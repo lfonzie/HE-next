@@ -1,164 +1,256 @@
-# HE Next
+# 🚀 HubEdu.ai - Plataforma Educacional Completa
 
-A modern, full-stack Next.js application built with TypeScript, Tailwind CSS, and cutting-edge web technologies.
+**HubEdu.ai** é uma plataforma educacional completa com IA conversacional, simulador ENEM e 8 módulos especializados, construída com Next.js 15.
 
-## 🚀 Features
+## ✨ Funcionalidades Principais
 
-- **Next.js 14** with App Router
-- **TypeScript** for type safety
-- **Tailwind CSS** for styling
-- **Responsive Design** that works on all devices
-- **API Routes** for backend functionality
-- **Modern UI Components** with Lucide React icons
-- **Performance Optimized** with Next.js features
+### 💬 Sistema de Chat Inteligente
+- **Streaming em tempo real** com Server-Sent Events
+- **8 módulos especializados** com detecção automática
+- **Upload de arquivos** e imagens
+- **Histórico persistente** de conversas
+- **Sistema de votação** em mensagens
 
-## 🛠️ Tech Stack
+### 📚 Simulador ENEM Completo
+- **Simulados personalizáveis** por área
+- **Timer inteligente** com pausa
+- **Banco de questões** da API oficial ENEM
+- **Explicações por IA** para cada questão
+- **Relatórios de desempenho**
 
-- **Framework**: Next.js 14
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **Icons**: Lucide React
-- **Deployment**: Vercel (recommended)
+### 🎓 8 Módulos Especializados
+1. **Professor**: Assistente de estudos
+2. **TI**: Suporte técnico educacional
+3. **Secretaria**: Gestão administrativa
+4. **Financeiro**: Controle financeiro
+5. **RH**: Recursos humanos
+6. **Atendimento**: Suporte multicanal
+7. **Coordenação**: Gestão pedagógica
+8. **Social Media**: Comunicação digital
+9. **Bem-Estar**: Suporte socioemocional
 
-## 📦 Installation
+## 🛠️ Tecnologias
 
-1. Clone the repository:
+### Frontend
+- **Next.js 15** com App Router
+- **React 18** com TypeScript
+- **Tailwind CSS** + Shadcn/ui
+- **Framer Motion** para animações
+- **React Hook Form** + Zod validation
+- **TanStack Query** para estado servidor
+
+### Backend
+- **Next.js API Routes** (Serverless)
+- **Prisma ORM** com PostgreSQL
+- **NextAuth.js** para autenticação
+- **OpenAI SDK** para IA
+- **Socket.io** para tempo real
+
+### Database
+- **PostgreSQL** (Neon/PlanetScale)
+- **Prisma** como ORM
+- **Redis** para cache (Upstash)
+
+## 🚀 Instalação e Configuração
+
+### 1. Clone o repositório
 ```bash
 git clone <repository-url>
-cd HE-next
+cd hubedu-nextjs
 ```
 
-2. Install dependencies:
+### 2. Instale as dependências
 ```bash
 npm install
 ```
 
-3. Copy environment variables:
+### 3. Configure as variáveis de ambiente
 ```bash
 cp env.example .env.local
 ```
 
-4. Update the environment variables in `.env.local` with your values.
+Edite o arquivo `.env.local` com suas configurações:
 
-5. Run the development server:
+```env
+# Database
+DATABASE_URL="postgresql://username:password@localhost:5432/hubedu"
+
+# NextAuth.js
+NEXTAUTH_SECRET="your-secret-key-here"
+NEXTAUTH_URL="http://localhost:3000"
+
+# OpenAI
+OPENAI_API_KEY="sk-your-openai-api-key-here"
+
+# Google OAuth (optional)
+GOOGLE_CLIENT_ID="your-google-client-id"
+GOOGLE_CLIENT_SECRET="your-google-client-secret"
+
+# Redis (optional)
+REDIS_URL="redis://localhost:6379"
+```
+
+### 4. Configure o banco de dados
+```bash
+# Execute as migrações do Prisma
+npx prisma db push
+
+# Popule o banco com dados iniciais
+npm run db:seed
+```
+
+### 5. Execute o projeto
 ```bash
 npm run dev
 ```
 
-6. Open [http://localhost:3000](http://localhost:3000) in your browser.
+Acesse [http://localhost:3000](http://localhost:3000) para ver a aplicação.
 
-## 🏗️ Project Structure
+## 📁 Estrutura do Projeto
 
 ```
-HE-next/
-├── app/                    # Next.js App Router
-│   ├── api/               # API routes
-│   │   ├── hello/         # Hello API endpoint
-│   │   └── users/         # Users API endpoint
-│   ├── about/             # About page
-│   ├── api-demo/          # API demo page
-│   ├── globals.css        # Global styles
-│   ├── layout.tsx         # Root layout
-│   └── page.tsx           # Home page
-├── components/            # React components
-│   ├── CTA.tsx           # Call-to-action component
-│   ├── Features.tsx      # Features section
-│   ├── Hero.tsx          # Hero section
-│   ├── Navigation.tsx    # Navigation component
-│   └── Stats.tsx         # Statistics section
-├── lib/                   # Utility functions
-│   └── utils.ts          # Common utilities
-├── types/                 # TypeScript type definitions
-│   └── index.ts          # Type definitions
-├── next.config.js        # Next.js configuration
-├── tailwind.config.js     # Tailwind CSS configuration
-├── tsconfig.json         # TypeScript configuration
-└── package.json          # Dependencies and scripts
+hubedu-nextjs/
+├── app/                          # App Router (Next.js 15)
+│   ├── (auth)/                   # Route Groups
+│   │   ├── login/page.tsx
+│   │   ├── register/page.tsx
+│   │   └── layout.tsx
+│   ├── (dashboard)/             # Dashboard Routes
+│   │   ├── chat/page.tsx
+│   │   ├── simulador/page.tsx
+│   │   └── layout.tsx
+│   ├── api/                      # API Routes
+│   │   ├── chat/route.ts
+│   │   ├── enem/route.ts
+│   │   ├── auth/route.ts
+│   │   └── webhook/route.ts
+│   ├── globals.css
+│   ├── layout.tsx                # Root Layout
+│   └── page.tsx                  # Home Page
+├── components/                   # Componentes Reutilizáveis
+│   ├── ui/                       # Shadcn/ui Components
+│   ├── chat/                     # Chat Components
+│   ├── enem/                     # ENEM Components
+│   ├── modules/                  # Module Components
+│   └── layout/                   # Layout Components
+├── lib/                          # Utilities & Config
+│   ├── db.ts                     # Database Config
+│   ├── auth.ts                   # Auth Config
+│   ├── openai.ts                 # OpenAI Config
+│   └── utils.ts                  # Utilities
+├── hooks/                        # Custom Hooks
+├── types/                        # TypeScript Types
+├── prisma/                       # Database Schema
+├── middleware.ts                 # Next.js Middleware
+├── next.config.js               # Next.js Config
+├── tailwind.config.js           # Tailwind Config
+└── package.json
 ```
 
-## 🚀 Available Scripts
+## 🔧 Scripts Disponíveis
 
-- `npm run dev` - Start the development server
-- `npm run build` - Build the application for production
-- `npm run start` - Start the production server
-- `npm run lint` - Run ESLint
-- `npm run type-check` - Run TypeScript type checking
+```bash
+# Desenvolvimento
+npm run dev
 
-## 📡 API Endpoints
+# Build para produção
+npm run build
 
-### Hello API
-- `GET /api/hello?name=Developer` - Returns a greeting message
-- `POST /api/hello` - Accepts JSON data and returns confirmation
+# Executar em produção
+npm run start
 
-### Users API
-- `GET /api/users?role=admin` - Returns list of users (with optional role filter)
-- `POST /api/users` - Creates a new user
+# Linting
+npm run lint
 
-## 🎨 Customization
-
-### Colors
-The color scheme can be customized in `tailwind.config.js`. The primary color is currently set to blue, but you can change it to any color you prefer.
-
-### Components
-All components are located in the `components/` directory and can be easily modified or extended.
-
-### Styling
-Global styles are in `app/globals.css`, and component-specific styles use Tailwind CSS classes.
-
-## 🚀 Deployment
-
-### Vercel (Recommended)
-1. Push your code to GitHub
-2. Connect your repository to Vercel
-3. Deploy automatically
-
-### Other Platforms
-The app can be deployed to any platform that supports Node.js:
-- Netlify
-- Railway
-- DigitalOcean App Platform
-- AWS Amplify
-
-## 📝 Environment Variables
-
-Create a `.env.local` file with the following variables:
-
-```env
-# Database (if using a database)
-DATABASE_URL="postgresql://username:password@localhost:5432/he_next_db"
-
-# Authentication (if using NextAuth.js)
-NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="your-secret-key-here"
-
-# External APIs
-NEXT_PUBLIC_API_URL="http://localhost:3000/api"
-
-# Feature flags
-NEXT_PUBLIC_ENABLE_ANALYTICS=false
-NEXT_PUBLIC_ENABLE_DEBUG=true
+# Database
+npm run db:push      # Aplicar mudanças no schema
+npm run db:studio    # Abrir Prisma Studio
+npm run db:seed      # Popular banco com dados iniciais
 ```
 
-## 🤝 Contributing
+## 🎯 Como Usar
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature-name`
-3. Commit your changes: `git commit -am 'Add some feature'`
-4. Push to the branch: `git push origin feature-name`
-5. Submit a pull request
+### 1. Criar uma Conta
+- Acesse `/register` para criar uma nova conta
+- Ou use login com Google
 
-## 📄 License
+### 2. Chat Inteligente
+- Acesse `/chat` para conversar com a IA
+- Escolha um dos 8 módulos especializados
+- Digite sua pergunta e receba respostas em tempo real
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+### 3. Simulador ENEM
+- Acesse `/simulador` para fazer simulados
+- Configure área, número de questões e duração
+- Responda as questões e veja seu desempenho
 
-## 🆘 Support
+### 4. Módulos Especializados
+- **Professor**: Dúvidas pedagógicas e metodologias
+- **TI**: Suporte técnico e ferramentas educacionais
+- **Secretaria**: Processos administrativos
+- **Financeiro**: Gestão financeira educacional
+- **RH**: Recursos humanos e desenvolvimento
+- **Atendimento**: Estratégias de atendimento
+- **Coordenação**: Gestão pedagógica
+- **Social Media**: Comunicação digital
+- **Bem-Estar**: Saúde mental e socioemocional
 
-If you have any questions or need help, please:
-1. Check the documentation
-2. Search existing issues
-3. Create a new issue
-4. Contact the maintainers
+## 🚀 Deploy
+
+### Vercel (Recomendado)
+1. Conecte seu repositório ao Vercel
+2. Configure as variáveis de ambiente
+3. Deploy automático
+
+### Outras Plataformas
+- **Railway**: Para PostgreSQL
+- **Upstash**: Para Redis
+- **Cloudinary**: Para upload de imagens
+
+## 📊 Features Implementadas
+
+### ✅ Core Features
+- [x] Next.js 15 com App Router
+- [x] Autenticação com NextAuth.js
+- [x] Database com Prisma + PostgreSQL
+- [x] Chat com streaming em tempo real
+- [x] 8 módulos especializados
+- [x] Simulador ENEM completo
+- [x] Sistema de quotas
+- [x] Analytics e métricas
+- [x] Upload de arquivos
+- [x] Responsive design
+- [x] Dark/Light mode
+- [x] PWA support
+
+### ✅ Advanced Features
+- [x] Socket.io para tempo real
+- [x] Redis para cache
+- [x] Rate limiting
+- [x] Error boundaries
+- [x] SEO otimizado
+- [x] Performance monitoring
+- [x] A/B testing ready
+- [x] Multi-tenant support
+
+## 🤝 Contribuição
+
+1. Fork o projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
+3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+4. Push para a branch (`git push origin feature/AmazingFeature`)
+5. Abra um Pull Request
+
+## 📄 Licença
+
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+
+## 📞 Suporte
+
+- **Email**: suporte@hubedu.ai
+- **Documentação**: [docs.hubedu.ai](https://docs.hubedu.ai)
+- **Issues**: [GitHub Issues](https://github.com/hubedu/issues)
 
 ---
 
-Built with ❤️ using Next.js, TypeScript, and Tailwind CSS.
+**HubEdu.ai** - Transformando a educação com IA 🚀
