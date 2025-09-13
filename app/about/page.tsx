@@ -14,7 +14,7 @@ export default function About() {
             About HE Next
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            We're passionate about creating exceptional web experiences using the latest technologies.
+            We&apos;re passionate about creating exceptional web experiences using the latest technologies.
           </p>
         </div>
         

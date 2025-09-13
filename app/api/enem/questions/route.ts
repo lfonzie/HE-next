@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
-import { openai } from '@/lib/openai'
+import { openai, selectModel, getModelConfig } from '@/lib/openai'
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     const questions = await prisma.enemQuestion.findMany({
       where: { area },
       take: numQuestions,
-      orderBy: { createdAt: 'desc' }
+      orderBy: { created_at: 'desc' }
     })
 
     // If not enough questions in DB, generate with AI
@@ -54,10 +54,17 @@ async function generateQuestions(area: string, count: number) {
     
     Retorne apenas o JSON válido com um array de questões.`
 
+    // Selecionar modelo baseado na complexidade da tarefa de geração de questões
+    const selectedModel = selectModel(prompt, 'enem')
+    const modelConfig = getModelConfig(selectedModel)
+    
+    console.log(`Using model: ${selectedModel} for ENEM questions generation`)
+    
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: selectedModel,
       messages: [{ role: 'user', content: prompt }],
-      temperature: 0.7,
+      temperature: modelConfig.temperature,
+      max_tokens: modelConfig.max_tokens,
     })
 
     const response = completion.choices[0]?.message?.content

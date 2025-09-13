@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
       data: {
         name,
         email,
-        password: hashedPassword,
+        password_hash: hashedPassword,
         role: 'STUDENT'
       }
     })

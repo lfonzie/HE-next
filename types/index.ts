@@ -1,4 +1,4 @@
-import { UserRole, PlanType } from '@prisma/client'
+import { role, plan } from '@prisma/client'
 
 export interface User {
   id: string
@@ -6,7 +6,7 @@ export interface User {
   email: string
   emailVerified?: Date
   image?: string
-  role: UserRole
+  role: role
   schoolId?: string
   createdAt: Date
   updatedAt: Date
@@ -17,7 +17,7 @@ export interface School {
   domain: string
   name: string
   logoUrl?: string
-  plan: PlanType
+  plan: plan
   primaryColor: string
   secondaryColor: string
   supportEmail?: string
@@ -28,13 +28,14 @@ export interface School {
 
 export interface Conversation {
   id: string
-  userId: string
+  userId?: string
+  title?: string
   module: string
   subject?: string
   grade?: string
   messages: Message[]
   tokenCount: number
-  model: string
+  model?: string
   createdAt: Date
   updatedAt: Date
 }
@@ -45,7 +46,19 @@ export interface Message {
   content: string
   timestamp: Date
   module?: string
+  model?: string
+  tokens?: number
+  tier?: "IA" | "IA_SUPER"
+  isStreaming?: boolean
+  originalQuery?: string
+  structured?: boolean
+  webSearchUsed?: boolean
+  citations?: any[]
+  searchTime?: number
   attachments?: Attachment[]
+  image?: string
+  attachment?: File
+  hasError?: boolean
 }
 
 export interface Attachment {
@@ -118,6 +131,8 @@ export type ModuleType =
   | 'coordenacao'
   | 'social-media'
   | 'bem-estar'
+  | 'enem-interactive'
+  | 'aula-expandida'
 
 export interface ModuleConfig {
   id: ModuleType

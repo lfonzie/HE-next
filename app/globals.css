@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -10,8 +11,8 @@
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 45 93% 47%;
+    --primary-foreground: 0 0% 0%;
     --secondary: 210 40% 96%;
     --secondary-foreground: 222.2 84% 4.9%;
     --muted: 210 40% 96%;
@@ -22,30 +23,53 @@
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
+    --ring: 45 93% 47%;
     --radius: 0.5rem;
+    
+    /* Loading screen variables */
+    --color-warning-50: #fefce8;
+    --color-warning-100: #fef3c7;
+    --color-warning-400: #fbbf24;
+    --color-warning-500: #f59e0b;
+    --color-background-secondary: #f9fafb;
+    --color-neutral-700: #374151;
+    --color-neutral-800: #1f2937;
+    --color-neutral-900: #111827;
+    --z-modal: 9999;
+    --transition-slow: 0.5s ease-in-out;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
+    /* Dark mode inspirado na tela de loading - tons de cinza escuro com acentos laranja/amarelo */
+    --background: 17 24% 6%; /* #111827 - cinza muito escuro */
+    --foreground: 210 40% 98%; /* texto claro */
+    --card: 17 24% 8%; /* #1f2937 - cinza escuro para cards */
     --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
+    --popover: 17 24% 8%;
     --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 84% 4.9%;
-    --secondary: 217.2 32.6% 17.5%;
+    --primary: 25 95% 53%; /* #f97316 - laranja vibrante da tela de loading */
+    --primary-foreground: 0 0% 0%;
+    --secondary: 17 24% 12%; /* #374151 - cinza médio escuro */
     --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
+    --muted: 17 24% 12%;
     --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
+    --accent: 17 24% 12%;
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 94.1%;
+    --border: 17 24% 12%;
+    --input: 17 24% 12%;
+    --ring: 25 95% 53%; /* laranja para focus rings */
+    
+    /* Variáveis específicas para dark mode inspiradas na tela de loading */
+    --color-warning-50: #1f2937; /* cinza escuro */
+    --color-warning-100: #374151; /* cinza médio escuro */
+    --color-warning-400: #fbbf24; /* amarelo dourado */
+    --color-warning-500: #f97316; /* laranja vibrante */
+    --color-background-secondary: #111827; /* cinza muito escuro */
+    --color-neutral-700: #374151;
+    --color-neutral-800: #1f2937;
+    --color-neutral-900: #111827;
   }
 }
 
@@ -55,5 +79,20 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Custom styles for math expressions in chat */
+@layer components {
+  .math-inline {
+    @apply inline-block mx-1 bg-blue-50 px-2 py-1 rounded text-blue-800 font-mono text-sm;
+  }
+  
+  .math-block {
+    @apply block my-4 text-center bg-blue-50 p-4 rounded-lg border border-blue-200;
+  }
+  
+  .math-display {
+    @apply block my-4 text-center bg-gray-50 p-4 rounded-lg border border-gray-200;
   }
 }

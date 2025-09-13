@@ -4,7 +4,7 @@ import { ArrowRight, Sparkles } from 'lucide-react'
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-r from-primary-600 to-primary-800 py-20 px-4 sm:px-6 lg:px-8">
+    <section className="relative overflow-hidden bg-gradient-to-r from-primary to-yellow-600 py-20 px-4 sm:px-6 lg:px-8">
       <div className="absolute inset-0 bg-black/20"></div>
       <div className="relative max-w-7xl mx-auto">
         <div className="text-center">
@@ -28,7 +28,7 @@ export function Hero() {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="inline-flex items-center px-8 py-3 bg-white text-primary-600 font-semibold rounded-lg hover:bg-white/90 transition-colors">
+            <button className="inline-flex items-center px-8 py-3 bg-white text-primary font-semibold rounded-lg hover:bg-white/90 transition-colors">
               Get Started
               <ArrowRight className="ml-2 w-5 h-5" />
             </button>

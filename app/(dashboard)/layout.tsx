@@ -1,13 +1,16 @@
 "use client"
 
-import { ReactNode } from 'react'
+import { ReactNode, useState } from 'react'
 import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { MessageSquare, BookOpen, BarChart3, Settings, LogOut, User } from 'lucide-react'
-import { signOut } from 'next-auth/react'
+import { MainSidebar } from '@/components/layout/MainSidebar'
+import { UnifiedSidebar } from '@/components/layout/UnifiedSidebar'
+import { ChatProvider } from '@/components/providers/ChatContext'
+import { QuotaProvider } from '@/components/providers/QuotaProvider'
+import { LoadingScreen, LoadingOverlay } from '@/components/ui/loading'
+import { useNavigationLoading } from '@/hooks/useNavigationLoading'
+import { MessageSquare, BookOpen, Settings, GraduationCap } from 'lucide-react'
 
 interface DashboardLayoutProps {
   children: ReactNode
@@ -16,92 +19,118 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const pathname = usePathname()
+  const { isLoading, getLoadingMessage } = useNavigationLoading()
+  const [selectedModule, setSelectedModule] = useState<string | null>(null)
+  
+  // Verificar se estamos na página do chat
+  const isChatPage = pathname === '/chat'
+  
+  // Verificar se estamos na página de apresentação
+  const isApresentacaoPage = pathname === '/apresentacao'
 
-  useEffect(() => {
-    if (status === 'loading') return
-    if (!session) router.push('/login')
-  }, [session, status, router])
+  // Temporariamente desabilitado para desenvolvimento
+  // useEffect(() => {
+  //   if (status === 'loading') return
+  //   if (!session) router.push('/login')
+  // }, [session, status, router])
 
-  if (status === 'loading') {
+  // if (status === 'loading') {
+  //   return <LoadingScreen message="Verificando autenticação..." />
+  // }
+
+  // if (!session) {
+  //   return null
+  // }
+
+  // Layout especial para apresentação - sidebar compacta
+  if (isApresentacaoPage) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
+      <ChatProvider>
+        <QuotaProvider>
+          <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50">
+            <div className="flex h-screen">
+              {/* Sidebar compacta para apresentação */}
+              <div className="w-16 flex-shrink-0 bg-white/90 backdrop-blur-sm border-r border-gray-200 flex flex-col items-center py-4 space-y-4">
+                {/* Logo */}
+                <div className="w-10 h-10 bg-yellow-500 rounded-lg flex items-center justify-center">
+                  <img
+                    src="/Logo_HubEdu.ia.svg"
+                    alt="HubEdu.ia"
+                    className="w-8 h-8 object-contain"
+                  />
+                </div>
+                
+                {/* Botões de navegação compactos */}
+                <button
+                  onClick={() => window.location.href = '/chat'}
+                  className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center transition-colors"
+                  title="Chat"
+                >
+                  <MessageSquare className="w-5 h-5 text-gray-600" />
+                </button>
+                
+                <button
+                  onClick={() => window.location.href = '/professor'}
+                  className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center transition-colors"
+                  title="Professor IA"
+                >
+                  <BookOpen className="w-5 h-5 text-gray-600" />
+                </button>
+                
+                <button
+                  onClick={() => window.location.href = '/simulador'}
+                  className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center transition-colors"
+                  title="Simulador ENEM"
+                >
+                  <GraduationCap className="w-5 h-5 text-gray-600" />
+                </button>
+                
+                <button
+                  onClick={() => window.location.href = '/admin'}
+                  className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center transition-colors"
+                  title="Admin"
+                >
+                  <Settings className="w-5 h-5 text-gray-600" />
+                </button>
+              </div>
+
+              {/* Main content - fullscreen para apresentação */}
+              <div className="flex-1 overflow-hidden">
+                <LoadingOverlay isLoading={isLoading()} message={getLoadingMessage('navigation')}>
+                  {children}
+                </LoadingOverlay>
+              </div>
+            </div>
+          </div>
+        </QuotaProvider>
+      </ChatProvider>
     )
   }
 
-  if (!session) {
-    return null
-  }
-
-  const navigation = [
-    { name: 'Chat', href: '/chat', icon: MessageSquare },
-    { name: 'Simulador ENEM', href: '/simulador', icon: BookOpen },
-    { name: 'Analytics', href: '/analytics', icon: BarChart3 },
-    { name: 'Configurações', href: '/settings', icon: Settings },
-  ]
-
   return (
-    <div className="min-h-screen bg-background">
-      <div className="flex">
-        {/* Sidebar */}
-        <div className="w-64 bg-card border-r min-h-screen p-4">
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-xl font-bold text-primary">HubEdu.ai</h1>
-              <p className="text-sm text-muted-foreground">Plataforma Educacional</p>
-            </div>
+    <ChatProvider>
+      <QuotaProvider>
+        <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50">
+          <div className="flex h-screen">
+            {/* Sidebar - Usar UnifiedSidebar para todas as páginas */}
+            <UnifiedSidebar 
+              selectedModule={selectedModule}
+              onSelectModule={setSelectedModule}
+            />
 
-            <nav className="space-y-2">
-              {navigation.map((item) => (
-                <Button
-                  key={item.name}
-                  variant="ghost"
-                  className="w-full justify-start"
-                  onClick={() => router.push(item.href)}
-                >
-                  <item.icon className="mr-2 h-4 w-4" />
-                  {item.name}
-                </Button>
-              ))}
-            </nav>
-
-            <div className="pt-4 border-t">
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                      <User className="h-4 w-4 text-primary-foreground" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">
-                        {session.user?.name || session.user?.email}
-                      </p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {session.user?.email}
-                      </p>
-                    </div>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full mt-2"
-                    onClick={() => signOut()}
-                  >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Sair
-                  </Button>
-                </CardContent>
-              </Card>
+            {/* Main content - ajusta automaticamente ao sidebar */}
+            <div className="flex-1 flex flex-col overflow-hidden main-content-with-sidebar">
+              {/* Page Content */}
+              <div className="flex-1 overflow-hidden">
+                <LoadingOverlay isLoading={isLoading()} message={getLoadingMessage('navigation')}>
+                  {children}
+                </LoadingOverlay>
+              </div>
             </div>
           </div>
         </div>
-
-        {/* Main content */}
-        <div className="flex-1">
-          {children}
-        </div>
-      </div>
-    </div>
+      </QuotaProvider>
+    </ChatProvider>
   )
 }

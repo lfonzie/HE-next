@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { openai, MODULE_SYSTEM_PROMPTS } from '@/lib/openai'
+import { openai, MODULE_SYSTEM_PROMPTS, selectModel, getModelConfig } from '@/lib/openai'
 import { prisma } from '@/lib/db'
 
 export async function POST(request: NextRequest) {
@@ -28,18 +28,34 @@ export async function POST(request: NextRequest) {
       }
     ]
 
+    // Selecionar modelo baseado na complexidade da mensagem
+    const selectedModel = selectModel(message, module)
+    const modelConfig = getModelConfig(selectedModel)
+    
+    console.log(`Using model: ${selectedModel} for module: ${module}`)
+    
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: selectedModel,
       messages,
-      stream: true,
-      temperature: 0.7,
-      max_tokens: 800,
+      stream: modelConfig.stream,
+      temperature: modelConfig.temperature,
+      max_tokens: modelConfig.max_tokens,
     })
 
     const stream = new ReadableStream({
       async start(controller) {
-        for await (const chunk of completion) {
-          const content = chunk.choices[0]?.delta?.content || ''
+        if (modelConfig.stream) {
+          const stream = completion as any
+          for await (const chunk of stream) {
+            const content = chunk.choices[0]?.delta?.content || ''
+            if (content) {
+              controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ content })}\n\n`))
+            }
+          }
+        } else {
+          // Non-streaming response
+          const response = completion as any
+          const content = response.choices[0]?.message?.content || ''
           if (content) {
             controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ content })}\n\n`))
           }

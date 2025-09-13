@@ -1,57 +1,40 @@
-# 🚀 HubEdu.ai - Plataforma Educacional Completa
+# HubEdu.ai - Plataforma Educacional com IA
 
-**HubEdu.ai** é uma plataforma educacional completa com IA conversacional, simulador ENEM e 8 módulos especializados, construída com Next.js 15.
+Uma plataforma educacional completa com IA conversacional, simulador ENEM e 8 módulos para escolas brasileiras.
 
-## ✨ Funcionalidades Principais
+## 🚀 Funcionalidades
 
-### 💬 Sistema de Chat Inteligente
-- **Streaming em tempo real** com Server-Sent Events
-- **8 módulos especializados** com detecção automática
-- **Upload de arquivos** e imagens
-- **Histórico persistente** de conversas
-- **Sistema de votação** em mensagens
+### 💬 Chat Inteligente
+- **8 Módulos**: Professor, TI, Secretaria, Financeiro, RH, Atendimento, Coordenação, Social Media e Bem-Estar
+- **Streaming em Tempo Real**: Respostas da IA são transmitidas em tempo real
+- **Histórico Persistente**: Conversas são salvas e podem ser retomadas
+- **IA Específica**: Cada módulo tem prompts específicos para sua área de atuação
 
-### 📚 Simulador ENEM Completo
-- **Simulados personalizáveis** por área
-- **Timer inteligente** com pausa
-- **Banco de questões** da API oficial ENEM
-- **Explicações por IA** para cada questão
-- **Relatórios de desempenho**
+### 📚 Simulador ENEM
+- **Questões Oficiais**: Banco de questões do ENEM com IA para gerar novas
+- **Simulados Personalizáveis**: Escolha área, número de questões e duração
+- **Timer Inteligente**: Controle de tempo com pausa e retomada
+- **Explicações por IA**: Análise detalhada das respostas
 
-### 🎓 8 Módulos Especializados
-1. **Professor**: Assistente de estudos
-2. **TI**: Suporte técnico educacional
-3. **Secretaria**: Gestão administrativa
-4. **Financeiro**: Controle financeiro
-5. **RH**: Recursos humanos
-6. **Atendimento**: Suporte multicanal
-7. **Coordenação**: Gestão pedagógica
-8. **Social Media**: Comunicação digital
-9. **Bem-Estar**: Suporte socioemocional
+### 🏫 Multi-tenant
+- **Suporte para Escolas**: Sistema completo para instituições educacionais
+- **Gestão de Usuários**: Diferentes níveis de acesso (Estudante, Professor, Admin)
+- **Analytics**: Métricas detalhadas de uso e desempenho
+- **Customização**: Cores, logos e mensagens personalizadas por escola
 
 ## 🛠️ Tecnologias
 
-### Frontend
-- **Next.js 15** com App Router
-- **React 18** com TypeScript
-- **Tailwind CSS** + Shadcn/ui
-- **Framer Motion** para animações
-- **React Hook Form** + Zod validation
-- **TanStack Query** para estado servidor
+- **Frontend**: Next.js 15, React 18, TypeScript
+- **Styling**: Tailwind CSS, Shadcn/ui
+- **Backend**: Next.js API Routes
+- **Database**: PostgreSQL com Prisma ORM
+- **Authentication**: NextAuth.js
+- **AI**: OpenAI GPT-4
+- **Real-time**: Server-Sent Events
+- **Bundler**: Turbopack (10x mais rápido em desenvolvimento)
+- **Deployment**: Vercel
 
-### Backend
-- **Next.js API Routes** (Serverless)
-- **Prisma ORM** com PostgreSQL
-- **NextAuth.js** para autenticação
-- **OpenAI SDK** para IA
-- **Socket.io** para tempo real
-
-### Database
-- **PostgreSQL** (Neon/PlanetScale)
-- **Prisma** como ORM
-- **Redis** para cache (Upstash)
-
-## 🚀 Instalação e Configuração
+## 📦 Instalação
 
 ### 1. Clone o repositório
 ```bash
@@ -65,15 +48,11 @@ npm install
 ```
 
 ### 3. Configure as variáveis de ambiente
+Crie um arquivo `.env.local` baseado no `.env.example`:
+
 ```bash
-cp env.example .env.local
-```
-
-Edite o arquivo `.env.local` com suas configurações:
-
-```env
 # Database
-DATABASE_URL="postgresql://username:password@localhost:5432/hubedu"
+DATABASE_URL="postgresql://username:password@localhost:5432/hubedu_db"
 
 # NextAuth.js
 NEXTAUTH_SECRET="your-secret-key-here"
@@ -82,156 +61,155 @@ NEXTAUTH_URL="http://localhost:3000"
 # OpenAI
 OPENAI_API_KEY="sk-your-openai-api-key-here"
 
-# Google OAuth (optional)
+# Google OAuth (Opcional)
 GOOGLE_CLIENT_ID="your-google-client-id"
 GOOGLE_CLIENT_SECRET="your-google-client-secret"
 
-# Redis (optional)
-REDIS_URL="redis://localhost:6379"
+# GitHub OAuth (Opcional)
+GITHUB_CLIENT_ID="your-github-client-id"
+GITHUB_CLIENT_SECRET="your-github-client-secret"
 ```
 
 ### 4. Configure o banco de dados
 ```bash
-# Execute as migrações do Prisma
+# Execute as migrations
 npx prisma db push
 
 # Popule o banco com dados iniciais
-npm run db:seed
+npx prisma db seed
 ```
 
 ### 5. Execute o projeto
+
+#### 🚀 Desenvolvimento Rápido (Turbopack)
+```bash
+npm run dev:turbo
+```
+
+#### 🔧 Desenvolvimento Padrão (Webpack)
 ```bash
 npm run dev
 ```
 
-Acesse [http://localhost:3000](http://localhost:3000) para ver a aplicação.
+O projeto estará disponível em `http://localhost:3000`
 
-## 📁 Estrutura do Projeto
+> **💡 Dica**: Use `dev:turbo` para builds até 10x mais rápidos em desenvolvimento!
 
-```
-hubedu-nextjs/
-├── app/                          # App Router (Next.js 15)
-│   ├── (auth)/                   # Route Groups
-│   │   ├── login/page.tsx
-│   │   ├── register/page.tsx
-│   │   └── layout.tsx
-│   ├── (dashboard)/             # Dashboard Routes
-│   │   ├── chat/page.tsx
-│   │   ├── simulador/page.tsx
-│   │   └── layout.tsx
-│   ├── api/                      # API Routes
-│   │   ├── chat/route.ts
-│   │   ├── enem/route.ts
-│   │   ├── auth/route.ts
-│   │   └── webhook/route.ts
-│   ├── globals.css
-│   ├── layout.tsx                # Root Layout
-│   └── page.tsx                  # Home Page
-├── components/                   # Componentes Reutilizáveis
-│   ├── ui/                       # Shadcn/ui Components
-│   ├── chat/                     # Chat Components
-│   ├── enem/                     # ENEM Components
-│   ├── modules/                  # Module Components
-│   └── layout/                   # Layout Components
-├── lib/                          # Utilities & Config
-│   ├── db.ts                     # Database Config
-│   ├── auth.ts                   # Auth Config
-│   ├── openai.ts                 # OpenAI Config
-│   └── utils.ts                  # Utilities
-├── hooks/                        # Custom Hooks
-├── types/                        # TypeScript Types
-├── prisma/                       # Database Schema
-├── middleware.ts                 # Next.js Middleware
-├── next.config.js               # Next.js Config
-├── tailwind.config.js           # Tailwind Config
-└── package.json
-```
+## 🗄️ Banco de Dados
 
-## 🔧 Scripts Disponíveis
+### Modelos Principais
+
+- **User**: Usuários do sistema (estudantes, professores, admins)
+- **School**: Instituições educacionais
+- **Conversation**: Histórico de conversas do chat
+- **SystemMessage**: Prompts especializados para cada módulo
+- **EnemQuestion**: Banco de questões do ENEM
+- **EnemSession**: Sessões de simulados realizados
+- **Analytics**: Métricas de uso e desempenho
+
+### Comandos Úteis
 
 ```bash
-# Desenvolvimento
-npm run dev
+# Visualizar banco de dados
+npx prisma studio
 
-# Build para produção
-npm run build
+# Reset do banco
+npx prisma db push --force-reset
 
-# Executar em produção
-npm run start
-
-# Linting
-npm run lint
-
-# Database
-npm run db:push      # Aplicar mudanças no schema
-npm run db:studio    # Abrir Prisma Studio
-npm run db:seed      # Popular banco com dados iniciais
+# Gerar cliente Prisma
+npx prisma generate
 ```
 
-## 🎯 Como Usar
+## 🎯 Módulos
 
-### 1. Criar uma Conta
-- Acesse `/register` para criar uma nova conta
-- Ou use login com Google
+### 👨‍🏫 Professor
+- Explicações didáticas e claras
+- Exemplos do contexto brasileiro
+- Tom motivacional e positivo
+- Adaptação ao nível do estudante
 
-### 2. Chat Inteligente
-- Acesse `/chat` para conversar com a IA
-- Escolha um dos 8 módulos especializados
-- Digite sua pergunta e receba respostas em tempo real
+### 💻 TI
+- Suporte técnico educacional
+- Google Workspace for Education
+- Troubleshooting de dispositivos
+- Segurança digital
 
-### 3. Simulador ENEM
-- Acesse `/simulador` para fazer simulados
-- Configure área, número de questões e duração
-- Responda as questões e veja seu desempenho
+### 📋 Secretaria
+- Gestão administrativa escolar
+- Processos e protocolos
+- Organização de eventos
+- Comunicação institucional
 
-### 4. Módulos Especializados
-- **Professor**: Dúvidas pedagógicas e metodologias
-- **TI**: Suporte técnico e ferramentas educacionais
-- **Secretaria**: Processos administrativos
-- **Financeiro**: Gestão financeira educacional
-- **RH**: Recursos humanos e desenvolvimento
-- **Atendimento**: Estratégias de atendimento
-- **Coordenação**: Gestão pedagógica
-- **Social Media**: Comunicação digital
-- **Bem-Estar**: Saúde mental e socioemocional
+### 💰 Financeiro
+- Controle de custos educacionais
+- Orçamento escolar
+- Captação de recursos
+- Relatórios financeiros
+
+### 👥 RH
+- Gestão de equipe educacional
+- Desenvolvimento profissional
+- Políticas de RH educacionais
+- Clima organizacional
+
+### 🎧 Atendimento
+- Suporte multicanal
+- Experiência do usuário
+- Resolução de conflitos
+- Métricas de satisfação
+
+### 📊 Coordenação
+- Planejamento pedagógico
+- Coordenação educacional
+- Avaliação e acompanhamento
+- Qualidade educacional
+
+### 📱 Social Media
+- Marketing educacional
+- Conteúdo para redes sociais
+- Comunicação digital
+- Engajamento da comunidade
+
+### 🌱 Bem-Estar
+- Bem-estar escolar
+- Desenvolvimento socioemocional
+- Prevenção e cuidado mental
+- Ambientes acolhedores
 
 ## 🚀 Deploy
 
 ### Vercel (Recomendado)
-1. Conecte seu repositório ao Vercel
-2. Configure as variáveis de ambiente
-3. Deploy automático
+
+1. **Conecte o repositório ao Vercel**
+2. **Configure as variáveis de ambiente**
+3. **Configure o banco de dados** (Neon, Supabase, etc.)
+4. **Deploy automático**
 
 ### Outras Plataformas
-- **Railway**: Para PostgreSQL
-- **Upstash**: Para Redis
-- **Cloudinary**: Para upload de imagens
 
-## 📊 Features Implementadas
+O projeto pode ser deployado em qualquer plataforma que suporte Next.js:
+- Netlify
+- Railway
+- DigitalOcean App Platform
+- AWS Amplify
 
-### ✅ Core Features
-- [x] Next.js 15 com App Router
-- [x] Autenticação com NextAuth.js
-- [x] Database com Prisma + PostgreSQL
-- [x] Chat com streaming em tempo real
-- [x] 8 módulos especializados
-- [x] Simulador ENEM completo
-- [x] Sistema de quotas
-- [x] Analytics e métricas
-- [x] Upload de arquivos
-- [x] Responsive design
-- [x] Dark/Light mode
-- [x] PWA support
+## 📊 Analytics e Métricas
 
-### ✅ Advanced Features
-- [x] Socket.io para tempo real
-- [x] Redis para cache
-- [x] Rate limiting
-- [x] Error boundaries
-- [x] SEO otimizado
-- [x] Performance monitoring
-- [x] A/B testing ready
-- [x] Multi-tenant support
+O sistema coleta automaticamente:
+- Número de mensagens por módulo
+- Tempo de resposta da IA
+- Satisfação dos usuários
+- Uso de tokens
+- Questões respondidas no ENEM
+- Tempo gasto em simulados
+
+## 🔒 Segurança
+
+- **Autenticação**: NextAuth.js com múltiplos provedores
+- **Autorização**: Controle de acesso baseado em roles
+- **Criptografia**: Senhas hasheadas com bcrypt
+- **Rate Limiting**: Proteção contra spam
+- **Validação**: Validação de dados com Zod
 
 ## 🤝 Contribuição
 
@@ -241,15 +219,24 @@ npm run db:seed      # Popular banco com dados iniciais
 4. Push para a branch (`git push origin feature/AmazingFeature`)
 5. Abra um Pull Request
 
-## 📄 Licença
+## 📝 Licença
 
-Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
 
 ## 📞 Suporte
 
-- **Email**: suporte@hubedu.ai
-- **Documentação**: [docs.hubedu.ai](https://docs.hubedu.ai)
-- **Issues**: [GitHub Issues](https://github.com/hubedu/issues)
+Para suporte, entre em contato:
+- Email: suporte@hubedu.ai
+- Discord: [Servidor da Comunidade]
+- GitHub Issues: [Reportar bugs]
+
+## 🎉 Agradecimentos
+
+- OpenAI pela API GPT-4
+- Vercel pela plataforma de deploy
+- Prisma pela ORM
+- Shadcn/ui pelos componentes
+- Comunidade Next.js
 
 ---
 

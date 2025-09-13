@@ -1,6 +1,5 @@
 "use client"
 
-import { useEffect, useRef } from 'react'
 import { Message } from '@/types'
 import { MessageItem } from './MessageItem'
 import { Card, CardContent } from '@/components/ui/card'
@@ -10,15 +9,6 @@ interface MessageListProps {
 }
 
 export function MessageList({ messages }: MessageListProps) {
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }
-
-  useEffect(() => {
-    scrollToBottom()
-  }, [messages])
 
   if (messages.length === 0) {
     return (
@@ -41,7 +31,6 @@ export function MessageList({ messages }: MessageListProps) {
       {messages.map((message) => (
         <MessageItem key={message.id} message={message} />
       ))}
-      <div ref={messagesEndRef} />
     </div>
   )
 }

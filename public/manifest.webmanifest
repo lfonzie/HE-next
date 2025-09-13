@@ -1,0 +1,75 @@
+{
+  "name": "HubEdu.ia - Plataforma Educacional com IA",
+  "short_name": "HubEdu",
+  "start_url": "/",
+  "display": "standalone",
+  "scope": "/",
+  "background_color": "#ffffff",
+  "theme_color": "#ffd233",
+  "description": "Professor Particular Digital e Assistente Escolar IA - Plataforma completa com IA conversacional, simulador ENEM e 8 módulos educacionais",
+  "orientation": "portrait-primary",
+  "categories": ["education", "productivity", "utilities"],
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "prefer_related_applications": false,
+  "display_override": ["window-controls-overlay", "standalone"],
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/favicon.ico", "sizes": "32x32", "type": "image/x-icon", "purpose": "any" },
+    { "src": "/favicon-16x16.png", "sizes": "16x16", "type": "image/png", "purpose": "any" },
+    { "src": "/favicon-32x32.png", "sizes": "32x32", "type": "image/png", "purpose": "any" },
+    { "src": "/favicon-48x48.png", "sizes": "48x48", "type": "image/png", "purpose": "any" },
+    { "src": "/icons-new/icon-72x72.png", "sizes": "72x72", "type": "image/png", "purpose": "any" },
+    { "src": "/icons-new/icon-96x96.png", "sizes": "96x96", "type": "image/png", "purpose": "any" },
+    { "src": "/icons-new/icon-128x128.png", "sizes": "128x128", "type": "image/png", "purpose": "any" },
+    { "src": "/icons-new/icon-144x144.png", "sizes": "144x144", "type": "image/png", "purpose": "any" },
+    { "src": "/icons-new/icon-152x152.png", "sizes": "152x152", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons-new/icon-384x384.png", "sizes": "384x384", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "screenshots": [
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "HubEdu.ia - Plataforma Educacional"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Chat IA",
+      "short_name": "Chat",
+      "description": "Acesse o chat com IA educacional",
+      "url": "/chat",
+      "icons": [{ "src": "/assets/icons/chat-icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+    },
+    {
+      "name": "Simulador ENEM",
+      "short_name": "ENEM",
+      "description": "Simulador completo do ENEM",
+      "url": "/simulador",
+      "icons": [{ "src": "/assets/icons/enem-icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+    },
+    {
+      "name": "Professor Interativo",
+      "short_name": "Professor",
+      "description": "Assistente educacional especializado",
+      "url": "/professor",
+      "icons": [{ "src": "/assets/icons/professor-icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+    },
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Painel principal da plataforma",
+      "url": "/dashboard",
+      "icons": [{ "src": "/assets/icons/dashboard-icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+    }
+  ]
+}

@@ -1,19 +1,225 @@
 "use client"
 
-import { ChatInterface } from '@/components/chat/ChatInterface'
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { ChatMessage } from "@/components/chat/ChatMessage";
+import { StreamingMessage } from "@/components/chat/StreamingMessage";
+import { ChatInput } from "@/components/chat/ChatInput";
+import { GeneralWelcome } from "@/components/chat/GeneralWelcome";
+import { ModuleWelcome } from "@/components/chat/ModuleWelcome";
+import { useChat } from "@/hooks/useChat";
+import { ModuleId, MODULES, convertModuleId, convertToOldModuleId } from "@/lib/modules";
+import { ModuleType } from "@/types";
+import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { Plus, Headphones } from "lucide-react";
+import { useChatContext } from "@/components/providers/ChatContext";
+import { useQuota } from "@/components/providers/QuotaProvider";
+import { SupportModal } from "@/components/modals/SupportModal";
+import "@/components/chat/ChatInput.css";
 
 export default function ChatPage() {
+  const router = useRouter();
+  const { 
+    currentConversation, 
+    sendMessage, 
+    isStreaming, 
+    startNewConversation,
+    fetchConversations 
+  } = useChat();
+  const { toast } = useToast();
+  const { selectedModule, setSelectedModule, highlightActiveModule } = useChatContext();
+  const { quota, maxQuota, decrementQuota, resetQuota } = useQuota();
+  
+  // State
+  const [inputMessage, setInputMessage] = useState("");
+  const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
+  
+  // Refs
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Memoized values
+  const currentModuleId = useMemo(
+    () => selectedModule ? convertModuleId(selectedModule) : null,
+    [selectedModule]
+  );
+
+  const messages = currentConversation?.messages || [];
+  const hasMessages = messages.length > 0;
+
+
+  // Handle module selection
+  const handleSelectModule = useCallback((moduleId: string) => {
+    setSelectedModule(moduleId as ModuleType);
+    startNewConversation(moduleId);
+  }, [setSelectedModule, startNewConversation]);
+
+  // Handle new conversation
+  const handleNewConversation = useCallback(() => {
+    startNewConversation(selectedModule || "");
+    setSelectedModule(null);
+  }, [startNewConversation, selectedModule, setSelectedModule]);
+
+  // Handle send message
+  const handleSendMessage = useCallback(async (message: string) => {
+    if (!message.trim()) return;
+    
+    try {
+      await sendMessage(
+        message, 
+        selectedModule || "atendimento",
+        undefined,
+        undefined,
+        currentConversation?.id
+      );
+      setInputMessage("");
+      
+      // Destacar o módulo ativo após enviar a mensagem
+      highlightActiveModule();
+      
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: error.message || "Falha ao enviar mensagem",
+        variant: "destructive"
+      });
+    }
+  }, [sendMessage, selectedModule, currentConversation?.id, toast, highlightActiveModule]);
+
+  // Handle suggestion click
+  const handleSuggestionClick = useCallback(async (suggestion: string) => {
+    await handleSendMessage(`Me ajude com: ${suggestion}`);
+  }, [handleSendMessage]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === "k") {
+        event.preventDefault();
+        handleNewConversation();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [handleNewConversation]);
+
+  // Load conversations on mount
+  useEffect(() => {
+    fetchConversations();
+  }, [fetchConversations]);
+
   return (
-    <div className="h-screen flex flex-col">
-      <div className="border-b p-4">
-        <h1 className="text-2xl font-bold">Chat Inteligente</h1>
-        <p className="text-muted-foreground">
-          Converse com nossa IA especializada em diferentes módulos educacionais
-        </p>
-      </div>
-      <div className="flex-1 overflow-hidden">
-        <ChatInterface />
-      </div>
+    <div className="flex-1 flex flex-col h-full bg-gray-50">
+        {/* Header */}
+        <div className="bg-white shadow-sm border-b border-gray-200 p-4 flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div>
+                <h1 className="text-xl font-semibold text-gray-900">
+                  {currentModuleId ? MODULES[currentModuleId]?.label : "Chat"}
+                </h1>
+                {currentModuleId && (
+                  <p className="text-sm text-gray-600">
+                    {MODULES[currentModuleId]?.description}
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleNewConversation}
+                  variant="outline"
+                  size="sm"
+                  className="border-yellow-300 text-yellow-700 hover:bg-yellow-50"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Nova Conversa
+                </Button>
+                <Button
+                  onClick={() => setIsSupportModalOpen(true)}
+                  variant="outline"
+                  size="sm"
+                  className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                >
+                  <Headphones className="w-4 h-4 mr-2" />
+                  Suporte
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Messages Container */}
+        <main className="flex-1 overflow-y-auto chat-messages-container chat-content-with-fixed-input bg-gray-50" ref={messagesContainerRef}>
+          {hasMessages ? (
+            <div className="p-4 space-y-4">
+              {messages.map((message, index) =>
+                message.isStreaming ? (
+                  <StreamingMessage
+                    key={`streaming-${message.id || index}`}
+                    content={message.content}
+                    userInitials="U"
+                    isComplete={!isStreaming && index === messages.length - 1}
+                    currentModuleId={currentModuleId}
+                    tier={message.tier}
+                    model={message.model}
+                    tokens={message.tokens}
+                  />
+                ) : (
+                  <ChatMessage
+                    key={`message-${message.id || index}`}
+                    message={message}
+                    isUser={message.role === "user"}
+                    userInitials="U"
+                    currentModuleId={currentModuleId}
+                    conversationId={currentConversation?.id || ''}
+                    messageIndex={index}
+                  />
+                )
+              )}
+            </div>
+          ) : currentModuleId ? (
+            <ModuleWelcome
+              moduleId={currentModuleId}
+              onSuggestionClick={handleSuggestionClick}
+              quotaAvailable={true}
+            />
+          ) : (
+            <GeneralWelcome
+              selectedModule={selectedModule}
+              selectedModuleLabel={null}
+              onModuleSelect={(moduleId: string) => handleSelectModule(moduleId)}
+              onSuggestionClick={handleSuggestionClick}
+              quotaAvailable={true}
+            />
+          )}
+        </main>
+
+        {/* Chat Input - Fixed at bottom */}
+        <div className="chat-input-fixed">
+          <div className="max-w-none mx-auto">
+            <ChatInput
+              message={inputMessage}
+              onMessageChange={setInputMessage}
+              onSendMessage={handleSendMessage}
+              isStreaming={isStreaming}
+              disabled={false}
+              placeholder={
+                currentModuleId 
+                  ? `Digite sua pergunta sobre ${MODULES[currentModuleId]?.label?.toLowerCase()}...`
+                  : "Digite sua pergunta ou escolha um módulo..."
+              }
+            />
+          </div>
+        </div>
+
+        {/* Support Modal */}
+        <SupportModal
+          isOpen={isSupportModalOpen}
+          onClose={() => setIsSupportModalOpen(false)}
+        />
     </div>
-  )
+  );
 }

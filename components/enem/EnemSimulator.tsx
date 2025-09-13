@@ -52,7 +52,7 @@ export function EnemSimulator({ area, numQuestions, duration }: EnemSimulatorPro
       finishSimulation()
     }
     return () => clearInterval(interval)
-  }, [isActive, timeLeft, finishSimulation])
+  }, [isActive, timeLeft, finishSimulation, setTimeLeft])
 
   const handleStart = () => {
     startSimulation(duration)

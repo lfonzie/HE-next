@@ -1,0 +1,581 @@
+/* ===== COLLAPSIBLE SIDEBAR STYLES ===== */
+
+/* Sidebar Container */
+.collapsible-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  z-index: 1000;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border-right: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.collapsible-sidebar.collapsed {
+  width: 80px;
+}
+
+.collapsible-sidebar.expanded {
+  width: 280px;
+}
+
+/* Sidebar Icons Panel */
+.collapsible-sidebar-icons {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 20px 16px;
+  gap: 24px;
+}
+
+/* Logo Section */
+.collapsible-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  border: 1px solid #cbd5e1;
+  transition: all 0.3s ease;
+}
+
+.collapsible-logo:hover {
+  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.collapsible-logo-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.collapsible-school-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+  line-height: 1.2;
+}
+
+.collapsible-powered-by {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* Modules Section */
+.collapsible-modules {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+/* Actions Section */
+.collapsible-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: auto;
+}
+
+/* Action Icons */
+.collapsible-action-icon {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  font-weight: 500;
+  min-height: 48px;
+}
+
+.collapsible-action-icon:hover {
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  color: #1e293b;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.collapsible-action-icon.logout:hover {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  color: #dc2626;
+}
+
+.collapsible-action-label {
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Expand Button */
+.collapsible-expand-btn {
+  position: absolute;
+  top: 50%;
+  right: -12px;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.collapsible-expand-btn:hover {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Mobile Hamburger Button */
+.mobile-hamburger-btn {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1001;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.mobile-hamburger-btn:hover {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+  transform: scale(1.05);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Mobile Sidebar Overlay */
+.mobile-sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.mobile-sidebar-overlay.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.mobile-sidebar-content {
+  width: 320px;
+  max-width: 85vw;
+  height: 100%;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border-right: 1px solid #e2e8f0;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.mobile-sidebar-overlay.open .mobile-sidebar-content {
+  transform: translateX(0);
+}
+
+/* Mobile Header */
+.mobile-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  border-bottom: 1px solid #e2e8f0;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+}
+
+.mobile-sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mobile-sidebar-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.mobile-sidebar-subtitle {
+  font-size: 12px;
+  color: #64748b;
+  margin: 0;
+}
+
+.mobile-close-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  border: none;
+  background: #f1f5f9;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.mobile-close-btn:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+  transform: scale(1.05);
+}
+
+/* Mobile Content Body */
+.mobile-sidebar-content-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 20px;
+  gap: 20px;
+}
+
+.mobile-modules-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mobile-module-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 12px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 16px;
+  font-weight: 500;
+  text-align: left;
+  width: 100%;
+}
+
+.mobile-module-btn:hover {
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  color: #1e293b;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.mobile-module-btn.active {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #1e40af;
+  border: 2px solid #3b82f6;
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.15);
+}
+
+/* Mobile Footer */
+.mobile-sidebar-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 20px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.mobile-user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+}
+
+.mobile-user-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mobile-user-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+.mobile-user-role {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+}
+
+.mobile-admin-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mobile-admin-btn {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.mobile-admin-btn.system-admin {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  border-color: #b91c1c;
+  color: white;
+}
+
+.mobile-admin-btn.admin-escola {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  border-color: #047857;
+  color: white;
+}
+
+.mobile-admin-btn.admin {
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  border-color: #6d28d9;
+  color: white;
+}
+
+.mobile-logout-btn {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border-color: #fecaca;
+  color: #dc2626;
+  transition: all 0.3s ease;
+}
+
+.mobile-logout-btn:hover {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Backdrop */
+.collapsible-sidebar-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.collapsible-sidebar-backdrop.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Responsive Design */
+@media (max-width: 767px) {
+  .collapsible-sidebar {
+    display: none;
+  }
+  
+  .mobile-hamburger-btn {
+    display: flex;
+  }
+}
+
+@media (min-width: 768px) {
+  .mobile-hamburger-btn {
+    display: none;
+  }
+  
+  .mobile-sidebar-overlay {
+    display: none;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .collapsible-sidebar {
+    background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+    border-right-color: #334155;
+  }
+  
+  .collapsible-logo {
+    background: linear-gradient(135deg, #334155 0%, #475569 100%);
+    border-color: #475569;
+  }
+  
+  .collapsible-school-name {
+    color: #f1f5f9;
+  }
+  
+  .collapsible-powered-by {
+    color: #94a3b8;
+  }
+  
+  .collapsible-action-icon {
+    color: #94a3b8;
+  }
+  
+  .collapsible-action-icon:hover {
+    background: linear-gradient(135deg, #334155 0%, #475569 100%);
+    color: #f1f5f9;
+  }
+  
+  .mobile-sidebar-content {
+    background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+    border-right-color: #334155;
+  }
+  
+  .mobile-sidebar-header {
+    background: linear-gradient(135deg, #334155 0%, #475569 100%);
+    border-bottom-color: #334155;
+  }
+  
+  .mobile-sidebar-title {
+    color: #f1f5f9;
+  }
+  
+  .mobile-sidebar-subtitle {
+    color: #94a3b8;
+  }
+  
+  .mobile-close-btn {
+    background: #334155;
+    color: #94a3b8;
+  }
+  
+  .mobile-close-btn:hover {
+    background: #475569;
+    color: #f1f5f9;
+  }
+  
+  .mobile-module-btn {
+    color: #94a3b8;
+  }
+  
+  .mobile-module-btn:hover {
+    background: linear-gradient(135deg, #334155 0%, #475569 100%);
+    color: #f1f5f9;
+  }
+  
+  .mobile-module-btn.active {
+    background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%);
+    color: #dbeafe;
+    border-color: #3b82f6;
+  }
+  
+  .mobile-user-info {
+    background: linear-gradient(135deg, #334155 0%, #475569 100%);
+  }
+  
+  .mobile-user-name {
+    color: #f1f5f9;
+  }
+  
+  .mobile-user-role {
+    color: #94a3b8;
+  }
+  
+  .mobile-sidebar-footer {
+    border-top-color: #334155;
+  }
+}
+
+/* Animation Classes */
+.sidebar-expanded {
+  margin-left: 280px;
+}
+
+.sidebar-collapsed {
+  margin-left: 80px;
+}
+
+/* Active Module Styles */
+.active-module {
+  position: relative;
+  overflow: hidden;
+}
+
+.active-module::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.1) 100%);
+  border-radius: 12px;
+  z-index: -1;
+}
+
+/* Focus States */
+.collapsible-action-icon:focus,
+.mobile-module-btn:focus,
+.mobile-close-btn:focus,
+.collapsible-expand-btn:focus,
+.mobile-hamburger-btn:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .collapsible-sidebar,
+  .collapsible-action-icon,
+  .mobile-sidebar-content,
+  .mobile-module-btn,
+  .mobile-close-btn,
+  .collapsible-expand-btn,
+  .mobile-hamburger-btn {
+    transition: none;
+  }
+  
+  .collapsible-action-icon:hover,
+  .mobile-module-btn:hover,
+  .mobile-close-btn:hover,
+  .collapsible-expand-btn:hover,
+  .mobile-hamburger-btn:hover {
+    transform: none;
+  }
+}

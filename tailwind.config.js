@@ -8,6 +8,7 @@ module.exports = {
     './components/**/*.{ts,tsx}',
     './app/**/*.{ts,tsx}',
     './src/**/*.{ts,tsx}',
+    './sections/**/*.{ts,tsx}',
   ],
   theme: {
     container: {
@@ -51,6 +52,15 @@ module.exports = {
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
+        },
+        // Custom colors for HubEdu.ia branding
+        yellow: {
+          400: "#facc15",
+          500: "#eab308",
+          600: "#ca8a04",
+        },
+        orange: {
+          500: "#f97316",
         },
       },
       borderRadius: {

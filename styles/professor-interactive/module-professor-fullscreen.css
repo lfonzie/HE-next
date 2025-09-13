@@ -1,0 +1,378 @@
+/* CSS específico para module-professor-interactive sem sidebar/header */
+
+/* Sobrescrever TODAS as regras do CollapsibleSidebar.css para esta página */
+.module-professor-page {
+  /* Remover qualquer margem ou padding relacionado ao sidebar */
+  margin: 0 !important;
+  padding: 0 !important;
+  padding-top: 0px !important; /* Removido padding superior para evitar faixa cinza */
+  width: 100vw !important;
+  height: 100vh !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  z-index: 1 !important;
+  /* Forçar remoção de qualquer espaçamento do sidebar */
+  transform: none !important;
+  overflow: hidden !important;
+}
+
+/* FORÇAR REMOÇÃO DE TODOS OS ESPAÇOS SUPERIORES */
+.module-professor-page * {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* EXCEÇÃO: Removido padding superior no container principal */
+.module-professor-page.module-professor-scroll {
+  padding-top: 0px !important; /* Removido para evitar faixa cinza */
+}
+
+.module-professor-page .module-header {
+  margin-top: 0 !important;
+  padding-top: 1rem !important; /* Adicionado padding superior para dar espaço */
+}
+
+.module-professor-page .module-header > * {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* FORÇAR REMOÇÃO DE ESPAÇOS EM TODOS OS ELEMENTOS */
+.module-professor-page .px-4 {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+  padding-top: 1rem !important; /* Adicionado padding superior para dar espaço */
+  padding-bottom: 0 !important;
+}
+
+.module-professor-page .py-4 {
+  padding-top: 0 !important;
+  padding-bottom: 1rem !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* REMOVER QUALQUER ESPAÇO DO HEADER */
+.module-professor-page .module-header .px-5 {
+  padding-left: 1.25rem !important;
+  padding-right: 1.25rem !important;
+  padding-top: 1rem !important; /* Adicionado padding superior para dar espaço */
+  padding-bottom: 1rem !important;
+}
+
+/* Container principal sem espaços reservados */
+.module-professor-page .module-professor-scroll {
+  width: 100vw !important;
+  height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  position: relative !important;
+  left: 0 !important;
+  top: 0 !important;
+  overflow: hidden !important; /* Evitar scroll extra */
+}
+
+/* Área de conteúdo ocupando toda a tela */
+.module-professor-page .flex.flex-col.h-full.w-full {
+  width: 100vw !important;
+  height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  position: relative !important;
+  left: 0 !important;
+  top: 0 !important;
+  overflow: hidden !important; /* Evitar scroll extra */
+}
+
+/* Área de conteúdo da aula sem margens do sidebar */
+.module-professor-page .module-professor-content {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0.5rem !important;
+  padding-top: 0px !important; /* Removido padding superior para evitar faixa cinza */
+  padding-left: 0.5rem !important;
+  padding-right: 0.5rem !important;
+  padding-bottom: 0px !important; /* Removido padding inferior para evitar faixa cinza */
+  position: relative !important;
+  left: 0 !important;
+  top: 0 !important;
+  /* Ajustar altura para considerar o header */
+  height: calc(100vh - 80px) !important;
+  max-height: calc(100vh - 80px) !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* Chat input ocupando toda a largura */
+.module-professor-page .chat-input-container {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 1rem !important;
+  position: relative !important;
+  left: 0 !important;
+}
+
+/* Botão de scroll para o topo ajustado */
+.module-professor-page .module-professor-scroll-to-top {
+  right: 1rem !important;
+  bottom: 120px !important;
+}
+
+/* Botão de fullscreen ajustado */
+.module-professor-page .fixed.top-4.right-4 {
+  top: 1rem !important;
+  right: 1rem !important;
+}
+
+/* Garantir que não há elementos do sidebar visíveis */
+.module-professor-page .collapsible-sidebar {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Manter apenas o ModuleHeader, remover outros headers */
+.module-professor-page .chat-header-responsive,
+.module-professor-page .header {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  height: 0 !important;
+}
+
+/* Permitir ModuleHeader */
+.module-professor-page .module-header {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  position: relative !important;
+  left: 0 !important;
+  top: 0 !important;
+}
+
+/* Remover qualquer espaçamento superior */
+.module-professor-page .collapsible-chat-content {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+}
+
+/* REGRAS ESPECÍFICAS PARA SOBRESCREVER CollapsibleSidebar.css */
+.module-professor-page .collapsible-chat-content {
+  /* Sobrescrever todas as regras de posicionamento do sidebar */
+  position: relative !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  min-height: 100vh !important;
+  max-height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  /* Remover qualquer transição relacionada ao sidebar */
+  transition: none !important;
+  /* Garantir que não há overflow */
+  overflow: visible !important;
+  /* Remover qualquer background que possa estar vindo do sidebar */
+  background: transparent !important;
+  /* Remover bordas e sombras */
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  outline: none !important;
+  /* Remover qualquer transformação */
+  transform: none !important;
+  filter: none !important;
+}
+
+/* Sobrescrever regras específicas do CollapsibleSidebar.css */
+body .module-professor-page .collapsible-chat-content {
+  position: relative !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Sobrescrever regras quando sidebar está expandido */
+body.sidebar-expanded .module-professor-page .collapsible-chat-content {
+  left: 0 !important;
+  width: 100vw !important;
+}
+
+/* Sobrescrever regras para mobile */
+@media (max-width: 768px) {
+  .module-professor-page .collapsible-chat-content {
+    left: 0 !important;
+    width: 100vw !important;
+    top: 0 !important;
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+  }
+}
+
+/* Garantir que o conteúdo não seja afetado por regras do sidebar */
+.module-professor-page * {
+  box-sizing: border-box !important;
+}
+
+/* Layout especial para primeiro e último slide - 2 cards separados */
+.module-professor-page .grid.grid-cols-1.lg\\:grid-cols-2.h-96 {
+  gap: 1.5rem !important; /* Espaçamento entre os cards */
+  height: calc(100vh - 80px) !important; /* Altura dinâmica baseada na viewport - menos espaço para header */
+  min-height: 24rem !important; /* Altura mínima */
+}
+
+.module-professor-page .grid .h-full {
+  height: 100% !important; /* Altura total do card */
+}
+
+/* Garantir que os cards ocupem toda a altura disponível */
+.module-professor-page .grid.grid-cols-1.lg\\:grid-cols-2.h-96 > div {
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* Card do texto */
+.module-professor-page .grid .bg-gradient-to-br.from-yellow-50.to-white {
+  background: linear-gradient(135deg, #fefce8 0%, #ffffff 100%) !important;
+  height: 100% !important;
+  min-height: 100% !important;
+}
+
+/* Container de fundo do card de texto - deve ir até o final */
+.module-professor-page .grid .bg-gradient-to-br.from-yellow-50.to-white .card-content,
+.module-professor-page .grid .bg-gradient-to-br.from-yellow-50.to-white > div {
+  height: 100% !important;
+  min-height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* Garantir que o Card component ocupe toda altura */
+.module-professor-page .grid .bg-gradient-to-br.from-yellow-50.to-white .card {
+  height: 100% !important;
+  min-height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.module-professor-page .grid .bg-gradient-to-br.from-yellow-50.to-white .card .card-content {
+  height: 100% !important;
+  min-height: 100% !important;
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* Conteúdo do slide no card de texto */
+.module-professor-page .grid .text-gray-800.leading-relaxed.whitespace-pre-wrap {
+  font-size: 1rem !important;
+  line-height: 1.6 !important;
+  color: #1f2937 !important;
+  max-height: calc(100% - 60px) !important; /* Subtrair espaço do cabeçalho */
+  overflow-y: auto !important;
+  padding-right: 0.5rem !important;
+  padding-top: 1rem !important;
+}
+
+/* Scrollbar personalizada para o conteúdo do slide */
+.module-professor-page .grid .text-gray-800.leading-relaxed.whitespace-pre-wrap::-webkit-scrollbar {
+  width: 4px !important;
+}
+
+.module-professor-page .grid .text-gray-800.leading-relaxed.whitespace-pre-wrap::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05) !important;
+  border-radius: 2px !important;
+}
+
+.module-professor-page .grid .text-gray-800.leading-relaxed.whitespace-pre-wrap::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2) !important;
+  border-radius: 2px !important;
+}
+
+/* Botões de navegação - devem ficar na parte inferior */
+.module-professor-page .flex.justify-between.items-center.mt-6 {
+  margin-top: auto !important; /* Empurra para baixo */
+  padding-top: 1rem !important;
+  position: relative !important;
+  bottom: 0 !important;
+}
+
+/* Container dos botões */
+.module-professor-page .flex.justify-between.items-center.mt-6 > div {
+  width: 100% !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+}
+
+/* Card da imagem */
+.module-professor-page .grid .overflow-hidden {
+  overflow: hidden !important;
+}
+
+@media (max-width: 1023px) {
+  .module-professor-page .grid.grid-cols-1.lg\\:grid-cols-2.h-96 {
+    height: auto !important; /* Altura automática em mobile */
+  }
+  
+  .module-professor-page .grid .h-full {
+    min-height: 200px !important; /* Altura mínima em mobile */
+  }
+}
+
+/* Responsividade para mobile */
+@media (max-width: 768px) {
+  .module-professor-page {
+    width: 100vw !important;
+    height: 100vh !important;
+  }
+  
+  .module-professor-page .module-professor-content {
+    padding: 0.75rem !important;
+    padding-top: 0px !important; /* Removido padding superior em mobile para evitar faixa cinza */
+    padding-bottom: 0px !important; /* Removido padding inferior em mobile para evitar faixa cinza */
+  }
+  
+  .module-professor-page .chat-input-container {
+    padding: 0.75rem !important;
+  }
+}
+
+/* Modo fullscreen */
+.module-professor-page.fullscreen-mode {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 9999 !important;
+  background: white !important;
+  overflow: hidden !important; /* Evitar scroll extra */
+}
+
+.module-professor-page.fullscreen-mode .module-professor-scroll {
+  width: 100vw !important;
+  height: 100vh !important;
+  overflow: hidden !important; /* Evitar scroll extra */
+}
+
+.module-professor-page.fullscreen-mode .flex.flex-col.h-full.w-full {
+  width: 100vw !important;
+  height: 100vh !important;
+  overflow: hidden !important; /* Evitar scroll extra */
+}
+

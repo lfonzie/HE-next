@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
 
     const sessions = await prisma.enemSession.findMany({
       where: { userId: session.user.id },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { created_at: 'desc' },
       take: 10
     })
 

@@ -80,6 +80,7 @@ export default function RegisterPage() {
                 placeholder="Seu nome completo"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                autoComplete="name"
                 required
               />
             </div>
@@ -91,6 +92,7 @@ export default function RegisterPage() {
                 placeholder="seu@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
                 required
               />
             </div>
@@ -102,6 +104,7 @@ export default function RegisterPage() {
                 placeholder="Sua senha"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                autoComplete="new-password"
                 required
               />
             </div>
@@ -113,6 +116,7 @@ export default function RegisterPage() {
                 placeholder="Confirme sua senha"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
+                autoComplete="new-password"
                 required
               />
             </div>

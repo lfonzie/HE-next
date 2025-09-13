@@ -13,7 +13,9 @@ import { ModuleType } from '@/types'
 export function ChatInterface() {
   const [message, setMessage] = useState('')
   const [selectedModule, setSelectedModule] = useState<ModuleType>('professor')
-  const { messages, sendMessage, isLoading, clearMessages } = useChat()
+  const { currentConversation, sendMessage, isStreaming, startNewConversation } = useChat()
+  const messages = currentConversation?.messages || []
+  const isLoading = isStreaming
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -36,7 +38,7 @@ export function ChatInterface() {
       <div className="p-4 border-b">
         <ModuleSelector 
           selectedModule={selectedModule}
-          onModuleChange={setSelectedModule}
+          onSelectModule={(moduleId: string) => setSelectedModule(moduleId as ModuleType)}
         />
       </div>
       
@@ -73,7 +75,7 @@ export function ChatInterface() {
                 type="button" 
                 variant="ghost" 
                 size="sm"
-                onClick={clearMessages}
+                onClick={() => startNewConversation(selectedModule)}
               >
                 Limpar conversa
               </Button>
