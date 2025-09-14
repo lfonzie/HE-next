@@ -22,11 +22,27 @@ echo "   DATABASE_URL: ${DATABASE_URL:+SET}"
 echo "   NEXTAUTH_URL: ${NEXTAUTH_URL:+SET}"
 echo "   ENEM_API_URL: ${ENEM_API_URL:+SET}"
 
+# Verify build artifacts exist
+echo -e "${BLUE}🔍 Verificando builds...${NC}"
+if [ ! -d ".next" ]; then
+    echo -e "${RED}❌ HubEdu.ai build not found - .next directory missing${NC}"
+    echo -e "${YELLOW}💡 Run 'npm run build:hubedu' first${NC}"
+    exit 1
+fi
+
+if [ ! -d "enem-api-main/.next" ]; then
+    echo -e "${RED}❌ ENEM API build not found - .next directory missing${NC}"
+    echo -e "${YELLOW}💡 Run 'npm run build:enem' first${NC}"
+    exit 1
+fi
+
+echo -e "${GREEN}✅ Build artifacts verified${NC}"
+
 # Start both services with concurrently, ensuring ENEM API uses port 11000
 echo -e "${GREEN}🎓 Iniciando HubEdu.ai na porta $PORT...${NC}"
 echo -e "${GREEN}📚 Iniciando ENEM API na porta 11000...${NC}"
 echo -e "${BLUE}📝 Iniciando servidores Next.js...${NC}"
 
 concurrently --kill-others --prefix-colors "blue,green" --names "HubEdu,ENEM-API" \
-  "next start" \
-  "cd enem-api-main && PORT=11000 npm start" 2>&1 | tee hubedu.log
+  "next start 2>&1 | tee hubedu.log" \
+  "cd enem-api-main && PORT=11000 npm start 2>&1 | tee enem-api.log"

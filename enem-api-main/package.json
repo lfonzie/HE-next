@@ -5,7 +5,7 @@
     "scripts": {
         "dev": "next dev -p 3100",
         "build": "npx prisma generate && next build",
-        "start": "next start",
+        "start": "next start -p ${PORT:-3000}",
         "lint": "next lint",
         "format": "prettier --write \"**/*.{ts,tsx}\"",
         "docs": "cd docs && mintlify dev --port 3001"
@@ -33,7 +33,7 @@
         "zod-openapi": "^2.19.0"
     },
     "devDependencies": {
-        "@types/node": "^22.7.5",
+        "@types/node": "^22.18.3",
         "@types/react": "^18",
         "@types/react-dom": "^18",
         "eslint": "^8",

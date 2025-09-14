@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Render Build Script for HubEdu.ai + ENEM API
-echo "🚀 Iniciando build para Render..."
+echo "🔨 Building HubEdu.ai and ENEM API for Render deployment..."
 
 # Colors for output
 RED='\033[0;31m'
@@ -10,64 +10,43 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Function to check if command exists
-command_exists() {
-    command -v "$1" >/dev/null 2>&1
-}
+# Set environment variables for production
+export NODE_ENV=production
 
-# Check Node.js version
-echo -e "${BLUE}🔍 Verificando Node.js...${NC}"
-if command_exists node; then
-    NODE_VERSION=$(node --version)
-    echo -e "${GREEN}✅ Node.js: $NODE_VERSION${NC}"
-else
-    echo -e "${RED}❌ Node.js não encontrado${NC}"
-    exit 1
-fi
+# Log environment variables for debugging
+echo -e "${BLUE}🔍 Build Environment:${NC}"
+echo "   NODE_ENV: $NODE_ENV"
+echo "   DATABASE_URL: ${DATABASE_URL:+SET}"
+echo "   NEXTAUTH_URL: ${NEXTAUTH_URL:+SET}"
+echo "   ENEM_API_URL: ${ENEM_API_URL:+SET}"
 
-# Check npm version
-echo -e "${BLUE}🔍 Verificando npm...${NC}"
-if command_exists npm; then
-    NPM_VERSION=$(npm --version)
-    echo -e "${GREEN}✅ npm: $NPM_VERSION${NC}"
-else
-    echo -e "${RED}❌ npm não encontrado${NC}"
-    exit 1
-fi
-
-# Install dependencies for main app
-echo -e "${BLUE}📦 Instalando dependências do HubEdu.ai...${NC}"
+# Install dependencies for main project
+echo -e "${GREEN}📦 Installing HubEdu.ai dependencies...${NC}"
 npm install --prefer-offline --no-audit
 
-if [ $? -ne 0 ]; then
-    echo -e "${RED}❌ Falha ao instalar dependências do HubEdu.ai${NC}"
-    exit 1
-fi
-
-# Note: ENEM API is deployed as a separate service on Render
-echo -e "${YELLOW}ℹ️  ENEM API será construído como serviço separado no Render${NC}"
-
-# Generate Prisma client for main app
-echo -e "${BLUE}🗄️  Gerando cliente Prisma para HubEdu.ai...${NC}"
-npx prisma generate
-
-if [ $? -ne 0 ]; then
-    echo -e "${RED}❌ Falha ao gerar cliente Prisma${NC}"
-    exit 1
-fi
-
-# Build main app
-echo -e "${BLUE}🔨 Construindo HubEdu.ai...${NC}"
+# Build HubEdu.ai
+echo -e "${GREEN}🏗️ Building HubEdu.ai...${NC}"
 npm run build:hubedu
 
-if [ $? -ne 0 ]; then
-    echo -e "${RED}❌ Falha ao construir HubEdu.ai${NC}"
+# Check if HubEdu.ai build was successful
+if [ ! -d ".next" ]; then
+    echo -e "${RED}❌ HubEdu.ai build failed - .next directory not found${NC}"
     exit 1
 fi
+echo -e "${GREEN}✅ HubEdu.ai build successful${NC}"
 
-echo -e "${GREEN}✅ Build concluído com sucesso!${NC}"
-echo -e "${BLUE}📊 Resumo do build:${NC}"
-echo -e "   - HubEdu.ai: ✅ Construído"
-echo -e "   - ENEM API: ✅ Serviço separado no Render"
-echo -e "   - Prisma: ✅ Cliente gerado"
-echo -e "   - Migrações: ✅ Executadas"
+# Build ENEM API
+echo -e "${GREEN}🏗️ Building ENEM API...${NC}"
+npm run build:enem
+
+# Check if ENEM API build was successful
+if [ ! -d "enem-api-main/.next" ]; then
+    echo -e "${RED}❌ ENEM API build failed - .next directory not found${NC}"
+    exit 1
+fi
+echo -e "${GREEN}✅ ENEM API build successful${NC}"
+
+echo -e "${GREEN}🎉 All builds completed successfully!${NC}"
+echo -e "${BLUE}📁 Build artifacts:${NC}"
+echo "   HubEdu.ai: .next/"
+echo "   ENEM API: enem-api-main/.next/"
