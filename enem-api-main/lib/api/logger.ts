@@ -44,7 +44,7 @@ export async function logger(request: NextRequest) {
             timestamp,
         };
 
-        await prisma.log.create({
+        await prisma.enemLog.create({
             data: logEntry,
         });
     } catch (error) {

@@ -7,7 +7,10 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
-model Log {
+// Usar apenas as tabelas que o ENEM API precisa
+// As outras tabelas já existem no banco principal
+
+model enemLog {
     id        Int      @id @default(autoincrement())
     url       String
     method    String
@@ -20,5 +23,42 @@ model Log {
     latitude  Float?
     longitude Float?
     timestamp DateTime @default(now())
+}
+
+model enemQuestion {
+    id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+    area       String   @db.VarChar(50)
+    disciplina String   @db.VarChar(100)
+    stem       String
+    a          String
+    b          String
+    c          String
+    d          String
+    e          String
+    correct    String   @db.VarChar(1)
+    source     String   @default("Manual") @db.VarChar(50)
+    created_at DateTime @default(now()) @db.Timestamp(6)
+    updated_at DateTime @default(now()) @db.Timestamp(6)
+
+    @@index([area], map: "idx_enem_questions_area")
+    @@index([disciplina], map: "idx_enem_questions_disciplina")
+}
+
+model enemSession {
+    id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+    userId       String   @db.Uuid
+    area         String   @db.VarChar(50)
+    numQuestions Int
+    durationMs   Int
+    startedAt    DateTime @db.Timestamp(6)
+    finishedAt   DateTime @db.Timestamp(6)
+    questions    Json
+    answers      Json
+    score        Int?
+    created_at   DateTime @default(now()) @db.Timestamp(6)
+    updated_at   DateTime @default(now()) @db.Timestamp(6)
+
+    @@index([userId], map: "idx_enem_sessions_user")
+    @@index([area], map: "idx_enem_sessions_area")
 }
 

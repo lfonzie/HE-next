@@ -63,9 +63,9 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# Push Prisma schema for ENEM API
-echo -e "${BLUE}🗄️  Aplicando schema do ENEM API...${NC}"
-npx prisma db push --accept-data-loss
+# Generate Prisma client for ENEM API (schema já existe no banco)
+echo -e "${BLUE}🗄️  Gerando cliente Prisma para ENEM API...${NC}"
+echo -e "${YELLOW}ℹ️  Schema já existe no banco, apenas gerando cliente${NC}"
 
 if [ $? -ne 0 ]; then
     echo -e "${RED}❌ Falha ao executar migrações${NC}"
