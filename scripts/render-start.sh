@@ -147,9 +147,9 @@ check_health() {
 if check_health; then
     echo -e "${GREEN}🎉 HubEdu.ai is running successfully!${NC}"
     echo -e "${BLUE}📊 Health endpoints:${NC}"
-    echo "   - /api/health (comprehensive health check)"
+    echo "   - /api/health (app health check - no external dependencies)"
     echo "   - /api/healthz (basic health check)"
-    echo "   - /api/enem/health (ENEM API health check)"
+    echo "   - /api/health-detailed (detailed app monitoring)"
     
     # Keep the script running and show logs
     echo -e "${BLUE}📝 Following application logs...${NC}"

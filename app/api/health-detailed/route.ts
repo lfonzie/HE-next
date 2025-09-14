@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server';
-import { enemApi } from '@/lib/enem-api';
 
 export async function GET() {
   try {
     const startTime = Date.now();
     
-    // Detailed health check that includes external service checks
+    // Detailed health check for APP ONLY - no external dependencies
     // This endpoint is for monitoring purposes, not for Render deployment checks
     const health = {
       status: 'healthy',
@@ -25,39 +24,28 @@ export async function GET() {
         application: true,
         environment: !!process.env.NODE_ENV,
         port: !!process.env.PORT,
-        enemApi: false, // Will be updated below
+        // Environment variables check (no external API calls)
         openai: !!process.env.OPENAI_API_KEY,
-        unsplash: !!process.env.UNSPLASH_API_KEY
+        unsplash: !!process.env.UNSPLASH_API_KEY,
+        nextauth: !!process.env.NEXTAUTH_SECRET,
+        database: !!process.env.DATABASE_URL
       },
       endpoints: {
         health: '/api/health',
         healthz: '/api/healthz',
         healthDetailed: '/api/health-detailed',
-        enemHealth: '/api/enem/health',
         enemQuestions: '/api/enem/questions',
-        enemExams: '/api/enem/exams',
+        enemProgressive: '/api/enem/progressive',
         auth: '/api/auth',
         chat: '/api/chat',
         interactive: '/test-hubedu-interactive'
       }
     };
 
-    // Check ENEM API availability (with timeout)
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
-      
-      health.checks.enemApi = await enemApi.checkApiAvailability();
-      clearTimeout(timeoutId);
-    } catch (error) {
-      console.warn('ENEM API check failed:', error);
-      health.checks.enemApi = false;
-    }
-
     // Calculate response time
     health.responseTime = Date.now() - startTime;
 
-    // Return 200 even if external services fail - this is for monitoring
+    // Return 200 - this is for app monitoring only
     return NextResponse.json(health, { status: 200 });
   } catch (error) {
     console.error('Detailed health check error:', error);
