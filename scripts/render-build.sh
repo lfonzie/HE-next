@@ -37,7 +37,7 @@ fi
 
 # Install dependencies for main app
 echo -e "${BLUE}📦 Instalando dependências do HubEdu.ai...${NC}"
-npm ci --prefer-offline --no-audit
+npm install --prefer-offline --no-audit
 
 if [ $? -ne 0 ]; then
     echo -e "${RED}❌ Falha ao instalar dependências do HubEdu.ai${NC}"
@@ -47,7 +47,7 @@ fi
 # Install dependencies for ENEM API
 echo -e "${BLUE}📦 Instalando dependências do ENEM API...${NC}"
 cd enem-api-main
-npm ci --prefer-offline --no-audit
+npm install --prefer-offline --no-audit
 
 if [ $? -ne 0 ]; then
     echo -e "${RED}❌ Falha ao instalar dependências do ENEM API${NC}"
