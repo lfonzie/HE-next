@@ -33,7 +33,7 @@
         "zod-openapi": "^2.19.0"
     },
     "devDependencies": {
-        "@types/node": "^20",
+        "@types/node": "^22.7.5",
         "@types/react": "^18",
         "@types/react-dom": "^18",
         "eslint": "^8",
