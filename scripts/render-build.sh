@@ -65,7 +65,7 @@ fi
 
 # Push Prisma schema for ENEM API
 echo -e "${BLUE}🗄️  Aplicando schema do ENEM API...${NC}"
-npx prisma db push
+npx prisma db push --accept-data-loss
 
 if [ $? -ne 0 ]; then
     echo -e "${RED}❌ Falha ao executar migrações${NC}"
