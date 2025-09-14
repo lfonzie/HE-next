@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Render Start Script for HubEdu.ai + ENEM API
-echo "🚀 Iniciando HubEdu.ai + ENEM API no Render..."
+# Render Start Script for HubEdu.ai Main Application
+echo "🚀 Iniciando HubEdu.ai no Render..."
 
 # Colors for output
 RED='\033[0;31m'
@@ -24,57 +24,41 @@ check_port() {
     fi
 }
 
-# Function to start ENEM API
-start_enem_api() {
-    echo -e "${GREEN}📚 Iniciando ENEM API na porta 3001...${NC}"
-    cd enem-api-main
-    
-    # Set ENEM API port
-    export PORT=3001
-    
-    # Start ENEM API
-    npm start > ../enem-api.log 2>&1 &
-    ENEM_PID=$!
-    echo "ENEM API PID: $ENEM_PID" > ../enem-api.pid
-    
-    # Wait a bit for ENEM API to start
-    sleep 3
-    
-    # Check if ENEM API is running
-    if check_port 3001; then
-        echo -e "${GREEN}✅ ENEM API rodando na porta 3001${NC}"
-    else
-        echo -e "${RED}❌ Falha ao iniciar ENEM API${NC}"
-        return 1
-    fi
-    
-    cd ..
-}
-
 # Function to start HubEdu.ai
 start_hubedu() {
     echo -e "${GREEN}🎓 Iniciando HubEdu.ai na porta $PORT...${NC}"
     
+    # Log environment variables for debugging
+    echo -e "${BLUE}🔍 Environment Variables:${NC}"
+    echo "   NODE_ENV: $NODE_ENV"
+    echo "   PORT: $PORT"
+    echo "   DATABASE_URL: ${DATABASE_URL:+SET}"
+    echo "   NEXTAUTH_URL: ${NEXTAUTH_URL:+SET}"
+    echo "   ENEM_API_URL: ${ENEM_API_URL:+SET}"
+    
     # Start HubEdu.ai
-    npm start > hubedu.log 2>&1 &
+    echo -e "${BLUE}📝 Iniciando servidor Next.js...${NC}"
+    npm start 2>&1 | tee hubedu.log &
     HUBEDU_PID=$!
     echo "HubEdu.ai PID: $HUBEDU_PID" > hubedu.pid
     
     # Wait a bit for HubEdu.ai to start
-    sleep 3
+    sleep 5
     
     # Check if HubEdu.ai is running
     if check_port $PORT; then
         echo -e "${GREEN}✅ HubEdu.ai rodando na porta $PORT${NC}"
+        echo -e "${BLUE}🌐 Acesse: http://localhost:$PORT${NC}"
     else
         echo -e "${RED}❌ Falha ao iniciar HubEdu.ai${NC}"
+        echo -e "${RED}📝 Verifique os logs em hubedu.log${NC}"
         return 1
     fi
 }
 
 # Function to cleanup on exit
 cleanup() {
-    echo -e "\n${YELLOW}🛑 Parando servidores...${NC}"
+    echo -e "\n${YELLOW}🛑 Parando servidor...${NC}"
     
     if [ -f "hubedu.pid" ]; then
         HUBEDU_PID=$(cat hubedu.pid)
@@ -82,41 +66,27 @@ cleanup() {
         rm hubedu.pid
     fi
     
-    if [ -f "enem-api.pid" ]; then
-        ENEM_PID=$(cat enem-api.pid)
-        kill $ENEM_PID 2>/dev/null
-        rm enem-api.pid
-    fi
-    
-    echo -e "${GREEN}✅ Servidores parados${NC}"
+    echo -e "${GREEN}✅ Servidor parado${NC}"
     exit 0
 }
 
 # Set up signal handlers
 trap cleanup SIGINT SIGTERM
 
-# Start ENEM API first
-start_enem_api
-if [ $? -ne 0 ]; then
-    echo -e "${RED}❌ Falha ao iniciar ENEM API. Abortando...${NC}"
-    exit 1
-fi
-
 # Start HubEdu.ai
 start_hubedu
 if [ $? -ne 0 ]; then
     echo -e "${RED}❌ Falha ao iniciar HubEdu.ai. Abortando...${NC}"
-    cleanup
+    echo -e "${RED}📝 Logs disponíveis em hubedu.log${NC}"
     exit 1
 fi
 
-echo -e "\n${BLUE}🎉 Ambos os servidores estão rodando!${NC}"
+echo -e "\n${BLUE}🎉 HubEdu.ai está rodando!${NC}"
 echo -e "${GREEN}📊 Status:${NC}"
 echo -e "   - HubEdu.ai: http://localhost:$PORT"
-echo -e "   - ENEM API: http://localhost:3001"
+echo -e "   - ENEM API: ${ENEM_API_URL:-'Serviço separado no Render'}"
 echo -e "\n${YELLOW}📊 Para ver logs:${NC}"
 echo -e "   HubEdu.ai: tail -f hubedu.log"
-echo -e "   ENEM API: tail -f enem-api.log"
 
 # Keep script running
 wait

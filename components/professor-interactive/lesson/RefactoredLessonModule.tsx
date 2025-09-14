@@ -56,33 +56,53 @@ export default function RefactoredLessonModule({
   
   // Processar slides para seguir padrão HubEdu de 8 slides
   const processedLesson = useMemo(() => {
+    // Se há slides carregados progressivamente, criar uma aula temporária
+    const availableSlides = progressiveLoading.getAvailableSlides();
+    if (availableSlides.length > 0) {
+      return {
+        title: `Aula Interativa - ${query}`,
+        subject: 'Geral',
+        introduction: 'Aula interativa carregada progressivamente',
+        steps: availableSlides,
+        summary: 'Aula em andamento',
+        nextSteps: ['Continue navegando pelos slides']
+      };
+    }
+    
     if (!lesson) return null;
     return {
       ...lesson,
       steps: processSlidesForHubEduPattern(lesson.steps)
     };
-  }, [lesson]);
+  }, [lesson, progressiveLoading, query]);
 
   // Memoized values - usar slides processados
   const currentStep = useMemo(() => {
     if (!processedLesson) return null;
-    // Usar slides carregados progressivamente se disponível
-    const availableSlides = progressiveLoading.getAvailableSlides();
-    if (availableSlides.length > 0 && lessonState.currentStep < availableSlides.length) {
-      return availableSlides[lessonState.currentStep];
+    
+    // Verificar se o índice atual está dentro dos limites
+    if (lessonState.currentStep >= processedLesson.steps.length) {
+      return null;
     }
+    
     return processedLesson.steps[lessonState.currentStep];
-  }, [processedLesson, lessonState.currentStep, progressiveLoading]);
+  }, [processedLesson, lessonState.currentStep]);
 
   const canGoPrevious = useMemo(() => lessonState.currentStep > 0, [lessonState.currentStep]);
   const canGoNext = useMemo(() => {
     if (!processedLesson) return false;
-    const availableSlides = progressiveLoading.getAvailableSlides();
+    
     const currentIndex = lessonState.currentStep;
     
-    // Pode ir para próximo se não estiver gerando e houver próximo slide disponível
-    return !progressiveLoading.loadingState.isGeneratingNext && 
-           (currentIndex < availableSlides.length - 1 || currentIndex < 7);
+    // Se estamos usando slides progressivos, verificar se há próximo slide disponível
+    const availableSlides = progressiveLoading.getAvailableSlides();
+    if (availableSlides.length > 0) {
+      return !progressiveLoading.loadingState.isGeneratingNext && 
+             currentIndex < availableSlides.length - 1;
+    }
+    
+    // Caso contrário, usar a lógica normal
+    return currentIndex < processedLesson.steps.length - 1;
   }, [processedLesson, lessonState.currentStep, progressiveLoading]);
   
   // Função para navegação para o próximo slide

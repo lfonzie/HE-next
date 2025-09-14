@@ -44,47 +44,8 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# Install dependencies for ENEM API
-echo -e "${BLUE}📦 Instalando dependências do ENEM API...${NC}"
-cd enem-api-main
-npm install --prefer-offline --no-audit
-
-if [ $? -ne 0 ]; then
-    echo -e "${RED}❌ Falha ao instalar dependências do ENEM API${NC}"
-    exit 1
-fi
-
-# Generate Prisma client for ENEM API
-echo -e "${BLUE}🗄️  Gerando cliente Prisma para ENEM API...${NC}"
-npx prisma generate
-
-if [ $? -ne 0 ]; then
-    echo -e "${RED}❌ Falha ao gerar cliente Prisma${NC}"
-    exit 1
-fi
-
-# Generate Prisma client for ENEM API (schema já existe no banco)
-echo -e "${BLUE}🗄️  Gerando cliente Prisma para ENEM API...${NC}"
-echo -e "${YELLOW}ℹ️  Schema já existe no banco, apenas gerando cliente${NC}"
-cd enem-api-main
-npx prisma generate
-
-if [ $? -ne 0 ]; then
-    echo -e "${RED}❌ Falha ao gerar cliente Prisma${NC}"
-    exit 1
-fi
-
-# Build ENEM API
-echo -e "${BLUE}🔨 Construindo ENEM API...${NC}"
-npm run build
-
-if [ $? -ne 0 ]; then
-    echo -e "${RED}❌ Falha ao construir ENEM API${NC}"
-    exit 1
-fi
-
-# Go back to main directory
-cd ..
+# Note: ENEM API is deployed as a separate service on Render
+echo -e "${YELLOW}ℹ️  ENEM API será construído como serviço separado no Render${NC}"
 
 # Generate Prisma client for main app
 echo -e "${BLUE}🗄️  Gerando cliente Prisma para HubEdu.ai...${NC}"
@@ -107,6 +68,6 @@ fi
 echo -e "${GREEN}✅ Build concluído com sucesso!${NC}"
 echo -e "${BLUE}📊 Resumo do build:${NC}"
 echo -e "   - HubEdu.ai: ✅ Construído"
-echo -e "   - ENEM API: ✅ Construído"
-echo -e "   - Prisma: ✅ Clientes gerados"
+echo -e "   - ENEM API: ✅ Serviço separado no Render"
+echo -e "   - Prisma: ✅ Cliente gerado"
 echo -e "   - Migrações: ✅ Executadas"

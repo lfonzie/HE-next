@@ -329,13 +329,24 @@ export function EnemSimulator({ area, numQuestions, duration, useRealQuestions =
           {!isActive && !isFinished && (
             <div className="text-center py-8">
               <Target className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-lg font-semibold mb-2">Simulado Pronto!</h3>
+              <h3 className="text-lg font-semibold mb-2">
+                {progressiveLoading.canStart ? 'Simulado Pronto!' : 'Carregando questões...'}
+              </h3>
               <p className="text-muted-foreground mb-4">
                 {numQuestions} questões de {area} • {duration} minutos
+                {progressiveLoading.loadedQuestions.length > 0 && (
+                  <span className="block text-sm text-green-600 mt-2">
+                    {progressiveLoading.loadedQuestions.length} questões carregadas
+                  </span>
+                )}
               </p>
-              <Button onClick={handleStart} size="lg">
+              <Button 
+                onClick={handleStart} 
+                size="lg"
+                disabled={!progressiveLoading.canStart}
+              >
                 <Play className="h-4 w-4 mr-2" />
-                Iniciar Simulado
+                {progressiveLoading.canStart ? 'Iniciar Simulado' : 'Aguarde...'}
               </Button>
             </div>
           )}
