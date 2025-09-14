@@ -368,13 +368,19 @@ export default function RefactoredLessonModule({
                   <Card className="h-fit">
                     <CardHeader>
                       <CardTitle className="text-base">
-                        {currentStep.card1?.title || (currentStep.type === 'question' ? 'Pergunta' : 'Conteúdo Principal')}
+                        {typeof currentStep.card1?.title === 'string' 
+                          ? currentStep.card1.title 
+                          : (currentStep.type === 'question' ? 'Pergunta' : 'Conteúdo Principal')}
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="prose max-w-none">
                         <p className="text-sm leading-relaxed">
-                          {currentStep.card1?.content || currentStep.content || 'Conteúdo do primeiro card'}
+                          {typeof currentStep.card1?.content === 'string' 
+                            ? currentStep.card1.content 
+                            : typeof currentStep.content === 'string'
+                            ? currentStep.content
+                            : 'Conteúdo do primeiro card'}
                         </p>
                       </div>
                     </CardContent>
@@ -384,7 +390,9 @@ export default function RefactoredLessonModule({
                   <Card className="h-fit">
                     <CardHeader>
                       <CardTitle className="text-base">
-                        {currentStep.card2?.title || (currentStep.type === 'question' ? 'Opções de Resposta' : 'Detalhes Adicionais')}
+                        {typeof currentStep.card2?.title === 'string' 
+                          ? currentStep.card2.title 
+                          : (currentStep.type === 'question' ? 'Opções de Resposta' : 'Detalhes Adicionais')}
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -412,11 +420,15 @@ export default function RefactoredLessonModule({
                       {currentStep.type === 'question' && currentStep.card2?.options ? (
                         <div className="mt-4">
                           <QuestionCard
-                            question={currentStep.card1?.content || currentStep.question || 'Pergunta de verificação'}
-                            options={currentStep.card2.options}
+                            question={typeof currentStep.card1?.content === 'string' 
+                              ? currentStep.card1.content 
+                              : typeof currentStep.question === 'string'
+                              ? currentStep.question
+                              : 'Pergunta de verificação'}
+                            options={Array.isArray(currentStep.card2.options) ? currentStep.card2.options : []}
                             correctOption={currentStep.card2.correctOption ?? 0}
-                            helpMessage={currentStep.card2.helpMessage}
-                            correctAnswer={currentStep.card2.correctAnswer}
+                            helpMessage={typeof currentStep.card2.helpMessage === 'string' ? currentStep.card2.helpMessage : undefined}
+                            correctAnswer={typeof currentStep.card2.correctAnswer === 'string' ? currentStep.card2.correctAnswer : undefined}
                             onAnswer={(selectedOption, isCorrect) => 
                               handleAnswer(lessonState.currentStep, selectedOption, isCorrect)
                             }
@@ -429,7 +441,9 @@ export default function RefactoredLessonModule({
                         /* Para slides de explicação, mostrar conteúdo normal */
                         <div className="prose max-w-none">
                           <p className="text-sm leading-relaxed">
-                            {currentStep.card2?.content || 'Conteúdo do segundo card'}
+                            {typeof currentStep.card2?.content === 'string' 
+                              ? currentStep.card2.content 
+                              : 'Conteúdo do segundo card'}
                           </p>
                         </div>
                       )}
