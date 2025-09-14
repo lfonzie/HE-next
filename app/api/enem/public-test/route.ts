@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
       results.tests.apiAvailability = {
         status: isAvailable ? 'success' : 'warning',
         message: isAvailable ? 'API is available' : 'API not available, using fallback',
-        usingLocalServer: enemApi.isUsingLocalServer()
+        apiSource: 'enem-dev-api'
       }
     } catch (error) {
       results.tests.apiAvailability = {
@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
 
     // Teste 4: Verificar configuração
     results.configuration = {
-      localServerEnabled: enemApi.isUsingLocalServer(),
+      apiSource: 'enem-dev-api',
       databaseConnected: true, // Se chegou até aqui, o banco está conectado
       endpoints: {
         health: '/api/enem/health',

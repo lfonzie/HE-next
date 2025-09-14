@@ -10,64 +10,42 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Retornar provas ENEM reais dos últimos anos
-    const exams = [
-      {
-        id: 'enem-2023',
-        year: 2023,
-        type: 'REGULAR',
-        description: 'ENEM 2023 - Prova Regular',
-        questionsCount: 180
-      },
-      {
-        id: 'enem-2022',
-        year: 2022,
-        type: 'REGULAR',
-        description: 'ENEM 2022 - Prova Regular',
-        questionsCount: 180
-      },
-      {
-        id: 'enem-2021',
-        year: 2021,
-        type: 'REGULAR',
-        description: 'ENEM 2021 - Prova Regular',
-        questionsCount: 180
-      },
-      {
-        id: 'enem-2020',
-        year: 2020,
-        type: 'REGULAR',
-        description: 'ENEM 2020 - Prova Regular',
-        questionsCount: 180
-      },
-      {
-        id: 'enem-2019',
-        year: 2019,
-        type: 'REGULAR',
-        description: 'ENEM 2019 - Prova Regular',
-        questionsCount: 180
-      },
-      {
-        id: 'enem-2023-digital',
-        year: 2023,
-        type: 'DIGITAL',
-        description: 'ENEM 2023 - Prova Digital',
-        questionsCount: 180
-      },
-      {
-        id: 'enem-2022-digital',
-        year: 2022,
-        type: 'DIGITAL',
-        description: 'ENEM 2022 - Prova Digital',
-        questionsCount: 180
-      }
-    ]
-    
-    return NextResponse.json({ 
-      exams,
-      total: exams.length,
-      source: 'local-server'
-    })
+    // Buscar provas ENEM reais da API pública
+    try {
+      const exams = await enemApi.getExams()
+      
+      return NextResponse.json({ 
+        exams,
+        total: exams.length,
+        source: 'enem-dev-api'
+      })
+    } catch (error) {
+      console.error('Failed to fetch exams from enem.dev:', error)
+      
+      // Fallback para dados mock se a API falhar
+      const mockExams = [
+        {
+          id: 'enem-2023',
+          year: 2023,
+          type: 'REGULAR',
+          description: 'ENEM 2023 - Prova Regular',
+          questionsCount: 180
+        },
+        {
+          id: 'enem-2022',
+          year: 2022,
+          type: 'REGULAR',
+          description: 'ENEM 2022 - Prova Regular',
+          questionsCount: 180
+        }
+      ]
+      
+      return NextResponse.json({ 
+        exams: mockExams,
+        total: mockExams.length,
+        source: 'mock-data'
+      })
+    }
 
   } catch (error) {
     console.error('ENEM exams API error:', error)

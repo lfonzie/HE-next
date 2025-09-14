@@ -1,5 +1,12 @@
 // lib/enem-api.ts
-// Integração com a API enem.dev para questões reais do ENEM
+// Integração com a API pública enem.dev para questões reais do ENEM
+import OpenAI from 'openai';
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+const ENEM_API_BASE = 'https://api.enem.dev/v1';
 
 export interface EnemExam {
   id: string
@@ -25,12 +32,6 @@ export interface EnemQuestion {
   difficulty?: 'Fácil' | 'Médio' | 'Difícil'
 }
 
-export interface EnemApiResponse<T> {
-  data: T
-  message?: string
-  status: number
-}
-
 export interface EnemFilters {
   year?: number
   area?: string
@@ -41,9 +42,6 @@ export interface EnemFilters {
 }
 
 class EnemApiClient {
-  private baseUrl = 'https://enem.dev/api'
-  private localServerUrl = process.env.ENEM_API_URL || 'http://localhost:3100/v1' // Use environment variable or fallback to localhost
-  private useLocalServer = process.env.NODE_ENV === 'development' // Only use local server in development
   private rateLimitDelay = 1000 // 1 segundo entre requisições
   private lastRequestTime = 0
   private isApiAvailable = true
@@ -61,14 +59,11 @@ class EnemApiClient {
     }
     this.lastRequestTime = Date.now()
 
-    // Usar servidor local se disponível
-    const url = this.useLocalServer ? `${this.localServerUrl}${endpoint}` : `${this.baseUrl}${endpoint}`
-    
     try {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 segundos
 
-      const response = await fetch(url, {
+      const response = await fetch(`${ENEM_API_BASE}${endpoint}`, {
         ...options,
         signal: controller.signal,
         headers: {
@@ -89,7 +84,7 @@ class EnemApiClient {
         if (response.status === 404) {
           // Only log once per availability check interval to avoid spam
           if (this.isApiAvailable) {
-            console.log('📵 ENEM API endpoint not found, falling back to database/AI (cached for 5 minutes)')
+            console.log('📵 ENEM API endpoint not found, falling back to AI generation (cached for 5 minutes)')
           }
           this.isApiAvailable = false
           this.lastAvailabilityCheck = Date.now()
@@ -153,23 +148,6 @@ class EnemApiClient {
   }
 
   /**
-   * Alterna entre servidor local e API externa
-   */
-  setUseLocalServer(useLocal: boolean): void {
-    this.useLocalServer = useLocal
-    this.isApiAvailable = true // Reset availability when switching
-    this.lastAvailabilityCheck = 0 // Force immediate check
-    console.log(`ENEM client switched to ${useLocal ? 'Local Server' : 'External API'}`)
-  }
-
-  /**
-   * Verifica se está usando servidor local
-   */
-  isUsingLocalServer(): boolean {
-    return this.useLocalServer
-  }
-
-  /**
    * Verifica se a API está disponível com cache inteligente
    */
   async checkApiAvailability(): Promise<boolean> {
@@ -192,10 +170,7 @@ class EnemApiClient {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 segundos
 
-      // Verificar servidor local primeiro
-      const checkUrl = this.useLocalServer ? `${this.localServerUrl}/exams` : this.baseUrl
-      
-      const response = await fetch(checkUrl, {
+      const response = await fetch(`${ENEM_API_BASE}/exams`, {
         method: 'HEAD',
         signal: controller.signal,
         headers: {
@@ -207,14 +182,14 @@ class EnemApiClient {
       this.isApiAvailable = response.ok
       
       if (this.isApiAvailable) {
-        console.log(`✅ ENEM ${this.useLocalServer ? 'Local Server' : 'API'} is available`)
+        console.log('✅ ENEM API is available')
       } else {
-        console.log(`📵 ENEM ${this.useLocalServer ? 'Local Server' : 'API'} is currently unavailable (cached for 5 minutes)`)
+        console.log('📵 ENEM API is currently unavailable (cached for 5 minutes)')
       }
       
       return this.isApiAvailable
     } catch (error) {
-      console.log(`ENEM ${this.useLocalServer ? 'Local Server' : 'API'} availability check failed:`, error instanceof Error ? error.message : 'Unknown error')
+      console.log('ENEM API availability check failed:', error instanceof Error ? error.message : 'Unknown error')
       this.isApiAvailable = false
       return false
     }
@@ -224,40 +199,33 @@ class EnemApiClient {
    * Lista todas as provas disponíveis
    */
   async getExams(): Promise<EnemExam[]> {
-    if (!this.isApiAvailable && !this.useLocalServer) {
+    if (!this.isApiAvailable) {
       console.log('API not available, returning mock data')
       return this.getMockExams()
     }
 
     try {
-      if (this.useLocalServer) {
-        // Usar servidor local
-        const response = await fetch(`${this.localServerUrl}/exams`, {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        })
-        
-        if (response.ok) {
-          const data = await response.json()
-          console.log("DEBUG examsData:", JSON.stringify(data).slice(0, 300)); // Debug: Inspect response structure
-          const examsList = Array.isArray(data) ? data : data.data || data.exams || []
-          // Converter formato da API local para formato esperado
-          return examsList.map((exam: any) => ({
-            id: exam.id || `exam-${exam.year}`,
-            year: exam.year,
-            type: exam.type || 'REGULAR',
-            description: exam.description || `ENEM ${exam.year} - Prova Regular`,
-            questionsCount: exam.questionsCount || exam.questions?.length || 0
-          }))
-        } else {
-          throw new Error(`Local server error: ${response.status}`)
-        }
-      } else {
-        // Usar API externa
-        const response = await this.makeRequest<EnemApiResponse<EnemExam[]>>('/exams')
-        return response.data || []
+      const response = await this.makeRequest<any>('/exams')
+      console.log("DEBUG examsData from enem.dev:", JSON.stringify(response).slice(0, 300)); // Debug log
+
+      // Normalizar: A API retorna array ou { data: [...] } ou { exams: [...] }
+      const examsList = Array.isArray(response) ? response : response.data || response.exams || []
+
+      if (examsList.length === 0) {
+        console.log("No exams found in enem.dev API")
+        return this.getMockExams()
       }
+
+      console.log(`✅ Loaded ${examsList.length} exams from enem.dev API`)
+      
+      // Converter formato da API para formato esperado
+      return examsList.map((exam: any) => ({
+        id: exam.id || `exam-${exam.year}`,
+        year: exam.year,
+        type: exam.type || 'REGULAR',
+        description: exam.description || `ENEM ${exam.year} - Prova Regular`,
+        questionsCount: exam.questionsCount || exam.questions?.length || 0
+      }))
     } catch (error) {
       console.error('Failed to fetch exams:', error)
       return this.getMockExams()
@@ -268,89 +236,59 @@ class EnemApiClient {
    * Busca questões com filtros opcionais
    */
   async getQuestions(filters: EnemFilters = {}): Promise<EnemQuestion[]> {
-    if (!this.isApiAvailable && !this.useLocalServer) {
+    if (!this.isApiAvailable) {
       console.log('API not available, returning empty array')
       return []
     }
 
     try {
-      if (this.useLocalServer) {
-        // Usar servidor local - primeiro buscar exames disponíveis
-        const examsResponse = await fetch(`${this.localServerUrl}/exams`, {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        })
-        
-        if (!examsResponse.ok) {
-          throw new Error(`Local server error: ${examsResponse.status}`)
-        }
-        
-        const examsData = await examsResponse.json()
-        console.log("DEBUG examsData:", JSON.stringify(examsData).slice(0, 300)); // Debug: Inspect response structure
-        const examsList = Array.isArray(examsData) ? examsData : examsData.data || examsData.exams || []
-        
-        if (examsList.length === 0) {
-          console.log('No exams found in local server')
-          console.error("ENEM-API fallback: No valid data")
-          return generateFallbackQuestions(area, limit); // Uses process.env.ENEM_FALLBACK_MODEL || "gpt-4o-mini"
-        }
-        
-        // Usar o primeiro exame disponível se não especificado
-        const targetYear = filters.year || examsList[0].year
-        const targetExam = examsList.find((exam: any) => exam.year === targetYear)
-        
-        if (!targetExam) {
-          console.log(`No exam found for year ${targetYear}`)
-          return []
-        }
-        
-        // Buscar questões do exame específico
-        const params = new URLSearchParams()
-        if (filters.limit) params.append('limit', filters.limit.toString())
-        if (filters.offset) params.append('offset', filters.offset.toString())
+      const params = new URLSearchParams()
+      
+      if (filters.year) params.append('year', filters.year.toString())
+      if (filters.area) params.append('discipline', filters.area) // Ajuste o parâmetro conforme docs
+      if (filters.subject) params.append('subject', filters.subject)
+      if (filters.type) params.append('type', filters.type)
+      if (filters.limit) params.append('limit', filters.limit.toString())
+      if (filters.offset) params.append('offset', filters.offset.toString())
 
-        const questionsUrl = `${this.localServerUrl}/exams/${targetYear}/questions${params.toString() ? `?${params.toString()}` : ''}`
-        const questionsResponse = await fetch(questionsUrl, {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        })
-        
-        if (questionsResponse.ok) {
-          const questionsData = await questionsResponse.json()
-          const questions = questionsData.questions || []
-          
-          // Filtrar por área se especificado
-          if (filters.area) {
-            return questions.filter((q: any) => 
-              q.area && q.area.toLowerCase().includes(filters.area!.toLowerCase())
-            )
-          }
-          
-          return questions
-        } else {
-          throw new Error(`Local server error: ${questionsResponse.status}`)
-        }
-      } else {
-        // Usar API externa
-        const params = new URLSearchParams()
-        
-        if (filters.year) params.append('year', filters.year.toString())
-        if (filters.area) params.append('area', filters.area)
-        if (filters.subject) params.append('subject', filters.subject)
-        if (filters.type) params.append('type', filters.type)
-        if (filters.limit) params.append('limit', filters.limit.toString())
-        if (filters.offset) params.append('offset', filters.offset.toString())
+      const endpoint = filters.year 
+        ? `/exams/${filters.year}/questions${params.toString() ? `?${params.toString()}` : ''}`
+        : `/questions${params.toString() ? `?${params.toString()}` : ''}`
+      
+      const response = await this.makeRequest<any>(endpoint)
+      console.log("DEBUG questionsData from enem.dev:", JSON.stringify(response).slice(0, 300)); // Debug log
 
-        const endpoint = `/questions${params.toString() ? `?${params.toString()}` : ''}`
-        const response = await this.makeRequest<EnemApiResponse<EnemQuestion[]>>(endpoint)
-        
-        return response.data || []
+      // Normalizar: A API retorna { metadata: {...}, questions: [...] }
+      const questionsList = Array.isArray(response) 
+        ? response 
+        : response.questions || response.data || []
+
+      if (questionsList.length === 0) {
+        console.log("No questions found in enem.dev API, falling back to AI")
+        return await generateFallbackQuestions(filters.area || 'geral', filters.limit || 10)
       }
+
+      console.log(`✅ Loaded ${questionsList.length} questions from enem.dev API`)
+      
+      // Converter formato da API para formato esperado
+      return questionsList.map((question: any) => ({
+        id: question.id || `q-${Date.now()}-${Math.random()}`,
+        examId: question.examId || `exam-${question.year || 2023}`,
+        year: question.year || filters.year || 2023,
+        type: question.type || 'REGULAR',
+        area: question.area || question.discipline || filters.area || 'geral',
+        subject: question.subject || question.area || filters.area || 'geral',
+        question: question.question || question.text || question.enunciado || '',
+        options: question.options || question.alternatives || [],
+        correctAnswer: question.correctAnswer || question.resposta || 0,
+        explanation: question.explanation || question.gabarito,
+        topics: question.topics || question.temas || [],
+        competencies: question.competencies || question.competencias || [],
+        difficulty: question.difficulty || 'Médio'
+      }))
     } catch (error) {
       console.error('Failed to fetch questions:', error)
-      return []
+      return await generateFallbackQuestions(filters.area || 'geral', filters.limit || 10)
     }
   }
 
@@ -381,8 +319,26 @@ class EnemApiClient {
    */
   async getQuestionById(id: string): Promise<EnemQuestion | null> {
     try {
-      const response = await this.makeRequest<EnemApiResponse<EnemQuestion>>(`/questions/${id}`)
-      return response.data || null
+      const response = await this.makeRequest<any>(`/questions/${id}`)
+      const question = Array.isArray(response) ? response[0] : response
+      
+      if (!question) return null
+      
+      return {
+        id: question.id || id,
+        examId: question.examId || `exam-${question.year || 2023}`,
+        year: question.year || 2023,
+        type: question.type || 'REGULAR',
+        area: question.area || question.discipline || 'geral',
+        subject: question.subject || question.area || 'geral',
+        question: question.question || question.text || question.enunciado || '',
+        options: question.options || question.alternatives || [],
+        correctAnswer: question.correctAnswer || question.resposta || 0,
+        explanation: question.explanation || question.gabarito,
+        topics: question.topics || question.temas || [],
+        competencies: question.competencies || question.competencias || [],
+        difficulty: question.difficulty || 'Médio'
+      }
     } catch (error) {
       console.error('Failed to fetch question:', error)
       return null
@@ -503,45 +459,20 @@ export const ENEM_YEARS = Array.from({ length: 15 }, (_, i) => 2023 - i) // 2009
  * Generates fallback questions using AI when ENEM API is unavailable
  */
 async function generateFallbackQuestions(area: string, limit: number): Promise<EnemQuestion[]> {
+  const model = process.env.ENEM_FALLBACK_MODEL || "gpt-4o-mini";
+  console.log(`Generating ${limit} fallback questions for ${area} using model: ${model}`);
+
   try {
-    console.log(`🤖 Generating ${limit} fallback questions for area: ${area}`)
-    
-    const { OpenAI } = await import('openai')
-    const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    })
-
-    const fallbackModel = process.env.ENEM_FALLBACK_MODEL || 'gpt-4o-mini'
-    
-    const prompt = `Gere ${limit} questões do ENEM para a área de ${area}. 
-    Cada questão deve ter:
-    - Um enunciado claro e objetivo
-    - 5 alternativas (A, B, C, D, E)
-    - Uma alternativa correta
-    - Formato JSON com campos: id, examId, year, type, area, subject, question, options, correctAnswer
-    
-    IMPORTANTE: Retorne APENAS um JSON válido, sem markdown, sem texto adicional. 
-    O formato deve ser exatamente assim:
-    [
-      {
-        "id": "fallback_${area}_1",
-        "examId": "fallback_2023",
-        "year": 2023,
-        "type": "REGULAR",
-        "area": "${area}",
-        "subject": "${area}",
-        "question": "enunciado da questão",
-        "options": ["alternativa A", "alternativa B", "alternativa C", "alternativa D", "alternativa E"],
-        "correctAnswer": 0
-      }
-    ]`
-
     const completion = await openai.chat.completions.create({
-      model: fallbackModel,
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.7,
-      max_tokens: 2000,
-    })
+      model: model,
+      messages: [
+        {
+          role: "system",
+          content: `Você é um gerador de questões do ENEM para a área "${area}". Gere ${limit} questões realistas, com alternativas A/B/C/D/E, incluindo a correta. Formato JSON: [{ id: "fallback_${area}_1", examId: "fallback_2023", year: 2023, type: "REGULAR", area: "${area}", subject: "${area}", question: "...", options: ["A", "B", "C", "D", "E"], correctAnswer: 0 }]`
+        }
+      ],
+      max_tokens: 2000, // Ajuste para evitar timeouts
+    });
 
     const response = completion.choices[0]?.message?.content
     if (!response) return []
@@ -556,12 +487,11 @@ async function generateFallbackQuestions(area: string, limit: number): Promise<E
       cleanResponse = cleanResponse.split('```')[1].split('```')[0]
     }
 
-    const questions = JSON.parse(cleanResponse)
-    console.log(`✅ Generated ${questions.length} fallback questions using ${fallbackModel}`)
-    
-    return questions
+    const generatedQuestions = JSON.parse(cleanResponse);
+    console.log(`✅ Generated ${generatedQuestions.length} fallback questions using ${model}`);
+    return generatedQuestions;
   } catch (error) {
-    console.error('Failed to generate fallback questions:', error)
-    return []
+    console.error("Error in fallback AI generation:", error);
+    return []; // Retorna vazio se IA falhar
   }
 }

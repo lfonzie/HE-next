@@ -3,9 +3,9 @@ import { enemApi } from '@/lib/enem-api'
 
 export async function GET(request: NextRequest) {
   try {
-    // Endpoint público para demonstração do servidor ENEM
+    // Endpoint público para demonstração da integração ENEM
     const demo: any = {
-      message: 'ENEM Local Server Demo',
+      message: 'ENEM Public API Integration Demo',
       timestamp: new Date().toISOString(),
       tests: {}
     }
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
       demo.tests.apiAvailability = {
         status: isAvailable ? 'success' : 'warning',
         message: isAvailable ? 'API is available' : 'API not available, using fallback',
-        usingLocalServer: enemApi.isUsingLocalServer()
+        apiSource: 'enem-dev-api'
       }
     } catch (error) {
       demo.tests.apiAvailability = {
@@ -43,9 +43,8 @@ export async function GET(request: NextRequest) {
 
     // Teste 3: Verificar configuração do cliente
     demo.configuration = {
-      localServerEnabled: enemApi.isUsingLocalServer(),
-      baseUrl: 'https://enem.dev/api',
-      localServerUrl: '/api/enem',
+      apiSource: 'enem-dev-api',
+      baseUrl: 'https://api.enem.dev/v1',
       rateLimitDelay: 1000,
       cacheInterval: 300000
     }

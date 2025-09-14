@@ -10,10 +10,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Testar servidor ENEM local
+    // Testar integração ENEM API pública
     const tests: any = {
       serverStatus: 'running',
-      localServerEnabled: enemApi.isUsingLocalServer(),
       apiAvailability: await enemApi.checkApiAvailability(),
       timestamp: new Date().toISOString()
     }
@@ -24,7 +23,7 @@ export async function GET(request: NextRequest) {
       tests.examsEndpoint = {
         status: 'success',
         count: exams.length,
-        source: exams.length > 0 ? 'local-server' : 'mock-data'
+        source: exams.length > 0 ? 'enem-dev-api' : 'mock-data'
       }
     } catch (error) {
       tests.examsEndpoint = {
@@ -39,7 +38,7 @@ export async function GET(request: NextRequest) {
       tests.questionsEndpoint = {
         status: 'success',
         count: questions.length,
-        source: questions.length > 0 ? 'local-database' : 'fallback'
+        source: questions.length > 0 ? 'enem-dev-api' : 'ai-fallback'
       }
     } catch (error) {
       tests.questionsEndpoint = {
@@ -79,28 +78,12 @@ export async function POST(request: NextRequest) {
     const { action } = await request.json()
 
     switch (action) {
-      case 'switch-to-local':
-        enemApi.setUseLocalServer(true)
-        return NextResponse.json({
-          success: true,
-          message: 'Switched to local server',
-          currentMode: 'local-server'
-        })
-
-      case 'switch-to-external':
-        enemApi.setUseLocalServer(false)
-        return NextResponse.json({
-          success: true,
-          message: 'Switched to external API',
-          currentMode: 'external-api'
-        })
-
       case 'reset-status':
         enemApi.resetApiStatus()
         return NextResponse.json({
           success: true,
           message: 'API status reset',
-          currentMode: enemApi.isUsingLocalServer() ? 'local-server' : 'external-api'
+          currentMode: 'enem-dev-api'
         })
 
       default:

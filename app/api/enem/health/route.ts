@@ -3,13 +3,13 @@ import { enemApi } from '@/lib/enem-api'
 
 export async function GET(request: NextRequest) {
   try {
-    // Endpoint público para verificar saúde do servidor ENEM
+    // Endpoint público para verificar saúde da integração ENEM
     const health = {
       status: 'healthy',
       timestamp: new Date().toISOString(),
-      server: 'ENEM Local Server',
+      server: 'ENEM Public API (enem.dev)',
       version: '1.0.0',
-      localServerEnabled: enemApi.isUsingLocalServer(),
+      apiAvailable: await enemApi.checkApiAvailability(),
       endpoints: {
         exams: '/api/enem/exams',
         questions: '/api/enem/questions',

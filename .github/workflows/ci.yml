@@ -20,27 +20,11 @@ jobs:
           node-version: '22'
           cache: 'npm'
           
-      - name: Install HubEdu dependencies
+      - name: Install dependencies
         run: npm install
         
       - name: Build HubEdu
         run: npm run build
         
-      - name: Install ENEM API dependencies
-        working-directory: ./enem-api-main
-        run: npm install
-        
-      - name: Generate Prisma client
-        working-directory: ./enem-api-main
-        run: npx prisma generate
-        
-      - name: Build ENEM API
-        working-directory: ./enem-api-main
-        run: npm run build
-        
-      - name: Run HubEdu linting
-        run: npm run lint
-        
-      - name: Run ENEM API linting
-        working-directory: ./enem-api-main
+      - name: Run linting
         run: npm run lint
