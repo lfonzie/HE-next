@@ -577,7 +577,7 @@ export function useChat() {
     
     const searchTerm = query.toLowerCase()
     return conversations.filter(conv => 
-      conv.title?.toLowerCase().includes(searchTerm) ||
+      (conv.title ?? '').toLowerCase().includes(searchTerm) ||
       conv.messages.some(msg => 
         msg.content.toLowerCase().includes(searchTerm)
       )

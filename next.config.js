@@ -7,8 +7,7 @@ const nextConfig = {
   },
   // Ensure proper development mode handling
   experimental: {
-    // Prevent development server from looking for production artifacts
-    serverComponentsExternalPackages: ['@prisma/client']
+    // Additional experimental features can be added here if needed
   },
   async headers() {
     return [
