@@ -67,3 +67,46 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { query, count = 1 } = body;
+
+    if (!query) {
+      return NextResponse.json(
+        { error: 'Query is required' },
+        { status: 400 }
+      );
+    }
+
+    // For interactive lessons, we don't require authentication
+    // This allows the HubEduLessonModule to fetch images
+    const result = await unsplashService.searchPhotos(query, 1, count);
+
+    return NextResponse.json({
+      success: true,
+      photos: result.results.map(photo => ({
+        id: photo.id,
+        urls: photo.urls,
+        alt_description: photo.alt_description,
+        description: photo.description,
+        user: photo.user,
+        width: photo.width,
+        height: photo.height,
+        color: photo.color,
+        likes: photo.likes
+      }))
+    });
+
+  } catch (error: any) {
+    console.error('Unsplash POST API error:', error);
+    return NextResponse.json(
+      { 
+        error: 'Failed to search images',
+        details: error.message 
+      },
+      { status: 500 }
+    );
+  }
+}

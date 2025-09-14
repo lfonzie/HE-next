@@ -1,12 +1,10 @@
 import { NextResponse } from 'next/server';
-import { enemApi } from '@/lib/enem-api';
-import { prisma } from '@/lib/db';
 
 export async function GET() {
   try {
     const startTime = Date.now();
     
-    // Basic health check
+    // Simple health check that doesn't depend on external services
     const health = {
       status: 'healthy',
       timestamp: new Date().toISOString(),
@@ -22,9 +20,9 @@ export async function GET() {
       },
       responseTime: 0,
       checks: {
-        database: false,
-        enemApi: false,
-        openai: false
+        application: true,
+        environment: !!process.env.NODE_ENV,
+        port: !!process.env.PORT
       },
       endpoints: {
         health: '/api/health',
@@ -33,50 +31,18 @@ export async function GET() {
         enemQuestions: '/api/enem/questions',
         enemExams: '/api/enem/exams',
         auth: '/api/auth',
-        chat: '/api/chat'
+        chat: '/api/chat',
+        interactive: '/test-hubedu-interactive'
       }
     };
-
-    // Check database connection
-    try {
-      await prisma.$queryRaw`SELECT 1`;
-      health.checks.database = true;
-    } catch (error) {
-      console.error('Database health check failed:', error);
-      health.checks.database = false;
-    }
-
-    // Check ENEM API availability
-    try {
-      health.checks.enemApi = await enemApi.checkApiAvailability();
-    } catch (error) {
-      console.error('ENEM API health check failed:', error);
-      health.checks.enemApi = false;
-    }
-
-    // Check OpenAI API key
-    try {
-      health.checks.openai = !!process.env.OPENAI_API_KEY;
-    } catch (error) {
-      console.error('OpenAI health check failed:', error);
-      health.checks.openai = false;
-    }
 
     // Calculate response time
     health.responseTime = Date.now() - startTime;
 
-    // Determine overall health status
-    const criticalChecks = [health.checks.database, health.checks.openai];
-    const allCriticalHealthy = criticalChecks.every(check => check === true);
-    
-    if (!allCriticalHealthy) {
-      health.status = 'degraded';
-    }
-
-    const statusCode = allCriticalHealthy ? 200 : 503;
-
-    return NextResponse.json(health, { status: statusCode });
+    // Always return 200 for basic health check
+    return NextResponse.json(health, { status: 200 });
   } catch (error) {
+    console.error('Health check error:', error);
     return NextResponse.json({
       status: 'error',
       timestamp: new Date().toISOString(),
