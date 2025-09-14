@@ -63,9 +63,9 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# Run Prisma migrations for ENEM API
-echo -e "${BLUE}🗄️  Executando migrações do ENEM API...${NC}"
-npx prisma migrate deploy
+# Push Prisma schema for ENEM API
+echo -e "${BLUE}🗄️  Aplicando schema do ENEM API...${NC}"
+npx prisma db push
 
 if [ $? -ne 0 ]; then
     echo -e "${RED}❌ Falha ao executar migrações${NC}"

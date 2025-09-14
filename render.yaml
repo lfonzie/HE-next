@@ -35,7 +35,7 @@ services:
     name: hubedu-enem-api
     env: node
     plan: starter
-    buildCommand: cd enem-api-main && npm install --prefer-offline --no-audit && npx prisma generate && npx prisma migrate deploy && npm run build
+    buildCommand: cd enem-api-main && npm install --prefer-offline --no-audit && npx prisma generate && npx prisma db push && npm run build
     startCommand: cd enem-api-main && npm start
     envVars:
       - key: NODE_ENV
