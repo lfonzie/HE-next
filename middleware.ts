@@ -55,7 +55,8 @@ export async function middleware(request: NextRequest) {
   // Require authentication for admin routes
   if (request.nextUrl.pathname.startsWith('/admin-dashboard') ||
       request.nextUrl.pathname.startsWith('/admin-system-prompts') ||
-      request.nextUrl.pathname.startsWith('/admin-escola')) {
+      request.nextUrl.pathname.startsWith('/admin-escola') ||
+      request.nextUrl.pathname.startsWith('/admin')) {
     if (!token) {
       return NextResponse.redirect(new URL('/login', request.url))
     }
@@ -75,6 +76,7 @@ export const config = {
     '/chat/:path*',
     '/simulador/:path*',
     '/professor-interactive/:path*',
+    '/admin/:path*',
     '/admin-dashboard/:path*',
     '/admin-system-prompts/:path*',
     '/admin-escola/:path*',

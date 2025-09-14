@@ -42,8 +42,8 @@ export interface EnemFilters {
 
 class EnemApiClient {
   private baseUrl = 'https://enem.dev/api'
-  private localServerUrl = 'http://localhost:3100/v1' // Servidor local ENEM na porta 3100
-  private useLocalServer = true // Habilitar servidor local agora que temos endpoints corretos
+  private localServerUrl = process.env.ENEM_API_URL || 'http://localhost:3100/v1' // Use environment variable or fallback to localhost
+  private useLocalServer = process.env.NODE_ENV === 'development' // Only use local server in development
   private rateLimitDelay = 1000 // 1 segundo entre requisições
   private lastRequestTime = 0
   private isApiAvailable = true

@@ -66,6 +66,7 @@ fi
 # Generate Prisma client for ENEM API (schema já existe no banco)
 echo -e "${BLUE}🗄️  Gerando cliente Prisma para ENEM API...${NC}"
 echo -e "${YELLOW}ℹ️  Schema já existe no banco, apenas gerando cliente${NC}"
+cd enem-api-main
 npx prisma generate
 
 if [ $? -ne 0 ]; then
