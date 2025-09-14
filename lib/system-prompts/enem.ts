@@ -178,21 +178,49 @@ FORMATO DE SAÍDA (JSON):
   "competencies": ["Competência X", "Habilidade Y"]
 }`;
 
-export const ENEM_SIMULATOR_PROMPT = `Gere um conjunto de questões para simulado ENEM com as seguintes características:
-- Área: {areas}
-- Disciplina: {subject}
-- Quantidade: {totalQuestions}
-- Duração estimada: {duration} minutos
-- Distribuição de dificuldade: 20% Fácil, 50% Médio, 30% Difícil
+export const ENEM_SIMULATOR_PROMPT = `Generate a set of questions for an ENEM simulation with the following characteristics:
+- Area: {areas}
+- Discipline: {subject}
+- Quantity: {totalQuestions}
+- Estimated Duration: {duration} minutes
+- Difficulty Distribution: 20% Easy, 50% Medium, 30% Difficult
 
-IMPORTANTE: Todas as questões devem ser da disciplina {subject} na área {areas}.
-Para Linguagens e Códigos: use Português, Literatura, Inglês ou Espanhol
-Para Ciências Humanas: use História, Geografia, Filosofia ou Sociologia  
-Para Ciências da Natureza: use Física, Química ou Biologia
-Para Matemática: use apenas Matemática
+IMPORTANT: All questions must pertain to the discipline {subject} within the area {areas}.
+For Languages and Codes: Use Portuguese, Literature, English, or Spanish.
+For Human Sciences: Use History, Geography, Philosophy, or Sociology.
+For Natural Sciences: Use Physics, Chemistry, or Biology.
+For Mathematics: Use only Mathematics.
 
-Cada questão deve seguir o formato ENEM padrão com 5 alternativas.
-Retorne um array de questões no formato JSON.`;
+Each question must follow the standard ENEM format with 5 alternatives.
+Return an array of questions in JSON format.`;
+
+export const ENEM_SYSTEM_PROMPT_ENHANCED = `You are an expert in ENEM (Exame Nacional do Ensino Médio) questions. Your mission is:
+
+1. Generate authentic ENEM questions based on the specified area.
+2. Follow the official ENEM format (5 alternatives: A, B, C, D, E).
+3. Align with the BNCC (Base Nacional Comum Curricular).
+4. Include specific competencies and skills.
+5. Provide detailed and educational explanations.
+6. Vary difficulty levels (Easy, Medium, Difficult).
+
+Response Format in JSON:
+{
+  "questions": [
+    {
+      "id": "unique_id",
+      "subject": "discipline",
+      "area": "knowledge area",
+      "difficulty": "Easy|Medium|Difficult",
+      "year": 2023,
+      "question": "Question statement",
+      "options": ["A) alternative 1", "B) alternative 2", "C) alternative 3", "D) alternative 4", "E) alternative 5"],
+      "correctAnswer": 0,
+      "explanation": "Detailed explanation of the correct answer",
+      "topics": ["topic 1", "topic 2"],
+      "competencies": ["competency 1", "competency 2"]
+    }
+  ]
+}`;
 
 export const ENEM_PARAGRAPH_EVALUATION_PROMPT = `You are an ENEM essay evaluator. Evaluate ONLY the provided paragraph.
 Return JSON with:

@@ -321,52 +321,53 @@ function generateMockQuestions(area: string, count: number) {
 
 async function generateQuestions(area: string, count: number) {
   try {
-    // Limit count to prevent timeout issues
-    const maxCount = Math.min(count, 5)
+    // Use GPT-4o mini as fallback model for question generation
+    const fallbackModel = process.env.ENEM_FALLBACK_MODEL || "gpt-4o-mini"
+    
+    // Limit count to prevent timeout issues - batch generation strategy
+    const maxCount = Math.min(count, 2) // Generate in batches of 2
     if (count > maxCount) {
-      console.log(`Limiting question generation to ${maxCount} to prevent timeouts`)
+      console.log(`Limiting question generation to ${maxCount} to prevent timeouts (batch strategy)`)
     }
 
-    const prompt = `Gere ${maxCount} questões do ENEM para a área de ${area}. 
-    Cada questão deve ter:
-    - Um enunciado claro e objetivo
-    - 5 alternativas (A, B, C, D, E)
-    - Uma alternativa correta
-    - Formato JSON com campos: stem, a, b, c, d, e, correct, disciplina
+    // Enhanced prompt using the system prompt from the architectural guide
+    const prompt = `Generate ${maxCount} ENEM-style questions for the area "${area}". 
+    Each question must have:
+    - A clear and objective statement
+    - 5 alternatives (A, B, C, D, E)
+    - One correct alternative
+    - Detailed explanation
     
-    IMPORTANTE: Retorne APENAS um JSON válido, sem markdown, sem texto adicional. 
-    O formato deve ser exatamente assim:
+    IMPORTANT: Return ONLY valid JSON, no markdown, no additional text.
+    Format must be exactly:
     [
       {
-        "stem": "enunciado da questão",
-        "a": "alternativa A",
-        "b": "alternativa B", 
-        "c": "alternativa C",
-        "d": "alternativa D",
-        "e": "alternativa E",
+        "stem": "question statement",
+        "a": "alternative A",
+        "b": "alternative B", 
+        "c": "alternative C",
+        "d": "alternative D",
+        "e": "alternative E",
         "correct": "A",
-        "disciplina": "${area}"
+        "disciplina": "${area}",
+        "explanation": "detailed explanation of the correct answer"
       }
     ]`
 
-    // Selecionar modelo baseado na complexidade da tarefa de geração de questões
-    const selectedModel = selectModel(prompt, 'enem')
-    const modelConfig = getModelConfig(selectedModel)
+    console.log(`Using fallback model: ${fallbackModel} for ENEM questions generation`)
     
-    console.log(`Using model: ${selectedModel} for ENEM questions generation`)
-    
-    // Add timeout and retry logic
+    // Add timeout and retry logic with shorter timeout for batch generation
     const controller = new AbortController()
     const timeoutId = setTimeout(() => {
       controller.abort()
       console.log('AI generation timeout - aborting request')
-    }, 30000) // 30 seconds timeout
+    }, 20000) // 20 seconds timeout for batch generation
     
     const completion = await openai.chat.completions.create({
-      model: selectedModel,
+      model: fallbackModel,
       messages: [{ role: 'user', content: prompt }],
-      temperature: modelConfig.temperature,
-      max_tokens: modelConfig.max_tokens,
+      temperature: 0.7,
+      max_tokens: 1500, // Reduced for batch generation
     })
     
     clearTimeout(timeoutId)
@@ -392,6 +393,9 @@ async function generateQuestions(area: string, count: number) {
       console.error('Raw response:', response)
       return []
     }
+    
+    console.log(`✅ Generated ${questions.length} questions using ${fallbackModel}`)
+    
     return questions.map((q: any) => ({
       area,
       disciplina: q.disciplina || area,
@@ -402,7 +406,8 @@ async function generateQuestions(area: string, count: number) {
       d: q.d,
       e: q.e,
       correct: q.correct,
-      source: 'AI Generated'
+      explanation: q.explanation || 'Explicação não disponível',
+      source: 'AI Generated (GPT-4o mini)'
     }))
   } catch (error) {
     console.error('Error generating questions:', error)

@@ -485,41 +485,85 @@ export const ENEM_YEARS = Array.from({ length: 15 }, (_, i) => 2023 - i) // 2009
 
 /**
  * Generates fallback questions using AI when ENEM API is unavailable
+ * Uses GPT-4o mini as specified in the architectural guide
  */
 async function generateFallbackQuestions(area: string, limit: number): Promise<EnemQuestion[]> {
   const model = process.env.ENEM_FALLBACK_MODEL || "gpt-4o-mini";
   console.log(`Generating ${limit} fallback questions for ${area} using model: ${model}`);
 
   try {
-    const completion = await openai.chat.completions.create({
-      model: model,
-      messages: [
-        {
-          role: "system",
-          content: `Você é um gerador de questões do ENEM para a área "${area}". Gere ${limit} questões realistas, com alternativas A/B/C/D/E, incluindo a correta. Formato JSON: [{ id: "fallback_${area}_1", examId: "fallback_2023", year: 2023, type: "REGULAR", area: "${area}", subject: "${area}", question: "...", options: ["A", "B", "C", "D", "E"], correctAnswer: 0 }]`
-        }
-      ],
-      max_tokens: 2000, // Ajuste para evitar timeouts
-    });
+    // Batch generation strategy - generate in batches of 2
+    const batchSize = Math.min(limit, 2);
+    const batches = Math.ceil(limit / batchSize);
+    let allQuestions: EnemQuestion[] = [];
 
-    const response = completion.choices[0]?.message?.content
-    if (!response) return []
+    for (let i = 0; i < batches; i++) {
+      const currentBatchSize = Math.min(batchSize, limit - allQuestions.length);
+      
+      const completion = await openai.chat.completions.create({
+        model: model,
+        messages: [
+          {
+            role: "system",
+            content: `You are an expert ENEM question generator for the area "${area}". Generate ${currentBatchSize} authentic ENEM-style questions with 5 alternatives (A/B/C/D/E), including the correct answer and detailed explanation. Follow the official ENEM format and BNCC guidelines.`
+          },
+          {
+            role: "user",
+            content: `Generate ${currentBatchSize} ENEM questions for ${area}. Return ONLY valid JSON array format:
+            [
+              {
+                "id": "fallback_${area}_${i}_1",
+                "examId": "fallback_2023",
+                "year": 2023,
+                "type": "REGULAR",
+                "area": "${area}",
+                "subject": "${area}",
+                "question": "Question statement...",
+                "options": ["A) alternative 1", "B) alternative 2", "C) alternative 3", "D) alternative 4", "E) alternative 5"],
+                "correctAnswer": 0,
+                "explanation": "Detailed explanation of the correct answer",
+                "topics": ["topic1", "topic2"],
+                "competencies": ["competency1", "competency2"],
+                "difficulty": "Medium"
+              }
+            ]`
+          }
+        ],
+        max_tokens: 1500, // Reduced for batch generation
+        temperature: 0.7,
+      });
 
-    // Clean the response to extract JSON from markdown if present
-    let cleanResponse = response.trim()
-    
-    // Remove markdown code blocks if present
-    if (cleanResponse.includes('```json')) {
-      cleanResponse = cleanResponse.split('```json')[1].split('```')[0]
-    } else if (cleanResponse.includes('```')) {
-      cleanResponse = cleanResponse.split('```')[1].split('```')[0]
+      const response = completion.choices[0]?.message?.content
+      if (!response) continue
+
+      // Clean the response to extract JSON from markdown if present
+      let cleanResponse = response.trim()
+      
+      // Remove markdown code blocks if present
+      if (cleanResponse.includes('```json')) {
+        cleanResponse = cleanResponse.split('```json')[1].split('```')[0]
+      } else if (cleanResponse.includes('```')) {
+        cleanResponse = cleanResponse.split('```')[1].split('```')[0]
+      }
+
+      try {
+        const batchQuestions = JSON.parse(cleanResponse);
+        allQuestions.push(...batchQuestions);
+        console.log(`✅ Generated batch ${i + 1}/${batches}: ${batchQuestions.length} questions`);
+      } catch (parseError) {
+        console.error(`Failed to parse batch ${i + 1}:`, parseError);
+      }
+
+      // Small delay between batches to avoid rate limiting
+      if (i < batches - 1) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
     }
 
-    const generatedQuestions = JSON.parse(cleanResponse);
-    console.log(`✅ Generated ${generatedQuestions.length} fallback questions using ${model}`);
-    return generatedQuestions;
+    console.log(`✅ Generated ${allQuestions.length} total fallback questions using ${model}`);
+    return allQuestions.slice(0, limit); // Ensure we don't exceed the requested limit
   } catch (error) {
     console.error("Error in fallback AI generation:", error);
-    return []; // Retorna vazio se IA falhar
+    return []; // Return empty if AI fails
   }
 }

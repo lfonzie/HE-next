@@ -116,20 +116,24 @@ function SimuladorContent() {
       
       const mappedArea = areaMapping[params.area] || params.area.toLowerCase()
       
-      setSimulationConfig({
+      // Generate unique simulator ID
+      const simulatorId = `sim_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      
+      // Store session data in localStorage for the new architecture
+      const sessionData = {
         area: mappedArea,
         numQuestions: params.numQuestions,
         duration: params.duration,
         useRealQuestions: params.useRealQuestions,
         year: params.year,
-        useProgressiveLoading: params.useProgressiveLoading
-      })
+        useProgressiveLoading: params.useProgressiveLoading || true
+      }
       
-      toast({
-        title: "Simulado Iniciado!",
-        description: `Simulado de ${params.area} com ${params.numQuestions} questões iniciado.`,
-        variant: "default"
-      })
+      localStorage.setItem(`simulator_${simulatorId}`, JSON.stringify(sessionData))
+      
+      // Redirect to the new simulator page
+      window.location.href = `/simulador/${simulatorId}`
+      
     } catch (err: any) {
       console.error('Error starting simulation:', err)
       setError(err.message || 'Falha ao gerar simulado. Tente novamente.')
