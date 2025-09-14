@@ -1,143 +1,106 @@
-# ENEM API Deployment Fix Summary
+# Deployment Fix Summary - ENEM API Build Error
 
-## Problem Identified
-
-The deployment was failing because the `render-start.sh` script was trying to start both HubEdu.ai and ENEM API in the same container, but according to the `render.yaml` configuration, these should be deployed as **separate services**.
+## Issue Resolved
+Fixed the `npm ci` error that was causing the ENEM API build to fail on Render deployment.
 
 ## Root Cause
+The `package-lock.json` file in the `enem-api-main` directory was out of sync with `package.json`, causing `npm ci` to fail with dependency version mismatches (e.g., `ajv@6.12.6` vs `ajv@8.17.1`).
 
-1. **Configuration Mismatch**: `render.yaml` defines two separate services:
-   - `hubedu-main` (main Next.js app)
-   - `hubedu-enem-api` (ENEM API)
-   
-   But `render-start.sh` was trying to start both in the same container.
+## Changes Made
 
-2. **Port Conflicts**: The script tried to bind ENEM API to port 3001, but Render assigns a single external port per service.
+### 1. Fixed Package Lock Synchronization
+- **File**: `enem-api-main/package-lock.json`
+- **Action**: Regenerated the lock file by removing the old one and running `npm install`
+- **Result**: `npm ci` now works successfully
 
-3. **Missing Error Logging**: The startup script lacked detailed error logging to diagnose issues.
+### 2. Updated Build Scripts
+- **File**: `package.json`
+- **Change**: Updated `build:enem` script from:
+  ```json
+  "build:enem": "cd enem-api-main && npm ci && npx prisma generate && npm run build"
+  ```
+  to:
+  ```json
+  "build:enem": "cd enem-api-main && npm install --prefer-offline --no-audit && npx prisma generate && npm run build"
+  ```
+- **Reason**: `npm install` is more flexible than `npm ci` for CI/CD environments
 
-## Fixes Applied
+### 3. Enhanced Port Configuration
+- **File**: `enem-api-main/next.config.mjs`
+- **Addition**: Added PORT environment variable configuration:
+  ```javascript
+  env: {
+      PORT: process.env.PORT || "11000",
+  },
+  ```
+- **Result**: ENEM API now properly respects the PORT environment variable
 
-### 1. Updated `scripts/render-start.sh`
-- **Removed ENEM API startup logic** since it's deployed as a separate service
-- **Added detailed environment variable logging** for debugging
-- **Improved error handling** with better error messages
-- **Added log file output** (`hubedu.log`) for troubleshooting
+### 4. Verified Build Process
+- Both HubEdu.ai and ENEM API now build successfully
+- ENEM API generates `.next` directory correctly
+- Port configuration ensures ENEM API uses port 11000
 
-### 2. Updated `scripts/render-build.sh`
-- **Removed ENEM API build steps** since it's built separately
-- **Added informational message** about separate ENEM API deployment
+## Current Configuration
 
-### 3. Created `enem-api-main/start.sh`
-- **New startup script** specifically for the ENEM API service
-- **Environment variable logging** for debugging
-- **Prisma client generation check** before startup
-- **Detailed error logging** to `enem-api.log`
-- **Process monitoring** to ensure API stays running
+### Port Setup
+- **HubEdu.ai**: Port 10000 (default)
+- **ENEM API**: Port 11000 (configured in `render-start.sh`)
 
-### 4. Updated `render.yaml`
-- **Updated ENEM API start command** to use the new startup script
-- **Maintained separate service configuration** as intended
+### Build Commands
+- **Root**: `npm run build` (builds both apps)
+- **HubEdu.ai**: `npm run build:hubedu`
+- **ENEM API**: `npm run build:enem`
+
+### Start Commands
+- **Root**: `npm start` (starts both apps with concurrently)
+- **Render**: Uses `scripts/render-start.sh` for production deployment
 
 ## Deployment Instructions
 
-### Step 1: Commit Changes
-```bash
-git add .
-git commit -m "Fix ENEM API deployment: separate services with improved logging"
-git push origin main
-```
+### For Render Deployment
+1. **Build Command**: 
+   ```bash
+   npm install --prefer-offline --no-audit && npm run build
+   ```
 
-### Step 2: Deploy on Render
-1. **Main Service (`hubedu-main`)**:
-   - Will automatically redeploy when you push to main
-   - Uses the updated `render-start.sh` script
-   - Only starts the main Next.js application
+2. **Start Command**: 
+   ```bash
+   chmod +x scripts/render-start.sh && ./scripts/render-start.sh
+   ```
 
-2. **ENEM API Service (`hubedu-enem-api`)**:
-   - Will automatically redeploy when you push to main
-   - Uses the new `start.sh` script
-   - Runs independently on its assigned port
+3. **Environment Variables**:
+   - `PORT=10000` (for HubEdu.ai)
+   - `DATABASE_URL=<your-database-url>`
+   - `NEXTAUTH_URL=<your-app-url>`
+   - `ENEM_API_URL=<internal-enem-api-url>`
 
-### Step 3: Monitor Deployment
-1. **Check Render Dashboard** for both services
-2. **Monitor logs** for any startup errors
-3. **Verify environment variables** are set correctly
+### Verification Steps
+1. Check build logs for successful compilation of both apps
+2. Verify HubEdu.ai starts on port 10000
+3. Verify ENEM API starts on port 11000
+4. Test ENEM API endpoints internally
 
-## Expected Behavior
-
-### Main Service (`hubedu-main`)
-- Starts Next.js application on Render's assigned port
-- Logs environment variables for debugging
-- Creates `hubedu.log` for troubleshooting
-- Connects to main database (`hubedu-db`)
-
-### ENEM API Service (`hubedu-enem-api`)
-- Starts Next.js API server on Render's assigned port
-- Generates Prisma client if needed
-- Logs environment variables for debugging
-- Creates `enem-api.log` for troubleshooting
-- Connects to ENEM database (`hubedu-enem-db`)
-
-## Environment Variables Required
-
-### Main Service
-- `NODE_ENV=production`
-- `DATABASE_URL` (from `hubedu-db`)
-- `NEXTAUTH_SECRET` (auto-generated)
-- `NEXTAUTH_URL=https://hubedu-main.onrender.com`
-- `ENEM_API_URL=https://hubedu-enem-api.onrender.com`
-- API keys (OpenAI, Google, GitHub)
+## Alternative: Separate Services
+If issues persist, consider deploying ENEM API as a separate Render service:
 
 ### ENEM API Service
-- `NODE_ENV=production`
-- `PORT=3001`
-- `DATABASE_URL` (from `hubedu-enem-db`)
-- `NEXTAUTH_SECRET` (auto-generated)
-- `NEXTAUTH_URL=https://hubedu-enem-api.onrender.com`
+- **Repository**: `https://github.com/lfonzie/HE-next`
+- **Root Directory**: `enem-api-main`
+- **Build Command**: `npm install --prefer-offline --no-audit && npx prisma generate && npm run build`
+- **Start Command**: `npm start`
+- **Port**: `11000`
 
-## Troubleshooting
+### HubEdu.ai Service
+- **Build Command**: `npm install --prefer-offline --no-audit && npm run build`
+- **Start Command**: `npm start`
+- **Port**: `10000`
+- **Environment**: `ENEM_API_URL=https://enem-api.onrender.com`
 
-### If Main Service Fails
-1. Check `hubedu.log` for detailed error messages
-2. Verify environment variables in Render dashboard
-3. Check database connectivity
+## Prevention
+- Always run `npm install` after updating `package.json` to keep `package-lock.json` in sync
+- Use consistent package manager (npm only, remove pnpm-lock.yaml if present)
+- Test builds locally before deployment
+- Monitor deployment logs for build errors
 
-### If ENEM API Service Fails
-1. Check `enem-api.log` for detailed error messages
-2. Verify Prisma client generation
-3. Check ENEM database connectivity
-4. Verify port configuration
-
-### Common Issues
-1. **Missing Environment Variables**: Ensure all required variables are set in Render dashboard
-2. **Database Connection**: Verify database URLs are correct and accessible
-3. **Port Conflicts**: Each service gets its own port from Render
-4. **Prisma Issues**: Ensure Prisma client is generated during build
-
-## Testing Locally
-
-To test the fixes locally:
-
-```bash
-# Test main app startup
-chmod +x scripts/render-start.sh
-./scripts/render-start.sh
-
-# Test ENEM API startup (in separate terminal)
-cd enem-api-main
-chmod +x start.sh
-./start.sh
-```
-
-## Next Steps
-
-1. **Deploy the changes** following the instructions above
-2. **Monitor both services** in Render dashboard
-3. **Test API endpoints** once both services are running
-4. **Update any hardcoded URLs** to use the Render service URLs
-5. **Set up health checks** if needed for monitoring
-
-## Summary
-
-The main issue was a configuration mismatch between the deployment script and the Render service configuration. By separating the services properly and adding comprehensive logging, the deployment should now succeed. Each service will run independently with its own resources and database connection.
+## Status
+✅ **RESOLVED** - Both applications build successfully and are ready for deployment.
