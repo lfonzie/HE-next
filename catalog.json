@@ -1,0 +1,85 @@
+{
+  "version": "1.0.0",
+  "modules": [
+    {
+      "module_id": "enem",
+      "name": "ENEM",
+      "description": "Handles ENEM-related tasks like simulations, questions, and answer keys.",
+      "keywords": ["enem", "simulado", "questão", "questões", "gabarito", "linguagens", "ciencias", "matematica"],
+      "entities": ["matematica", "linguagens", "ciencias", "tempo", "dificuldade", "n"],
+      "blocklist": ["prova de bolsas", "mensalidade", "matricula"]
+    },
+    {
+      "module_id": "professor_interativo",
+      "name": "Professor Interativo",
+      "description": "Generates lessons, quizzes, and explanations for teachers.",
+      "keywords": ["aula", "quiz", "explicar", "tema"],
+      "entities": ["tema", "assunto"],
+      "blocklist": []
+    },
+    {
+      "module_id": "aula_expandida",
+      "name": "Aula Expandida",
+      "description": "Creates lesson plans and evaluates learning outcomes.",
+      "keywords": ["roteiro", "avaliar", "imagens", "graficos"],
+      "entities": ["passos", "tema"],
+      "blocklist": []
+    },
+    {
+      "module_id": "resultados_bolsas",
+      "name": "Resultados de Bolsas",
+      "description": "Manages scholarship results and calculations.",
+      "keywords": ["prova de bolsas", "resultado", "percentual", "mensalidade", "bolsa"],
+      "entities": ["percentual", "resultado", "bolsa"],
+      "blocklist": ["enem"]
+    },
+    {
+      "module_id": "secretaria",
+      "name": "Secretaria",
+      "description": "Handles administrative tasks like enrollment and schedules.",
+      "keywords": ["matricula", "matrícula", "documentos", "horario", "horário", "secretaria", "whats"],
+      "entities": ["data", "documento"],
+      "blocklist": []
+    },
+    {
+      "module_id": "financeiro",
+      "name": "Financeiro",
+      "description": "Manages payments, installments, and discounts.",
+      "keywords": ["mensalidade", "13 parcelas", "valor", "pagamento", "boleto"],
+      "entities": ["valor", "parcela"],
+      "blocklist": []
+    },
+    {
+      "module_id": "ti_suporte",
+      "name": "TI Suporte",
+      "description": "Handles technical issues like bugs, builds, and deployments.",
+      "keywords": ["build", "deploy", "render", "porta", "log", "404", "405", "nextauth", "rota", "api"],
+      "entities": ["erro", "rota"],
+      "blocklist": []
+    },
+    {
+      "module_id": "juridico_contratos",
+      "name": "Jurídico e Contratos",
+      "description": "Manages legal documents and contracts.",
+      "keywords": ["contrato", "juridico", "termo"],
+      "entities": ["contrato"],
+      "blocklist": []
+    },
+    {
+      "module_id": "marketing_design",
+      "name": "Marketing e Design",
+      "description": "Handles marketing content and design requests.",
+      "keywords": ["marketing", "design", "campanha"],
+      "entities": ["campanha"],
+      "blocklist": []
+    },
+    {
+      "module_id": "chat_geral",
+      "name": "Chat Geral",
+      "description": "Fallback for general queries not matching other modules.",
+      "keywords": [],
+      "entities": [],
+      "blocklist": []
+    }
+  ]
+}

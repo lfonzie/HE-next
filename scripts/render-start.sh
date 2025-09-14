@@ -44,5 +44,5 @@ echo -e "${GREEN}📚 Iniciando ENEM API na porta 11000...${NC}"
 echo -e "${BLUE}📝 Iniciando servidores Next.js...${NC}"
 
 concurrently --kill-others --prefix-colors "blue,green" --names "HubEdu,ENEM-API" \
-  "next start 2>&1 | tee hubedu.log" \
-  "cd enem-api-main && PORT=11000 npm start 2>&1 | tee enem-api.log"
+  "next start" \
+  "cd enem-api-main && PORT=11000 npm start" 2>&1 | tee hubedu.log
