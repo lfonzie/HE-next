@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently --kill-others --prefix-colors \"blue,green\" --names \"HubEdu,ENEM-API\" \"next dev\" \"cd enem-api-main && npm run dev\"",
+    "dev": "next dev",
     "dev:turbo": "next dev --turbo",
     "dev:all": "chmod +x scripts/*.sh && ./scripts/start-all.sh",
     "build": "next build",
