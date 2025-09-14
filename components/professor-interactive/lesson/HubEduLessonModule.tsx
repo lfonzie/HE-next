@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { useHubEduInteractive, HubEduSlide } from '@/hooks/useHubEduInteractive';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -364,9 +365,11 @@ export default function HubEduLessonModule({
       {imageUrl && (
         <Card className="mb-6">
           <CardContent className="p-0">
-            <img
+            <Image
               src={imageUrl}
               alt={currentSlide.image_prompt}
+              width={800}
+              height={256}
               className="w-full h-64 object-cover rounded-lg"
             />
           </CardContent>

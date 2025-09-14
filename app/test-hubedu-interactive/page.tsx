@@ -203,7 +203,7 @@ export default function TestHubEduInteractivePage() {
                 {!showExample && (
                   <div className="text-center py-8">
                     <p className="text-gray-600 mb-4">
-                      Clique em "Mostrar Exemplo" para ver o exemplo completo de fotossíntese
+                      Clique em &quot;Mostrar Exemplo&quot; para ver o exemplo completo de fotossíntese
                     </p>
                     <div className="text-sm text-gray-500">
                       <p>• 8 slides estruturados</p>
@@ -242,7 +242,7 @@ export default function TestHubEduInteractivePage() {
               <div>
                 <h4 className="font-semibold mb-3">Fluxo de Carregamento Incremental</h4>
                 <ul className="space-y-2 text-sm">
-                  <li>• Usuário manda uma mensagem ("Quero aprender frações")</li>
+                  <li>• Usuário manda uma mensagem (&quot;Quero aprender frações&quot;)</li>
                   <li>• Sistema classifica o tema (matemática/frações)</li>
                   <li>• Envia requisição de imagens relacionadas ao tema</li>
                   <li>• Gera slide 1 e 2 (carregados imediatamente)</li>

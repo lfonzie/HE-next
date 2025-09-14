@@ -53,16 +53,30 @@ export default function RefactoredLessonModule({
         title: `Aula Interativa - ${query}`,
         subject: 'Geral',
         introduction: 'Aula interativa carregada progressivamente',
-        steps: availableSlides,
+        steps: availableSlides.map(slide => ({
+          ...slide,
+          content: slide.content || slide.question || 'Conteúdo não disponível'
+        })),
         summary: 'Aula em andamento',
-        nextSteps: ['Continue navegando pelos slides']
+        nextSteps: ['Continue navegando pelos slides'],
+        finalTest: {
+          question: 'Qual foi o tema principal desta aula?',
+          expectedAnswer: 'O tema principal foi abordado nos slides apresentados',
+          helpMessage: 'Revise os slides anteriores para encontrar a resposta',
+          correctAnswer: 'A',
+          options: ['A) Tema principal', 'B) Tema secundário', 'C) Não sei', 'D) Outro tema']
+        }
       };
     }
     
     if (!lesson) return null;
+    const processedSlides = processSlidesForHubEduPattern(lesson.steps);
     return {
       ...lesson,
-      steps: processSlidesForHubEduPattern(lesson.steps)
+      steps: processedSlides.map(slide => ({
+        ...slide,
+        content: slide.content || slide.question || 'Conteúdo não disponível'
+      }))
     };
   }, [lesson, progressiveLoading, query]);
 

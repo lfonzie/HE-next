@@ -40,12 +40,12 @@ export async function POST(request: NextRequest) {
 
           ESTRUTURA OBRIGATÓRIA DE 8 SLIDES COM 2 CARDS CADA:
           Slide 1: Introdução ao tópico (CARD 1: Texto explicativo detalhado | CARD 2: Imagem)
-          Slide 2: Conceitos fundamentais (CARD 1: Conceito principal extenso | CARD 2: Detalhes e exemplos abundantes)
+          Slide 2: Conceitos fundamentais (CARD 1: Conceito principal extenso | CARD 2: Definições importantes e termos-chave)
           Slide 3: Desenvolvimento do conteúdo (CARD 1: Teoria aprofundada | CARD 2: Aplicações práticas detalhadas)
           Slide 4: PERGUNTA DE VERIFICAÇÃO (CARD 1: Pergunta contextualizada | CARD 2: Opções de resposta)
           Slide 5: Aplicações práticas (CARD 1: Exemplos reais extensos | CARD 2: Casos de uso detalhados)
           Slide 6: Exemplos e exercícios (CARD 1: Exercício prático completo | CARD 2: Solução comentada detalhada)
-          Slide 7: SEGUNDA PERGUNTA DE VERIFICAÇÃO (CARD 1: Pergunta avançada | CARD 2: Opções de resposta)
+          Slide 7: ATIVIDADE COM ALUNOS (CARD 1: Atividade prática simulando uso da plataforma por professor | CARD 2: Opções de resposta sobre estratégia pedagógica)
           Slide 8: Resumo e conclusão (CARD 1: Resumo completo do conteúdo | CARD 2: Imagem de conclusão)
           
           REGRAS IMPORTANTES PARA CONTEÚDO:
@@ -184,12 +184,12 @@ Além disso, ${query} nos proporciona uma base sólida para desenvolver pensamen
 Os princípios fundamentais de ${query} são universais e aplicam-se em diferentes contextos. Eles nos fornecem uma estrutura conceitual robusta para analisar e explicar fenômenos relacionados ao tema.`
             },
             card2: {
-              title: 'Exemplos Práticos',
-              content: `Vamos explorar exemplos práticos que demonstram como ${query} se manifesta no nosso dia a dia. Estes exemplos nos ajudam a conectar a teoria com a prática de forma significativa.
+              title: 'Definições Importantes',
+              content: `Vamos definir os termos-chave e estabelecer uma linguagem comum para nosso estudo. Estas definições nos ajudarão a comunicar ideias de forma precisa e clara.
 
-Estes exemplos práticos servem como pontes importantes entre o conhecimento teórico e sua aplicação no mundo real. Eles nos permitem ver como os conceitos se traduzem em situações concretas e soluções práticas.
+As definições são fundamentais para garantir que todos compreendam os conceitos da mesma forma. Elas servem como pontos de referência claros que nos permitem construir conhecimento de forma consistente.
 
-Os exemplos abrangem diferentes contextos, desde aplicações cotidianas até casos mais complexos. Esta diversidade nos ajuda a entender a versatilidade de ${query} e como os mesmos princípios podem ser aplicados em contextos diferentes.`
+Estas definições abrangem diferentes aspectos do tema, desde conceitos básicos até termos mais especializados. Esta base terminológica sólida é essencial para o aprendizado eficaz.`
             }
           },
           {
@@ -271,20 +271,20 @@ Vamos explorar alternativas possíveis, analisando diferentes abordagens e compa
           {
             type: 'question',
             card1: {
-              title: 'Segunda Pergunta',
-              content: `Vamos testar novamente nosso conhecimento com uma pergunta mais avançada sobre ${query}. Esta segunda pergunta foi elaborada para avaliar nossa capacidade de aplicar os conceitos estudados em situações mais complexas.
+              title: 'Atividade Prática',
+              content: `Agora vamos propor uma atividade prática onde vocês, alunos, poderão aplicar o conhecimento adquirido sobre ${query}. Esta atividade foi pensada para simular como um professor usaria esta plataforma em sala de aula.
 
-Esta pergunta envolve a integração de múltiplos conceitos de ${query}, exigindo que demonstremos capacidade de conectar diferentes aspectos e aplicá-los de forma coerente. Este tipo de avaliação nos ajuda a verificar se desenvolvemos uma compreensão integrada do tema.
+Como professor, você precisa criar uma atividade que envolva os alunos e permita que eles pratiquem os conceitos de ${query} de forma interativa. Esta atividade deve ser educativa, envolvente e prática.
 
-A complexidade desta pergunta nos desafia a pensar de forma mais analítica, desenvolvendo nossa capacidade de resolver problemas complexos baseados em ${query}.`
+A atividade deve demonstrar como ${query} pode ser aplicado em situações reais, permitindo que os alunos vejam a relevância prática do que aprenderam.`
             },
             card2: {
               title: 'Opções de Resposta',
-              content: 'Analise cuidadosamente cada opção apresentada abaixo. Considere qual melhor representa uma compreensão integrada dos conceitos avançados de ${query}:',
-              options: ['Opção A: Análise superficial dos conceitos', 'Opção B: Compreensão profunda com aplicação prática', 'Opção C: Aplicação básica sem compreensão dos princípios', 'Opção D: Síntese completa sem capacidade de aplicação'],
-              correctOption: 1,
-              helpMessage: 'Considere o que aprendemos sobre análise crítica e aplicação prática de ${query}. Pense em qual opção melhor representa uma compreensão que combina conhecimento teórico com aplicação prática.',
-              correctAnswer: 'A resposta correta é a Opção B, que representa uma compreensão profunda de ${query} combinada com capacidade de aplicação prática eficaz.'
+              content: 'Como professor, qual seria a melhor abordagem para esta atividade com os alunos?',
+              options: ['A) Explicar passo a passo e depois aplicar', 'B) Deixar os alunos descobrirem sozinhos', 'C) Aplicar diretamente sem explicação', 'D) Explicar apenas a teoria'],
+              correctOption: 0,
+              helpMessage: 'Pense na melhor estratégia pedagógica para envolver os alunos no aprendizado de ${query}. Considere como um professor eficaz conduziria esta atividade.',
+              correctAnswer: 'A resposta correta é a Opção A, pois combina explicação clara com aplicação prática, garantindo que os alunos compreendam ${query} antes de aplicar.'
             }
           },
           {

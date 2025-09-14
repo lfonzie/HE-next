@@ -190,15 +190,15 @@ export function createDefault8SlidesStructure(): Slide[] {
       id: 'slide-2', 
       type: 'explanation', 
       content: 'Conceitos fundamentais',
-      card1: { title: 'Conceitos Básicos', content: 'Vamos explorar os conceitos fundamentais que formam a base deste tópico.' },
-      card2: { title: 'Exemplos Práticos', content: 'Vamos ver como estes conceitos se manifestam em situações reais do dia a dia.' }
+      card1: { title: 'Conceitos Básicos', content: 'Vamos explorar os conceitos fundamentais que formam a base deste tópico. Estes conceitos são essenciais para compreender os princípios que regem este campo de conhecimento.' },
+      card2: { title: 'Definições Importantes', content: 'Vamos definir os termos-chave e estabelecer uma linguagem comum para nosso estudo. Estas definições nos ajudarão a comunicar ideias de forma precisa e clara.' }
     },
     { 
       id: 'slide-3', 
       type: 'explanation', 
       content: 'Desenvolvimento do conteúdo',
-      card1: { title: 'Teoria', content: 'Agora vamos aprofundar nosso conhecimento explorando aspectos mais complexos.' },
-      card2: { title: 'Aplicações', content: 'Vamos ver como aplicar este conhecimento em diferentes contextos e situações.' }
+      card1: { title: 'Teoria Aprofundada', content: 'Agora vamos aprofundar nosso conhecimento explorando aspectos mais complexos e as relações entre diferentes elementos do sistema.' },
+      card2: { title: 'Aplicações Práticas', content: 'Vamos ver como aplicar este conhecimento em diferentes contextos e situações, desde casos simples até aplicações mais sofisticadas.' }
     },
     { 
       id: 'slide-4', 
@@ -233,25 +233,25 @@ export function createDefault8SlidesStructure(): Slide[] {
     { 
       id: 'slide-7', 
       type: 'question', 
-      question: 'Segunda pergunta', 
+      question: 'Atividade com alunos', 
       options: ['A', 'B', 'C', 'D'], 
       correctOption: 0,
-      card1: { title: 'Segunda Pergunta', content: 'Vamos testar novamente nosso conhecimento com uma pergunta mais avançada.' },
+      card1: { title: 'Atividade Prática', content: 'Agora vamos propor uma atividade prática onde vocês, alunos, poderão aplicar o conhecimento adquirido. Esta atividade foi pensada para simular como um professor usaria esta plataforma em sala de aula.' },
       card2: { 
         title: 'Opções de Resposta', 
-        content: 'Analise cuidadosamente cada opção:',
-        options: ['Opção A', 'Opção B', 'Opção C', 'Opção D'],
+        content: 'Como professor, qual seria a melhor abordagem para esta atividade com os alunos?',
+        options: ['A) Explicar passo a passo e depois aplicar', 'B) Deixar os alunos descobrirem sozinhos', 'C) Aplicar diretamente sem explicação', 'D) Explicar apenas a teoria'],
         correctOption: 0,
-        helpMessage: 'Considere o que aprendemos sobre análise e aplicação.',
-        correctAnswer: 'A resposta correta é a Opção A.'
+        helpMessage: 'Pense na melhor estratégia pedagógica para envolver os alunos no aprendizado.',
+        correctAnswer: 'A resposta correta é a Opção A, pois combina explicação clara com aplicação prática, garantindo que os alunos compreendam antes de aplicar.'
       }
     },
     { 
       id: 'slide-8', 
       type: 'explanation', 
       content: 'Resumo e conclusão',
-      card1: { title: 'Resumo do Conteúdo', content: 'Parabéns! Você concluiu a aula. Vamos fazer um resumo dos principais pontos aprendidos.' },
-      card2: { title: 'Conclusão', content: 'Este tema é fundamental para desenvolver habilidades importantes. Continue praticando e explorando!' }
+      card1: { title: 'Resumo do Conteúdo', content: 'Parabéns! Você concluiu esta aula interativa. Vamos fazer um resumo dos principais pontos aprendidos e como aplicá-los de forma eficaz.' },
+      card2: { title: 'Conclusão', content: 'Este tema é fundamental para desenvolver habilidades importantes. Continue praticando, explorando e aplicando este conhecimento em diferentes contextos!' }
     }
   ];
 }

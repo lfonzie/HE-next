@@ -48,7 +48,7 @@ export default function ChatPage() {
     [selectedModule]
   );
 
-  const messages = currentConversation?.messages || [];
+  const messages = useMemo(() => currentConversation?.messages || [], [currentConversation?.messages]);
   const hasMessages = messages.length > 0;
 
 
