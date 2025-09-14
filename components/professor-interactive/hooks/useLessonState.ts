@@ -68,11 +68,11 @@ export function useLessonState(lesson: InteractiveLesson | null) {
   });
 
   const goNext = useCallback(() => {
-    if (!lesson) return;
-    
     setLessonState(prev => {
       const nextStep = prev.currentStep + 1;
-      const isLastStep = nextStep >= lesson.steps.length;
+      // Para carregamento progressivo, permitir navegação até o slide 8
+      const maxSteps = lesson?.steps?.length || 8;
+      const isLastStep = nextStep >= maxSteps;
       
       return {
         ...prev,

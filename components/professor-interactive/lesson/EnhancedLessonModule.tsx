@@ -160,10 +160,16 @@ const OptimizedSlideCard = React.memo(({
                     alt={slide.card2.title}
                     width={500}
                     height={300}
-                    className={`w-full h-64 object-cover rounded-lg transition-opacity duration-300 ${
+                    className={`w-full h-auto object-cover rounded-lg transition-opacity duration-300 ${
                       imageLoaded ? 'opacity-100' : 'opacity-0'
                     }`}
-                    loading={"lazy"}
+                    loading="lazy"
+                    style={{ 
+                      aspectRatio: '1350/1080',
+                      width: 'auto',
+                      height: 'auto',
+                      maxHeight: '300px'
+                    }}
                     onLoad={handleImageLoad}
                     onError={handleImageError}
                   />

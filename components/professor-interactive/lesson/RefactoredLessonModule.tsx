@@ -37,16 +37,6 @@ export default function RefactoredLessonModule({
   
   const { lesson, error, generateLesson, generateMockLesson, clearLesson } = useLessonGeneration();
   const { loadingState, startLoading, updateProgress, finishLoading, stopLoading } = useLessonLoading();
-  const { 
-    lessonState, 
-    goNext, 
-    goPrevious, 
-    recordAnswer, 
-    toggleHelp, 
-    restartLesson,
-    updateTimeSpent 
-  } = useLessonState(lesson);
-  
   // Hook para carregamento progressivo dos slides
   const progressiveLoading = useProfessorProgressiveLoading();
   
@@ -75,6 +65,16 @@ export default function RefactoredLessonModule({
       steps: processSlidesForHubEduPattern(lesson.steps)
     };
   }, [lesson, progressiveLoading, query]);
+
+  const { 
+    lessonState, 
+    goNext, 
+    goPrevious, 
+    recordAnswer, 
+    toggleHelp, 
+    restartLesson,
+    updateTimeSpent 
+  } = useLessonState(processedLesson);
 
   // Memoized values - usar slides processados
   const currentStep = useMemo(() => {
@@ -396,10 +396,11 @@ export default function RefactoredLessonModule({
         alt={lesson?.title || 'Imagem da aula'}
         width={500}
         height={300}
-        className={""}
-        loading={"lazy"}
+        className="w-full h-auto rounded-lg"
+        loading="lazy"
         style={{ 
           aspectRatio: '1350/1080',
+          width: 'auto',
           height: 'auto',
           maxHeight: '300px'
         }}
