@@ -5,6 +5,11 @@ const nextConfig = {
   outputFileTracingExcludes: {
     '*': ['./enem-api-main/**/*']
   },
+  // Ensure proper development mode handling
+  experimental: {
+    // Prevent development server from looking for production artifacts
+    serverComponentsExternalPackages: ['@prisma/client']
+  },
   async headers() {
     return [
       {
