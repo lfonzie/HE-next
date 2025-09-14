@@ -268,19 +268,47 @@ class EnemApiClient {
         return await generateFallbackQuestions(filters.area || 'geral', filters.limit || 10)
       }
 
-      console.log(`✅ Loaded ${questionsList.length} questions from enem.dev API`)
+      // Filtrar questões por área se especificado (a API pode retornar questões de outras áreas)
+      let filteredQuestions = questionsList
+      if (filters.area && filters.area !== 'geral') {
+        filteredQuestions = questionsList.filter((q: any) => {
+          const questionArea = q.discipline || q.area || ''
+          const targetArea = filters.area!.toLowerCase()
+          
+          // Mapear áreas para corresponder com a API
+          const areaMapping: { [key: string]: string[] } = {
+            'matematica': ['matematica', 'matemática'],
+            'linguagens': ['linguagens', 'linguagens-codigos'],
+            'natureza': ['ciencias-natureza', 'natureza'],
+            'humanas': ['ciencias-humanas', 'humanas']
+          }
+          
+          const mappedAreas = areaMapping[targetArea] || [targetArea]
+          return mappedAreas.some(area => questionArea.toLowerCase().includes(area))
+        })
+        
+        console.log(`Filtered ${filteredQuestions.length} questions for area: ${filters.area}`)
+      }
+
+      // Se não encontrou questões da área específica, usar fallback IA
+      if (filteredQuestions.length === 0 && filters.area && filters.area !== 'geral') {
+        console.log(`No questions found for area ${filters.area} in enem.dev API, falling back to AI`)
+        return await generateFallbackQuestions(filters.area, filters.limit || 10)
+      }
+
+      console.log(`✅ Loaded ${filteredQuestions.length} questions from enem.dev API`)
       
       // Converter formato da API para formato esperado
-      return questionsList.map((question: any) => ({
+      return filteredQuestions.map((question: any) => ({
         id: question.id || `q-${Date.now()}-${Math.random()}`,
         examId: question.examId || `exam-${question.year || 2023}`,
         year: question.year || filters.year || 2023,
         type: question.type || 'REGULAR',
-        area: question.area || question.discipline || filters.area || 'geral',
-        subject: question.subject || question.area || filters.area || 'geral',
-        question: question.question || question.text || question.enunciado || '',
-        options: question.options || question.alternatives || [],
-        correctAnswer: question.correctAnswer || question.resposta || 0,
+        area: question.discipline || question.area || filters.area || 'geral',
+        subject: question.subject || question.discipline || question.area || filters.area || 'geral',
+        question: question.context || question.question || question.text || question.enunciado || '',
+        options: question.alternatives || question.options || [],
+        correctAnswer: question.correctAlternative || question.correctAnswer || question.resposta || 0,
         explanation: question.explanation || question.gabarito,
         topics: question.topics || question.temas || [],
         competencies: question.competencies || question.competencias || [],
