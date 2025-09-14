@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Render Start Script for HubEdu.ai + ENEM API
-echo "🚀 Iniciando HubEdu.ai e ENEM API no Render..."
+echo "🚀 Starting HubEdu.ai and ENEM API on Render..."
 
 # Colors for output
 RED='\033[0;31m'
@@ -20,29 +20,29 @@ echo "   NODE_ENV: $NODE_ENV"
 echo "   PORT: $PORT"
 echo "   DATABASE_URL: ${DATABASE_URL:+SET}"
 echo "   NEXTAUTH_URL: ${NEXTAUTH_URL:+SET}"
-echo "   ENEM_API_URL: ${ENEM_API_URL:+SET}"
+echo "   ENEM_API_BASE: ${ENEM_API_BASE:+SET}"
 
 # Verify build artifacts exist
-echo -e "${BLUE}🔍 Verificando builds...${NC}"
+echo -e "${BLUE}🔍 Verifying builds...${NC}"
 if [ ! -d ".next" ]; then
     echo -e "${RED}❌ HubEdu.ai build not found - .next directory missing${NC}"
-    echo -e "${YELLOW}💡 Run 'npm run build:hubedu' first${NC}"
+    echo -e "${YELLOW}💡 Run 'npm run build' first${NC}"
     exit 1
 fi
 
 if [ ! -d "enem-api-main/.next" ]; then
     echo -e "${RED}❌ ENEM API build not found - .next directory missing${NC}"
-    echo -e "${YELLOW}💡 Run 'npm run build:enem' first${NC}"
+    echo -e "${YELLOW}💡 Run 'npm run build' in enem-api-main first${NC}"
     exit 1
 fi
 
 echo -e "${GREEN}✅ Build artifacts verified${NC}"
 
 # Start both services with concurrently, ensuring ENEM API uses port 11000
-echo -e "${GREEN}🎓 Iniciando HubEdu.ai na porta $PORT...${NC}"
-echo -e "${GREEN}📚 Iniciando ENEM API na porta 11000...${NC}"
-echo -e "${BLUE}📝 Iniciando servidores Next.js...${NC}"
+echo -e "${GREEN}🎓 Starting HubEdu.ai on port $PORT...${NC}"
+echo -e "${GREEN}📚 Starting ENEM API on port 11000...${NC}"
+echo -e "${BLUE}📝 Starting Next.js servers...${NC}"
 
 concurrently --kill-others --prefix-colors "blue,green" --names "HubEdu,ENEM-API" \
-  "next start" \
-  "cd enem-api-main && PORT=11000 npm start" 2>&1 | tee hubedu.log
+  "npm start 2>&1 | tee hubedu.log" \
+  "cd enem-api-main && PORT=11000 npm start 2>&1 | tee enem-api.log"

@@ -240,14 +240,16 @@ class EnemApiClient {
         
         if (response.ok) {
           const data = await response.json()
+          console.log("DEBUG examsData:", JSON.stringify(data).slice(0, 300)); // Debug: Inspect response structure
+          const examsList = Array.isArray(data) ? data : data.data || data.exams || []
           // Converter formato da API local para formato esperado
-          return data.exams?.map((exam: any) => ({
+          return examsList.map((exam: any) => ({
             id: exam.id || `exam-${exam.year}`,
             year: exam.year,
             type: exam.type || 'REGULAR',
             description: exam.description || `ENEM ${exam.year} - Prova Regular`,
             questionsCount: exam.questionsCount || exam.questions?.length || 0
-          })) || []
+          }))
         } else {
           throw new Error(`Local server error: ${response.status}`)
         }
@@ -285,16 +287,18 @@ class EnemApiClient {
         }
         
         const examsData = await examsResponse.json()
-        const exams = examsData.exams || []
+        console.log("DEBUG examsData:", JSON.stringify(examsData).slice(0, 300)); // Debug: Inspect response structure
+        const examsList = Array.isArray(examsData) ? examsData : examsData.data || examsData.exams || []
         
-        if (exams.length === 0) {
+        if (examsList.length === 0) {
           console.log('No exams found in local server')
-          return []
+          console.error("ENEM-API fallback: No valid data")
+          return generateFallbackQuestions(area, limit); // Uses process.env.ENEM_FALLBACK_MODEL || "gpt-4o-mini"
         }
         
         // Usar o primeiro exame disponível se não especificado
-        const targetYear = filters.year || exams[0].year
-        const targetExam = exams.find((exam: any) => exam.year === targetYear)
+        const targetYear = filters.year || examsList[0].year
+        const targetExam = examsList.find((exam: any) => exam.year === targetYear)
         
         if (!targetExam) {
           console.log(`No exam found for year ${targetYear}`)
@@ -494,3 +498,70 @@ export const ENEM_SUBJECTS = {
 } as const
 
 export const ENEM_YEARS = Array.from({ length: 15 }, (_, i) => 2023 - i) // 2009-2023
+
+/**
+ * Generates fallback questions using AI when ENEM API is unavailable
+ */
+async function generateFallbackQuestions(area: string, limit: number): Promise<EnemQuestion[]> {
+  try {
+    console.log(`🤖 Generating ${limit} fallback questions for area: ${area}`)
+    
+    const { OpenAI } = await import('openai')
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    })
+
+    const fallbackModel = process.env.ENEM_FALLBACK_MODEL || 'gpt-4o-mini'
+    
+    const prompt = `Gere ${limit} questões do ENEM para a área de ${area}. 
+    Cada questão deve ter:
+    - Um enunciado claro e objetivo
+    - 5 alternativas (A, B, C, D, E)
+    - Uma alternativa correta
+    - Formato JSON com campos: id, examId, year, type, area, subject, question, options, correctAnswer
+    
+    IMPORTANTE: Retorne APENAS um JSON válido, sem markdown, sem texto adicional. 
+    O formato deve ser exatamente assim:
+    [
+      {
+        "id": "fallback_${area}_1",
+        "examId": "fallback_2023",
+        "year": 2023,
+        "type": "REGULAR",
+        "area": "${area}",
+        "subject": "${area}",
+        "question": "enunciado da questão",
+        "options": ["alternativa A", "alternativa B", "alternativa C", "alternativa D", "alternativa E"],
+        "correctAnswer": 0
+      }
+    ]`
+
+    const completion = await openai.chat.completions.create({
+      model: fallbackModel,
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.7,
+      max_tokens: 2000,
+    })
+
+    const response = completion.choices[0]?.message?.content
+    if (!response) return []
+
+    // Clean the response to extract JSON from markdown if present
+    let cleanResponse = response.trim()
+    
+    // Remove markdown code blocks if present
+    if (cleanResponse.includes('```json')) {
+      cleanResponse = cleanResponse.split('```json')[1].split('```')[0]
+    } else if (cleanResponse.includes('```')) {
+      cleanResponse = cleanResponse.split('```')[1].split('```')[0]
+    }
+
+    const questions = JSON.parse(cleanResponse)
+    console.log(`✅ Generated ${questions.length} fallback questions using ${fallbackModel}`)
+    
+    return questions
+  } catch (error) {
+    console.error('Failed to generate fallback questions:', error)
+    return []
+  }
+}

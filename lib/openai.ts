@@ -7,7 +7,7 @@ export const openai = new OpenAI({
 // Configuração dos modelos disponíveis
 export const MODELS = {
   SIMPLE: 'gpt-4o-mini',      // Para tarefas simples e rápidas
-  COMPLEX: 'gpt-5-chat-latest', // Para tarefas complexas que requerem mais capacidade
+  COMPLEX: process.env.ENEM_FALLBACK_MODEL || 'gpt-4o-mini', // Para tarefas complexas que requerem mais capacidade
 } as const
 
 // Palavras-chave que indicam complexidade alta
