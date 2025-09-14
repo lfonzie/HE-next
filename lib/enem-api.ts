@@ -94,7 +94,7 @@ class EnemApiClient {
           this.isApiAvailable = false
           this.lastAvailabilityCheck = Date.now()
           // Don't throw error for 404, just return empty array to allow fallback
-          return []
+          return [] as T
         }
         if (response.status >= 500) {
           console.log('Server error from ENEM API, marking as unavailable')

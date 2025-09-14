@@ -44,7 +44,7 @@ class LessonCache<T = any> {
   // Limpar entradas expiradas
   private cleanupExpired(): void {
     const now = Date.now();
-    for (const [key, entry] of this.cache.entries()) {
+    for (const [key, entry] of Array.from(this.cache.entries())) {
       if (now - entry.timestamp > entry.ttl) {
         this.cache.delete(key);
         this.stats.size--;
@@ -59,7 +59,7 @@ class LessonCache<T = any> {
     let oldestKey = '';
     let oldestTime = Date.now();
 
-    for (const [key, entry] of this.cache.entries()) {
+    for (const [key, entry] of Array.from(this.cache.entries())) {
       if (entry.lastAccessed < oldestTime) {
         oldestTime = entry.lastAccessed;
         oldestKey = key;
@@ -191,7 +191,7 @@ class LessonCache<T = any> {
   getMemoryUsage(): number {
     let totalSize = 0;
     
-    for (const [key, entry] of this.cache.entries()) {
+    for (const [key, entry] of Array.from(this.cache.entries())) {
       totalSize += key.length;
       totalSize += JSON.stringify(entry.data).length;
       totalSize += 100; // Overhead estimado por entrada
@@ -229,7 +229,7 @@ export const cacheUtils = {
   // Limpar cache por padrão
   clearByPattern: (pattern: string, cache: LessonCache) => {
     const regex = new RegExp(pattern);
-    for (const [key] of cache['cache'].entries()) {
+    for (const [key] of Array.from(cache['cache'].entries())) {
       if (regex.test(key)) {
         cache['cache'].delete(key);
         cache['stats'].size--;
