@@ -33,8 +33,55 @@ fi
 
 echo -e "${GREEN}✅ Build artifacts verified${NC}"
 
-# Start HubEdu.ai service
+# Start HubEdu.ai service in background
 echo -e "${GREEN}🎓 Starting HubEdu.ai on port $PORT...${NC}"
 echo -e "${BLUE}📝 Iniciando servidor Next.js...${NC}"
 
-npm start 2>&1 | tee hubedu.log
+# Start the application and capture PID
+npm start > hubedu.log 2>&1 &
+APP_PID=$!
+
+# Wait for the application to start
+echo -e "${BLUE}⏳ Waiting for application to start...${NC}"
+sleep 10
+
+# Health check function
+check_health() {
+    local max_attempts=30
+    local attempt=1
+    
+    while [ $attempt -le $max_attempts ]; do
+        echo -e "${BLUE}🔍 Health check attempt $attempt/$max_attempts...${NC}"
+        
+        if curl -f -s http://localhost:$PORT/api/health > /dev/null 2>&1; then
+            echo -e "${GREEN}✅ Health check passed!${NC}"
+            return 0
+        fi
+        
+        echo -e "${YELLOW}⏳ Health check failed, retrying in 2 seconds...${NC}"
+        sleep 2
+        attempt=$((attempt + 1))
+    done
+    
+    echo -e "${RED}❌ Health check failed after $max_attempts attempts${NC}"
+    return 1
+}
+
+# Perform health check
+if check_health; then
+    echo -e "${GREEN}🎉 HubEdu.ai is running successfully!${NC}"
+    echo -e "${BLUE}📊 Health endpoints:${NC}"
+    echo "   - /api/health (comprehensive health check)"
+    echo "   - /api/healthz (basic health check)"
+    echo "   - /api/enem/health (ENEM API health check)"
+    
+    # Keep the script running and show logs
+    echo -e "${BLUE}📝 Following application logs...${NC}"
+    tail -f hubedu.log
+else
+    echo -e "${RED}❌ Application failed to start properly${NC}"
+    echo -e "${YELLOW}📝 Last 50 lines of logs:${NC}"
+    tail -50 hubedu.log
+    kill $APP_PID 2>/dev/null
+    exit 1
+fi
