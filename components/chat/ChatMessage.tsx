@@ -135,9 +135,20 @@ export const ChatMessage = memo(function ChatMessage({
   const ModuleIcon = getModuleIcon(moduleIconKey);
   const moduleColor = getModuleColor(moduleIconKey);
 
+  // Bubble classes based on role
+  const bubbleClass = (role: 'user' | 'assistant' | 'system') => {
+    if (role === 'user') {
+      return "self-end bg-amber-300 text-black rounded-2xl px-4 py-3 shadow-sm max-w-prose md:max-w-[65ch] break-words hyphens-auto";
+    }
+    if (role === 'assistant') {
+      return "self-start rounded-2xl px-4 py-3 shadow-sm border border-zinc-200/60 dark:border-zinc-700/50 bg-white/70 dark:bg-zinc-800/60 max-w-prose md:max-w-[65ch] break-words hyphens-auto";
+    }
+    return "self-center text-xs text-zinc-500 bg-zinc-100/60 dark:bg-zinc-800/40 rounded-full px-3 py-1";
+  };
+
   return (
     <div
-      className={`msg flex items-start gap-3 mb-6 ${roleClass}`}
+      className={`flex items-start gap-3 ${isUser ? 'justify-end' : 'justify-start'}`}
       data-message-role={bubbleRole}
       data-message-id={msgId}
       aria-live={isUser ? "off" : "polite"}
@@ -146,7 +157,7 @@ export const ChatMessage = memo(function ChatMessage({
     >
       {/* Avatar do assistente - ícone específico do módulo */}
       {!isUser && (
-        <div className="flex flex-col items-center">
+        <div className={`flex flex-col items-center ${isUser ? 'order-last' : 'order-first'}`}>
           <div 
             className="w-8 h-8 rounded-full border-2 shadow-sm flex items-center justify-center"
             style={{
@@ -175,12 +186,12 @@ export const ChatMessage = memo(function ChatMessage({
         </div>
       )}
 
-      <div className={`flex-1 ${isUser ? "max-w-3xl" : ""}`}>
+      <div className={`${isUser ? 'order-first' : 'order-last'}`}>
         <article
-          className={`openai-chat-message ${bubbleRole}`}
+          className={bubbleClass(bubbleRole as 'user' | 'assistant' | 'system')}
           aria-label={isUser ? "Mensagem do usuário" : "Resposta do assistente"}
         >
-          <div className="openai-message-content">
+          <div className="message-content">
           {/* Renderização especial para módulos com componentes Answer específicos */}
           {!isUser && effectiveModuleId === "PROFESSOR" ? (
             <ProfessorAnswer 
@@ -331,30 +342,12 @@ export const ChatMessage = memo(function ChatMessage({
           </div>
 
           {/* Metadados */}
-          <footer className="message-metadata mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500">
+          <footer className="mt-1 text-xs text-zinc-500 select-none">
             {msgTime && (
               <time dateTime={new Date(message.timestamp!).toISOString()}>{msgTime}</time>
             )}
-
             {typeof message.tokens === "number" && (
-              <span>{formatTokens(message.tokens)} tokens</span>
-            )}
-
-            {!isUser && message.tier && (
-              <span
-                className={`ml-1 px-2 py-0.5 rounded-full font-medium ${
-                  message.tier === "IA_SUPER"
-                    ? "bg-gradient-to-r from-yellow-100 to-yellow-200 text-yellow-800 border border-yellow-200"
-                    : "bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border border-blue-200"
-                }`}
-                title={`Modelo: ${message.model || 'N/A'}`}
-                style={{
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                  fontSize: '11px'
-                }}
-              >
-                {message.tier === "IA_SUPER" ? "🚀 IA Super" : "⚡ IA"}
-              </span>
+              <span className="ml-2">{formatTokens(message.tokens)} tokens</span>
             )}
           </footer>
         </article>

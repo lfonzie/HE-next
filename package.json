@@ -9,7 +9,7 @@
     "dev:all": "chmod +x scripts/*.sh && ./scripts/start-all.sh",
     "build": "npm run build:hubedu && npm run build:enem",
     "build:hubedu": "next build",
-    "build:enem": "cd enem-api-main && npm ci && npx prisma generate && npm run build",
+    "build:enem": "cd enem-api-main && npm install --prefer-offline --no-audit && npx prisma generate && npm run build",
     "start": "concurrently --kill-others --prefix-colors \"blue,green\" --names \"HubEdu,ENEM-API\" \"next start\" \"cd enem-api-main && npm start\"",
     "start:hubedu": "next start",
     "start:enem": "cd enem-api-main && npm start",

@@ -40,6 +40,7 @@ export default function ChatPage() {
   
   // Refs
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const endRef = useRef<HTMLDivElement>(null);
   
   // Memoized values
   const currentModuleId = useMemo(
@@ -112,18 +113,25 @@ export default function ChatPage() {
     fetchConversations();
   }, [fetchConversations]);
 
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (endRef.current) {
+      endRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, isStreaming]);
+
   return (
-    <div className="flex-1 flex flex-col h-full bg-gray-50">
+    <div className="flex-1 flex flex-col h-full bg-gray-50 dark:bg-zinc-900">
         {/* Header */}
-        <div className="bg-white shadow-sm border-b border-gray-200 p-4 flex-shrink-0">
+        <div className="bg-white dark:bg-zinc-900 shadow-sm border-b border-gray-200 dark:border-zinc-700 p-4 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div>
-                <h1 className="text-xl font-semibold text-gray-900">
+                <h1 className="text-xl font-semibold text-gray-900 dark:text-zinc-100">
                   {currentModuleId ? MODULES[currentModuleId]?.label : "Chat"}
                 </h1>
                 {currentModuleId && (
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-600 dark:text-zinc-400">
                     {MODULES[currentModuleId]?.description}
                   </p>
                 )}
@@ -154,44 +162,52 @@ export default function ChatPage() {
           </div>
         </div>
 
-        {/* Messages Container */}
-        <main className="flex-1 overflow-y-auto chat-messages-container chat-content-with-fixed-input bg-gray-50" ref={messagesContainerRef}>
+        {/* Messages Container - Reading Column Layout */}
+        <main className="flex-1 overflow-y-auto chat-messages-container chat-content-with-fixed-input bg-gray-50 dark:bg-zinc-900" ref={messagesContainerRef}>
           {hasMessages ? (
-            <div className="p-4 space-y-4">
-              {/* Classification Indicator */}
-              {lastClassification && (
-                <ClassificationIndicator
-                  module={lastClassification.module}
-                  confidence={lastClassification.confidence}
-                  rationale={lastClassification.rationale}
-                  isVisible={true}
-                />
-              )}
-              
-              {messages.map((message, index) =>
-                message.isStreaming ? (
-                  <StreamingMessage
-                    key={`streaming-${message.id || index}`}
-                    content={message.content}
-                    userInitials="U"
-                    isComplete={!isStreaming && index === messages.length - 1}
-                    currentModuleId={currentModuleId}
-                    tier={message.tier}
-                    model={message.model}
-                    tokens={message.tokens}
+            <div className="mx-auto max-w-screen-md px-4 md:px-6 lg:px-8 leading-relaxed text-pretty">
+              <div 
+                className="flex flex-col gap-4 md:gap-6 pb-28"
+                role="log"
+                aria-live="polite"
+              >
+                {/* Classification Indicator */}
+                {lastClassification && (
+                  <ClassificationIndicator
+                    module={lastClassification.module}
+                    confidence={lastClassification.confidence}
+                    rationale={lastClassification.rationale}
+                    isVisible={true}
                   />
-                ) : (
-                  <ChatMessage
-                    key={`message-${message.id || index}`}
-                    message={message}
-                    isUser={message.role === "user"}
-                    userInitials="U"
-                    currentModuleId={currentModuleId}
-                    conversationId={currentConversation?.id || ''}
-                    messageIndex={index}
-                  />
-                )
-              )}
+                )}
+                
+                {messages.map((message, index) =>
+                  message.isStreaming ? (
+                    <StreamingMessage
+                      key={`streaming-${message.id || index}`}
+                      content={message.content}
+                      userInitials="U"
+                      isComplete={!isStreaming && index === messages.length - 1}
+                      currentModuleId={currentModuleId}
+                      tier={message.tier}
+                      model={message.model}
+                      tokens={message.tokens}
+                    />
+                  ) : (
+                    <ChatMessage
+                      key={`message-${message.id || index}`}
+                      message={message}
+                      isUser={message.role === "user"}
+                      userInitials="U"
+                      currentModuleId={currentModuleId}
+                      conversationId={currentConversation?.id || ''}
+                      messageIndex={index}
+                    />
+                  )
+                )}
+                {/* Scroll sentinel */}
+                <div ref={endRef} />
+              </div>
             </div>
           ) : currentModuleId ? (
             <ModuleWelcomeScreen
@@ -210,9 +226,9 @@ export default function ChatPage() {
           )}
         </main>
 
-        {/* Chat Input - Fixed at bottom */}
-        <div className="chat-input-fixed">
-          <div className="max-w-none mx-auto">
+        {/* Chat Input - Fixed Composer with Blur */}
+        <div className="sticky bottom-0 left-0 right-0 backdrop-blur supports-[backdrop-filter]:bg-white/70 dark:supports-[backdrop-filter]:bg-zinc-900/60 border-t border-zinc-200/60 dark:border-zinc-700/50 shadow-[0_-1px_0_0_rgba(0,0,0,0.04)] px-4 md:px-6 lg:px-8 py-3">
+          <div className="mx-auto max-w-screen-md">
             <ChatInput
               message={inputMessage}
               onMessageChange={setInputMessage}

@@ -54,7 +54,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   };
 
   return (
-    <div className="flex gap-2 items-end w-full">
+    <form onSubmit={handleSubmit} className="flex items-end gap-2">
       <div className="flex-1">
         <Textarea
           ref={textareaRef}
@@ -63,7 +63,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           disabled={isStreaming || disabled}
-          className="min-h-[44px] max-h-32 resize-none"
+          className="w-full min-h-[44px] max-h-44 resize-none rounded-xl border border-zinc-200 dark:border-zinc-700 px-3 py-2 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 placeholder-zinc-500 dark:placeholder-zinc-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          aria-label="Mensagem"
         />
       </div>
       
@@ -83,8 +84,9 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           size="sm"
           onClick={() => document.getElementById('file-upload')?.click()}
           disabled={isStreaming || disabled}
-          className="h-11 w-11 p-0"
+          className="h-10 w-10 p-0 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-700"
           title="Anexar arquivo"
+          aria-label="Anexar arquivo"
         >
           <Upload className="w-4 h-4" />
         </Button>
@@ -96,8 +98,9 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           size="sm"
           onClick={handleVoiceRecord}
           disabled={isStreaming || disabled}
-          className={`h-11 w-11 p-0 ${isRecording ? 'text-red-500' : ''}`}
+          className={`h-10 w-10 p-0 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-700 ${isRecording ? 'text-red-500' : ''}`}
           title="Gravar áudio"
+          aria-label="Gravar áudio"
         >
           <Mic className="w-4 h-4" />
         </Button>
@@ -106,8 +109,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         <Button
           type="submit"
           disabled={!message.trim() || isStreaming || disabled}
-          className="h-11 px-4"
-          onClick={handleSubmit}
+          className="h-10 rounded-xl px-3 font-medium bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+          aria-label="Enviar mensagem"
         >
           {isStreaming ? (
             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -116,6 +119,6 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           )}
         </Button>
       </div>
-    </div>
+    </form>
   );
 };
