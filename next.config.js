@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   serverExternalPackages: ['@prisma/client'],
+  // Exclude ENEM API server from build
+  outputFileTracingExcludes: {
+    '*': ['./enem-api-main/**/*']
+  },
   async headers() {
     return [
       {

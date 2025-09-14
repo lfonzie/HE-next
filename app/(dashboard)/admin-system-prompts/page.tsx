@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -50,7 +50,7 @@ export default function AdminSystemPromptsPage() {
   const [showPreview, setShowPreview] = useState(false);
 
   // Load prompts
-  const loadPrompts = async () => {
+  const loadPrompts = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
@@ -72,12 +72,12 @@ export default function AdminSystemPromptsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
 
   // Load prompts when filters change
   useEffect(() => {
     loadPrompts();
-  }, [filters]);
+  }, [filters, loadPrompts]);
 
   // Update editor when prompt changes
   useEffect(() => {

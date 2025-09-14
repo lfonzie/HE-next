@@ -6,11 +6,49 @@ import { enemApi, ENEM_AREAS } from '@/lib/enem-api'
 import { openai, selectModel, getModelConfig } from '@/lib/openai'
 import { apiConfig } from '@/lib/api-config'
 
+// Cache para evitar chamadas duplicadas
+const questionCache = new Map<string, { data: any, timestamp: number }>()
+const CACHE_DURATION = 5 * 60 * 1000 // 5 minutos
+
+// Handler para requisições GET
+export async function GET(request: NextRequest) {
+  try {
+    // Verificação de sessão com fallback para desenvolvimento
+    const session = await getServerSession(authOptions)
+    console.log('🔐 Session check (GET):', session ? 'Authenticated' : 'Not authenticated')
+    
+    // Permitir acesso sem autenticação em desenvolvimento
+    if (!session && process.env.NODE_ENV === 'production') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Parse query parameters
+    const { searchParams } = new URL(request.url)
+    const area = searchParams.get('area')
+    const numQuestions = parseInt(searchParams.get('numQuestions') || '1')
+    const useRealQuestions = searchParams.get('useRealQuestions') !== 'false'
+    const limit = parseInt(searchParams.get('limit') || '1')
+
+    // Use limit if numQuestions is not provided
+    const questionCount = numQuestions || limit
+
+    if (!area) {
+      return NextResponse.json({ error: 'Area parameter is required' }, { status: 400 })
+    }
+
+    return await processQuestionsRequest(area, questionCount, useRealQuestions)
+  } catch (error) {
+    console.error('ENEM API GET error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+// Handler para requisições POST
 export async function POST(request: NextRequest) {
   try {
     // Verificação de sessão com fallback para desenvolvimento
     const session = await getServerSession(authOptions)
-    console.log('🔐 Session check:', session ? 'Authenticated' : 'Not authenticated')
+    console.log('🔐 Session check (POST):', session ? 'Authenticated' : 'Not authenticated')
     
     // Permitir acesso sem autenticação em desenvolvimento
     if (!session && process.env.NODE_ENV === 'production') {
@@ -30,11 +68,29 @@ export async function POST(request: NextRequest) {
 
     const { area, numQuestions, useRealQuestions = true } = requestBody
 
+    return await processQuestionsRequest(area, numQuestions, useRealQuestions)
+  } catch (error) {
+    console.error('ENEM API POST error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+// Função comum para processar requisições de questões
+async function processQuestionsRequest(area: string, numQuestions: number, useRealQuestions: boolean) {
+  try {
     // Validate input
     if (!area || !numQuestions || numQuestions <= 0) {
       return NextResponse.json({ 
         error: 'Invalid parameters: area and numQuestions are required' 
       }, { status: 400 })
+    }
+
+    // Verificar cache primeiro
+    const cacheKey = `${area}-${numQuestions}-${useRealQuestions}`
+    const cached = questionCache.get(cacheKey)
+    if (cached && (Date.now() - cached.timestamp) < CACHE_DURATION) {
+      console.log(`📦 Returning cached questions for ${area}`)
+      return NextResponse.json(cached.data)
     }
 
     let questions = []
@@ -48,34 +104,38 @@ export async function POST(request: NextRequest) {
     if (shouldUseApi) {
       // Verificar se a API está disponível primeiro (com cache inteligente)
       try {
-        const isApiAvailable = await enemApi.checkApiAvailability()
+        console.log(`🔍 Attempting to load ${numQuestions} questions for area: ${area}`)
         
-        if (isApiAvailable) {
-          // Tentar buscar questões reais da API enem.dev
-          try {
-            const apiArea = Object.keys(ENEM_AREAS).find(key => 
+        // Tentar buscar questões reais da API enem.dev
+        try {
+          // Tratar área "geral" especificamente
+          let apiArea = area
+          if (area.toLowerCase() === 'geral') {
+            console.log('🎯 Area "geral" detected, will search across all ENEM areas')
+            apiArea = 'geral' // O método getRandomQuestions já trata isso
+          } else {
+            apiArea = Object.keys(ENEM_AREAS).find(key => 
               key.toLowerCase().includes(area.toLowerCase()) || 
               area.toLowerCase().includes(key.toLowerCase())
             ) || area
-
-            const realQuestions = await enemApi.getRandomQuestions(apiArea, numQuestions)
-            
-            if (realQuestions.length > 0) {
-              questions = realQuestions.map(q => enemApi.convertToInternalFormat(q))
-              source = 'enem.dev'
-              console.log(`✅ Loaded ${questions.length} real ENEM questions from API (API Priority Mode)`)
-            } else {
-              console.log('📵 No real questions returned from API, falling back to database/AI generation')
-            }
-          } catch (error) {
-            console.error('Failed to fetch real ENEM questions:', error)
-            // Continue to fallback options
           }
-        } else {
-          console.log('📵 ENEM API not available (cached), falling back to database/AI generation')
+
+          console.log(`🎯 Mapped area "${area}" to API area "${apiArea}"`)
+          const realQuestions = await enemApi.getRandomQuestions(apiArea, numQuestions)
+          
+          if (realQuestions.length > 0) {
+            questions = realQuestions.map(q => enemApi.convertToInternalFormat(q))
+            source = 'enem.dev'
+            console.log(`✅ Loaded ${questions.length} real ENEM questions from API`)
+          } else {
+            console.log('📵 No real questions returned from API, falling back to database/AI generation')
+          }
+        } catch (error) {
+          console.error('❌ Failed to fetch real ENEM questions:', error)
+          // Continue to fallback options
         }
       } catch (error) {
-        console.error('Error checking API availability:', error)
+        console.error('❌ Error in API availability check:', error)
         // Continue to fallback options
       }
     }
@@ -83,8 +143,19 @@ export async function POST(request: NextRequest) {
     // Se não conseguiu questões reais ou não foi solicitado, buscar do banco
     if (questions.length === 0 && shouldUseDatabase) {
       try {
+        // Tratar área "geral" no banco de dados
+        let whereClause: any = { area }
+        if (area.toLowerCase() === 'geral') {
+          // Para área geral, buscar de todas as áreas
+          whereClause = {
+            area: {
+              in: ['linguagens', 'matematica', 'natureza', 'humanas']
+            }
+          }
+        }
+        
         const dbQuestions = await prisma.enemQuestion.findMany({
-          where: { area },
+          where: whereClause,
           take: numQuestions,
           orderBy: { created_at: 'desc' }
         })
@@ -186,23 +257,66 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Ensure we have at least some questions
+    // Ensure we have at least some questions - create mock questions as final fallback
     if (questions.length === 0) {
-      return NextResponse.json({ 
-        error: 'Unable to load or generate questions. Please try again later.' 
-      }, { status: 500 })
+      console.log('🔄 Creating mock questions as final fallback')
+      questions = generateMockQuestions(area, numQuestions)
+      source = 'mock'
     }
 
-    return NextResponse.json({ 
+    const responseData = { 
       questions: questions.slice(0, numQuestions),
       source,
       total: questions.length
+    }
+
+    // Armazenar no cache
+    questionCache.set(cacheKey, {
+      data: responseData,
+      timestamp: Date.now()
     })
+
+    // Limpar cache antigo (manter apenas últimos 100 itens)
+    if (questionCache.size > 100) {
+      const oldestKey = questionCache.keys().next().value
+      if (oldestKey) {
+        questionCache.delete(oldestKey)
+      }
+    }
+
+    return NextResponse.json(responseData)
 
   } catch (error) {
     console.error('ENEM API error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
+}
+
+function generateMockQuestions(area: string, count: number) {
+  const mockQuestions = []
+  
+  for (let i = 1; i <= count; i++) {
+    mockQuestions.push({
+      id: `mock-${area}-${i}`,
+      subject: area,
+      area: area,
+      difficulty: 'Médio',
+      year: new Date().getFullYear(),
+      question: `Esta é uma questão de exemplo da área de ${area}. Questão ${i} de ${count}.`,
+      options: [
+        'Alternativa A',
+        'Alternativa B', 
+        'Alternativa C',
+        'Alternativa D',
+        'Alternativa E'
+      ],
+      correctAnswer: 'A',
+      explanation: `Explicação da questão ${i} da área de ${area}.`,
+      source: 'mock'
+    })
+  }
+  
+  return mockQuestions
 }
 
 async function generateQuestions(area: string, count: number) {

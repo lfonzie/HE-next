@@ -143,7 +143,7 @@ export function useLessonState(lesson: InteractiveLesson | null) {
       questionTimer: {},
       currentQuestionStartTime: Date.now()
     });
-  }, [lesson]);
+  }, []);
 
   const updateTimeSpent = useCallback((time: number) => {
     setLessonState(prev => ({

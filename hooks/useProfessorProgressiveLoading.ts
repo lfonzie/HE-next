@@ -55,6 +55,28 @@ export function useProfessorProgressiveLoading() {
 
   const generateSlide = useCallback(async (slideIndex: number, query: string, subject: string): Promise<Slide> => {
     try {
+      // Para o slide 1, usar API rápida
+      if (slideIndex === 1) {
+        const response = await fetch('/api/module-professor-interactive/quick-start', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            query: query,
+            subject: subject
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Falha na resposta da API: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data.slide1;
+      }
+
+      // Para outros slides, usar API normal
       const response = await fetch('/api/module-professor-interactive/slide', {
         method: 'POST',
         headers: {
@@ -109,7 +131,7 @@ export function useProfessorProgressiveLoading() {
     subject: string,
     initialImageUrl?: string
   ) => {
-    console.log('🚀 Iniciando carregamento progressivo - apenas slides 1 e 2');
+    console.log('🚀 Iniciando carregamento progressivo otimizado');
     
     setLoadingState({
       isLoading: true,
@@ -126,36 +148,59 @@ export function useProfessorProgressiveLoading() {
     });
 
     try {
-      // Simular preparação inicial
-      await new Promise(resolve => setTimeout(resolve, 800));
+      // Preparação inicial mínima
       setLoadingState(prev => ({
         ...prev,
-        progress: 30,
-        message: 'Gerando slides iniciais (1 e 2)...'
+        progress: 10,
+        message: 'Gerando primeiro slide...'
       }));
 
-      // Gerar APENAS slides 1 e 2 simultaneamente
-      console.log('📝 Gerando slides 1 e 2 simultaneamente...');
-      const [slide1, slide2] = await Promise.all([
-        generateSlide(1, query, subject),
-        generateSlide(2, query, subject)
-      ]);
+      // Gerar APENAS o slide 1 primeiro (usando API rápida)
+      console.log('⚡ Gerando slide 1 com API rápida...');
+      const slide1 = await generateSlide(1, query, subject);
 
       // Adicionar imagem ao slide 1 se disponível
       if (initialImageUrl && slide1.card2) {
         slide1.card2.imageUrl = initialImageUrl;
       }
 
+      // Mostrar slide 1 imediatamente
       setLoadingState(prev => ({
         ...prev,
         progress: 100,
-        message: 'Aula pronta! Slides 1 e 2 carregados.',
-        loadedSlides: [slide1, slide2], // APENAS 2 slides carregados inicialmente
-        canStart: true,
-        isLoading: false
+        message: 'Primeiro slide pronto!',
+        loadedSlides: [slide1], // APENAS slide 1 carregado
+        canStart: true, // Permitir começar com slide 1
+        isLoading: false // Parar loading principal
       }));
 
-      console.log('✅ Carregamento inicial concluído - slides 1 e 2 prontos');
+      console.log('✅ Slide 1 pronto - usuário pode começar');
+
+      // Gerar slide 2 em paralelo (sem bloquear a UI)
+      setTimeout(async () => {
+        try {
+          console.log('📝 Gerando slide 2 em paralelo...');
+          const slide2 = await generateSlide(2, query, subject);
+          
+          setLoadingState(prev => ({
+            ...prev,
+            loadedSlides: [slide1, slide2], // Adicionar slide 2
+            message: 'Segundo slide carregado!'
+          }));
+
+          console.log('✅ Slide 2 carregado em paralelo');
+          
+          // Limpar mensagem após um tempo
+          setTimeout(() => {
+            setLoadingState(prev => ({
+              ...prev,
+              message: ''
+            }));
+          }, 1500);
+        } catch (error) {
+          console.error('❌ Erro ao gerar slide 2:', error);
+        }
+      }, 50); // Delay mínimo
 
     } catch (error) {
       console.error('❌ Erro no carregamento inicial:', error);

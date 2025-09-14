@@ -1,6 +1,7 @@
 // components/ui/UnsplashImagePicker.tsx
 'use client';
 
+import Image from 'next/image';
 import React, { useState } from 'react';
 import { Image as ImageIcon, Download, ExternalLink, Heart } from 'lucide-react';
 import { Button } from './button';
@@ -79,11 +80,14 @@ export function UnsplashImagePicker({
             <div className="border-t pt-4 mt-4">
               <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg">
                 <div className="relative w-20 h-20 overflow-hidden rounded-md">
-                  <img
-                    src={selectedImage.urls.small}
-                    alt={selectedImage.alt_description || 'Imagem selecionada'}
-                    className="w-full h-full object-cover"
-                  />
+                  <Image
+        src={selectedImage.urls.small}
+        alt={selectedImage.alt_description || 'Imagem selecionada'}
+        width={500}
+        height={300}
+        className={""}
+        loading={"lazy"}
+      />
                 </div>
                 
                 <div className="flex-1 space-y-2">

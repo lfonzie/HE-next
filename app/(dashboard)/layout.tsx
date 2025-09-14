@@ -1,6 +1,7 @@
 "use client"
 
 import { ReactNode, useState } from 'react'
+import Image from 'next/image'
 import { useSession } from 'next-auth/react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useEffect } from 'react'
@@ -54,9 +55,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               <div className="w-16 flex-shrink-0 bg-white/90 backdrop-blur-sm border-r border-gray-200 flex flex-col items-center py-4 space-y-4">
                 {/* Logo */}
                 <div className="w-10 h-10 bg-yellow-500 rounded-lg flex items-center justify-center">
-                  <img
+                  <Image
                     src="/Logo_HubEdu.ia.svg"
                     alt="HubEdu.ia"
+                    width={32}
+                    height={32}
                     className="w-8 h-8 object-contain"
                   />
                 </div>

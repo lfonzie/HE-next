@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
-import { Timer, BookOpen, Target, Play, Pause, RotateCcw, Clock } from 'lucide-react'
+import { Timer, BookOpen, Target, Play, Pause, RotateCcw, Clock, CheckCircle } from 'lucide-react'
 import { useEnem } from '@/hooks/useEnem'
 import { formatTime } from '@/lib/utils'
 import { EnemQuestion } from '@/types'
@@ -153,42 +153,70 @@ export function EnemSimulator({ area, numQuestions, duration, useRealQuestions =
   }
 
   // Mostrar carregamento progressivo se ativo
-  if (progressiveLoading.isLoading || progressiveLoading.message.includes('Erro ao carregar')) {
-    const isError = progressiveLoading.message.includes('Erro ao carregar')
+  if (progressiveLoading.isLoading || progressiveLoading.error) {
+    const isError = !!progressiveLoading.error
     
     return (
       <div className="max-w-4xl mx-auto p-6">
-        <Card>
+        <Card className="shadow-lg border-0 bg-gradient-to-br from-white to-blue-50/30">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BookOpen className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <BookOpen className="h-6 w-6 text-blue-600" />
               {isError ? 'Erro no Carregamento' : 'Preparando Simulado ENEM'}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="text-center">
+            <div className="text-center space-y-4">
               {!isError && (
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                <div className="relative">
+                  <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-600 mx-auto mb-4"></div>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-blue-600 font-bold text-lg">
+                      {progressiveLoading.progress}%
+                    </div>
+                  </div>
+                </div>
               )}
               {isError && (
                 <div className="text-red-500 text-6xl mb-4">⚠️</div>
               )}
-              <h3 className="text-lg font-semibold mb-2">{progressiveLoading.message}</h3>
-              {!isError && (
-                <Progress value={progressiveLoading.progress} className="w-full mb-4" />
-              )}
-              <p className="text-sm text-muted-foreground">
-                {progressiveLoading.loadedQuestions.length} de {progressiveLoading.totalQuestions} questões carregadas
-              </p>
+              
+              <div className="space-y-2">
+                <h3 className="text-xl font-semibold text-gray-800">{progressiveLoading.message}</h3>
+                {!isError && (
+                  <div className="space-y-2">
+                    <Progress value={progressiveLoading.progress} className="w-full h-3" />
+                    <div className="flex justify-between text-sm text-gray-600">
+                      <span>{progressiveLoading.loadedQuestions.length} de {progressiveLoading.totalQuestions} questões</span>
+                      <span>{progressiveLoading.loadingSpeed.toFixed(1)} questões/s</span>
+                    </div>
+                    {progressiveLoading.estimatedTimeRemaining > 0 && (
+                      <p className="text-sm text-gray-500">
+                        Tempo estimado restante: {progressiveLoading.estimatedTimeRemaining}s
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
             
             {progressiveLoading.canStart && !isError && (
-              <div className="text-center">
-                <p className="text-sm text-green-600 mb-4">
-                  ✅ Você pode começar a responder enquanto as questões carregam!
-                </p>
-                <Button onClick={() => setUseProgressiveLoading(false)} size="lg">
-                  <Play className="h-4 w-4 mr-2" />
+              <div className="text-center space-y-4">
+                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center justify-center gap-2 text-green-700 mb-2">
+                    <CheckCircle className="h-5 w-5" />
+                    <span className="font-semibold">Pronto para começar!</span>
+                  </div>
+                  <p className="text-sm text-green-600">
+                    Você pode começar a responder enquanto as questões continuam carregando
+                  </p>
+                </div>
+                <Button 
+                  onClick={() => setUseProgressiveLoading(false)} 
+                  size="lg"
+                  className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold px-8 py-3"
+                >
+                  <Play className="h-5 w-5 mr-2" />
                   Começar Simulado
                 </Button>
               </div>
@@ -196,9 +224,14 @@ export function EnemSimulator({ area, numQuestions, duration, useRealQuestions =
             
             {isError && (
               <div className="text-center space-y-4">
-                <p className="text-sm text-red-600 mb-4">
-                  Ocorreu um erro ao carregar as questões. Verifique sua conexão e tente novamente.
-                </p>
+                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-600 mb-2">
+                    Ocorreu um erro ao carregar as questões. Verifique sua conexão e tente novamente.
+                  </p>
+                  <p className="text-xs text-red-500">
+                    Erro: {progressiveLoading.error}
+                  </p>
+                </div>
                 <div className="flex gap-3 justify-center">
                   <Button 
                     onClick={() => {
@@ -207,6 +240,7 @@ export function EnemSimulator({ area, numQuestions, duration, useRealQuestions =
                     }} 
                     size="lg"
                     variant="default"
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
                   >
                     <RotateCcw className="h-4 w-4 mr-2" />
                     Tentar Novamente

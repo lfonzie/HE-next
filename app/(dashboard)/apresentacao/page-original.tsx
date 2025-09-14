@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import React, { useState, useEffect, useCallback } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -360,12 +361,14 @@ export function SlideLogo() {
   return (
     <div className="flex items-center space-x-3 group cursor-pointer">
       <div className="relative p-1">
-        <img
-          src={ASSETS.LOGO_ICON}
-          alt="HubEdu.ia"
-          className="w-8 h-8 object-contain transition-transform duration-300 group-hover:scale-110"
-          loading="eager"
-        />
+        <Image
+        src={ASSETS.LOGO_ICON}
+        alt={"Image"}
+        width={500}
+        height={300}
+        className={""}
+        loading={"lazy"}
+      />
         <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 to-indigo-400/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </div>
       <h1 className="text-xl font-bold text-gray-800 group-hover:text-yellow-600 transition-all duration-300">
@@ -418,13 +421,15 @@ const slides = [
         <div className="flex justify-center mb-3 mt-8 slide-in-up">
           <div className="relative group floating-animation p-4">
             <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full blur-2xl opacity-20 group-hover:opacity-30 transition-opacity duration-500 pulse-glow"></div>
-            <img
-              src={ASSETS.LOGO_ICON}
-              alt="Símbolo da HubEdu.ia"
-              className="relative w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 xl:w-48 xl:h-48 2xl:w-56 2xl:h-56 object-contain transition-all duration-700 hover:scale-110 drop-shadow-2xl"
-              style={{ filter: "drop-shadow(0 25px 50px rgba(0,0,0,0.2))" }}
-              loading="eager"
-            />
+            <Image
+        src={ASSETS.LOGO_ICON}
+        alt={"Image"}
+        width={500}
+        height={300}
+        className={""}
+        loading={"lazy"}
+        style={{ filter: "drop-shadow(0 25px 50px rgba(0,0,0,0.2))" }}
+      />
           </div>
           </div>
           
@@ -637,12 +642,14 @@ const slides = [
         <div className="flex justify-center mb-8">
           <div className="relative group floating-animation p-3">
             <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-blue-400 rounded-full blur-2xl opacity-20 group-hover:opacity-30 transition-opacity duration-500 pulse-glow"></div>
-            <img
-              src={ASSETS.LOGO_ICON}
-              alt="HubEdu.ia"
-              className="relative w-10 h-10 object-contain transition-all duration-700 hover:scale-110 drop-shadow-lg"
-              loading="eager"
-            />
+            <Image
+        src={ASSETS.LOGO_ICON}
+        alt={"Image"}
+        width={500}
+        height={300}
+        className={""}
+        loading={"lazy"}
+      />
           </div>
         </div>
         
@@ -763,12 +770,14 @@ const slides = [
         <div className="flex justify-center mb-8">
           <div className="relative group floating-animation p-3">
             <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full blur-2xl opacity-20 group-hover:opacity-30 transition-opacity duration-500 pulse-glow"></div>
-            <img
-              src={ASSETS.LOGO_ICON}
-              alt="HubEdu.ia"
-              className="relative w-10 h-10 object-contain transition-all duration-700 hover:scale-110 drop-shadow-lg"
-              loading="eager"
-            />
+            <Image
+        src={ASSETS.LOGO_ICON}
+        alt={"Image"}
+        width={500}
+        height={300}
+        className={""}
+        loading={"lazy"}
+      />
           </div>
         </div>
         
@@ -888,12 +897,14 @@ const slides = [
         <div className="flex justify-center mb-2">
           <div className="relative group floating-animation p-3">
             <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-blue-400 rounded-full blur-2xl opacity-20 group-hover:opacity-30 transition-opacity duration-500 pulse-glow"></div>
-            <img
-              src={ASSETS.LOGO_ICON}
-              alt="HubEdu.ia"
-              className="relative w-12 h-12 object-contain transition-all duration-700 hover:scale-110 drop-shadow-lg"
-              loading="eager"
-            />
+            <Image
+        src={ASSETS.LOGO_ICON}
+        alt={"Image"}
+        width={500}
+        height={300}
+        className={""}
+        loading={"lazy"}
+      />
           </div>
         </div>
         
@@ -969,13 +980,15 @@ const slides = [
         <div className="flex justify-center mb-4 mt-2">
           <div className="relative group floating-animation p-6">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-full blur-3xl opacity-20 group-hover:opacity-30 transition-opacity duration-500 pulse-glow"></div>
-            <img
-              src={ASSETS.LOGO_ICON}
-              alt="HubEdu.ia"
-              className="relative w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 xl:w-48 xl:h-48 2xl:w-56 2xl:h-56 object-contain transition-all duration-700 hover:scale-110 drop-shadow-2xl"
-              style={{ filter: "drop-shadow(0 25px 50px rgba(0,0,0,0.2))" }}
-              loading="eager"
-            />
+            <Image
+        src={ASSETS.LOGO_ICON}
+        alt={"Image"}
+        width={500}
+        height={300}
+        className={""}
+        loading={"lazy"}
+        style={{ filter: "drop-shadow(0 25px 50px rgba(0,0,0,0.2))" }}
+      />
           </div>
         </div>
         
@@ -1031,7 +1044,7 @@ export default function Apresentacao() {
         setTimeout(() => setIsTransitioning(false), 100);
       }, 50);
     }
-  }, [currentSlide, isTransitioning, slides.length]);
+  }, [currentSlide, isTransitioning]);
 
   const prevSlide = useCallback(() => {
     if (currentSlide > 0 && !isTransitioning) {
@@ -1095,7 +1108,7 @@ export default function Apresentacao() {
     // Usar window.addEventListener para capturar eventos globais
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [currentSlide, isTransitioning, nextSlide, prevSlide, slides]);
+  }, [currentSlide, isTransitioning, nextSlide, prevSlide]);
 
 
   return (
@@ -1184,12 +1197,14 @@ export default function Apresentacao() {
         <div className="fixed top-4 md:top-8 left-2 md:left-8 z-50">
           <div className="bg-white/90 backdrop-blur-sm rounded-full p-1.5 md:p-2 shadow-lg border border-white/20">
             <div className="flex items-center space-x-1 md:space-x-2">
-              <img
-                src={ASSETS.LOGO_ICON}
-                alt="HubEdu.ia"
-                className="w-4 h-4 md:w-6 md:h-6 object-contain"
-                loading="eager"
-              />
+              <Image
+        src={ASSETS.LOGO_ICON}
+        alt={"Image"}
+        width={500}
+        height={300}
+        className={""}
+        loading={"lazy"}
+      />
               <span className="text-xs md:text-sm font-bold text-gray-800">
                 HubEdu.ia
               </span>

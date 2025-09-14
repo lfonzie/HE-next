@@ -22,11 +22,15 @@ export async function POST(request: NextRequest) {
     const isQuestionSlide = slideIndex === 4 || slideIndex === 7;
     const isFinalSlide = slideIndex === 8;
     
-    // Determinar contexto do progresso da aula
-    const progressContext = slideIndex <= 2 ? 'início' : 
-                           slideIndex <= 4 ? 'desenvolvimento inicial' :
-                           slideIndex <= 6 ? 'desenvolvimento avançado' :
-                           slideIndex <= 8 ? 'conclusão' : 'final';
+    // Determinar contexto específico do progresso da aula
+    const progressContext = slideIndex === 1 ? 'introdução inicial' :
+                           slideIndex === 2 ? 'conceitos fundamentais' :
+                           slideIndex === 3 ? 'desenvolvimento inicial' :
+                           slideIndex === 4 ? 'primeira verificação' :
+                           slideIndex === 5 ? 'aplicações práticas' :
+                           slideIndex === 6 ? 'exercícios e exemplos' :
+                           slideIndex === 7 ? 'segunda verificação' :
+                           slideIndex === 8 ? 'conclusão e resumo' : 'final';
     
     console.log(`📝 Gerando slide ${slideIndex}, tipo: ${isQuestionSlide ? 'pergunta' : 'explicação'}, contexto: ${progressContext}`);
 
@@ -90,31 +94,113 @@ export async function POST(request: NextRequest) {
 
       userPrompt = `Crie um slide de conclusão ÚNICO para ${query}. Este é o slide final da aula e deve resumir todo o conteúdo estudado de forma específica e não repetitiva. Inclua uma imagem diferente relacionada ao tema no segundo card.`;
     } else {
-      systemPrompt = `Você é um professor especializado em criar conteúdo educativo sobre ${query}.
+      // Prompts específicos baseados no contexto do slide
+      if (slideIndex === 1) {
+        systemPrompt = `Você é um professor especializado em criar conteúdo educativo sobre ${query}.
 
-      Crie um slide explicativo ÚNICO seguindo esta estrutura:
-      - Conteúdo principal claro e educativo específico para o slide ${slideIndex}
-      - Informações complementares e aplicações práticas únicas
-      - Cada card deve ter aproximadamente 100-150 palavras de conteúdo bem estruturado
-      - Incluir exemplos práticos únicos e explicações claras específicas
-      - Usar linguagem didática e envolvente
-      - NÃO repetir conteúdo de slides anteriores
-      - Focar em aspectos específicos do slide ${slideIndex}
+        Crie um slide de APRESENTAÇÃO E MOTIVAÇÃO seguindo esta estrutura:
+        - Card 1: Contexto histórico e relevância atual do tema
+        - Card 2: Impacto no mundo real e curiosidades interessantes
+        - Foco em despertar curiosidade e mostrar a importância prática
+        - Linguagem envolvente com exemplos do cotidiano
+        - Cada card deve ter aproximadamente 100-150 palavras
+        
+        Responda APENAS com JSON válido:
+        {
+          "type": "explanation",
+          "card1": {
+            "title": "Título do Card 1",
+            "content": "Contexto histórico e relevância atual"
+          },
+          "card2": {
+            "title": "Título do Card 2",
+            "content": "Impacto real e curiosidades"
+          }
+        }`;
+
+        userPrompt = `Crie um slide de APRESENTAÇÃO E MOTIVAÇÃO sobre ${query}. Este slide deve apresentar o contexto histórico do tema, sua relevância atual, impacto no mundo real e curiosidades interessantes. Use exemplos do cotidiano para despertar curiosidade. NÃO fale sobre conceitos ou definições - apenas apresente o tema de forma motivacional.`;
+      } else if (slideIndex === 2) {
+        systemPrompt = `Você é um professor especializado em criar conteúdo educativo sobre ${query}.
+
+        Crie um slide de DEFINIÇÕES E TERMINOLOGIA seguindo esta estrutura:
+        - Card 1: Definições precisas e terminologia específica do tema
+        - Card 2: Glossário de termos importantes e suas aplicações
+        - Foco em estabelecer vocabulário técnico correto
+        - Linguagem precisa e técnica
+        - Cada card deve ter aproximadamente 100-150 palavras
+        
+        Responda APENAS com JSON válido:
+        {
+          "type": "explanation",
+          "card1": {
+            "title": "Título do Card 1",
+            "content": "Definições precisas e terminologia"
+          },
+          "card2": {
+            "title": "Título do Card 2",
+            "content": "Glossário de termos importantes"
+          }
+        }`;
+
+        userPrompt = `Crie um slide de DEFINIÇÕES E TERMINOLOGIA sobre ${query}. Este slide deve apresentar as definições precisas do tema, terminologia específica e um glossário de termos importantes. Foque em estabelecer o vocabulário técnico correto. NÃO repita informações do slide anterior - seja específico sobre definições e termos técnicos.`;
+      } else if (slideIndex === 3) {
+        systemPrompt = `Você é um professor especializado em criar conteúdo educativo sobre ${query}.
+
+        Crie um slide de MECANISMOS E PROCESSOS seguindo esta estrutura:
+        - Card 1: Como funciona o tema - mecanismos internos e processos
+        - Card 2: Etapas específicas e fluxos de funcionamento
+        - Foco em explicar o "como" e "por que" dos processos
+        - Linguagem técnica explicativa
+        - Cada card deve ter aproximadamente 100-150 palavras
+        
+        Responda APENAS com JSON válido:
+        {
+          "type": "explanation",
+          "card1": {
+            "title": "Título do Card 1",
+            "content": "Mecanismos internos e processos"
+          },
+          "card2": {
+            "title": "Título do Card 2",
+            "content": "Etapas e fluxos de funcionamento"
+          }
+        }`;
+
+        userPrompt = `Crie um slide de MECANISMOS E PROCESSOS sobre ${query}. Este slide deve explicar como o tema funciona internamente, seus mecanismos, processos específicos e etapas de funcionamento. Foque em explicar o "como" e "por que" dos processos. NÃO repita definições ou contexto - seja específico sobre mecanismos e processos internos.`;
+      } else {
+        systemPrompt = `Você é um professor especializado em criar conteúdo educativo sobre ${query}.
+
+        Crie um slide explicativo ÚNICO seguindo esta estrutura:
+        - Conteúdo principal claro e educativo específico para o slide ${slideIndex}
+        - Informações complementares e aplicações práticas únicas
+        - Cada card deve ter aproximadamente 100-150 palavras de conteúdo bem estruturado
+        - Incluir exemplos práticos únicos e explicações claras específicas
+        - Usar linguagem didática e envolvente
+        - NÃO repetir conteúdo de slides anteriores
+        - Focar em aspectos específicos do slide ${slideIndex}
+        
+        Responda APENAS com JSON válido:
+        {
+          "type": "explanation",
+          "card1": {
+            "title": "Título do Card 1",
+            "content": "Conteúdo claro e educativo do primeiro card (100-150 palavras)"
+          },
+          "card2": {
+            "title": "Título do Card 2",
+            "content": "Conteúdo claro e educativo do segundo card (100-150 palavras)"
+          }
+        }`;
+
+        userPrompt = `Crie um slide explicativo ÚNICO sobre ${query} para o slide ${slideIndex} (contexto: ${progressContext}). O conteúdo deve ser específico para este momento da aula, educativo, claro (100-150 palavras por card) e NÃO repetir conteúdo de slides anteriores. Inclua exemplos práticos únicos e explicações concisas específicas para o slide ${slideIndex}. O nível de complexidade deve ser apropriado para o contexto ${progressContext}.`;
+      }
       
-      Responda APENAS com JSON válido:
-      {
-        "type": "explanation",
-        "card1": {
-          "title": "Título do Card 1",
-          "content": "Conteúdo claro e educativo do primeiro card (100-150 palavras)"
-        },
-        "card2": {
-          "title": "Título do Card 2",
-          "content": "Conteúdo claro e educativo do segundo card (100-150 palavras)"
-        }
-      }`;
-
-      userPrompt = `Crie um slide explicativo ÚNICO sobre ${query} para o slide ${slideIndex} (contexto: ${progressContext}). O conteúdo deve ser específico para este momento da aula, educativo, claro (100-150 palavras por card) e NÃO repetir conteúdo de slides anteriores. Inclua exemplos práticos únicos e explicações concisas específicas para o slide ${slideIndex}. O nível de complexidade deve ser apropriado para o contexto ${progressContext}.`;
+      // Adicionar contexto específico para slides 5 e 6
+      if (slideIndex === 5) {
+        userPrompt += ` Este é o slide de APLICAÇÕES PRÁTICAS - foque em casos reais, implementações concretas e situações do mundo real onde ${query} é aplicado.`;
+      } else if (slideIndex === 6) {
+        userPrompt += ` Este é o slide de EXERCÍCIOS E EXEMPLOS - foque em exercícios práticos, resolução de problemas e exemplos detalhados com soluções comentadas.`;
+      }
     }
 
     const completion = await openai.chat.completions.create({

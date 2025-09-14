@@ -1,6 +1,7 @@
 // components/ui/UnsplashImageSearch.tsx
 'use client';
 
+import Image from 'next/image';
 import React, { useState, useEffect } from 'react';
 import { Search, Image as ImageIcon, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from './button';
@@ -126,7 +127,7 @@ export function UnsplashImageSearch({
     if (activeTab === 'education') {
       searchImages('', 1, 'education');
     }
-  }, []);
+  }, [activeTab]);
 
   return (
     <div className={`space-y-4 ${className}`}>
@@ -190,12 +191,14 @@ export function UnsplashImageSearch({
               >
                 <CardContent className="p-0">
                   <div className="relative aspect-square overflow-hidden rounded-t-md">
-                    <img
-                      src={image.urls.small}
-                      alt={image.alt_description || image.description || 'Imagem do Unsplash'}
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
-                      loading="lazy"
-                    />
+                    <Image
+        src={image.urls.small}
+        alt={image.alt_description || image.description || 'Imagem do Unsplash'}
+        width={500}
+        height={300}
+        className={""}
+        loading={"lazy"}
+      />
                     <div className="absolute top-2 right-2">
                       <Badge variant="secondary" className="text-xs">
                         {image.likes} ♥

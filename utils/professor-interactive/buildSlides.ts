@@ -32,8 +32,10 @@ export interface Slide {
  */
 export function dedupeSlides(slides: Slide[]): Slide[] {
   const seen = new Set<string>();
-  return slides.filter((slide) => {
-    const key = `${slide.type}:${slide.id ?? slide.payload?.hash ?? slide.payload?.title ?? ''}`;
+  return slides.filter((slide, index) => {
+    // Criar uma chave única baseada no índice, tipo e conteúdo
+    const contentHash = slide.card1?.content?.substring(0, 50) || slide.content?.substring(0, 50) || '';
+    const key = `${index}:${slide.type}:${contentHash}`;
     if (seen.has(key)) return false;
     seen.add(key);
     return true;

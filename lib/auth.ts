@@ -11,17 +11,24 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: "/login",
+    error: "/error",
   },
-  debug: process.env.NODE_ENV === "development",
+  debug: process.env.NEXTAUTH_DEBUG === "true",
   logger: {
     error: (code, metadata) => {
       console.error("NextAuth Error:", code, metadata)
     },
     warn: (code) => {
-      console.warn("NextAuth Warning:", code)
+      // Only log warnings in development
+      if (process.env.NODE_ENV === "development") {
+        console.warn("NextAuth Warning:", code)
+      }
     },
     debug: (code, metadata) => {
-      console.log("NextAuth Debug:", code, metadata)
+      // Only log debug info if explicitly enabled
+      if (process.env.NEXTAUTH_DEBUG === "true") {
+        console.log("NextAuth Debug:", code, metadata)
+      }
     }
   },
   providers: [
@@ -32,10 +39,15 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        console.log("🔐 NextAuth authorize called with:", { email: credentials?.email })
+        // Only log in development or when debug is enabled
+        if (process.env.NEXTAUTH_DEBUG === "true") {
+          console.log("🔐 NextAuth authorize called with:", { email: credentials?.email })
+        }
         
         if (!credentials?.email || !credentials?.password) {
-          console.log("❌ Missing credentials")
+          if (process.env.NEXTAUTH_DEBUG === "true") {
+            console.log("❌ Missing credentials")
+          }
           return null
         }
 
@@ -44,10 +56,10 @@ export const authOptions: NextAuthOptions = {
             where: { email: credentials.email }
           })
 
-          console.log("👤 User found:", user ? "Yes" : "No")
-
           if (!user || !user.password_hash) {
-            console.log("❌ User not found or no password hash")
+            if (process.env.NEXTAUTH_DEBUG === "true") {
+              console.log("❌ User not found or no password hash")
+            }
             return null
           }
 
@@ -56,14 +68,16 @@ export const authOptions: NextAuthOptions = {
             user.password_hash
           )
 
-          console.log("🔑 Password valid:", isPasswordValid)
-
           if (!isPasswordValid) {
-            console.log("❌ Invalid password")
+            if (process.env.NEXTAUTH_DEBUG === "true") {
+              console.log("❌ Invalid password")
+            }
             return null
           }
 
-          console.log("✅ Authentication successful for:", user.email)
+          if (process.env.NEXTAUTH_DEBUG === "true") {
+            console.log("✅ Authentication successful for:", user.email)
+          }
           return {
             id: user.id,
             email: user.email,

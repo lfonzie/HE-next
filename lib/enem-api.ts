@@ -42,8 +42,8 @@ export interface EnemFilters {
 
 class EnemApiClient {
   private baseUrl = 'https://enem.dev/api'
-  private localServerUrl = 'http://localhost:3001/v1' // Servidor local ENEM
-  private useLocalServer = true // Usar servidor local por padrão
+  private localServerUrl = 'http://localhost:3100/v1' // Servidor local ENEM na porta 3100
+  private useLocalServer = true // Habilitar servidor local agora que temos endpoints corretos
   private rateLimitDelay = 1000 // 1 segundo entre requisições
   private lastRequestTime = 0
   private isApiAvailable = true
@@ -89,11 +89,12 @@ class EnemApiClient {
         if (response.status === 404) {
           // Only log once per availability check interval to avoid spam
           if (this.isApiAvailable) {
-            console.log('ENEM API endpoint not found, marking as unavailable (cached for 5 minutes)')
+            console.log('📵 ENEM API endpoint not found, falling back to database/AI (cached for 5 minutes)')
           }
           this.isApiAvailable = false
           this.lastAvailabilityCheck = Date.now()
-          throw new Error('API endpoint not found. Service may be unavailable.')
+          // Don't throw error for 404, just return empty array to allow fallback
+          return []
         }
         if (response.status >= 500) {
           console.log('Server error from ENEM API, marking as unavailable')
@@ -239,7 +240,14 @@ class EnemApiClient {
         
         if (response.ok) {
           const data = await response.json()
-          return data.exams || []
+          // Converter formato da API local para formato esperado
+          return data.exams?.map((exam: any) => ({
+            id: exam.id || `exam-${exam.year}`,
+            year: exam.year,
+            type: exam.type || 'REGULAR',
+            description: exam.description || `ENEM ${exam.year} - Prova Regular`,
+            questionsCount: exam.questionsCount || exam.questions?.length || 0
+          })) || []
         } else {
           throw new Error(`Local server error: ${response.status}`)
         }
@@ -265,28 +273,60 @@ class EnemApiClient {
 
     try {
       if (this.useLocalServer) {
-        // Usar servidor local
-        const params = new URLSearchParams()
-        
-        if (filters.year) params.append('year', filters.year.toString())
-        if (filters.area) params.append('area', filters.area)
-        if (filters.subject) params.append('subject', filters.subject)
-        if (filters.type) params.append('type', filters.type)
-        if (filters.limit) params.append('limit', filters.limit.toString())
-        if (filters.offset) params.append('offset', filters.offset.toString())
-
-        const url = `${this.localServerUrl}/real-questions${params.toString() ? `?${params.toString()}` : ''}`
-        const response = await fetch(url, {
+        // Usar servidor local - primeiro buscar exames disponíveis
+        const examsResponse = await fetch(`${this.localServerUrl}/exams`, {
           headers: {
             'Content-Type': 'application/json',
           },
         })
         
-        if (response.ok) {
-          const data = await response.json()
-          return data.questions || []
+        if (!examsResponse.ok) {
+          throw new Error(`Local server error: ${examsResponse.status}`)
+        }
+        
+        const examsData = await examsResponse.json()
+        const exams = examsData.exams || []
+        
+        if (exams.length === 0) {
+          console.log('No exams found in local server')
+          return []
+        }
+        
+        // Usar o primeiro exame disponível se não especificado
+        const targetYear = filters.year || exams[0].year
+        const targetExam = exams.find((exam: any) => exam.year === targetYear)
+        
+        if (!targetExam) {
+          console.log(`No exam found for year ${targetYear}`)
+          return []
+        }
+        
+        // Buscar questões do exame específico
+        const params = new URLSearchParams()
+        if (filters.limit) params.append('limit', filters.limit.toString())
+        if (filters.offset) params.append('offset', filters.offset.toString())
+
+        const questionsUrl = `${this.localServerUrl}/exams/${targetYear}/questions${params.toString() ? `?${params.toString()}` : ''}`
+        const questionsResponse = await fetch(questionsUrl, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+        
+        if (questionsResponse.ok) {
+          const questionsData = await questionsResponse.json()
+          const questions = questionsData.questions || []
+          
+          // Filtrar por área se especificado
+          if (filters.area) {
+            return questions.filter((q: any) => 
+              q.area && q.area.toLowerCase().includes(filters.area!.toLowerCase())
+            )
+          }
+          
+          return questions
         } else {
-          throw new Error(`Local server error: ${response.status}`)
+          throw new Error(`Local server error: ${questionsResponse.status}`)
         }
       } else {
         // Usar API externa
@@ -364,34 +404,51 @@ class EnemApiClient {
    */
   async getRandomQuestions(area: string, count: number): Promise<EnemQuestion[]> {
     try {
-      if (this.useLocalServer) {
-        // Usar nossa rota personalizada que integra com o servidor local ENEM
-        const response = await fetch('/api/enem/real-questions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            area,
-            count,
-            random: true
-          })
-        })
+      console.log(`🔍 Searching for ${count} random questions in area: ${area}`)
+      
+      // Tratar área "geral" como todas as áreas
+      if (area.toLowerCase() === 'geral') {
+        console.log('🎯 Area "geral" detected, searching across all ENEM areas')
+        const allAreas = ['linguagens', 'matematica', 'natureza', 'humanas']
+        const questionsPerArea = Math.ceil(count / allAreas.length)
         
-        if (response.ok) {
-          const data = await response.json()
-          return data.questions || []
-        } else {
-          throw new Error(`Local server error: ${response.status}`)
+        let allQuestions: EnemQuestion[] = []
+        for (const specificArea of allAreas) {
+          try {
+            const areaQuestions = await this.getQuestions({ area: specificArea, limit: questionsPerArea })
+            allQuestions.push(...areaQuestions)
+          } catch (error) {
+            console.log(`⚠️ Failed to get questions for area ${specificArea}:`, error instanceof Error ? error.message : 'Unknown error')
+          }
         }
-      } else {
-        // Busca mais questões do que necessário para ter variedade
-        const allQuestions = await this.getQuestionsByArea(area, count * 3)
+        
+        if (allQuestions.length === 0) {
+          console.log('📵 No questions found for any area in "geral"')
+          return []
+        }
         
         // Embaralha e pega apenas a quantidade necessária
         const shuffled = allQuestions.sort(() => Math.random() - 0.5)
-        return shuffled.slice(0, count)
+        const selectedQuestions = shuffled.slice(0, count)
+        
+        console.log(`✅ Found ${selectedQuestions.length} questions for area "geral"`)
+        return selectedQuestions
       }
+      
+      // Busca questões usando o método getQuestions com filtro de área
+      const allQuestions = await this.getQuestions({ area, limit: count * 3 })
+      
+      if (allQuestions.length === 0) {
+        console.log(`📵 No questions found for area: ${area}`)
+        return []
+      }
+      
+      // Embaralha e pega apenas a quantidade necessária
+      const shuffled = allQuestions.sort(() => Math.random() - 0.5)
+      const selectedQuestions = shuffled.slice(0, count)
+      
+      console.log(`✅ Found ${selectedQuestions.length} questions for area: ${area}`)
+      return selectedQuestions
     } catch (error) {
       console.error('Failed to get random questions:', error)
       return []

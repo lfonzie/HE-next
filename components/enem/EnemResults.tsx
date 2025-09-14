@@ -17,8 +17,16 @@ import {
   AlertCircle,
   Lightbulb,
   GraduationCap,
-  TrendingUp
+  TrendingUp,
+  BarChart3,
+  Clock,
+  Award,
+  Zap,
+  History
 } from 'lucide-react'
+import { EnemPerformanceAnalysis } from './EnemPerformanceAnalysis'
+import { EnemHistory } from './EnemHistory'
+import { useEnemHistory } from '@/hooks/useEnemHistory'
 import { useToast } from '@/hooks/use-toast'
 
 interface Explanation {
@@ -54,7 +62,11 @@ export function EnemResults({
   const [explanations, setExplanations] = useState<Explanation[]>([])
   const [isLoadingExplanations, setIsLoadingExplanations] = useState(false)
   const [showExplanations, setShowExplanations] = useState(false)
+  const [showPerformanceAnalysis, setShowPerformanceAnalysis] = useState(false)
+  const [showHistory, setShowHistory] = useState(false)
+  const [timeSpent, setTimeSpent] = useState(0)
   const { toast } = useToast()
+  const { saveSimulation } = useEnemHistory()
 
   // Calcular estatísticas
   const correctAnswers = questions.reduce((acc, question, index) => {
@@ -64,21 +76,42 @@ export function EnemResults({
   const wrongAnswers = totalQuestions - correctAnswers
   const percentage = Math.round((correctAnswers / totalQuestions) * 100)
 
-  // Carregar explicações quando o componente monta
+  // Simular tempo gasto (em produção, seria real)
   useEffect(() => {
-    if (wrongAnswers > 0) {
-      loadExplanations()
-    }
-  }, [])
+    const estimatedTime = totalQuestions * 90 // 90 segundos por questão em média
+    setTimeSpent(estimatedTime)
+  }, [totalQuestions])
 
-  const loadExplanations = async () => {
+  // Salvar simulado no histórico
+  useEffect(() => {
+    if (questions.length > 0 && score !== undefined) {
+      const simulationData = {
+        area: questions[0]?.area || 'geral',
+        numQuestions: totalQuestions,
+        duration: Math.round(timeSpent / 60),
+        score: score,
+        correctAnswers,
+        totalQuestions,
+        percentage: Math.round((correctAnswers / totalQuestions) * 100),
+        timeSpent,
+        useRealQuestions: questions[0]?.year ? true : false,
+        year: questions[0]?.year,
+        questions: questions.map(q => q.id),
+        answers
+      }
+      
+      saveSimulation(simulationData)
+    }
+  }, [questions, score, totalQuestions, correctAnswers, timeSpent, answers, saveSimulation])
+
+  const loadExplanations = useCallback(async () => {
     setIsLoadingExplanations(true)
     try {
       // Preparar dados das questões com respostas do usuário
       const questionsWithAnswers = questions.map((question, index) => ({
         ...question,
         userAnswer: answers[index]
-      }))
+      }));
 
       const response = await fetch('/api/enem/explanations', {
         method: 'POST',
@@ -109,7 +142,14 @@ export function EnemResults({
     } finally {
       setIsLoadingExplanations(false)
     }
-  }
+  }, [answers, questions, toast]);
+
+  // Carregar explicações quando o componente monta
+  useEffect(() => {
+    if (wrongAnswers > 0) {
+      loadExplanations()
+    }
+  }, [wrongAnswers, loadExplanations])
 
   const getScoreColor = (score: number) => {
     if (score >= 800) return 'text-green-600'
@@ -123,6 +163,27 @@ export function EnemResults({
     if (score >= 600) return 'bg-blue-100 text-blue-800'
     if (score >= 400) return 'bg-yellow-100 text-yellow-800'
     return 'bg-red-100 text-red-800'
+  }
+
+  // Se mostrar análise de performance, renderizar o componente
+  if (showPerformanceAnalysis) {
+    return (
+      <EnemPerformanceAnalysis
+        questions={questions}
+        answers={answers}
+        timeSpent={timeSpent}
+        onClose={() => setShowPerformanceAnalysis(false)}
+      />
+    )
+  }
+
+  // Se mostrar histórico, renderizar o componente
+  if (showHistory) {
+    return (
+      <EnemHistory
+        onClose={() => setShowHistory(false)}
+      />
+    )
   }
 
   return (
@@ -139,6 +200,36 @@ export function EnemResults({
           <p className="text-gray-600 mt-2">
             Parabéns por completar o simulado ENEM
           </p>
+          
+          {/* Botões de Ação Rápida */}
+          <div className="flex flex-wrap justify-center gap-4 mt-6">
+            <Button
+              onClick={() => setShowPerformanceAnalysis(true)}
+              size="lg"
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold"
+            >
+              <BarChart3 className="h-5 w-5 mr-2" />
+              Análise Detalhada
+            </Button>
+            <Button
+              onClick={() => setShowHistory(true)}
+              size="lg"
+              variant="outline"
+              className="border-purple-200 text-purple-700 hover:bg-purple-50"
+            >
+              <History className="h-5 w-5 mr-2" />
+              Histórico
+            </Button>
+            <Button
+              onClick={() => setShowExplanations(true)}
+              variant="outline"
+              size="lg"
+              disabled={wrongAnswers === 0}
+            >
+              <BookOpen className="h-5 w-5 mr-2" />
+              Explicações ({wrongAnswers})
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
@@ -190,7 +281,7 @@ export function EnemResults({
       </Card>
 
       {/* Estatísticas Detalhadas */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -200,7 +291,7 @@ export function EnemResults({
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {questions.reduce((acc, question, index) => {
+              {Object.entries(questions.reduce((acc, question, index) => {
                 const area = question.area || question.subject || 'Geral'
                 if (!acc[area]) {
                   acc[area] = { total: 0, correct: 0 }
@@ -210,16 +301,15 @@ export function EnemResults({
                   acc[area].correct++
                 }
                 return acc
-              }, {} as Record<string, { total: number, correct: number }>)
-              .map(([area, stats]: [string, { total: number, correct: number }]) => (
-                <div key={area} className="flex justify-between items-center">
+              }, {} as Record<string, { total: number, correct: number }>)).map(([area, stats]) => (
+                <div key={area} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                   <span className="font-medium">{area}</span>
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-gray-600">
-                      {stats.correct}/{stats.total}
+                      {(stats as any).correct}/{(stats as any).total}
                     </span>
                     <Badge variant="outline">
-                      {Math.round((stats.correct / stats.total) * 100)}%
+                      {Math.round(((stats as any).correct / (stats as any).total) * 100)}%
                     </Badge>
                   </div>
                 </div>
@@ -232,22 +322,74 @@ export function EnemResults({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-green-600" />
-              Análise de Performance
+              Performance Geral
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
                 <CheckCircle className="h-5 w-5 text-green-500" />
-                <span>Questões corretas: {correctAnswers}</span>
+                <div>
+                  <div className="font-semibold">{correctAnswers} acertos</div>
+                  <div className="text-sm text-gray-600">{percentage}% de aproveitamento</div>
+                </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 p-3 bg-red-50 rounded-lg">
                 <XCircle className="h-5 w-5 text-red-500" />
-                <span>Questões incorretas: {wrongAnswers}</span>
+                <div>
+                  <div className="font-semibold">{wrongAnswers} erros</div>
+                  <div className="text-sm text-gray-600">{100 - percentage}% para melhorar</div>
+                </div>
               </div>
-              <div className="flex items-center gap-3">
-                <AlertCircle className="h-5 w-5 text-yellow-500" />
-                <span>Taxa de acerto: {percentage}%</span>
+              <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
+                <Clock className="h-5 w-5 text-blue-500" />
+                <div>
+                  <div className="font-semibold">{Math.round(timeSpent / 60)} minutos</div>
+                  <div className="text-sm text-gray-600">Tempo total gasto</div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Award className="h-5 w-5 text-purple-600" />
+              Insights Rápidos
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="text-center p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg">
+                <div className="text-2xl font-bold text-blue-600 mb-1">{score}</div>
+                <div className="text-sm text-gray-600">Pontuação TRI</div>
+                <Badge className={getScoreBadge(score)}>
+                  {score >= 800 ? 'Excelente' : 
+                   score >= 600 ? 'Bom' : 
+                   score >= 400 ? 'Regular' : 'Precisa melhorar'}
+                </Badge>
+              </div>
+              
+              <div className="space-y-2">
+                <Button
+                  onClick={() => setShowPerformanceAnalysis(true)}
+                  size="sm"
+                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                >
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  Análise Completa
+                </Button>
+                <Button
+                  onClick={() => setShowExplanations(true)}
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  disabled={wrongAnswers === 0}
+                >
+                  <BookOpen className="h-4 w-4 mr-2" />
+                  Explicações ({wrongAnswers})
+                </Button>
               </div>
             </div>
           </CardContent>

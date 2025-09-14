@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { EnemQuestion } from '@/types'
 
 interface ProgressiveLoadingState {
@@ -10,6 +10,9 @@ interface ProgressiveLoadingState {
   currentQuestionIndex: number
   canStart: boolean
   startTime: number | null
+  estimatedTimeRemaining: number
+  loadingSpeed: number // questões por segundo
+  error: string | null
 }
 
 export function useEnemProgressiveLoading() {
@@ -21,14 +24,28 @@ export function useEnemProgressiveLoading() {
     totalQuestions: 0,
     currentQuestionIndex: 0,
     canStart: false,
-    startTime: null
+    startTime: null,
+    estimatedTimeRemaining: 0,
+    loadingSpeed: 1, // 1 questão por segundo por padrão
+    error: null
   })
+
+  const loadingIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const startTimeRef = useRef<number | null>(null)
 
   const startProgressiveLoading = useCallback(async (
     totalQuestions: number,
     loadQuestionsFn: () => Promise<EnemQuestion[]>
   ) => {
+    // Limpar intervalos anteriores
+    if (loadingIntervalRef.current) {
+      clearInterval(loadingIntervalRef.current)
+    }
+
     // Reset state first
+    const startTime = Date.now()
+    startTimeRef.current = startTime
+    
     setLoadingState({
       isLoading: true,
       progress: 0,
@@ -37,7 +54,10 @@ export function useEnemProgressiveLoading() {
       totalQuestions,
       currentQuestionIndex: 0,
       canStart: false,
-      startTime: Date.now()
+      startTime,
+      estimatedTimeRemaining: totalQuestions,
+      loadingSpeed: 1,
+      error: null
     })
 
     try {
@@ -50,43 +70,74 @@ export function useEnemProgressiveLoading() {
         throw new Error('Nenhuma questão foi encontrada')
       }
 
-      // Simular carregamento progressivo: 1 questão por segundo
-      for (let i = 0; i < allQuestions.length; i++) {
-        await new Promise(resolve => setTimeout(resolve, 1000)) // 1 segundo por questão
-        
-        const progress = Math.round(((i + 1) / allQuestions.length) * 100)
-        const message = `Carregando questão ${i + 1} de ${allQuestions.length}...`
+      // Calcular velocidade de carregamento baseada no número de questões
+      const loadingSpeed = Math.max(0.5, Math.min(2, totalQuestions / 20)) // Entre 0.5 e 2 questões por segundo
+      const intervalMs = Math.round(1000 / loadingSpeed)
+
+      let currentIndex = 0
+      
+      // Atualizar velocidade de carregamento
+      setLoadingState(prev => ({
+        ...prev,
+        loadingSpeed,
+        message: `Carregando questões (${loadingSpeed.toFixed(1)}/s)...`
+      }))
+
+      // Simular carregamento progressivo com velocidade adaptativa
+      loadingIntervalRef.current = setInterval(() => {
+        if (currentIndex >= allQuestions.length) {
+          // Finalizar carregamento
+          if (loadingIntervalRef.current) {
+            clearInterval(loadingIntervalRef.current)
+          }
+          
+          setLoadingState(prev => ({
+            ...prev,
+            isLoading: false,
+            progress: 100,
+            message: 'Simulado pronto!',
+            canStart: true,
+            estimatedTimeRemaining: 0
+          }))
+          return
+        }
+
+        currentIndex++
+        const progress = Math.round((currentIndex / allQuestions.length) * 100)
+        const elapsed = Date.now() - startTime
+        const actualSpeed = currentIndex / (elapsed / 1000)
+        const remainingQuestions = allQuestions.length - currentIndex
+        const estimatedTimeRemaining = Math.round(remainingQuestions / actualSpeed)
         
         setLoadingState(prev => ({
           ...prev,
           progress,
-          message,
-          loadedQuestions: allQuestions.slice(0, i + 1),
-          currentQuestionIndex: i,
-          canStart: i >= 0 // Pode começar desde a primeira questão
+          message: `Carregando questão ${currentIndex} de ${allQuestions.length}...`,
+          loadedQuestions: allQuestions.slice(0, currentIndex),
+          currentQuestionIndex: currentIndex - 1,
+          canStart: currentIndex >= 1, // Pode começar desde a primeira questão
+          estimatedTimeRemaining,
+          loadingSpeed: actualSpeed
         }))
-      }
-
-      // Finalizar carregamento
-      setLoadingState(prev => ({
-        ...prev,
-        isLoading: false,
-        progress: 100,
-        message: 'Simulado pronto!',
-        canStart: true
-      }))
+      }, intervalMs)
 
     } catch (error) {
       console.error('Erro no carregamento progressivo:', error)
       
-      // Use a more defensive state update
+      // Limpar intervalos em caso de erro
+      if (loadingIntervalRef.current) {
+        clearInterval(loadingIntervalRef.current)
+      }
+      
       setLoadingState(prevState => ({
         ...prevState,
         isLoading: false,
         progress: 0,
         message: `Erro ao carregar questões: ${error instanceof Error ? error.message : 'Erro desconhecido'}. Verifique sua conexão e tente novamente.`,
         loadedQuestions: [],
-        canStart: false
+        canStart: false,
+        error: error instanceof Error ? error.message : 'Erro desconhecido',
+        estimatedTimeRemaining: 0
       }))
     }
   }, [])
@@ -100,6 +151,11 @@ export function useEnemProgressiveLoading() {
   }, [])
 
   const stopLoading = useCallback(() => {
+    // Limpar intervalos
+    if (loadingIntervalRef.current) {
+      clearInterval(loadingIntervalRef.current)
+    }
+    
     setLoadingState({
       isLoading: false,
       progress: 0,
@@ -108,8 +164,20 @@ export function useEnemProgressiveLoading() {
       totalQuestions: 0,
       currentQuestionIndex: 0,
       canStart: false,
-      startTime: null
+      startTime: null,
+      estimatedTimeRemaining: 0,
+      loadingSpeed: 1,
+      error: null
     })
+  }, [])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (loadingIntervalRef.current) {
+        clearInterval(loadingIntervalRef.current)
+      }
+    }
   }, [])
 
   const getCurrentQuestion = useCallback(() => {

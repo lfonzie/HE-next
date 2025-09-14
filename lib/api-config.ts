@@ -42,7 +42,7 @@ export interface ApiConfig {
 // Default configuration prioritizing APIs
 export const DEFAULT_API_CONFIG: ApiConfig = {
   enem: {
-    priority: 'api', // Use API as primary source
+    priority: 'hybrid', // Use API as primary source with fallbacks
     enableRealQuestions: true,
     enableDatabaseFallback: true,
     enableAiFallback: true,

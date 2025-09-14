@@ -1,6 +1,7 @@
 // app/unsplash-demo/page.tsx
 'use client';
 
+import Image from 'next/image';
 import React, { useState } from 'react';
 import { UnsplashImagePicker } from '@/components/ui/UnsplashImagePicker';
 import { UnsplashImageSearch } from '@/components/ui/UnsplashImageSearch';
@@ -111,11 +112,14 @@ export default function UnsplashDemoPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <div className="relative overflow-hidden rounded-lg">
-                  <img
-                    src={selectedImage.urls.regular}
-                    alt={selectedImage.alt_description || selectedImage.description || 'Imagem selecionada'}
-                    className="w-full h-auto object-cover"
-                  />
+                  <Image
+        src={selectedImage.urls.regular}
+        alt={selectedImage.alt_description || selectedImage.description || 'Imagem selecionada'}
+        width={500}
+        height={300}
+        className={""}
+        loading={"lazy"}
+      />
                 </div>
                 
                 <div className="flex gap-2">

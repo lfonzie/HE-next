@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Users, Clock, DollarSign, Star, ArrowRight, Play, CheckCircle, MessageSquare, Bot, Zap, Rocket, Shield, Heart, Menu, X, Phone, Mail, MapPin, Target, TrendingUp, BookOpen, Lightbulb, LogIn } from 'lucide-react';
 import PrivacyPolicyModal from '@/components/modals/PrivacyPolicyModal';
 import TermsOfUseModal from '@/components/modals/TermsOfUseModal';
@@ -48,9 +49,11 @@ const ApresentacaoPage = () => {
       } border-b border-yellow-200 overflow-x-hidden`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <img 
+            <Image 
               src="/Logo_HubEdu.ia.svg" 
               alt="HubEdu.ia Logo" 
+              width={120}
+              height={40}
               className="h-10 w-auto"
             />
             <div className="text-2xl font-bold">

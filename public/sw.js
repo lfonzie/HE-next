@@ -10,11 +10,6 @@ const STATIC_ASSETS = [
   '/',
   '/manifest.webmanifest',
   '/browserconfig.xml',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png',
-  '/icons/icon-192-maskable.svg',
-  '/icons/icon-512-maskable.svg',
-  '/Logo_HubEdu.ia.svg',
   '/favicon.ico',
   '/favicon.svg'
 ];
@@ -27,7 +22,15 @@ self.addEventListener('install', (event) => {
     caches.open(STATIC_CACHE)
       .then((cache) => {
         console.log('[SW] Cacheando recursos estáticos');
-        return cache.addAll(STATIC_ASSETS);
+        // Cache individualmente para evitar falhas em recursos não encontrados
+        return Promise.allSettled(
+          STATIC_ASSETS.map(asset => 
+            cache.add(asset).catch(err => {
+              console.warn(`[SW] Não foi possível cachear ${asset}:`, err);
+              return null;
+            })
+          )
+        );
       })
       .then(() => {
         console.log('[SW] Instalação concluída');
@@ -35,6 +38,8 @@ self.addEventListener('install', (event) => {
       })
       .catch((error) => {
         console.error('[SW] Erro na instalação:', error);
+        // Mesmo com erro, continua a instalação
+        return self.skipWaiting();
       })
   );
 });

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from 'next/image';
 import React, { useEffect, useMemo, useCallback, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,7 @@ import { processSlidesForHubEduPattern } from '@/utils/professor-interactive/bui
 import { useProfessorProgressiveLoading } from '@/hooks/useProfessorProgressiveLoading';
 import { useKeyboardNavigation } from '@/hooks/useKeyboardNavigation';
 import { useFullscreen } from '@/hooks/useFullscreen';
+import { detectSubject } from '@/utils/professor-interactive/subjectDetection';
 
 import LessonHeader from './LessonHeader';
 import LessonProgress from './LessonProgress';
@@ -143,25 +145,22 @@ export default function RefactoredLessonModule({
       // Start loading immediately
       startLoading('Gerando aula interativa...');
       
-      // Generate lesson (this will take the actual API time)
-      const generatedLesson = await generateLesson(query);
+      // Detect subject quickly
+      const detectedSubject = await detectSubject(query);
       
       // Complete initial loading
       finishLoading();
       
-      // Start progressive loading with initial slides
-      if (generatedLesson) {
-        await progressiveLoading.startProgressiveLoading(
-          query, 
-          generatedLesson.subject || 'Geral',
-          generatedLesson.themeImage
-        );
-      }
+      // Start progressive loading with initial slides (sem usar API principal)
+      await progressiveLoading.startProgressiveLoading(
+        query, 
+        detectedSubject || 'Geral'
+      );
     } catch (error) {
       console.error('Erro ao gerar aula:', error);
       stopLoading();
     }
-  }, [query, startLoading, finishLoading, generateLesson, stopLoading, progressiveLoading]);
+  }, [query, startLoading, finishLoading, stopLoading, progressiveLoading]);
 
   const handleAnswer = (stepIndex: number, selectedOption: number, isCorrect: boolean) => {
     recordAnswer(stepIndex, selectedOption, isCorrect);
@@ -372,28 +371,24 @@ export default function RefactoredLessonModule({
                       {/* Mostrar imagem nos slides 1 e 8 */}
                       {(lessonState.currentStep === 0 || lessonState.currentStep === 7) && (currentStep.card2?.imageUrl || lesson?.themeImage) && (
                         <div className="mb-4">
-                          <img
-                            src={currentStep.card2?.imageUrl || lesson?.themeImage}
-                            alt={lesson?.title || 'Imagem da aula'}
-                            className="w-full object-cover rounded-lg shadow-md"
-                            style={{ 
-                              aspectRatio: '1350/1080',
-                              height: 'auto',
-                              maxHeight: '300px'
-                            }}
-                            loading="lazy"
-                          />
+                          <Image
+        src={currentStep.card2?.imageUrl || lesson?.themeImage}
+        alt={lesson?.title || 'Imagem da aula'}
+        width={500}
+        height={300}
+        className={""}
+        loading={"lazy"}
+        style={{ 
+          aspectRatio: '1350/1080',
+          height: 'auto',
+          maxHeight: '300px'
+        }}
+      />
                         </div>
                       )}
                       
-                      <div className="prose max-w-none">
-                        <p className="text-sm leading-relaxed">
-                          {currentStep.card2?.content || 'Conteúdo do segundo card'}
-                        </p>
-                      </div>
-                      
-                      {/* Para slides de pergunta, mostrar opções */}
-                      {currentStep.type === 'question' && currentStep.card2?.options && (
+                      {/* Para slides de pergunta, mostrar apenas as opções */}
+                      {currentStep.type === 'question' && currentStep.card2?.options ? (
                         <div className="mt-4">
                           <QuestionCard
                             question={currentStep.card1?.content || currentStep.question || 'Pergunta de verificação'}
@@ -408,6 +403,13 @@ export default function RefactoredLessonModule({
                             onToggleHelp={() => toggleHelp(lessonState.currentStep)}
                             disabled={lessonState.userAnswers[lessonState.currentStep] !== undefined}
                           />
+                        </div>
+                      ) : (
+                        /* Para slides de explicação, mostrar conteúdo normal */
+                        <div className="prose max-w-none">
+                          <p className="text-sm leading-relaxed">
+                            {currentStep.card2?.content || 'Conteúdo do segundo card'}
+                          </p>
                         </div>
                       )}
                     </CardContent>

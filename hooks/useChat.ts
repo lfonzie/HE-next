@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useMemo } from 'react'
 import { useSession } from 'next-auth/react'
 import { Message, ModuleType, Conversation } from '@/types'
 import { useChatContext } from '@/components/providers/ChatContext'
@@ -12,8 +12,32 @@ export function useChat() {
     confidence: number
     rationale: string
   } | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [retryCount, setRetryCount] = useState(0)
+  
   const { data: session } = useSession()
   const { setSelectedModule } = useChatContext()
+  
+  // Refs para otimização
+  const abortControllerRef = useRef<AbortController | null>(null)
+  const messageQueueRef = useRef<Message[]>([])
+  const lastMessageIdRef = useRef<string | null>(null)
+  
+  // Memoized values para performance
+  const currentMessages = useMemo(() => 
+    currentConversation?.messages || [], 
+    [currentConversation?.messages]
+  )
+  
+  const conversationCount = useMemo(() => 
+    conversations.length, 
+    [conversations.length]
+  )
+  
+  const totalMessages = useMemo(() => 
+    conversations.reduce((total, conv) => total + conv.messages.length, 0),
+    [conversations]
+  )
 
   const sendMessage = useCallback(async (
     message: string,
@@ -25,6 +49,17 @@ export function useChat() {
     attachment?: File,
     useWebSearch?: boolean
   ) => {
+    // Limpar erros anteriores
+    setError(null)
+    
+    // Cancelar requisição anterior se existir
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+    }
+    
+    // Criar novo AbortController
+    abortControllerRef.current = new AbortController()
+    
     // Temporariamente desabilitado para desenvolvimento
     // if (!session) throw new Error("User not authenticated")
 
@@ -93,10 +128,10 @@ export function useChat() {
       
       // Retry logic for network failures
       let response: Response | undefined
-      let retryCount = 0
-      const maxRetries = 2
+      let currentRetryCount = 0
+      const maxRetries = 3
       
-      while (retryCount <= maxRetries) {
+      while (currentRetryCount <= maxRetries) {
         try {
           response = await fetch('/api/chat/stream', {
             method: "POST",
@@ -105,15 +140,32 @@ export function useChat() {
               // Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify(requestBody),
+            signal: abortControllerRef.current.signal
           })
+          
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+          }
+          
           break // Success, exit retry loop
         } catch (networkError: any) {
-          retryCount++
-          if (retryCount > maxRetries) {
+          // Se foi cancelado pelo AbortController, não tentar novamente
+          if (networkError.name === 'AbortError') {
+            throw networkError
+          }
+          
+          currentRetryCount++
+          setRetryCount(currentRetryCount)
+          
+          if (currentRetryCount > maxRetries) {
             console.error('[Chat] Max retries exceeded:', networkError)
+            setError(`Falha de rede após ${maxRetries} tentativas: ${networkError.message}`)
             throw new Error(`Falha de rede após ${maxRetries} tentativas: ${networkError.message}`)
           }
-          await new Promise(resolve => setTimeout(resolve, 1000 * retryCount)) // Exponential backoff
+          
+          // Exponential backoff com jitter
+          const delay = Math.min(1000 * Math.pow(2, currentRetryCount) + Math.random() * 1000, 10000)
+          await new Promise(resolve => setTimeout(resolve, delay))
         }
       }
 
@@ -505,15 +557,148 @@ export function useChat() {
     }
   }, [session])
 
+  // Função para cancelar requisição atual
+  const cancelCurrentRequest = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+      setIsStreaming(false)
+    }
+  }, [])
+
+  // Função para limpar erros
+  const clearError = useCallback(() => {
+    setError(null)
+    setRetryCount(0)
+  }, [])
+
+  // Função para buscar conversas com filtros
+  const searchConversations = useCallback((query: string) => {
+    if (!query.trim()) return conversations
+    
+    const searchTerm = query.toLowerCase()
+    return conversations.filter(conv => 
+      conv.title.toLowerCase().includes(searchTerm) ||
+      conv.messages.some(msg => 
+        msg.content.toLowerCase().includes(searchTerm)
+      )
+    )
+  }, [conversations])
+
+  // Função para obter estatísticas das conversas
+  const getConversationStats = useCallback(() => {
+    const totalTokens = conversations.reduce((total, conv) => 
+      total + (conv.tokenCount || 0), 0
+    )
+    
+    const avgMessagesPerConversation = conversations.length > 0 
+      ? totalMessages / conversations.length 
+      : 0
+    
+    const mostUsedModule = conversations.reduce((acc, conv) => {
+      acc[conv.module] = (acc[conv.module] || 0) + 1
+      return acc
+    }, {} as Record<string, number>)
+    
+    const topModule = Object.entries(mostUsedModule)
+      .sort(([,a], [,b]) => b - a)[0]?.[0] || 'Nenhum'
+    
+    return {
+      totalConversations: conversations.length,
+      totalMessages,
+      totalTokens,
+      avgMessagesPerConversation: Math.round(avgMessagesPerConversation * 10) / 10,
+      mostUsedModule: topModule
+    }
+  }, [conversations, totalMessages])
+
+  // Função para exportar conversa atual
+  const exportCurrentConversation = useCallback(() => {
+    if (!currentConversation) return null
+    
+    const exportData = {
+      conversation: {
+        id: currentConversation.id,
+        title: currentConversation.title,
+        module: currentConversation.module,
+        createdAt: currentConversation.createdAt,
+        updatedAt: currentConversation.updatedAt,
+        tokenCount: currentConversation.tokenCount
+      },
+      messages: currentConversation.messages.map(msg => ({
+        role: msg.role,
+        content: msg.content,
+        timestamp: msg.timestamp,
+        model: msg.model,
+        tokens: msg.tokens,
+        tier: msg.tier
+      }))
+    }
+    
+    return exportData
+  }, [currentConversation])
+
+  // Função para importar conversa
+  const importConversation = useCallback((importData: any) => {
+    try {
+      const newConversation: Conversation = {
+        id: importData.conversation.id || `imported-${Date.now()}`,
+        title: importData.conversation.title || 'Conversa Importada',
+        module: importData.conversation.module || 'ATENDIMENTO',
+        messages: importData.messages.map((msg: any) => ({
+          id: `imported-${Date.now()}-${Math.random()}`,
+          role: msg.role,
+          content: msg.content,
+          timestamp: new Date(msg.timestamp),
+          model: msg.model,
+          tokens: msg.tokens,
+          tier: msg.tier
+        })),
+        tokenCount: importData.conversation.tokenCount || 0,
+        createdAt: new Date(importData.conversation.createdAt),
+        updatedAt: new Date(importData.conversation.updatedAt)
+      }
+      
+      setConversations(prev => [newConversation, ...prev])
+      setCurrentConversation(newConversation)
+      
+      return true
+    } catch (error) {
+      console.error('Erro ao importar conversa:', error)
+      return false
+    }
+  }, [])
+
   return {
+    // Estados principais
     conversations,
     currentConversation,
+    currentMessages,
     isStreaming,
     lastClassification,
+    error,
+    retryCount,
+    
+    // Estatísticas
+    conversationCount,
+    totalMessages,
+    
+    // Funções principais
     sendMessage,
     fetchConversations,
     startNewConversation,
     loadConversation,
     setCurrentConversation,
+    
+    // Funções de controle
+    cancelCurrentRequest,
+    clearError,
+    
+    // Funções de busca e análise
+    searchConversations,
+    getConversationStats,
+    
+    // Funções de importação/exportação
+    exportCurrentConversation,
+    importConversation,
   }
 }

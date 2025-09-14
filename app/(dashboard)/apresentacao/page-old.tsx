@@ -1,7 +1,8 @@
 // app/(dashboard)/apresentacao/page.tsx
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import Image from 'next/image';
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
@@ -331,7 +332,7 @@ export default function Apresentacao() {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Dados dos slides - será definido em seguida
-  const slides = [
+  const slides = useMemo(() => [
     // Slide 1: Introdução
     {
       id: 1,
@@ -342,13 +343,15 @@ export default function Apresentacao() {
           <div className="flex justify-center mb-3 mt-8 slide-in-up">
             <div className="relative group floating-animation p-4">
               <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full blur-2xl opacity-20 group-hover:opacity-30 transition-opacity duration-500 pulse-glow"></div>
-              <img
-                src={ASSETS.LOGO_ICON}
-                alt="Símbolo da HubEdu.ia"
-                className="relative w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 xl:w-48 xl:h-48 2xl:w-56 2xl:h-56 object-contain transition-all duration-700 hover:scale-110 drop-shadow-2xl"
-                style={{ filter: "drop-shadow(0 25px 50px rgba(0,0,0,0.2))" }}
-                loading="eager"
-              />
+              <Image
+        src={ASSETS.LOGO_ICON}
+        alt={"Image"}
+        width={500}
+        height={300}
+        className={""}
+        loading={"lazy"}
+        style={{ filter: "drop-shadow(0 25px 50px rgba(0,0,0,0.2))" }}
+      />
             </div>
           </div>
           
@@ -381,7 +384,7 @@ export default function Apresentacao() {
       background: "bg-gradient-to-br from-yellow-50 via-white to-yellow-50/30"
     },
     // Mais slides serão adicionados em seguida...
-  ];
+  ], []);
 
   const nextSlide = useCallback(() => {
     if (currentSlide < slides.length - 1 && !isTransitioning) {
@@ -543,12 +546,14 @@ export default function Apresentacao() {
         <div className="fixed top-4 md:top-8 left-2 md:left-8 z-50">
           <div className="bg-white/90 backdrop-blur-sm rounded-full p-1.5 md:p-2 shadow-lg border border-white/20">
             <div className="flex items-center space-x-1 md:space-x-2">
-              <img
-                src={ASSETS.LOGO_ICON}
-                alt="HubEdu.ia"
-                className="w-4 h-4 md:w-6 md:h-6 object-contain"
-                loading="eager"
-              />
+              <Image
+        src={ASSETS.LOGO_ICON}
+        alt={"Image"}
+        width={500}
+        height={300}
+        className={""}
+        loading={"lazy"}
+      />
               <span className="text-xs md:text-sm font-bold text-gray-800">
                 HubEdu.ia
               </span>
