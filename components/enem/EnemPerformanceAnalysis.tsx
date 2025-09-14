@@ -79,24 +79,6 @@ export function EnemPerformanceAnalysis({
   const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('overview')
 
-  const analyzePerformance = useCallback(async () => {
-    setIsLoading(true)
-    
-    try {
-      // Simular análise de performance (em produção, isso seria feito com IA)
-      const analysis = await performAdvancedAnalysis()
-      setPerformanceData(analysis)
-    } catch (error) {
-      console.error('Erro na análise de performance:', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [performAdvancedAnalysis]);
-
-  useEffect(() => {
-    analyzePerformance()
-  }, [questions, answers, timeSpent, analyzePerformance])
-
   const performAdvancedAnalysis = useCallback(async (): Promise<PerformanceData> => {
     // Análise por área
     const areaScores: Record<string, any> = {}
@@ -184,6 +166,24 @@ export function EnemPerformanceAnalysis({
       }
     }
   }, [questions, answers, timeSpent]);
+
+  const analyzePerformance = useCallback(async () => {
+    setIsLoading(true)
+    
+    try {
+      // Simular análise de performance (em produção, isso seria feito com IA)
+      const analysis = await performAdvancedAnalysis()
+      setPerformanceData(analysis)
+    } catch (error) {
+      console.error('Erro na análise de performance:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [performAdvancedAnalysis]);
+
+  useEffect(() => {
+    analyzePerformance()
+  }, [questions, answers, timeSpent, analyzePerformance])
 
   const getRecommendation = (area: string, percentage: number): string => {
     const recommendations = {

@@ -316,6 +316,34 @@ export default function EnhancedLessonModule({
            (processedLesson && lessonState.currentStep < processedLesson.steps.length - 1);
   }, [lessonState.currentStep, progressiveLoading, processedLesson]);
 
+  const handleSubmit = useCallback(async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!query.trim()) return;
+
+    try {
+      setError('');
+      // Start loading immediately
+      startLoading('Gerando aula interativa...');
+      
+      // Detect subject quickly
+      const detectedSubject = await detectSubject(query);
+      setSubject(detectedSubject || 'Geral');
+      
+      // Complete initial loading
+      finishLoading();
+      
+      // Start progressive loading with initial slides
+      await progressiveLoading.startProgressiveLoading(
+        query, 
+        detectedSubject || 'Geral'
+      );
+    } catch (error) {
+      console.error('Erro ao gerar aula:', error);
+      setError('Erro ao gerar aula. Tente novamente.');
+      finishLoading();
+    }
+  }, [query, progressiveLoading, startLoading, finishLoading]);
+
   // Auto-start se houver query inicial
   useEffect(() => {
     if (initialQuery && initialQuery.trim() && !lesson) {
@@ -364,34 +392,6 @@ export default function EnhancedLessonModule({
     isFullscreen: fullscreen.isFullscreen,
     disabled: loadingState.isLoading || progressiveLoading.loadingState.isGeneratingNext
   });
-
-  const handleSubmit = useCallback(async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!query.trim()) return;
-
-    try {
-      setError('');
-      // Start loading immediately
-      startLoading('Gerando aula interativa...');
-      
-      // Detect subject quickly
-      const detectedSubject = await detectSubject(query);
-      setSubject(detectedSubject || 'Geral');
-      
-      // Complete initial loading
-      finishLoading();
-      
-      // Start progressive loading with initial slides
-      await progressiveLoading.startProgressiveLoading(
-        query, 
-        detectedSubject || 'Geral'
-      );
-    } catch (error) {
-      console.error('Erro ao gerar aula:', error);
-      setError('Erro ao gerar aula. Tente novamente.');
-      stopLoading();
-    }
-  }, [query, startLoading, finishLoading, stopLoading, progressiveLoading]);
 
   const handleAnswer = useCallback((stepIndex: number, selectedOption: number, isCorrect: boolean) => {
     recordAnswer(stepIndex, selectedOption, isCorrect);
@@ -606,7 +606,7 @@ export default function EnhancedLessonModule({
       {/* Navegação */}
       <OptimizedNavigation
         canGoPrevious={canGoPrevious}
-        canGoNext={canGoNext}
+        canGoNext={canGoNext ?? false}
         onPrevious={goPrevious}
         onNext={handleGoNext}
         isGeneratingNext={progressiveLoading.loadingState.isGeneratingNext}
@@ -621,6 +621,8 @@ export default function EnhancedLessonModule({
           correctAnswers={lessonState.correctAnswers}
           timeSpent={lessonState.timeSpent}
           achievements={lessonState.achievements}
+          score={Math.round((lessonState.correctAnswers / lessonState.totalQuestions) * 100)}
+          showStats={lessonState.showStats}
         />
       )}
     </div>

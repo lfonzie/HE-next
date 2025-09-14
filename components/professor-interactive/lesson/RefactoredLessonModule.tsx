@@ -372,7 +372,7 @@ export default function RefactoredLessonModule({
                       {(lessonState.currentStep === 0 || lessonState.currentStep === 7) && (currentStep.card2?.imageUrl || lesson?.themeImage) && (
                         <div className="mb-4">
                           <Image
-        src={currentStep.card2?.imageUrl || lesson?.themeImage}
+        src={currentStep.card2?.imageUrl || lesson?.themeImage || '/placeholder-image.jpg'}
         alt={lesson?.title || 'Imagem da aula'}
         width={500}
         height={300}

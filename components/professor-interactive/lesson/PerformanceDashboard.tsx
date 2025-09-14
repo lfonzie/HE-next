@@ -274,21 +274,21 @@ export default function PerformanceDashboard({
               value={`${Math.round(accuracyRate)}%`}
               icon={Target}
               color="green"
-              trend={trends.accuracy}
+              trend={trends.accuracy as "stable" | "up" | "down"}
             />
             <MetricCard
               title="Velocidade"
               value={`${Math.round(averageResponseTime)}s`}
               icon={Clock}
               color="blue"
-              trend={trends.speed}
+              trend={trends.speed as "stable" | "up" | "down"}
             />
             <MetricCard
               title="Engajamento"
               value={`${Math.round(engagementScore)}%`}
               icon={Brain}
               color="purple"
-              trend={trends.engagement}
+              trend={trends.engagement as "stable" | "up" | "down"}
             />
             <MetricCard
               title="Eficiência"
