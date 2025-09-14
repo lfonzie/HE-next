@@ -312,8 +312,12 @@ export default function EnhancedLessonModule({
   const canGoPrevious = useMemo(() => lessonState.currentStep > 0, [lessonState.currentStep]);
   const canGoNext = useMemo(() => {
     const availableSlides = progressiveLoading.getAvailableSlides();
-    return lessonState.currentStep < availableSlides.length - 1 || 
-           (processedLesson && lessonState.currentStep < processedLesson.steps.length - 1);
+    // Permitir navegação até o slide 8 (índice 7) quando usando slides progressivos
+    if (availableSlides.length > 0) {
+      return !progressiveLoading.loadingState.isGeneratingNext && 
+             lessonState.currentStep < 7;
+    }
+    return processedLesson && lessonState.currentStep < processedLesson.steps.length - 1;
   }, [lessonState.currentStep, progressiveLoading, processedLesson]);
 
   const handleSubmit = useCallback(async (e?: React.FormEvent) => {

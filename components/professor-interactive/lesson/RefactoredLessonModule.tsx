@@ -94,11 +94,11 @@ export default function RefactoredLessonModule({
     
     const currentIndex = lessonState.currentStep;
     
-    // Se estamos usando slides progressivos, verificar se há próximo slide disponível
+    // Se estamos usando slides progressivos, permitir navegação até o slide 8
     const availableSlides = progressiveLoading.getAvailableSlides();
     if (availableSlides.length > 0) {
       return !progressiveLoading.loadingState.isGeneratingNext && 
-             currentIndex < availableSlides.length - 1;
+             currentIndex < 7; // Permitir até o slide 8 (índice 7)
     }
     
     // Caso contrário, usar a lógica normal
