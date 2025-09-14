@@ -1,18 +1,94 @@
 #!/bin/bash
 
-# Render Start Script for HubEdu.ai
+# Render Start Script for HubEdu.ai with Git Operations
+# 
+# Usage:
+#   ./scripts/render-start.sh                    # Normal execution with git operations
+#   SKIP_GIT=true ./scripts/render-start.sh      # Skip git operations
+#
+# This script will:
+# 1. Execute git operations (add, commit, push) if there are changes
+# 2. Set production environment variables
+# 3. Verify build artifacts exist
+# 4. Start the Next.js application
+# 5. Perform health checks
+# 6. Follow application logs
+
 echo "🚀 Iniciando HubEdu.ai no Render..."
+
+# Check for skip git flag
+SKIP_GIT=${SKIP_GIT:-false}
 
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
+PURPLE='\033[0;35m'
 NC='\033[0m' # No Color
+
+# Git operations function
+git_operations() {
+    echo -e "${PURPLE}📝 Executando operações Git...${NC}"
+    
+    # Check if we're in a git repository
+    if [ ! -d ".git" ]; then
+        echo -e "${YELLOW}⚠️  Não é um repositório Git, pulando operações Git${NC}"
+        return 0
+    fi
+    
+    # Check git status
+    echo -e "${BLUE}🔍 Verificando status do Git...${NC}"
+    git status --porcelain
+    
+    # Check if there are changes to commit
+    if [ -z "$(git status --porcelain)" ]; then
+        echo -e "${GREEN}✅ Nenhuma alteração para commitar${NC}"
+        return 0
+    fi
+    
+    # Add all changes
+    echo -e "${BLUE}📦 Adicionando alterações...${NC}"
+    git add .
+    
+    # Generate commit message with timestamp
+    COMMIT_MSG="🚀 Deploy: $(date '+%Y-%m-%d %H:%M:%S') - Render deployment"
+    
+    # Commit changes
+    echo -e "${BLUE}💾 Fazendo commit: $COMMIT_MSG${NC}"
+    git commit -m "$COMMIT_MSG"
+    
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}✅ Commit realizado com sucesso${NC}"
+        
+        # Push to remote
+        echo -e "${BLUE}🚀 Fazendo push para o repositório remoto...${NC}"
+        git push origin main
+        
+        if [ $? -eq 0 ]; then
+            echo -e "${GREEN}✅ Push realizado com sucesso${NC}"
+        else
+            echo -e "${RED}❌ Erro ao fazer push${NC}"
+            return 1
+        fi
+    else
+        echo -e "${RED}❌ Erro ao fazer commit${NC}"
+        return 1
+    fi
+    
+    return 0
+}
 
 # Set environment variables for production
 export NODE_ENV=production
 export PORT=${PORT:-10000}
+
+# Execute git operations first (unless skipped)
+if [ "$SKIP_GIT" = "false" ]; then
+    git_operations
+else
+    echo -e "${YELLOW}⏭️  Pulando operações Git (SKIP_GIT=true)${NC}"
+fi
 
 # Log environment variables for debugging
 echo -e "${BLUE}🔍 Environment Variables:${NC}"
