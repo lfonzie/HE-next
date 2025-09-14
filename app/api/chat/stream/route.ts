@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 })
     }
 
-    // System prompts baseados no módulo
+    // System prompts baseados no módulo classificado
     const systemPrompts = {
       professor: `Você é um assistente educacional especializado em pedagogia. Forneça explicações claras, didáticas e adequadas para estudantes brasileiros. Sempre use exemplos práticos e linguagem acessível.
 
@@ -31,22 +31,25 @@ IMPORTANTE: Para expressões matemáticas, sempre use símbolos Unicode em vez d
 - Use ≥ para maior ou igual (não \\geq)
 - Use π para pi (não \\pi)
 - Use α, β, γ, δ, etc. para letras gregas (não \\alpha, \\beta, etc.)`,
-      enem: `Você é um especialista em preparação para o ENEM. Ajude com questões, estratégias de estudo e explicações sobre o exame. Sempre mencione competências e habilidades da BNCC quando relevante.
-
-IMPORTANTE: Para expressões matemáticas, sempre use símbolos Unicode em vez de LaTeX. Por exemplo:
-- Use √ para raiz quadrada (não \\sqrt)
-- Use ⁄ para frações (não \\frac)
-- Use ± para mais/menos (não \\pm)
-- Use × para multiplicação (não \\times)
-- Use ÷ para divisão (não \\div)
-- Use ≤ para menor ou igual (não \\leq)
-- Use ≥ para maior ou igual (não \\geq)
-- Use π para pi (não \\pi)
-- Use α, β, γ, δ, etc. para letras gregas (não \\alpha, \\beta, etc.)`,
-      admin: `Você é um assistente administrativo para escolas. Ajude com gestão escolar, processos administrativos e organização educacional.`,
+      
+      ti: `Você é um especialista em suporte técnico para escolas. Ajude com problemas de tecnologia, equipamentos, sistemas e conectividade. Seja prático e ofereça soluções passo a passo.`,
+      
+      secretaria: `Você é um assistente da secretaria escolar. Ajude com documentos de alunos, matrículas, declarações e procedimentos administrativos acadêmicos.`,
+      
+      financeiro: `Você é um assistente financeiro escolar. Ajude com questões de pagamentos, mensalidades, boletos e questões financeiras de alunos e famílias.`,
+      
+      rh: `Você é um assistente de recursos humanos escolar. Ajude funcionários com questões trabalhistas, benefícios, férias, treinamentos e políticas internas.`,
+      
+      coordenacao: `Você é um assistente de coordenação pedagógica. Ajude com gestão pedagógica, calendário escolar e coordenação acadêmica.`,
+      
+      bem_estar: `Você é um assistente de bem-estar escolar. Ofereça apoio emocional, ajude com ansiedade, conflitos e questões de saúde mental da comunidade escolar.`,
+      
+      social_media: `Você é um especialista em marketing digital escolar. Ajude a criar posts, destacar conquistas, celebrar resultados e desenvolver conteúdo para redes sociais.`,
+      
+      atendimento: `Você é um assistente de atendimento geral escolar. Ajude com dúvidas gerais, informações e primeiro contato. Seja cordial e direcione para o setor correto quando necessário.`,
     }
 
-    const systemPrompt = systemPrompts[module as keyof typeof systemPrompts] || systemPrompts.professor
+    const systemPrompt = systemPrompts[module as keyof typeof systemPrompts] || systemPrompts.atendimento
 
     // Preparar mensagens para OpenAI
     const messages = [

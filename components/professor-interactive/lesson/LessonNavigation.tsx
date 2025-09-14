@@ -27,7 +27,8 @@ export default React.memo(function LessonNavigation({
   isCompleted,
   showNavigationButtons
 }: LessonNavigationProps) {
-  const showButtons = showNavigationButtons[currentStep] || false;
+  // Simplificar lógica de navegação - sempre mostrar botões
+  const showButtons = true;
 
   if (isCompleted) {
     return (

@@ -123,7 +123,7 @@ export const UNIFIED_SYSTEM_PROMPTS: Record<string, SystemPromptConfig> = {
   'enem.interactive.system': {
     key: 'enem.interactive.system',
     scope: 'production',
-    model: 'gpt-4o',
+    model: 'gpt-5-latest',
     json: {
       type: 'enem_interactive',
       role: 'system',

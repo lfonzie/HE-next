@@ -18,6 +18,7 @@ interface InteractiveLesson {
   title: string;
   subject: string;
   introduction: string;
+  themeImage?: string;
   steps: InteractiveStep[];
   finalTest: {
     question: string;
@@ -60,8 +61,14 @@ export function useLessonGeneration() {
       const data = await response.json();
       
       if (data.success && data.lesson) {
-        setLesson(data.lesson);
-        return data.lesson;
+        // Incluir imagem se disponível
+        const lessonWithImage = {
+          ...data.lesson,
+          themeImage: data.imageInfo?.imageUrl || data.lesson.themeImage
+        };
+        
+        setLesson(lessonWithImage);
+        return lessonWithImage;
       } else {
         throw new Error('Resposta da API inválida');
       }

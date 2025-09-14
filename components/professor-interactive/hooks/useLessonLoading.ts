@@ -7,6 +7,8 @@ interface LoadingState {
   progress: number;
   message: string;
   startTime: number | null;
+  elapsedTime: number;
+  formattedTime: string;
 }
 
 export function useLessonLoading() {
@@ -14,7 +16,9 @@ export function useLessonLoading() {
     isLoading: false,
     progress: 0,
     message: '',
-    startTime: null
+    startTime: null,
+    elapsedTime: 0,
+    formattedTime: '0s'
   });
 
   const startLoading = useCallback((initialMessage: string = 'Iniciando...') => {
@@ -22,7 +26,9 @@ export function useLessonLoading() {
       isLoading: true,
       progress: 0,
       message: initialMessage,
-      startTime: Date.now()
+      startTime: Date.now(),
+      elapsedTime: 0,
+      formattedTime: '0s'
     });
   }, []);
 
@@ -38,18 +44,20 @@ export function useLessonLoading() {
     setLoadingState(prev => ({
       ...prev,
       progress: 100,
-      message: 'Concluído!'
+      message: 'Aula pronta!'
     }));
     
-    // Auto-hide after 1 second
+    // Auto-hide after 150ms for immediate feedback
     setTimeout(() => {
       setLoadingState({
         isLoading: false,
         progress: 0,
         message: '',
-        startTime: null
+        startTime: null,
+        elapsedTime: 0,
+        formattedTime: '00:00'
       });
-    }, 1000);
+    }, 150);
   }, []);
 
   const stopLoading = useCallback(() => {
@@ -57,7 +65,9 @@ export function useLessonLoading() {
       isLoading: false,
       progress: 0,
       message: '',
-      startTime: null
+      startTime: null,
+      elapsedTime: 0,
+      formattedTime: '0s'
     });
   }, []);
 
@@ -72,7 +82,23 @@ export function useLessonLoading() {
     finishLoading();
   }, [startLoading, updateProgress, finishLoading]);
 
-  // Auto-update time spent
+  // Função para formatar tempo
+  const formatTime = useCallback((seconds: number): string => {
+    if (seconds < 60) {
+      return `${seconds}s`
+    }
+    
+    const minutes = Math.floor(seconds / 60)
+    const remainingSeconds = seconds % 60
+    
+    if (remainingSeconds === 0) {
+      return `${minutes}m`
+    }
+    
+    return `${minutes}m ${remainingSeconds}s`
+  }, [])
+
+  // Auto-update progress and timer based on elapsed time
   useEffect(() => {
     if (!loadingState.isLoading || !loadingState.startTime) return;
     
@@ -80,14 +106,29 @@ export function useLessonLoading() {
       const elapsed = Date.now() - loadingState.startTime!;
       const seconds = Math.floor(elapsed / 1000);
       
-      // Update message based on time elapsed
-      if (seconds > 10 && loadingState.progress < 50) {
-        updateProgress(loadingState.progress + 5, 'Processando dados...');
+      // Atualizar contador de tempo
+      setLoadingState(prev => ({
+        ...prev,
+        elapsedTime: seconds,
+        formattedTime: formatTime(seconds)
+      }));
+      
+      // Progressive loading based on time
+      if (seconds < 2) {
+        updateProgress(20, 'Conectando com IA...');
+      } else if (seconds < 5) {
+        updateProgress(40, 'Analisando conteúdo...');
+      } else if (seconds < 8) {
+        updateProgress(60, 'Gerando aula interativa...');
+      } else if (seconds < 12) {
+        updateProgress(80, 'Criando exercícios...');
+      } else {
+        updateProgress(95, 'Finalizando...');
       }
-    }, 1000);
+    }, 1000); // Update every 1 second for timer and 500ms for progress
     
     return () => clearInterval(interval);
-  }, [loadingState.isLoading, loadingState.startTime, loadingState.progress, updateProgress]);
+  }, [loadingState.isLoading, loadingState.startTime, updateProgress, formatTime]);
 
   return {
     loadingState,

@@ -9,12 +9,16 @@ interface LessonLoadingScreenProps {
   progress: number;
   message: string;
   isLoading: boolean;
+  elapsedTime?: number;
+  formattedTime?: string;
 }
 
 export default React.memo(function LessonLoadingScreen({
   progress,
   message,
-  isLoading
+  isLoading,
+  elapsedTime = 0,
+  formattedTime = '0s'
 }: LessonLoadingScreenProps) {
   if (!isLoading) return null;
 
@@ -42,8 +46,14 @@ export default React.memo(function LessonLoadingScreen({
           <Progress value={progress} className="h-2" />
         </div>
         
-        <div className="text-center text-xs text-gray-500">
-          Isso pode levar alguns segundos...
+        <div className="flex justify-between items-center text-xs text-gray-500">
+          <div>
+            Isso pode levar alguns segundos...
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+            <span className="font-mono font-medium">{formattedTime}</span>
+          </div>
         </div>
       </CardContent>
     </Card>

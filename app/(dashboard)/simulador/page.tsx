@@ -36,14 +36,18 @@ import {
 import { useToast } from '@/hooks/use-toast'
 import { EnemSetup } from '@/components/enem/EnemSetup'
 import { EnemSimulator } from '@/components/enem/EnemSimulator'
+import { AuthGuard } from '@/components/AuthGuard'
 
-export default function SimuladorPage() {
+function SimuladorContent() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string>('')
   const [simulationConfig, setSimulationConfig] = useState<{
     area: string
     numQuestions: number
     duration: number
+    useRealQuestions: boolean
+    year?: number
+    useProgressiveLoading?: boolean
   } | null>(null)
   const { toast } = useToast()
 
@@ -90,7 +94,14 @@ export default function SimuladorPage() {
     }
   ]
 
-  const handleStartSimulation = async (params: { area: string; numQuestions: number; duration: number }) => {
+  const handleStartSimulation = async (params: { 
+    area: string; 
+    numQuestions: number; 
+    duration: number; 
+    useRealQuestions: boolean; 
+    year?: number; 
+    useProgressiveLoading?: boolean 
+  }) => {
     setLoading(true)
     setError('')
     
@@ -108,7 +119,10 @@ export default function SimuladorPage() {
       setSimulationConfig({
         area: mappedArea,
         numQuestions: params.numQuestions,
-        duration: params.duration
+        duration: params.duration,
+        useRealQuestions: params.useRealQuestions,
+        year: params.year,
+        useProgressiveLoading: params.useProgressiveLoading
       })
       
       toast({
@@ -148,6 +162,8 @@ export default function SimuladorPage() {
                 </h1>
                 <p className="text-sm text-gray-600">
                   {simulationConfig.numQuestions} questões • {simulationConfig.duration} minutos
+                  {simulationConfig.useRealQuestions && ' • Questões Reais'}
+                  {simulationConfig.year && ` • ${simulationConfig.year}`}
                 </p>
               </div>
               <Button onClick={handleBackToSetup} variant="outline">
@@ -163,6 +179,9 @@ export default function SimuladorPage() {
             area={simulationConfig.area}
             numQuestions={simulationConfig.numQuestions}
             duration={simulationConfig.duration}
+            useRealQuestions={simulationConfig.useRealQuestions}
+            year={simulationConfig.year}
+            useProgressiveLoading={simulationConfig.useProgressiveLoading}
           />
         </div>
       </div>
@@ -276,5 +295,13 @@ export default function SimuladorPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function SimuladorPage() {
+  return (
+    <AuthGuard>
+      <SimuladorContent />
+    </AuthGuard>
   )
 }

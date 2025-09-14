@@ -31,6 +31,10 @@ REDIS_URL="redis://localhost:6379"
 # External APIs
 NEXT_PUBLIC_API_URL="http://localhost:3000/api"
 
+# Unsplash API (opcional - para busca de imagens)
+UNSPLASH_ACCESS_KEY="QLwU2RvlL-4pIi5UP3_YYbgyyxXGt5unln1xBzzkezM"
+UNSPLASH_SECRET_KEY="UYj7_oSSR8PLsTcMqHHFvTnqywW_ZT7U-L6OKjCY3Ng"
+
 # Feature flags
 NEXT_PUBLIC_ENABLE_ANALYTICS=false
 NEXT_PUBLIC_ENABLE_DEBUG=true

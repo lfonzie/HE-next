@@ -18,34 +18,34 @@ export function MessageItem({ message }: MessageItemProps) {
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
       {isUser ? (
-        // Bolha estilo Grok para mensagens do usuário
+        // Bolha amarela para mensagens do usuário
         <div className="relative max-w-[80%]">
-          <div className="bg-gradient-to-br from-blue-500 to-purple-600 text-white rounded-2xl rounded-tr-md px-4 py-3 shadow-lg">
-            <div className="prose prose-sm max-w-none prose-invert">
+          <div className="bg-gradient-to-br from-yellow-400 to-yellow-500 text-black rounded-2xl rounded-tr-md px-4 py-3 shadow-lg">
+            <div className="prose prose-sm max-w-none">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={{
-                  p: ({ children }) => <p className="mb-2 last:mb-0 text-white">{children}</p>,
-                  ul: ({ children }) => <ul className="list-disc pl-4 mb-2 text-white">{children}</ul>,
-                  ol: ({ children }) => <ol className="list-decimal pl-4 mb-2 text-white">{children}</ol>,
-                  li: ({ children }) => <li className="mb-1 text-white">{children}</li>,
+                  p: ({ children }) => <p className="mb-2 last:mb-0 text-black">{children}</p>,
+                  ul: ({ children }) => <ul className="list-disc pl-4 mb-2 text-black">{children}</ul>,
+                  ol: ({ children }) => <ol className="list-decimal pl-4 mb-2 text-black">{children}</ol>,
+                  li: ({ children }) => <li className="mb-1 text-black">{children}</li>,
                   code: ({ children }) => (
-                    <code className="bg-white/20 px-1 py-0.5 rounded text-sm text-white">{children}</code>
+                    <code className="bg-black/10 px-1 py-0.5 rounded text-sm text-black">{children}</code>
                   ),
                   pre: ({ children }) => (
-                    <pre className="bg-white/20 p-3 rounded overflow-x-auto text-sm text-white">{children}</pre>
+                    <pre className="bg-black/10 p-3 rounded overflow-x-auto text-sm text-black">{children}</pre>
                   ),
                 }}
               >
-                {message.content}
+                {message.content || ''}
               </ReactMarkdown>
             </div>
-            <div className="text-xs opacity-70 mt-2 text-right">
-              {formatDate(message.timestamp)}
+            <div className="text-xs opacity-70 mt-2 text-right text-black">
+              {message.timestamp ? formatDate(message.timestamp) : ''}
             </div>
           </div>
-          {/* Seta da bolha estilo Grok */}
-          <div className="absolute -bottom-1 right-0 w-0 h-0 border-l-[8px] border-l-transparent border-t-[8px] border-t-purple-600"></div>
+          {/* Seta da bolha amarela */}
+          <div className="absolute -bottom-1 right-0 w-0 h-0 border-l-[8px] border-l-transparent border-t-[8px] border-t-yellow-500"></div>
         </div>
       ) : (
         // Mensagem do assistente (mantém estilo original)
@@ -91,12 +91,12 @@ export function MessageItem({ message }: MessageItemProps) {
                     ),
                   }}
                 >
-                  {message.content}
+                  {message.content || ''}
                 </ReactMarkdown>
               </div>
               
               <div className="text-xs opacity-70">
-                {formatDate(message.timestamp)}
+                {message.timestamp ? formatDate(message.timestamp) : ''}
               </div>
             </div>
           </CardContent>

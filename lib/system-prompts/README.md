@@ -112,9 +112,9 @@ const completion = await openai.chat.completions.create({
 ## 🔧 Configurações
 
 ### Modelos Suportados
-- `gpt-4o-mini` - Modelo rápido e eficiente
-- `gpt-4o` - Modelo avançado para tarefas complexas
-- `gpt-5-chat-latest` - Modelo mais recente
+- `gpt-4o-mini` - Modelo rápido e eficiente para tarefas simples
+- `gpt-5-latest` - Modelo avançado para tarefas complexas
+- `gpt-5-chat-latest` - Modelo mais recente com capacidades avançadas
 
 ### Formatos de Resposta
 - `json_object` - Para respostas estruturadas

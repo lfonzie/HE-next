@@ -36,10 +36,10 @@ export const MODEL_CONFIGURATIONS = {
     temperature: 0.7,
     description: "Modelo rápido e eficiente para tarefas gerais"
   },
-  "gpt-4o": {
+  "gpt-5-latest": {
     maxTokens: 8000,
     temperature: 0.7,
-    description: "Modelo avançado para tarefas complexas"
+    description: "Modelo mais avançado para tarefas complexas"
   },
   "gpt-5-chat-latest": {
     maxTokens: 12000,

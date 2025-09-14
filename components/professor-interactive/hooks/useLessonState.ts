@@ -57,7 +57,7 @@ export function useLessonState(lesson: InteractiveLesson | null) {
     score: 0,
     showNavigationButtons: {},
     currentQuestionIndex: {},
-    totalQuestions: lesson?.steps.filter(step => step.type === 'question').length || 0,
+    totalQuestions: 2, // Sempre 2 perguntas no padrão HubEdu (slides 4 e 7)
     correctAnswers: 0,
     timeSpent: 0,
     startTime: Date.now(),
@@ -90,11 +90,7 @@ export function useLessonState(lesson: InteractiveLesson | null) {
   const goPrevious = useCallback(() => {
     setLessonState(prev => ({
       ...prev,
-      currentStep: Math.max(0, prev.currentStep - 1),
-      showNavigationButtons: {
-        ...prev.showNavigationButtons,
-        [prev.currentStep]: false
-      }
+      currentStep: Math.max(0, prev.currentStep - 1)
     }));
   }, []);
 
@@ -138,7 +134,7 @@ export function useLessonState(lesson: InteractiveLesson | null) {
       score: 0,
       showNavigationButtons: {},
       currentQuestionIndex: {},
-      totalQuestions: lesson?.steps.filter(step => step.type === 'question').length || 0,
+      totalQuestions: 2, // Sempre 2 perguntas no padrão HubEdu (slides 4 e 7)
       correctAnswers: 0,
       timeSpent: 0,
       startTime: Date.now(),

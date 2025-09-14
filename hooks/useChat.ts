@@ -1,12 +1,19 @@
 import { useState, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { Message, ModuleType, Conversation } from '@/types'
+import { useChatContext } from '@/components/providers/ChatContext'
 
 export function useChat() {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null)
   const [isStreaming, setIsStreaming] = useState(false)
+  const [lastClassification, setLastClassification] = useState<{
+    module: string
+    confidence: number
+    rationale: string
+  } | null>(null)
   const { data: session } = useSession()
+  const { setSelectedModule } = useChatContext()
 
   const sendMessage = useCallback(async (
     message: string,
@@ -28,12 +35,49 @@ export function useChat() {
       // const token = localStorage.getItem("token")
       // if (!token) throw new Error("No auth token available")
 
+      // Classificação automática se não há módulo específico selecionado
+      let finalModule = module || "ATENDIMENTO"
+      
+      if (!module || module === "atendimento" || module === "ATENDIMENTO") {
+        try {
+          console.log("🔍 Classificando mensagem automaticamente...")
+          const classifyResponse = await fetch('/api/classify', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ userMessage: message }),
+          })
+          
+          if (classifyResponse.ok) {
+            const classifyData = await classifyResponse.json()
+            if (classifyData.success && classifyData.classification) {
+              finalModule = classifyData.classification.module.toLowerCase()
+              console.log(`✅ Módulo classificado: ${finalModule} (${Math.round(classifyData.classification.confidence * 100)}%)`)
+              
+              // Atualizar o módulo selecionado no contexto
+              setSelectedModule(finalModule as ModuleType)
+              
+              // Salvar informações da classificação
+              setLastClassification({
+                module: finalModule,
+                confidence: classifyData.classification.confidence,
+                rationale: classifyData.classification.rationale
+              })
+            }
+          }
+        } catch (classifyError) {
+          console.error("❌ Erro na classificação automática:", classifyError)
+          // Continua com o módulo padrão
+        }
+      }
+
       // Include conversation history for context
       const conversationHistory = currentConversation?.messages || []
 
       const requestBody = {
         message,
-        module: module || "ATENDIMENTO",
+        module: finalModule,
         subject,
         grade,
         conversationId,
@@ -373,7 +417,7 @@ export function useChat() {
     } finally {
       setIsStreaming(false)
     }
-  }, [session, currentConversation])
+  }, [session, currentConversation, setSelectedModule])
 
   const fetchConversations = useCallback(async () => {
     if (!session) return
@@ -465,6 +509,7 @@ export function useChat() {
     conversations,
     currentConversation,
     isStreaming,
+    lastClassification,
     sendMessage,
     fetchConversations,
     startNewConversation,

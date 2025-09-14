@@ -4,10 +4,11 @@ import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { BookOpen, Clock, Target, Play } from 'lucide-react'
+import { Switch } from '@/components/ui/switch'
+import { BookOpen, Clock, Target, Play, Database, Sparkles, Zap } from 'lucide-react'
 
 interface EnemSetupProps {
-  onStart: (config: { area: string; numQuestions: number; duration: number }) => void
+  onStart: (config: { area: string; numQuestions: number; duration: number; useRealQuestions: boolean; year?: number; useProgressiveLoading?: boolean }) => void
 }
 
 const areas = [
@@ -20,17 +21,24 @@ const areas = [
 
 const questionCounts = [10, 20, 30, 45, 90]
 const durations = [30, 60, 90, 180, 270]
+const years = Array.from({ length: 15 }, (_, i) => 2023 - i) // 2009-2023
 
 export function EnemSetup({ onStart }: EnemSetupProps) {
   const [selectedArea, setSelectedArea] = useState('geral')
   const [selectedQuestions, setSelectedQuestions] = useState(20)
   const [selectedDuration, setSelectedDuration] = useState(60)
+  const [useRealQuestions, setUseRealQuestions] = useState(true)
+  const [selectedYear, setSelectedYear] = useState<number | undefined>(undefined)
+  const [useProgressiveLoading, setUseProgressiveLoading] = useState(true)
 
   const handleStart = () => {
     onStart({
       area: selectedArea,
       numQuestions: selectedQuestions,
-      duration: selectedDuration
+      duration: selectedDuration,
+      useRealQuestions,
+      year: selectedYear,
+      useProgressiveLoading
     })
   }
 
@@ -102,6 +110,125 @@ export function EnemSetup({ onStart }: EnemSetupProps) {
             </div>
           </div>
 
+          {/* Tipo de Questões */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Tipo de Questões</h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Database className="h-5 w-5 text-blue-500" />
+                  <div>
+                    <p className="font-medium">Questões Reais do ENEM</p>
+                    <p className="text-sm text-muted-foreground">
+                      Questões oficiais de provas anteriores (2009-2023)
+                    </p>
+                    <p className="text-xs text-amber-600 mt-1">
+                      ⚠️ Fallback para IA se API indisponível
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  checked={useRealQuestions}
+                  onCheckedChange={setUseRealQuestions}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Sparkles className="h-5 w-5 text-purple-500" />
+                  <div>
+                    <p className="font-medium">Questões Geradas por IA</p>
+                    <p className="text-sm text-muted-foreground">
+                      Questões criadas automaticamente baseadas no padrão ENEM
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  checked={!useRealQuestions}
+                  onCheckedChange={(checked) => setUseRealQuestions(!checked)}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Ano Específico (apenas para questões reais) */}
+          {useRealQuestions && (
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Ano da Prova (opcional)</h3>
+              <div className="space-y-3">
+                <Button
+                  variant={selectedYear === undefined ? "default" : "outline"}
+                  onClick={() => setSelectedYear(undefined)}
+                  className="mr-2"
+                >
+                  Todos os anos
+                </Button>
+                <div className="grid grid-cols-5 gap-2">
+                  {years.slice(0, 10).map((year) => (
+                    <Button
+                      key={year}
+                      variant={selectedYear === year ? "default" : "outline"}
+                      onClick={() => setSelectedYear(year)}
+                      size="sm"
+                    >
+                      {year}
+                    </Button>
+                  ))}
+                </div>
+                <div className="grid grid-cols-5 gap-2">
+                  {years.slice(10).map((year) => (
+                    <Button
+                      key={year}
+                      variant={selectedYear === year ? "default" : "outline"}
+                      onClick={() => setSelectedYear(year)}
+                      size="sm"
+                    >
+                      {year}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Carregamento Progressivo */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Modo de Carregamento</h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Zap className="h-5 w-5 text-yellow-500" />
+                  <div>
+                    <p className="font-medium">Carregamento Progressivo</p>
+                    <p className="text-sm text-muted-foreground">
+                      Questões carregam 1 por segundo - você pode começar a responder imediatamente
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  checked={useProgressiveLoading}
+                  onCheckedChange={setUseProgressiveLoading}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Clock className="h-5 w-5 text-gray-500" />
+                  <div>
+                    <p className="font-medium">Carregamento Tradicional</p>
+                    <p className="text-sm text-muted-foreground">
+                      Aguarda todas as questões carregarem antes de começar
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  checked={!useProgressiveLoading}
+                  onCheckedChange={(checked) => setUseProgressiveLoading(!checked)}
+                />
+              </div>
+            </div>
+          </div>
+
           {/* Resumo */}
           <Card className="bg-muted/50">
             <CardContent className="p-4">
@@ -118,6 +245,27 @@ export function EnemSetup({ onStart }: EnemSetupProps) {
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4" />
                   <span>{selectedDuration} minutos</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {useRealQuestions ? (
+                    <Database className="h-4 w-4 text-blue-500" />
+                  ) : (
+                    <Sparkles className="h-4 w-4 text-purple-500" />
+                  )}
+                  <span>
+                    {useRealQuestions ? 'Questões Reais' : 'Questões IA'}
+                    {useRealQuestions && selectedYear && ` (${selectedYear})`}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {useProgressiveLoading ? (
+                    <Zap className="h-4 w-4 text-yellow-500" />
+                  ) : (
+                    <Clock className="h-4 w-4 text-gray-500" />
+                  )}
+                  <span>
+                    {useProgressiveLoading ? 'Progressivo' : 'Tradicional'}
+                  </span>
                 </div>
               </div>
             </CardContent>

@@ -7,7 +7,7 @@ export const openai = new OpenAI({
 // Configuração dos modelos disponíveis
 export const MODELS = {
   SIMPLE: 'gpt-4o-mini',      // Para tarefas simples e rápidas
-  COMPLEX: 'gpt-4o',          // Para tarefas complexas que requerem mais capacidade
+  COMPLEX: 'gpt-5-chat-latest', // Para tarefas complexas que requerem mais capacidade
 } as const
 
 // Palavras-chave que indicam complexidade alta
@@ -124,7 +124,7 @@ export function getModelConfig(model: string) {
     },
     [MODELS.COMPLEX]: {
       temperature: 0.7,
-      max_tokens: 2000,
+      max_tokens: 4000,
       stream: true
     }
   }

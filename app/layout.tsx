@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import { SessionProvider } from '@/components/providers/SessionProvider'
-import { ThemeProvider } from '@/components/providers/ThemeProvider'
 import { LessonProvider } from '@/components/providers/LessonProvider'
 import { NotificationProvider } from '@/components/providers/NotificationProvider'
 import { PWAProvider } from '@/components/providers/PWAProvider'
@@ -105,18 +104,16 @@ export default function RootLayout({
       <body className={inter.className}>
         <SplashScreen />
         <SessionProvider>
-          <ThemeProvider>
-            <PWAProvider>
-              <LoadingProvider>
-                <LessonProvider>
-                  <NotificationProvider>
-                    {children}
-                    <Toaster />
-                  </NotificationProvider>
-                </LessonProvider>
-              </LoadingProvider>
-            </PWAProvider>
-          </ThemeProvider>
+          <PWAProvider>
+            <LoadingProvider>
+              <LessonProvider>
+                <NotificationProvider>
+                  {children}
+                  <Toaster />
+                </NotificationProvider>
+              </LessonProvider>
+            </LoadingProvider>
+          </PWAProvider>
         </SessionProvider>
       </body>
     </html>

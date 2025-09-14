@@ -120,9 +120,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             />
 
             {/* Main content - ajusta automaticamente ao sidebar */}
-            <div className="flex-1 flex flex-col overflow-hidden main-content-with-sidebar">
+            <div className="flex-1 flex flex-col overflow-y-auto main-content-with-sidebar">
               {/* Page Content */}
-              <div className="flex-1 overflow-hidden">
+              <div className="flex-1 overflow-y-auto">
                 <LoadingOverlay isLoading={isLoading()} message={getLoadingMessage('navigation')}>
                   {children}
                 </LoadingOverlay>

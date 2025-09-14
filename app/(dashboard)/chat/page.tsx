@@ -7,6 +7,8 @@ import { StreamingMessage } from "@/components/chat/StreamingMessage";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { GeneralWelcome } from "@/components/chat/GeneralWelcome";
 import { ModuleWelcome } from "@/components/chat/ModuleWelcome";
+import { ModuleWelcomeScreen } from "@/components/chat/ModuleWelcomeScreen";
+import { ClassificationIndicator } from "@/components/chat/ClassificationIndicator";
 import { useChat } from "@/hooks/useChat";
 import { ModuleId, MODULES, convertModuleId, convertToOldModuleId } from "@/lib/modules";
 import { ModuleType } from "@/types";
@@ -24,6 +26,7 @@ export default function ChatPage() {
     currentConversation, 
     sendMessage, 
     isStreaming, 
+    lastClassification,
     startNewConversation,
     fetchConversations 
   } = useChat();
@@ -155,6 +158,16 @@ export default function ChatPage() {
         <main className="flex-1 overflow-y-auto chat-messages-container chat-content-with-fixed-input bg-gray-50" ref={messagesContainerRef}>
           {hasMessages ? (
             <div className="p-4 space-y-4">
+              {/* Classification Indicator */}
+              {lastClassification && (
+                <ClassificationIndicator
+                  module={lastClassification.module}
+                  confidence={lastClassification.confidence}
+                  rationale={lastClassification.rationale}
+                  isVisible={true}
+                />
+              )}
+              
               {messages.map((message, index) =>
                 message.isStreaming ? (
                   <StreamingMessage
@@ -181,7 +194,7 @@ export default function ChatPage() {
               )}
             </div>
           ) : currentModuleId ? (
-            <ModuleWelcome
+            <ModuleWelcomeScreen
               moduleId={currentModuleId}
               onSuggestionClick={handleSuggestionClick}
               quotaAvailable={true}
