@@ -208,7 +208,7 @@ export default function ResetPassword() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 to-amber-100 p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-gray-900">Carregando...</CardTitle>
+            <CardTitle className="text-2xl font-bold text-gray-900">Carregando…</CardTitle>
           </CardHeader>
         </Card>
       </div>

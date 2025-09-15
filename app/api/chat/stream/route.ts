@@ -11,10 +11,35 @@ export async function POST(request: NextRequest) {
     //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     // }
 
-    const { message, module, conversationId } = await request.json()
+    const { message, module, conversationId, history = [] } = await request.json()
 
     if (!message) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 })
+    }
+
+    // Automatic model selection using classifier
+    let selectedModel = 'gpt-4o-mini'; // Default fallback
+    
+    try {
+      console.log('🔍 Classifying message for model selection...');
+      const classifyResponse = await fetch(`${request.nextUrl.origin}/api/router/classify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message }),
+      });
+      
+      if (classifyResponse.ok) {
+        const { classification } = await classifyResponse.json();
+        selectedModel = classification === 'complexa' ? 'gpt-5-chat-latest' : 'gpt-4o-mini';
+        console.log(`✅ Model selected: ${selectedModel} (classification: ${classification})`);
+      } else {
+        console.warn('⚠️ Classifier failed, using default model');
+      }
+    } catch (classifyError) {
+      console.error('❌ Classification error:', classifyError);
+      // Continue with default model
     }
 
     // System prompts baseados no módulo classificado
@@ -51,14 +76,14 @@ IMPORTANTE: Para expressões matemáticas, sempre use símbolos Unicode em vez d
 
     const systemPrompt = systemPrompts[module as keyof typeof systemPrompts] || systemPrompts.atendimento
 
-    // Preparar mensagens para OpenAI
+    // Preparar mensagens para OpenAI com histórico
     const messages = [
       { role: 'system', content: systemPrompt },
+      ...history.slice(-10), // Include last 10 messages for context
       { role: 'user', content: message }
     ]
 
-    // Selecionar modelo baseado na complexidade da mensagem
-    const selectedModel = selectModel(message, module)
+    // Get model configuration
     const modelConfig = getModelConfig(selectedModel)
     
     console.log(`Using model: ${selectedModel} for module: ${module}`)
@@ -78,6 +103,29 @@ IMPORTANTE: Para expressões matemáticas, sempre use símbolos Unicode em vez d
     const readableStream = new ReadableStream({
       async start(controller) {
         let totalTokens = 0
+        let isClosed = false
+        
+        const safeEnqueue = (data: string) => {
+          if (!isClosed) {
+            try {
+              controller.enqueue(encoder.encode(data))
+            } catch (error) {
+              console.warn('Controller already closed, skipping enqueue')
+              isClosed = true
+            }
+          }
+        }
+        
+        const safeClose = () => {
+          if (!isClosed) {
+            try {
+              controller.close()
+              isClosed = true
+            } catch (error) {
+              console.warn('Controller already closed')
+            }
+          }
+        }
         
         try {
           for await (const chunk of stream as any) {
@@ -86,7 +134,7 @@ IMPORTANTE: Para expressões matemáticas, sempre use símbolos Unicode em vez d
             if (content) {
               // Enviar chunk de conteúdo
               const data = JSON.stringify({ content })
-              controller.enqueue(encoder.encode(`data: ${data}\n\n`))
+              safeEnqueue(`data: ${data}\n\n`)
             }
             
             // Capturar uso de tokens
@@ -103,17 +151,17 @@ IMPORTANTE: Para expressões matemáticas, sempre use símbolos Unicode em vez d
               tier: selectedModel === MODELS.COMPLEX ? 'IA_SUPER' : 'IA'
             }
           })
-          controller.enqueue(encoder.encode(`data: ${metadata}\n\n`))
+          safeEnqueue(`data: ${metadata}\n\n`)
           
           // Sinalizar fim do stream
-          controller.enqueue(encoder.encode('data: [DONE]\n\n'))
-          controller.close()
+          safeEnqueue('data: [DONE]\n\n')
+          safeClose()
           
         } catch (error) {
           console.error('Streaming error:', error)
           const errorData = JSON.stringify({ error: 'Erro durante o streaming' })
-          controller.enqueue(encoder.encode(`data: ${errorData}\n\n`))
-          controller.close()
+          safeEnqueue(`data: ${errorData}\n\n`)
+          safeClose()
         }
       }
     })

@@ -157,13 +157,6 @@ const NotFoundPage: React.FC = () => {
                 >
                   Suporte
                 </Link>
-                <span className="text-gray-600">•</span>
-                <Link 
-                  href="/contato" 
-                  className="text-xs text-yellow-400 hover:text-yellow-300 transition-colors"
-                >
-                  Contato
-                </Link>
               </div>
             </div>
           </AnimatedText>

@@ -374,16 +374,16 @@ export function EnemSetup({ onStart }: EnemSetupProps) {
                       </div>
                       <div className="flex items-center gap-2 text-sm text-gray-600">
                         <CheckCircle className="h-4 w-4 text-green-500" />
-                        <span>Padrão oficial do ENEM</span>
+                        <span>Base de dados local completa</span>
                       </div>
                       <div className="flex items-center gap-2 text-sm text-gray-600">
                         <CheckCircle className="h-4 w-4 text-green-500" />
                         <span>Correção TRI real</span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-amber-600 bg-amber-50 p-2 rounded">
-                      <AlertTriangle className="h-3 w-3" />
-                      <span>Fallback para IA se API indisponível</span>
+                    <div className="flex items-center gap-2 text-xs text-green-600 bg-green-50 p-2 rounded">
+                      <Database className="h-3 w-3" />
+                      <span>Base de dados local + API externa + IA</span>
                     </div>
                   </div>
                 </CardContent>

@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
-import { Users, Clock, DollarSign, Star, ArrowRight, Play, CheckCircle, MessageSquare, Bot, Zap, Rocket, Shield, Heart, Menu, X, Phone, Mail, MapPin, Target, TrendingUp, BookOpen, Lightbulb, LogIn, ChevronDown } from 'lucide-react';
+import { Users, Clock, DollarSign, Star, ArrowRight, Play, CheckCircle, MessageSquare, Bot, Zap, Rocket, Shield, Heart, Phone, Mail, MapPin, Target, TrendingUp, BookOpen, Lightbulb, LogIn, ChevronDown } from 'lucide-react';
 import { Logo } from '@/components/ui/logo';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useGlobalLoading } from '@/hooks/useGlobalLoading';
 
 // Lazy load modals for better performance
 const PrivacyPolicyModal = lazy(() => import('../components/modals/PrivacyPolicyModal'));
@@ -297,7 +298,6 @@ const FAQ = () => {
 
 const HubEduLanding = () => {
   const [isVisible, setIsVisible] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeDemo, setActiveDemo] = useState(0);
   const [scrollY, setScrollY] = useState(0);
   const [modalsState, setModalsState] = useState({
@@ -305,6 +305,8 @@ const HubEduLanding = () => {
     terms: false,
     lgpd: false
   });
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const loading = useGlobalLoading();
 
   // Memoized handlers
   const toggleModal = useCallback((modalType: keyof typeof modalsState) => {
@@ -313,6 +315,25 @@ const HubEduLanding = () => {
       [modalType]: !prev[modalType]
     }));
   }, []);
+
+  const handleLogin = useCallback(async () => {
+    if (isLoggingIn) return; // Prevenir múltiplos cliques
+    
+    setIsLoggingIn(true);
+    loading.show(300, { message: "Carregando…" });
+    
+    try {
+      // Simular delay mínimo para evitar flicker
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      // Redirecionar para login
+      window.location.href = '/login';
+    } catch (error) {
+      console.error('Erro no login:', error);
+      loading.hide();
+      setIsLoggingIn(false);
+    }
+  }, [isLoggingIn, loading]);
 
 
   // Effects
@@ -366,62 +387,39 @@ const HubEduLanding = () => {
 
       {/* Enhanced Header */}
       <header className={headerClasses}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-3">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+          <div className="flex items-center gap-2">
             <OptimizedImage 
               src="/assets/Logo_HubEdu.ia.svg" 
               alt="HubEdu.ia Logo" 
-              className="h-10 w-auto"
+              className="h-6 w-6 md:h-8 md:w-8"
               width={160}
               height={40}
             />
-            <div className="text-2xl font-bold">
+            <div className="text-base md:text-xl font-bold truncate">
               <span className="text-black">Hub</span>
               <span className="text-yellow-500">Edu</span>
               <span className="text-black">.ia</span>
             </div>
           </div>
           
-          <nav className="hidden lg:flex items-center gap-8" role="navigation">
-            <a href="#features" className="hover:text-yellow-500 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-400 rounded">Recursos</a>
-            <a href="#pricing" className="hover:text-yellow-500 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-400 rounded">Preços</a>
-            <a href="#testimonials" className="hover:text-yellow-500 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-400 rounded">Cases</a>
-            <a href="#contact" className="hover:text-yellow-500 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-400 rounded">Contato</a>
-          </nav>
 
-          <div className="flex items-center gap-4">
-            <a 
-              href="/login" 
-              className="px-6 py-3 bg-yellow-400 hover:bg-yellow-500 text-black font-bold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+          <div className="flex items-center gap-2 md:gap-4">
+            <button 
+              onClick={handleLogin}
+              disabled={isLoggingIn}
+              className="px-2 py-1 md:px-6 md:py-3 bg-yellow-400 hover:bg-yellow-500 disabled:bg-yellow-300 disabled:cursor-not-allowed text-black font-bold rounded-xl transition-all duration-300 transform hover:scale-105 disabled:transform-none shadow-lg flex items-center gap-1 md:gap-2 focus:outline-none focus:ring-2 focus:ring-yellow-400 text-sm md:text-base"
               aria-label="Fazer login na plataforma"
             >
-              <LogIn className="w-4 h-4" />
-              Entrar
-              <ArrowRight className="w-4 h-4" />
-            </a>
-            
-            <button
-              className="lg:hidden p-2 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-400"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              aria-label="Abrir menu mobile"
-              aria-expanded={mobileMenuOpen}
-            >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              <LogIn className="w-3 h-3 md:w-4 md:h-4" />
+              <span className="hidden sm:inline">{isLoggingIn ? 'Entrando...' : 'Entrar'}</span>
+              <span className="sm:hidden">{isLoggingIn ? 'Entrando...' : 'Entrar'}</span>
+              <ArrowRight className="w-3 h-3 md:w-4 md:h-4" />
             </button>
+            
           </div>
         </div>
 
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <nav className="lg:hidden bg-white border-t border-gray-200 p-4">
-            <div className="flex flex-col space-y-4">
-              <a href="#features" className="block hover:text-yellow-500 transition-colors">Recursos</a>
-              <a href="#pricing" className="block hover:text-yellow-500 transition-colors">Preços</a>
-              <a href="#testimonials" className="block hover:text-yellow-500 transition-colors">Cases</a>
-              <a href="#contact" className="block hover:text-yellow-500 transition-colors">Contato</a>
-            </div>
-          </nav>
-        )}
       </header>
 
       {/* Hero Section */}
@@ -549,7 +547,7 @@ const HubEduLanding = () => {
               Teste Grátis - Demo IA
             </a>
             <a 
-              href="#contact" 
+              href="/login" 
                   className="px-8 py-4 border-2 border-black hover:bg-black hover:text-white transition-all duration-300 font-semibold flex items-center justify-center gap-2"
                 >
                   <Phone className="w-5 h-5" />
@@ -1033,7 +1031,7 @@ const HubEduLanding = () => {
               Teste Grátis - Demo IA
             </a>
             <a 
-              href="#contact" 
+              href="/login" 
               className="px-8 py-4 border-2 border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-black transition-all duration-300 font-semibold rounded-xl flex items-center justify-center gap-2"
             >
               <MessageSquare className="w-5 h-5" />
@@ -1132,9 +1130,6 @@ const HubEduLanding = () => {
             <div>
               <h3 className="text-xl font-bold mb-6 text-yellow-400">Links Rápidos</h3>
               <nav className="space-y-3">
-                <a href="#features" className="block text-gray-400 hover:text-yellow-400 transition-colors">Recursos</a>
-                <a href="#pricing" className="block text-gray-400 hover:text-yellow-400 transition-colors">Preços</a>
-                <a href="#testimonials" className="block text-gray-400 hover:text-yellow-400 transition-colors">Cases de Sucesso</a>
                 <a href="#demo" className="block text-gray-400 hover:text-yellow-400 transition-colors">Demo Interativa</a>
                 <a href="/faq" className="block text-gray-400 hover:text-yellow-400 transition-colors">Central de Ajuda</a>
               </nav>

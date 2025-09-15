@@ -26,6 +26,8 @@ import {
 } from 'lucide-react'
 import { EnemPerformanceAnalysis } from './EnemPerformanceAnalysis'
 import { EnemHistory } from './EnemHistory'
+import { EnemWrongAnswersAnalysis } from './EnemWrongAnswersAnalysis'
+import { EnemWrongAnswersSummary } from './EnemWrongAnswersSummary'
 import { useEnemHistory } from '@/hooks/useEnemHistory'
 import { useToast } from '@/hooks/use-toast'
 
@@ -64,6 +66,7 @@ export function EnemResults({
   const [showExplanations, setShowExplanations] = useState(false)
   const [showPerformanceAnalysis, setShowPerformanceAnalysis] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
+  const [showWrongAnswersAnalysis, setShowWrongAnswersAnalysis] = useState(false)
   const [timeSpent, setTimeSpent] = useState(0)
   const { toast } = useToast()
   const { saveSimulation } = useEnemHistory()
@@ -186,6 +189,17 @@ export function EnemResults({
     )
   }
 
+  // Se mostrar análise de questões erradas, renderizar o componente
+  if (showWrongAnswersAnalysis) {
+    return (
+      <EnemWrongAnswersAnalysis
+        questions={questions}
+        answers={answers}
+        onClose={() => setShowWrongAnswersAnalysis(false)}
+      />
+    )
+  }
+
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">
       {/* Header de Resultados */}
@@ -221,13 +235,14 @@ export function EnemResults({
               Histórico
             </Button>
             <Button
-              onClick={() => setShowExplanations(true)}
+              onClick={() => setShowWrongAnswersAnalysis(true)}
               variant="outline"
               size="lg"
               disabled={wrongAnswers === 0}
+              className="border-red-200 text-red-700 hover:bg-red-50"
             >
               <BookOpen className="h-5 w-5 mr-2" />
-              Explicações ({wrongAnswers})
+              Análise Detalhada ({wrongAnswers})
             </Button>
           </div>
         </CardHeader>
@@ -381,14 +396,14 @@ export function EnemResults({
                   Análise Completa
                 </Button>
                 <Button
-                  onClick={() => setShowExplanations(true)}
+                  onClick={() => setShowWrongAnswersAnalysis(true)}
                   variant="outline"
                   size="sm"
-                  className="w-full"
+                  className="w-full border-red-200 text-red-700 hover:bg-red-50"
                   disabled={wrongAnswers === 0}
                 >
                   <BookOpen className="h-4 w-4 mr-2" />
-                  Explicações ({wrongAnswers})
+                  Análise Detalhada ({wrongAnswers})
                 </Button>
               </div>
             </div>
@@ -396,127 +411,13 @@ export function EnemResults({
         </Card>
       </div>
 
-      {/* Explicações das Questões Erradas */}
+      {/* Resumo das Questões Erradas */}
       {wrongAnswers > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-purple-600" />
-              Explicações das Questões Incorretas
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {!showExplanations ? (
-              <div className="text-center space-y-4">
-                <p className="text-gray-600">
-                  Revise as questões que você errou com explicações detalhadas
-                </p>
-                <Button 
-                  onClick={() => setShowExplanations(true)}
-                  disabled={isLoadingExplanations}
-                  size="lg"
-                >
-                  {isLoadingExplanations ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Carregando Explicações...
-                    </>
-                  ) : (
-                    <>
-                      <GraduationCap className="h-4 w-4 mr-2" />
-                      Ver Explicações ({wrongAnswers})
-                    </>
-                  )}
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {explanations.map((explanation, index) => (
-                  <Card key={explanation.questionId} className="border-l-4 border-l-red-500">
-                    <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <CardTitle className="text-lg">
-                          Questão {questions.findIndex(q => q.id === explanation.questionId) + 1}
-                        </CardTitle>
-                        <Badge variant="outline">{explanation.area}</Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      {/* Questão */}
-                      <div className="bg-gray-50 p-4 rounded-lg">
-                        <p className="font-medium mb-3">{explanation.question}</p>
-                        <div className="space-y-2">
-                          {explanation.options.map((option, i) => (
-                            <div 
-                              key={i} 
-                              className={`p-2 rounded ${
-                                i === explanation.correctAnswer 
-                                  ? 'bg-green-100 border border-green-300' 
-                                  : i === explanation.userAnswer
-                                  ? 'bg-red-100 border border-red-300'
-                                  : 'bg-gray-100'
-                              }`}
-                            >
-                              <span className="font-semibold mr-2">
-                                {String.fromCharCode(65 + i)})
-                              </span>
-                              {option}
-                              {i === explanation.correctAnswer && (
-                                <CheckCircle className="h-4 w-4 text-green-600 inline ml-2" />
-                              )}
-                              {i === explanation.userAnswer && i !== explanation.correctAnswer && (
-                                <XCircle className="h-4 w-4 text-red-600 inline ml-2" />
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Explicação */}
-                      <div className="space-y-3">
-                        <h4 className="font-semibold text-gray-800">Explicação:</h4>
-                        <p className="text-gray-700 leading-relaxed">
-                          {explanation.explanation}
-                        </p>
-                      </div>
-
-                      {/* Conceitos */}
-                      {explanation.concepts.length > 0 && (
-                        <div className="space-y-2">
-                          <h4 className="font-semibold text-gray-800">Conceitos Envolvidos:</h4>
-                          <div className="flex flex-wrap gap-2">
-                            {explanation.concepts.map((concept, i) => (
-                              <Badge key={i} variant="secondary">
-                                {concept}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Dicas */}
-                      {explanation.tips.length > 0 && (
-                        <div className="space-y-2">
-                          <h4 className="font-semibold text-gray-800 flex items-center gap-2">
-                            <Lightbulb className="h-4 w-4 text-yellow-500" />
-                            Dicas:
-                          </h4>
-                          <ul className="space-y-1">
-                            {explanation.tips.map((tip, i) => (
-                              <li key={i} className="text-gray-700 text-sm">
-                                • {tip}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <EnemWrongAnswersSummary
+          questions={questions}
+          answers={answers}
+          onViewDetailedAnalysis={() => setShowWrongAnswersAnalysis(true)}
+        />
       )}
 
       {/* Ações */}

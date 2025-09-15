@@ -36,6 +36,7 @@ import {
 import { useToast } from '@/hooks/use-toast'
 import { EnemSetup } from '@/components/enem/EnemSetup'
 import { EnemSimulator } from '@/components/enem/EnemSimulator'
+import { EnemDatabaseStats } from '@/components/enem/EnemDatabaseStats'
 import { AuthGuard } from '@/components/AuthGuard'
 
 function SimuladorContent() {
@@ -276,6 +277,9 @@ function SimuladorContent() {
             </CardContent>
           </Card>
         )}
+
+        {/* Database Stats */}
+        <EnemDatabaseStats />
 
         {/* Configuration Panel */}
         <EnemSetup onStart={handleStartSimulation} />

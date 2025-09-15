@@ -132,8 +132,8 @@ export function SplashScreen({
         <div className="animate-slide-up delay-600">
           <div className="w-8 h-8 mx-auto mb-4 border-2 border-yellow-400/30 border-t-yellow-400 rounded-full animate-spin" />
           <div className="text-yellow-300/80 text-sm font-medium">
-            <span className="animate-pulse">Inicializando</span>
-            <span className="animate-dots">...</span>
+            <span className="animate-pulse">Carregando</span>
+            <span className="animate-dots">…</span>
           </div>
         </div>
       </div>

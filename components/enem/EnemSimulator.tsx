@@ -316,6 +316,11 @@ export function EnemSimulator({ area, numQuestions, duration, useRealQuestions =
             <div className="flex gap-2">
               <Badge variant="secondary">{area}</Badge>
               <Badge variant="outline">{answeredQuestions} respondidas</Badge>
+              {currentQuestion === availableQuestions.length - 1 && (
+                <Badge variant="default" className="bg-green-500">
+                  Última questão
+                </Badge>
+              )}
               {progressiveLoading.loadedQuestions.length > 0 && (
                 <Badge variant="default" className="bg-green-500">
                   {progressiveLoading.loadedQuestions.length}/{progressiveLoading.totalQuestions} carregadas
@@ -398,6 +403,17 @@ export function EnemSimulator({ area, numQuestions, duration, useRealQuestions =
                 )}
               </div>
 
+              {currentQuestion === availableQuestions.length - 1 && (
+                <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center gap-2 text-green-700">
+                    <CheckCircle className="h-4 w-4" />
+                    <span className="text-sm font-medium">
+                      Esta é a última questão! Clique em &quot;Finalizar&quot; para ver seus resultados.
+                    </span>
+                  </div>
+                </div>
+              )}
+
               <div className="flex justify-between">
                 <Button 
                   variant="outline" 
@@ -416,9 +432,16 @@ export function EnemSimulator({ area, numQuestions, duration, useRealQuestions =
                   </Button>
                   <Button 
                     onClick={nextQuestion}
-                    disabled={currentQuestion === availableQuestions.length - 1}
+                    className={currentQuestion === availableQuestions.length - 1 ? "bg-green-600 hover:bg-green-700" : ""}
                   >
-                    Próxima
+                    {currentQuestion === availableQuestions.length - 1 ? (
+                      <>
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Finalizar
+                      </>
+                    ) : (
+                      "Próxima"
+                    )}
                   </Button>
                 </div>
               </div>

@@ -2,8 +2,9 @@ import { useState, useCallback, useRef, useMemo } from 'react'
 import { useSession } from 'next-auth/react'
 import { Message, ModuleType, Conversation } from '@/types'
 import { useChatContext } from '@/components/providers/ChatContext'
+import { useGlobalLoading } from '@/hooks/useGlobalLoading'
 
-export function useChat() {
+export function useChat(onStreamingStart?: () => void) {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null)
   const [isStreaming, setIsStreaming] = useState(false)
@@ -14,9 +15,11 @@ export function useChat() {
   } | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [retryCount, setRetryCount] = useState(0)
+  const [firstTokenReceived, setFirstTokenReceived] = useState(false)
   
   const { data: session } = useSession()
   const { setSelectedModule } = useChatContext()
+  const loading = useGlobalLoading()
   
   // Refs para otimização
   const abortControllerRef = useRef<AbortController | null>(null)
@@ -51,6 +54,7 @@ export function useChat() {
   ) => {
     // Limpar erros anteriores
     setError(null)
+    setFirstTokenReceived(false)
     
     // Cancelar requisição anterior se existir
     if (abortControllerRef.current) {
@@ -63,7 +67,21 @@ export function useChat() {
     // Temporariamente desabilitado para desenvolvimento
     // if (!session) throw new Error("User not authenticated")
 
+    // Mostrar loading global com opção de cancelar
+    loading.show(300, { 
+      message: "Carregando…",
+      showCancelButton: true,
+      onCancel: () => {
+        if (abortControllerRef.current) {
+          abortControllerRef.current.abort()
+        }
+        loading.hide()
+        setIsStreaming(false)
+      }
+    })
+
     setIsStreaming(true)
+    onStreamingStart?.() // Hide global loading overlay when streaming starts
     
     try {
       // Temporariamente desabilitado para desenvolvimento
@@ -349,6 +367,12 @@ export function useChat() {
                 )
                 assistantMessage += utf8Content
                 
+                // Hide loading on first token received
+                if (!firstTokenReceived) {
+                  setFirstTokenReceived(true)
+                  loading.hide()
+                }
+                
                 // Capture received model
                 if (data.model) {
                   finalModel = data.model
@@ -465,9 +489,14 @@ export function useChat() {
       
     } catch (error) {
       setIsStreaming(false)
+      loading.hide()
       throw error
     } finally {
       setIsStreaming(false)
+      // Garantir que o loading seja escondido mesmo em caso de erro
+      if (!firstTokenReceived) {
+        loading.hide()
+      }
     }
   }, [session, currentConversation, setSelectedModule])
 

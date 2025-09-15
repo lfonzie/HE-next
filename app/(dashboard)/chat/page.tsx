@@ -18,10 +18,12 @@ import { Plus, Headphones } from "lucide-react";
 import { useChatContext } from "@/components/providers/ChatContext";
 import { useQuota } from "@/components/providers/QuotaProvider";
 import { SupportModal } from "@/components/modals/SupportModal";
+import { useLoading } from "@/lib/loading";
 import "@/components/chat/ChatInput.css";
 
 export default function ChatPage() {
   const router = useRouter();
+  const { start: startLoading, end: endLoading } = useLoading();
   const { 
     currentConversation, 
     sendMessage, 
@@ -29,7 +31,7 @@ export default function ChatPage() {
     lastClassification,
     startNewConversation,
     fetchConversations 
-  } = useChat();
+  } = useChat(() => endLoading('message')); // Pass endLoading callback to hide overlay when streaming starts
   const { toast } = useToast();
   const { selectedModule, setSelectedModule, highlightActiveModule } = useChatContext();
   const { quota, maxQuota, decrementQuota, resetQuota } = useQuota();
@@ -64,9 +66,17 @@ export default function ChatPage() {
     setSelectedModule(null);
   }, [startNewConversation, selectedModule, setSelectedModule]);
 
-  // Handle send message
+  // Handle send message with optimized loading
   const handleSendMessage = useCallback(async (message: string) => {
     if (!message.trim()) return;
+    
+    // Start loading with optimized system
+    const loadingKey = startLoading('message', {
+      message: 'Carregando…',
+      cancelable: true,
+      priority: 'normal',
+      timeout: 12000 // 12s timeout
+    });
     
     try {
       await sendMessage(
@@ -82,13 +92,47 @@ export default function ChatPage() {
       highlightActiveModule();
       
     } catch (error: any) {
-      toast({
-        title: "Erro",
-        description: error.message || "Falha ao enviar mensagem",
-        variant: "destructive"
-      });
+      endLoading(loadingKey, 'error'); // Hide overlay on error
+      
+      // Show retry option for network errors
+      if (error.message?.includes('rede') || error.message?.includes('network')) {
+        startLoading('retry', {
+          message: 'Conexão lenta, tentando novamente...',
+          cancelable: true,
+          priority: 'normal',
+          timeout: 8000
+        });
+        
+        // Auto-retry once after delay
+        setTimeout(async () => {
+          try {
+            await sendMessage(
+              message, 
+              selectedModule || "atendimento",
+              undefined,
+              undefined,
+              currentConversation?.id
+            );
+            setInputMessage("");
+            highlightActiveModule();
+          } catch (retryError: any) {
+            endLoading('retry', 'error');
+            toast({
+              title: "Erro",
+              description: "Falha na conexão. Tente novamente.",
+              variant: "destructive"
+            });
+          }
+        }, 2000);
+      } else {
+        toast({
+          title: "Erro",
+          description: error.message || "Falha ao enviar mensagem",
+          variant: "destructive"
+        });
+      }
     }
-  }, [sendMessage, selectedModule, currentConversation?.id, toast, highlightActiveModule]);
+  }, [sendMessage, selectedModule, currentConversation?.id, toast, highlightActiveModule, startLoading, endLoading]);
 
   // Handle suggestion click
   const handleSuggestionClick = useCallback(async (suggestion: string) => {

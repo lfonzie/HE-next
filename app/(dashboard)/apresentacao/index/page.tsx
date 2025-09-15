@@ -63,13 +63,6 @@ const ApresentacaoPage = () => {
             </div>
           </div>
           
-          {/* Desktop Menu */}
-          <nav className="hidden lg:flex items-center gap-8">
-            <a href="#features" className="hover:text-yellow-500 transition-colors">Recursos</a>
-            <a href="#pricing" className="hover:text-yellow-500 transition-colors">Preços</a>
-            <a href="#testimonials" className="hover:text-yellow-500 transition-colors">Cases</a>
-            <a href="#contact" className="hover:text-yellow-500 transition-colors">Contato</a>
-          </nav>
 
           <div className="flex items-center gap-4">
             <a href="/login" className="px-6 py-3 bg-yellow-400 hover:bg-yellow-500 text-black font-bold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center gap-2">
@@ -397,9 +390,6 @@ const ApresentacaoPage = () => {
             <div>
               <h3 className="text-xl font-bold mb-6 text-yellow-400">Links Rápidos</h3>
               <div className="space-y-3">
-                <a href="#features" className="block text-gray-400 hover:text-yellow-400 transition-colors">Recursos</a>
-                <a href="#pricing" className="block text-gray-400 hover:text-yellow-400 transition-colors">Preços</a>
-                <a href="#testimonials" className="block text-gray-400 hover:text-yellow-400 transition-colors">Cases de Sucesso</a>
                 <a href="#demo" className="block text-gray-400 hover:text-yellow-400 transition-colors">Demo Interativa</a>
                 <a href="/faq" className="block text-gray-400 hover:text-yellow-400 transition-colors">Central de Ajuda</a>
               </div>

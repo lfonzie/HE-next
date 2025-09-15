@@ -1,6 +1,7 @@
 // lib/enem-api.ts
-// Integração com a API pública enem.dev para questões reais do ENEM
+// Integração com a API pública enem.dev e base de dados local para questões reais do ENEM
 import OpenAI from 'openai';
+import { enemLocalDB } from './enem-local-database';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -49,6 +50,7 @@ class EnemApiClient {
   private maxFailures = 3 // After 3 failures, mark as unavailable for longer
   private lastAvailabilityCheck = 0
   private availabilityCheckInterval = 300000 // 5 minutes between availability checks
+  private useLocalDatabase = true // Prioriza base de dados local
 
   private async makeRequest<T>(endpoint: string, options?: RequestInit): Promise<T> {
     // Rate limiting - 1 requisição por segundo
@@ -148,6 +150,31 @@ class EnemApiClient {
   }
 
   /**
+   * Controla o uso da base de dados local
+   */
+  setUseLocalDatabase(use: boolean): void {
+    this.useLocalDatabase = use
+    console.log(`Local database usage ${use ? 'enabled' : 'disabled'}`)
+  }
+
+  /**
+   * Verifica se a base de dados local está disponível
+   */
+  isLocalDatabaseAvailable(): boolean {
+    return enemLocalDB.isAvailable()
+  }
+
+  /**
+   * Obtém estatísticas da base de dados local
+   */
+  async getLocalDatabaseStats(): Promise<any> {
+    if (!enemLocalDB.isAvailable()) {
+      return null
+    }
+    return await enemLocalDB.getStats()
+  }
+
+  /**
    * Verifica se a API está disponível com cache inteligente
    */
   async checkApiAvailability(): Promise<boolean> {
@@ -199,6 +226,23 @@ class EnemApiClient {
    * Lista todas as provas disponíveis
    */
   async getExams(): Promise<EnemExam[]> {
+    // Prioriza base de dados local se disponível
+    if (this.useLocalDatabase && enemLocalDB.isAvailable()) {
+      try {
+        console.log('📁 Using local ENEM database for exams')
+        const localExams = await enemLocalDB.getExams()
+        return localExams.map(exam => ({
+          id: `local-${exam.year}`,
+          year: exam.year,
+          type: 'REGULAR' as const,
+          description: exam.title,
+          questionsCount: exam.questions.length
+        }))
+      } catch (error) {
+        console.error('Error loading exams from local database:', error)
+      }
+    }
+
     if (!this.isApiAvailable) {
       console.log('API not available, returning mock data')
       return this.getMockExams()
@@ -236,6 +280,27 @@ class EnemApiClient {
    * Busca questões com filtros opcionais
    */
   async getQuestions(filters: EnemFilters = {}): Promise<EnemQuestion[]> {
+    // Prioriza base de dados local se disponível
+    if (this.useLocalDatabase && enemLocalDB.isAvailable()) {
+      try {
+        console.log('📁 Using local ENEM database for questions')
+        const localFilters = {
+          year: filters.year,
+          discipline: filters.area,
+          language: filters.subject === 'espanhol' || filters.subject === 'ingles' ? filters.subject : undefined,
+          limit: filters.limit,
+          random: true
+        }
+        
+        const localQuestions = await enemLocalDB.getQuestions(localFilters)
+        if (localQuestions.length > 0) {
+          return localQuestions.map(q => enemLocalDB.convertToSimulatorFormat(q))
+        }
+      } catch (error) {
+        console.error('Error loading questions from local database:', error)
+      }
+    }
+
     if (!this.isApiAvailable) {
       console.log('API not available, returning empty array')
       return []
@@ -393,6 +458,62 @@ class EnemApiClient {
   async getRandomQuestions(area: string, count: number): Promise<EnemQuestion[]> {
     try {
       console.log(`🔍 Searching for ${count} random questions in area: ${area}`)
+      
+      // Prioriza base de dados local se disponível
+      if (this.useLocalDatabase && enemLocalDB.isAvailable()) {
+        try {
+          console.log('📁 Using local ENEM database for random questions')
+          
+          // Tratar área "geral" como todas as áreas
+          if (area.toLowerCase() === 'geral') {
+            console.log('🎯 Area "geral" detected, searching across all ENEM areas')
+            const allAreas = ['linguagens', 'matematica', 'ciencias-natureza', 'ciencias-humanas']
+            const questionsPerArea = Math.ceil(count / allAreas.length)
+            
+            let allQuestions: EnemQuestion[] = []
+            for (const specificArea of allAreas) {
+              try {
+                const localQuestions = await enemLocalDB.getQuestions({
+                  discipline: specificArea,
+                  limit: questionsPerArea,
+                  random: true
+                })
+                const convertedQuestions = localQuestions.map(q => enemLocalDB.convertToSimulatorFormat(q))
+                allQuestions.push(...convertedQuestions)
+              } catch (error) {
+                console.log(`⚠️ Failed to get questions for area ${specificArea}:`, error instanceof Error ? error.message : 'Unknown error')
+              }
+            }
+            
+            if (allQuestions.length === 0) {
+              console.log('📵 No questions found for any area in "geral"')
+              return []
+            }
+            
+            // Embaralha e pega apenas a quantidade necessária
+            const shuffled = allQuestions.sort(() => Math.random() - 0.5)
+            const selectedQuestions = shuffled.slice(0, count)
+            
+            console.log(`✅ Found ${selectedQuestions.length} questions for area "geral" from local database`)
+            return selectedQuestions
+          }
+          
+          // Busca questões específicas da área
+          const localQuestions = await enemLocalDB.getQuestions({
+            discipline: area,
+            limit: count,
+            random: true
+          })
+          
+          if (localQuestions.length > 0) {
+            const convertedQuestions = localQuestions.map(q => enemLocalDB.convertToSimulatorFormat(q))
+            console.log(`✅ Found ${convertedQuestions.length} questions for area: ${area} from local database`)
+            return convertedQuestions
+          }
+        } catch (error) {
+          console.error('Error loading random questions from local database:', error)
+        }
+      }
       
       // Tratar área "geral" como todas as áreas
       if (area.toLowerCase() === 'geral') {

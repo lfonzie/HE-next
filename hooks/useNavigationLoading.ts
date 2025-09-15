@@ -10,7 +10,7 @@ interface LoadingState {
 export function useNavigationLoading() {
   const [loadingStates, setLoadingStates] = useState<Record<string, LoadingState>>({});
 
-  const startLoading = useCallback((key: string, message: string = 'Carregando...') => {
+  const startLoading = useCallback((key: string, message: string = 'Carregando…') => {
     setLoadingStates(prev => ({
       ...prev,
       [key]: { isLoading: true, message }
@@ -34,7 +34,7 @@ export function useNavigationLoading() {
   }, [loadingStates]);
 
   const getLoadingMessage = useCallback((key: string) => {
-    return loadingStates[key]?.message || 'Carregando...';
+    return loadingStates[key]?.message || 'Carregando…';
   }, [loadingStates]);
 
   const clearAllLoading = useCallback(() => {

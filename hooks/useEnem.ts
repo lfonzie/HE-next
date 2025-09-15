@@ -54,14 +54,41 @@ export function useEnem() {
 
     setIsLoading(true)
     try {
-      const response = await fetch('/api/enem/real-questions', {
+      // Tenta primeiro a nova API com base de dados local
+      const response = await fetch('/api/enem/real-questions-local', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include', // Include cookies for NextAuth
-        body: JSON.stringify({ area, count: numQuestions, year, random: true })
+        body: JSON.stringify({ 
+          area, 
+          count: numQuestions, 
+          year, 
+          random: true,
+          useRealQuestions: true 
+        })
       })
 
-      if (!response.ok) throw new Error('Failed to load real questions')
+      if (!response.ok) {
+        // Fallback para API antiga
+        const fallbackResponse = await fetch('/api/enem/real-questions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ area, count: numQuestions, year, random: true })
+        })
+
+        if (!fallbackResponse.ok) throw new Error('Failed to load real questions')
+
+        const fallbackData = await fallbackResponse.json()
+        setQuestions(fallbackData.questions)
+        setCurrentQuestion(0)
+        setAnswers({})
+        setIsFinished(false)
+        setScore(undefined)
+        
+        console.log(`Real ENEM questions loaded (fallback): ${fallbackData.total} questions`)
+        return
+      }
 
       const data = await response.json()
       setQuestions(data.questions)
@@ -70,7 +97,7 @@ export function useEnem() {
       setIsFinished(false)
       setScore(undefined)
       
-      console.log(`Real ENEM questions loaded: ${data.total} questions`)
+      console.log(`Real ENEM questions loaded (${data.source}): ${data.total} questions`)
     } catch (error) {
       console.error('Error loading real questions:', error)
     } finally {
@@ -152,7 +179,7 @@ export function useEnem() {
     setIsFinished(true)
     
     // Calculate score
-    const correctAnswers = questions.reduce((acc, question, index) => {
+    const correctAnswers = questions.reduce((acc: number, question: any, index: number) => {
       return acc + (answers[index] === question.correct ? 1 : 0)
     }, 0)
     
@@ -169,7 +196,7 @@ export function useEnem() {
             area: questions[0]?.area || 'geral',
             numQuestions: questions.length,
             durationMs: (questions.length * 3) * 60 * 1000, // 3 minutes per question
-            questions: questions.map(q => q.id),
+            questions: questions.map((q: any) => q.id),
             answers,
             score: calculatedScore
           })
@@ -181,14 +208,17 @@ export function useEnem() {
   }, [questions, answers, session])
 
   const selectAnswer = useCallback((answer: string) => {
-    setAnswers(prev => ({ ...prev, [currentQuestion]: answer }))
+    setAnswers((prev: Record<number, string>) => ({ ...prev, [currentQuestion]: answer }))
   }, [currentQuestion])
 
   const nextQuestion = useCallback(() => {
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1)
+    } else {
+      // Se estamos na última questão, finalizar o simulado
+      finishSimulation()
     }
-  }, [currentQuestion, questions.length])
+  }, [currentQuestion, questions.length, finishSimulation])
 
   const prevQuestion = useCallback(() => {
     if (currentQuestion > 0) {

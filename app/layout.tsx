@@ -5,6 +5,8 @@ import { LessonProvider } from '@/components/providers/LessonProvider'
 import { NotificationProvider } from '@/components/providers/NotificationProvider'
 import { PWAProvider } from '@/components/providers/PWAProvider'
 import { LoadingProvider } from '@/lib/loading'
+import { GlobalLoadingProvider } from '@/hooks/useGlobalLoading'
+import { GlobalLoading } from '@/components/providers/GlobalLoading'
 import { SplashScreen } from '@/components/ui/SplashScreen'
 import { Toaster } from '@/components/ui/toaster'
 import './globals.css'
@@ -82,12 +84,15 @@ export default function RootLayout({
         <SessionProvider>
           <PWAProvider>
             <LoadingProvider>
-              <LessonProvider>
-                <NotificationProvider>
-                  {children}
-                  <Toaster />
-                </NotificationProvider>
-              </LessonProvider>
+              <GlobalLoadingProvider>
+                <LessonProvider>
+                  <NotificationProvider>
+                    {children}
+                    <GlobalLoading />
+                    <Toaster />
+                  </NotificationProvider>
+                </LessonProvider>
+              </GlobalLoadingProvider>
             </LoadingProvider>
           </PWAProvider>
         </SessionProvider>

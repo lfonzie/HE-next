@@ -31,7 +31,7 @@ interface UseLoadingScreenReturn {
 // Hook aprimorado para gerenciar estado do loading screen
 export function useLoadingScreen(): UseLoadingScreenReturn {
   const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState('Carregando...');
+  const [message, setMessage] = useState('Carregando…');
   const [progress, setProgress] = useState(0);
 
   const simulateProgress = useCallback((duration: number = 3000) => {
@@ -55,7 +55,7 @@ export function useLoadingScreen(): UseLoadingScreenReturn {
 
   const startLoading = useCallback((newMessage?: string, duration?: number) => {
     setIsLoading(true);
-    setMessage(newMessage || 'Carregando...');
+    setMessage(newMessage || 'Carregando…');
     setProgress(0);
     
     if (duration) {
@@ -91,7 +91,7 @@ export function useLoadingScreen(): UseLoadingScreenReturn {
 // Componente principal aprimorado
 export function LoadingScreen({
   isLoading,
-  message = 'Carregando...',
+  message = 'Carregando…',
   progress = 0,
   showProgress = true,
   showPercentage = true,
@@ -497,7 +497,7 @@ export function LoadingSpinner({
 
 // Card de loading aprimorado
 export function LoadingCard({ 
-  message = 'Carregando...',
+  message = 'Carregando…',
   showSpinner = true,
   variant = 'default',
   className 

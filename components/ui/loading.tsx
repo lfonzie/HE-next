@@ -36,7 +36,7 @@ interface LoadingScreenProps {
 }
 
 export const LoadingScreen: React.FC<LoadingScreenProps> = ({ 
-  message = 'Carregando...', 
+  message = 'Carregando…', 
   className 
 }) => {
   return (
@@ -84,7 +84,7 @@ interface LoadingOverlayProps {
 export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({ 
   isLoading, 
   children, 
-  message = 'Carregando...' 
+  message = 'Carregando…' 
 }) => {
   if (!isLoading) return <>{children}</>
 

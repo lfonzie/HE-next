@@ -67,7 +67,7 @@ const Hero: React.FC<HeroProps> = ({ data, features, className = "" }) => {
               <Play className="w-5 h-5 group-hover:scale-110 transition-transform" />
               {data.cta.primary}
             </Link>
-            <Link href="#contact" className="px-8 py-4 border-2 border-white text-white hover:bg-white hover:text-black transition-all duration-300 font-semibold flex items-center justify-center gap-2">
+            <Link href="/login" className="px-8 py-4 border-2 border-white text-white hover:bg-white hover:text-black transition-all duration-300 font-semibold flex items-center justify-center gap-2">
               <MessageSquare className="w-5 h-5" />
               {data.cta.secondary}
             </Link>

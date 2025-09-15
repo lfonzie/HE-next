@@ -84,7 +84,7 @@ const LoadingProvider: React.FC<{
     setLoadings(prev => new Map(prev.set(loadingKey, {
       key: loadingKey,
       phase: "waiting",
-      message: options?.message || "Carregando...",
+      message: options?.message || "Carregando…",
       cancelable: options?.cancelable || false,
       onCancel: options?.onCancel,
       priority: options?.priority || "normal",
@@ -404,7 +404,7 @@ const LoadingCard: React.FC<{
   onCancel?: () => void;
   phase?: LoadingPhase;
 }> = ({ 
-  message = "Carregando...", 
+  message = "Carregando…", 
   className,
   showProgress = false,
   progress = 0,

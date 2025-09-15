@@ -510,3 +510,227 @@
 .animate-glow {
   animation: glow 2s ease-in-out infinite;
 }
+
+/* ============================================================================
+   CHAT OPTIMIZATION STYLES
+   ============================================================================ */
+
+/* Spinner animations for loading states */
+.spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  animation: spin 1s linear infinite;
+}
+
+.spinner-sm {
+  width: 16px;
+  height: 16px;
+  border-width: 2px;
+}
+
+.spinner-lg {
+  width: 32px;
+  height: 32px;
+  border-width: 4px;
+}
+
+/* Typing animation for chat placeholders */
+.typing-animation {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.typing-animation::after {
+  content: '• • •';
+  animation: pulse 1.5s infinite;
+  color: #6b7280;
+}
+
+/* Chat message animations */
+.chat-message-enter {
+  animation: slideInFromBottom 0.3s ease-out;
+}
+
+.chat-message-exit {
+  animation: slideOutToBottom 0.2s ease-in;
+}
+
+/* Loading overlay styles */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  backdrop-filter: blur(4px);
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.dark .loading-overlay {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+/* Assistant placeholder bubble */
+.assistant-placeholder {
+  background: #e0e0e0;
+  border-radius: 16px;
+  padding: 8px 16px;
+  margin: 8px;
+  animation: pulse 2s infinite;
+}
+
+.dark .assistant-placeholder {
+  background: #374151;
+}
+
+/* Error message styling */
+.chat-error {
+  background: #ffe5e5;
+  border: 1px solid #fecaca;
+  border-radius: 16px;
+  padding: 8px 16px;
+  margin: 8px;
+  color: #dc2626;
+}
+
+.dark .chat-error {
+  background: #7f1d1d;
+  border-color: #991b1b;
+  color: #fca5a5;
+}
+
+/* Streaming indicator */
+.streaming-indicator {
+  position: relative;
+}
+
+.streaming-indicator::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #3498db, transparent);
+  animation: streamFlow 2s infinite;
+}
+
+/* Cancel button styling */
+.cancel-button {
+  margin-left: 16px;
+  padding: 4px 8px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.cancel-button:hover {
+  background: #dc2626;
+}
+
+/* Keyframe animations for chat */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.4; }
+  100% { opacity: 1; }
+}
+
+@keyframes slideInFromBottom {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideOutToBottom {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes streamFlow {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Responsive chat container */
+.chat-container {
+  max-width: 800px;
+  padding: 16px;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .chat-container {
+    padding: 8px;
+  }
+  
+  .spinner {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .loading-overlay {
+    padding: 16px;
+  }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  .spinner,
+  .typing-animation::after,
+  .assistant-placeholder,
+  .streaming-indicator::after {
+    animation: none;
+  }
+  
+  .chat-message-enter,
+  .chat-message-exit {
+    animation: none;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .spinner {
+    border-color: #000;
+    border-top-color: #0066cc;
+  }
+  
+  .assistant-placeholder {
+    background: #f0f0f0;
+    border: 2px solid #000;
+  }
+  
+  .chat-error {
+    background: #ffebee;
+    border: 2px solid #d32f2f;
+  }
+}

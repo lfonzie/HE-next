@@ -11,6 +11,7 @@ import { Separator } from '@/components/ui/separator'
 import { Mail, Lock, Eye, EyeOff, AlertCircle, ArrowLeft } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
+import { useLoading } from '@/lib/loading'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -20,6 +21,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
   const router = useRouter()
+  const { start: startLoading, end: endLoading } = useLoading()
   
   // Refs para foco
   const emailRef = useRef<HTMLInputElement>(null)
@@ -29,6 +31,14 @@ export default function LoginPage() {
     e.preventDefault()
     setIsLoading(true)
     setError('')
+    
+    // Start loading with optimized system
+    const loadingKey = startLoading('login', {
+      message: 'Carregando…',
+      cancelable: false,
+      priority: 'high',
+      timeout: 15000 // 15s timeout
+    })
 
     try {
       const result = await signIn('credentials', {
@@ -39,11 +49,21 @@ export default function LoginPage() {
 
       if (result?.error) {
         setError('Credenciais inválidas')
+        endLoading(loadingKey, 'error')
       } else if (result?.ok) {
+        // Update loading message for navigation
+        startLoading('navigation', {
+          message: 'Carregando…',
+          cancelable: false,
+          priority: 'high'
+        })
+        
+        // Navigate to chat - loading will be hidden when chat page loads
         router.push('/chat')
       }
     } catch (error) {
       setError('Erro ao fazer login')
+      endLoading(loadingKey, 'error')
     } finally {
       setIsLoading(false)
     }
@@ -56,10 +76,12 @@ export default function LoginPage() {
 
   const togglePasswordVisibility = () => setShowPassword(prev => !prev)
 
-  // Auto-focus no email ao carregar
+  // Auto-focus no email ao carregar and prefetch chat
   useEffect(() => {
     emailRef.current?.focus()
-  }, [])
+    // Prefetch chat route to reduce navigation latency
+    router.prefetch('/chat')
+  }, [router])
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-yellow-50 via-orange-50 to-white p-4 relative overflow-hidden">

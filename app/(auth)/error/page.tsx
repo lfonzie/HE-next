@@ -81,7 +81,7 @@ export default function AuthErrorPage() {
               <AlertCircle className="w-6 h-6 text-red-600" />
             </div>
             <CardTitle className="text-xl font-semibold text-gray-900">
-              Carregando...
+              Carregando…
             </CardTitle>
           </CardHeader>
         </Card>
