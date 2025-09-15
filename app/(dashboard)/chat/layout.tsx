@@ -7,11 +7,12 @@ export default async function ChatLayout({
 }: { 
   children: React.ReactNode 
 }) {
-  const session = await getServerSession(authOptions);
+  // Temporariamente desabilitado para desenvolvimento
+  // const session = await getServerSession(authOptions);
   
-  if (!session) {
-    redirect('/login?error=unauthenticated');
-  }
+  // if (!session) {
+  //   redirect('/login?error=unauthenticated');
+  // }
 
   return <>{children}</>;
 }

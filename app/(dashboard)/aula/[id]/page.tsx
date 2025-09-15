@@ -110,17 +110,17 @@ export default function AulaPage() {
     }
   }, [currentStage, stageResults, totalPoints, totalTimeSpent, isCompleted, lessonData, lessonId])
 
-  const handleStageComplete = (result: any, timeSpent: number, pointsEarned: number) => {
+  const handleStageComplete = (stageIndex: number, result: any) => {
     const newResult: StageResult = {
-      stageIndex: currentStage,
+      stageIndex,
       result,
-      timeSpent,
-      pointsEarned
+      timeSpent: result.timeSpent || 0,
+      pointsEarned: result.pointsEarned || 0
     }
 
     setStageResults(prev => [...prev, newResult])
-    setTotalPoints(prev => prev + pointsEarned)
-    setTotalTimeSpent(prev => prev + timeSpent)
+    setTotalPoints(prev => prev + newResult.pointsEarned)
+    setTotalTimeSpent(prev => prev + newResult.timeSpent)
 
     if (currentStage < lessonData!.stages.length - 1) {
       setCurrentStage(prev => prev + 1)
@@ -303,12 +303,13 @@ export default function AulaPage() {
           {currentStageData && (
             <DynamicStage
               stage={currentStageData}
+              stageIndex={currentStage}
+              totalStages={lessonData.stages.length}
               onComplete={handleStageComplete}
               onNext={handleNextStage}
               onPrevious={handlePreviousStage}
-              isFirstStage={currentStage === 0}
-              isLastStage={currentStage === lessonData.stages.length - 1}
-              isCompleted={isCompleted}
+              canGoNext={currentStage < lessonData.stages.length - 1}
+              canGoPrevious={currentStage > 0}
             />
           )}
         </motion.div>

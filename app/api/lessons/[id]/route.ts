@@ -5,10 +5,11 @@ import { prisma } from '@/lib/db'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
+    const { id } = await params
     
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -16,7 +17,7 @@ export async function GET(
 
     const lesson = await prisma.lessons.findUnique({
       where: {
-        id: params.id,
+        id,
         user_id: session.user.id
       }
     })
@@ -37,10 +38,11 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
+    const { id } = await params
     
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -50,7 +52,7 @@ export async function PUT(
 
     const lesson = await prisma.lessons.update({
       where: {
-        id: params.id,
+        id,
         user_id: session.user.id
       },
       data: {
@@ -87,10 +89,11 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
+    const { id } = await params
     
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -98,7 +101,7 @@ export async function DELETE(
 
     await prisma.lessons.delete({
       where: {
-        id: params.id,
+        id,
         user_id: session.user.id
       }
     })

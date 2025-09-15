@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { ChatMessage } from "@/components/chat/ChatMessage-simple";
+import { ChatMessage } from "@/components/chat/ChatMessage";
 import { StreamingMessage } from "@/components/chat/StreamingMessage";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { GeneralWelcome } from "@/components/chat/GeneralWelcome";

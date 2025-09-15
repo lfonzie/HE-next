@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { formatDate, getModuleConfig } from '@/lib/utils'
-// Removed ReactMarkdown imports to avoid errors
+import { MessageRenderer } from './MessageRenderer'
 import { Copy, Check, ThumbsUp, ThumbsDown, MoreHorizontal } from 'lucide-react'
 import { useState } from 'react'
 
@@ -114,11 +114,21 @@ export function MessageItem({ message, isLast = false }: MessageItemProps) {
                 </div>
                 
                 {/* Conteúdo da mensagem */}
-                <div className="prose prose-sm max-w-none dark:prose-invert">
-                  <div className="whitespace-pre-wrap">
-                    {message.content || ''}
-                  </div>
-                </div>
+                <MessageRenderer
+                  content={message.content || ''}
+                  moduleId={message.module}
+                  structured={message.structured}
+                  blocks={message.blocks}
+                  actions={message.actions}
+                  onActionClick={(action) => {
+                    console.log('Action clicked:', action)
+                    // Aqui você pode implementar a lógica para executar a ação
+                  }}
+                  onBlockClick={(block) => {
+                    console.log('Block clicked:', block)
+                    // Aqui você pode implementar a lógica para executar o bloco
+                  }}
+                />
                 
                 {/* Footer com timestamp e ações */}
                 <div className="flex items-center justify-between text-xs text-gray-500">

@@ -398,6 +398,10 @@ export const enemLocalDB = new EnemLocalDatabase()
 
 // Mapeamento de áreas para o formato local
 export const AREA_MAPPING = {
+  'CN': 'ciencias-natureza',
+  'CH': 'ciencias-humanas',
+  'LC': 'linguagens',
+  'MT': 'matematica',
   'linguagens': 'linguagens',
   'ciencias-humanas': 'ciencias-humanas',
   'ciencias-natureza': 'ciencias-natureza',

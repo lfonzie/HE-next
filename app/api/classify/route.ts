@@ -10,6 +10,11 @@ const openai = new OpenAI({
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 
 function checkRateLimit(ip: string): boolean {
+  // Bypass rate limiting em desenvolvimento
+  if (process.env.NODE_ENV === 'development') {
+    return true;
+  }
+  
   const now = Date.now();
   const userLimit = rateLimitMap.get(ip);
   
@@ -18,7 +23,7 @@ function checkRateLimit(ip: string): boolean {
     return true;
   }
   
-  if (userLimit.count >= 10) { // 10 requests por minuto
+  if (userLimit.count >= 20) { // 20 requests por minuto (aumentado para testes)
     return false;
   }
   
@@ -71,8 +76,8 @@ export async function POST(request: NextRequest) {
 
     // Sanitização e validação
     const MODULE_LIST = [
-      "PROFESSOR", "TI", "SECRETARIA", "FINANCEIRO", "RH", "ATENDIMENTO", 
-      "COORDENACAO", "BEM_ESTAR", "SOCIAL_MEDIA"
+      "PROFESSOR", "AULA_EXPANDIDA", "ENEM_INTERATIVO", "TI", "SECRETARIA", 
+      "FINANCEIRO", "RH", "ATENDIMENTO", "COORDENACAO", "BEM_ESTAR", "SOCIAL_MEDIA"
     ];
 
     if (!MODULE_LIST.includes(parsed.module)) {

@@ -10,6 +10,16 @@ PROFESSOR: Conteúdo educacional, estudos, matérias, exercícios, provas, dúvi
 - Exemplos: "história da Fender", "história do Brasil", "história da matemática", "apoio em redação", "ajuda com redação"
 - Conceitos acadêmicos, teorias, fórmulas, exercícios, provas
 
+AULA_EXPANDIDA: Aulas completas, explicações detalhadas, conteúdo expandido
+- "aula expandida", "aula completa", "aula detalhada", "explicação completa"
+- "conteúdo expandido", "aula com exercícios", "aula com exemplos"
+- Exemplos: "quero uma aula expandida sobre fotossíntese", "aula completa de matemática"
+
+ENEM_INTERATIVO: Simulados ENEM com explicações detalhadas e feedback
+- "enem interativo", "simulado interativo", "questões interativas"
+- "prova interativa", "enem com explicações", "simulado com feedback"
+- Exemplos: "quero um enem interativo", "simulado com explicações detalhadas"
+
 BEM_ESTAR: Apoio emocional, ansiedade, conflitos, saúde mental, bem-estar
 
 TI: Problemas técnicos, internet, login, bugs, suporte tecnológico, equipamentos audiovisuais, projetores, TVs, computadores, impressoras, sistemas, configurações técnicas, instalação de equipamentos, conectividade, redes, hardware, software, dispositivos eletrônicos
@@ -34,12 +44,15 @@ COORDENACAO: Gestão pedagógica, calendário, coordenação acadêmica
 ATENDIMENTO: Dúvidas gerais, informações, primeiro contato (APENAS quando não se encaixa em nenhum módulo específico)
 
 REGRAS DE CLASSIFICAÇÃO CRÍTICAS:
-1. TI: Qualquer questão técnica relacionada a equipamentos, sistemas, configurações, instalações, conectividade, hardware, software, dispositivos eletrônicos, projetores, TVs, computadores, impressoras, internet, login, bugs
-2. SOCIAL_MEDIA: Qualquer questão sobre criar posts, destacar conquistas, celebrar resultados, compartilhar sucessos, marketing digital
-3. RH: Questões relacionadas a FUNCIONÁRIOS/COLABORADORES da escola: benefícios, férias, atestados, treinamentos, políticas internas, folha de ponto, políticas da empresa, salário, progressão salarial, promoção, carreira, contrato, trabalho
-4. FINANCEIRO: Questões de PAGAMENTOS e COBRANÇA: mensalidades, boletos, valores, descontos, renegociação de mensalidades de ALUNOS
-5. SECRETARIA: Apenas para documentos de ALUNOS (matrícula, declarações escolares)
-6. ATENDIMENTO: APENAS quando não se encaixa em nenhum módulo específico
+1. AULA_EXPANDIDA: Para aulas completas, detalhadas, com exercícios e exemplos
+2. ENEM_INTERATIVO: Para simulados ENEM com explicações detalhadas e feedback
+3. PROFESSOR: Para dúvidas acadêmicas, conceitos, exercícios, matérias escolares
+4. TI: Qualquer questão técnica relacionada a equipamentos, sistemas, configurações, instalações, conectividade, hardware, software, dispositivos eletrônicos, projetores, TVs, computadores, impressoras, internet, login, bugs
+5. SOCIAL_MEDIA: Qualquer questão sobre criar posts, destacar conquistas, celebrar resultados, compartilhar sucessos, marketing digital
+6. RH: Questões relacionadas a FUNCIONÁRIOS/COLABORADORES da escola: benefícios, férias, atestados, treinamentos, políticas internas, folha de ponto, políticas da empresa, salário, progressão salarial, promoção, carreira, contrato, trabalho
+7. FINANCEIRO: Questões de PAGAMENTOS e COBRANÇA: mensalidades, boletos, valores, descontos, renegociação de mensalidades de ALUNOS
+8. SECRETARIA: Apenas para documentos de ALUNOS (matrícula, declarações escolares)
+9. ATENDIMENTO: APENAS quando não se encaixa em nenhum módulo específico
 
 IMPORTANTE: 
 - RH ≠ FINANCEIRO: RH é para funcionários, FINANCEIRO é para pagamentos de alunos

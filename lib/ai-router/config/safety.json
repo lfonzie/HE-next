@@ -1,0 +1,214 @@
+{
+  "piiDetection": {
+    "enabled": true,
+    "patterns": [
+      {
+        "name": "CPF",
+        "pattern": "\\b\\d{3}\\.\\d{3}\\.\\d{3}-\\d{2}\\b",
+        "severity": "high",
+        "action": "mask"
+      },
+      {
+        "name": "CNPJ",
+        "pattern": "\\b\\d{2}\\.\\d{3}\\.\\d{3}\\/\\d{4}-\\d{2}\\b",
+        "severity": "high",
+        "action": "mask"
+      },
+      {
+        "name": "Email",
+        "pattern": "\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b",
+        "severity": "medium",
+        "action": "mask"
+      },
+      {
+        "name": "Telefone",
+        "pattern": "\\b\\(\\d{2}\\)\\s?\\d{4,5}-?\\d{4}\\b",
+        "severity": "medium",
+        "action": "mask"
+      },
+      {
+        "name": "CEP",
+        "pattern": "\\b\\d{5}-?\\d{3}\\b",
+        "severity": "low",
+        "action": "mask"
+      }
+    ]
+  },
+  "contentFiltering": {
+    "enabled": true,
+    "sensitiveTopics": [
+      {
+        "topic": "suicídio",
+        "keywords": ["suicídio", "suicidio", "suicide", "se matar", "acabar com a vida"],
+        "severity": "critical",
+        "action": "block"
+      },
+      {
+        "topic": "automutilação",
+        "keywords": ["automutilação", "automutilacao", "self-harm", "se cortar", "se machucar"],
+        "severity": "critical",
+        "action": "block"
+      },
+      {
+        "topic": "drogas",
+        "keywords": ["drogas", "drugs", "substâncias", "maconha", "cocaína"],
+        "severity": "high",
+        "action": "flag"
+      },
+      {
+        "topic": "violência",
+        "keywords": ["violência", "violencia", "violence", "agressão", "briga"],
+        "severity": "medium",
+        "action": "flag"
+      }
+    ]
+  },
+  "lgpdCompliance": {
+    "enabled": true,
+    "dataResidency": {
+      "required": true,
+      "allowedRegions": ["br", "us", "eu"],
+      "preferredRegion": "br"
+    },
+    "dataRetention": {
+      "defaultDays": 30,
+      "byDataType": {
+        "personal": 30,
+        "sensitive": 7,
+        "anonymized": 365
+      }
+    },
+    "consentManagement": {
+      "required": true,
+      "explicitConsent": true,
+      "withdrawalAllowed": true
+    }
+  },
+  "jsonValidation": {
+    "enabled": true,
+    "schemas": {
+      "aula_interativa": {
+        "type": "object",
+        "required": ["slides"],
+        "properties": {
+          "slides": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 9,
+            "items": {
+              "type": "object",
+              "required": ["titulo", "conteudo"],
+              "properties": {
+                "titulo": { "type": "string", "minLength": 1 },
+                "conteudo": { "type": "string", "minLength": 1 },
+                "tipo": { "type": "string", "enum": ["introducao", "desenvolvimento", "interativo", "resumo"] },
+                "interacao": { "type": "object", "required": false }
+              }
+            }
+          }
+        }
+      },
+      "enem": {
+        "type": "object",
+        "required": ["questoes"],
+        "properties": {
+          "questoes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["enunciado", "alternativas", "resposta", "explicacao"],
+              "properties": {
+                "enunciado": { "type": "string", "minLength": 10 },
+                "alternativas": {
+                  "type": "array",
+                  "minItems": 5,
+                  "maxItems": 5,
+                  "items": { "type": "string", "minLength": 1 }
+                },
+                "resposta": { "type": "string", "enum": ["A", "B", "C", "D", "E"] },
+                "explicacao": { "type": "string", "minLength": 10 }
+              }
+            }
+          }
+        }
+      },
+      "ti": {
+        "type": "object",
+        "required": ["solucao"],
+        "properties": {
+          "solucao": { "type": "string", "minLength": 1 },
+          "codigo": { "type": "string", "required": false },
+          "explicacao": { "type": "string", "required": false },
+          "recursos": { "type": "array", "required": false }
+        }
+      }
+    }
+  },
+  "qualityChecks": {
+    "enabled": true,
+    "checks": [
+      {
+        "name": "empty_response",
+        "description": "Resposta vazia ou muito curta",
+        "severity": "high",
+        "threshold": 10
+      },
+      {
+        "name": "placeholder_content",
+        "description": "Conteúdo contém placeholders não resolvidos",
+        "severity": "medium",
+        "patterns": ["[PLACEHOLDER]", "[TODO]", "[FIXME]"]
+      },
+      {
+        "name": "error_messages",
+        "description": "Resposta contém mensagens de erro",
+        "severity": "high",
+        "patterns": ["ERROR:", "FALHA:", "ERRO:"]
+      },
+      {
+        "name": "incomplete_json",
+        "description": "JSON malformado ou incompleto",
+        "severity": "high",
+        "check": "json_validity"
+      }
+    ]
+  },
+  "rateLimiting": {
+    "enabled": true,
+    "limits": {
+      "perUser": {
+        "requestsPerMinute": 60,
+        "requestsPerHour": 1000,
+        "requestsPerDay": 10000
+      },
+      "perModule": {
+        "aula_interativa": {
+          "requestsPerMinute": 10,
+          "requestsPerHour": 100
+        },
+        "enem": {
+          "requestsPerMinute": 20,
+          "requestsPerHour": 200
+        },
+        "ti": {
+          "requestsPerMinute": 30,
+          "requestsPerHour": 300
+        }
+      }
+    }
+  },
+  "alerting": {
+    "enabled": true,
+    "channels": ["console", "webhook"],
+    "thresholds": {
+      "errorRate": 0.05,
+      "latencyP95": 5000,
+      "costPerSession": 1.00,
+      "consecutiveErrors": 5
+    },
+    "webhook": {
+      "url": "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK",
+      "timeout": 5000
+    }
+  }
+}

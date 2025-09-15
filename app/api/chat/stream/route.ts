@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { orchestrate } from '@/lib/orchestrator'
-import '@/lib/orchestrator-modules'
+import { openai } from '@/lib/openai'
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,20 +17,67 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 })
     }
 
-    // Orchestrator returns JSON response; keep stream route as wrapper sending one JSON event
-    const result = await orchestrate({ 
-      text: message, 
-      context: {
-        ...context,
-        module: context?.module || 'atendimento'
+    console.log('🤖 Chat OpenAI request:', message, 'Context:', context)
+
+    // Verificar se a chave da OpenAI está configurada
+    if (!process.env.OPENAI_API_KEY) {
+      return NextResponse.json({ error: 'OpenAI API key not configured' }, { status: 500 })
+    }
+
+    // Construir mensagens para OpenAI
+    const messages = [
+      {
+        role: 'system' as const,
+        content: `Você é um professor virtual especializado em educação brasileira. Você é paciente, didático e sempre busca explicar conceitos de forma clara e envolvente. 
+
+Sua personalidade:
+- Amigável e encorajador
+- Explica conceitos de forma simples
+- Usa exemplos práticos do dia a dia
+- Incentiva o aprendizado
+- Adapta o nível de explicação ao aluno
+
+Quando responder:
+- Use emojis para tornar mais interessante
+- Faça perguntas para engajar o aluno
+- Sugira exercícios práticos quando apropriado
+- Seja específico e detalhado nas explicações
+- Use formatação markdown para organizar o conteúdo
+
+Contexto atual: ${context?.module ? `Módulo: ${context.module}` : 'Chat geral'}`
+      },
+      {
+        role: 'user' as const,
+        content: message
       }
+    ]
+
+    // Chamar OpenAI com streaming
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: messages as any,
+      max_completion_tokens: 2000,
+      temperature: 0.7,
+      stream: true
     })
+
     const encoder = new TextEncoder()
     const readableStream = new ReadableStream({
-      start(controller) {
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify(result)}\n\n`))
-        controller.enqueue(encoder.encode('data: [DONE]\n\n'))
-        controller.close()
+      async start(controller) {
+        try {
+          for await (const chunk of completion) {
+            const content = chunk.choices[0]?.delta?.content || ''
+            if (content) {
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content })}\n\n`))
+            }
+          }
+          controller.enqueue(encoder.encode('data: [DONE]\n\n'))
+          controller.close()
+        } catch (error) {
+          console.error('Streaming error:', error)
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: 'Streaming error' })}\n\n`))
+          controller.close()
+        }
       }
     })
 
@@ -56,6 +102,8 @@ export async function POST(request: NextRequest) {
       friendlyError = 'Cota de tokens excedida. Verifique seu plano.'
     } else if (error.message?.includes('network')) {
       friendlyError = 'Erro de conexão. Verifique sua internet e tente novamente.'
+    } else if (error.message?.includes('API key')) {
+      friendlyError = 'Chave da OpenAI não configurada. Verifique as configurações.'
     }
 
     return NextResponse.json({ error: friendlyError }, { status: 500 })

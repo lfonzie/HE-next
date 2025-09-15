@@ -1,0 +1,85 @@
+{
+  "mode": "shadow",
+  "canaryPercentage": 5,
+  "weights": {
+    "quality": 0.4,
+    "speed": 0.3,
+    "cost": 0.2,
+    "reliability": 0.1
+  },
+  "budgets": {
+    "perSession": 0.50,
+    "perUserDaily": 5.00,
+    "perModule": {
+      "aula_interativa": 2.00,
+      "enem": 1.50,
+      "ti": 0.75,
+      "professor": 1.00,
+      "atendimento": 0.50,
+      "coordenacao": 1.25,
+      "social-media": 0.75,
+      "bem-estar": 1.00,
+      "rh": 1.25,
+      "financeiro": 0.75,
+      "secretaria": 0.75
+    }
+  },
+  "safetyThresholds": {
+    "jsonValidity": 0.95,
+    "responseTimeout": 30000,
+    "costAlert": 0.80
+  },
+  "moduleSpecificWeights": {
+    "aula_interativa": {
+      "quality": 0.5,
+      "speed": 0.2,
+      "cost": 0.2,
+      "reliability": 0.1
+    },
+    "enem": {
+      "quality": 0.6,
+      "speed": 0.1,
+      "cost": 0.2,
+      "reliability": 0.1
+    },
+    "ti": {
+      "quality": 0.3,
+      "speed": 0.4,
+      "cost": 0.2,
+      "reliability": 0.1
+    },
+    "professor": {
+      "quality": 0.4,
+      "speed": 0.3,
+      "cost": 0.2,
+      "reliability": 0.1
+    },
+    "atendimento": {
+      "quality": 0.3,
+      "speed": 0.3,
+      "cost": 0.3,
+      "reliability": 0.1
+    }
+  },
+  "fallbackChain": [
+    "openai-gpt-4o-mini",
+    "anthropic-claude-3-haiku",
+    "google-gemini-pro",
+    "mistral-mistral-small",
+    "groq-llama-3"
+  ],
+  "learningConfig": {
+    "enabled": true,
+    "updateInterval": 100,
+    "decayFactor": 0.95,
+    "minSamples": 10
+  },
+  "monitoringConfig": {
+    "metricsRetentionDays": 30,
+    "alertThresholds": {
+      "errorRate": 0.05,
+      "latencyP95": 5000,
+      "costPerSession": 1.00
+    }
+  }
+}

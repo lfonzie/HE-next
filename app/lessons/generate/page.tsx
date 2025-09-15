@@ -223,11 +223,6 @@ export default function GenerateLessonPage() {
                   <div className="flex gap-2 mt-2">
                     <Badge variant="secondary">{generatedLesson.subject}</Badge>
                     <Badge variant="outline">{generatedLesson.level}º ano</Badge>
-                    {generatedLesson.demoMode && (
-                      <Badge variant="outline" className="bg-blue-50 text-blue-700">
-                        Demo
-                      </Badge>
-                    )}
                   </div>
                 </div>
 

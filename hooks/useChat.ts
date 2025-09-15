@@ -88,41 +88,39 @@ export function useChat(onStreamingStart?: () => void) {
       // const token = localStorage.getItem("token")
       // if (!token) throw new Error("No auth token available")
 
-      // Classificação automática se não há módulo específico selecionado
+      // SEMPRE usar OpenAI para classificação - maior certeza
       let finalModule = module || "ATENDIMENTO"
       
-      if (!module || module === "atendimento" || module === "ATENDIMENTO") {
-        try {
-          console.log("🔍 Classificando mensagem automaticamente...")
-          const classifyResponse = await fetch('/api/classify', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ userMessage: message }),
-          })
-          
-          if (classifyResponse.ok) {
-            const classifyData = await classifyResponse.json()
-            if (classifyData.success && classifyData.classification) {
-              finalModule = classifyData.classification.module.toLowerCase()
-              console.log(`✅ Módulo classificado: ${finalModule} (${Math.round(classifyData.classification.confidence * 100)}%)`)
-              
-              // Atualizar o módulo selecionado no contexto
-              setSelectedModule(finalModule as ModuleType)
-              
-              // Salvar informações da classificação
-              setLastClassification({
-                module: finalModule,
-                confidence: classifyData.classification.confidence,
-                rationale: classifyData.classification.rationale
-              })
-            }
+      try {
+        console.log("🔍 Classificando mensagem com OpenAI...")
+        const classifyResponse = await fetch('/api/classify', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ userMessage: message }),
+        })
+        
+        if (classifyResponse.ok) {
+          const classifyData = await classifyResponse.json()
+          if (classifyData.success && classifyData.classification) {
+            finalModule = classifyData.classification.module.toLowerCase()
+            console.log(`✅ Módulo classificado pelo OpenAI: ${finalModule} (${Math.round(classifyData.classification.confidence * 100)}%)`)
+            
+            // Atualizar o módulo selecionado no contexto
+            setSelectedModule(finalModule as ModuleType)
+            
+            // Salvar informações da classificação
+            setLastClassification({
+              module: finalModule,
+              confidence: classifyData.classification.confidence,
+              rationale: classifyData.classification.rationale
+            })
           }
-        } catch (classifyError) {
-          console.error("❌ Erro na classificação automática:", classifyError)
-          // Continua com o módulo padrão
         }
+      } catch (classifyError) {
+        console.error("❌ Erro na classificação OpenAI:", classifyError)
+        // Continua com o módulo padrão
       }
 
       // Include conversation history for context

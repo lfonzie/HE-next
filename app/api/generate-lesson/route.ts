@@ -163,7 +163,7 @@ IMPORTANT: Respond ONLY with valid JSON. Do not include any markdown formatting,
           }
         })
       } catch (dbError) {
-        console.warn('Database operation failed, continuing in demo mode:', dbError.message)
+        console.warn('Database operation failed, continuing in demo mode:', dbError instanceof Error ? dbError.message : String(dbError))
         // Continue with demo mode if database fails
       }
     }

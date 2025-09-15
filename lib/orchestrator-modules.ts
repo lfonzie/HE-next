@@ -9,20 +9,95 @@ registerModule({
   permissions: { requires_auth: false },
   cost_estimate: { tokens: 1000, latency_ms: 1500 },
   async detect({ text }): Promise<DetectedIntent> {
-    const t = text.toLowerCase()
-    const hit = /(aula|entender|explique|fotoss(í|i)n(t)?ese|fatora(ç|c)ao|revolu(ç|c)ao)/.test(t)
-    return { intent: 'lesson_request', module: 'aula_interativa', confidence: hit ? 0.8 : 0.3, slots: {} }
+    // Sempre usar OpenAI para detecção - maior certeza
+    try {
+      const response = await fetch('/api/classify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userMessage: text }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.classification?.module === 'AULA_EXPANDIDA') {
+          return { 
+            intent: 'lesson_request', 
+            module: 'aula_interativa', 
+            confidence: data.classification.confidence || 0.8, 
+            slots: {} 
+          };
+        }
+      }
+    } catch (error) {
+      console.error('Erro na detecção OpenAI:', error);
+    }
+
+    // Fallback simples apenas em caso de erro
+    return { intent: 'lesson_request', module: 'aula_interativa', confidence: 0.3, slots: {} }
   },
   async execute({ slots }): Promise<OrchestratorResponse> {
     const tema = slots.tema || 'assunto'
     const disciplina = slots.disciplina || 'geral'
     return {
-      text: `Preparei uma aula interativa sobre ${tema} (${disciplina}). Podemos começar pelos fundamentos e depois avançar.`,
+      text: `📚 **Aula Interativa Ativada**\n\nPreparei uma aula interativa sobre ${tema} (${disciplina}). Podemos começar pelos fundamentos e depois avançar.\n\n**Estrutura da aula:**\n• Slide 1: Introdução\n• Slide 2: Conceitos fundamentais\n• Slide 3: Desenvolvimento\n• Slide 4: Pergunta interativa\n• Slide 5: Aplicações práticas\n• Slide 6: Exemplos\n• Slide 7: Pergunta interativa\n• Slide 8: Resumo\n\nDigite "começar aula" para iniciar!`,
       blocks: [
-        { type: 'lesson_interactive', lesson_id: `lesson_${Date.now()}`, meta: { tema, disciplina, passos: 9 } }
+        { type: 'lesson_interactive', lesson_id: `lesson_${Date.now()}`, meta: { tema, disciplina, passos: 8 } }
       ],
       actions: [
+        { type: 'cta', label: 'Começar Aula', module: 'aula_interativa', args: { tema, disciplina } },
         { type: 'cta', label: 'Adicionar quiz de 5 questões', module: 'enem', args: { quantidade_questoes: 5 } }
+      ]
+    }
+  }
+})
+
+// aula-expandida module (alias for aula_interativa)
+registerModule({
+  id: 'aula-expandida',
+  name: 'Aula Expandida',
+  version: '1.0.0',
+  permissions: { requires_auth: false },
+  cost_estimate: { tokens: 1000, latency_ms: 1500 },
+  async detect({ text }): Promise<DetectedIntent> {
+    // Sempre usar OpenAI para detecção - maior certeza
+    try {
+      const response = await fetch('/api/classify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userMessage: text }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.classification?.module === 'AULA_EXPANDIDA') {
+          return { 
+            intent: 'lesson_request', 
+            module: 'aula-expandida', 
+            confidence: data.classification.confidence || 0.9, 
+            slots: {} 
+          };
+        }
+      }
+    } catch (error) {
+      console.error('Erro na detecção OpenAI:', error);
+    }
+
+    // Fallback simples apenas em caso de erro
+    return { intent: 'lesson_request', module: 'aula-expandida', confidence: 0.3, slots: {} }
+  },
+  async execute({ slots, context }): Promise<OrchestratorResponse> {
+    const message = context?.text || ''
+    const tema = slots.tema || message || 'assunto'
+    const disciplina = slots.disciplina || 'geral'
+    
+    return {
+      text: `🎓 **Aula Expandida Ativada**\n\nCriando uma aula completa e detalhada sobre ${tema}.\n\n**Esta aula incluirá:**\n• Explicações detalhadas\n• Exemplos práticos\n• Exercícios interativos\n• Resumo completo\n• Material de apoio\n\nDigite "começar aula expandida" para iniciar!`,
+      blocks: [
+        { type: 'lesson_interactive', lesson_id: `lesson_expanded_${Date.now()}`, meta: { tema, disciplina, passos: 8, mode: 'expanded' } }
+      ],
+      actions: [
+        { type: 'cta', label: 'Começar Aula Expandida', module: 'aula-expandida', args: { tema, disciplina } },
+        { type: 'cta', label: 'Simulado Relacionado', module: 'enem', args: { quantidade_questoes: 5 } }
       ]
     }
   }
@@ -36,22 +111,103 @@ registerModule({
   permissions: { requires_auth: false },
   cost_estimate: { tokens: 800, latency_ms: 1200 },
   async detect({ text }): Promise<DetectedIntent> {
-    const t = text.toLowerCase()
-    const hit = /(simulado|quest(ã|a)o|questoes|enem|prova)/.test(t)
-    return { intent: 'quiz_request', module: 'enem', confidence: hit ? 0.85 : 0.25, slots: {} }
+    // Sempre usar OpenAI para detecção - maior certeza
+    try {
+      const response = await fetch('/api/classify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userMessage: text }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && (data.classification?.module === 'ENEM_INTERATIVO' || data.classification?.module === 'PROFESSOR')) {
+          return { 
+            intent: 'quiz_request', 
+            module: 'enem', 
+            confidence: data.classification.confidence || 0.85, 
+            slots: {} 
+          };
+        }
+      }
+    } catch (error) {
+      console.error('Erro na detecção OpenAI:', error);
+    }
+
+    // Fallback simples apenas em caso de erro
+    return { intent: 'quiz_request', module: 'enem', confidence: 0.25, slots: {} }
   },
-  async execute({ slots }): Promise<OrchestratorResponse> {
+  async execute({ slots, context }): Promise<OrchestratorResponse> {
+    const message = context?.text || ''
     const area = slots.area || 'CN'
     const quantidade = Math.min(Math.max(Number(slots.quantidade_questoes || 5), 1), 50)
+    
     return {
-      text: `Iniciei um simulado do ENEM em ${area} com ${quantidade} questões.`,
+      text: `🎯 **Simulador ENEM Ativado**\n\nIniciando simulado com ${quantidade} questões de ${area}.\n\n**Áreas disponíveis:**\n• CN - Ciências da Natureza\n• CH - Ciências Humanas\n• LC - Linguagens e Códigos\n• MT - Matemática\n\nDigite "começar simulado" para iniciar ou me diga qual área você quer praticar!`,
       blocks: [
-        { type: 'quiz', questions: [], meta: { area, quantidade, session_id: `enem_${Date.now()}` } }
+        { 
+          type: 'quiz', 
+          questions: [], 
+          meta: { 
+            area, 
+            quantidade, 
+            session_id: `enem_${Date.now()}`,
+            mode: 'interactive',
+            ready_to_start: false
+          } 
+        }
       ],
       actions: [
-        { type: 'cta', label: 'Ver relatório ao final', module: 'enem', args: { action: 'report' } }
+        { type: 'cta', label: 'Começar Simulado CN', module: 'enem', args: { area: 'CN', quantidade_questoes: 5 } },
+        { type: 'cta', label: 'Começar Simulado CH', module: 'enem', args: { area: 'CH', quantidade_questoes: 5 } },
+        { type: 'cta', label: 'Começar Simulado LC', module: 'enem', args: { area: 'LC', quantidade_questoes: 5 } },
+        { type: 'cta', label: 'Começar Simulado MT', module: 'enem', args: { area: 'MT', quantidade_questoes: 5 } }
       ],
       trace: { module: 'enem', confidence: 0.85 }
+    }
+  }
+})
+
+// enem-interativo module (alias for enem with enhanced features)
+registerModule({
+  id: 'enem-interativo',
+  name: 'ENEM Interativo',
+  version: '1.0.0',
+  permissions: { requires_auth: false },
+  cost_estimate: { tokens: 1000, latency_ms: 1500 },
+  async detect({ text }): Promise<DetectedIntent> {
+    const t = text.toLowerCase()
+    const hit = /(enem interativo|simulado interativo|questões interativas|prova interativa|enem com explicações)/.test(t)
+    return { intent: 'quiz_request', module: 'enem-interativo', confidence: hit ? 0.9 : 0.3, slots: {} }
+  },
+  async execute({ slots, context }): Promise<OrchestratorResponse> {
+    const message = context?.text || ''
+    const area = slots.area || 'CN'
+    const quantidade = Math.min(Math.max(Number(slots.quantidade_questoes || 5), 1), 50)
+    
+    return {
+      text: `🎯 **ENEM Interativo Ativado**\n\nModo interativo com explicações detalhadas e feedback em tempo real!\n\n**Recursos especiais:**\n• Explicações detalhadas de cada questão\n• Feedback imediato\n• Análise de performance\n• Sugestões de estudo\n• Relatório personalizado\n\n**Áreas disponíveis:**\n• CN - Ciências da Natureza\n• CH - Ciências Humanas\n• LC - Linguagens e Códigos\n• MT - Matemática\n\nDigite "começar enem interativo" para iniciar!`,
+      blocks: [
+        { 
+          type: 'quiz', 
+          questions: [], 
+          meta: { 
+            area, 
+            quantidade, 
+            session_id: `enem_interactive_${Date.now()}`,
+            mode: 'interactive',
+            enhanced: true,
+            ready_to_start: false
+          } 
+        }
+      ],
+      actions: [
+        { type: 'cta', label: 'ENEM Interativo CN', module: 'enem-interativo', args: { area: 'CN', quantidade_questoes: 5 } },
+        { type: 'cta', label: 'ENEM Interativo CH', module: 'enem-interativo', args: { area: 'CH', quantidade_questoes: 5 } },
+        { type: 'cta', label: 'ENEM Interativo LC', module: 'enem-interativo', args: { area: 'LC', quantidade_questoes: 5 } },
+        { type: 'cta', label: 'ENEM Interativo MT', module: 'enem-interativo', args: { area: 'MT', quantidade_questoes: 5 } }
+      ],
+      trace: { module: 'enem-interativo', confidence: 0.9 }
     }
   }
 })
@@ -344,9 +500,31 @@ registerModule({
   permissions: { requires_auth: false },
   cost_estimate: { tokens: 800, latency_ms: 1000 },
   async detect({ text }): Promise<DetectedIntent> {
-    const t = text.toLowerCase()
-    const hit = /(historia|matematica|portugues|fisica|quimica|biologia|geografia|sociologia|filosofia|educacao|estudo|aprender|ensinar|aula|conteudo|materia|disciplina|geometria|algebra|calculo|trigonometria|dúvida|questão|exercicio)/.test(t)
-    return { intent: 'educational_support', module: 'professor', confidence: hit ? 0.9 : 0.3, slots: {} }
+    // Sempre usar OpenAI para detecção - maior certeza
+    try {
+      const response = await fetch('/api/classify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userMessage: text }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.classification?.module === 'PROFESSOR') {
+          return { 
+            intent: 'educational_support', 
+            module: 'professor', 
+            confidence: data.classification.confidence || 0.9, 
+            slots: {} 
+          };
+        }
+      }
+    } catch (error) {
+      console.error('Erro na detecção OpenAI:', error);
+    }
+
+    // Fallback simples apenas em caso de erro
+    return { intent: 'educational_support', module: 'professor', confidence: 0.3, slots: {} }
   },
   async execute({ slots, context }): Promise<OrchestratorResponse> {
     const message = context?.text || ''
@@ -363,28 +541,101 @@ registerModule({
     
     // Se for uma pergunta específica sobre geometria ou outras matérias, responder diretamente
     if (/(geometria|matemática|matematica|álgebra|algebra|cálculo|calculo|trigonometria|trigonomteria|trigonom|física|fisica|química|quimica|biologia|fotossíntese|fotossintese|mitose|meiose|genética|genetica|evolução|evolucao|ecossistema|história|historia|português|portugues|literatura|gramática|gramatica|dúvida|duvida|questão|questao|exercício|exercicio)/i.test(message)) {
+      const subject = getSubjectName(message)
+      
+      // Respostas específicas para cada matéria
+      let specificResponse = ''
+      let specificActions = []
+      
+      switch (subject) {
+        case 'trigonometria':
+          specificResponse = `📐 **Trigonometria - Guia Completo**\n\nA trigonometria é uma das áreas mais importantes da matemática, estudando as relações entre ângulos e lados de triângulos. É essencial para entender fenômenos periódicos e resolver problemas geométricos.\n\n## **Conceitos Fundamentais**\n\n**As três funções principais:**\n• **Seno (sin)**: Relação entre o cateto oposto e a hipotenusa\n• **Cosseno (cos)**: Relação entre o cateto adjacente e a hipotenusa\n• **Tangente (tan)**: Relação entre o cateto oposto e o adjacente\n\n## **Aplicações Práticas**\n\n• **Engenharia**: Cálculo de estruturas, pontes, edifícios\n• **Física**: Ondas, oscilações, movimento harmônico\n• **Astronomia**: Cálculo de distâncias entre corpos celestes\n• **Navegação**: GPS, sistemas de localização\n• **Arquitetura**: Projetos de construção\n\n## **Conceitos Avançados**\n\n• **Círculo trigonométrico**: Visualização das funções\n• **Identidades trigonométricas**: Relações matemáticas importantes\n• **Lei dos senos e cossenos**: Resolução de triângulos\n• **Funções inversas**: Arco-seno, arco-cosseno, arco-tangente\n\n**💡 Dica**: A trigonometria é muito visual! Sempre desenhe triângulos e use o círculo trigonométrico para entender melhor os conceitos.\n\n**O que você gostaria de explorar primeiro?**`
+          specificActions = [
+            { type: 'cta' as const, label: 'Conceitos básicos', module: 'professor', args: { topic: 'trigonometria_basica' } },
+            { type: 'cta' as const, label: 'Círculo trigonométrico', module: 'professor', args: { topic: 'circulo_trigonometrico' } },
+            { type: 'cta' as const, label: 'Aula interativa completa', module: 'aula_interativa', args: { tema: 'trigonometria' } }
+          ]
+          break
+          
+        case 'geometria':
+          specificResponse = `📏 **Geometria - A Arte das Formas**\n\nA geometria é uma das áreas mais antigas e fascinantes da matemática, estudando as formas, tamanhos e propriedades do espaço. É a base para entender o mundo ao nosso redor!\n\n## **Principais Áreas da Geometria**\n\n### **Geometria Plana**\n• **Triângulos**: Propriedades, classificação, teoremas importantes\n• **Quadriláteros**: Retângulos, quadrados, paralelogramos\n• **Círculos**: Circunferência, área, propriedades especiais\n• **Polígonos**: Regulares e irregulares\n\n### **Geometria Espacial**\n• **Sólidos**: Cubos, esferas, cilindros, cones\n• **Volumes**: Cálculo de capacidade\n• **Áreas**: Superfície de sólidos\n• **Projeções**: Visualização 3D\n\n### **Geometria Analítica**\n• **Coordenadas**: Sistema cartesiano\n• **Equações**: Retas, círculos, parábolas\n• **Distâncias**: Entre pontos e figuras\n• **Transformações**: Translação, rotação, reflexão\n\n## **Aplicações no Dia a Dia**\n\n• **Arquitetura**: Projetos de casas e edifícios\n• **Design**: Logotipos, layouts, interfaces\n• **Engenharia**: Construção de pontes e estradas\n• **Arte**: Perspectiva, composição visual\n• **Tecnologia**: Gráficos computacionais, GPS\n\n**💡 Dica**: A geometria é muito visual! Use desenhos, modelos e exemplos práticos para entender melhor os conceitos.\n\n**Por onde você gostaria de começar?**`
+          specificActions = [
+            { type: 'cta' as const, label: 'Geometria plana', module: 'professor', args: { topic: 'geometria_plana' } },
+            { type: 'cta' as const, label: 'Triângulos', module: 'professor', args: { topic: 'triangulos' } },
+            { type: 'cta' as const, label: 'Aula completa', module: 'aula_interativa', args: { tema: 'geometria' } }
+          ]
+          break
+          
+        case 'matemática':
+          specificResponse = `🔢 **Matemática - A Linguagem Universal**\n\nA matemática é muito mais que números! É a linguagem que descreve o universo, desde as menores partículas até as maiores galáxias. É uma ferramenta poderosa para resolver problemas e entender o mundo ao nosso redor.\n\n## **Principais Áreas da Matemática**\n\n### **Álgebra**\n• **Equações**: Resolução de problemas matemáticos\n• **Funções**: Relações entre variáveis\n• **Gráficos**: Visualização de dados\n• **Polinômios**: Expressões algébricas complexas\n\n### **Geometria**\n• **Formas**: Triângulos, círculos, polígonos\n• **Espaço**: Geometria 3D e sólidos\n• **Medidas**: Área, perímetro, volume\n• **Transformações**: Movimentos geométricos\n\n### **Trigonometria**\n• **Funções**: Seno, cosseno, tangente\n• **Triângulos**: Resolução de problemas\n• **Ondas**: Fenômenos periódicos\n• **Aplicações**: Engenharia, física\n\n### **Cálculo**\n• **Limites**: Comportamento de funções\n• **Derivadas**: Taxa de variação\n• **Integrais**: Área sob curvas\n• **Aplicações**: Otimização, modelagem\n\n### **Estatística**\n• **Análise de dados**: Interpretação de informações\n• **Probabilidade**: Chances e possibilidades\n• **Gráficos**: Visualização estatística\n• **Aplicações**: Pesquisa, medicina, economia\n\n## **Por que a Matemática é Importante?**\n\n• **Desenvolvimento do raciocínio lógico**\n• **Resolução de problemas complexos**\n• **Base para outras ciências**\n• **Aplicações práticas no dia a dia**\n• **Desenvolvimento de habilidades analíticas**\n\n**💡 Dica**: A matemática não é sobre decorar fórmulas, mas sobre entender conceitos e desenvolver o pensamento lógico!\n\n**Qual área você gostaria de explorar?**`
+          specificActions = [
+            { type: 'cta' as const, label: 'Álgebra', module: 'professor', args: { topic: 'algebra' } },
+            { type: 'cta' as const, label: 'Geometria', module: 'professor', args: { topic: 'geometria' } },
+            { type: 'cta' as const, label: 'Trigonometria', module: 'professor', args: { topic: 'trigonometria' } }
+          ]
+          break
+          
+        case 'física':
+          specificResponse = `⚡ **Física - Desvendando os Mistérios do Universo**\n\nA física é a ciência que estuda a natureza e os fenômenos que ocorrem no universo. É através dela que entendemos desde o movimento de uma bola até os segredos das estrelas!\n\n## **Principais Áreas da Física**\n\n### **Mecânica**\n• **Cinemática**: Estudo do movimento\n• **Dinâmica**: Forças e suas causas\n• **Energia**: Conservação e transformação\n• **Gravitação**: Atração entre corpos\n\n### **Termodinâmica**\n• **Calor**: Transferência de energia térmica\n• **Temperatura**: Medida da energia cinética\n• **Leis da termodinâmica**: Princípios fundamentais\n• **Máquinas térmicas**: Motores e refrigeradores\n\n### **Eletromagnetismo**\n• **Eletricidade**: Cargas e correntes\n• **Magnetismo**: Campos magnéticos\n• **Ondas eletromagnéticas**: Luz, rádio, raios X\n• **Circuitos**: Componentes elétricos\n\n### **Óptica**\n• **Luz**: Natureza e comportamento\n• **Reflexão**: Espelhos e superfícies\n• **Refração**: Lentes e prismas\n• **Cores**: Espectro e percepção\n\n### **Física Moderna**\n• **Relatividade**: Espaço e tempo\n• **Física quântica**: Mundo subatômico\n• **Física nuclear**: Energia atômica\n• **Astrofísica**: Estrelas e galáxias\n\n## **Aplicações Práticas**\n\n• **Tecnologia**: Smartphones, computadores, GPS\n• **Medicina**: Raios X, ressonância magnética\n• **Energia**: Usinas, painéis solares\n• **Transporte**: Aviões, carros, foguetes\n• **Comunicação**: Internet, satélites\n\n**💡 Dica**: A física está em tudo! Observe o mundo ao seu redor e tente entender os fenômenos que acontecem diariamente.\n\n**Qual área da física te interessa mais?**`
+          specificActions = [
+            { type: 'cta' as const, label: 'Mecânica', module: 'professor', args: { topic: 'mecanica' } },
+            { type: 'cta' as const, label: 'Eletricidade', module: 'professor', args: { topic: 'eletricidade' } },
+            { type: 'cta' as const, label: 'Aula completa', module: 'aula_interativa', args: { tema: 'fisica' } }
+          ]
+          break
+          
+        case 'química':
+          specificResponse = `🧪 **Química - A Ciência das Transformações**\n\nA química é a ciência que estuda a matéria, suas propriedades, composição e as transformações que ela sofre. É através da química que entendemos como os materiais se comportam e como podemos criar novos produtos!\n\n## **Principais Áreas da Química**\n\n### **Química Geral**\n• **Átomos**: Estrutura e propriedades\n• **Moléculas**: Ligações químicas\n• **Tabela periódica**: Organização dos elementos\n• **Reações**: Transformações químicas\n\n### **Química Orgânica**\n• **Compostos de carbono**: Base da vida\n• **Hidrocarbonetos**: Petróleo e derivados\n• **Funções orgânicas**: Álcool, ácido, éter\n• **Polímeros**: Plásticos e fibras\n\n### **Química Inorgânica**\n• **Elementos**: Metais e não-metais\n• **Ácidos e bases**: pH e neutralização\n• **Sais**: Compostos iônicos\n• **Minerais**: Recursos naturais\n\n### **Físico-Química**\n• **Termodinâmica**: Energia nas reações\n• **Cinética**: Velocidade das reações\n• **Equilíbrio**: Estado de balanço\n• **Eletroquímica**: Reações com eletricidade\n\n## **Aplicações no Dia a Dia**\n\n• **Medicina**: Medicamentos e tratamentos\n• **Alimentação**: Conservantes e aditivos\n• **Cosméticos**: Produtos de beleza\n• **Limpeza**: Detergentes e sabões\n• **Tecnologia**: Baterias e semicondutores\n• **Agricultura**: Fertilizantes e pesticidas\n\n## **Importância da Química**\n\n• **Desenvolvimento de novos materiais**\n• **Soluções para problemas ambientais**\n• **Melhoria da qualidade de vida**\n• **Inovação tecnológica**\n• **Compreensão dos processos naturais**\n\n**💡 Dica**: A química está em tudo ao nosso redor! Desde o ar que respiramos até os alimentos que comemos.\n\n**Qual área da química você gostaria de explorar?**`
+          specificActions = [
+            { type: 'cta' as const, label: 'Conceitos básicos', module: 'professor', args: { topic: 'quimica_basica' } },
+            { type: 'cta' as const, label: 'Química orgânica', module: 'professor', args: { topic: 'quimica_organica' } },
+            { type: 'cta' as const, label: 'Aula completa', module: 'aula_interativa', args: { tema: 'quimica' } }
+          ]
+          break
+          
+        case 'biologia':
+          specificResponse = `🧬 **Biologia - A Ciência da Vida**\n\nA biologia é a ciência que estuda a vida em todas suas formas e manifestações. É através dela que entendemos como os seres vivos funcionam, se relacionam e evoluem ao longo do tempo!\n\n## **Principais Áreas da Biologia**\n\n### **Biologia Celular**\n• **Células**: Unidade básica da vida\n• **Organelas**: Estruturas celulares\n• **Metabolismo**: Processos químicos\n• **Divisão celular**: Reprodução e crescimento\n\n### **Genética**\n• **DNA**: Código genético\n• **Genes**: Unidades hereditárias\n• **Hereditariedade**: Transmissão de características\n• **Mutação**: Variações genéticas\n\n### **Ecologia**\n• **Ecossistemas**: Relações ambientais\n• **Biodiversidade**: Variedade de vida\n• **Cadeias alimentares**: Fluxo de energia\n• **Conservação**: Preservação da natureza\n\n### **Evolução**\n• **Seleção natural**: Adaptação ao ambiente\n• **Especiação**: Formação de novas espécies\n• **Fósseis**: Evidências evolutivas\n• **Árvore da vida**: Relacionamento entre espécies\n\n### **Fisiologia**\n• **Sistemas**: Digestivo, circulatório, nervoso\n• **Órgãos**: Funções específicas\n• **Homeostase**: Equilíbrio interno\n• **Adaptações**: Sobrevivência e reprodução\n\n## **Aplicações Práticas**\n\n• **Medicina**: Diagnóstico e tratamento\n• **Agricultura**: Melhoramento de culturas\n• **Biotecnologia**: Produção de medicamentos\n• **Conservação**: Proteção de espécies\n• **Pesquisa**: Descobertas científicas\n\n## **Importância da Biologia**\n\n• **Compreensão da vida humana**\n• **Preservação do meio ambiente**\n• **Desenvolvimento de tecnologias**\n• **Melhoria da saúde**\n• **Sustentabilidade planetária**\n\n**💡 Dica**: A biologia conecta tudo! Desde as menores bactérias até os maiores ecossistemas, tudo está interligado.\n\n**Qual área da biologia te interessa mais?**`
+          specificActions = [
+            { type: 'cta' as const, label: 'Biologia celular', module: 'professor', args: { topic: 'biologia_celular' } },
+            { type: 'cta' as const, label: 'Genética', module: 'professor', args: { topic: 'genetica' } },
+            { type: 'cta' as const, label: 'Aula completa', module: 'aula_interativa', args: { tema: 'biologia' } }
+          ]
+          break
+          
+        default:
+          specificResponse = `📚 **${subject.charAt(0).toUpperCase() + subject.slice(1)} - Seu Guia de Estudos**\n\nÓtimo! Vou te ajudar com suas dúvidas sobre ${subject}. Como seu professor virtual, estou aqui para tornar o aprendizado mais fácil e interessante!\n\n## **Como Posso Te Ajudar?**\n\n### **Explicações Detalhadas**\n• Conceitos fundamentais\n• Exemplos práticos\n• Aplicações no dia a dia\n• Conexões com outras matérias\n\n### **Resolução de Exercícios**\n• Passo a passo detalhado\n• Dicas e macetes\n• Métodos alternativos\n• Verificação de respostas\n\n### **Material de Apoio**\n• Resumos organizados\n• Fórmulas importantes\n• Conceitos-chave\n• Exercícios práticos\n\n## **Para Começar, Me Conte:**\n\n1. **Qual é sua dúvida específica?**\n2. **Em que nível você está estudando?** (Fundamental, Médio, Superior)\n3. **Você tem algum exercício ou problema em mente?**\n4. **Há algum tópico que você gostaria de revisar?**\n\n**💡 Dica**: Quanto mais específica for sua pergunta, melhor posso te ajudar! Não tenha medo de perguntar - estou aqui para esclarecer todas as suas dúvidas.\n\n**Vamos começar? Me conte sua dúvida!**`
+          specificActions = [
+            { type: 'cta' as const, label: 'Criar aula interativa', module: 'aula_interativa', args: { tema: message } },
+            { type: 'cta' as const, label: 'Continuar conversa', module: 'professor', args: { action: 'continue' } }
+          ]
+      }
+      
       return {
-        text: `Professor IA\nAssistente de estudos\n\nVou te ajudar com sua dúvida sobre ${getSubjectName(message)}!\n\nPara te dar a melhor explicação, preciso saber:\n\n1. Qual é sua dúvida específica?\n2. Em que nível você está estudando? (Ensino Fundamental, Médio, Superior)\n3. Você tem algum exercício ou problema específico em mente?\n\nCom essas informações, posso criar uma explicação personalizada e didática para você!`,
+        text: specificResponse,
         blocks: [
           { 
             type: 'notice', 
-            title: 'Professor IA', 
-            body: 'Estou aqui para te ajudar com suas dúvidas acadêmicas. Me conte mais detalhes sobre sua pergunta!' 
+            title: `Professor IA - ${subject.charAt(0).toUpperCase() + subject.slice(1)}`, 
+            body: `Estou aqui para te ajudar com ${subject}. Escolha uma opção abaixo ou me conte sua dúvida específica!` 
           }
         ],
-        actions: [
-          { type: 'cta', label: 'Criar aula interativa', module: 'aula_interativa', args: { tema: message } },
-          { type: 'cta', label: 'Continuar conversa', module: 'professor', args: { action: 'continue' } }
-        ]
+        actions: specificActions
       }
     }
     
     return {
-      text: 'Professor IA\nAssistente de estudos\n\nComo posso ajudar você hoje? Posso te ajudar com:\n\n• Dúvidas de matemática, geometria, álgebra\n• Explicações de física, química, biologia\n• Aulas de história, português, geografia\n• Criação de aulas interativas\n• Resolução de exercícios\n\nMe conte qual é sua dúvida específica!',
-      blocks: [],
+      text: '🎓 **Professor IA - Seu Assistente de Estudos Pessoal**\n\nOlá! Sou seu professor virtual e estou aqui para tornar o aprendizado mais fácil, interessante e eficiente. Posso te ajudar com qualquer dúvida acadêmica!\n\n## **Matérias que Posso Ensinar:**\n\n### **Exatas**\n• **Matemática**: Álgebra, geometria, trigonometria, cálculo\n• **Física**: Mecânica, eletricidade, óptica, termodinâmica\n• **Química**: Geral, orgânica, inorgânica, físico-química\n\n### **Biológicas**\n• **Biologia**: Celular, genética, ecologia, evolução\n• **Ciências**: Meio ambiente, saúde, anatomia\n\n### **Humanas**\n• **História**: Geral, do Brasil, mundial\n• **Geografia**: Física, humana, política\n• **Português**: Gramática, literatura, redação\n• **Filosofia**: Ética, lógica, história da filosofia\n• **Sociologia**: Sociedade, cultura, política\n\n## **Como Posso Te Ajudar:**\n\n✅ **Explicações detalhadas e didáticas**\n✅ **Resolução de exercícios passo a passo**\n✅ **Criação de aulas interativas**\n✅ **Simulados e provas**\n✅ **Dicas de estudo e memorização**\n✅ **Material de apoio personalizado**\n\n**💡 Dica**: Quanto mais específica for sua pergunta, melhor posso te ajudar! Não tenha medo de perguntar - estou aqui para esclarecer todas as suas dúvidas.\n\n**Me conte: qual é sua dúvida ou o que você gostaria de aprender hoje?**',
+      blocks: [
+        { 
+          type: 'notice', 
+          title: '🎯 Professor IA Ativo', 
+          body: 'Estou pronto para te ajudar com qualquer matéria! Escolha uma opção abaixo ou me conte sua dúvida específica.' 
+        }
+      ],
       actions: [
-        { type: 'cta', label: 'Criar aula interativa', module: 'aula_interativa', args: {} },
-        { type: 'cta', label: 'Simulado rápido', module: 'enem', args: { quantidade_questoes: 5 } }
+        { type: 'cta', label: '📚 Criar aula interativa', module: 'aula_interativa', args: {} },
+        { type: 'cta', label: '🎯 Simulado rápido (5 questões)', module: 'enem', args: { quantidade_questoes: 5 } },
+        { type: 'cta', label: '📖 Aula expandida completa', module: 'aula-expandida', args: {} }
       ]
     }
   }
@@ -398,6 +649,30 @@ registerModule({
   permissions: { requires_auth: false },
   cost_estimate: { tokens: 400, latency_ms: 500 },
   async detect({ text }): Promise<DetectedIntent> {
+    // Sempre usar OpenAI para detecção - maior certeza
+    try {
+      const response = await fetch('/api/classify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userMessage: text }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.classification?.module === 'ATENDIMENTO') {
+          return { 
+            intent: 'general', 
+            module: 'atendimento', 
+            confidence: data.classification.confidence || 0.4, 
+            slots: {} 
+          };
+        }
+      }
+    } catch (error) {
+      console.error('Erro na detecção OpenAI:', error);
+    }
+
+    // Fallback simples apenas em caso de erro
     return { intent: 'general', module: 'atendimento', confidence: 0.4, slots: {} }
   },
   async execute({ slots }): Promise<OrchestratorResponse> {

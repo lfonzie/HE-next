@@ -394,7 +394,7 @@ export default function GenerateAulaPage() {
                 <BookOpen className="h-16 w-16 mx-auto mb-4 text-gray-400" />
                 <h3 className="text-lg font-semibold mb-2">Aula será gerada aqui</h3>
                 <p className="text-gray-600">
-                  Preencha o formulário e clique em "Gerar Aula com IA" para ver a prévia
+                  Preencha o formulário e clique em &quot;Gerar Aula com IA&quot; para ver a prévia
                 </p>
               </CardContent>
             </Card>

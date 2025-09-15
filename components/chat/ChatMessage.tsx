@@ -16,6 +16,7 @@ import { BemEstarAnswer } from "./BemEstarAnswer";
 import { SocialMediaAnswer } from "./SocialMediaAnswer";
 import { WeatherAnswer } from "./WeatherAnswer";
 import { MessageRenderer } from "./MessageRenderer";
+import { MarkdownRenderer } from "./MarkdownRenderer";
 import { BlocksRenderer } from "./BlocksRenderer";
 import { ActionsRenderer } from "./ActionsRenderer";
 import { MODULES } from "@/lib/modules";
@@ -243,12 +244,14 @@ export const ChatMessage = memo(function ChatMessage({
                 answer={message.content}
               />
             ) : (
-              <MessageRenderer 
-                content={message.content} 
-                moduleId={currentModuleId} 
-                structured={message.structured}
-              />
+              <div className="prose prose-sm max-w-none">
+                <MarkdownRenderer 
+                  content={message.content || ""} 
+                  className="text-gray-700 dark:text-gray-300"
+                />
+              </div>
             )}
+
 
             {/* Detectar e renderizar aula interativa */}
             {!isUser && message.content && message.content.includes('🎓 **Aula Interativa Criada!**') && (
@@ -290,11 +293,6 @@ export const ChatMessage = memo(function ChatMessage({
               </div>
             )}
 
-            {/* Orchestrated Blocks */}
-            {!isUser && <BlocksRenderer blocks={message.blocks as any} />}
-
-            {/* Orchestrated Actions */}
-            {!isUser && <ActionsRenderer actions={message.actions as any} />}
 
             {/* Citações (web search) */}
             {!isUser && !!message.webSearchUsed && !!message.citations?.length && (

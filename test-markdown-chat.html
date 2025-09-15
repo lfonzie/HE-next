@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Markdown e Matemática - Chat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+</head>
+<body class="bg-gray-50 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-8 text-gray-900">Teste de Formatação Markdown e Matemática</h1>
+        
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4">Exemplos de Markdown</h2>
+            
+            <div class="space-y-6">
+                <!-- Cabeçalhos -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-2">Cabeçalhos:</h3>
+                    <div class="bg-gray-100 p-4 rounded-lg">
+                        <h1 class="text-2xl font-bold mt-6 mb-4 text-gray-900 border-b border-gray-200 pb-2">Título Principal</h1>
+                        <h2 class="text-xl font-semibold mt-5 mb-3 text-gray-900">Subtítulo</h2>
+                        <h3 class="text-lg font-semibold mt-4 mb-2 text-gray-900">Sub-subtítulo</h3>
+                    </div>
+                </div>
+
+                <!-- Texto em negrito e itálico -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-2">Formatação de texto:</h3>
+                    <div class="bg-gray-100 p-4 rounded-lg">
+                        <p class="mb-3 text-gray-700 leading-relaxed">
+                            Este é um texto <strong class="font-semibold text-gray-900">em negrito</strong> e este é <em class="italic text-gray-800">em itálico</em>.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Código -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-2">Código inline e blocos:</h3>
+                    <div class="bg-gray-100 p-4 rounded-lg">
+                        <p class="mb-3 text-gray-700 leading-relaxed">
+                            Use <code class="bg-gray-200 px-1.5 py-0.5 rounded text-sm font-mono text-gray-800 border border-gray-300">console.log()</code> para debugar.
+                        </p>
+                        <pre class="bg-gray-200 p-4 rounded-lg overflow-x-auto border border-gray-300 mb-4"><code class="text-sm font-mono">function exemplo() {
+  return "Olá mundo!";
+}</code></pre>
+                    </div>
+                </div>
+
+                <!-- Listas -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-2">Listas:</h3>
+                    <div class="bg-gray-100 p-4 rounded-lg">
+                        <ul class="list-disc list-inside mb-4 space-y-1 text-gray-700">
+                            <li class="ml-2">Item 1</li>
+                            <li class="ml-2">Item 2</li>
+                            <li class="ml-2">Item 3</li>
+                        </ul>
+                        <ol class="list-decimal list-inside mb-4 space-y-1 text-gray-700">
+                            <li class="ml-2">Primeiro item</li>
+                            <li class="ml-2">Segundo item</li>
+                            <li class="ml-2">Terceiro item</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <!-- Tabelas -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-2">Tabelas:</h3>
+                    <div class="bg-gray-100 p-4 rounded-lg">
+                        <div class="overflow-x-auto mb-4">
+                            <table class="min-w-full border border-gray-300 rounded-lg">
+                                <thead class="bg-gray-200">
+                                    <tr>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">Nome</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">Idade</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300">Cidade</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-300">
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-4 py-2 text-sm text-gray-900 border-b border-gray-300">João</td>
+                                        <td class="px-4 py-2 text-sm text-gray-900 border-b border-gray-300">25</td>
+                                        <td class="px-4 py-2 text-sm text-gray-900 border-b border-gray-300">São Paulo</td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-4 py-2 text-sm text-gray-900 border-b border-gray-300">Maria</td>
+                                        <td class="px-4 py-2 text-sm text-gray-900 border-b border-gray-300">30</td>
+                                        <td class="px-4 py-2 text-sm text-gray-900 border-b border-gray-300">Rio de Janeiro</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-xl font-semibold mb-4">Exemplos de Matemática</h2>
+            
+            <div class="space-y-6">
+                <!-- Matemática inline -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-2">Matemática inline:</h3>
+                    <div class="bg-gray-100 p-4 rounded-lg">
+                        <p class="mb-3 text-gray-700 leading-relaxed">
+                            A fórmula quadrática é <span class="bg-gray-200 px-1 py-0.5 rounded text-sm border border-gray-300">x = (-b ± √(b² - 4ac)) / 2a</span>.
+                        </p>
+                        <p class="mb-3 text-gray-700 leading-relaxed">
+                            O teorema de Pitágoras: <span class="bg-gray-200 px-1 py-0.5 rounded text-sm border border-gray-300">a² + b² = c²</span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Matemática em bloco -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-2">Matemática em bloco:</h3>
+                    <div class="bg-gray-100 p-4 rounded-lg">
+                        <div class="my-4 p-3 bg-gray-200 rounded-lg border border-gray-300 overflow-x-auto">
+                            <div class="text-center">
+                                <span class="text-lg">∫₀^∞ e^(-x²) dx = √π/2</span>
+                            </div>
+                        </div>
+                        <div class="my-4 p-3 bg-gray-200 rounded-lg border border-gray-300 overflow-x-auto">
+                            <div class="text-center">
+                                <span class="text-lg">lim(x→0) (sin x)/x = 1</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Exemplos de Unicode matemático -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-2">Unicode matemático:</h3>
+                    <div class="bg-gray-100 p-4 rounded-lg">
+                        <div class="space-y-2 text-gray-700">
+                            <p><strong>Símbolos básicos:</strong> ∑ ∏ ∫ ∂ ∇ ± × ÷ ≤ ≥ ≠ ≈ ∞</p>
+                            <p><strong>Letras gregas:</strong> α β γ δ ε ζ η θ λ μ π ρ σ τ φ χ ψ ω</p>
+                            <p><strong>Conjuntos:</strong> ∈ ∉ ⊂ ⊃ ∪ ∩ ∅ ℕ ℤ ℚ ℝ ℂ</p>
+                            <p><strong>Operadores:</strong> ∧ ∨ ¬ → ↔ ∀ ∃</p>
+                            <p><strong>Exemplos de fórmulas:</strong></p>
+                            <ul class="ml-4 space-y-1">
+                                <li>• E = mc² (energia)</li>
+                                <li>• F = ma (força)</li>
+                                <li>• V = πr²h (volume do cilindro)</li>
+                                <li>• A = πr² (área do círculo)</li>
+                                <li>• sen²θ + cos²θ = 1 (identidade trigonométrica)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
+            <h2 class="text-xl font-semibold mb-4 text-blue-900">Como usar no chat:</h2>
+            <div class="text-blue-800 space-y-2">
+                <p><strong>Markdown:</strong> Use **negrito**, *itálico*, `código`, # cabeçalhos, - listas, etc.</p>
+                <p><strong>Matemática inline:</strong> Use $fórmula$ ou símbolos Unicode diretamente</p>
+                <p><strong>Matemática em bloco:</strong> Use $$fórmula$$ para fórmulas grandes</p>
+                <p><strong>Exemplo:</strong> "Calcule a **derivada** de f(x) = x² + 3x - 1"</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

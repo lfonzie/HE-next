@@ -324,25 +324,24 @@ export class EnemExamGenerator {
     for (let i = 0; i < count; i++) {
       const area = areas[i % areas.length];
       sampleQuestions.push({
-        id: `sample_${difficulty}_${i}`,
-        subject: this.getAreaSubject(area),
+        item_id: `sample_${difficulty}_${i}`,
         area: area,
-        difficulty: difficulty,
         year: 2023,
-        question: `Esta é uma questão de exemplo de ${this.getAreaSubject(area)} (${difficulty}).`,
-        options: [
-          'Alternativa A',
-          'Alternativa B', 
-          'Alternativa C',
-          'Alternativa D',
-          'Alternativa E'
-        ],
-        correctAnswer: 0,
-        explanation: 'Esta é uma questão de exemplo para demonstração.',
-        topics: [area],
-        competencies: [area],
-        files: [],
-        source: 'sample'
+        text: `Esta é uma questão de exemplo de ${this.getAreaSubject(area)} (${difficulty}).`,
+        alternatives: {
+          A: 'Alternativa A',
+          B: 'Alternativa B',
+          C: 'Alternativa C',
+          D: 'Alternativa D',
+          E: 'Alternativa E'
+        },
+        correct_answer: 'A',
+        topic: 'Tópico de exemplo',
+        estimated_difficulty: difficulty,
+        asset_refs: [],
+        content_hash: `hash_${i}`,
+        dataset_version: '1.0',
+        metadata: {}
       });
     }
     
@@ -354,6 +353,10 @@ export class EnemExamGenerator {
    */
   private getAreaSubject(area: EnemArea): string {
     const subjects = {
+      'CN': 'Ciências da Natureza e suas Tecnologias',
+      'CH': 'Ciências Humanas e suas Tecnologias',
+      'LC': 'Linguagens, Códigos e suas Tecnologias',
+      'MT': 'Matemática e suas Tecnologias',
       'linguagens': 'Linguagens, Códigos e suas Tecnologias',
       'ciencias-humanas': 'Ciências Humanas e suas Tecnologias', 
       'ciencias-natureza': 'Ciências da Natureza e suas Tecnologias',

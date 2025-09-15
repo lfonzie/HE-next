@@ -42,66 +42,63 @@ export function listModules(): ModuleMetadata[] {
   }))
 }
 
-export function heuristicDetect(text: string): DetectedIntent {
-  const t = text.toLowerCase()
-  
-  // ENEM - Simulados e questões
-  if (/(simulado|quest(ã|a)o|questoes|prova|enem|tri|acertos|gabarito|exame nacional)/.test(t)) {
-    return { intent: 'quiz_request', module: 'enem', confidence: 0.72, slots: {} }
-  }
-  
-  // Aula Interativa - Conceitos e explicações
-  if (/(aula|entender|explique|explicar|passo a passo|fotoss(í|i)n(t)?ese|fatora(ç|c)ao|revolu(ç|c)ao|como funciona|o que é)/.test(t)) {
-    return { intent: 'lesson_request', module: 'aula_interativa', confidence: 0.68, slots: {} }
-  }
-  
-  // TI Troubleshooting - Problemas técnicos
-  if (/(wifi|wi-fi|lento|internet|rede|conectar|impressora|bloqueada|conta bloqueada|computador|notebook|tablet|projetor|som|microfone|câmera|webcam|software|sistema|login|senha|acesso|erro|bug|travou|não funciona|problema técnico)/.test(t)) {
-    return { intent: 'ti_support', module: 'ti_troubleshooting', confidence: 0.75, slots: {} }
-  }
-  
-  // FAQ Escola - Documentos e procedimentos administrativos
-  if (/(matr(í|i)cula|documentos|hor(á|a)rios|secretaria|boleto|mensalidade|declaração|atestado|histórico|transferência|rematrícula|calendário|feriado|recesso|férias|prova|nota|boletim|diário|frequência|falta|justificativa)/.test(t)) {
-    return { intent: 'faq_request', module: 'faq_escola', confidence: 0.7, slots: {} }
-  }
-  
-  // Bem-Estar - Suporte emocional e saúde mental
-  if (/(ansiedade|estresse|depressão|tristeza|medo|preocupação|nervoso|calmo|relaxar|respirar|meditação|yoga|bem-estar|saúde mental|psicológico|terapia|conselho|ajuda emocional|suporte|conflito|briga|bullying|isolamento|solidão|autoestima|confiança)/.test(t)) {
-    return { intent: 'wellbeing_support', module: 'bem_estar', confidence: 0.8, slots: {} }
-  }
-  
-  // Financeiro - Questões de pagamento e mensalidades
-  if (/(pagamento|mensalidade|boleto|cartão|débito|crédito|parcelamento|desconto|bolsa|financiamento|empréstimo|conta|fatura|vencimento|multa|juros|valor|preço|custo|taxa|financeiro|dinheiro|reembolso|estorno)/.test(t)) {
-    return { intent: 'financial_support', module: 'financeiro', confidence: 0.75, slots: {} }
-  }
-  
-  // RH - Recursos humanos e questões trabalhistas
-  if (/(funcionário|professor|coordenador|diretor|rh|recursos humanos|salário|benefício|férias|licença|afastamento|treinamento|capacitação|contrato|demissão|admissão|folha|ponto|hora extra|vale|plano de saúde|aposentadoria|fgts|inss)/.test(t)) {
-    return { intent: 'hr_support', module: 'rh', confidence: 0.7, slots: {} }
-  }
-  
-  // Coordenação - Gestão pedagógica
-  if (/(coordenação|pedagógico|currículo|grade|disciplina|matéria|conteúdo|plano de aula|avaliação|prova|trabalho|projeto|atividade|extraclasse|evento|reunião|pais|responsável|reunião pedagógica|planejamento|metodologia|didática)/.test(t)) {
-    return { intent: 'coordination_support', module: 'coordenacao', confidence: 0.7, slots: {} }
-  }
-  
-  // Social Media - Marketing e comunicação
-  if (/(rede social|instagram|facebook|whatsapp|telegram|post|story|reels|marketing|comunicação|divulgação|evento|festa|formatura|comemoração|conquista|resultado|ranking|premiação|foto|vídeo|conteúdo digital|influencer|seguidor|curtida|compartilhamento)/.test(t)) {
-    return { intent: 'social_media_support', module: 'social_media', confidence: 0.65, slots: {} }
-  }
-  
-  // Conteúdo & Mídia - Imagens e diagramas
-  if (/(imagem|diagrama|figura|foto|gr(a|á)fico|ilustração|desenho|esquema|mapa|tabela|infográfico|visual|mídia|conteúdo visual|apresentação|slide|poster|banner)/.test(t)) {
-    return { intent: 'media_request', module: 'conteudo_midia', confidence: 0.6, slots: {} }
-  }
-  
-  // Atendimento geral - Fallback
-  return { intent: 'general', module: 'atendimento', confidence: 0.4, slots: {} }
-}
+// Função removida - agora usamos sempre OpenAI para classificação
+// export function heuristicDetect(text: string): DetectedIntent { ... }
 
 export async function classifyIntent(input: { text: string; context?: Record<string, any> }): Promise<DetectedIntent> {
-  const h = heuristicDetect(input.text)
-  return h
+  // Sempre usar OpenAI para classificação - maior certeza
+  try {
+    const response = await fetch('/api/classify', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ userMessage: input.text }),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success && data.classification) {
+        const classification = data.classification;
+        
+        // Mapear módulos da API para módulos internos
+        const moduleMapping: Record<string, string> = {
+          'PROFESSOR': 'professor',
+          'AULA_EXPANDIDA': 'aula-expandida',
+          'ENEM_INTERATIVO': 'enem-interativo',
+          'TI': 'ti_troubleshooting',
+          'SECRETARIA': 'faq_escola',
+          'FINANCEIRO': 'financeiro',
+          'RH': 'rh',
+          'COORDENACAO': 'coordenacao',
+          'BEM_ESTAR': 'bem_estar',
+          'SOCIAL_MEDIA': 'social_media',
+          'ATENDIMENTO': 'atendimento'
+        };
+
+        const mappedModule = moduleMapping[classification.module] || 'atendimento';
+        
+        return {
+          intent: classification.module.toLowerCase(),
+          module: mappedModule,
+          confidence: classification.confidence || 0.8,
+          slots: {},
+          rationale: classification.rationale
+        };
+      }
+    }
+  } catch (error) {
+    console.error('Erro na classificação OpenAI:', error);
+  }
+
+  // Fallback apenas em caso de erro
+  return { 
+    intent: 'general', 
+    module: 'atendimento', 
+    confidence: 0.4, 
+    slots: {},
+    rationale: 'fallback_erro_openai'
+  };
 }
 
 export interface OrchestratorPolicyDecision {
@@ -114,8 +111,11 @@ export function decideModules(det: DetectedIntent): OrchestratorPolicyDecision {
   const id = det.module
   
   // Política de decisão com ordem de preferência
+  if (id === 'aula-expandida' && conf >= 0.5) return { primary: { id: 'aula-expandida', slots: det.slots } }
+  if (id === 'enem-interativo' && conf >= 0.5) return { primary: { id: 'enem-interativo', slots: det.slots } }
   if (id === 'aula_interativa' && conf >= 0.5) return { primary: { id: 'aula_interativa', slots: det.slots } }
   if (id === 'enem' && conf >= 0.5) return { primary: { id: 'enem', slots: det.slots } }
+  if (id === 'professor' && conf >= 0.5) return { primary: { id: 'professor', slots: det.slots } }
   if (id === 'ti_troubleshooting' && conf >= 0.5) return { primary: { id: 'ti_troubleshooting', slots: det.slots } }
   if (id === 'faq_escola' && conf >= 0.5) return { primary: { id: 'faq_escola', slots: det.slots } }
   if (id === 'bem_estar' && conf >= 0.5) return { primary: { id: 'bem_estar', slots: det.slots } }
@@ -139,10 +139,22 @@ export async function orchestrate(input: OrchestrateInput): Promise<Orchestrator
   
   // Se já temos um módulo no contexto, use-o diretamente
   if (input.context?.module && input.context.module !== 'atendimento') {
-    const module = getModule(input.context.module)
-    if (module) {
-      const result = await module.execute({ 
-        slots: {}, 
+    const selectedModule = getModule(input.context.module)
+    if (selectedModule) {
+      // Verificar se o usuário está respondendo a uma pergunta sobre slots
+      const isSlotResponse = input.context?.waitingForSlot
+      let slots = {}
+      
+      if (isSlotResponse) {
+        // Extrair tema da resposta do usuário
+        const tema = input.text.trim()
+        if (tema) {
+          slots = { tema }
+        }
+      }
+      
+      const result = await selectedModule.execute({ 
+        slots, 
         context: { 
           text: input.text, 
           ...input.context 
@@ -153,7 +165,7 @@ export async function orchestrate(input: OrchestrateInput): Promise<Orchestrator
         module: input.context.module,
         confidence: 1.0,
         intent: 'direct_module',
-        slots: {},
+        slots,
         latencyMs: Date.now() - t0
       }
       return { ...result, trace }
@@ -184,11 +196,34 @@ export async function orchestrate(input: OrchestrateInput): Promise<Orchestrator
 
   const requiredSlotsByModule: Record<string, string[]> = {
     enem: ['area', 'quantidade_questoes'],
-    aula_interativa: ['tema']
+    aula_interativa: ['tema'],
+    'aula-expandida': ['tema']
   }
   const required = requiredSlotsByModule[decision.primary.id] || []
   const missing = required.filter(k => decision.primary!.slots[k] == null)
+  
+  // Se há slots faltando, mas o usuário pode estar respondendo a uma pergunta anterior
   if (missing.length > 0) {
+    // Verificar se o usuário está respondendo a uma pergunta sobre slots
+    const isShortResponse = input.text.trim().length < 50 && !input.text.includes('?') && !input.text.includes('!')
+    const hasThemeKeywords = /(fotossíntese|fotossintese|mitose|meiose|genética|genetica|evolução|evolucao|ecossistema|biologia|história|historia|matemática|matematica|geometria|álgebra|algebra|cálculo|calculo|trigonometria|física|fisica|química|quimica|português|portugues|literatura|gramática|gramatica|geografia|sociologia|filosofia)/i.test(input.text)
+    
+    if (isShortResponse && hasThemeKeywords && missing[0] === 'tema') {
+      // O usuário está respondendo com um tema
+      const tema = input.text.trim()
+      const updatedSlots = { ...decision.primary.slots, tema }
+      const result = await primaryModule.execute({ slots: updatedSlots, context: input.context })
+      const trace: OrchestratorTrace = {
+        ...(result.trace || {}),
+        module: decision.primary.id,
+        confidence: det.confidence,
+        intent: det.intent,
+        slots: updatedSlots,
+        latencyMs: Date.now() - t0
+      }
+      return { ...result, trace }
+    }
+    
     const trace: OrchestratorTrace = { module: decision.primary.id, confidence: det.confidence, intent: det.intent, slots: det.slots, latencyMs: Date.now() - t0 }
     return {
       text: `Antes de começar, só preciso de uma informação: ${missing[0]}. Pode me dizer?`,

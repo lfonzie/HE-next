@@ -1,0 +1,194 @@
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                           FLUXO ORQUESTRADOR + OPENAI                            │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────┐    ┌──────────────┐    ┌─────────────┐    ┌─────────────┐
+│   USUÁRIO   │───▶│  CHAT UI     │───▶│ useChat     │───▶│ /api/chat   │
+│             │    │              │    │ Hook        │    │             │
+└─────────────┘    └──────────────┘    └─────────────┘    └─────────────┘
+                                                                    │
+                                                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                           CLASSIFICAÇÃO INTELIGENTE                             │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────┐    ┌──────────────┐    ┌─────────────┐    ┌─────────────┐
+│ Mensagem    │───▶│ /api/classify│───▶│ OpenAI      │───▶│ Módulo      │
+│ do Usuário  │    │              │    │ GPT-4o-mini │    │ Recomendado │
+└─────────────┘    └──────────────┘    └─────────────┘    └─────────────┘
+                            │                    │
+                            ▼                    ▼
+                   ┌──────────────┐    ┌─────────────┐
+                   │ Prompt       │    │ JSON        │
+                   │ Especializado│    │ Estruturado │
+                   │ Classification│    │ {module,    │
+                   │              │    │ confidence, │
+                   │              │    │ rationale}  │
+                   └──────────────┘    └─────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                              ORQUESTRAÇÃO                                       │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────┐    ┌──────────────┐    ┌─────────────┐    ┌─────────────┐
+│ Classificação│───▶│ Orchestrator │───▶│ Decisão     │───▶│ Execução    │
+│ OpenAI       │    │              │    │ de Módulos  │    │ do Módulo   │
+└─────────────┘    └──────────────┘    └─────────────┘    └─────────────┘
+                            │                    │
+                            ▼                    ▼
+                   ┌──────────────┐    ┌─────────────┐
+                   │ classifyIntent│    │ decideModules│
+                   │              │    │             │
+                   │ - Heurística │    │ - Política  │
+                   │ - Contexto   │    │ - Threshold │
+                   │ - Fallback   │    │ - Slots     │
+                   └──────────────┘    └─────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                           MÓDULOS ESPECIALIZADOS                                │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────┐    ┌──────────────┐    ┌─────────────┐    ┌─────────────┐
+│ PROFESSOR   │    │ AULA_EXPANDIDA│    │ ENEM_INTERAT│    │ TI          │
+│             │    │              │    │ IVO         │    │             │
+│ - Matemática│    │ - Aulas      │    │ - Simulados │    │ - Suporte   │
+│ - Física    │    │   Completas  │    │ - Explicações│    │   Técnico   │
+│ - Biologia  │    │ - 8 Slides   │    │ - Feedback  │    │ - Equipamentos│
+│ - Exercícios│    │ - Detalhadas │    │ - Análise   │    │ - Sistemas  │
+└─────────────┘    └──────────────┘    └─────────────┘    └─────────────┘
+
+┌─────────────┐    ┌──────────────┐    ┌─────────────┐    ┌─────────────┐
+│ RH          │    │ FINANCEIRO   │    │ BEM_ESTAR   │    │ SOCIAL_MEDIA│
+│             │    │              │    │             │    │             │
+│ - Funcionários│    │ - Pagamentos│    │ - Apoio     │    │ - Posts     │
+│ - Benefícios│    │ - Mensalidades│    │   Emocional │    │ - Marketing │
+│ - Políticas │    │ - Boletos    │    │ - Saúde     │    │ - Conteúdo  │
+│ - Treinamentos│    │ - Valores    │    │   Mental    │    │   Digital   │
+└─────────────┘    └──────────────┘    └─────────────┘    └─────────────┘
+
+┌─────────────┐    ┌──────────────┐    ┌─────────────┐
+│ COORDENACAO │    │ SECRETARIA   │    │ ATENDIMENTO │
+│             │    │              │    │             │
+│ - Gestão    │    │ - Documentos │    │ - Chat      │
+│   Pedagógica│    │ - Matrícula  │    │   Geral     │
+│ - Currículo │    │ - Declarações│    │ - Fallback  │
+│ - Avaliações│    │ - Procedimentos│    │ - Direcionamento│
+└─────────────┘    └──────────────┘    └─────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                           GERAÇÃO DE CONTEÚDO                                   │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────┐    ┌──────────────┐    ┌─────────────┐    ┌─────────────┐
+│ Módulo      │───▶│ OpenAI       │───▶│ Conteúdo    │───▶│ Resposta    │
+│ Específico  │    │ Especializado│    │ Gerado      │    │ ao Usuário  │
+└─────────────┘    └──────────────┘    └─────────────┘    └─────────────┘
+                            │
+                            ▼
+                   ┌──────────────┐
+                   │ Prompts      │
+                   │ Específicos  │
+                   │ por Módulo   │
+                   │              │
+                   │ - Professor  │
+                   │ - ENEM       │
+                   │ - TI         │
+                   │ - RH         │
+                   │ - etc.       │
+                   └──────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                           CONFIGURAÇÃO DE MODELOS                               │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────┐    ┌──────────────┐    ┌─────────────┐
+│ Análise de  │───▶│ Seleção de   │───▶│ Configuração│
+│ Complexidade│    │ Modelo       │    │ Específica  │
+└─────────────┘    └──────────────┘    └─────────────┘
+        │                    │                    │
+        ▼                    ▼                    ▼
+┌─────────────┐    ┌──────────────┐    ┌─────────────┐
+│ Palavras-   │    │ SIMPLE:      │    │ Temperature: │
+│ chave       │    │ gpt-4o-mini  │    │ 0.7         │
+│ Complexas   │    │              │    │             │
+│             │    │ COMPLEX:     │    │ Max Tokens: │
+│ - análise   │    │ gpt-4o-mini  │    │ 800-4000   │
+│ - síntese   │    │ (fallback)   │    │             │
+│ - estratégia│    │              │    │ Stream:     │
+│ - metodologia│    │              │    │ true        │
+└─────────────┘    └──────────────┘    └─────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                           MONITORAMENTO E DEBUG                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────┐    ┌──────────────┐    ┌─────────────┐    ┌─────────────┐
+│ Logs        │    │ Trace        │    │ Métricas    │    │ Otimização  │
+│ Estruturados│───▶│ Completo     │───▶│ Performance │───▶│ Contínua    │
+└─────────────┘    └──────────────┘    └─────────────┘    └─────────────┘
+        │                    │                    │                    │
+        ▼                    ▼                    ▼                    ▼
+┌─────────────┐    ┌──────────────┐    ┌─────────────┐    ┌─────────────┐
+│ 🔍 [CLASSIFY]│    │ module:      │    │ Latência    │    │ Rate        │
+│ ✅ [CLASSIFY]│    │ confidence:  │    │ Taxa de     │    │ Limiting    │
+│ ❌ [ERROR]   │    │ intent:      │    │ Acerto      │    │             │
+│             │    │ slots:       │    │ Uso de      │    │ Cache       │
+│             │    │ latencyMs:   │    │ Tokens      │    │             │
+│             │    │ errors:      │    │ Custo por   │    │ Fallback    │
+│             │    │              │    │ Requisição  │    │             │
+└─────────────┘    └──────────────┘    └─────────────┘    └─────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                              VANTAGENS DA ARQUITETURA                           │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────┐    ┌──────────────┐    ┌─────────────┐    ┌─────────────┐
+│ EFICIÊNCIA  │    │ PRECISÃO     │    │ FLEXIBILIDADE│    │ ESCALABILIDADE│
+└─────────────┘    └──────────────┘    └─────────────┘    └─────────────┘
+        │                    │                    │                    │
+        ▼                    ▼                    ▼                    ▼
+┌─────────────┐    ┌──────────────┐    ┌─────────────┐    ┌─────────────┐
+│ Heurísticas │    │ Classificação│    │ Módulos     │    │ Rate        │
+│ Locais      │    │ Inteligente  │    │ Especializados│    │ Limiting    │
+│             │    │              │    │             │    │             │
+│ OpenAI      │    │ Validação    │    │ Prompts     │    │ Monitoramento│
+│ Apenas      │    │ Sanitização  │    │ Específicos │    │             │
+│ Quando      │    │              │    │             │    │ Otimização  │
+│ Necessário  │    │ Fallback     │    │ Configuração│    │ Custos      │
+│             │    │ Robusto      │    │ Dinâmica    │    │             │
+└─────────────┘    └──────────────┘    └─────────────┘    └─────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                              FLUXO COMPLETO                                    │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+1. USUÁRIO envia mensagem
+   ↓
+2. useChat Hook recebe mensagem
+   ↓
+3. Classificação automática (se necessário)
+   ↓
+4. OpenAI classifica módulo apropriado
+   ↓
+5. Orquestrador decide execução
+   ↓
+6. Módulo específico é executado
+   ↓
+7. OpenAI gera conteúdo específico
+   ↓
+8. Resposta é retornada ao usuário
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                              CONCLUSÃO                                          │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+O sistema HubEdu utiliza uma arquitetura inteligente que combina:
+
+✅ ORQUESTRADOR: Gerencia o fluxo e decide qual módulo usar
+✅ OPENAI: Fornece classificação inteligente e geração de conteúdo
+✅ MÓDULOS ESPECIALIZADOS: Cada um com sua função específica
+✅ HEURÍSTICAS LOCAIS: Para casos simples e fallback
+✅ MONITORAMENTO: Para otimização contínua
+
+Esta integração permite que o sistema seja tanto eficiente quanto inteligente,
+fornecendo respostas precisas e contextualizadas para cada tipo de consulta educacional.
