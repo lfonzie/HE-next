@@ -74,15 +74,15 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 </button>
                 
                 <button
-                  onClick={() => window.location.href = '/professor'}
+                  onClick={() => window.location.href = '/aula'}
                   className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center transition-colors"
-                  title="Professor IA"
+                  title="Aula Expandida"
                 >
                   <BookOpen className="w-5 h-5 text-gray-600" />
                 </button>
                 
                 <button
-                  onClick={() => window.location.href = '/simulador'}
+                  onClick={() => window.location.href = '/enem'}
                   className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center transition-colors"
                   title="Simulador ENEM"
                 >

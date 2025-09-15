@@ -23,7 +23,7 @@ This document tracks the migration progress from the original React (TypeScript,
 - ✅ `/module-professor` - Migrated to `app/(dashboard)/professor/page.tsx` with full features
 - ❌ `/module-professor-interactive` - Needs migration
 - ❌ `/module-enem-interactive` - Needs migration
-- ✅ `/simulador-enem` - Migrated to `app/(dashboard)/simulador/page.tsx` with comprehensive features
+- ✅ `/enem-enem` - Migrated to `app/(dashboard)/enem/page.tsx` with comprehensive features
 - ❌ `/professor-ia` - Needs migration
 - ❌ `/chat/aula-expandida` - Needs migration
 - ❌ `/aula-expandida` - Needs migration

@@ -1,331 +1,272 @@
-"use client"
+'use client';
 
-import { useState, useEffect, useCallback } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { 
   Trophy, 
   Target, 
-  BookOpen, 
-  RotateCcw, 
-  Download, 
-  Share2,
+  Clock, 
+  TrendingUp, 
+  TrendingDown,
   CheckCircle,
   XCircle,
   AlertCircle,
-  Lightbulb,
-  GraduationCap,
-  TrendingUp,
-  BarChart3,
-  Clock,
-  Award,
-  Zap,
-  History
-} from 'lucide-react'
-import { EnemPerformanceAnalysis } from './EnemPerformanceAnalysis'
-import { EnemHistory } from './EnemHistory'
-import { EnemWrongAnswersAnalysis } from './EnemWrongAnswersAnalysis'
-import { EnemWrongAnswersSummary } from './EnemWrongAnswersSummary'
-import { useEnemHistory } from '@/hooks/useEnemHistory'
-import { useToast } from '@/hooks/use-toast'
-
-interface Explanation {
-  questionId: string
-  question: string
-  options: string[]
-  correctAnswer: number
-  userAnswer: number
-  explanation: string
-  concepts: string[]
-  tips: string[]
-  difficulty: string
-  area: string
-}
+  Download,
+  Share2,
+  RotateCcw
+} from 'lucide-react';
+import { SimulationStats } from '@/lib/stores/enem-simulation-store';
+import { cn } from '@/lib/utils';
 
 interface EnemResultsProps {
-  questions: any[]
-  answers: Record<number, string>
-  score: number
-  totalQuestions: number
-  onRestart: () => void
-  onBackToSetup: () => void
+  stats: SimulationStats;
+  totalQuestions: number;
+  timeSpent: number;
+  onRestart: () => void;
+  onDownload?: () => void;
+  onShare?: () => void;
 }
 
-export function EnemResults({ 
-  questions, 
-  answers, 
-  score, 
-  totalQuestions, 
-  onRestart, 
-  onBackToSetup 
+export function EnemResults({
+  stats,
+  totalQuestions,
+  timeSpent,
+  onRestart,
+  onDownload,
+  onShare
 }: EnemResultsProps) {
-  const [explanations, setExplanations] = useState<Explanation[]>([])
-  const [isLoadingExplanations, setIsLoadingExplanations] = useState(false)
-  const [showExplanations, setShowExplanations] = useState(false)
-  const [showPerformanceAnalysis, setShowPerformanceAnalysis] = useState(false)
-  const [showHistory, setShowHistory] = useState(false)
-  const [showWrongAnswersAnalysis, setShowWrongAnswersAnalysis] = useState(false)
-  const [timeSpent, setTimeSpent] = useState(0)
-  const { toast } = useToast()
-  const { saveSimulation } = useEnemHistory()
-
-  // Calcular estatísticas
-  const correctAnswers = questions.reduce((acc, question, index) => {
-    return acc + (answers[index] === question.correctAnswer ? 1 : 0)
-  }, 0)
-  
-  const wrongAnswers = totalQuestions - correctAnswers
-  const percentage = Math.round((correctAnswers / totalQuestions) * 100)
-
-  // Simular tempo gasto (em produção, seria real)
-  useEffect(() => {
-    const estimatedTime = totalQuestions * 90 // 90 segundos por questão em média
-    setTimeSpent(estimatedTime)
-  }, [totalQuestions])
-
-  // Salvar simulado no histórico
-  useEffect(() => {
-    if (questions.length > 0 && score !== undefined) {
-      const simulationData = {
-        area: questions[0]?.area || 'geral',
-        numQuestions: totalQuestions,
-        duration: Math.round(timeSpent / 60),
-        score: score,
-        correctAnswers,
-        totalQuestions,
-        percentage: Math.round((correctAnswers / totalQuestions) * 100),
-        timeSpent,
-        useRealQuestions: questions[0]?.year ? true : false,
-        year: questions[0]?.year,
-        questions: questions.map(q => q.id),
-        answers
-      }
-      
-      saveSimulation(simulationData)
+  const formatTime = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes}min ${secs}s`;
     }
-  }, [questions, score, totalQuestions, correctAnswers, timeSpent, answers, saveSimulation])
+    return `${minutes}min ${secs}s`;
+  };
 
-  const loadExplanations = useCallback(async () => {
-    setIsLoadingExplanations(true)
-    try {
-      // Preparar dados das questões com respostas do usuário
-      const questionsWithAnswers = questions.map((question, index) => ({
-        ...question,
-        userAnswer: answers[index]
-      }));
+  const getPerformanceLevel = (accuracy: number) => {
+    if (accuracy >= 80) return { level: 'Excelente', color: 'text-green-600', icon: Trophy };
+    if (accuracy >= 70) return { level: 'Bom', color: 'text-blue-600', icon: Target };
+    if (accuracy >= 60) return { level: 'Regular', color: 'text-yellow-600', icon: AlertCircle };
+    return { level: 'Precisa Melhorar', color: 'text-red-600', icon: TrendingDown };
+  };
 
-      const response = await fetch('/api/enem/explanations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', // Include cookies for NextAuth
-        body: JSON.stringify({
-          questions: questionsWithAnswers,
-          answers: Object.values(answers)
-        })
-      })
+  const performance = getPerformanceLevel(stats.accuracy);
+  const PerformanceIcon = performance.icon;
 
-      if (!response.ok) throw new Error('Failed to load explanations')
+  const getDifficultyStats = (difficulty: 'easy' | 'medium' | 'hard') => {
+    const data = stats.difficultyBreakdown[difficulty];
+    const accuracy = data.total > 0 ? (data.correct / data.total) * 100 : 0;
+    return { ...data, accuracy };
+  };
 
-      const data = await response.json()
-      setExplanations(data.explanations || [])
-      
-      toast({
-        title: "Explicações carregadas!",
-        description: `${data.totalWrong} questões com explicações detalhadas.`,
-      })
-    } catch (error) {
-      console.error('Error loading explanations:', error)
-      toast({
-        title: "Erro ao carregar explicações",
-        description: "Não foi possível carregar as explicações das questões.",
-        variant: "destructive"
-      })
-    } finally {
-      setIsLoadingExplanations(false)
-    }
-  }, [answers, questions, toast]);
+  const easyStats = getDifficultyStats('easy');
+  const mediumStats = getDifficultyStats('medium');
+  const hardStats = getDifficultyStats('hard');
 
-  // Carregar explicações quando o componente monta
-  useEffect(() => {
-    if (wrongAnswers > 0) {
-      loadExplanations()
-    }
-  }, [wrongAnswers, loadExplanations])
+  const topSkills = Object.entries(stats.skillBreakdown)
+    .map(([skill, data]) => ({
+      skill,
+      accuracy: data.total > 0 ? (data.correct / data.total) * 100 : 0,
+      total: data.total
+    }))
+    .sort((a, b) => b.accuracy - a.accuracy)
+    .slice(0, 5);
 
-  const getScoreColor = (score: number) => {
-    if (score >= 800) return 'text-green-600'
-    if (score >= 600) return 'text-blue-600'
-    if (score >= 400) return 'text-yellow-600'
-    return 'text-red-600'
-  }
-
-  const getScoreBadge = (score: number) => {
-    if (score >= 800) return 'bg-green-100 text-green-800'
-    if (score >= 600) return 'bg-blue-100 text-blue-800'
-    if (score >= 400) return 'bg-yellow-100 text-yellow-800'
-    return 'bg-red-100 text-red-800'
-  }
-
-  // Se mostrar análise de performance, renderizar o componente
-  if (showPerformanceAnalysis) {
-    return (
-      <EnemPerformanceAnalysis
-        questions={questions}
-        answers={answers}
-        timeSpent={timeSpent}
-        onClose={() => setShowPerformanceAnalysis(false)}
-      />
-    )
-  }
-
-  // Se mostrar histórico, renderizar o componente
-  if (showHistory) {
-    return (
-      <EnemHistory
-        onClose={() => setShowHistory(false)}
-      />
-    )
-  }
-
-  // Se mostrar análise de questões erradas, renderizar o componente
-  if (showWrongAnswersAnalysis) {
-    return (
-      <EnemWrongAnswersAnalysis
-        questions={questions}
-        answers={answers}
-        onClose={() => setShowWrongAnswersAnalysis(false)}
-      />
-    )
-  }
+  const bottomSkills = Object.entries(stats.skillBreakdown)
+    .map(([skill, data]) => ({
+      skill,
+      accuracy: data.total > 0 ? (data.correct / data.total) * 100 : 0,
+      total: data.total
+    }))
+    .sort((a, b) => a.accuracy - b.accuracy)
+    .slice(0, 3);
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6">
-      {/* Header de Resultados */}
-      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <Trophy className="h-16 w-16 text-yellow-500" />
-          </div>
-          <CardTitle className="text-3xl font-bold text-gray-800">
-            Simulado Finalizado!
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="text-center space-y-2">
+        <h1 className="text-3xl font-bold">Resultado do Simulado</h1>
+        <p className="text-muted-foreground">
+          Análise detalhada do seu desempenho
+        </p>
+      </div>
+
+      {/* Overall Performance */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <PerformanceIcon className={cn("w-6 h-6", performance.color)} />
+            Desempenho Geral
           </CardTitle>
-          <p className="text-gray-600 mt-2">
-            Parabéns por completar o simulado ENEM
-          </p>
-          
-          {/* Botões de Ação Rápida */}
-          <div className="flex flex-wrap justify-center gap-4 mt-6">
-            <Button
-              onClick={() => setShowPerformanceAnalysis(true)}
-              size="lg"
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold"
-            >
-              <BarChart3 className="h-5 w-5 mr-2" />
-              Análise Detalhada
-            </Button>
-            <Button
-              onClick={() => setShowHistory(true)}
-              size="lg"
-              variant="outline"
-              className="border-purple-200 text-purple-700 hover:bg-purple-50"
-            >
-              <History className="h-5 w-5 mr-2" />
-              Histórico
-            </Button>
-            <Button
-              onClick={() => setShowWrongAnswersAnalysis(true)}
-              variant="outline"
-              size="lg"
-              disabled={wrongAnswers === 0}
-              className="border-red-200 text-red-700 hover:bg-red-50"
-            >
-              <BookOpen className="h-5 w-5 mr-2" />
-              Análise Detalhada ({wrongAnswers})
-            </Button>
-          </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-            {/* Pontuação */}
-            <div className="space-y-2">
-              <div className="text-4xl font-bold text-blue-600">
-                {score}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="text-center">
+              <div className="text-3xl font-bold text-primary">
+                {stats.accuracy.toFixed(1)}%
               </div>
-              <div className="text-sm text-gray-600">Pontuação</div>
-              <Badge className={getScoreBadge(score)}>
-                {score >= 800 ? 'Excelente' : 
-                 score >= 600 ? 'Bom' : 
-                 score >= 400 ? 'Regular' : 'Precisa melhorar'}
+              <div className="text-sm text-muted-foreground">Precisão</div>
+              <Badge className={cn("mt-1", performance.color)}>
+                {performance.level}
               </Badge>
             </div>
-
-            {/* Acertos */}
-            <div className="space-y-2">
-              <div className="text-4xl font-bold text-green-600">
-                {correctAnswers}
+            
+            <div className="text-center">
+              <div className="text-3xl font-bold text-green-600">
+                {stats.correctAnswers}
               </div>
-              <div className="text-sm text-gray-600">Acertos</div>
-              <div className="text-lg font-semibold text-green-600">
-                {percentage}%
-              </div>
+              <div className="text-sm text-muted-foreground">Corretas</div>
             </div>
-
-            {/* Erros */}
-            <div className="space-y-2">
-              <div className="text-4xl font-bold text-red-600">
-                {wrongAnswers}
+            
+            <div className="text-center">
+              <div className="text-3xl font-bold text-red-600">
+                {stats.incorrectAnswers}
               </div>
-              <div className="text-sm text-gray-600">Erros</div>
-              <div className="text-lg font-semibold text-red-600">
-                {100 - percentage}%
+              <div className="text-sm text-muted-foreground">Incorretas</div>
+            </div>
+            
+            <div className="text-center">
+              <div className="text-3xl font-bold text-gray-600">
+                {stats.skippedAnswers}
               </div>
+              <div className="text-sm text-muted-foreground">Puladas</div>
             </div>
-          </div>
-
-          {/* Barra de Progresso */}
-          <div className="mt-6">
-            <div className="flex justify-between text-sm text-gray-600 mb-2">
-              <span>Progresso</span>
-              <span>{correctAnswers} de {totalQuestions}</span>
-            </div>
-            <Progress value={percentage} className="h-3" />
           </div>
         </CardContent>
       </Card>
 
-      {/* Estatísticas Detalhadas */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Time Analysis */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Clock className="w-5 h-5" />
+            Análise de Tempo
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold">
+                {formatTime(timeSpent)}
+              </div>
+              <div className="text-sm text-muted-foreground">Tempo Total</div>
+            </div>
+            
+            <div className="text-center">
+              <div className="text-2xl font-bold">
+                {Math.round(stats.averageTimePerQuestion)}s
+              </div>
+              <div className="text-sm text-muted-foreground">Tempo por Questão</div>
+            </div>
+            
+            <div className="text-center">
+              <div className="text-2xl font-bold">
+                {Math.round((stats.correctAnswers / timeSpent) * 60)}/min
+              </div>
+              <div className="text-sm text-muted-foreground">Questões Corretas/min</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Difficulty Breakdown */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Target className="w-5 h-5" />
+            Desempenho por Dificuldade
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {/* Easy */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="bg-green-100 text-green-800">
+                    Fácil
+                  </Badge>
+                  <span className="text-sm">
+                    {easyStats.correct}/{easyStats.total} corretas
+                  </span>
+                </div>
+                <span className="text-sm font-medium">
+                  {easyStats.accuracy.toFixed(1)}%
+                </span>
+              </div>
+              <Progress value={easyStats.accuracy} className="h-2" />
+            </div>
+
+            {/* Medium */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="bg-yellow-100 text-yellow-800">
+                    Médio
+                  </Badge>
+                  <span className="text-sm">
+                    {mediumStats.correct}/{mediumStats.total} corretas
+                  </span>
+                </div>
+                <span className="text-sm font-medium">
+                  {mediumStats.accuracy.toFixed(1)}%
+                </span>
+              </div>
+              <Progress value={mediumStats.accuracy} className="h-2" />
+            </div>
+
+            {/* Hard */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="bg-red-100 text-red-800">
+                    Difícil
+                  </Badge>
+                  <span className="text-sm">
+                    {hardStats.correct}/{hardStats.total} corretas
+                  </span>
+                </div>
+                <span className="text-sm font-medium">
+                  {hardStats.accuracy.toFixed(1)}%
+                </span>
+              </div>
+              <Progress value={hardStats.accuracy} className="h-2" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Skills Analysis */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Top Skills */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Target className="h-5 w-5 text-blue-600" />
-              Resumo por Área
+              <TrendingUp className="w-5 h-5 text-green-600" />
+              Pontos Fortes
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {Object.entries(questions.reduce((acc, question, index) => {
-                const area = question.area || question.subject || 'Geral'
-                if (!acc[area]) {
-                  acc[area] = { total: 0, correct: 0 }
-                }
-                acc[area].total++
-                if (answers[index] === question.correctAnswer) {
-                  acc[area].correct++
-                }
-                return acc
-              }, {} as Record<string, { total: number, correct: number }>)).map(([area, stats]) => (
-                <div key={area} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                  <span className="font-medium">{area}</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">
-                      {(stats as any).correct}/{(stats as any).total}
-                    </span>
-                    <Badge variant="outline">
-                      {Math.round(((stats as any).correct / (stats as any).total) * 100)}%
-                    </Badge>
+              {topSkills.map(({ skill, accuracy, total }) => (
+                <div key={skill} className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="text-sm font-medium">{skill}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {total} questões
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm font-bold text-green-600">
+                      {accuracy.toFixed(1)}%
+                    </div>
+                    <Progress value={accuracy} className="w-16 h-1 mt-1" />
                   </div>
                 </div>
               ))}
@@ -333,132 +274,105 @@ export function EnemResults({
           </CardContent>
         </Card>
 
+        {/* Areas for Improvement */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-green-600" />
-              Performance Geral
+              <TrendingDown className="w-5 h-5 text-red-600" />
+              Áreas para Melhorar
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
-                <CheckCircle className="h-5 w-5 text-green-500" />
-                <div>
-                  <div className="font-semibold">{correctAnswers} acertos</div>
-                  <div className="text-sm text-gray-600">{percentage}% de aproveitamento</div>
+            <div className="space-y-3">
+              {bottomSkills.map(({ skill, accuracy, total }) => (
+                <div key={skill} className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="text-sm font-medium">{skill}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {total} questões
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm font-bold text-red-600">
+                      {accuracy.toFixed(1)}%
+                    </div>
+                    <Progress value={accuracy} className="w-16 h-1 mt-1" />
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-3 p-3 bg-red-50 rounded-lg">
-                <XCircle className="h-5 w-5 text-red-500" />
-                <div>
-                  <div className="font-semibold">{wrongAnswers} erros</div>
-                  <div className="text-sm text-gray-600">{100 - percentage}% para melhorar</div>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
-                <Clock className="h-5 w-5 text-blue-500" />
-                <div>
-                  <div className="font-semibold">{Math.round(timeSpent / 60)} minutos</div>
-                  <div className="text-sm text-gray-600">Tempo total gasto</div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Award className="h-5 w-5 text-purple-600" />
-              Insights Rápidos
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="text-center p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg">
-                <div className="text-2xl font-bold text-blue-600 mb-1">{score}</div>
-                <div className="text-sm text-gray-600">Pontuação TRI</div>
-                <Badge className={getScoreBadge(score)}>
-                  {score >= 800 ? 'Excelente' : 
-                   score >= 600 ? 'Bom' : 
-                   score >= 400 ? 'Regular' : 'Precisa melhorar'}
-                </Badge>
-              </div>
-              
-              <div className="space-y-2">
-                <Button
-                  onClick={() => setShowPerformanceAnalysis(true)}
-                  size="sm"
-                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-                >
-                  <BarChart3 className="h-4 w-4 mr-2" />
-                  Análise Completa
-                </Button>
-                <Button
-                  onClick={() => setShowWrongAnswersAnalysis(true)}
-                  variant="outline"
-                  size="sm"
-                  className="w-full border-red-200 text-red-700 hover:bg-red-50"
-                  disabled={wrongAnswers === 0}
-                >
-                  <BookOpen className="h-4 w-4 mr-2" />
-                  Análise Detalhada ({wrongAnswers})
-                </Button>
-              </div>
+              ))}
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Resumo das Questões Erradas */}
-      {wrongAnswers > 0 && (
-        <EnemWrongAnswersSummary
-          questions={questions}
-          answers={answers}
-          onViewDetailedAnalysis={() => setShowWrongAnswersAnalysis(true)}
-        />
-      )}
-
-      {/* Ações */}
+      {/* Recommendations */}
       <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              onClick={onRestart}
-              size="lg"
-              variant="default"
-            >
-              <RotateCcw className="h-4 w-4 mr-2" />
+        <CardHeader>
+          <CardTitle>Recomendações de Estudo</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {bottomSkills.length > 0 && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                <h4 className="font-semibold text-red-800 mb-1">
+                  Foque nestas áreas:
+                </h4>
+                <p className="text-red-700 text-sm">
+                  {bottomSkills.map(skill => skill.skill).join(', ')}
+                </p>
+              </div>
+            )}
+            
+            {stats.accuracy < 70 && (
+              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <h4 className="font-semibold text-yellow-800 mb-1">
+                  Dica de Estudo:
+                </h4>
+                <p className="text-yellow-700 text-sm">
+                  Pratique mais questões de nível médio antes de avançar para as difíceis.
+                </p>
+              </div>
+            )}
+            
+            {stats.averageTimePerQuestion > 120 && (
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <h4 className="font-semibold text-blue-800 mb-1">
+                  Gestão de Tempo:
+                </h4>
+                <p className="text-blue-700 text-sm">
+                  Você está gastando muito tempo por questão. Pratique para aumentar a velocidade.
+                </p>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Actions */}
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button onClick={onRestart} className="flex items-center gap-2">
+              <RotateCcw className="w-4 h-4" />
               Fazer Novo Simulado
             </Button>
-            <Button 
-              onClick={onBackToSetup}
-              size="lg"
-              variant="outline"
-            >
-              <Target className="h-4 w-4 mr-2" />
-              Configurar Outro Simulado
-            </Button>
-            <Button 
-              size="lg"
-              variant="outline"
-              disabled
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Baixar Relatório
-            </Button>
-            <Button 
-              size="lg"
-              variant="outline"
-              disabled
-            >
-              <Share2 className="h-4 w-4 mr-2" />
-              Compartilhar
-            </Button>
+            
+            {onDownload && (
+              <Button variant="outline" onClick={onDownload} className="flex items-center gap-2">
+                <Download className="w-4 h-4" />
+                Baixar Resultado
+              </Button>
+            )}
+            
+            {onShare && (
+              <Button variant="outline" onClick={onShare} className="flex items-center gap-2">
+                <Share2 className="w-4 h-4" />
+                Compartilhar
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

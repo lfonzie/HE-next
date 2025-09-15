@@ -17,7 +17,53 @@ function calculateSimilarity(text1: string, text2: string): number {
   return intersection.size / union.size;
 }
 
-async function generateSlide(topic: string, position: number): Promise<Slide> {
+// Sanitize JSON response from OpenAI API
+function sanitizeJsonString(content: string): string {
+  // First, try to extract JSON from markdown blocks
+  const jsonBlockMatch = content.match(/```json\s*([\s\S]*?)\s*```/);
+  if (jsonBlockMatch) {
+    return jsonBlockMatch[1].trim();
+  }
+  
+  // If no markdown blocks, try to find JSON object/array
+  const jsonMatch = content.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
+  if (jsonMatch) {
+    return jsonMatch[1].trim();
+  }
+  
+  // Fallback: clean the entire content
+  return content
+    .replace(/```json/g, '') // Remove ```json
+    .replace(/```/g, '')     // Remove ```
+    .replace(/^\s+|\s+$/g, '') // Remove espaços em branco no início/fim
+    .replace(/\n/g, '')      // Remove quebras de linha
+    .replace(/\t/g, '');     // Remove tabulações
+}
+
+// Validate if string is potentially valid JSON
+function isPotentiallyValidJson(content: string): boolean {
+  const trimmed = content.trim();
+  return (
+    (trimmed.startsWith('{') && trimmed.endsWith('}')) ||
+    (trimmed.startsWith('[') && trimmed.endsWith(']'))
+  );
+}
+
+// Validate slide structure
+function validateSlideStructure(slide: any): slide is Slide {
+  return (
+    slide &&
+    typeof slide === 'object' &&
+    typeof slide.type === 'string' &&
+    ['explanation', 'question', 'closing'].includes(slide.type) &&
+    typeof slide.title === 'string' &&
+    typeof slide.content === 'string' &&
+    slide.title.trim().length > 0 &&
+    slide.content.trim().length > 0
+  );
+}
+
+async function generateSlide(topic: string, position: number, previousSlides: Slide[] = [], attempt: number = 1): Promise<Slide> {
   const model = selectModel('gpt-4o-mini');
   const config = getModelConfig(model);
   
@@ -31,13 +77,48 @@ async function generateSlide(topic: string, position: number): Promise<Slide> {
   
   const slideType = slideTypes[position - 1];
   
-  const prompt = `Gere um slide (JSON, conforme contrato: type, title, content, key_points, question_stem, options, answer, rationale, image_prompt, image_confidence) para a posição ${position} de uma aula de 9 slides sobre ${topic}. Cada slide deve abordar um subtema distinto (ex.: definição, exemplo prático, variações, contraexemplo, prática guiada, síntese). Máx. 150 palavras no content, linguagem clara, brasileira, sem jargões. Para type: question, inclua apenas 1 alternativa correta com opções plausíveis e rationale curto (1–2 frases). Evite repetições de títulos ou ideias de slides anteriores. Não use linguagem 'meta' (ex.: 'neste slide...'). 
+  // Create context from previous slides to avoid repetition
+  const previousContext = previousSlides.length > 0 
+    ? `\n\nCONTEXTO DOS SLIDES ANTERIORES (evite repetir):\n${previousSlides.map((slide, i) => 
+        `Slide ${i + 1}: "${slide.title}" - ${slide.content.substring(0, 100)}...`
+      ).join('\n')}\n\nIMPORTANTE: Crie conteúdo completamente diferente dos slides anteriores.`
+    : '';
+  
+  // Enhanced prompt with better diversity and context awareness
+  const basePrompt = `Gere um slide (JSON, conforme contrato: type, title, content, key_points, question_stem, options, answer, rationale, image_prompt, image_confidence) para a posição ${position} de uma aula de 9 slides sobre "${topic}".
 
-Para image_prompt: crie um prompt simples e descritivo em inglês (1-3 palavras) que funcione bem com Unsplash para buscar imagens educacionais relacionadas ao conteúdo. Exemplos: "mathematics classroom", "science laboratory", "students learning", "books education", "teacher teaching". Use image_confidence entre 0.7-1.0 para imagens que realmente agregam valor educacional.`;
+TIPO DE SLIDE: ${slideType}
+POSIÇÃO: ${position}/9
+
+DIRETRIZES ESPECÍFICAS:
+- Para EXPLANATION: Foque em conceitos, exemplos práticos, aplicações reais
+- Para QUESTION: Crie pergunta desafiadora com 4 alternativas (só 1 correta)
+- Para CLOSING: Resumo final + dica prática para aplicar o conhecimento
+
+DIVERSIDADE OBRIGATÓRIA:
+- Título único e específico (não genérico)
+- Conteúdo focado em aspecto específico do tema
+- Linguagem clara, brasileira, sem jargões técnicos
+- Máximo 150 palavras no content
+- Para questions: rationale curto (1-2 frases)
+
+IMAGEM:
+- image_prompt: 1-3 palavras em inglês para Unsplash
+- image_confidence: 0.7-1.0 (alta qualidade educacional)
+
+${previousContext}`;
+
+  // Enhanced prompt for retry attempts
+  const retryPrompt = attempt === 1 
+    ? basePrompt
+    : `${basePrompt}\n\nCRÍTICO: Retorne APENAS um objeto JSON válido, sem blocos de código Markdown (ex.: sem \`\`\`json ou \`\`\`), comentários ou texto adicional. A resposta deve ser exclusivamente JSON puro.`;
 
   const messages = [
-    { role: 'system', content: 'Você é um especialista em educação que gera slides únicos e educativos. Sempre retorne JSON válido.' },
-    { role: 'user', content: prompt }
+    { 
+      role: 'system', 
+      content: 'Você é um especialista em educação que gera slides únicos e educativos. Sempre retorne JSON válido puro, sem formatação Markdown ou texto adicional.' 
+    },
+    { role: 'user', content: retryPrompt }
   ];
 
   try {
@@ -49,14 +130,29 @@ Para image_prompt: crie um prompt simples e descritivo em inglês (1-3 palavras)
     });
 
     const content = response.choices[0]?.message?.content;
-    if (!content) throw new Error('No content generated');
+    if (!content) {
+      throw new Error('No content generated from OpenAI API');
+    }
+
+    // Log raw response for debugging
+    console.log(`Raw API response (attempt ${attempt}):`, content);
+
+    // Sanitize the response
+    const sanitizedContent = sanitizeJsonString(content);
+    
+    // Validate JSON format before parsing
+    if (!isPotentiallyValidJson(sanitizedContent)) {
+      console.error(`Response is not in valid JSON format (attempt ${attempt}):`, sanitizedContent);
+      throw new Error('Response is not in valid JSON format');
+    }
 
     // Parse JSON response
-    const slide = JSON.parse(content) as Slide;
+    const slide = JSON.parse(sanitizedContent) as Slide;
     
-    // Validate required fields
-    if (!slide.type || !slide.title || !slide.content) {
-      throw new Error('Invalid slide structure');
+    // Validate slide structure
+    if (!validateSlideStructure(slide)) {
+      console.error(`Invalid slide structure (attempt ${attempt}):`, slide);
+      throw new Error('Invalid slide structure: missing required fields');
     }
 
     // Ensure image_confidence is a number
@@ -64,10 +160,18 @@ Para image_prompt: crie um prompt simples e descritivo em inglês (1-3 palavras)
       slide.image_confidence = Math.random() * 0.5 + 0.5; // Random between 0.5-1.0
     }
 
+    console.log(`Successfully generated slide ${position} (attempt ${attempt})`);
     return slide;
   } catch (error) {
-    console.error('Error generating slide:', error);
-    throw error;
+    console.error(`Error generating slide ${position} (attempt ${attempt}):`, error);
+    
+    // Retry with enhanced prompt if not the last attempt
+    if (attempt < 3) {
+      console.warn(`Retrying slide generation (attempt ${attempt + 1})`);
+      return generateSlide(topic, position, attempt + 1);
+    }
+    
+    throw new Error(`Failed to generate slide after ${attempt} attempts: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
@@ -89,12 +193,12 @@ export async function POST(request: NextRequest) {
     let attempts = 0;
     const maxAttempts = 3;
 
-    // Anti-repetition logic
+    // Anti-repetition logic with improved error handling
     while (attempts < maxAttempts) {
       try {
-        slide = await generateSlide(topic, position);
+        slide = await generateSlide(topic, position, previousSlides, attempts);
         
-        // Check similarity with previous slides
+        // Check similarity with previous slides (more lenient threshold)
         const isUnique = slide ? previousSlides.every(prev => {
           const contentSimilarity = calculateSimilarity(
             slide!.content + (slide!.key_points?.join('') || ''),
@@ -102,7 +206,7 @@ export async function POST(request: NextRequest) {
           );
           const titleSimilarity = calculateSimilarity(slide!.title, prev.title);
           
-          return contentSimilarity < 0.8 && titleSimilarity < 0.8;
+          return contentSimilarity < 0.7 && titleSimilarity < 0.7; // Reduced threshold
         }) : true;
 
         if (isUnique) break;
@@ -112,12 +216,21 @@ export async function POST(request: NextRequest) {
       } catch (error) {
         console.error(`Error generating slide ${position} (attempt ${attempts + 1}):`, error);
         attempts++;
+        
+        // If this is the last attempt, return error immediately
+        if (attempts >= maxAttempts) {
+          return NextResponse.json({ 
+            error: `Failed to generate slide after ${maxAttempts} attempts: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            success: false
+          }, { status: 500 });
+        }
       }
     }
 
     if (!slide) {
       return NextResponse.json({ 
-        error: 'Failed to generate unique slide after multiple attempts' 
+        error: 'Failed to generate unique slide after multiple attempts',
+        success: false
       }, { status: 500 });
     }
 

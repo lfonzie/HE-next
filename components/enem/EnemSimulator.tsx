@@ -10,6 +10,10 @@ import { useEnem } from '@/hooks/useEnem'
 import { formatTime } from '@/lib/utils'
 import { EnemQuestion } from '@/types'
 import { EnemResults } from './EnemResults'
+import { QuestionRenderer } from './QuestionRenderer'
+import { AlternativeButton } from './AlternativeButton'
+import { SimulatorErrorBoundary } from './SimulatorErrorBoundary'
+import { sanitizeQuestion, SanitizedQuestion } from '@/lib/enem-data-sanitizer'
 
 // Função para determinar o texto do chip baseado na origem da pergunta
 function getQuestionSourceChip(question: any): { text: string; variant: "default" | "secondary" | "destructive" | "outline" } {
@@ -357,51 +361,58 @@ export function EnemSimulator({ area, numQuestions, duration, useRealQuestions =
           )}
 
           {isActive && question && (
-            <div className="space-y-6">
-              <div className="prose max-w-none">
+            <SimulatorErrorBoundary>
+              <div className="space-y-6">
+                {/* Question Header with Source Badge */}
                 <div className="flex items-center gap-3 mb-4">
-                  <h3 className="text-lg font-medium flex-1">
-                    {question.stem}
-                  </h3>
                   <Badge variant={getQuestionSourceChip(question).variant} className="text-xs">
                     {getQuestionSourceChip(question).text}
                   </Badge>
                 </div>
-              </div>
 
-              <div className="space-y-3">
-                {question.alternatives ? (
-                  // Formato com alternatives array
-                  question.alternatives.map((option: string, index: number) => (
-                    <Button
-                      key={index}
-                      variant={answers[currentQuestion] === index.toString() ? "default" : "outline"}
-                      className="w-full justify-start h-auto p-4 text-left"
-                      onClick={() => selectAnswer(index.toString())}
-                    >
-                      <span className="font-semibold mr-3">
-                        {String.fromCharCode(65 + index)})
-                      </span>
-                      {option}
-                    </Button>
-                  ))
-                ) : (
-                  // Formato antigo do banco de dados
-                  ['a', 'b', 'c', 'd', 'e'].map((alt, index) => (
-                    <Button
-                      key={alt}
-                      variant={answers[currentQuestion] === alt ? "default" : "outline"}
-                      className="w-full justify-start h-auto p-4 text-left"
-                      onClick={() => selectAnswer(alt)}
-                    >
-                      <span className="font-semibold mr-3">
-                        {alt.toUpperCase()})
-                      </span>
-                      {question[alt as keyof EnemQuestion] as string}
-                    </Button>
-                  ))
-                )}
-              </div>
+                {/* Question Content with Markdown Support */}
+                <QuestionRenderer
+                  question={question.stem}
+                  imageUrl={question.image_url}
+                  imageAlt={question.image_alt}
+                />
+
+                {/* Alternatives with Improved Design */}
+                <div className="space-y-3">
+                  {(() => {
+                    // Sanitize question data
+                    const sanitizedResult = sanitizeQuestion(question)
+                    const sanitizedQuestion = sanitizedResult.sanitizedData || question
+                    
+                    return sanitizedQuestion.alternatives?.map((alternative, index) => (
+                      <AlternativeButton
+                        key={index}
+                        label={alternative.label}
+                        text={alternative.text}
+                        index={index}
+                        isSelected={answers[currentQuestion] === alternative.label.toLowerCase()}
+                        onClick={() => selectAnswer(alternative.label.toLowerCase())}
+                      />
+                    )) || (
+                      // Fallback for old format
+                      ['a', 'b', 'c', 'd', 'e'].map((alt, index) => {
+                        const text = question[alt as keyof EnemQuestion] as string
+                        if (!text) return null
+                        
+                        return (
+                          <AlternativeButton
+                            key={alt}
+                            label={String.fromCharCode(65 + index)}
+                            text={text}
+                            index={index}
+                            isSelected={answers[currentQuestion] === alt}
+                            onClick={() => selectAnswer(alt)}
+                          />
+                        )
+                      })
+                    )
+                  })()}
+                </div>
 
               {currentQuestion === availableQuestions.length - 1 && (
                 <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
@@ -445,7 +456,8 @@ export function EnemSimulator({ area, numQuestions, duration, useRealQuestions =
                   </Button>
                 </div>
               </div>
-            </div>
+              </div>
+            </SimulatorErrorBoundary>
           )}
 
           {isFinished && (

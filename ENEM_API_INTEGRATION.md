@@ -17,7 +17,7 @@ Implementação completa da integração com a API enem.dev para fornecer quest�
 - `hooks/useEnem.ts` - Novo método `loadRealQuestions`
 - `components/enem/EnemSetup.tsx` - Interface para escolher tipo de questões
 - `components/enem/EnemSimulator.tsx` - Suporte a questões reais
-- `app/(dashboard)/simulador/page.tsx` - Configuração atualizada
+- `app/(dashboard)/enem/page.tsx` - Configuração atualizada
 
 ## Funcionalidades Implementadas
 
@@ -76,7 +76,7 @@ interface EnemQuestion {
 ## Como Usar
 
 ### No Simulador
-1. Acesse `/simulador`
+1. Acesse `/enem`
 2. Configure área, número de questões e duração
 3. **Novo**: Escolha entre "Questões Reais" ou "Questões IA"
 4. **Novo**: Se questões reais, opcionalmente selecione um ano específico

@@ -54,7 +54,7 @@
       "name": "Simulador ENEM",
       "short_name": "ENEM",
       "description": "Simulador completo do ENEM",
-      "url": "/simulador",
+      "url": "/enem",
       "icons": [{ "src": "/assets/icons/enem-icon.svg", "sizes": "any", "type": "image/svg+xml" }]
     },
     {

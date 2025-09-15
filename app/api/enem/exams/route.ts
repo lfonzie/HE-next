@@ -1,54 +1,133 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { enemApi } from '@/lib/enem-api'
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+import { z } from 'zod';
+
+const CreateExamSchema = z.object({
+  area: z.enum(['matematica', 'linguagens', 'ciencias_natureza', 'ciencias_humanas']),
+  mode: z.enum(['REAL', 'AI', 'MIXED']).default('MIXED'),
+  total_questions: z.number().min(1).max(100).default(20),
+  duration_sec: z.number().min(60).max(14400).default(3600), // 1 hour default
+  config_json: z.object({
+    years: z.array(z.number()).optional(),
+    difficulty: z.array(z.string()).optional(),
+    skill_tags: z.array(z.string()).optional()
+  }).optional()
+});
+
+export async function POST(request: NextRequest) {
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const examData = CreateExamSchema.parse(body);
+
+    // Create exam record
+    const exam = await prisma.enemExam.create({
+      data: {
+        user_id: session.user.id,
+        area: examData.area,
+        mode: examData.mode,
+        total_questions: examData.total_questions,
+        duration_sec: examData.duration_sec,
+        config_json: examData.config_json || {}
+      }
+    });
+
+    return NextResponse.json({
+      exam_id: exam.id,
+      success: true,
+      exam: {
+        id: exam.id,
+        area: exam.area,
+        mode: exam.mode,
+        total_questions: exam.total_questions,
+        duration_sec: exam.duration_sec,
+        created_at: exam.created_at
+      }
+    });
+
+  } catch (error) {
+    console.error('Error creating exam:', error);
+    
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ 
+        error: 'Invalid request parameters',
+        details: error.errors 
+      }, { status: 400 });
+    }
+
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      success: false 
+    }, { status: 500 });
+  }
+}
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const session = await auth();
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Buscar provas ENEM reais da API pública
-    try {
-      const exams = await enemApi.getExams()
-      
-      return NextResponse.json({ 
-        exams,
-        total: exams.length,
-        source: 'enem-dev-api'
-      })
-    } catch (error) {
-      console.error('Failed to fetch exams from enem.dev:', error)
-      
-      // Fallback para dados mock se a API falhar
-      const mockExams = [
-        {
-          id: 'enem-2023',
-          year: 2023,
-          type: 'REGULAR',
-          description: 'ENEM 2023 - Prova Regular',
-          questionsCount: 180
-        },
-        {
-          id: 'enem-2022',
-          year: 2022,
-          type: 'REGULAR',
-          description: 'ENEM 2022 - Prova Regular',
-          questionsCount: 180
+    const { searchParams } = new URL(request.url);
+    const examId = searchParams.get('exam_id');
+    const limit = parseInt(searchParams.get('limit') || '10');
+    const offset = parseInt(searchParams.get('offset') || '0');
+
+    if (examId) {
+      // Get specific exam with items
+      const exam = await prisma.enemExam.findUnique({
+        where: { id: examId },
+        include: {
+          exam_items: {
+            orderBy: { index: 'asc' }
+          }
         }
-      ]
-      
-      return NextResponse.json({ 
-        exams: mockExams,
-        total: mockExams.length,
-        source: 'mock-data'
-      })
+      });
+
+      if (!exam) {
+        return NextResponse.json({ error: 'Exam not found' }, { status: 404 });
+      }
+
+      return NextResponse.json({
+        exam,
+        success: true
+      });
+    } else {
+      // Get user's exams
+      const exams = await prisma.enemExam.findMany({
+        where: { user_id: session.user.id },
+        orderBy: { created_at: 'desc' },
+        take: limit,
+        skip: offset,
+        include: {
+          _count: {
+            select: { exam_items: true }
+          }
+        }
+      });
+
+      return NextResponse.json({
+        exams,
+        success: true,
+        pagination: {
+          limit,
+          offset,
+          has_more: exams.length === limit
+        }
+      });
     }
 
   } catch (error) {
-    console.error('ENEM exams API error:', error)
-    return NextResponse.json({ error: 'Failed to fetch exams' }, { status: 500 })
+    console.error('Error fetching exams:', error);
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      success: false 
+    }, { status: 500 });
   }
 }

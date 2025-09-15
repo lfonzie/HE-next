@@ -156,7 +156,7 @@ useEffect(() => {
 ## Exemplo de Uso
 
 ### Configuração
-1. Usuário acessa `/simulador`
+1. Usuário acessa `/enem`
 2. Escolhe área: "Matemática"
 3. Escolhe questões: "20"
 4. Escolhe duração: "60 minutos"

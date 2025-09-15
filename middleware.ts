@@ -37,7 +37,7 @@ export async function middleware(request: NextRequest) {
   // Require authentication for dashboard routes (temporarily disabled for development)
   // if (request.nextUrl.pathname.startsWith('/dashboard') ||
   //     request.nextUrl.pathname.startsWith('/chat') ||
-  //     request.nextUrl.pathname.startsWith('/simulador')) {
+  //     request.nextUrl.pathname.startsWith('/enem')) {
   //   if (!token) {
   //     return NextResponse.redirect(new URL('/login', request.url))
   //   }
@@ -74,7 +74,9 @@ export const config = {
   matcher: [
     '/dashboard/:path*',
     '/chat/:path*',
-    '/simulador/:path*',
+    '/enem/:path*',
+    '/simulador/:path*', // Keep for redirects
+    '/aula/:path*',
     '/professor-interactive/:path*',
     '/admin/:path*',
     '/admin-dashboard/:path*',

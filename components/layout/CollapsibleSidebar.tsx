@@ -214,7 +214,7 @@ export function CollapsibleSidebar({ selectedModule, onSelectModule }: Collapsib
     // Mapear IDs dos módulos para os IDs usados no sistema
     const moduleMapping: Record<string, ModuleId> = {
       "professor": "PROFESSOR",
-      "aula-expandida": "AULA_EXPANDIDA",
+      "aula": "AULA_EXPANDIDA",
       "ti": "TI", 
       "rh": "RH",
       "financeiro": "FINANCEIRO",
@@ -301,7 +301,7 @@ export function CollapsibleSidebar({ selectedModule, onSelectModule }: Collapsib
                 // Mapear IDs dos módulos para os IDs usados no sistema
                 const moduleMapping: Record<string, string> = {
                   "PROFESSOR": "professor",
-                  "AULA_EXPANDIDA": "aula-expandida",
+                  "AULA_EXPANDIDA": "aula",
                   "TI": "ti", 
                   "RH": "rh",
                   "FINANCEIRO": "financeiro",

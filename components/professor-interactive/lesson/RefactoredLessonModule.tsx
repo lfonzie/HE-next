@@ -1,496 +1,469 @@
 "use client";
 
-import Image from 'next/image';
-import React, { useEffect, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { BookOpen, Play, RotateCcw } from 'lucide-react';
-
-import { useLessonState } from '../hooks/useLessonState';
-import { useLessonLoading } from '../hooks/useLessonLoading';
-import { useLessonGeneration } from '../hooks/useLessonGeneration';
-import { processSlidesForHubEduPattern } from '@/utils/professor-interactive/buildSlides';
-import { useProfessorProgressiveLoading } from '@/hooks/useProfessorProgressiveLoading';
-import { useKeyboardNavigation } from '@/hooks/useKeyboardNavigation';
-import { useFullscreen } from '@/hooks/useFullscreen';
-import { detectSubject } from '@/utils/professor-interactive/subjectDetection';
-
-import LessonHeader from './LessonHeader';
-import LessonProgress from './LessonProgress';
-import LessonLoadingScreen from './LessonLoadingScreen';
-import LessonStats from './LessonStats';
-import LessonControls from './LessonControls';
-import QuestionCard from '../quiz/QuestionCard';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { 
+  BookOpen, 
+  Play, 
+  RotateCcw, 
+  ArrowLeft, 
+  ArrowRight,
+  CheckCircle,
+  AlertCircle,
+  Loader2
+} from 'lucide-react';
+import { useProgressiveSlideLoading } from '@/hooks/useProgressiveSlideLoading';
+import { Slide } from '@/types/slides';
 
 interface RefactoredLessonModuleProps {
   initialQuery?: string;
   onLessonComplete?: () => void;
 }
 
+interface LessonState {
+  currentStep: number;
+  answers: Record<number, string>;
+  isCompleted: boolean;
+}
+
 export default function RefactoredLessonModule({ 
   initialQuery = "", 
   onLessonComplete 
 }: RefactoredLessonModuleProps) {
-  const [query, setQuery] = React.useState(initialQuery);
   
-  const { lesson, error, generateLesson, generateMockLesson, clearLesson } = useLessonGeneration();
-  const { loadingState, startLoading, updateProgress, finishLoading, stopLoading } = useLessonLoading();
-  // Hook para carregamento progressivo dos slides
-  const progressiveLoading = useProfessorProgressiveLoading();
-  
-  // Hook para navegação por teclado e fullscreen
-  const fullscreen = useFullscreen();
-  const containerRef = useRef<HTMLDivElement>(null);
-  
-  // Processar slides para seguir padrão HubEdu de 8 slides
-  const processedLesson = useMemo(() => {
-    // Se há slides carregados progressivamente, criar uma aula temporária
-    const availableSlides = progressiveLoading.getAvailableSlides();
-    if (availableSlides.length > 0) {
-      return {
-        title: `Aula Interativa - ${query}`,
-        subject: 'Geral',
-        introduction: 'Aula interativa carregada progressivamente',
-        steps: availableSlides.map(slide => ({
-          ...slide,
-          content: slide.content || slide.question || 'Conteúdo não disponível'
-        })),
-        summary: 'Aula em andamento',
-        nextSteps: ['Continue navegando pelos slides'],
-        finalTest: {
-          question: 'Qual foi o tema principal desta aula?',
-          expectedAnswer: 'O tema principal foi abordado nos slides apresentados',
-          helpMessage: 'Revise os slides anteriores para encontrar a resposta',
-          correctAnswer: 'A',
-          options: ['A) Tema principal', 'B) Tema secundário', 'C) Não sei', 'D) Outro tema']
-        }
-      };
-    }
-    
-    if (!lesson) return null;
-    const processedSlides = processSlidesForHubEduPattern(lesson.steps);
-    return {
-      ...lesson,
-      steps: processedSlides.map(slide => ({
-        ...slide,
-        content: slide.content || slide.question || 'Conteúdo não disponível'
-      }))
-    };
-  }, [lesson, progressiveLoading, query]);
-
-  const { 
-    lessonState, 
-    goNext, 
-    goPrevious, 
-    recordAnswer, 
-    toggleHelp, 
-    restartLesson,
-    updateTimeSpent 
-  } = useLessonState(processedLesson);
-
-  // Memoized values - usar slides processados
-  const currentStep = useMemo(() => {
-    if (!processedLesson) return null;
-    
-    // Verificar se o índice atual está dentro dos limites
-    if (lessonState.currentStep >= processedLesson.steps.length) {
-      return null;
-    }
-    
-    return processedLesson.steps[lessonState.currentStep];
-  }, [processedLesson, lessonState.currentStep]);
-
-  const canGoPrevious = useMemo(() => lessonState.currentStep > 0, [lessonState.currentStep]);
-  const canGoNext = useMemo(() => {
-    if (!processedLesson) return false;
-    
-    const currentIndex = lessonState.currentStep;
-    
-    // Se estamos usando slides progressivos, permitir navegação até o slide 8
-    const availableSlides = progressiveLoading.getAvailableSlides();
-    if (availableSlides.length > 0) {
-      return !progressiveLoading.loadingState.isGeneratingNext && 
-             currentIndex < 7; // Permitir até o slide 8 (índice 7)
-    }
-    
-    // Caso contrário, usar a lógica normal
-    return currentIndex < processedLesson.steps.length - 1;
-  }, [processedLesson, lessonState.currentStep, progressiveLoading]);
-  
-  // Função para navegação para o próximo slide
-  const handleGoNext = useCallback(async () => {
-    const availableSlides = progressiveLoading.getAvailableSlides();
-    const currentSlideIndex = lessonState.currentStep;
-    const nextSlideIndex = currentSlideIndex + 1;
-    
-    console.log('🔄 handleGoNext:', {
-      currentSlideIndex,
-      nextSlideIndex,
-      availableSlides: availableSlides.length,
-      isGenerating: progressiveLoading.loadingState.isGeneratingNext,
-      totalSlides: 8
-    });
-    
-    // Se o próximo slide não existe ainda, carregar automaticamente
-    if (nextSlideIndex >= availableSlides.length && nextSlideIndex < 8) {
-      console.log('📥 Carregando próximo slide automaticamente:', nextSlideIndex + 1);
-      
-      // Mostrar indicador de carregamento
-      startLoading(`Gerando slide ${nextSlideIndex + 1}...`);
-      
-      try {
-        await progressiveLoading.loadNextSlide(
-          query, 
-          lesson?.subject || 'Geral',
-          currentSlideIndex
-        );
-        finishLoading();
-        console.log('✅ Slide carregado com sucesso:', nextSlideIndex + 1);
-      } catch (error) {
-        console.error('❌ Erro ao carregar slide:', error);
-        stopLoading();
-        return; // Não navegar se houver erro
-      }
-    }
-    
-    // Ir para o próximo slide
-    goNext();
-  }, [lessonState.currentStep, progressiveLoading, query, lesson, goNext, startLoading, finishLoading, stopLoading]);
-  
-  // Hook para navegação por teclado
-  useKeyboardNavigation({
-    onNext: handleGoNext,
-    onPrevious: goPrevious,
-    onFullscreen: () => fullscreen.toggleFullscreen(containerRef.current || undefined),
-    onExitFullscreen: fullscreen.exitFullscreen,
-    canGoNext,
-    canGoPrevious,
-    isFullscreen: fullscreen.isFullscreen,
-    disabled: loadingState.isLoading || progressiveLoading.loadingState.isGeneratingNext
+  const [query, setQuery] = useState(initialQuery);
+  const [subject, setSubject] = useState('Geral');
+  const [lessonState, setLessonState] = useState<LessonState>({
+    currentStep: 0,
+    answers: {},
+    isCompleted: false
   });
 
-  const handleSubmit = useCallback(async (e?: React.FormEvent) => {
+  const progressiveLoading = useProgressiveSlideLoading();
+
+  // Handlers
+  const handleSubmit = useCallback(async (e?: any) => {
     if (e) e.preventDefault();
     if (!query.trim()) return;
 
-    try {
-      // Start loading immediately
-      startLoading('Gerando aula interativa...');
-      
-      // Detect subject quickly
-      const detectedSubject = await detectSubject(query);
-      
-      // Complete initial loading
-      finishLoading();
-      
-      // Start progressive loading with initial slides (sem usar API principal)
-      await progressiveLoading.startProgressiveLoading(
-        query, 
-        detectedSubject || 'Geral'
-      );
-    } catch (error) {
-      console.error('Erro ao gerar aula:', error);
-      stopLoading();
-    }
-  }, [query, startLoading, finishLoading, stopLoading, progressiveLoading]);
+    // Reset lesson state
+    setLessonState({
+      currentStep: 0,
+      answers: {},
+      isCompleted: false
+    });
 
-  const handleAnswer = (stepIndex: number, selectedOption: number, isCorrect: boolean) => {
-    recordAnswer(stepIndex, selectedOption, isCorrect);
+    // Start progressive loading
+    await progressiveLoading.startProgressiveLoading(query.trim(), subject);
+  }, [query, subject, progressiveLoading]);
+
+  const handleAnswerSelect = useCallback((slideIndex: number, answer: string) => {
+    setLessonState((prev: any) => ({
+      ...prev,
+      answers: { ...prev.answers, [slideIndex]: answer }
+    }));
+  }, []);
+
+  const handleNext = useCallback(() => {
+    const availableSlides = progressiveLoading.getAvailableSlides();
     
-    // Add achievement if perfect score
-    if (isCorrect && lessonState.correctAnswers + 1 === lessonState.totalQuestions) {
-      // Achievement logic here
+    if (lessonState.currentStep < availableSlides.length - 1) {
+      setLessonState((prev: any) => ({ ...prev, currentStep: prev.currentStep + 1 }));
+    } else if (progressiveLoading.canLoadNextSlide(lessonState.currentStep)) {
+      // Load next slide if available
+      progressiveLoading.loadNextSlide(query, subject, lessonState.currentStep);
     }
-  };
+  }, [lessonState.currentStep, progressiveLoading, query, subject]);
 
+  const handlePrevious = useCallback(() => {
+    if (lessonState.currentStep > 0) {
+      setLessonState((prev: any) => ({ ...prev, currentStep: prev.currentStep - 1 }));
+    }
+  }, [lessonState.currentStep]);
+
+  const handleRestart = useCallback(() => {
+    setQuery('');
+    setSubject('Geral');
+    setLessonState({
+      currentStep: 0,
+      answers: {},
+      isCompleted: false
+    });
+    progressiveLoading.stopLoading();
+  }, [progressiveLoading]);
 
   // Carregamento automático do próximo slide quando o usuário está navegando
   useEffect(() => {
     const availableSlides = progressiveLoading.getAvailableSlides();
-    const currentSlideIndex = lessonState.currentStep;
-    const nextSlideIndex = currentSlideIndex + 1;
     
-    // Carregar automaticamente o próximo slide se:
-    // 1. Não está gerando um slide no momento
-    // 2. O próximo slide não existe ainda
-    // 3. Não é o último slide (máximo 8)
-    // 4. Temos pelo menos 2 slides carregados (para evitar carregamento prematuro)
-    if (
-      !progressiveLoading.loadingState.isGeneratingNext &&
-      nextSlideIndex >= availableSlides.length &&
-      nextSlideIndex < 8 &&
-      availableSlides.length >= 2
-    ) {
-      console.log(`🚀 Carregamento automático: usuário está no slide ${currentSlideIndex + 1}, carregando slide ${nextSlideIndex + 1}...`);
+    // Se o usuário está no último slide disponível e há mais slides para carregar
+    if (lessonState.currentStep >= availableSlides.length - 1 && 
+        availableSlides.length < 9 && 
+        !progressiveLoading.loadingState.isGeneratingNext) {
       
-      const loadNextSlideAsync = async () => {
-        try {
-          await progressiveLoading.loadNextSlide(
-            query, 
-            lesson?.subject || 'Geral',
-            currentSlideIndex
-          );
-          console.log(`✅ Slide ${nextSlideIndex + 1} carregado automaticamente`);
-        } catch (error) {
-          console.error('❌ Erro no carregamento automático:', error);
-        }
-      };
-      
-      loadNextSlideAsync();
+      // Carregar próximo slide em background
+      setTimeout(() => {
+        progressiveLoading.loadNextSlide(
+          query, 
+          subject, 
+          lessonState.currentStep
+        ).catch((error: any) => {
+          console.error('Erro no carregamento automático:', error);
+        });
+      }, 1000); // Delay para não interferir na navegação
     }
-  }, [lessonState.currentStep, progressiveLoading, query, lesson]);
+  }, [lessonState.currentStep, progressiveLoading, query, subject]);
 
-  const handleLessonComplete = useCallback(() => {
-    if (onLessonComplete) {
-      onLessonComplete();
-    }
-  }, [onLessonComplete]);
-
-  // Auto-start if initial query provided
+  // Verificar se a aula foi concluída
   useEffect(() => {
-    if (initialQuery && initialQuery.trim()) {
-      setQuery(initialQuery);
-      handleSubmit();
+    const availableSlides = progressiveLoading.getAvailableSlides();
+    if (availableSlides.length === 9 && lessonState.currentStep === availableSlides.length - 1) {
+      setLessonState((prev: any) => ({ ...prev, isCompleted: true }));
+      if (onLessonComplete) {
+        onLessonComplete();
+      }
     }
-  }, [initialQuery, handleSubmit]);
+  }, [lessonState.currentStep, progressiveLoading.loadingState.loadedSlides, onLessonComplete]);
 
-  // Update time spent
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const elapsed = Math.floor((Date.now() - lessonState.startTime) / 1000);
-      updateTimeSpent(elapsed);
-    }, 1000);
+  // Valores calculados
+  const currentSlide = progressiveLoading.loadingState.loadedSlides[lessonState.currentStep];
+  const canGoNext = lessonState.currentStep < progressiveLoading.loadingState.loadedSlides.length - 1 || 
+                   progressiveLoading.canLoadNextSlide(lessonState.currentStep);
+  const canGoPrevious = lessonState.currentStep > 0;
+  const progress = progressiveLoading.loadingState.loadedSlides.length > 0 ? 
+    ((lessonState.currentStep + 1) / 9) * 100 : 0;
 
-    return () => clearInterval(interval);
-  }, [lessonState.startTime, updateTimeSpent]);
-
-  // Handle lesson completion
-  useEffect(() => {
-    if (lessonState.completed) {
-      handleLessonComplete();
-    }
-  }, [lessonState.completed, handleLessonComplete]);
-
-  return (
-    <div ref={containerRef} className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-4xl mx-auto">
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BookOpen className="h-6 w-6 text-blue-600" />
-              Professor Interativo - Aulas Expandidas
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <Input
-                  type="text"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Digite sua pergunta para gerar uma aula interativa..."
-                  className="w-full"
-                  disabled={loadingState.isLoading}
-                />
-              </div>
-              <div className="flex gap-2">
-                <Button 
-                  type="submit" 
-                  disabled={loadingState.isLoading || !query.trim()}
-                  className="flex items-center gap-2"
-                >
-                  <Play className="h-4 w-4" />
-                  {loadingState.isLoading ? 'Gerando aula...' : 'Gerar Aula Interativa'}
-                </Button>
-                
-                {lesson && (
+  // Se não há aula carregada, mostrar formulário
+  if (progressiveLoading.loadingState.loadedSlides.length === 0 && !progressiveLoading.loadingState.isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-4">
+        <div className="max-w-4xl mx-auto">
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BookOpen className="h-6 w-6 text-blue-600" />
+                Aula Progressiva - Carregamento Inteligente
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <Input
+                    type="text"
+                    value={query}
+                    onChange={(e: any) => setQuery(e.target.value)}
+                    placeholder="Digite o tema da aula (ex: Funções Quadráticas, Revolução Francesa, etc.)..."
+                    className="w-full"
+                    disabled={progressiveLoading.loadingState.isLoading}
+                  />
+                </div>
+                <div>
+                  <Input
+                    type="text"
+                    value={subject}
+                    onChange={(e: any) => setSubject(e.target.value)}
+                    placeholder="Matéria/Disciplina (opcional)"
+                    className="w-full"
+                    disabled={progressiveLoading.loadingState.isLoading}
+                  />
+                </div>
+                <div className="flex gap-2">
                   <Button 
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      clearLesson();
-                      setQuery('');
-                    }}
+                    type="submit" 
+                    disabled={progressiveLoading.loadingState.isLoading || !query.trim()}
                     className="flex items-center gap-2"
                   >
-                    <RotateCcw className="h-4 w-4" />
-                    Nova Aula
+                    <Play className="h-4 w-4" />
+                    {progressiveLoading.loadingState.isLoading ? 'Iniciando...' : 'Iniciar Aula Progressiva'}
                   </Button>
-                )}
-              </div>
-            </form>
+                </div>
+              </form>
+              
+              {progressiveLoading.loadingState.error && (
+                <Alert className="mt-4">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{progressiveLoading.loadingState.error}</AlertDescription>
+                </Alert>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Informações sobre carregamento progressivo */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-600 mb-2">⚡</div>
+                  <h3 className="font-semibold mb-2">Carregamento Rápido</h3>
+                  <p className="text-sm text-gray-600">Primeiro slide carrega em segundos, você pode começar imediatamente</p>
+                </div>
+              </CardContent>
+            </Card>
             
-            {error && (
-              <Alert className="mt-4">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-          </CardContent>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-600 mb-2">📚</div>
+                  <h3 className="font-semibold mb-2">Conteúdo Único</h3>
+                  <p className="text-sm text-gray-600">Cada slide é gerado com conteúdo diversificado e não repetitivo</p>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-purple-600 mb-2">🎯</div>
+                  <h3 className="font-semibold mb-2">Mix Inteligente</h3>
+                  <p className="text-sm text-gray-600">Combinação de explicações, perguntas e encerramento</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-4">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <BookOpen className="h-6 w-6 text-blue-600" />
+                Aula Progressiva: {query}
+              </div>
+              <Button 
+                variant="outline"
+                onClick={handleRestart}
+                className="flex items-center gap-2"
+              >
+                <RotateCcw className="h-4 w-4" />
+                Nova Aula
+              </Button>
+            </CardTitle>
+          </CardHeader>
         </Card>
 
-        <LessonLoadingScreen
-          progress={progressiveLoading.loadingState.isLoading ? progressiveLoading.loadingState.progress : loadingState.progress}
-          message={progressiveLoading.loadingState.isLoading ? progressiveLoading.loadingState.message : loadingState.message}
-          isLoading={loadingState.isLoading || progressiveLoading.loadingState.isLoading}
-          elapsedTime={progressiveLoading.loadingState.isLoading ? progressiveLoading.loadingState.elapsedTime : loadingState.elapsedTime}
-          formattedTime={progressiveLoading.loadingState.isLoading ? progressiveLoading.loadingState.formattedTime : loadingState.formattedTime}
-        />
-        
-        {/* Mostrar mensagem quando está gerando próximo slide */}
-        {progressiveLoading.loadingState.isGeneratingNext && (
-          <div className="fixed bottom-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg z-50">
-            <div className="flex items-center gap-2">
-              <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-              {progressiveLoading.loadingState.message}
-            </div>
+        {/* Progress */}
+        {progressiveLoading.loadingState.loadedSlides.length > 0 && (
+          <Card className="mb-6">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-gray-700">
+                  Progresso da Aula
+                </span>
+                <span className="text-sm text-gray-500">
+                  {lessonState.currentStep + 1} de {progressiveLoading.loadingState.loadedSlides.length} slides
+                </span>
+              </div>
+              <Progress value={progress} className="h-2" />
+              <div className="flex items-center justify-between mt-2">
+                <Badge variant="outline">
+                  {Object.keys(lessonState.answers).length} respondidas
+                </Badge>
+                <Badge variant="secondary">
+                  {Math.round(progress)}% completo
+                </Badge>
+                {progressiveLoading.loadingState.isGeneratingNext && (
+                  <Badge variant="outline" className="flex items-center gap-1">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    Gerando próximo...
+                  </Badge>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Loading State */}
+        {progressiveLoading.loadingState.isLoading && (
+          <Card className="mb-6">
+            <CardContent className="py-12">
+              <div className="text-center space-y-4">
+                <div className="inline-flex items-center gap-3 text-blue-600">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  <span className="text-lg font-semibold">{progressiveLoading.loadingState.message}</span>
+                </div>
+                <div className="space-y-2 text-sm text-gray-600">
+                  <p>🚀 Preparando primeiro slide...</p>
+                  <p>⚡ Você poderá começar em segundos!</p>
+                </div>
+                <div className="mt-4">
+                  <Progress value={progressiveLoading.loadingState.progress} className="h-2" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Slide Display */}
+        {currentSlide && (
+          <div className="mb-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Slide {lessonState.currentStep + 1}: {currentSlide.title}</span>
+                  <Badge variant={currentSlide.type === 'question' ? 'default' : 'secondary'}>
+                    {currentSlide.type === 'question' ? 'Pergunta' : 
+                     currentSlide.type === 'closing' ? 'Encerramento' : 'Explicação'}
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="prose max-w-none">
+                  <div className="text-lg leading-relaxed mb-4">
+                    {currentSlide.content}
+                  </div>
+                  
+                  {/* Key Points */}
+                  {currentSlide.key_points && currentSlide.key_points.length > 0 && (
+                    <div className="mb-4">
+                      <h4 className="font-semibold mb-2">Pontos-chave:</h4>
+                      <ul className="list-disc list-inside space-y-1">
+                        {currentSlide.key_points.map((point: any, index: any) => (
+                          <li key={index} className="text-gray-700">{point}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Question */}
+                  {currentSlide.type === 'question' && currentSlide.question_stem && (
+                    <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                      <h4 className="font-semibold mb-3">{currentSlide.question_stem}</h4>
+                      <div className="space-y-2">
+                        {currentSlide.options?.map((option: any, index: any) => (
+                          <button
+                            key={index}
+                            onClick={() => handleAnswerSelect(lessonState.currentStep, option)}
+                            className={`w-full text-left p-3 rounded-lg border transition-colors ${
+                              lessonState.answers[lessonState.currentStep] === option
+                                ? 'bg-blue-100 border-blue-300 text-blue-800'
+                                : 'bg-white border-gray-200 hover:bg-gray-50'
+                            }`}
+                          >
+                            {option}
+                          </button>
+                        ))}
+                      </div>
+                      
+                      {/* Show answer and rationale if answered */}
+                      {lessonState.answers[lessonState.currentStep] && (
+                        <div className="mt-4 p-3 bg-green-50 rounded-lg">
+                          <div className="flex items-center gap-2 mb-2">
+                            <CheckCircle className="h-4 w-4 text-green-600" />
+                            <span className="font-medium text-green-800">Resposta Correta:</span>
+                          </div>
+                          <p className="text-green-700 font-medium mb-2">{currentSlide.answer}</p>
+                          <p className="text-green-600 text-sm">{currentSlide.rationale}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Image */}
+                  {currentSlide.image_prompt && (
+                    <div className="mt-6">
+                      <div className="text-sm text-gray-500 mb-2">
+                        Imagem sugerida: {currentSlide.image_prompt}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
 
-        {processedLesson && (
-          <>
-            <LessonHeader
-              title={processedLesson.title}
-              subject={processedLesson.subject}
-              totalSteps={processedLesson.steps.length}
-              currentStep={lessonState.currentStep}
-              timeSpent={lessonState.timeSpent}
-              score={lessonState.score}
-              achievements={lessonState.achievements}
-            />
+        {/* Navigation */}
+        {progressiveLoading.loadingState.loadedSlides.length > 0 && (
+          <div className="flex items-center justify-between">
+            <Button
+              onClick={handlePrevious}
+              disabled={!canGoPrevious}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Anterior
+            </Button>
 
-            <LessonProgress
-              currentStep={lessonState.currentStep}
-              totalSteps={processedLesson.steps.length}
-              className="mb-6"
-            />
-
-            {currentStep && (
-              <div className="mb-6">
-                <Card className="mb-4">
-                  <CardHeader>
-                    <CardTitle className="text-lg">
-                      Slide {lessonState.currentStep + 1} de 8: {currentStep.type === 'question' ? 'Pergunta' : 'Conteúdo'}
-                    </CardTitle>
-                  </CardHeader>
-                </Card>
-                
-                {/* Layout de 2 cards lado a lado */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {/* Card 1 */}
-                  <Card className="h-fit">
-                    <CardHeader>
-                      <CardTitle className="text-base">
-                        {typeof currentStep.card1?.title === 'string' 
-                          ? currentStep.card1.title 
-                          : (currentStep.type === 'question' ? 'Pergunta' : 'Conteúdo Principal')}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="prose max-w-none">
-                        <p className="text-sm leading-relaxed">
-                          {typeof currentStep.card1?.content === 'string' 
-                            ? currentStep.card1.content 
-                            : typeof currentStep.content === 'string'
-                            ? currentStep.content
-                            : 'Conteúdo do primeiro card'}
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Card 2 */}
-                  <Card className="h-fit">
-                    <CardHeader>
-                      <CardTitle className="text-base">
-                        {typeof currentStep.card2?.title === 'string' 
-                          ? currentStep.card2.title 
-                          : (currentStep.type === 'question' ? 'Opções de Resposta' : 'Detalhes Adicionais')}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {/* Mostrar imagem nos slides 1 e 8 */}
-                      {(lessonState.currentStep === 0 || lessonState.currentStep === 7) && (currentStep.card2?.imageUrl || lesson?.themeImage) && (
-                        <div className="mb-4">
-                          <Image
-        src={currentStep.card2?.imageUrl || lesson?.themeImage || '/placeholder-image.jpg'}
-        alt={lesson?.title || 'Imagem da aula'}
-        width={500}
-        height={300}
-        className="w-full h-auto rounded-lg"
-        loading="lazy"
-        style={{ 
-          aspectRatio: '1350/1080',
-          width: 'auto',
-          height: 'auto',
-          maxHeight: '300px'
-        }}
-      />
-                        </div>
-                      )}
-                      
-                      {/* Para slides de pergunta, mostrar apenas as opções */}
-                      {currentStep.type === 'question' && currentStep.card2?.options ? (
-                        <div className="mt-4">
-                          <QuestionCard
-                            question={typeof currentStep.card1?.content === 'string' 
-                              ? currentStep.card1.content 
-                              : typeof currentStep.question === 'string'
-                              ? currentStep.question
-                              : 'Pergunta de verificação'}
-                            options={Array.isArray(currentStep.card2.options) ? currentStep.card2.options : []}
-                            correctOption={currentStep.card2.correctOption ?? 0}
-                            helpMessage={typeof currentStep.card2.helpMessage === 'string' ? currentStep.card2.helpMessage : undefined}
-                            correctAnswer={typeof currentStep.card2.correctAnswer === 'string' ? currentStep.card2.correctAnswer : undefined}
-                            onAnswer={(selectedOption, isCorrect) => 
-                              handleAnswer(lessonState.currentStep, selectedOption, isCorrect)
-                            }
-                            showHelp={lessonState.showHelp[lessonState.currentStep] || false}
-                            onToggleHelp={() => toggleHelp(lessonState.currentStep)}
-                            disabled={lessonState.userAnswers[lessonState.currentStep] !== undefined}
-                          />
-                        </div>
-                      ) : (
-                        /* Para slides de explicação, mostrar conteúdo normal */
-                        <div className="prose max-w-none">
-                          <p className="text-sm leading-relaxed">
-                            {typeof currentStep.card2?.content === 'string' 
-                              ? currentStep.card2.content 
-                              : 'Conteúdo do segundo card'}
-                          </p>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
+            <div className="flex items-center gap-2">
+              {lessonState.isCompleted && (
+                <div className="flex items-center gap-2 text-green-600">
+                  <CheckCircle className="h-5 w-5" />
+                  <span className="font-medium">Aula Concluída!</span>
                 </div>
+              )}
+            </div>
+
+            <Button
+              onClick={handleNext}
+              disabled={!canGoNext}
+              className="flex items-center gap-2"
+            >
+              {progressiveLoading.loadingState.isGeneratingNext ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Carregando...
+                </>
+              ) : (
+                <>
+                  Próximo
+                  <ArrowRight className="h-4 w-4" />
+                </>
+              )}
+            </Button>
+          </div>
+        )}
+
+        {/* Completion Summary */}
+        {lessonState.isCompleted && (
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="text-xl text-center">Aula Concluída!</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center space-y-4">
+                <div className="text-2xl font-bold text-green-600">
+                  Parabéns! Você completou a aula sobre "{query}"
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="text-center p-4 bg-blue-50 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-600">9</div>
+                    <div className="text-sm text-blue-600">Slides Únicos</div>
+                  </div>
+                  <div className="text-center p-4 bg-green-50 rounded-lg">
+                    <div className="text-2xl font-bold text-green-600">
+                      {Object.keys(lessonState.answers).length}
+                    </div>
+                    <div className="text-sm text-green-600">Questões Respondidas</div>
+                  </div>
+                  <div className="text-center p-4 bg-purple-50 rounded-lg">
+                    <div className="text-2xl font-bold text-purple-600">
+                      {progressiveLoading.loadingState.loadedSlides.filter((slide: any) => 
+                        slide.image_confidence && slide.image_confidence >= 0.7
+                      ).length}
+                    </div>
+                    <div className="text-sm text-purple-600">Imagens de Qualidade</div>
+                  </div>
+                </div>
+                <Button onClick={handleRestart} className="flex items-center gap-2">
+                  <RotateCcw className="h-4 w-4" />
+                  Criar Nova Aula
+                </Button>
               </div>
-            )}
-
-            <LessonStats
-              totalQuestions={lessonState.totalQuestions}
-              correctAnswers={lessonState.correctAnswers}
-              timeSpent={lessonState.timeSpent}
-              score={lessonState.score}
-              achievements={lessonState.achievements}
-              showStats={lessonState.showStats}
-            />
-
-            <LessonControls
-              currentStep={lessonState.currentStep}
-              totalSteps={processedLesson.steps.length}
-              onPrevious={goPrevious}
-              onNext={handleGoNext}
-              onRestart={restartLesson}
-              onToggleFullscreen={() => fullscreen.toggleFullscreen(containerRef.current || undefined)}
-              canGoPrevious={canGoPrevious}
-              canGoNext={canGoNext}
-              isCompleted={lessonState.completed}
-              isFullscreen={fullscreen.isFullscreen}
-              isFullscreenSupported={fullscreen.isSupported}
-              showNavigationButtons={lessonState.showNavigationButtons}
-            />
-          </>
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>

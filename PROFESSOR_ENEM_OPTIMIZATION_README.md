@@ -62,7 +62,7 @@ app/
 - **Question Interaction**: Two-card layout for better readability
 - **Completion Summary**: Detailed statistics and achievements
 
-### ENEM Simulator (`/simulador`)
+### ENEM Simulator (`/enem`)
 
 #### Batch Loading System
 - **Initial Load**: 3 questions loaded immediately
@@ -195,7 +195,7 @@ app/
 - **Gradual Migration**: Can be switched gradually
 
 ### ENEM Simulator
-- **Enhanced Route**: Updated `/simulador` with new features
+- **Enhanced Route**: Updated `/enem` with new features
 - **Progressive Enhancement**: Maintains existing functionality
 - **Improved UX**: Better loading and error handling
 

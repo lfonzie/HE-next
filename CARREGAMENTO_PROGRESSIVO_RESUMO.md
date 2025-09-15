@@ -70,7 +70,7 @@ Module not found: Can't resolve '@radix-ui/react-switch'
 - `hooks/useEnem.ts` - Integração com carregamento progressivo
 - `components/enem/EnemSimulator.tsx` - Interface de carregamento progressivo
 - `components/enem/EnemSetup.tsx` - Opções de carregamento
-- `app/(dashboard)/simulador/page.tsx` - Configuração atualizada
+- `app/(dashboard)/enem/page.tsx` - Configuração atualizada
 
 ## 🎉 Status Final
 
@@ -83,7 +83,7 @@ Module not found: Can't resolve '@radix-ui/react-switch'
 
 ## 🚀 Como Usar
 
-1. Acesse `/simulador`
+1. Acesse `/enem`
 2. Configure área, questões e duração
 3. **Escolha "Carregamento Progressivo"** ✅
 4. Clique "Iniciar Simulado"

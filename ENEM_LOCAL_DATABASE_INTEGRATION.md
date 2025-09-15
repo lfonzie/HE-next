@@ -37,7 +37,7 @@ Integração completa da base de dados local das questões do ENEM (2009-2023) n
 - `lib/enem-api.ts` - Integração com base local
 - `hooks/useEnem.ts` - Suporte à nova API
 - `components/enem/EnemSetup.tsx` - Interface atualizada
-- `app/(dashboard)/simulador/page.tsx` - Integração do componente de stats
+- `app/(dashboard)/enem/page.tsx` - Integração do componente de stats
 
 ## 🔧 Funcionalidades Implementadas
 
