@@ -13,32 +13,96 @@ export const MathRenderer: React.FC<MathRendererProps> = ({
   inline = false, 
   className = '' 
 }) => {
-  // Função simples para converter LaTeX básico para Unicode
+  // Função completa para converter LaTeX para Unicode
   const latexToUnicode = (text: string): string => {
     return text
+      // Frações
       .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '$1⁄$2')
+      .replace(/\\frac\s*([^\s]+)\s*([^\s]+)/g, '$1⁄$2')
+      // Raízes
       .replace(/\\sqrt\{([^}]+)\}/g, '√$1')
-      .replace(/\\pi/g, 'π')
+      .replace(/\\sqrt\[([^\]]+)\]\{([^}]+)\}/g, '$1√$2')
+      // Potências e subscritos
+      .replace(/\^(\d+)/g, '^$1')
+      .replace(/\^([a-zA-Z])/g, '^$1')
+      .replace(/_(\d+)/g, '_$1')
+      .replace(/_([a-zA-Z])/g, '_$1')
+      // Símbolos matemáticos básicos
+      .replace(/\\pm/g, '±')
+      .replace(/\\mp/g, '∓')
+      .replace(/\\times/g, '×')
+      .replace(/\\cdot/g, '·')
+      .replace(/\\div/g, '÷')
+      .replace(/\\neq/g, '≠')
+      .replace(/\\leq/g, '≤')
+      .replace(/\\geq/g, '≥')
+      .replace(/\\approx/g, '≈')
+      .replace(/\\infty/g, '∞')
+      .replace(/\\sum/g, '∑')
+      .replace(/\\int/g, '∫')
+      .replace(/\\lim/g, 'lim')
+      // Letras gregas
       .replace(/\\alpha/g, 'α')
       .replace(/\\beta/g, 'β')
       .replace(/\\gamma/g, 'γ')
       .replace(/\\delta/g, 'δ')
+      .replace(/\\epsilon/g, 'ε')
+      .replace(/\\zeta/g, 'ζ')
+      .replace(/\\eta/g, 'η')
       .replace(/\\theta/g, 'θ')
+      .replace(/\\iota/g, 'ι')
+      .replace(/\\kappa/g, 'κ')
       .replace(/\\lambda/g, 'λ')
       .replace(/\\mu/g, 'μ')
+      .replace(/\\nu/g, 'ν')
+      .replace(/\\xi/g, 'ξ')
+      .replace(/\\pi/g, 'π')
+      .replace(/\\rho/g, 'ρ')
       .replace(/\\sigma/g, 'σ')
       .replace(/\\tau/g, 'τ')
+      .replace(/\\upsilon/g, 'υ')
       .replace(/\\phi/g, 'φ')
+      .replace(/\\chi/g, 'χ')
+      .replace(/\\psi/g, 'ψ')
       .replace(/\\omega/g, 'ω')
-      .replace(/\\pm/g, '±')
-      .replace(/\\times/g, '×')
-      .replace(/\\div/g, '÷')
-      .replace(/\\leq/g, '≤')
-      .replace(/\\geq/g, '≥')
-      .replace(/\\neq/g, '≠')
-      .replace(/\\infty/g, '∞')
-      .replace(/\\sum/g, '∑')
-      .replace(/\\int/g, '∫');
+      // Derivadas
+      .replace(/\\partial/g, '∂')
+      .replace(/\\nabla/g, '∇')
+      // Conjuntos
+      .replace(/\\in/g, '∈')
+      .replace(/\\notin/g, '∉')
+      .replace(/\\subset/g, '⊂')
+      .replace(/\\supset/g, '⊃')
+      .replace(/\\cup/g, '∪')
+      .replace(/\\cap/g, '∩')
+      .replace(/\\emptyset/g, '∅')
+      .replace(/\\mathbb\{R\}/g, 'ℝ')
+      .replace(/\\mathbb\{N\}/g, 'ℕ')
+      .replace(/\\mathbb\{Z\}/g, 'ℤ')
+      .replace(/\\mathbb\{Q\}/g, 'ℚ')
+      .replace(/\\mathbb\{C\}/g, 'ℂ')
+      // Lógica
+      .replace(/\\land/g, '∧')
+      .replace(/\\lor/g, '∨')
+      .replace(/\\neg/g, '¬')
+      .replace(/\\implies/g, '⇒')
+      .replace(/\\iff/g, '⇔')
+      // Outros símbolos
+      .replace(/\\rightarrow/g, '→')
+      .replace(/\\leftarrow/g, '←')
+      .replace(/\\leftrightarrow/g, '↔')
+      .replace(/\\uparrow/g, '↑')
+      .replace(/\\downarrow/g, '↓')
+      // Parênteses, colchetes e chaves
+      .replace(/\\left\(/g, '(')
+      .replace(/\\right\)/g, ')')
+      .replace(/\\left\[/g, '[')
+      .replace(/\\right\]/g, ']')
+      .replace(/\\left\{/g, '{')
+      .replace(/\\right\}/g, '}')
+      // Limpar espaços extras
+      .replace(/\s+/g, ' ')
+      .trim();
   };
   
   const unicodeContent = latexToUnicode(content);
@@ -57,7 +121,6 @@ interface MathTextProps {
   text: string;
   className?: string;
 }
-
 
 // Função para processar markdown básico
 const processMarkdown = (text: string): string => {
@@ -127,97 +190,6 @@ export const MathText: React.FC<MathTextProps> = ({ text, className = '' }) => {
   );
 };
 
-// Função para converter LaTeX para Unicode
-const latexToUnicode = (latex: string): string => {
-  return latex
-    // Frações
-    .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '$1⁄$2')
-    .replace(/\\frac\s*([^\s]+)\s*([^\s]+)/g, '$1⁄$2')
-    // Raízes
-    .replace(/\\sqrt\{([^}]+)\}/g, '√$1')
-    .replace(/\\sqrt\[([^\]]+)\]\{([^}]+)\}/g, '$1√$2')
-    // Potências e subscritos
-    .replace(/\^(\d+)/g, '^$1')
-    .replace(/\^([a-zA-Z])/g, '^$1')
-    .replace(/_(\d+)/g, '_$1')
-    .replace(/_([a-zA-Z])/g, '_$1')
-    // Símbolos matemáticos básicos
-    .replace(/\\pm/g, '±')
-    .replace(/\\mp/g, '∓')
-    .replace(/\\times/g, '×')
-    .replace(/\\cdot/g, '·')
-    .replace(/\\div/g, '÷')
-    .replace(/\\neq/g, '≠')
-    .replace(/\\leq/g, '≤')
-    .replace(/\\geq/g, '≥')
-    .replace(/\\approx/g, '≈')
-    .replace(/\\infty/g, '∞')
-    .replace(/\\sum/g, '∑')
-    .replace(/\\int/g, '∫')
-    .replace(/\\lim/g, 'lim')
-    // Letras gregas
-    .replace(/\\alpha/g, 'α')
-    .replace(/\\beta/g, 'β')
-    .replace(/\\gamma/g, 'γ')
-    .replace(/\\delta/g, 'δ')
-    .replace(/\\epsilon/g, 'ε')
-    .replace(/\\zeta/g, 'ζ')
-    .replace(/\\eta/g, 'η')
-    .replace(/\\theta/g, 'θ')
-    .replace(/\\iota/g, 'ι')
-    .replace(/\\kappa/g, 'κ')
-    .replace(/\\lambda/g, 'λ')
-    .replace(/\\mu/g, 'μ')
-    .replace(/\\nu/g, 'ν')
-    .replace(/\\xi/g, 'ξ')
-    .replace(/\\pi/g, 'π')
-    .replace(/\\rho/g, 'ρ')
-    .replace(/\\sigma/g, 'σ')
-    .replace(/\\tau/g, 'τ')
-    .replace(/\\upsilon/g, 'υ')
-    .replace(/\\phi/g, 'φ')
-    .replace(/\\chi/g, 'χ')
-    .replace(/\\psi/g, 'ψ')
-    .replace(/\\omega/g, 'ω')
-    // Derivadas
-    .replace(/\\partial/g, '∂')
-    .replace(/\\nabla/g, '∇')
-    // Conjuntos
-    .replace(/\\in/g, '∈')
-    .replace(/\\notin/g, '∉')
-    .replace(/\\subset/g, '⊂')
-    .replace(/\\supset/g, '⊃')
-    .replace(/\\cup/g, '∪')
-    .replace(/\\cap/g, '∩')
-    .replace(/\\emptyset/g, '∅')
-    .replace(/\\mathbb\{R\}/g, 'ℝ')
-    .replace(/\\mathbb\{N\}/g, 'ℕ')
-    .replace(/\\mathbb\{Z\}/g, 'ℤ')
-    .replace(/\\mathbb\{Q\}/g, 'ℚ')
-    .replace(/\\mathbb\{C\}/g, 'ℂ')
-    // Lógica
-    .replace(/\\land/g, '∧')
-    .replace(/\\lor/g, '∨')
-    .replace(/\\neg/g, '¬')
-    .replace(/\\implies/g, '⇒')
-    .replace(/\\iff/g, '⇔')
-    // Outros símbolos
-    .replace(/\\rightarrow/g, '→')
-    .replace(/\\leftarrow/g, '←')
-    .replace(/\\leftrightarrow/g, '↔')
-    .replace(/\\uparrow/g, '↑')
-    .replace(/\\downarrow/g, '↓')
-    // Parênteses, colchetes e chaves
-    .replace(/\\left\(/g, '(')
-    .replace(/\\right\)/g, ')')
-    .replace(/\\left\[/g, '[')
-    .replace(/\\right\]/g, ']')
-    .replace(/\\left\{/g, '{')
-    .replace(/\\right\}/g, '}')
-    // Limpar espaços extras
-    .replace(/\s+/g, ' ')
-    .trim();
-};
 
 
 export default MathRenderer;
