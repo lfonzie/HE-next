@@ -201,8 +201,8 @@ export class EnemBatchProcessor {
       correct: q.correct,
       rationale: q.rationale || 'Explicação não disponível',
       difficulty: q.difficulty,
-      image_url: q.image_url,
-      image_alt: q.image_alt,
+      image_url: q.image_url || undefined,
+      image_alt: q.image_alt || undefined,
       source: 'DATABASE' as const
     }));
   }
@@ -221,7 +221,11 @@ export class EnemBatchProcessor {
       years: config.years
     };
 
-    return await enemGenerator.generateQuestions(aiRequest);
+    const questions = await enemGenerator.generateQuestions(aiRequest);
+    return questions.map(q => ({
+      ...q,
+      id: q.id || `generated_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    }));
   }
 
   private generateFallbackQuestions(area: string, count: number): Question[] {
@@ -280,24 +284,26 @@ export class EnemBatchProcessor {
 
   // Cancel all batches for an exam
   cancelAllBatches(examId: string): void {
-    for (const [key, controller] of this.activeBatches.entries()) {
+    const keysToDelete: string[] = [];
+    this.activeBatches.forEach((controller, key) => {
       if (key.includes(examId)) {
         controller.abort();
-        this.activeBatches.delete(key);
+        keysToDelete.push(key);
       }
-    }
+    });
+    keysToDelete.forEach(key => this.activeBatches.delete(key));
   }
 
   // Get processing status
   getProcessingStatus(examId: string): Array<{ batchNumber: number; isProcessing: boolean }> {
     const status: Array<{ batchNumber: number; isProcessing: boolean }> = [];
     
-    for (const key of this.activeBatches.keys()) {
+    this.activeBatches.forEach((controller, key) => {
       if (key.includes(examId)) {
         const batchNumber = parseInt(key.split(':').pop() || '0');
         status.push({ batchNumber, isProcessing: true });
       }
-    }
+    });
     
     return status;
   }
@@ -305,9 +311,9 @@ export class EnemBatchProcessor {
   // Cleanup
   destroy(): void {
     // Cancel all active batches
-    for (const controller of this.activeBatches.values()) {
+    this.activeBatches.forEach(controller => {
       controller.abort();
-    }
+    });
     this.activeBatches.clear();
     this.batchQueue = [];
   }

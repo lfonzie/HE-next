@@ -1,299 +1,354 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Button } from '../../components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { useToast } from '../../hooks/use-toast';
-import { ArrowLeft, Clock, MessageSquare, User, Mail, Phone, AlertCircle } from 'lucide-react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { TIInteractive } from '@/components/ti-interactive/TIInteractive';
+import { AchievementSystem } from '@/components/gamification/AchievementSystem';
+import AnalyticsDashboard from '@/components/analytics/AnalyticsDashboard';
+import { 
+  Wrench, 
+  Trophy, 
+  BarChart3, 
+  Lightbulb, 
+  Target,
+  Zap,
+  Clock,
+  MessageSquare
+} from 'lucide-react';
 
-interface DemoUser {
-  name: string;
-  email: string;
-  phone: string;
-  registeredAt: string;
-}
+function DemoContent() {
+  const searchParams = useSearchParams();
+  const [selectedDemo, setSelectedDemo] = useState<string>('ti');
 
-export default function Demo() {
-  const router = useRouter();
-  const { toast } = useToast();
-  const [demoUser, setDemoUser] = useState<DemoUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [timeRemaining, setTimeRemaining] = useState<string>('');
+  // Mock user ID for demo purposes
+  const demoUserId = 'demo-user-123';
 
-  // Perguntas pré-definidas para o demo
-  const demoQuestions = [
-    "Como funciona o sistema de IA educacional do HubEdu.ia?",
-    "Quais são os módulos disponíveis e como eles podem ajudar minha escola?",
-    "Como o HubEdu.ia garante a privacidade e conformidade com a LGPD?",
-    "Quais são os benefícios financeiros e operacionais para uma escola?",
-    "Como posso implementar o HubEdu.ia na minha instituição de ensino?"
-  ];
-
-  const startTimer = useCallback((registeredAt: Date) => {
-    const updateTimer = () => {
-      const now = new Date();
-      const timeLeft = 24 * 60 * 60 * 1000 - (now.getTime() - registeredAt.getTime());
-      
-      if (timeLeft <= 0) {
-        setTimeRemaining('Expirado');
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('demoUser');
-        }
-        toast({
-          title: 'Demo expirado',
-          description: 'O período de demonstração de 24 horas expirou. Cadastre-se novamente para acessar.',
-          variant: 'destructive',
-        });
-        router.push('/demo-register');
-        return;
-      }
-      
-      const hours = Math.floor(timeLeft / (1000 * 60 * 60));
-      const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
-      
-      setTimeRemaining(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
-    };
-    
-    updateTimer(); // Atualizar imediatamente
-    const interval = setInterval(updateTimer, 1000);
-    
-    return () => clearInterval(interval);
-  }, [router, toast]);
-
-  useEffect(() => {
-    // Verificar se o usuário está registrado para o demo
-    if (typeof window !== 'undefined') {
-      const storedDemoUser = localStorage.getItem('demoUser');
-      if (storedDemoUser) {
-        try {
-          const user = JSON.parse(storedDemoUser);
-          const registeredAt = new Date(user.registeredAt);
-          const now = new Date();
-          const hoursElapsed = (now.getTime() - registeredAt.getTime()) / (1000 * 60 * 60);
-          
-          // Verificar se ainda está dentro do prazo de 24 horas
-          if (hoursElapsed < 24) {
-            setDemoUser(user);
-            startTimer(registeredAt);
-          } else {
-            // Demo expirado
-            localStorage.removeItem('demoUser');
-            toast({
-              title: 'Demo expirado',
-              description: 'O período de demonstração de 24 horas expirou. Cadastre-se novamente para acessar.',
-              variant: 'destructive',
-            });
-            router.push('/demo-register');
-          }
-        } catch (error) {
-          console.error('Erro ao carregar dados do demo:', error);
-          localStorage.removeItem('demoUser');
-          router.push('/demo-register');
-        }
-      } else {
-        router.push('/demo-register');
-      }
-    }
-    
-    setIsLoading(false);
-  }, [router, toast, startTimer]);
-
-
-  const handleQuestionClick = (question: string) => {
-    // Simular clique na pergunta (será implementado no chat)
-    console.log('Pergunta selecionada:', question);
+  // Mock analytics data for demo
+  const mockAnalyticsData = {
+    overview: {
+      totalStudents: 150,
+      totalLessons: 25,
+      totalTimeSpent: 1250,
+      averageAccuracy: 78,
+      completionRate: 85,
+      engagementScore: 8.2
+    },
+    studentProgress: [
+      { studentId: '1', name: 'João Silva', completedLessons: 8, totalPoints: 245, accuracy: 85, timeSpent: 120000, lastActive: new Date() },
+      { studentId: '2', name: 'Maria Santos', completedLessons: 6, totalPoints: 198, accuracy: 92, timeSpent: 95000, lastActive: new Date() }
+    ],
+    lessonPerformance: [
+      { lessonId: '1', title: 'Fotossíntese', completionRate: 90, averageScore: 85, averageTime: 25, difficulty: 'medium', studentCount: 45 },
+      { lessonId: '2', title: 'Equações', completionRate: 75, averageScore: 78, averageTime: 30, difficulty: 'hard', studentCount: 38 }
+    ],
+    engagementMetrics: [
+      { date: '2024-01-01', activeStudents: 45, lessonsCompleted: 12, averageSessionTime: 25, quizAccuracy: 82 },
+      { date: '2024-01-02', activeStudents: 52, lessonsCompleted: 15, averageSessionTime: 28, quizAccuracy: 85 }
+    ],
+    popularContent: [
+      { type: 'lesson', title: 'Fotossíntese', views: 150, completions: 45, rating: 4.5 },
+      { type: 'quiz', title: 'Quiz de Matemática', views: 120, completions: 38, rating: 4.2 }
+    ]
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-yellow-50/30 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Carregando demo...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!demoUser) {
-    return null; // Será redirecionado
-  }
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab && ['ti', 'achievements', 'analytics'].includes(tab)) {
+      setSelectedDemo(tab);
+    }
+  }, [searchParams]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-yellow-50/30">
-      {/* Header do Demo */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-yellow-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Image
-                src="/assets/Logo_HubEdu.ia.svg"
-                alt="HubEdu.ia"
-                width={32}
-                height={32}
-                className="object-contain"
-              />
-              <div>
-                <h1 className="text-lg font-bold text-gray-900">Demo HubEdu.ia</h1>
-                <p className="text-sm text-gray-600">Modo demonstração</p>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              {/* Timer */}
-              <div className="flex items-center space-x-2 bg-yellow-100 px-3 py-1 rounded-full">
-                <Clock className="w-4 h-4 text-yellow-600" />
-                <span className="text-sm font-medium text-yellow-800">
-                  {timeRemaining}
-                </span>
-              </div>
-              
-              {/* Usuário */}
-              <div className="flex items-center space-x-2">
-                <User className="w-4 h-4 text-gray-600" />
-                <span className="text-sm text-gray-700">{demoUser.name}</span>
-              </div>
-              
-              {/* Botão voltar */}
-              <Link href="/">
-                <Button variant="outline" size="sm">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Voltar
-                </Button>
-              </Link>
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            🚀 Novas Funcionalidades - HubEdu.ai
+          </h1>
+          <p className="text-xl text-gray-600 mb-6">
+            Demonstração das funcionalidades migradas do HubEdu.ai_ para HE-next
+          </p>
+          <div className="flex justify-center gap-4 mb-6">
+            <Badge variant="outline" className="px-4 py-2">
+              <Wrench className="w-4 h-4 mr-2" />
+              Troubleshooting Interativo
+            </Badge>
+            <Badge variant="outline" className="px-4 py-2">
+              <Trophy className="w-4 h-4 mr-2" />
+              Sistema de Conquistas
+            </Badge>
+            <Badge variant="outline" className="px-4 py-2">
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Analytics Avançado
+            </Badge>
           </div>
         </div>
-      </div>
 
-      {/* Conteúdo Principal */}
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Sidebar com informações do demo */}
-          <div className="lg:col-span-1 space-y-6">
-            {/* Informações do usuário */}
+        {/* Navigation Tabs */}
+        <Tabs value={selectedDemo} onValueChange={setSelectedDemo} className="w-full">
+          <TabsList className="grid w-full grid-cols-3 mb-8">
+            <TabsTrigger value="ti" className="flex items-center gap-2">
+              <Wrench className="w-4 h-4" />
+              Troubleshooting
+            </TabsTrigger>
+            <TabsTrigger value="achievements" className="flex items-center gap-2">
+              <Trophy className="w-4 h-4" />
+              Conquistas
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="flex items-center gap-2">
+              <BarChart3 className="w-4 h-4" />
+              Analytics
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Troubleshooting Demo */}
+          <TabsContent value="ti" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg flex items-center space-x-2">
-                  <User className="w-5 h-5" />
-                  <span>Seus dados</span>
+                <CardTitle className="flex items-center gap-2">
+                  <Wrench className="w-5 h-5 text-blue-600" />
+                  Sistema de Troubleshooting Interativo
                 </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <User className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm text-gray-700">{demoUser.name}</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Mail className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm text-gray-700">{demoUser.email}</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Phone className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm text-gray-700">{demoUser.phone}</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Limitações do demo */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center space-x-2">
-                  <AlertCircle className="w-5 h-5 text-yellow-600" />
-                  <span>Limitações do Demo</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <MessageSquare className="w-4 h-4 text-yellow-600" />
-                  <span className="text-sm text-gray-700">Máximo de 5 mensagens</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Clock className="w-4 h-4 text-yellow-600" />
-                  <span className="text-sm text-gray-700">Acesso por 24 horas</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <User className="w-4 h-4 text-yellow-600" />
-                  <span className="text-sm text-gray-700">1 demo por e-mail/celular</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Perguntas sugeridas */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Perguntas sugeridas</CardTitle>
-                <p className="text-sm text-gray-600">
-                  Clique em uma pergunta para testar o chat
+                <p className="text-gray-600">
+                  Resolução passo-a-passo de problemas de TI com dicas em tempo real
                 </p>
               </CardHeader>
-              <CardContent className="space-y-2">
-                {demoQuestions.map((question, index) => (
-                  <Button
-                    key={index}
-                    variant="outline"
-                    className="w-full text-left justify-start h-auto p-3 text-sm"
-                    onClick={() => handleQuestionClick(question)}
-                  >
-                    {question}
-                  </Button>
-                ))}
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Área do chat */}
-          <div className="lg:col-span-2">
-            <Card className="h-[600px]">
-              <CardHeader>
-                <CardTitle className="text-lg">Chat IA - Modo Demo</CardTitle>
-                <p className="text-sm text-gray-600">
-                  Teste o sistema de IA educacional com até 5 mensagens
-                </p>
-              </CardHeader>
-              <CardContent className="p-0 h-full">
-                <div className="h-full flex items-center justify-center">
-                  <div className="text-center">
-                    <MessageSquare className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-600 mb-2">Chat Demo</h3>
-                    <p className="text-gray-500">Interface de chat será implementada aqui</p>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <Card className="border-blue-200 bg-blue-50">
+                      <CardContent className="p-4">
+                        <h3 className="font-semibold text-blue-800 mb-2">🔧 Problemas de PC</h3>
+                        <p className="text-sm text-blue-600">
+                          Resolução de problemas de performance, lentidão e travamentos
+                        </p>
+                      </CardContent>
+                    </Card>
+                    <Card className="border-green-200 bg-green-50">
+                      <CardContent className="p-4">
+                        <h3 className="font-semibold text-green-800 mb-2">📶 Problemas de Wi-Fi</h3>
+                        <p className="text-sm text-green-600">
+                          Solução de problemas de conectividade e rede
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                  
+                  <div className="border rounded-lg p-4 bg-white">
+                    <h3 className="font-semibold mb-3">Teste o Sistema:</h3>
+                    <TIInteractive initialQuestion="Meu computador está muito lento" />
                   </div>
                 </div>
               </CardContent>
             </Card>
-          </div>
-        </div>
-      </div>
+          </TabsContent>
 
-      {/* Footer do demo */}
-      <div className="bg-white/80 backdrop-blur-sm border-t border-yellow-200 mt-8">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="text-center">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Gostou do que viu?
-            </h3>
-            <p className="text-gray-600 mb-4">
-              Cadastre-se para ter acesso completo a todos os módulos e funcionalidades
-            </p>
-            <div className="flex justify-center space-x-4">
-              <Link href="/register">
-                <Button className="bg-yellow-500 hover:bg-yellow-600 text-black">
-                  Cadastrar-se
-                </Button>
-              </Link>
-              <Link href="/contato">
-                <Button variant="outline">
-                  Falar com vendas
-                </Button>
-              </Link>
+          {/* Achievements Demo */}
+          <TabsContent value="achievements" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Trophy className="w-5 h-5 text-yellow-600" />
+                  Sistema de Gamificação
+                </CardTitle>
+                <p className="text-gray-600">
+                  Conquistas e badges para engajar usuários e motivar o aprendizado
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <Card className="border-yellow-200 bg-yellow-50">
+                      <CardContent className="p-4 text-center">
+                        <Zap className="w-8 h-8 text-yellow-600 mx-auto mb-2" />
+                        <h3 className="font-semibold text-yellow-800">Engajamento</h3>
+                        <p className="text-sm text-yellow-600">Atividade constante</p>
+                      </CardContent>
+                    </Card>
+                    <Card className="border-blue-200 bg-blue-50">
+                      <CardContent className="p-4 text-center">
+                        <Target className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+                        <h3 className="font-semibold text-blue-800">Exploração</h3>
+                        <p className="text-sm text-blue-600">Descoberta de recursos</p>
+                      </CardContent>
+                    </Card>
+                    <Card className="border-green-200 bg-green-50">
+                      <CardContent className="p-4 text-center">
+                        <Clock className="w-8 h-8 text-green-600 mx-auto mb-2" />
+                        <h3 className="font-semibold text-green-800">Consistência</h3>
+                        <p className="text-sm text-green-600">Uso regular</p>
+                      </CardContent>
+                    </Card>
+                    <Card className="border-purple-200 bg-purple-50">
+                      <CardContent className="p-4 text-center">
+                        <Trophy className="w-8 h-8 text-purple-600 mx-auto mb-2" />
+                        <h3 className="font-semibold text-purple-800">Desafios</h3>
+                        <p className="text-sm text-purple-600">Objetivos especiais</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                  
+                  <div className="border rounded-lg p-4 bg-white">
+                    <h3 className="font-semibold mb-3">Sistema de Conquistas:</h3>
+                    <AchievementSystem userId={demoUserId} />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Analytics Demo */}
+          <TabsContent value="analytics" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5 text-purple-600" />
+                  Dashboard de Analytics
+                </CardTitle>
+                <p className="text-gray-600">
+                  Métricas detalhadas de uso, performance e engajamento dos usuários
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <Card className="border-blue-200 bg-blue-50">
+                      <CardContent className="p-4 text-center">
+                        <MessageSquare className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+                        <h3 className="font-semibold text-blue-800">Mensagens</h3>
+                        <p className="text-sm text-blue-600">Total de interações</p>
+                      </CardContent>
+                    </Card>
+                    <Card className="border-green-200 bg-green-50">
+                      <CardContent className="p-4 text-center">
+                        <Clock className="w-8 h-8 text-green-600 mx-auto mb-2" />
+                        <h3 className="font-semibold text-green-800">Tempo</h3>
+                        <p className="text-sm text-green-600">Tempo de uso</p>
+                      </CardContent>
+                    </Card>
+                    <Card className="border-yellow-200 bg-yellow-50">
+                      <CardContent className="p-4 text-center">
+                        <Trophy className="w-8 h-8 text-yellow-600 mx-auto mb-2" />
+                        <h3 className="font-semibold text-yellow-800">Conquistas</h3>
+                        <p className="text-sm text-yellow-600">Progresso</p>
+                      </CardContent>
+                    </Card>
+                    <Card className="border-purple-200 bg-purple-50">
+                      <CardContent className="p-4 text-center">
+                        <BarChart3 className="w-8 h-8 text-purple-600 mx-auto mb-2" />
+                        <h3 className="font-semibold text-purple-800">Performance</h3>
+                        <p className="text-sm text-purple-600">Métricas</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                  
+                  <div className="border rounded-lg p-4 bg-white">
+                    <h3 className="font-semibold mb-3">Dashboard de Analytics:</h3>
+                    <AnalyticsDashboard data={mockAnalyticsData} timeRange="monthly" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
+        {/* API Endpoints Info */}
+        <Card className="mt-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Lightbulb className="w-5 h-5 text-orange-600" />
+              Endpoints da API Disponíveis
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="border rounded-lg p-4">
+                <h3 className="font-semibold text-blue-800 mb-2">🔧 TI Hints</h3>
+                <code className="text-sm bg-gray-100 p-2 rounded block">
+                  POST /api/ti/hint
+                </code>
+                <p className="text-sm text-gray-600 mt-2">
+                  Dicas em tempo real para troubleshooting
+                </p>
+              </div>
+              <div className="border rounded-lg p-4">
+                <h3 className="font-semibold text-yellow-800 mb-2">🏆 Achievements</h3>
+                <code className="text-sm bg-gray-100 p-2 rounded block">
+                  GET/POST /api/achievements
+                </code>
+                <p className="text-sm text-gray-600 mt-2">
+                  Sistema de conquistas e gamificação
+                </p>
+              </div>
+              <div className="border rounded-lg p-4">
+                <h3 className="font-semibold text-purple-800 mb-2">📊 Analytics</h3>
+                <code className="text-sm bg-gray-100 p-2 rounded block">
+                  GET /api/analytics
+                </code>
+                <p className="text-sm text-gray-600 mt-2">
+                  Métricas e estatísticas de uso
+                </p>
+              </div>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
+
+        {/* Instructions */}
+        <Card className="mt-8 bg-gradient-to-r from-green-50 to-blue-50">
+          <CardHeader>
+            <CardTitle className="text-green-800">📋 Como Usar as Novas Funcionalidades</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="bg-blue-100 text-blue-800 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">1</div>
+                <div>
+                  <h4 className="font-semibold">Troubleshooting Interativo</h4>
+                  <p className="text-sm text-gray-600">
+                    Digite uma pergunta sobre problemas de TI e siga os passos guiados com dicas em tempo real.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="bg-blue-100 text-blue-800 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">2</div>
+                <div>
+                  <h4 className="font-semibold">Sistema de Conquistas</h4>
+                  <p className="text-sm text-gray-600">
+                    Complete atividades para desbloquear badges e acompanhar seu progresso de aprendizado.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="bg-blue-100 text-blue-800 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">3</div>
+                <div>
+                  <h4 className="font-semibold">Analytics Dashboard</h4>
+                  <p className="text-sm text-gray-600">
+                    Visualize métricas de uso, tempo de estudo e performance em gráficos interativos.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
+  );
+}
+
+export default function DemoPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p className="text-xl text-gray-600">Carregando demonstração...</p>
+      </div>
+    </div>}>
+      <DemoContent />
+    </Suspense>
   );
 }

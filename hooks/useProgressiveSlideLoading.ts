@@ -104,8 +104,9 @@ export function useProgressiveSlideLoading() {
       const slide1 = await generateSlide(1, query, subject);
 
       // Adicionar imagem ao slide 1 se disponível
-      if (initialImageUrl && slide1.card2) {
-        slide1.card2.imageUrl = initialImageUrl;
+      if (initialImageUrl) {
+        // Note: Image handling would need to be implemented based on the Slide interface
+        console.log('Image URL available:', initialImageUrl);
       }
 
       // Mostrar slide 1 imediatamente

@@ -249,14 +249,14 @@ export class HealthChecker {
   async runChecks(): Promise<Record<string, boolean>> {
     const results: Record<string, boolean> = {}
 
-    for (const [name, check] of this.checks) {
+    this.checks.forEach(async (check, name) => {
       try {
         results[name] = await check()
       } catch (error) {
         console.error(`Health check failed for ${name}:`, error)
         results[name] = false
       }
-    }
+    });
 
     return results
   }

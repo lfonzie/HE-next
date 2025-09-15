@@ -3,26 +3,26 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
 model User {
-  id                String   @id(map: "users_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email             String   @unique(map: "users_email_unique") @db.VarChar(255)
+  id                String    @id(map: "users_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email             String    @unique(map: "users_email_unique") @db.VarChar(255)
   password_hash     String?
-  name              String?  @db.VarChar(255)
-  role              role     @default(STUDENT)
-  google_id         String?  @db.VarChar(255)
-  profile_image_url String?  @db.VarChar(500)
-  photo             String?  @db.VarChar(500)
-  school_id         String?  @db.Uuid
-  resetToken        String?  @db.VarChar(255)
-  resetTokenExpiry  DateTime? @db.Timestamp(6)
-  created_at        DateTime @default(now()) @db.Timestamp(6)
-  updated_at        DateTime @default(now()) @db.Timestamp(6)
+  name              String?   @db.VarChar(255)
+  role              role      @default(STUDENT)
+  google_id         String?   @db.VarChar(255)
+  profile_image_url String?   @db.VarChar(500)
+  photo             String?   @db.VarChar(500)
+  school_id         String?   @db.Uuid
+  created_at        DateTime  @default(now()) @db.Timestamp(6)
+  updated_at        DateTime  @default(now()) @db.Timestamp(6)
   profile           Json?
+  resetToken        String?   @db.VarChar(255)
+  resetTokenExpiry  DateTime? @db.Timestamp(6)
 
   @@index([email], map: "idx_users_email")
   @@index([google_id], map: "idx_users_google_id")
@@ -30,12 +30,12 @@ model User {
 }
 
 model DemoUser {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name        String   @db.VarChar(255)
-  email       String   @unique @db.VarChar(255)
-  phone       String   @db.VarChar(20)
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String   @db.VarChar(255)
+  email        String   @unique @db.VarChar(255)
+  phone        String   @db.VarChar(20)
   registeredAt DateTime @default(now()) @db.Timestamp(6)
-  expiresAt   DateTime @db.Timestamp(6)
+  expiresAt    DateTime @db.Timestamp(6)
 
   @@index([email], map: "idx_demo_users_email")
 }
@@ -847,6 +847,22 @@ model uptime_checks {
   @@ignore
 }
 
+model ti_troubleshooting_sessions {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id          String   @db.Uuid
+  playbook_id      String   @db.VarChar(50)
+  question         String
+  steps_completed  Int      @default(0)
+  total_steps      Int
+  resolution_found Boolean  @default(false)
+  duration_seconds Int?
+  created_at       DateTime @default(now()) @db.Timestamp(6)
+  updated_at       DateTime @default(now()) @db.Timestamp(6)
+
+  @@index([user_id], map: "idx_ti_sessions_user")
+  @@index([playbook_id], map: "idx_ti_sessions_playbook")
+}
+
 model user_achievements {
   id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   user_id        String   @db.Uuid
@@ -915,26 +931,26 @@ model webhook_calls {
 }
 
 model enemQuestion {
-  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  year             Int      @db.SmallInt
-  area             String   @db.VarChar(50)
-  disciplina       String   @db.VarChar(100)
-  skill_tag        String[] @default([])
-  stem             String
-  a                String
-  b                String
-  c                String
-  d                String
-  e                String
-  correct          String   @db.VarChar(1)
-  rationale        String?
-  image_url        String?  @db.VarChar(500)
-  image_alt        String?  @db.VarChar(255)
-  source_attribution String? @db.VarChar(255)
-  difficulty       difficulty_level @default(MEDIUM)
-  source           String   @default("Manual") @db.VarChar(50)
-  created_at       DateTime @default(now()) @db.Timestamp(6)
-  updated_at       DateTime @default(now()) @db.Timestamp(6)
+  id                 String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  area               String           @db.VarChar(50)
+  disciplina         String           @db.VarChar(100)
+  stem               String
+  a                  String
+  b                  String
+  c                  String
+  d                  String
+  e                  String
+  correct            String           @db.VarChar(1)
+  source             String           @default("Manual") @db.VarChar(50)
+  created_at         DateTime         @default(now()) @db.Timestamp(6)
+  updated_at         DateTime         @default(now()) @db.Timestamp(6)
+  difficulty         difficulty_level @default(MEDIUM)
+  image_alt          String?          @db.VarChar(255)
+  image_url          String?          @db.VarChar(500)
+  rationale          String?
+  skill_tag          String[]         @default([])
+  source_attribution String?          @db.VarChar(255)
+  year               Int              @default(2023) @db.SmallInt
 
   @@index([area], map: "idx_enem_questions_area")
   @@index([disciplina], map: "idx_enem_questions_disciplina")
@@ -944,21 +960,21 @@ model enemQuestion {
 }
 
 model enemSession {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId       String?  @db.Uuid
-  area         String   @db.VarChar(50)
-  mode         simulation_mode @default(MIXED)
+  id           String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String?         @db.Uuid
+  area         String          @db.VarChar(50)
   numQuestions Int
   durationMs   Int
-  startedAt    DateTime @db.Timestamp(6)
-  finishedAt   DateTime? @db.Timestamp(6)
+  startedAt    DateTime        @db.Timestamp(6)
+  finishedAt   DateTime?       @db.Timestamp(6)
   questions    Json
   answers      Json
   score        Int?
+  created_at   DateTime        @default(now()) @db.Timestamp(6)
+  updated_at   DateTime        @default(now()) @db.Timestamp(6)
   config_json  Json?
+  mode         simulation_mode @default(MIXED)
   stats_json   Json?
-  created_at   DateTime @default(now()) @db.Timestamp(6)
-  updated_at   DateTime @default(now()) @db.Timestamp(6)
 
   @@index([userId], map: "idx_enem_sessions_user")
   @@index([area], map: "idx_enem_sessions_area")
@@ -966,18 +982,17 @@ model enemSession {
 }
 
 model enemExam {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id      String?  @db.Uuid
-  area         String   @db.VarChar(50)
-  mode         simulation_mode @default(MIXED)
+  id              String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id         String?         @db.Uuid
+  area            String          @db.VarChar(50)
+  mode            simulation_mode @default(MIXED)
   total_questions Int
-  duration_sec Int
-  config_json  Json?
-  stats_json   Json?
-  created_at   DateTime @default(now()) @db.Timestamp(6)
-  updated_at   DateTime @default(now()) @db.Timestamp(6)
-
-  exam_items   enemExamItem[]
+  duration_sec    Int
+  config_json     Json?
+  stats_json      Json?
+  created_at      DateTime        @default(now()) @db.Timestamp(6)
+  updated_at      DateTime        @default(now()) @db.Timestamp(6)
+  exam_items      enemExamItem[]
 
   @@index([user_id], map: "idx_enem_exams_user")
   @@index([area], map: "idx_enem_exams_area")
@@ -985,18 +1000,17 @@ model enemExam {
 }
 
 model enemExamItem {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  exam_id      String   @db.Uuid
+  id           String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  exam_id      String          @db.Uuid
   index        Int
   source       question_source @default(DATABASE)
-  question_id  String?  @db.Uuid
+  question_id  String?         @db.Uuid
   payload_json Json?
-  image_url    String?  @db.VarChar(500)
-  answer_user  String?  @db.VarChar(1)
-  created_at   DateTime @default(now()) @db.Timestamp(6)
-  updated_at   DateTime @default(now()) @db.Timestamp(6)
-
-  exam         enemExam @relation(fields: [exam_id], references: [id], onDelete: Cascade)
+  image_url    String?         @db.VarChar(500)
+  answer_user  String?         @db.VarChar(1)
+  created_at   DateTime        @default(now()) @db.Timestamp(6)
+  updated_at   DateTime        @default(now()) @db.Timestamp(6)
+  exam         enemExam        @relation(fields: [exam_id], references: [id], onDelete: Cascade)
 
   @@index([exam_id], map: "idx_enem_exam_items_exam")
   @@index([source], map: "idx_enem_exam_items_source")
@@ -1336,4 +1350,118 @@ enum question_source {
   DATABASE
   AI
   FALLBACK
+}
+
+// ENEM Simulator Models - Offline-First Architecture
+model enem_item {
+  item_id           String            @id @db.VarChar(50)
+  year              Int               @db.SmallInt
+  area              String            @db.VarChar(10)
+  text              String
+  alternatives      Json
+  correct_answer    String            @db.VarChar(1)
+  topic             String            @db.VarChar(255)
+  estimated_difficulty difficulty_level @default(MEDIUM)
+  asset_refs        String[]          @default([])
+  content_hash      String            @unique @db.VarChar(64)
+  dataset_version   String            @db.VarChar(20)
+  metadata          Json              @default("{}")
+  created_at        DateTime          @default(now()) @db.Timestamp(6)
+  updated_at        DateTime          @default(now()) @db.Timestamp(6)
+
+  @@index([area, year], map: "idx_enem_item_area_year")
+  @@index([content_hash], map: "idx_enem_item_content_hash")
+  @@index([estimated_difficulty], map: "idx_enem_item_difficulty")
+  @@index([topic], map: "idx_enem_item_topic")
+}
+
+model enem_exam_template {
+  template_id       String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name              String            @db.VarChar(255)
+  items             String[]          @default([])
+  metadata          Json              @default("{}")
+  created_at        DateTime          @default(now()) @db.Timestamp(6)
+  updated_at        DateTime          @default(now()) @db.Timestamp(6)
+
+  @@index([name], map: "idx_enem_template_name")
+}
+
+model enem_session {
+  session_id        String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id           String            @db.Uuid
+  mode              enem_mode         @default(CUSTOM)
+  area              String[]          @default([])
+  config            Json              @default("{}")
+  start_time        DateTime          @default(now()) @db.Timestamp(6)
+  end_time          DateTime?         @db.Timestamp(6)
+  status            enem_session_status @default(ACTIVE)
+  created_at        DateTime          @default(now()) @db.Timestamp(6)
+  updated_at        DateTime          @default(now()) @db.Timestamp(6)
+
+  responses         enem_response[]
+  score             enem_score?
+
+  @@index([user_id], map: "idx_enem_session_user")
+  @@index([mode], map: "idx_enem_session_mode")
+  @@index([status], map: "idx_enem_session_status")
+  @@index([start_time], map: "idx_enem_session_start_time")
+}
+
+model enem_response {
+  response_id       String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  session_id        String            @db.Uuid
+  item_id           String            @db.VarChar(50)
+  selected_answer   String            @db.VarChar(1)
+  time_spent        Int               @default(0)
+  is_correct        Boolean           @default(false)
+  timestamp         DateTime          @default(now()) @db.Timestamp(6)
+
+  session           enem_session      @relation(fields: [session_id], references: [session_id], onDelete: Cascade)
+
+  @@index([session_id], map: "idx_enem_response_session")
+  @@index([item_id], map: "idx_enem_response_item")
+  @@index([is_correct], map: "idx_enem_response_correct")
+}
+
+model enem_score {
+  score_id          String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  session_id        String            @unique @db.Uuid
+  area_scores       Json              @default("{}")
+  total_score       Float             @default(0)
+  tri_estimated     Json              @default("{}")
+  stats             Json              @default("{}")
+  created_at        DateTime          @default(now()) @db.Timestamp(6)
+
+  session           enem_session      @relation(fields: [session_id], references: [session_id], onDelete: Cascade)
+
+  @@index([total_score], map: "idx_enem_score_total")
+}
+
+model enem_redacao {
+  redacao_id        String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  session_id        String            @db.Uuid
+  prompt            String
+  submission        String            // encrypted
+  rubrics           Json              @default("{}")
+  estimated_score   Float             @default(0)
+  ai_feedback       String?
+  created_at        DateTime          @default(now()) @db.Timestamp(6)
+  updated_at        DateTime          @default(now()) @db.Timestamp(6)
+
+  @@index([session_id], map: "idx_enem_redacao_session")
+  @@index([estimated_score], map: "idx_enem_redacao_score")
+}
+
+// ENEM Simulator Enums
+enum enem_mode {
+  QUICK
+  CUSTOM
+  OFFICIAL
+  ADAPTIVE
+}
+
+enum enem_session_status {
+  ACTIVE
+  COMPLETED
+  ABANDONED
 }

@@ -31,7 +31,7 @@ export const SecretariaAnswer: React.FC<SecretariaAnswerProps> = ({ question, an
       </div>
       
       <div className="secretaria-content">
-        <MessageRenderer content={answer} moduleId="ATENDIMENTO" />
+        <div className="whitespace-pre-wrap">{answer}</div>
       </div>
     </div>
   );

@@ -25,6 +25,8 @@ interface Question {
   correctAnswer: number
   explanation: string
   topics: string[]
+  imageUrl?: string
+  imageAlt?: string
   competencies: string[]
   source: string
 }

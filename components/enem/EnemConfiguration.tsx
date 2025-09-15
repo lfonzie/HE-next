@@ -33,7 +33,7 @@ export function EnemConfiguration() {
   const validation = validateConfig();
 
   const handleAreaSelect = (area: string) => {
-    setSelectedArea(area);
+    setSelectedArea(area as "matematica" | "linguagens" | "ciencias_natureza" | "ciencias_humanas");
     setConfig({ area: area as any });
   };
 

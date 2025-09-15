@@ -11,6 +11,7 @@ export interface ExportOptions {
   includeImages: boolean;
   includeStats: boolean;
   includeRecommendations: boolean;
+  includeAssessment: boolean;
 }
 
 export interface ExportData {
@@ -33,6 +34,8 @@ export class EnemExportService {
     options: ExportOptions,
     element?: HTMLElement
   ): Promise<Blob> {
+    // Type assertion to ensure correct type
+    const exportOptions = options as ExportOptions;
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
@@ -134,7 +137,7 @@ export class EnemExportService {
         }
 
         // Rationale
-        if (options.includeRationale && question.rationale) {
+        if (exportOptions.includeRationale && question.rationale) {
           pdf.setFontSize(9);
           pdf.text('Explicação:', 20, yPosition);
           yPosition += 5;

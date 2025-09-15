@@ -157,7 +157,23 @@ export function useChat(onStreamingStart?: () => void) {
               "Content-Type": "application/json; charset=utf-8",
               // Authorization: `Bearer ${token}`,
             },
-            body: JSON.stringify(requestBody),
+            body: JSON.stringify({ 
+              message, 
+              context: { 
+                history: conversationHistory.slice(-10),
+                module: finalModule,
+                subject,
+                grade,
+                conversationId,
+                image,
+                attachment: attachment ? {
+                  name: attachment.name,
+                  type: attachment.type,
+                  size: attachment.size
+                } : undefined,
+                useWebSearch
+              } 
+            }),
             signal: abortControllerRef.current.signal
           })
           
@@ -360,12 +376,10 @@ export function useChat(onStreamingStart?: () => void) {
                 continue // Don't process as content
               }
               
-              if (data.content) {
-                // Ensure content is in UTF-8
-                const utf8Content = new TextDecoder('utf-8').decode(
-                  new TextEncoder().encode(data.content)
-                )
-                assistantMessage += utf8Content
+              // Support orchestrator JSON payload (text/blocks/actions/trace)
+              if (data.text || data.blocks || data.actions || data.trace) {
+                const text = data.text || ''
+                assistantMessage = text
                 
                 // Hide loading on first token received
                 if (!firstTokenReceived) {
@@ -373,7 +387,49 @@ export function useChat(onStreamingStart?: () => void) {
                   loading.hide()
                 }
                 
-                // Capture received model
+                // Update message with orchestrated payload
+                setCurrentConversation(prev => {
+                  if (!prev) return prev
+                  
+                  const updatedMessages = prev.messages.map(msg => {
+                    if (msg.id === assistantMessageId) {
+                      return {
+                        ...msg,
+                        content: assistantMessage,
+                        model: data.model || finalModel,
+                        isStreaming: true,
+                        webSearchUsed: data.webSearchUsed,
+                        citations: data.citations,
+                        searchTime: data.searchTime,
+                        structured: true,
+                        blocks: data.blocks,
+                        actions: data.actions,
+                        trace: data.trace
+                      }
+                    }
+                    return msg
+                  })
+                  
+                  return {
+                    ...prev,
+                    messages: updatedMessages
+                  }
+                })
+                continue
+              }
+              
+              if (data.content) {
+                // Ensure content is in UTF-8
+                const utf8Content = new TextDecoder('utf-8').decode(
+                  new TextEncoder().encode(data.content)
+                )
+                assistantMessage += utf8Content
+                
+                if (!firstTokenReceived) {
+                  setFirstTokenReceived(true)
+                  loading.hide()
+                }
+                
                 if (data.model) {
                   finalModel = data.model
                 }

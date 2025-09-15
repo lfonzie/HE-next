@@ -80,7 +80,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className={inter.className}>
-        <SplashScreen />
+        {/* <SplashScreen /> */}
         <SessionProvider>
           <PWAProvider>
             <LoadingProvider>
@@ -88,7 +88,7 @@ export default function RootLayout({
                 <LessonProvider>
                   <NotificationProvider>
                     {children}
-                    <GlobalLoading />
+                    {/* <GlobalLoading /> */}
                     <Toaster />
                   </NotificationProvider>
                 </LessonProvider>

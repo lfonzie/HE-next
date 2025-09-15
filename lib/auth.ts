@@ -1,6 +1,7 @@
 import NextAuth from "next-auth"
 import { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
+import { getServerSession } from "next-auth/next"
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/db"
 
@@ -107,18 +108,7 @@ export const authOptions: NextAuthOptions = {
   },
 }
 
-// Simple auth utilities for now
-export const auth = {
-  // Placeholder for authentication functions
-  verifyToken: (token: string) => {
-    // Simple token verification logic
-    return { valid: true, userId: 'user123' };
-  },
-  
-  generateToken: (userId: string) => {
-    // Simple token generation logic
-    return 'mock-token-' + userId;
-  }
-};
+// Export the auth function for API routes
+export const auth = () => getServerSession(authOptions);
 
-export default auth;
+export default NextAuth(authOptions);

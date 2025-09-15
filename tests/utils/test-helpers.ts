@@ -257,11 +257,13 @@ export class MockServiceWorker {
 // Test environment setup
 export function setupTestEnvironment() {
   // Mock environment variables
-  process.env.NODE_ENV = 'test'
-  process.env.OPENAI_API_KEY = 'test-key'
-  process.env.UNSPLASH_ACCESS_KEY = 'test-key'
-  process.env.NEXTAUTH_SECRET = 'test-secret'
-  process.env.NEXTAUTH_URL = 'http://localhost:3000'
+  Object.assign(process.env, {
+    NODE_ENV: 'test',
+    OPENAI_API_KEY: 'test-key',
+    UNSPLASH_ACCESS_KEY: 'test-key',
+    NEXTAUTH_SECRET: 'test-secret',
+    NEXTAUTH_URL: 'http://localhost:3000'
+  });
 
   // Mock console methods to reduce noise in tests
   const originalConsole = { ...console }

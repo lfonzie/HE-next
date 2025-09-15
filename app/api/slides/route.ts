@@ -168,7 +168,7 @@ ${previousContext}`;
     // Retry with enhanced prompt if not the last attempt
     if (attempt < 3) {
       console.warn(`Retrying slide generation (attempt ${attempt + 1})`);
-      return generateSlide(topic, position, attempt + 1);
+      return generateSlide(topic, position, [], attempt + 1);
     }
     
     throw new Error(`Failed to generate slide after ${attempt} attempts: ${error instanceof Error ? error.message : 'Unknown error'}`);

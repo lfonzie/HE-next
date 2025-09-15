@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { prisma } from '@/lib/db';
 import { assessmentEngine } from '@/lib/assessment/enem-assessment';
 import { z } from 'zod';
 
@@ -43,40 +43,42 @@ export async function POST(request: NextRequest) {
       if (item.source === 'DATABASE' && item.question_id) {
         // For database questions, we'd need to fetch from enemQuestion table
         // For now, we'll use the payload_json
+        const payload = item.payload_json as any;
         return {
           id: item.question_id,
           area: exam.area,
           year: 2023, // Default year
           disciplina: 'Geral',
           skill_tag: ['geral'],
-          stem: item.payload_json?.stem || 'Questão não disponível',
-          a: item.payload_json?.a || 'A',
-          b: item.payload_json?.b || 'B',
-          c: item.payload_json?.c || 'C',
-          d: item.payload_json?.d || 'D',
-          e: item.payload_json?.e || 'E',
-          correct: item.payload_json?.correct || 'A',
-          rationale: item.payload_json?.rationale || 'Explicação não disponível',
-          difficulty: item.payload_json?.difficulty || 'MEDIUM',
+          stem: payload?.stem || 'Questão não disponível',
+          a: payload?.a || 'A',
+          b: payload?.b || 'B',
+          c: payload?.c || 'C',
+          d: payload?.d || 'D',
+          e: payload?.e || 'E',
+          correct: payload?.correct || 'A',
+          rationale: payload?.rationale || 'Explicação não disponível',
+          difficulty: payload?.difficulty || 'MEDIUM',
           source: item.source
         };
       } else {
         // For AI-generated questions
+        const aiPayload = item.payload_json as any;
         return {
           id: item.id,
           area: exam.area,
           year: 2023,
           disciplina: 'Geral',
-          skill_tag: item.payload_json?.skill_tag || ['geral'],
-          stem: item.payload_json?.stem || 'Questão não disponível',
-          a: item.payload_json?.a || 'A',
-          b: item.payload_json?.b || 'B',
-          c: item.payload_json?.c || 'C',
-          d: item.payload_json?.d || 'D',
-          e: item.payload_json?.e || 'E',
-          correct: item.payload_json?.correct || 'A',
-          rationale: item.payload_json?.rationale || 'Explicação não disponível',
-          difficulty: item.payload_json?.difficulty || 'MEDIUM',
+          skill_tag: aiPayload?.skill_tag || ['geral'],
+          stem: aiPayload?.stem || 'Questão não disponível',
+          a: aiPayload?.a || 'A',
+          b: aiPayload?.b || 'B',
+          c: aiPayload?.c || 'C',
+          d: aiPayload?.d || 'D',
+          e: aiPayload?.e || 'E',
+          correct: aiPayload?.correct || 'A',
+          rationale: aiPayload?.rationale || 'Explicação não disponível',
+          difficulty: aiPayload?.difficulty || 'MEDIUM',
           source: item.source
         };
       }
@@ -117,7 +119,7 @@ export async function POST(request: NextRequest) {
         medium: { correct: 0, total: 0 },
         hard: { correct: 0, total: 0 }
       },
-      skillBreakdown: {}
+      skillBreakdown: {} as Record<string, { correct: number; total: number }>
     };
 
     // Calculate difficulty breakdown
@@ -133,7 +135,7 @@ export async function POST(request: NextRequest) {
 
     // Calculate skill breakdown
     questions.forEach(question => {
-      question.skill_tag.forEach(skill => {
+      question.skill_tag.forEach((skill: string) => {
         if (!stats.skillBreakdown[skill]) {
           stats.skillBreakdown[skill] = { correct: 0, total: 0 };
         }
@@ -158,11 +160,11 @@ export async function POST(request: NextRequest) {
     await prisma.enemExam.update({
       where: { id: examId },
       data: {
-        stats_json: {
+        stats_json: JSON.parse(JSON.stringify({
           stats,
           assessment: includeRecommendations ? assessment : undefined,
           generatedAt: new Date().toISOString()
-        }
+        }))
       }
     });
 

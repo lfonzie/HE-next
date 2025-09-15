@@ -9,8 +9,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Verificar se a API key está disponível
+    // Keep simple classifier as optional; fallback immediately
     if (!process.env.XAI_API_KEY) {
-      console.warn('⚠️ XAI_API_KEY not configured, using default classification');
       return NextResponse.json({ classification: 'simples' });
     }
 

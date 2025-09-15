@@ -83,6 +83,7 @@ interface EnemSimulatorProps {
 }
 
 export function EnemSimulator({ area, numQuestions, duration, useRealQuestions = true, year, useProgressiveLoading = true }: EnemSimulatorProps) {
+  const sessionId = `session_${Date.now()}`;
   const {
     questions,
     currentQuestion,
@@ -384,16 +385,20 @@ export function EnemSimulator({ area, numQuestions, duration, useRealQuestions =
                     const sanitizedResult = sanitizeQuestion(question)
                     const sanitizedQuestion = sanitizedResult.sanitizedData || question
                     
-                    return sanitizedQuestion.alternatives?.map((alternative, index) => (
-                      <AlternativeButton
-                        key={index}
-                        label={alternative.label}
-                        text={alternative.text}
-                        index={index}
-                        isSelected={answers[currentQuestion] === alternative.label.toLowerCase()}
-                        onClick={() => selectAnswer(alternative.label.toLowerCase())}
-                      />
-                    )) || (
+                    return sanitizedQuestion.alternatives?.map((alternative, index) => {
+                      const label = typeof alternative === 'string' ? alternative : alternative.label;
+                      const text = typeof alternative === 'string' ? alternative : alternative.text;
+                      return (
+                        <AlternativeButton
+                          key={index}
+                          label={label}
+                          text={text}
+                          index={index}
+                          isSelected={answers[currentQuestion] === label.toLowerCase()}
+                          onClick={() => selectAnswer(label.toLowerCase())}
+                        />
+                      );
+                    }) || (
                       // Fallback for old format
                       ['a', 'b', 'c', 'd', 'e'].map((alt, index) => {
                         const text = question[alt as keyof EnemQuestion] as string
@@ -462,14 +467,54 @@ export function EnemSimulator({ area, numQuestions, duration, useRealQuestions =
 
           {isFinished && (
             <EnemResults
-              questions={availableQuestions}
-              answers={answers}
-              score={score || 0}
-              totalQuestions={availableQuestions.length}
-              onRestart={handleReset}
-              onBackToSetup={() => {
-                // Voltar para a configuração inicial
-                window.location.reload()
+              score={score ? {
+                score_id: `score_${Date.now()}`,
+                session_id: sessionId || '',
+                area_scores: {
+                  CN: { raw_score: score, percentage: score, correct: Math.floor(score / 10), total: 10 },
+                  CH: { raw_score: score, percentage: score, correct: Math.floor(score / 10), total: 10 },
+                  LC: { raw_score: score, percentage: score, correct: Math.floor(score / 10), total: 10 },
+                  MT: { raw_score: score, percentage: score, correct: Math.floor(score / 10), total: 10 }
+                },
+                total_score: score,
+                tri_estimated: {
+                  score: score * 0.8,
+                  confidence_interval: { lower: score * 0.7, upper: score * 0.9 },
+                  disclaimer: 'Estimativa baseada em dados históricos'
+                },
+                stats: {
+                  total_time_spent: 0,
+                  average_time_per_question: 0,
+                  accuracy_by_topic: {},
+                  difficulty_breakdown: { easy: { correct: 0, total: 0 }, medium: { correct: 0, total: 0 }, hard: { correct: 0, total: 0 } }
+                }
+              } : {
+                score_id: `score_${Date.now()}`,
+                session_id: sessionId || '',
+                area_scores: {
+                  CN: { raw_score: 0, percentage: 0, correct: 0, total: 0 },
+                  CH: { raw_score: 0, percentage: 0, correct: 0, total: 0 },
+                  LC: { raw_score: 0, percentage: 0, correct: 0, total: 0 },
+                  MT: { raw_score: 0, percentage: 0, correct: 0, total: 0 }
+                },
+                total_score: 0,
+                tri_estimated: {
+                  score: 0,
+                  confidence_interval: { lower: 0, upper: 0 },
+                  disclaimer: 'Estimativa baseada em dados históricos'
+                },
+                stats: {
+                  total_time_spent: 0,
+                  average_time_per_question: 0,
+                  accuracy_by_topic: {},
+                  difficulty_breakdown: { easy: { correct: 0, total: 0 }, medium: { correct: 0, total: 0 }, hard: { correct: 0, total: 0 } }
+                }
+              }}
+              sessionId={sessionId || ''}
+              onRetake={handleReset}
+              onRefocus={(topics: string[]) => {
+                // Implementar foco em tópicos específicos
+                console.log('Refocus on topics:', topics);
               }}
             />
           )}

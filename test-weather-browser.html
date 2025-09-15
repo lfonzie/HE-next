@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather API Test - Browser</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+        .test-section h2 {
+            color: #555;
+            margin-top: 0;
+        }
+        .weather-card {
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .weather-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            color: #2563eb;
+        }
+        .weather-current {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .weather-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 10px;
+            display: block;
+        }
+        .temperature {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #333;
+            margin: 0;
+        }
+        .description {
+            color: #666;
+            text-transform: capitalize;
+            margin-top: 5px;
+        }
+        .weather-details {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .detail-item {
+            text-align: center;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        .detail-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .detail-value {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #333;
+        }
+        .forecast {
+            border-top: 1px solid #e0e0e0;
+            padding-top: 20px;
+        }
+        .forecast-title {
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        .forecast-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            margin-bottom: 8px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+        }
+        .forecast-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .forecast-icon {
+            width: 32px;
+            height: 32px;
+        }
+        .forecast-date {
+            font-weight: 500;
+        }
+        .forecast-temps {
+            text-align: right;
+        }
+        .max-temp {
+            font-weight: bold;
+        }
+        .min-temp {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        button {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #1d4ed8;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+        }
+        .error {
+            color: #dc2626;
+            background-color: #fef2f2;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #fecaca;
+        }
+        .success {
+            color: #059669;
+            background-color: #f0fdf4;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #bbf7d0;
+        }
+        input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin: 5px;
+            width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌤️ Weather API Test</h1>
+        
+        <div class="test-section">
+            <h2>📍 Test Geocoding API</h2>
+            <input type="text" id="cityInput" placeholder="Enter city name" value="New York">
+            <button onclick="testGeocoding()">Get Coordinates</button>
+            <div id="geocodingResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🌡️ Test Weather Data</h2>
+            <button onclick="testWeatherData()">Get Weather for New York</button>
+            <div id="weatherResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🎯 Test Complete Weather Card</h2>
+            <input type="text" id="weatherCityInput" placeholder="Enter city name" value="London">
+            <button onclick="testWeatherCard()">Get Weather Card</button>
+            <div id="weatherCardResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔍 Test Query Detection</h2>
+            <input type="text" id="queryInput" placeholder="Enter query" value="What is the weather in Paris?">
+            <button onclick="testQueryDetection()">Test Query</button>
+            <div id="queryResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🌍 Test Multiple Cities</h2>
+            <button onclick="testMultipleCities()">Test Multiple Cities</button>
+            <div id="multipleCitiesResult"></div>
+        </div>
+    </div>
+
+    <script>
+        // Weather API functions (copied from weatherApi.ts for browser compatibility)
+        async function getCoordinates(cityName) {
+            const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cityName)}&count=1&language=en&format=json`;
+            
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Geocoding API error: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                if (data.results && data.results.length > 0) {
+                    const result = data.results[0];
+                    return {
+                        latitude: result.latitude,
+                        longitude: result.longitude,
+                        name: result.name,
+                        country: result.country,
+                        admin1: result.admin1
+                    };
+                } else {
+                    throw new Error(`City "${cityName}" not found.`);
+                }
+            } catch (error) {
+                console.error('Geocoding error:', error);
+                throw error;
+            }
+        }
+
+        async function fetchWeatherData(lat, lon, temperatureUnit = 'celsius') {
+            const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,relative_humidity_2m,wind_speed_10m,wind_direction_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=auto&forecast_days=5&temperature_unit=${temperatureUnit}`;
+            
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Weather API error: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Weather fetch error:', error);
+                throw error;
+            }
+        }
+
+        async function getWeatherForCity(cityName, temperatureUnit = 'celsius') {
+            const coords = await getCoordinates(cityName);
+            const weatherData = await fetchWeatherData(coords.latitude, coords.longitude, temperatureUnit);
+            
+            const location = coords.admin1 && coords.country 
+                ? `${coords.name}, ${coords.admin1}, ${coords.country}`
+                : coords.country 
+                ? `${coords.name}, ${coords.country}`
+                : coords.name;
+
+            const forecast = weatherData.daily.time.slice(1, 6).map((date, index) => ({
+                date,
+                weather_code: weatherData.daily.weather_code[index + 1],
+                max_temp: weatherData.daily.temperature_2m_max[index + 1],
+                min_temp: weatherData.daily.temperature_2m_min[index + 1],
+                precipitation: weatherData.daily.precipitation_sum[index + 1]
+            }));
+
+            return {
+                location,
+                current: weatherData.current,
+                forecast,
+                units: {
+                    temperature: weatherData.current_units.temperature_2m,
+                    humidity: weatherData.current_units.relative_humidity_2m,
+                    wind: weatherData.current_units.wind_speed_10m,
+                    precipitation: weatherData.daily_units.precipitation_sum
+                }
+            };
+        }
+
+        const weatherIconMap = {
+            0: '01d', 1: '01d', 2: '02d', 3: '04d', 45: '50d', 48: '50d',
+            51: '09d', 53: '09d', 55: '09d', 56: '09d', 57: '09d',
+            61: '10d', 63: '10d', 65: '10d', 66: '09d', 67: '09d',
+            71: '13d', 73: '13d', 75: '13d', 77: '13d',
+            80: '09d', 81: '09d', 82: '09d', 85: '13d', 86: '13d',
+            95: '11d', 96: '11d', 99: '11d'
+        };
+
+        function getWeatherIcon(code, isDay = true) {
+            const iconCode = weatherIconMap[code] || '01d';
+            const dayNight = isDay ? 'd' : 'n';
+            return `https://openweathermap.org/img/wn/${iconCode.replace('d', dayNight)}@2x.png`;
+        }
+
+        function getWeatherDescription(code) {
+            const descriptions = {
+                0: 'Clear sky', 1: 'Mainly clear', 2: 'Partly cloudy', 3: 'Overcast',
+                45: 'Fog', 48: 'Depositing rime fog', 51: 'Light drizzle', 53: 'Moderate drizzle',
+                55: 'Dense drizzle', 56: 'Light freezing drizzle', 57: 'Dense freezing drizzle',
+                61: 'Slight rain', 63: 'Moderate rain', 65: 'Heavy rain', 66: 'Light freezing rain',
+                67: 'Heavy freezing rain', 71: 'Slight snow fall', 73: 'Moderate snow fall',
+                75: 'Heavy snow fall', 77: 'Snow grains', 80: 'Slight rain showers',
+                81: 'Moderate rain showers', 82: 'Violent rain showers', 85: 'Slight snow showers',
+                86: 'Heavy snow showers', 95: 'Thunderstorm', 96: 'Thunderstorm with slight hail',
+                99: 'Thunderstorm with heavy hail'
+            };
+            return descriptions[code] || 'Unknown';
+        }
+
+        function formatTemperature(temp, unit) {
+            const symbol = unit === 'fahrenheit' ? '°F' : '°C';
+            return `${Math.round(temp)}${symbol}`;
+        }
+
+        function isWeatherQuery(message) {
+            const weatherKeywords = [
+                'weather', 'clima', 'tempo', 'temperatura', 'chuva', 'rain', 'sun', 'sol',
+                'nublado', 'cloudy', 'vento', 'wind', 'neve', 'snow', 'storm', 'tempestade'
+            ];
+            
+            const lowerMessage = message.toLowerCase();
+            return weatherKeywords.some(keyword => lowerMessage.includes(keyword));
+        }
+
+        function extractCityFromQuery(message) {
+            const patterns = [
+                /(?:weather|clima|tempo)\s+(?:in|em|na|no)\s+([^,.\?!]+)/i,
+                /(?:what's|what is|como está|qual é)\s+(?:the\s+)?(?:weather|clima|tempo)\s+(?:in|em|na|no)\s+([^,.\?!]+)/i,
+                /(?:weather|clima|tempo)\s+(?:for|para)\s+([^,.\?!]+)/i,
+                /([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s+(?:weather|clima|tempo)/i
+            ];
+            
+            for (const pattern of patterns) {
+                const match = message.match(pattern);
+                if (match && match[1]) {
+                    return match[1].trim();
+                }
+            }
+            
+            return null;
+        }
+
+        // Test functions
+        async function testGeocoding() {
+            const cityInput = document.getElementById('cityInput');
+            const resultDiv = document.getElementById('geocodingResult');
+            
+            resultDiv.innerHTML = '<div class="loading">Loading...</div>';
+            
+            try {
+                const coords = await getCoordinates(cityInput.value);
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        <strong>✅ Coordinates found:</strong><br>
+                        City: ${coords.name}<br>
+                        Country: ${coords.country || 'N/A'}<br>
+                        State/Region: ${coords.admin1 || 'N/A'}<br>
+                        Latitude: ${coords.latitude}<br>
+                        Longitude: ${coords.longitude}
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testWeatherData() {
+            const resultDiv = document.getElementById('weatherResult');
+            
+            resultDiv.innerHTML = '<div class="loading">Loading weather data...</div>';
+            
+            try {
+                const coords = await getCoordinates('New York');
+                const weatherData = await fetchWeatherData(coords.latitude, coords.longitude);
+                
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        <strong>✅ Weather data retrieved:</strong><br>
+                        Current Temperature: ${weatherData.current.temperature_2m}°C<br>
+                        Weather Code: ${weatherData.current.weather_code}<br>
+                        Humidity: ${weatherData.current.relative_humidity_2m}%<br>
+                        Wind Speed: ${weatherData.current.wind_speed_10m} km/h<br>
+                        Wind Direction: ${weatherData.current.wind_direction_10m}°<br>
+                        Forecast Days: ${weatherData.daily.time.length}
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testWeatherCard() {
+            const cityInput = document.getElementById('weatherCityInput');
+            const resultDiv = document.getElementById('weatherCardResult');
+            
+            resultDiv.innerHTML = '<div class="loading">Loading weather card...</div>';
+            
+            try {
+                const weatherData = await getWeatherForCity(cityInput.value);
+                
+                const currentIcon = getWeatherIcon(weatherData.current.weather_code, true);
+                const currentDescription = getWeatherDescription(weatherData.current.weather_code);
+                
+                let forecastHtml = '';
+                weatherData.forecast.forEach((day, index) => {
+                    const dayIcon = getWeatherIcon(day.weather_code, true);
+                    const dayDescription = getWeatherDescription(day.weather_code);
+                    const date = new Date(day.date);
+                    const dayName = date.toLocaleDateString('en-US', { 
+                        weekday: 'short',
+                        month: 'short',
+                        day: 'numeric'
+                    });
+                    
+                    forecastHtml += `
+                        <div class="forecast-item">
+                            <div class="forecast-left">
+                                <img src="${dayIcon}" alt="${dayDescription}" class="forecast-icon">
+                                <div>
+                                    <div class="forecast-date">${dayName}</div>
+                                    <div style="font-size: 0.8rem; color: #666;">${dayDescription}</div>
+                                </div>
+                            </div>
+                            <div class="forecast-temps">
+                                <div class="max-temp">${formatTemperature(day.max_temp, weatherData.units.temperature)}</div>
+                                <div class="min-temp">${formatTemperature(day.min_temp, weatherData.units.temperature)}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                resultDiv.innerHTML = `
+                    <div class="weather-card">
+                        <div class="weather-header">
+                            📍 ${weatherData.location}
+                        </div>
+                        
+                        <div class="weather-current">
+                            <img src="${currentIcon}" alt="${currentDescription}" class="weather-icon">
+                            <div class="temperature">${formatTemperature(weatherData.current.temperature_2m, weatherData.units.temperature)}</div>
+                            <div class="description">${currentDescription}</div>
+                        </div>
+                        
+                        <div class="weather-details">
+                            <div class="detail-item">
+                                <div class="detail-label">Humidity</div>
+                                <div class="detail-value">${Math.round(weatherData.current.relative_humidity_2m)}%</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Wind Speed</div>
+                                <div class="detail-value">${Math.round(weatherData.current.wind_speed_10m)} km/h</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Wind Direction</div>
+                                <div class="detail-value">${weatherData.current.wind_direction_10m}°</div>
+                            </div>
+                        </div>
+                        
+                        <div class="forecast">
+                            <div class="forecast-title">5-Day Forecast</div>
+                            ${forecastHtml}
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testQueryDetection() {
+            const queryInput = document.getElementById('queryInput');
+            const resultDiv = document.getElementById('queryResult');
+            
+            const query = queryInput.value;
+            const isWeather = isWeatherQuery(query);
+            const city = extractCityFromQuery(query);
+            
+            resultDiv.innerHTML = `
+                <div class="${isWeather ? 'success' : 'error'}">
+                    <strong>Query:</strong> "${query}"<br>
+                    <strong>Is Weather Query:</strong> ${isWeather ? '✅ Yes' : '❌ No'}<br>
+                    <strong>Extracted City:</strong> ${city || 'None'}
+                </div>
+            `;
+        }
+
+        async function testMultipleCities() {
+            const resultDiv = document.getElementById('multipleCitiesResult');
+            
+            resultDiv.innerHTML = '<div class="loading">Testing multiple cities...</div>';
+            
+            const cities = ['Tokyo', 'São Paulo', 'Berlin', 'Sydney'];
+            let resultsHtml = '';
+            
+            for (const city of cities) {
+                try {
+                    const data = await getWeatherForCity(city);
+                    const description = getWeatherDescription(data.current.weather_code);
+                    resultsHtml += `
+                        <div style="margin: 10px 0; padding: 10px; background: #f0fdf4; border-radius: 6px; border: 1px solid #bbf7d0;">
+                            ✅ <strong>${city}:</strong> ${data.current.temperature_2m}°C, ${description}
+                        </div>
+                    `;
+                } catch (error) {
+                    resultsHtml += `
+                        <div style="margin: 10px 0; padding: 10px; background: #fef2f2; border-radius: 6px; border: 1px solid #fecaca;">
+                            ❌ <strong>${city}:</strong> Error - ${error.message}
+                        </div>
+                    `;
+                }
+            }
+            
+            resultDiv.innerHTML = `
+                <div class="success">
+                    <strong>Multiple Cities Test Results:</strong><br>
+                    ${resultsHtml}
+                </div>
+            `;
+        }
+
+        // Initialize with default test
+        window.onload = function() {
+            testGeocoding();
+        };
+    </script>
+</body>
+</html>

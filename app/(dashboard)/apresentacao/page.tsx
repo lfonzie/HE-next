@@ -30,15 +30,6 @@ import { QuotaProvider } from "@/components/providers/QuotaProvider";
 
 // Estilos CSS customizados
 const customStyles = `
-  @keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
-  }
-  
-  @keyframes pulse-glow {
-    0%, 100% { opacity: 0.2; }
-    50% { opacity: 0.4; }
-  }
   
   @keyframes slide-up {
     from { transform: translateY(30px); opacity: 0; }
@@ -77,13 +68,6 @@ const customStyles = `
     100% { transform: scale(1); opacity: 1; }
   }
   
-  .floating-animation {
-    animation: float 3s ease-in-out infinite;
-  }
-  
-  .pulse-glow {
-    animation: pulse-glow 2s ease-in-out infinite;
-  }
   
   .slide-up {
     animation: slide-up 0.6s ease-out forwards;
@@ -140,11 +124,6 @@ const customStyles = `
     background-clip: text;
   }
   
-  .glass-effect {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-  }
   
   .hover-lift {
     transition: all 0.3s ease;
@@ -340,19 +319,15 @@ export default function Apresentacao() {
       content: (
         <div className="text-center slide-1-content">
           <div className="flex justify-center mb-3 mt-8 slide-in-up">
-            <div className="relative group floating-animation p-4">
-              <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full blur-2xl opacity-20 group-hover:opacity-30 transition-opacity duration-500 pulse-glow"></div>
-              <Image
-        src={ASSETS.LOGO_ICON}
-        alt={"Image"}
-        width={500}
-        height={300}
-        className={""}
-        loading={"lazy"}
-        style={{ filter: "drop-shadow(0 25px 50px rgba(0,0,0,0.2))" }}
-      />
+            <Image
+      src={ASSETS.LOGO_ICON}
+      alt={"Image"}
+      width={500}
+      height={300}
+      className={""}
+      loading={"lazy"}
+    />
           </div>
-        </div>
           
           <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 via-yellow-600 to-orange-500 mb-2 leading-tight slide-in-up animate-delay-100">
             HubEdu.ia
@@ -1036,18 +1011,14 @@ export default function Apresentacao() {
       content: (
         <div className="text-center slide-1-content">
           <div className="flex justify-center mb-6 mt-8 slide-in-up">
-            <div className="relative group floating-animation p-6">
-              <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full blur-3xl opacity-30 group-hover:opacity-40 transition-opacity duration-500 pulse-glow"></div>
-              <Image
-        src={ASSETS.LOGO_ICON}
-        alt={"Image"}
-        width={500}
-        height={300}
-        className={""}
-        loading={"lazy"}
-        style={{ filter: "drop-shadow(0 25px 50px rgba(0,0,0,0.2))" }}
-      />
-            </div>
+            <Image
+      src={ASSETS.LOGO_ICON}
+      alt={"Image"}
+      width={500}
+      height={300}
+      className={""}
+      loading={"lazy"}
+    />
           </div>
           
           <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 via-yellow-600 to-orange-500 mb-4 leading-tight slide-in-up animate-delay-100">
@@ -1162,15 +1133,13 @@ export default function Apresentacao() {
       
       {/* Container principal */}
       <div className="relative min-h-screen">
-        {/* Background fallback - sempre visível */}
-        <div className="fixed inset-0 bg-gradient-to-br from-yellow-50 via-white to-yellow-50/30 z-0"></div>
         
         {/* Slides */}
         <div className="relative h-screen overflow-hidden z-10">
           {slides.map((slide, index) => (
             <div
               key={slide.id}
-              className={`absolute inset-0 ${slide.background} slide-transition ${
+              className={`absolute inset-0 slide-transition ${
                 index === currentSlide ? 'slide-active' : 
                 index < currentSlide ? 'slide-prev' : 'slide-inactive'
               }`}
@@ -1186,7 +1155,7 @@ export default function Apresentacao() {
           
         {/* Controles de navegação */}
         <div className="fixed top-1 md:top-2 left-1/2 transform -translate-x-1/2 z-50">
-          <div className="flex items-center space-x-0.5 md:space-x-1 bg-white/90 backdrop-blur-sm rounded-full px-1.5 md:px-2 py-0.5 md:py-1 shadow-lg border border-white/20">
+          <div className="flex items-center space-x-0.5 md:space-x-1 bg-white rounded-full px-1.5 md:px-2 py-0.5 md:py-1 shadow-lg border border-gray-200">
             {/* Botão anterior */}
             <Button
               onClick={prevSlide}
@@ -1240,7 +1209,7 @@ export default function Apresentacao() {
 
         {/* Logotipo - lado esquerdo */}
         <div className="fixed top-4 md:top-8 left-2 md:left-8 z-50">
-          <div className="bg-white/90 backdrop-blur-sm rounded-full p-1.5 md:p-2 shadow-lg border border-white/20">
+          <div className="bg-white rounded-full p-1.5 md:p-2 shadow-lg border border-gray-200">
             <div className="flex items-center space-x-1 md:space-x-2">
               <Image
         src={ASSETS.LOGO_ICON}
@@ -1259,7 +1228,7 @@ export default function Apresentacao() {
         
         {/* Contador de slides - lado direito */}
         <div className="fixed top-4 md:top-8 right-2 md:right-8 z-50">
-          <div className="bg-white/90 backdrop-blur-sm rounded-full px-2 md:px-4 py-1 md:py-2 shadow-lg border border-white/20">
+          <div className="bg-white rounded-full px-2 md:px-4 py-1 md:py-2 shadow-lg border border-gray-200">
             <span className="text-xs md:text-sm font-medium text-gray-700">
               {currentSlide + 1} de {slides.length}
             </span>

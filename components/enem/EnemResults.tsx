@@ -1,6 +1,6 @@
-'use client';
+"use client"
 
-import React from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,366 +10,359 @@ import {
   Target, 
   Clock, 
   TrendingUp, 
-  TrendingDown,
+  Download, 
+  Share2, 
+  RotateCcw,
   CheckCircle,
   XCircle,
   AlertCircle,
-  Download,
-  Share2,
-  RotateCcw
+  BookOpen,
+  BarChart3
 } from 'lucide-react';
-import { SimulationStats } from '@/lib/stores/enem-simulation-store';
-import { cn } from '@/lib/utils';
+import { EnemScore } from '@/types/enem';
+import { useToast } from '@/hooks/use-toast';
 
 interface EnemResultsProps {
-  stats: SimulationStats;
-  totalQuestions: number;
-  timeSpent: number;
-  onRestart: () => void;
-  onDownload?: () => void;
-  onShare?: () => void;
+  score: EnemScore;
+  sessionId: string;
+  onRetake: () => void;
+  onRefocus: (topics: string[]) => void;
 }
 
-export function EnemResults({
-  stats,
-  totalQuestions,
-  timeSpent,
-  onRestart,
-  onDownload,
-  onShare
-}: EnemResultsProps) {
-  const formatTime = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    
-    if (hours > 0) {
-      return `${hours}h ${minutes}min ${secs}s`;
+export function EnemResults({ score, sessionId, onRetake, onRefocus }: EnemResultsProps) {
+  const [exporting, setExporting] = useState(false);
+  const { toast } = useToast();
+
+  const handleExport = async (format: 'PDF' | 'CSV' | 'JSON') => {
+    setExporting(true);
+    try {
+      const response = await fetch('/api/enem/export', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: sessionId,
+          format,
+          options: {
+            includeAnswers: true,
+            includeExplanations: true,
+            includeStatistics: true,
+            includeSimilarQuestions: true
+          }
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Export failed');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `enem-session-${sessionId}.${format.toLowerCase()}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: "Sucesso",
+        description: `Relatório ${format} baixado com sucesso!`,
+      });
+    } catch (error) {
+      console.error('Export error:', error);
+      toast({
+        title: "Erro",
+        description: "Falha ao exportar relatório. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setExporting(false);
     }
-    return `${minutes}min ${secs}s`;
   };
 
-  const getPerformanceLevel = (accuracy: number) => {
-    if (accuracy >= 80) return { level: 'Excelente', color: 'text-green-600', icon: Trophy };
-    if (accuracy >= 70) return { level: 'Bom', color: 'text-blue-600', icon: Target };
-    if (accuracy >= 60) return { level: 'Regular', color: 'text-yellow-600', icon: AlertCircle };
-    return { level: 'Precisa Melhorar', color: 'text-red-600', icon: TrendingDown };
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Meu Resultado do Simulado ENEM',
+          text: `Concluí um simulado ENEM com pontuação total de ${score.total_score.toFixed(1)}!`,
+          url: window.location.href
+        });
+      } catch (error) {
+        console.log('Share cancelled');
+      }
+    } else {
+      // Fallback: copy to clipboard
+      navigator.clipboard.writeText(
+        `Concluí um simulado ENEM com pontuação total de ${score.total_score.toFixed(1)}! ` +
+        `Estimativa TRI: ${score.tri_estimated.score.toFixed(0)} ` +
+        `(${score.tri_estimated.confidence_interval.lower.toFixed(0)} - ${score.tri_estimated.confidence_interval.upper.toFixed(0)})`
+      );
+      toast({
+        title: "Copiado",
+        description: "Resultado copiado para a área de transferência!",
+      });
+    }
   };
 
-  const performance = getPerformanceLevel(stats.accuracy);
-  const PerformanceIcon = performance.icon;
-
-  const getDifficultyStats = (difficulty: 'easy' | 'medium' | 'hard') => {
-    const data = stats.difficultyBreakdown[difficulty];
-    const accuracy = data.total > 0 ? (data.correct / data.total) * 100 : 0;
-    return { ...data, accuracy };
+  const getPerformanceLevel = (percentage: number) => {
+    if (percentage >= 80) return { level: 'Excelente', color: 'text-green-600', bg: 'bg-green-100' };
+    if (percentage >= 60) return { level: 'Bom', color: 'text-blue-600', bg: 'bg-blue-100' };
+    if (percentage >= 40) return { level: 'Regular', color: 'text-yellow-600', bg: 'bg-yellow-100' };
+    return { level: 'Precisa Melhorar', color: 'text-red-600', bg: 'bg-red-100' };
   };
 
-  const easyStats = getDifficultyStats('easy');
-  const mediumStats = getDifficultyStats('medium');
-  const hardStats = getDifficultyStats('hard');
+  const getAreaName = (area: string) => {
+    const names: Record<string, string> = {
+      'CN': 'Ciências da Natureza',
+      'CH': 'Ciências Humanas',
+      'LC': 'Linguagens e Códigos',
+      'MT': 'Matemática'
+    };
+    return names[area] || area;
+  };
 
-  const topSkills = Object.entries(stats.skillBreakdown)
-    .map(([skill, data]) => ({
-      skill,
-      accuracy: data.total > 0 ? (data.correct / data.total) * 100 : 0,
-      total: data.total
-    }))
-    .sort((a, b) => b.accuracy - a.accuracy)
-    .slice(0, 5);
-
-  const bottomSkills = Object.entries(stats.skillBreakdown)
-    .map(([skill, data]) => ({
-      skill,
-      accuracy: data.total > 0 ? (data.correct / data.total) * 100 : 0,
-      total: data.total
-    }))
-    .sort((a, b) => a.accuracy - b.accuracy)
-    .slice(0, 3);
+  const weakTopics = Object.entries(score.stats.accuracy_by_topic)
+    .filter(([_, accuracy]) => accuracy < 0.5)
+    .map(([topic, _]) => topic);
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-6xl mx-auto space-y-6">
       {/* Header */}
-      <div className="text-center space-y-2">
-        <h1 className="text-3xl font-bold">Resultado do Simulado</h1>
-        <p className="text-muted-foreground">
-          Análise detalhada do seu desempenho
-        </p>
+      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+        <CardHeader>
+          <div className="text-center">
+            <Trophy className="h-16 w-16 text-yellow-500 mx-auto mb-4" />
+            <CardTitle className="text-3xl font-bold text-blue-900">
+              Simulado Concluído!
+            </CardTitle>
+            <p className="text-blue-700 mt-2">
+              Aqui estão seus resultados detalhados
+            </p>
+          </div>
+        </CardHeader>
+      </Card>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Overall Score */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="h-5 w-5" />
+              Pontuação Geral
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="text-center">
+              <div className="text-4xl font-bold text-blue-600 mb-2">
+                {score.total_score.toFixed(1)}
+              </div>
+              <div className="text-lg text-gray-600 mb-4">
+                Pontuação Total
+              </div>
+            </div>
+
+            {/* TRI Estimation */}
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h4 className="font-semibold mb-3 flex items-center gap-2">
+                <TrendingUp className="h-4 w-4" />
+                Estimativa TRI
+              </h4>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600 mb-1">
+                  {score.tri_estimated.score.toFixed(0)}
+                </div>
+                <div className="text-sm text-gray-600 mb-2">
+                  Intervalo: {score.tri_estimated.confidence_interval.lower.toFixed(0)} - {score.tri_estimated.confidence_interval.upper.toFixed(0)}
+                </div>
+                <div className="text-xs text-gray-500 italic">
+                  {score.tri_estimated.disclaimer}
+                </div>
+              </div>
+            </div>
+
+            {/* Statistics */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-purple-600">
+                  {Math.floor(score.stats.total_time_spent / 60)}
+                </div>
+                <div className="text-sm text-gray-600">Minutos</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-orange-600">
+                  {score.stats.average_time_per_question.toFixed(1)}
+                </div>
+                <div className="text-sm text-gray-600">Seg/Questão</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Actions */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Share2 className="h-5 w-5" />
+              Ações
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Button 
+              onClick={() => handleExport('PDF')} 
+              className="w-full"
+              disabled={exporting}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Exportar PDF
+            </Button>
+            <Button 
+              onClick={() => handleExport('CSV')} 
+              variant="outline" 
+              className="w-full"
+              disabled={exporting}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Exportar CSV
+            </Button>
+            <Button 
+              onClick={handleShare} 
+              variant="outline" 
+              className="w-full"
+            >
+              <Share2 className="h-4 w-4 mr-2" />
+              Compartilhar
+            </Button>
+            <Button 
+              onClick={onRetake} 
+              variant="outline" 
+              className="w-full"
+            >
+              <RotateCcw className="h-4 w-4 mr-2" />
+              Refazer Simulado
+            </Button>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Overall Performance */}
+      {/* Area Scores */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <PerformanceIcon className={cn("w-6 h-6", performance.color)} />
-            Desempenho Geral
+            <BarChart3 className="h-5 w-5" />
+            Desempenho por Área
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-primary">
-                {stats.accuracy.toFixed(1)}%
-              </div>
-              <div className="text-sm text-muted-foreground">Precisão</div>
-              <Badge className={cn("mt-1", performance.color)}>
-                {performance.level}
-              </Badge>
-            </div>
-            
-            <div className="text-center">
-              <div className="text-3xl font-bold text-green-600">
-                {stats.correctAnswers}
-              </div>
-              <div className="text-sm text-muted-foreground">Corretas</div>
-            </div>
-            
-            <div className="text-center">
-              <div className="text-3xl font-bold text-red-600">
-                {stats.incorrectAnswers}
-              </div>
-              <div className="text-sm text-muted-foreground">Incorretas</div>
-            </div>
-            
-            <div className="text-center">
-              <div className="text-3xl font-bold text-gray-600">
-                {stats.skippedAnswers}
-              </div>
-              <div className="text-sm text-muted-foreground">Puladas</div>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {Object.entries(score.area_scores).map(([area, areaScore]) => {
+              const performance = getPerformanceLevel(areaScore.percentage);
+              return (
+                <div key={area} className="text-center">
+                  <div className={`p-4 rounded-lg ${performance.bg}`}>
+                    <div className="text-lg font-semibold mb-1">
+                      {getAreaName(area)}
+                    </div>
+                    <div className={`text-2xl font-bold ${performance.color} mb-2`}>
+                      {areaScore.percentage.toFixed(1)}%
+                    </div>
+                    <div className="text-sm text-gray-600 mb-2">
+                      {areaScore.correct}/{areaScore.total} corretas
+                    </div>
+                    <Progress value={areaScore.percentage} className="h-2" />
+                    <Badge variant="secondary" className="mt-2">
+                      {performance.level}
+                    </Badge>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </CardContent>
       </Card>
 
-      {/* Time Analysis */}
+      {/* Topic Analysis */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Clock className="w-5 h-5" />
-            Análise de Tempo
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold">
-                {formatTime(timeSpent)}
-              </div>
-              <div className="text-sm text-muted-foreground">Tempo Total</div>
-            </div>
-            
-            <div className="text-center">
-              <div className="text-2xl font-bold">
-                {Math.round(stats.averageTimePerQuestion)}s
-              </div>
-              <div className="text-sm text-muted-foreground">Tempo por Questão</div>
-            </div>
-            
-            <div className="text-center">
-              <div className="text-2xl font-bold">
-                {Math.round((stats.correctAnswers / timeSpent) * 60)}/min
-              </div>
-              <div className="text-sm text-muted-foreground">Questões Corretas/min</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Difficulty Breakdown */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Target className="w-5 h-5" />
-            Desempenho por Dificuldade
+            <BookOpen className="h-5 w-5" />
+            Análise por Tópico
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {/* Easy */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="bg-green-100 text-green-800">
-                    Fácil
-                  </Badge>
-                  <span className="text-sm">
-                    {easyStats.correct}/{easyStats.total} corretas
+            {Object.entries(score.stats.accuracy_by_topic).map(([topic, accuracy]) => (
+              <div key={topic} className="flex items-center justify-between">
+                <span className="font-medium">{topic}</span>
+                <div className="flex items-center gap-3">
+                  <Progress value={accuracy * 100} className="w-32 h-2" />
+                  <span className="text-sm font-medium w-12 text-right">
+                    {(accuracy * 100).toFixed(1)}%
                   </span>
+                  {accuracy >= 0.5 ? (
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                  ) : (
+                    <XCircle className="h-4 w-4 text-red-500" />
+                  )}
                 </div>
-                <span className="text-sm font-medium">
-                  {easyStats.accuracy.toFixed(1)}%
-                </span>
               </div>
-              <Progress value={easyStats.accuracy} className="h-2" />
-            </div>
-
-            {/* Medium */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="bg-yellow-100 text-yellow-800">
-                    Médio
-                  </Badge>
-                  <span className="text-sm">
-                    {mediumStats.correct}/{mediumStats.total} corretas
-                  </span>
-                </div>
-                <span className="text-sm font-medium">
-                  {mediumStats.accuracy.toFixed(1)}%
-                </span>
-              </div>
-              <Progress value={mediumStats.accuracy} className="h-2" />
-            </div>
-
-            {/* Hard */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="bg-red-100 text-red-800">
-                    Difícil
-                  </Badge>
-                  <span className="text-sm">
-                    {hardStats.correct}/{hardStats.total} corretas
-                  </span>
-                </div>
-                <span className="text-sm font-medium">
-                  {hardStats.accuracy.toFixed(1)}%
-                </span>
-              </div>
-              <Progress value={hardStats.accuracy} className="h-2" />
-            </div>
+            ))}
           </div>
         </CardContent>
       </Card>
-
-      {/* Skills Analysis */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Top Skills */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-green-600" />
-              Pontos Fortes
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {topSkills.map(({ skill, accuracy, total }) => (
-                <div key={skill} className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="text-sm font-medium">{skill}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {total} questões
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm font-bold text-green-600">
-                      {accuracy.toFixed(1)}%
-                    </div>
-                    <Progress value={accuracy} className="w-16 h-1 mt-1" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Areas for Improvement */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingDown className="w-5 h-5 text-red-600" />
-              Áreas para Melhorar
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {bottomSkills.map(({ skill, accuracy, total }) => (
-                <div key={skill} className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="text-sm font-medium">{skill}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {total} questões
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm font-bold text-red-600">
-                      {accuracy.toFixed(1)}%
-                    </div>
-                    <Progress value={accuracy} className="w-16 h-1 mt-1" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Recommendations */}
+      {weakTopics.length > 0 && (
+        <Card className="border-orange-200 bg-orange-50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-orange-800">
+              <AlertCircle className="h-5 w-5" />
+              Áreas para Revisão
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <p className="text-orange-800">
+                Identificamos que você pode melhorar nos seguintes tópicos:
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {weakTopics.map(topic => (
+                  <Badge key={topic} variant="outline" className="text-orange-800 border-orange-300">
+                    {topic}
+                  </Badge>
+                ))}
+              </div>
+              <Button 
+                onClick={() => onRefocus(weakTopics)}
+                className="bg-orange-600 hover:bg-orange-700"
+              >
+                <Target className="h-4 w-4 mr-2" />
+                Focar Nestes Tópicos
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Difficulty Breakdown */}
       <Card>
         <CardHeader>
-          <CardTitle>Recomendações de Estudo</CardTitle>
+          <CardTitle>Desempenho por Dificuldade</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            {bottomSkills.length > 0 && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                <h4 className="font-semibold text-red-800 mb-1">
-                  Foque nestas áreas:
-                </h4>
-                <p className="text-red-700 text-sm">
-                  {bottomSkills.map(skill => skill.skill).join(', ')}
-                </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {Object.entries(score.stats.difficulty_breakdown).map(([difficulty, stats]) => (
+              <div key={difficulty} className="text-center">
+                <div className="text-lg font-semibold capitalize mb-2">{difficulty}</div>
+                <div className="text-2xl font-bold text-blue-600 mb-1">
+                  {stats.correct}/{stats.total}
+                </div>
+                <div className="text-sm text-gray-600">
+                  {stats.total > 0 ? ((stats.correct / stats.total) * 100).toFixed(1) : 0}% de acerto
+                </div>
               </div>
-            )}
-            
-            {stats.accuracy < 70 && (
-              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <h4 className="font-semibold text-yellow-800 mb-1">
-                  Dica de Estudo:
-                </h4>
-                <p className="text-yellow-700 text-sm">
-                  Pratique mais questões de nível médio antes de avançar para as difíceis.
-                </p>
-              </div>
-            )}
-            
-            {stats.averageTimePerQuestion > 120 && (
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <h4 className="font-semibold text-blue-800 mb-1">
-                  Gestão de Tempo:
-                </h4>
-                <p className="text-blue-700 text-sm">
-                  Você está gastando muito tempo por questão. Pratique para aumentar a velocidade.
-                </p>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Actions */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Button onClick={onRestart} className="flex items-center gap-2">
-              <RotateCcw className="w-4 h-4" />
-              Fazer Novo Simulado
-            </Button>
-            
-            {onDownload && (
-              <Button variant="outline" onClick={onDownload} className="flex items-center gap-2">
-                <Download className="w-4 h-4" />
-                Baixar Resultado
-              </Button>
-            )}
-            
-            {onShare && (
-              <Button variant="outline" onClick={onShare} className="flex items-center gap-2">
-                <Share2 className="w-4 h-4" />
-                Compartilhar
-              </Button>
-            )}
+            ))}
           </div>
         </CardContent>
       </Card>

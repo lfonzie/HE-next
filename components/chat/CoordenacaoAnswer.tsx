@@ -31,7 +31,7 @@ export const CoordenacaoAnswer: React.FC<CoordenacaoAnswerProps> = ({ question, 
       </div>
       
       <div className="coordenacao-content">
-        <MessageRenderer content={answer} moduleId="COORDENACAO" />
+        <div className="whitespace-pre-wrap">{answer}</div>
       </div>
     </div>
   );

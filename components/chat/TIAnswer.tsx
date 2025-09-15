@@ -31,7 +31,7 @@ export const TIAnswer: React.FC<TIAnswerProps> = ({ question, answer }) => {
       </div>
       
       <div className="ti-content">
-        <MessageRenderer content={answer} moduleId="TI" />
+        <div className="whitespace-pre-wrap">{answer}</div>
       </div>
     </div>
   );

@@ -31,7 +31,7 @@ export const SocialMediaAnswer: React.FC<SocialMediaAnswerProps> = ({ question, 
       </div>
       
       <div className="social-media-content">
-        <MessageRenderer content={answer} moduleId="SOCIAL_MEDIA" />
+        <div className="whitespace-pre-wrap">{answer}</div>
       </div>
     </div>
   );

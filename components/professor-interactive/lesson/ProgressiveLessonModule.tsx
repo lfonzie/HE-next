@@ -130,7 +130,7 @@ export default function ProgressiveLessonModule({
         onLessonComplete();
       }
     }
-  }, [lessonState.currentStep, progressiveLoading.loadingState.loadedSlides, onLessonComplete]);
+  }, [lessonState.currentStep, progressiveLoading.loadingState.loadedSlides, progressiveLoading, onLessonComplete]);
 
   // Valores calculados
   const currentSlide = progressiveLoading.loadingState.loadedSlides[lessonState.currentStep];
@@ -437,7 +437,7 @@ export default function ProgressiveLessonModule({
             <CardContent>
               <div className="text-center space-y-4">
                 <div className="text-2xl font-bold text-green-600">
-                  Parabéns! Você completou a aula sobre "{query}"
+                  Parabéns! Você completou a aula sobre &quot;{query}&quot;
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="text-center p-4 bg-blue-50 rounded-lg">

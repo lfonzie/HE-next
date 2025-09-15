@@ -14,11 +14,15 @@ import { CoordenacaoAnswer } from "./CoordenacaoAnswer";
 import { SecretariaAnswer } from "./SecretariaAnswer";
 import { BemEstarAnswer } from "./BemEstarAnswer";
 import { SocialMediaAnswer } from "./SocialMediaAnswer";
+import { WeatherAnswer } from "./WeatherAnswer";
 import { MessageRenderer } from "./MessageRenderer";
+import { BlocksRenderer } from "./BlocksRenderer";
+import { ActionsRenderer } from "./ActionsRenderer";
 import { MODULES } from "@/lib/modules";
 import { getModuleIcon } from "@/lib/moduleIcons";
 import { useState, useEffect } from "react";
 import { useAutoClassification } from "@/hooks/useAutoClassification";
+import { isWeatherQuery } from "@/utils/weatherApi";
 
 /* ---------- Utils ---------- */
 
@@ -233,6 +237,11 @@ export const ChatMessage = memo(function ChatMessage({
                 question={message.originalQuery || ""} 
                 answer={message.content}
               />
+            ) : !isUser && isWeatherQuery(message.content || message.originalQuery || "") ? (
+              <WeatherAnswer 
+                question={message.originalQuery || message.content || ""} 
+                answer={message.content}
+              />
             ) : (
               <MessageRenderer 
                 content={message.content} 
@@ -280,6 +289,12 @@ export const ChatMessage = memo(function ChatMessage({
                 </div>
               </div>
             )}
+
+            {/* Orchestrated Blocks */}
+            {!isUser && <BlocksRenderer blocks={message.blocks as any} />}
+
+            {/* Orchestrated Actions */}
+            {!isUser && <ActionsRenderer actions={message.actions as any} />}
 
             {/* Citações (web search) */}
             {!isUser && !!message.webSearchUsed && !!message.citations?.length && (

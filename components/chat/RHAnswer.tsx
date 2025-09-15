@@ -31,7 +31,7 @@ export const RHAnswer: React.FC<RHAnswerProps> = ({ question, answer }) => {
       </div>
       
       <div className="rh-content">
-        <MessageRenderer content={answer} moduleId="RH" />
+        <div className="whitespace-pre-wrap">{answer}</div>
       </div>
     </div>
   );

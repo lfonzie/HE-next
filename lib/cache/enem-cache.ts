@@ -39,11 +39,11 @@ export class EnemCache {
     const now = Date.now();
     const expiredKeys: string[] = [];
 
-    for (const [key, entry] of this.cache.entries()) {
+    this.cache.forEach((entry, key) => {
       if (now - entry.timestamp > entry.ttl) {
         expiredKeys.push(key);
       }
-    }
+    });
 
     expiredKeys.forEach(key => this.cache.delete(key));
 
@@ -167,8 +167,8 @@ export class QuestionCache {
   invalidateArea(area: string): void {
     const keys = Array.from((this.cache as any).cache.keys());
     keys.forEach(key => {
-      if (key.includes(`area:${area}`) || key.includes(`questions:`)) {
-        this.cache.delete(key);
+      if ((key as string).includes(`area:${area}`) || (key as string).includes(`questions:`)) {
+        this.cache.delete(key as string);
       }
     });
   }

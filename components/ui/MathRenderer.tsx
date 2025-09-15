@@ -13,6 +13,34 @@ export const MathRenderer: React.FC<MathRendererProps> = ({
   inline = false, 
   className = '' 
 }) => {
+  // Função simples para converter LaTeX básico para Unicode
+  const latexToUnicode = (text: string): string => {
+    return text
+      .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '$1⁄$2')
+      .replace(/\\sqrt\{([^}]+)\}/g, '√$1')
+      .replace(/\\pi/g, 'π')
+      .replace(/\\alpha/g, 'α')
+      .replace(/\\beta/g, 'β')
+      .replace(/\\gamma/g, 'γ')
+      .replace(/\\delta/g, 'δ')
+      .replace(/\\theta/g, 'θ')
+      .replace(/\\lambda/g, 'λ')
+      .replace(/\\mu/g, 'μ')
+      .replace(/\\sigma/g, 'σ')
+      .replace(/\\tau/g, 'τ')
+      .replace(/\\phi/g, 'φ')
+      .replace(/\\omega/g, 'ω')
+      .replace(/\\pm/g, '±')
+      .replace(/\\times/g, '×')
+      .replace(/\\div/g, '÷')
+      .replace(/\\leq/g, '≤')
+      .replace(/\\geq/g, '≥')
+      .replace(/\\neq/g, '≠')
+      .replace(/\\infty/g, '∞')
+      .replace(/\\sum/g, '∑')
+      .replace(/\\int/g, '∫');
+  };
+  
   const unicodeContent = latexToUnicode(content);
   
   return (
@@ -29,6 +57,27 @@ interface MathTextProps {
   text: string;
   className?: string;
 }
+
+// Função para processar markdown básico
+const processMarkdown = (text: string): string => {
+  return text
+    // Headings
+    .replace(/^### (.*$)/gm, '<h3 class="text-lg font-semibold mt-4 mb-2 text-gray-900">$1</h3>')
+    .replace(/^## (.*$)/gm, '<h2 class="text-xl font-semibold mt-5 mb-3 text-gray-900">$1</h2>')
+    .replace(/^# (.*$)/gm, '<h1 class="text-2xl font-bold mt-6 mb-4 text-gray-900">$1</h1>')
+    // Bold and italic
+    .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold">$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em class="italic">$1</em>')
+    // Code
+    .replace(/`(.*?)`/g, '<code class="inline-code bg-gray-100 px-1 py-0.5 rounded text-sm font-mono">$1</code>')
+    .replace(/```([\s\S]*?)```/g, '<pre class="code-block bg-gray-100 p-3 rounded-lg overflow-x-auto"><code class="text-sm font-mono">$1</code></pre>')
+    // Lists
+    .replace(/^\- (.*$)/gm, '<li class="ml-4 mb-1">• $1</li>')
+    .replace(/^\* (.*$)/gm, '<li class="ml-4 mb-1">• $1</li>')
+    .replace(/^\d+\. (.*$)/gm, '<li class="ml-4 mb-1">$1</li>')
+    // Line breaks
+    .replace(/\n/g, '<br>');
+};
 
 export const MathText: React.FC<MathTextProps> = ({ text, className = '' }) => {
   // Regex para encontrar expressões matemáticas
@@ -72,24 +121,7 @@ export const MathText: React.FC<MathTextProps> = ({ text, className = '' }) => {
 
   return (
     <div className={className}>
-      {parts.map((part, index) => {
-        if (part.type === 'math') {
-          return (
-            <MathRenderer
-              key={index}
-              content={part.content}
-              inline={part.inline}
-            />
-          );
-        } else {
-          return (
-            <span 
-              key={index} 
-              dangerouslySetInnerHTML={{ __html: part.content }}
-            />
-          );
-        }
-      })}
+      <span dangerouslySetInnerHTML={{ __html: processMarkdown(text) }} />
     </div>
   );
 };

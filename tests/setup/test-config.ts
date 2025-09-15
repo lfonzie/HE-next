@@ -21,9 +21,12 @@ export const testConfig = {
 
 // Test environment setup
 export function setupTestEnvironment() {
-  process.env.NODE_ENV = 'test'
-  process.env.OPENAI_API_KEY = 'test-key'
-  process.env.UNSPLASH_ACCESS_KEY = 'test-key'
-  process.env.NEXTAUTH_SECRET = 'test-secret'
-  process.env.NEXTAUTH_URL = 'http://localhost:3000'
+  // Set test environment variables
+  Object.assign(process.env, {
+    NODE_ENV: 'test',
+    OPENAI_API_KEY: 'test-key',
+    UNSPLASH_ACCESS_KEY: 'test-key',
+    NEXTAUTH_SECRET: 'test-secret',
+    NEXTAUTH_URL: 'http://localhost:3000'
+  });
 }

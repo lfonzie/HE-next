@@ -61,7 +61,7 @@ const defaultConfig: SimulationConfig = {
   total_questions: 20,
   duration_sec: 3600, // 1 hour
   years: [2023, 2022, 2021],
-  difficulty: ['EASY', 'MEDIUM', 'HARD'],
+  difficulty: ['EASY', 'MEDIUM', 'HARD'] as ('EASY' | 'MEDIUM' | 'HARD')[],
   skill_tags: [],
   fallback_threshold: 0.7
 };
@@ -236,21 +236,21 @@ export const useEnemConfigStore = create<EnemConfigState>()(
             total_questions: 10,
             duration_sec: 1800, // 30 minutes
             years: [2023],
-            difficulty: ['MEDIUM']
+            difficulty: ['MEDIUM'] as ('EASY' | 'MEDIUM' | 'HARD')[]
           },
           standard: {
             ...defaultConfig,
             total_questions: 20,
             duration_sec: 3600, // 1 hour
             years: [2023, 2022],
-            difficulty: ['EASY', 'MEDIUM', 'HARD']
+            difficulty: ['EASY', 'MEDIUM', 'HARD'] as ('EASY' | 'MEDIUM' | 'HARD')[]
           },
           comprehensive: {
             ...defaultConfig,
             total_questions: 45,
             duration_sec: 7200, // 2 hours
             years: [2023, 2022, 2021, 2020],
-            difficulty: ['EASY', 'MEDIUM', 'HARD']
+            difficulty: ['EASY', 'MEDIUM', 'HARD'] as ('EASY' | 'MEDIUM' | 'HARD')[]
           }
         };
 

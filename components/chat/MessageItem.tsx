@@ -5,8 +5,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { formatDate, getModuleConfig } from '@/lib/utils'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
+// Removed ReactMarkdown imports to avoid errors
 import { Copy, Check, ThumbsUp, ThumbsDown, MoreHorizontal } from 'lucide-react'
 import { useState } from 'react'
 
@@ -50,23 +49,9 @@ export function MessageItem({ message, isLast = false }: MessageItemProps) {
         <div className="relative max-w-[75%] lg:max-w-[60%]">
           <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-2xl rounded-tr-md px-4 py-3 shadow-lg">
             <div className="prose prose-sm max-w-none prose-invert">
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                components={{
-                  p: ({ children }) => <p className="mb-2 last:mb-0 text-white">{children}</p>,
-                  ul: ({ children }) => <ul className="list-disc pl-4 mb-2 text-white">{children}</ul>,
-                  ol: ({ children }) => <ol className="list-decimal pl-4 mb-2 text-white">{children}</ol>,
-                  li: ({ children }) => <li className="mb-1 text-white">{children}</li>,
-                  code: ({ children }) => (
-                    <code className="bg-white/20 px-1 py-0.5 rounded text-sm text-white">{children}</code>
-                  ),
-                  pre: ({ children }) => (
-                    <pre className="bg-white/20 p-3 rounded overflow-x-auto text-sm text-white">{children}</pre>
-                  ),
-                }}
-              >
+              <div className="whitespace-pre-wrap text-white">
                 {message.content || ''}
-              </ReactMarkdown>
+              </div>
             </div>
             <div className="text-xs opacity-70 mt-2 text-right text-white">
               {message.timestamp ? formatTime(message.timestamp) : ''}
@@ -130,26 +115,9 @@ export function MessageItem({ message, isLast = false }: MessageItemProps) {
                 
                 {/* Conteúdo da mensagem */}
                 <div className="prose prose-sm max-w-none dark:prose-invert">
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    components={{
-                      p: ({ children }) => <p className="mb-3 last:mb-0 leading-relaxed">{children}</p>,
-                      ul: ({ children }) => <ul className="list-disc pl-4 mb-3 space-y-1">{children}</ul>,
-                      ol: ({ children }) => <ol className="list-decimal pl-4 mb-3 space-y-1">{children}</ol>,
-                      li: ({ children }) => <li className="mb-1">{children}</li>,
-                      code: ({ children }) => (
-                        <code className="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-sm font-mono">{children}</code>
-                      ),
-                      pre: ({ children }) => (
-                        <pre className="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg overflow-x-auto text-sm font-mono">{children}</pre>
-                      ),
-                      blockquote: ({ children }) => (
-                        <blockquote className="border-l-4 border-blue-500 pl-4 italic text-gray-600 dark:text-gray-400">{children}</blockquote>
-                      ),
-                    }}
-                  >
+                  <div className="whitespace-pre-wrap">
                     {message.content || ''}
-                  </ReactMarkdown>
+                  </div>
                 </div>
                 
                 {/* Footer com timestamp e ações */}

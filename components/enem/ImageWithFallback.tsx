@@ -34,7 +34,7 @@ export function ImageWithFallback({
     setImageState('loading')
     
     // Test image accessibility
-    const testImage = new Image()
+    const testImage = new (Image as any)()
     testImage.onload = () => setImageState('loaded')
     testImage.onerror = () => {
       if (retryCount < maxRetries) {

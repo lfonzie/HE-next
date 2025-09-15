@@ -12,6 +12,7 @@ import { QuotaProvider } from '@/components/providers/QuotaProvider'
 import { LoadingScreen, LoadingOverlay } from '@/components/ui/loading'
 import { useNavigationLoading } from '@/hooks/useNavigationLoading'
 import { MessageSquare, BookOpen, Settings, GraduationCap } from 'lucide-react'
+import '../globals.css'
 
 interface DashboardLayoutProps {
   children: ReactNode

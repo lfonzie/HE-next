@@ -31,7 +31,7 @@ export const FinanceiroAnswer: React.FC<FinanceiroAnswerProps> = ({ question, an
       </div>
       
       <div className="financeiro-content">
-        <MessageRenderer content={answer} moduleId="FINANCEIRO" />
+        <div className="whitespace-pre-wrap">{answer}</div>
       </div>
     </div>
   );

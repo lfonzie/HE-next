@@ -1,0 +1,43 @@
+{
+  "dataset_version": "v2025-01-15",
+  "years_available": [
+    2023,
+    2022,
+    2021,
+    2020,
+    2019,
+    2018,
+    2017,
+    2016,
+    2015,
+    2014,
+    2013,
+    2012,
+    2011,
+    2010,
+    2009
+  ],
+  "areas": [
+    "CN",
+    "CH",
+    "LC",
+    "MT"
+  ],
+  "checksums": {
+    "2023/items.jsonl": "sha256-118c54ba2150af8bdaec670283693ca30f9fcbcb19cb08ee49ff7c569a035474",
+    "2022/items.jsonl": "sha256-35a7c4e6db4f1d129c67c9e0622b1283b0141cf62744b5000b433900b8012ff3",
+    "2021/items.jsonl": "sha256-cdee471881fd6aef40eb8905a7f487529c227e342996196ae3a469a4e11afccb",
+    "2020/items.jsonl": "sha256-03818831c92e3f87a7d481da54f51f9e9fd946912780a09b202b2b0aae7cd88f",
+    "2019/items.jsonl": "sha256-f1799f5f76825262573dba7794fa2fcdb2fc22dd23b56ca1b55f0a676babd2e3",
+    "2018/items.jsonl": "sha256-cf98fffc01fcdb735c8fdfd14c9b41568d8087ede178e958841fbe29f2746c9d",
+    "2017/items.jsonl": "sha256-777e64cfb9c4d9d51d2eb970afbdeb1b45d92967444357c0b9f3afff0bd6ea3a",
+    "2016/items.jsonl": "sha256-d375bf05d981c70f477f7c38856d8dc1dc61424f91a35e8e12185f67497715ff",
+    "2015/items.jsonl": "sha256-9268891a4c13a03349194af90c1107ce9391d71679519394288a5dd72f421254",
+    "2014/items.jsonl": "sha256-54af13b62fd2bca9a8a8920cae1f0a8459bd411b00e54b02773061f0084bf882",
+    "2013/items.jsonl": "sha256-8d4ff45117ec54e7134d5cf9367a12e98b1379de73a3ad3c56ccf2d5c6f37762",
+    "2012/items.jsonl": "sha256-9535857be9f6148de3eb8bd1a88341b63ebefdcb49a0e26e7cd148b28dda7c39",
+    "2011/items.jsonl": "sha256-5e872c19c92b469d9cb67a83bafd032ab71be7ac560386b0d3a9eb998048d2e7",
+    "2010/items.jsonl": "sha256-4b5dd7e669c7891e19c308763a5be005c4287f1c49ee76a03a258044a8f75f82",
+    "2009/items.jsonl": "sha256-afa20c2af43a850820048d5994008c60da540de1b16a678f42b844a60de604e7"
+  }
+}

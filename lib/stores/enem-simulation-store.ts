@@ -111,7 +111,7 @@ interface EnemSimulationState {
   
   // Results
   calculateStats: () => SimulationStats;
-  showResults: () => void;
+  displayResults: () => void;
   hideResults: () => void;
   
   // Utility
@@ -213,7 +213,7 @@ export const useEnemSimulationStore = create<EnemSimulationState>()(
 
           return {
             questions: newQuestions,
-            loadedBatches: new Set([...state.loadedBatches, batchNumber]),
+            loadedBatches: new Set(Array.from(state.loadedBatches).concat(batchNumber)),
             isLoading: false
           };
         }),
@@ -447,7 +447,7 @@ export const useEnemSimulationStore = create<EnemSimulationState>()(
         };
       },
 
-      showResults: () =>
+      displayResults: () =>
         set({ showResults: true }),
 
       hideResults: () =>

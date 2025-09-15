@@ -31,7 +31,7 @@ export const BemEstarAnswer: React.FC<BemEstarAnswerProps> = ({ question, answer
       </div>
       
       <div className="bem-estar-content">
-        <MessageRenderer content={answer} moduleId="BEM_ESTAR" />
+        <div className="whitespace-pre-wrap">{answer}</div>
       </div>
     </div>
   );

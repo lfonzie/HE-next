@@ -1,0 +1,236 @@
+{
+  "title": "Fotossíntese: Do Sol às Folhas — Como as Plantas Transformam Luz em Vida",
+  "objectives": [
+    "Explicar o que é fotossíntese e por que é essencial para os seres vivos",
+    "Descrever os ingredientes (luz, água, dióxido de carbono) e os produtos (oxigênio, glicose)",
+    "Entender onde no cloroplasto isso acontece (tilacoides, estroma)",
+    "Relacionar fotossíntese com impacto ambiental e atmosfera"
+  ],
+  "introduction": "Você já se perguntou como as plantas conseguem crescer apenas com luz solar e água? Nesta aula interativa, vamos descobrir o incrível processo da fotossíntese que acontece todos os dias nas folhas das plantas ao nosso redor.",
+  "stages": [
+    {
+      "etapa": "Introdução e Reflexão Inicial",
+      "type": "explainer",
+      "activity": {
+        "component": "OpenQuestion",
+        "prompt": "Por que você acha que as plantas precisam de luz? Observe uma planta próxima a você e descreva o que você vê.",
+        "inputType": "text-audio",
+        "time": 5,
+        "points": 5,
+        "feedback": "Registre respostas para discussão inicial e engajamento"
+      },
+      "route": "/lessons/photosynthesis/intro"
+    },
+    {
+      "etapa": "Conceitos Básicos - O que é Fotossíntese",
+      "type": "visual",
+      "activity": {
+        "component": "AnimationSlide",
+        "content": "Apresentar slides com imagens/vídeos de folhas, cloroplasto. Animação mostrando luz entrando, água absorvida pelas raízes, CO₂ entrando pelos estômatos.",
+        "media": [
+          "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800",
+          "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800"
+        ],
+        "animationSteps": [
+          {
+            "id": "step1",
+            "title": "A Luz Solar",
+            "description": "A luz solar é captada pelas folhas através de pigmentos chamados clorofila",
+            "duration": 3000
+          },
+          {
+            "id": "step2", 
+            "title": "Absorção de Água",
+            "description": "As raízes absorvem água do solo e transportam até as folhas",
+            "duration": 3000
+          },
+          {
+            "id": "step3",
+            "title": "Entrada de CO₂",
+            "description": "O dióxido de carbono entra pelas pequenas aberturas chamadas estômatos",
+            "duration": 3000
+          }
+        ],
+        "time": 8,
+        "points": 10
+      },
+      "route": "/lessons/photosynthesis/basics"
+    },
+    {
+      "etapa": "Quiz Interativo - Ingredientes da Fotossíntese",
+      "type": "quiz",
+      "activity": {
+        "component": "QuizComponent",
+        "questions": [
+          {
+            "q": "Qual parte da planta capta a luz solar?",
+            "options": ["Raízes", "Folhas", "Caule", "Flores"],
+            "correct": 1,
+            "explanation": "As folhas contêm clorofila, o pigmento verde que capta a luz solar."
+          },
+          {
+            "q": "Qual gás as plantas absorvem do ar?",
+            "options": ["Oxigênio", "Nitrogênio", "Dióxido de carbono", "Hidrogênio"],
+            "correct": 2,
+            "explanation": "As plantas absorvem CO₂ (dióxido de carbono) através dos estômatos nas folhas."
+          },
+          {
+            "q": "O que as plantas produzem durante a fotossíntese?",
+            "options": ["Apenas oxigênio", "Apenas glicose", "Oxigênio e glicose", "Apenas água"],
+            "correct": 2,
+            "explanation": "A fotossíntese produz tanto oxigênio (que respiramos) quanto glicose (alimento da planta)."
+          }
+        ],
+        "feedback": "Imediato com explicações detalhadas",
+        "time": 5,
+        "points": 15
+      },
+      "route": "/lessons/photosynthesis/quiz1"
+    },
+    {
+      "etapa": "Processo Bioquímico - Fase Clara e Escura",
+      "type": "guided",
+      "activity": {
+        "component": "AnimationSlide",
+        "content": "Explicar reações de luz (fase clara) e de escuridão (fase escura). Usar esquema interativo onde aluno clica nos componentes para ver papel de cada um: clorofila, ATP, NADPH, etc.",
+        "animationSteps": [
+          {
+            "id": "light_reaction",
+            "title": "Fase Clara",
+            "description": "A luz solar quebra moléculas de água, liberando oxigênio e criando energia (ATP e NADPH)",
+            "duration": 4000,
+            "element": "light_energy"
+          },
+          {
+            "id": "dark_reaction",
+            "title": "Fase Escura (Ciclo de Calvin)",
+            "description": "Usando ATP e NADPH, o CO₂ é convertido em glicose através do ciclo de Calvin",
+            "duration": 4000,
+            "element": "calvin_cycle"
+          },
+          {
+            "id": "chloroplast_structure",
+            "title": "Estrutura do Cloroplasto",
+            "description": "Os tilacoides fazem a fase clara, o estroma faz a fase escura",
+            "duration": 3000,
+            "element": "chloroplast"
+          }
+        ],
+        "time": 10,
+        "points": 20
+      },
+      "route": "/lessons/photosynthesis/process"
+    },
+    {
+      "etapa": "Atividade de Desenho - Ciclo da Fotossíntese",
+      "type": "applied",
+      "activity": {
+        "component": "DrawingPrompt",
+        "prompt": "Desenhe o ciclo básico da fotossíntese. Inclua: luz solar, água, CO₂, oxigênio e glicose. Use setas para mostrar o fluxo.",
+        "time": 7,
+        "points": 15,
+        "feedback": "Desenho será avaliado pela compreensão dos conceitos principais"
+      },
+      "route": "/lessons/photosynthesis/drawing"
+    },
+    {
+      "etapa": "Análise de Gráficos - Fatores que Afetam a Fotossíntese",
+      "type": "applied",
+      "activity": {
+        "component": "QuizComponent",
+        "questions": [
+          {
+            "q": "Dois casos: planta A em sombra, planta B em luz forte. Qual terá maior taxa de fotossíntese?",
+            "options": ["Planta A (sombra)", "Planta B (luz forte)", "Ambas iguais", "Depende da temperatura"],
+            "correct": 1,
+            "explanation": "Mais luz solar significa mais energia para a fotossíntese, até certo limite."
+          },
+          {
+            "q": "Se aumentarmos a concentração de CO₂ na atmosfera, o que acontece com a fotossíntese?",
+            "options": ["Diminui", "Aumenta", "Não muda", "Para completamente"],
+            "correct": 1,
+            "explanation": "Mais CO₂ disponível significa mais matéria-prima para produzir glicose."
+          }
+        ],
+        "time": 7,
+        "points": 15
+      },
+      "route": "/lessons/photosynthesis/applied"
+    },
+    {
+      "etapa": "Discussão e Reflexão - Impacto Ambiental",
+      "type": "debate",
+      "activity": {
+        "component": "DiscussionBoard",
+        "prompts": [
+          "Se aumentarmos CO₂ na atmosfera, o que pode acontecer com a fotossíntese? E se faltar água?",
+          "Como o desmatamento afeta o ciclo do oxigênio na Terra?",
+          "Que medidas podemos tomar para proteger as plantas e a fotossíntese?"
+        ],
+        "time": 5,
+        "realTime": true,
+        "points": 10
+      },
+      "route": "/lessons/photosynthesis/reflection"
+    },
+    {
+      "etapa": "Avaliação Final - Teste de Compreensão",
+      "type": "assessment",
+      "activity": {
+        "component": "MixedQuiz",
+        "questions": [
+          {
+            "type": "mcq",
+            "q": "Qual é a equação química da fotossíntese?",
+            "options": [
+              "6CO₂ + 6H₂O + luz → C₆H₁₂O₆ + 6O₂",
+              "6O₂ + 6H₂O + luz → C₆H₁₂O₆ + 6CO₂", 
+              "C₆H₁₂O₆ + 6O₂ → 6CO₂ + 6H₂O + energia",
+              "6CO₂ + 6O₂ → C₆H₁₂O₆ + 6H₂O"
+            ],
+            "correct": 0
+          },
+          {
+            "type": "open",
+            "prompt": "Explique em suas palavras o que é fotossíntese e por que é importante para a vida na Terra."
+          }
+        ],
+        "time": 5,
+        "points": 20
+      },
+      "route": "/lessons/photosynthesis/assessment"
+    },
+    {
+      "etapa": "Extensão - Aplicação Prática",
+      "type": "project",
+      "activity": {
+        "component": "UploadTask",
+        "prompt": "Observe plantas em casa/cidade: compare uma planta bem iluminada vs uma planta sombreada. Tire fotos e faça um diário de crescimento por uma semana. Registre suas observações sobre diferenças no crescimento.",
+        "due": "optional",
+        "time": "later",
+        "points": 25
+      },
+      "route": "/lessons/photosynthesis/extension"
+    }
+  ],
+  "feedback": {
+    "progress": "Mostrar progresso ('quantas etapas restam') com barra visual",
+    "review": "Permitir voltar e revisar etapas anteriores",
+    "challenges": "Mini-desafios: desenhar o ciclo básico da fotossíntese",
+    "gamification": "Pontos por acertos, medalhas por completar sem ajuda, ranking de participação"
+  },
+  "uiHooks": {
+    "navigation": "Use Next.js Link para transições entre etapas",
+    "data": "Fetch from JSON or DB; use useState para estados interativos",
+    "persistence": "Salvar progresso automaticamente no localStorage e banco de dados"
+  },
+  "metadata": {
+    "subject": "Ciências",
+    "grade": "7",
+    "duration": "45",
+    "difficulty": "medium",
+    "tags": ["fotossíntese", "plantas", "biologia", "ecologia", "química"],
+    "createdBy": "AI Assistant",
+    "version": "1.0"
+  }
+}

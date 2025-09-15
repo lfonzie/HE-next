@@ -59,6 +59,10 @@ export interface Message {
   image?: string
   attachment?: File
   hasError?: boolean
+  // Orchestrated UI payloads
+  blocks?: OrchestratorBlock[]
+  actions?: OrchestratorAction[]
+  trace?: OrchestratorTrace
 }
 
 export interface Attachment {
@@ -79,6 +83,8 @@ export interface EnemQuestion {
   alternatives: string[]
   correct: string
   explanation?: string
+  image_url?: string
+  image_alt?: string
   createdAt: Date
 }
 
@@ -196,4 +202,33 @@ export interface Stat {
   value: string
   label: string
   description: string
+}
+
+// Unified Orchestrator contract
+export type OrchestratorBlock =
+  | { type: 'lesson_interactive'; lesson_id: string; meta?: Record<string, any> }
+  | { type: 'quiz'; questions: any[]; meta?: Record<string, any> }
+  | { type: 'media'; items: Array<{ url: string; title?: string; caption?: string; source?: string }>; meta?: Record<string, any> }
+  | { type: 'notice'; title: string; body: string; meta?: Record<string, any> }
+  | { type: 'checklist'; items: Array<{ text: string; done?: boolean }>; meta?: Record<string, any> }
+
+export type OrchestratorAction =
+  | { type: 'cta'; label: string; module: string; args?: Record<string, any> }
+  | { type: 'link'; label: string; href: string }
+
+export interface OrchestratorTrace {
+  module: string
+  confidence: number
+  intent?: string
+  slots?: Record<string, any>
+  latencyMs?: number
+  cost?: { inputTokens?: number; outputTokens?: number }
+  errors?: string[]
+}
+
+export interface OrchestratorResponse {
+  text: string
+  blocks: OrchestratorBlock[]
+  actions?: OrchestratorAction[]
+  trace?: OrchestratorTrace
 }
