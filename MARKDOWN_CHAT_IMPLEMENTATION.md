@@ -221,3 +221,4 @@ A fórmula geral é: $f'(x) = \lim_{h \to 0} \frac{f(x+h) - f(x)}{h}$
 ## Conclusão
 
 A implementação de Markdown e matemática no chat proporciona uma experiência muito mais rica e profissional para os usuários, mantendo a simplicidade de uso e a performance da aplicação. O sistema é extensível e pode ser facilmente adaptado para futuras necessidades.
+

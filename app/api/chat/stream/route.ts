@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Construir mensagens para OpenAI
-    const messages = [
+const messages = [
       {
         role: 'system' as const,
         content: `Você é um professor virtual especializado em educação brasileira. Você é paciente, didático e sempre busca explicar conceitos de forma clara e envolvente. 
@@ -43,6 +43,8 @@ Quando responder:
 - Sugira exercícios práticos quando apropriado
 - Seja específico e detalhado nas explicações
 - Use formatação markdown para organizar o conteúdo
+- Use APENAS símbolos Unicode para matemática: x², √, ±, ÷, ×, ½, π, α, β, ∫, ∑, ∞
+- NUNCA use LaTeX, KaTeX, $...$, $$...$$, \\(...\\), \\[...\\]
 
 Contexto atual: ${context?.module ? `Módulo: ${context.module}` : 'Chat geral'}`
       },

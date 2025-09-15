@@ -323,6 +323,25 @@ export const UNIFIED_SYSTEM_PROMPTS: Record<string, SystemPromptConfig> = {
     createdBy: 'unified-system'
   },
 
+  'atendimento.geral.system': {
+    key: 'atendimento.geral.system',
+    scope: 'production',
+    model: 'gpt-4o-mini',
+    json: {
+      type: 'chat',
+      role: 'system',
+      content: Support.ATENDIMENTO_GERAL_PROMPT,
+      department: 'ATENDIMENTO',
+      priority: 'high',
+      mathFormat: 'unicode',
+      markdownFormat: true
+    },
+    description: 'Professor virtual para chat geral com formatação Unicode',
+    version: 1,
+    status: 'active',
+    createdBy: 'unified-system'
+  },
+
   // Lições (do sistema TypeScript)
   'lessons.creation.system': {
     key: 'lessons.creation.system',

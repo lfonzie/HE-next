@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react";
-import { MessageRenderer } from "./MessageRenderer";
+import { MarkdownRenderer } from "./MarkdownRenderer";
 
 interface SocialMediaAnswerProps {
   question: string;
@@ -31,7 +31,12 @@ export const SocialMediaAnswer: React.FC<SocialMediaAnswerProps> = ({ question, 
       </div>
       
       <div className="social-media-content">
-        <div className="whitespace-pre-wrap">{answer}</div>
+        <div className="prose prose-sm max-w-none">
+          <MarkdownRenderer 
+            content={answer} 
+            className="text-gray-700 dark:text-gray-300"
+          />
+        </div>
       </div>
     </div>
   );

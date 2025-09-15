@@ -224,10 +224,12 @@ export const ChatMessage = memo(function ChatMessage({
                 answer={message.content}
               />
             ) : !isUser && effectiveModuleId === "ATENDIMENTO" ? (
-              <SecretariaAnswer 
-                question={message.originalQuery || ""} 
-                answer={message.content}
-              />
+              <div className="prose prose-sm max-w-none">
+                <MarkdownRenderer 
+                  content={message.content || ""} 
+                  className="text-gray-700 dark:text-gray-300"
+                />
+              </div>
             ) : !isUser && effectiveModuleId === "BEM_ESTAR" ? (
               <BemEstarAnswer 
                 question={message.originalQuery || ""} 

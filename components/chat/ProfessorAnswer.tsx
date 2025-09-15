@@ -1,6 +1,7 @@
 "use client"
 
 import React from "react";
+import { MarkdownRenderer } from "./MarkdownRenderer";
 
 interface ProfessorAnswerProps {
   question: string;
@@ -17,8 +18,11 @@ export const ProfessorAnswer: React.FC<ProfessorAnswerProps> = ({ question, answ
       
       <div className="professor-content">
         {answer ? (
-          <div className="whitespace-pre-wrap">
-            {answer}
+          <div className="prose prose-sm max-w-none">
+            <MarkdownRenderer 
+              content={answer} 
+              className="text-gray-700 dark:text-gray-300"
+            />
           </div>
         ) : (
           <div className="text-gray-500 italic">
