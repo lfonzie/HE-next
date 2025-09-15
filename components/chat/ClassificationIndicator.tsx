@@ -25,9 +25,11 @@ export function ClassificationIndicator({
     financeiro: 'Financeiro',
     rh: 'Recursos Humanos',
     coordenacao: 'Coordenação',
-    bem_estar: 'Bem-estar',
-    social_media: 'Redes Sociais',
-    atendimento: 'Atendimento Geral'
+    'bem-estar': 'Bem-estar',
+    'social-media': 'Redes Sociais',
+    atendimento: 'Atendimento Geral',
+    'aula-expandida': 'Aula Expandida',
+    'enem-interativo': 'ENEM Interativo'
   }
 
   const moduleColors: Record<string, string> = {
@@ -37,9 +39,11 @@ export function ClassificationIndicator({
     financeiro: 'bg-yellow-100 text-yellow-800 border-yellow-200',
     rh: 'bg-pink-100 text-pink-800 border-pink-200',
     coordenacao: 'bg-indigo-100 text-indigo-800 border-indigo-200',
-    bem_estar: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-    social_media: 'bg-orange-100 text-orange-800 border-orange-200',
-    atendimento: 'bg-gray-100 text-gray-800 border-gray-200'
+    'bem-estar': 'bg-emerald-100 text-emerald-800 border-emerald-200',
+    'social-media': 'bg-orange-100 text-orange-800 border-orange-200',
+    atendimento: 'bg-gray-100 text-gray-800 border-gray-200',
+    'aula-expandida': 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    'enem-interativo': 'bg-blue-100 text-blue-800 border-blue-200'
   }
 
   return (

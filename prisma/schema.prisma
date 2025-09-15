@@ -1016,6 +1016,102 @@ model enemExamItem {
   @@index([source], map: "idx_enem_exam_items_source")
 }
 
+model enem_item {
+  item_id              String           @id @db.VarChar(50)
+  year                 Int              @db.SmallInt
+  area                 String           @db.VarChar(10)
+  text                 String
+  alternatives         Json
+  correct_answer       String           @db.VarChar(1)
+  topic                String           @db.VarChar(255)
+  estimated_difficulty difficulty_level @default(MEDIUM)
+  asset_refs           String[]         @default([])
+  content_hash         String           @unique @db.VarChar(64)
+  dataset_version      String           @db.VarChar(20)
+  metadata             Json             @default("{}")
+  created_at           DateTime         @default(now()) @db.Timestamp(6)
+  updated_at           DateTime         @default(now()) @db.Timestamp(6)
+
+  @@index([area, year], map: "idx_enem_item_area_year")
+  @@index([content_hash], map: "idx_enem_item_content_hash")
+  @@index([estimated_difficulty], map: "idx_enem_item_difficulty")
+  @@index([topic], map: "idx_enem_item_topic")
+}
+
+model enem_exam_template {
+  template_id String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String   @db.VarChar(255)
+  items       String[] @default([])
+  metadata    Json     @default("{}")
+  created_at  DateTime @default(now()) @db.Timestamp(6)
+  updated_at  DateTime @default(now()) @db.Timestamp(6)
+
+  @@index([name], map: "idx_enem_template_name")
+}
+
+model enem_session {
+  session_id String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String              @db.Uuid
+  mode       enem_mode           @default(CUSTOM)
+  area       String[]            @default([])
+  config     Json                @default("{}")
+  start_time DateTime            @default(now()) @db.Timestamp(6)
+  end_time   DateTime?           @db.Timestamp(6)
+  status     enem_session_status @default(ACTIVE)
+  created_at DateTime            @default(now()) @db.Timestamp(6)
+  updated_at DateTime            @default(now()) @db.Timestamp(6)
+  responses  enem_response[]
+  score      enem_score?
+
+  @@index([user_id], map: "idx_enem_session_user")
+  @@index([mode], map: "idx_enem_session_mode")
+  @@index([status], map: "idx_enem_session_status")
+  @@index([start_time], map: "idx_enem_session_start_time")
+}
+
+model enem_response {
+  response_id     String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  session_id      String       @db.Uuid
+  item_id         String       @db.VarChar(50)
+  selected_answer String       @db.VarChar(1)
+  time_spent      Int          @default(0)
+  is_correct      Boolean      @default(false)
+  timestamp       DateTime     @default(now()) @db.Timestamp(6)
+  session         enem_session @relation(fields: [session_id], references: [session_id], onDelete: Cascade)
+
+  @@index([session_id], map: "idx_enem_response_session")
+  @@index([item_id], map: "idx_enem_response_item")
+  @@index([is_correct], map: "idx_enem_response_correct")
+}
+
+model enem_score {
+  score_id      String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  session_id    String       @unique @db.Uuid
+  area_scores   Json         @default("{}")
+  total_score   Float        @default(0)
+  tri_estimated Json         @default("{}")
+  stats         Json         @default("{}")
+  created_at    DateTime     @default(now()) @db.Timestamp(6)
+  session       enem_session @relation(fields: [session_id], references: [session_id], onDelete: Cascade)
+
+  @@index([total_score], map: "idx_enem_score_total")
+}
+
+model enem_redacao {
+  redacao_id      String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  session_id      String   @db.Uuid
+  prompt          String
+  submission      String
+  rubrics         Json     @default("{}")
+  estimated_score Float    @default(0)
+  ai_feedback     String?
+  created_at      DateTime @default(now()) @db.Timestamp(6)
+  updated_at      DateTime @default(now()) @db.Timestamp(6)
+
+  @@index([session_id], map: "idx_enem_redacao_session")
+  @@index([estimated_score], map: "idx_enem_redacao_score")
+}
+
 enum achievement_category {
   engagement
   learning
@@ -1352,107 +1448,6 @@ enum question_source {
   FALLBACK
 }
 
-// ENEM Simulator Models - Offline-First Architecture
-model enem_item {
-  item_id           String            @id @db.VarChar(50)
-  year              Int               @db.SmallInt
-  area              String            @db.VarChar(10)
-  text              String
-  alternatives      Json
-  correct_answer    String            @db.VarChar(1)
-  topic             String            @db.VarChar(255)
-  estimated_difficulty difficulty_level @default(MEDIUM)
-  asset_refs        String[]          @default([])
-  content_hash      String            @unique @db.VarChar(64)
-  dataset_version   String            @db.VarChar(20)
-  metadata          Json              @default("{}")
-  created_at        DateTime          @default(now()) @db.Timestamp(6)
-  updated_at        DateTime          @default(now()) @db.Timestamp(6)
-
-  @@index([area, year], map: "idx_enem_item_area_year")
-  @@index([content_hash], map: "idx_enem_item_content_hash")
-  @@index([estimated_difficulty], map: "idx_enem_item_difficulty")
-  @@index([topic], map: "idx_enem_item_topic")
-}
-
-model enem_exam_template {
-  template_id       String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name              String            @db.VarChar(255)
-  items             String[]          @default([])
-  metadata          Json              @default("{}")
-  created_at        DateTime          @default(now()) @db.Timestamp(6)
-  updated_at        DateTime          @default(now()) @db.Timestamp(6)
-
-  @@index([name], map: "idx_enem_template_name")
-}
-
-model enem_session {
-  session_id        String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id           String            @db.Uuid
-  mode              enem_mode         @default(CUSTOM)
-  area              String[]          @default([])
-  config            Json              @default("{}")
-  start_time        DateTime          @default(now()) @db.Timestamp(6)
-  end_time          DateTime?         @db.Timestamp(6)
-  status            enem_session_status @default(ACTIVE)
-  created_at        DateTime          @default(now()) @db.Timestamp(6)
-  updated_at        DateTime          @default(now()) @db.Timestamp(6)
-
-  responses         enem_response[]
-  score             enem_score?
-
-  @@index([user_id], map: "idx_enem_session_user")
-  @@index([mode], map: "idx_enem_session_mode")
-  @@index([status], map: "idx_enem_session_status")
-  @@index([start_time], map: "idx_enem_session_start_time")
-}
-
-model enem_response {
-  response_id       String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  session_id        String            @db.Uuid
-  item_id           String            @db.VarChar(50)
-  selected_answer   String            @db.VarChar(1)
-  time_spent        Int               @default(0)
-  is_correct        Boolean           @default(false)
-  timestamp         DateTime          @default(now()) @db.Timestamp(6)
-
-  session           enem_session      @relation(fields: [session_id], references: [session_id], onDelete: Cascade)
-
-  @@index([session_id], map: "idx_enem_response_session")
-  @@index([item_id], map: "idx_enem_response_item")
-  @@index([is_correct], map: "idx_enem_response_correct")
-}
-
-model enem_score {
-  score_id          String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  session_id        String            @unique @db.Uuid
-  area_scores       Json              @default("{}")
-  total_score       Float             @default(0)
-  tri_estimated     Json              @default("{}")
-  stats             Json              @default("{}")
-  created_at        DateTime          @default(now()) @db.Timestamp(6)
-
-  session           enem_session      @relation(fields: [session_id], references: [session_id], onDelete: Cascade)
-
-  @@index([total_score], map: "idx_enem_score_total")
-}
-
-model enem_redacao {
-  redacao_id        String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  session_id        String            @db.Uuid
-  prompt            String
-  submission        String            // encrypted
-  rubrics           Json              @default("{}")
-  estimated_score   Float             @default(0)
-  ai_feedback       String?
-  created_at        DateTime          @default(now()) @db.Timestamp(6)
-  updated_at        DateTime          @default(now()) @db.Timestamp(6)
-
-  @@index([session_id], map: "idx_enem_redacao_session")
-  @@index([estimated_score], map: "idx_enem_redacao_score")
-}
-
-// ENEM Simulator Enums
 enum enem_mode {
   QUICK
   CUSTOM

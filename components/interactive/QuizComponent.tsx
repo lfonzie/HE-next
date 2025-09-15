@@ -39,6 +39,25 @@ export default function QuizComponent({
   const [isCompleted, setIsCompleted] = useState(false)
   const [showExplanationsState, setShowExplanationsState] = useState(false)
 
+  // Early return if no questions are provided
+  if (!questions || questions.length === 0) {
+    return (
+      <Card className="w-full max-w-2xl mx-auto">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Badge variant="outline">Quiz Interativo</Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="text-center py-8">
+          <div className="text-gray-500">
+            <p className="text-lg mb-2">Nenhuma questão disponível</p>
+            <p className="text-sm">Este quiz não possui questões para exibir.</p>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
   // Timer effect
   useEffect(() => {
     if (timeLimit > 0 && !isCompleted) {
@@ -61,12 +80,13 @@ export default function QuizComponent({
     
     setSelectedAnswer(answerIndex)
     const newAnswers = [...answers]
-    newAnswers[currentQuestion] = answerIndex
+    const safeCurrentQuestion = Math.min(currentQuestion, questions.length - 1)
+    newAnswers[safeCurrentQuestion] = answerIndex
     setAnswers(newAnswers)
 
     // Auto-advance after selection (optional)
     setTimeout(() => {
-      if (currentQuestion < questions.length - 1) {
+      if (safeCurrentQuestion < questions.length - 1) {
         setCurrentQuestion(prev => prev + 1)
         setSelectedAnswer(null)
       } else {
@@ -220,8 +240,10 @@ export default function QuizComponent({
     )
   }
 
-  const currentQ = questions[currentQuestion]
-  const progress = ((currentQuestion + 1) / questions.length) * 100
+  // Ensure currentQuestion is within bounds
+  const safeCurrentQuestion = Math.min(currentQuestion, questions.length - 1)
+  const currentQ = questions[safeCurrentQuestion]
+  const progress = ((safeCurrentQuestion + 1) / questions.length) * 100
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
@@ -239,7 +261,7 @@ export default function QuizComponent({
         </div>
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
-            <span>Questão {currentQuestion + 1} de {questions.length}</span>
+            <span>Questão {safeCurrentQuestion + 1} de {questions.length}</span>
             <span>{Math.round(progress)}%</span>
           </div>
           <Progress value={progress} className="h-2" />
@@ -247,7 +269,7 @@ export default function QuizComponent({
       </CardHeader>
       <CardContent className="space-y-6">
         <motion.div
-          key={currentQuestion}
+          key={safeCurrentQuestion}
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -20 }}

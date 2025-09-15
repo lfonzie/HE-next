@@ -251,15 +251,12 @@ export function formatWindSpeed(speed: number, unit: string): string {
 
 /**
  * Check if a message contains weather-related keywords
+ * WEATHER CARD FUNCTION DISABLED - Always returns false
  */
 export function isWeatherQuery(message: string): boolean {
-  const weatherKeywords = [
-    'weather', 'clima', 'tempo', 'temperatura', 'chuva', 'rain', 'sun', 'sol',
-    'nublado', 'cloudy', 'vento', 'wind', 'neve', 'snow', 'storm', 'tempestade'
-  ];
-  
-  const lowerMessage = message.toLowerCase();
-  return weatherKeywords.some(keyword => lowerMessage.includes(keyword));
+  // Weather Card function has been disabled
+  // Always return false to prevent weather card from showing
+  return false;
 }
 
 /**
@@ -268,16 +265,26 @@ export function isWeatherQuery(message: string): boolean {
 export function extractCityFromQuery(message: string): string | null {
   // Common patterns for weather queries
   const patterns = [
-    /(?:weather|clima|tempo)\s+(?:in|em|na|no)\s+([^,.\?!]+)/i,
-    /(?:what's|what is|como está|qual é)\s+(?:the\s+)?(?:weather|clima|tempo)\s+(?:in|em|na|no)\s+([^,.\?!]+)/i,
-    /(?:weather|clima|tempo)\s+(?:for|para)\s+([^,.\?!]+)/i,
-    /([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s+(?:weather|clima|tempo)/i
+    /(?:weather|clima|tempo)\s+(?:in|em|na|no)\s+([A-Z][a-zA-Z\s]+?)(?:\s|$|[,.!?])/i,
+    /(?:what's|what is|como está|qual é)\s+(?:the\s+)?(?:weather|clima|tempo)\s+(?:in|em|na|no)\s+([A-Z][a-zA-Z\s]+?)(?:\s|$|[,.!?])/i,
+    /(?:weather|clima|tempo)\s+(?:for|para)\s+([A-Z][a-zA-Z\s]+?)(?:\s|$|[,.!?])/i,
+    /([A-Z][a-zA-Z\s]+?)\s+(?:weather|clima|tempo)/i
   ];
   
   for (const pattern of patterns) {
     const match = message.match(pattern);
     if (match && match[1]) {
-      return match[1].trim();
+      const city = match[1].trim();
+      // Filter out common invalid city names
+      const invalidCities = [
+        'es ao longo do', 'ao longo do', 'longo do', 'es ao', 'ao longo',
+        'tempo em', 'clima em', 'weather in', 'tempo na', 'clima na',
+        'tempo no', 'clima no', 'weather for', 'tempo para', 'clima para'
+      ];
+      
+      if (!invalidCities.includes(city.toLowerCase()) && city.length > 1) {
+        return city;
+      }
     }
   }
   

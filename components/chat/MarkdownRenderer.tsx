@@ -18,13 +18,21 @@ interface MarkdownRendererProps {
 export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ 
   content, 
   className = "",
-  isStreaming = false 
+  isStreaming = false
 }) => {
+  // Normaliza quebras de linha para evitar espaçamento excessivo
+  const normalizedContent = content.replace(/\n{2,}/g, '\n').trim();
+  
   return (
     <div className={`markdown-content ${className}`}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={[rehypeKatex, rehypeHighlight]}
+        skipHtml={false}
+        allowElement={(element, index, parent) => {
+          // Permitir todos os elementos por padrão
+          return true;
+        }}
         components={{
           // Headers
           h1: ({ children }) => (
@@ -58,16 +66,16 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
             </h6>
           ),
           
-          // Paragraphs
+          // Paragraphs - ajustado para reduzir espaçamento excessivo
           p: ({ children }) => (
-            <p className="mb-3 text-gray-700 dark:text-gray-300 leading-relaxed">
+            <p className="mb-2 text-gray-700 dark:text-gray-300 leading-normal whitespace-pre-line">
               {children}
             </p>
           ),
           
-          // Bold and italic
+          // Bold and italic - sem quebra de linha
           strong: ({ children }) => (
-            <strong className="font-semibold text-gray-900 dark:text-gray-100">
+            <strong className="font-semibold text-gray-900 dark:text-gray-100 inline">
               {children}
             </strong>
           ),
@@ -198,10 +206,15 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
               );
             }
             return <span className={className}>{children}</span>;
-          }
+          },
+          
+          // Quebras de linha
+          br: () => (
+            <br className="block" />
+          )
         }}
       >
-        {content}
+        {normalizedContent || ''}
       </ReactMarkdown>
       
       {/* Indicador de streaming */}

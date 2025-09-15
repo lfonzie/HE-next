@@ -51,7 +51,7 @@ function isPotentiallyValidJson(content: string): boolean {
 
 // Validate slide structure
 function validateSlideStructure(slide: any): slide is Slide {
-  return (
+  const isValid = (
     slide &&
     typeof slide === 'object' &&
     typeof slide.type === 'string' &&
@@ -61,6 +61,19 @@ function validateSlideStructure(slide: any): slide is Slide {
     slide.title.trim().length > 0 &&
     slide.content.trim().length > 0
   );
+  
+  // Additional validation for question slides
+  if (slide.type === 'question') {
+    return isValid && 
+           typeof slide.question_stem === 'string' &&
+           Array.isArray(slide.options) &&
+           slide.options.length === 4 &&
+           typeof slide.answer === 'string' &&
+           ['A', 'B', 'C', 'D'].includes(slide.answer) &&
+           typeof slide.rationale === 'string';
+  }
+  
+  return isValid;
 }
 
 async function generateSlide(topic: string, position: number, previousSlides: Slide[] = [], attempt: number = 1): Promise<Slide> {
@@ -93,18 +106,25 @@ POSIÇÃO: ${position}/9
 DIRETRIZES ESPECÍFICAS:
 - Para EXPLANATION: Foque em conceitos, exemplos práticos, aplicações reais
 - Para QUESTION: Crie pergunta desafiadora com 4 alternativas (só 1 correta)
+  * question_stem: Pergunta clara e específica
+  * options: Array com 4 opções ["Opção A", "Opção B", "Opção C", "Opção D"]
+  * answer: Letra da resposta correta ('A', 'B', 'C' ou 'D')
+  * rationale: Explicação detalhada da resposta correta
 - Para CLOSING: Resumo final + dica prática para aplicar o conhecimento
 
 DIVERSIDADE OBRIGATÓRIA:
 - Título único e específico (não genérico)
 - Conteúdo focado em aspecto específico do tema
 - Linguagem clara, brasileira, sem jargões técnicos
-- Máximo 150 palavras no content
-- Para questions: rationale curto (1-2 frases)
+- MÍNIMO 400 palavras no content (conteúdo extenso e detalhado)
+- Para questions: rationale detalhado (3-4 frases explicativas)
+- Inclua exemplos práticos, casos de uso, aplicações reais
+- Desenvolva o tema de forma profunda e educativa
 
 IMAGEM:
 - image_prompt: 1-3 palavras em inglês para Unsplash
 - image_confidence: 0.7-1.0 (alta qualidade educacional)
+- Para slides 1 e 9: SEMPRE inclua image_prompt relevante
 
 ${previousContext}`;
 
@@ -126,7 +146,7 @@ ${previousContext}`;
       model: 'gpt-4o-mini',
       messages: messages as any,
       temperature: 0.7,
-      max_tokens: 1000,
+      max_tokens: 2000,
     });
 
     const content = response.choices[0]?.message?.content;

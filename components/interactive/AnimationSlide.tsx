@@ -59,6 +59,13 @@ export default function AnimationSlide({
     }
   }, [isPlaying, currentStep, animationSteps, onComplete])
 
+  // Call onComplete when animation reaches the end, even if not playing
+  useEffect(() => {
+    if (currentStep >= animationSteps.length && animationSteps.length > 0) {
+      onComplete?.()
+    }
+  }, [currentStep, animationSteps.length, onComplete])
+
   // Progress calculation
   useEffect(() => {
     if (animationSteps.length > 0) {
@@ -201,7 +208,7 @@ export default function AnimationSlide({
             </AnimatePresence>
 
             {/* Controls */}
-            {showControls && (
+            {showControls && animationSteps.length > 0 && (
               <div className="flex items-center justify-center gap-4">
                 <Button
                   onClick={handlePlay}
@@ -230,19 +237,21 @@ export default function AnimationSlide({
             )}
 
             {/* Step Navigation */}
-            <div className="flex flex-wrap gap-2 justify-center">
-              {animationSteps.map((step, index) => (
-                <Button
-                  key={step.id}
-                  onClick={() => handleStepClick(index)}
-                  variant={index === currentStep ? "default" : "outline"}
-                  size="sm"
-                  className="text-xs"
-                >
-                  {index + 1}
-                </Button>
-              ))}
-            </div>
+            {animationSteps.length > 0 && (
+              <div className="flex flex-wrap gap-2 justify-center">
+                {animationSteps.map((step, index) => (
+                  <Button
+                    key={step.id}
+                    onClick={() => handleStepClick(index)}
+                    variant={index === currentStep ? "default" : "outline"}
+                    size="sm"
+                    className="text-xs"
+                  >
+                    {index + 1}
+                  </Button>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -272,7 +281,7 @@ export default function AnimationSlide({
         )}
 
         {/* Completion Message */}
-        {currentStep >= animationSteps.length && (
+        {animationSteps.length > 0 && currentStep >= animationSteps.length && (
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}

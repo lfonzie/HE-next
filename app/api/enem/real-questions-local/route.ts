@@ -60,16 +60,16 @@ export async function POST(request: NextRequest) {
       console.error('Error loading questions from external API:', error)
     }
 
-    // Fallback final para IA
-    console.log('🤖 Falling back to AI generation')
+    // Não usar IA - apenas questões reais do ENEM
+    console.log('❌ Nenhuma questão real do ENEM disponível')
     return NextResponse.json({
       questions: [],
       total: 0,
-      source: 'ai_fallback',
+      source: 'none',
       area,
       year: year || 'all',
       success: false,
-      error: 'No questions available from any source'
+      error: 'Nenhuma questão real do ENEM disponível. Apenas questões oficiais são permitidas.'
     })
 
   } catch (error) {

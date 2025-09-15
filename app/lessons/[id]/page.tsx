@@ -10,17 +10,33 @@ import DynamicStage from '@/components/interactive/DynamicStage'
 import { ArrowLeft, BookOpen, Clock, Star, Trophy, Target } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
+import { useLessonsProgressiveLoading } from '@/hooks/useLessonsProgressiveLoading'
 
 interface LessonData {
   title: string
   objectives: string[]
   introduction: string
+  slides?: Array<{
+    slideNumber: number
+    type: string
+    title: string
+    content: string
+    imageUrl?: string
+    imagePrompt?: string
+    timeEstimate?: number
+    question?: string
+    options?: string[]
+    correctAnswer?: number
+    explanation?: string
+  }>
   stages: Array<{
     etapa: string
     type: string
     activity: any
     route: string
   }>
+  summary?: string
+  nextSteps?: string[]
   feedback: any
   metadata: {
     subject: string
@@ -42,7 +58,7 @@ export default function LessonPage() {
   const params = useParams()
   const router = useRouter()
   const lessonId = params.id as string
-  
+
   const [lessonData, setLessonData] = useState<LessonData | null>(null)
   const [currentStage, setCurrentStage] = useState(0)
   const [stageResults, setStageResults] = useState<StageResult[]>([])
@@ -51,35 +67,87 @@ export default function LessonPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isCompleted, setIsCompleted] = useState(false)
 
-  // Load lesson data
+  // Hook para carregamento progressivo de slides
+  const progressiveLoading = useLessonsProgressiveLoading()
+
+  // Load lesson data with progressive loading
   useEffect(() => {
     const loadLesson = async () => {
       try {
         // Try to load from database first
-        const response = await fetch(`/api/lessons/${lessonId}`)
-        if (response.ok) {
-          const data = await response.json()
-          setLessonData(data)
-        } else {
-          // Fallback to static data for photosynthesis lesson
-          if (lessonId === 'photosynthesis') {
+        try {
+          const response = await fetch(`/api/lessons/${lessonId}`)
+          if (response.ok) {
+            const data = await response.json()
+            setLessonData(data.lesson)
+            setIsLoading(false)
+            return
+          } else {
+            throw new Error('Lesson not found in database')
+          }
+        } catch (dbError) {
+          console.log('Database fetch failed, trying localStorage:', dbError)
+          
+          // Check if it's a demo lesson in localStorage
+          const demoLesson = localStorage.getItem(`demo_lesson_${lessonId}`)
+          if (demoLesson) {
+            const lessonData = JSON.parse(demoLesson)
+            // Convert the demo lesson format to the expected format
+            setLessonData({
+              title: lessonData.title,
+              objectives: lessonData.objectives,
+              introduction: lessonData.introduction || 'Aula interativa gerada com IA',
+              stages: lessonData.stages,
+              feedback: lessonData.feedback,
+              metadata: {
+                subject: lessonData.subject,
+                grade: lessonData.level.toString(),
+                duration: '45',
+                difficulty: 'medium',
+                tags: []
+              }
+            })
+            setIsLoading(false)
+            return
+          } else if (lessonId === 'photosynthesis') {
+            // Fallback to static data for photosynthesis lesson
             const staticData = await import('@/data/photosynthesis-lesson.json')
             setLessonData(staticData.default)
+            setIsLoading(false)
+            return
           } else {
-            throw new Error('Lesson not found')
+            // Se não encontrar aula existente, iniciar carregamento progressivo
+            console.log('🚀 Iniciando carregamento progressivo para nova aula')
+            await progressiveLoading.startProgressiveLoading(lessonId, 'Geral')
+            
+            // Criar estrutura básica da aula
+            setLessonData({
+              title: `Aula sobre ${lessonId}`,
+              objectives: ['Aprender conceitos fundamentais', 'Desenvolver compreensão prática'],
+              introduction: 'Aula interativa gerada com IA',
+              stages: [], // Será preenchido progressivamente
+              feedback: {},
+              metadata: {
+                subject: 'Geral',
+                grade: '5',
+                duration: '45',
+                difficulty: 'medium',
+                tags: []
+              }
+            })
+            setIsLoading(false)
+            return
           }
         }
       } catch (error) {
-        console.error('Error loading lesson:', error)
+        console.error('Erro ao carregar aula:', error)
         toast.error('Erro ao carregar a aula')
         router.push('/lessons')
-      } finally {
-        setIsLoading(false)
       }
     }
 
     loadLesson()
-  }, [lessonId, router])
+  }, [lessonId, router, progressiveLoading])
 
   // Load progress from localStorage
   useEffect(() => {
@@ -130,16 +198,34 @@ export default function LessonPage() {
     setTotalPoints(prev => prev + pointsEarned)
     setTotalTimeSpent(prev => prev + timeSpent)
 
+    // Carregar próximo slide se necessário
+    const availableSlides = progressiveLoading.getAvailableSlides()
+    if (stageIndex >= availableSlides.length - 1 && availableSlides.length < 9) {
+      console.log('📥 Carregando próximo slide sob demanda...')
+      progressiveLoading.loadNextSlide(lessonId, 'Geral', availableSlides.length)
+    }
+
     // Check if lesson is completed
-    if (stageIndex === lessonData!.stages.length - 1) {
+    const availableSlides = progressiveLoading.getAvailableSlides()
+    const totalStages = Math.max(lessonData.stages.length, availableSlides.length)
+    if (stageIndex === totalStages - 1) {
       setIsCompleted(true)
       toast.success('🎉 Parabéns! Você completou a aula!')
     }
   }
 
   const handleNext = () => {
-    if (currentStage < lessonData!.stages.length - 1) {
+    const availableSlides = progressiveLoading.getAvailableSlides()
+    const totalStages = Math.max(lessonData.stages.length, availableSlides.length)
+    
+    if (currentStage < totalStages - 1) {
       setCurrentStage(prev => prev + 1)
+      
+      // Carregar próximo slide se necessário
+      if (currentStage >= availableSlides.length - 1 && availableSlides.length < 9) {
+        console.log('📥 Carregando próximo slide sob demanda...')
+        progressiveLoading.loadNextSlide(lessonId, 'Geral', availableSlides.length)
+      }
     }
   }
 
@@ -176,13 +262,23 @@ export default function LessonPage() {
     return 'locked'
   }
 
-  if (isLoading) {
+  if (isLoading || progressiveLoading.loadingState.isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Carregando aula...</p>
+            <p className="text-gray-600">
+              {progressiveLoading.loadingState.message || 'Carregando aula...'}
+            </p>
+            {progressiveLoading.loadingState.progress > 0 && (
+              <div className="mt-4 w-64 mx-auto">
+                <Progress value={progressiveLoading.loadingState.progress} className="h-2" />
+                <p className="text-sm text-gray-500 mt-2">
+                  {progressiveLoading.loadingState.progress}% - {progressiveLoading.loadingState.formattedTime}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -202,8 +298,37 @@ export default function LessonPage() {
     )
   }
 
-  const currentStageData = lessonData.stages[currentStage]
-  const progress = ((currentStage + 1) / lessonData.stages.length) * 100
+  // Usar slides carregados progressivamente se disponível
+  const availableSlides = progressiveLoading.getAvailableSlides()
+  const totalStages = Math.max(lessonData.stages.length, availableSlides.length)
+  
+  // Converter slides para formato de stages se necessário
+  const stagesToUse = availableSlides.length > 0 ? 
+    availableSlides.map((slide, index) => ({
+      etapa: slide.title,
+      type: slide.type === 'question' ? 'quiz' : 'explanation',
+      activity: {
+        component: slide.type === 'question' ? 'QuizComponent' : 'AnimationSlide',
+        content: slide.content,
+        prompt: slide.question || slide.content,
+        questions: slide.type === 'question' ? [{
+          q: slide.question,
+          options: slide.options,
+          correct: slide.correctAnswer,
+          explanation: slide.explanation
+        }] : [],
+        media: [],
+        time: slide.timeEstimate || 5,
+        points: slide.type === 'question' ? 10 : 5,
+        feedback: slide.explanation || 'Bom trabalho!',
+        imagePrompt: slide.imagePrompt,
+        imageUrl: slide.imageUrl
+      },
+      route: `/lessons/${lessonId}/slide-${index + 1}`
+    })) : lessonData.stages
+
+  const currentStageData = stagesToUse[currentStage]
+  const progress = ((currentStage + 1) / totalStages) * 100
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
@@ -245,7 +370,7 @@ export default function LessonPage() {
           </div>
           <div className="flex items-center gap-2">
             <Target className="h-4 w-4 text-green-600" />
-            <span className="text-sm">{stageResults.length}/{lessonData.stages.length} etapas</span>
+            <span className="text-sm">{stageResults.length}/{totalStages} etapas</span>
           </div>
         </div>
 
@@ -267,7 +392,7 @@ export default function LessonPage() {
               <CardTitle className="text-lg">Etapas da Aula</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {lessonData.stages.map((stage, index) => {
+              {stagesToUse.map((stage, index) => {
                 const status = getStageStatus(index)
                 const result = stageResults.find(sr => sr.stageIndex === index)
                 
@@ -348,11 +473,11 @@ export default function LessonPage() {
               key={currentStage}
               stage={currentStageData}
               stageIndex={currentStage}
-              totalStages={lessonData.stages.length}
+              totalStages={totalStages}
               onComplete={handleStageComplete}
               onNext={handleNext}
               onPrevious={handlePrevious}
-              canGoNext={currentStage < lessonData.stages.length - 1}
+              canGoNext={currentStage < totalStages - 1}
               canGoPrevious={currentStage > 0}
               timeSpent={stageResults.find(sr => sr.stageIndex === currentStage)?.timeSpent || 0}
               pointsEarned={stageResults.find(sr => sr.stageIndex === currentStage)?.pointsEarned || 0}
@@ -380,6 +505,46 @@ export default function LessonPage() {
           </ul>
         </CardContent>
       </Card>
+
+      {/* Summary and Next Steps */}
+      {(lessonData.summary || lessonData.nextSteps) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+          {lessonData.summary && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BookOpen className="h-5 w-5" />
+                  Resumo da Aula
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-700">{lessonData.summary}</p>
+              </CardContent>
+            </Card>
+          )}
+
+          {lessonData.nextSteps && lessonData.nextSteps.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Trophy className="h-5 w-5" />
+                  Próximos Passos
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2">
+                  {lessonData.nextSteps.map((step, index) => (
+                    <li key={index} className="flex items-start gap-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
+                      <span className="text-sm">{step}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
     </div>
   )
 }

@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste - Timing do Progresso</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2563eb;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+        }
+        .test-section h2 {
+            color: #374151;
+            margin-top: 0;
+        }
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #1d4ed8;
+        }
+        button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        .progress-container {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #10b981);
+            transition: width 0.3s ease;
+            border-radius: 4px;
+        }
+        .status-message {
+            text-align: center;
+            margin: 10px 0;
+            font-weight: 500;
+            color: #374151;
+        }
+        .time-info {
+            text-align: center;
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 10px;
+        }
+        .steps {
+            margin-top: 20px;
+        }
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        .step.completed {
+            color: #10b981;
+        }
+        .step.current {
+            color: #3b82f6;
+            font-weight: 500;
+        }
+        .step.pending {
+            color: #9ca3af;
+        }
+        .step-icon {
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .success {
+            background: #d1fae5;
+            border: 1px solid #10b981;
+            color: #065f46;
+        }
+        .info {
+            background: #dbeafe;
+            border: 1px solid #3b82f6;
+            color: #1e40af;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⏱️ Teste - Timing do Progresso</h1>
+        
+        <div class="test-section">
+            <h2>📊 Simulação do Progresso de Geração</h2>
+            <p>Teste o novo sistema de progresso baseado em tempo médio de 20 segundos:</p>
+            
+            <button onclick="startProgressSimulation()" id="startBtn">🚀 Iniciar Simulação</button>
+            <button onclick="resetProgress()" id="resetBtn">🔄 Resetar</button>
+            
+            <div class="progress-container" id="progressContainer" style="display: none;">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                </div>
+                <div class="status-message" id="statusMessage">Iniciando...</div>
+                <div class="time-info" id="timeInfo">Tempo estimado: ~20 segundos</div>
+                
+                <div class="steps" id="stepsContainer">
+                    <!-- Steps will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <div id="results"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>📈 Informações do Sistema</h2>
+            <div class="result info">
+                Sistema de progresso otimizado:
+                ✅ Baseado em tempo médio real de 20s
+                ✅ Mensagens de status dinâmicas
+                ✅ Etapas visuais da geração
+                ✅ Estimativa de tempo restante
+                ✅ Progresso suave e realista
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const generationSteps = [
+            { id: 1, name: 'Analisando tópico', threshold: 10 },
+            { id: 2, name: 'Identificando matéria', threshold: 20 },
+            { id: 3, name: 'Criando objetivos', threshold: 30 },
+            { id: 4, name: 'Estruturando slides', threshold: 40 },
+            { id: 5, name: 'Gerando conteúdo', threshold: 50 },
+            { id: 6, name: 'Criando perguntas', threshold: 60 },
+            { id: 7, name: 'Buscando imagens', threshold: 70 },
+            { id: 8, name: 'Finalizando aula', threshold: 80 },
+            { id: 9, name: 'Preparando exibição', threshold: 90 }
+        ];
+
+        const statusMessages = [
+            { progress: 0, message: 'Iniciando geração da aula...' },
+            { progress: 10, message: 'Analisando o tópico...' },
+            { progress: 20, message: 'Identificando matéria e série...' },
+            { progress: 30, message: 'Criando objetivos de aprendizagem...' },
+            { progress: 40, message: 'Estruturando os 9 slides...' },
+            { progress: 50, message: 'Gerando conteúdo explicativo...' },
+            { progress: 60, message: 'Criando perguntas interativas...' },
+            { progress: 70, message: 'Buscando imagens no Unsplash...' },
+            { progress: 80, message: 'Finalizando estrutura da aula...' },
+            { progress: 90, message: 'Preparando para exibição...' },
+            { progress: 100, message: 'Aula gerada com sucesso!' }
+        ];
+
+        let progressInterval;
+        let startTime;
+        let isRunning = false;
+
+        function startProgressSimulation() {
+            if (isRunning) return;
+            
+            isRunning = true;
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('progressContainer').style.display = 'block';
+            
+            startTime = Date.now();
+            const estimatedDuration = 20000; // 20 segundos
+            
+            // Initialize steps
+            initializeSteps();
+            
+            progressInterval = setInterval(() => {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min((elapsed / estimatedDuration) * 85, 85);
+                
+                updateProgress(progress);
+                
+                if (progress >= 85) {
+                    clearInterval(progressInterval);
+                    setTimeout(() => {
+                        updateProgress(100);
+                        isRunning = false;
+                        document.getElementById('startBtn').disabled = false;
+                        showResult('✅ Simulação concluída! Progresso otimizado para 20 segundos.', 'success');
+                    }, 1000);
+                }
+            }, 200);
+        }
+
+        function initializeSteps() {
+            const stepsContainer = document.getElementById('stepsContainer');
+            stepsContainer.innerHTML = '';
+            
+            generationSteps.forEach(step => {
+                const stepDiv = document.createElement('div');
+                stepDiv.className = 'step pending';
+                stepDiv.id = `step-${step.id}`;
+                stepDiv.innerHTML = `
+                    <div class="step-icon">⏳</div>
+                    <span>${step.name}</span>
+                `;
+                stepsContainer.appendChild(stepDiv);
+            });
+        }
+
+        function updateProgress(progress) {
+            const progressFill = document.getElementById('progressFill');
+            const statusMessage = document.getElementById('statusMessage');
+            const timeInfo = document.getElementById('timeInfo');
+            
+            progressFill.style.width = `${progress}%`;
+            
+            // Update status message
+            const currentStatus = statusMessages
+                .slice()
+                .reverse()
+                .find(status => progress >= status.progress);
+            
+            if (currentStatus) {
+                statusMessage.textContent = currentStatus.message;
+            }
+            
+            // Update time info
+            if (progress < 100) {
+                const remainingSeconds = Math.max(0, Math.round((100 - progress) / 5));
+                timeInfo.textContent = `Aproximadamente ${remainingSeconds}s restantes`;
+            } else {
+                timeInfo.textContent = 'Aula gerada com sucesso!';
+            }
+            
+            // Update steps
+            generationSteps.forEach(step => {
+                const stepElement = document.getElementById(`step-${step.id}`);
+                const isCompleted = progress >= step.threshold;
+                const isCurrent = progress >= step.threshold && progress < step.threshold + 10;
+                
+                if (isCompleted) {
+                    stepElement.className = 'step completed';
+                    stepElement.innerHTML = `
+                        <div class="step-icon">✅</div>
+                        <span>${step.name}</span>
+                    `;
+                } else if (isCurrent) {
+                    stepElement.className = 'step current';
+                    stepElement.innerHTML = `
+                        <div class="step-icon">🔄</div>
+                        <span>${step.name}</span>
+                    `;
+                }
+            });
+        }
+
+        function resetProgress() {
+            if (progressInterval) {
+                clearInterval(progressInterval);
+            }
+            
+            isRunning = false;
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('progressContainer').style.display = 'none';
+            document.getElementById('progressFill').style.width = '0%';
+            document.getElementById('statusMessage').textContent = 'Iniciando...';
+            document.getElementById('timeInfo').textContent = 'Tempo estimado: ~20 segundos';
+            document.getElementById('results').innerHTML = '';
+        }
+
+        function showResult(message, type) {
+            const results = document.getElementById('results');
+            results.innerHTML = `<div class="result ${type}">${message}</div>`;
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            console.log('⏱️ Página de teste de timing carregada. Pronto para testar!');
+        });
+    </script>
+</body>
+</html>

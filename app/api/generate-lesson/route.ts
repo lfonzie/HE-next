@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import OpenAI from 'openai'
+import { STRUCTURED_LESSON_PROMPT } from '@/lib/system-prompts/lessons-structured'
+import { populateLessonWithImages } from '@/lib/unsplash-integration'
 
 const openai = new OpenAI({ 
   apiKey: process.env.OPENAI_API_KEY 
@@ -11,80 +13,88 @@ const openai = new OpenAI({
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    const { topic, objectives, methodology, demoMode } = await request.json()
+    const { topic, demoMode, subject, grade, generateSingleSlide } = await request.json()
 
     if (!topic) {
       return NextResponse.json({ 
-        error: 'Topic is required' 
+        error: 'Tópico é obrigatório' 
       }, { status: 400 })
     }
 
     // Check if demo mode is enabled or if user is authenticated
     if (!demoMode && !session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
-    // Enhanced prompt for interactive lesson generation
-    const prompt = `Generate a comprehensive interactive lesson plan in JSON format for the topic "${topic}".
+    // Se for geração de slide único, usar prompt específico
+    if (generateSingleSlide) {
+      const slidePrompt = `Crie APENAS o slide ${generateSingleSlide} para uma aula sobre "${topic}".
 
-First, analyze the topic and determine:
-1. The appropriate subject/field (e.g., Mathematics, Science, History, Geography, Portuguese, etc.)
-2. The appropriate grade level (1st to 12th grade) based on the complexity and content - MUST be a number between 1 and 12
-3. The educational context and prerequisites
+${generateSingleSlide === 1 ? `
+Slide 1 - Introdução:
+- Título: Introdução ao tópico
+- Conteúdo: Apresentação do tema, objetivos e importância
+- Tipo: "introduction"
+- Estimativa de tempo: 3 minutos
+` : generateSingleSlide === 2 ? `
+Slide 2 - Conceito Principal:
+- Título: Conceito principal do tópico
+- Conteúdo: Explicação detalhada do conceito principal
+- Tipo: "explanation"
+- Estimativa de tempo: 5 minutos
+` : `
+Slide ${generateSingleSlide} - Conteúdo:
+- Título: Título apropriado para o slide ${generateSingleSlide}
+- Conteúdo: Conteúdo educativo relevante
+- Tipo: "explanation"
+- Estimativa de tempo: 4 minutos
+`}
 
-Then create a lesson plan with the following structure:
-
+Retorne APENAS um objeto JSON com a estrutura do slide:
 {
-  "title": "Engaging lesson title",
-  "subject": "Inferred subject (e.g., Mathematics, Science, History)",
-  "grade": 5,
-  "objectives": ["objective1", "objective2", "objective3"],
-  "introduction": "Brief introduction to engage students",
-  "stages": [
-    {
-      "etapa": "Stage name",
-      "type": "explainer|quiz|interactive|visual|debate|assessment|project",
-      "activity": {
-        "component": "OpenQuestion|QuizComponent|AnimationSlide|DrawingPrompt|DiscussionBoard|MixedQuiz|UploadTask",
-        "content": "Detailed content description",
-        "prompt": "Question or prompt for students",
-        "questions": [{"q": "question", "options": ["a", "b", "c"], "correct": 0}],
-        "media": ["image1.jpg", "video1.mp4"],
-        "time": 5,
-        "points": 10,
-        "feedback": "Immediate feedback explanation"
-      },
-      "route": "/lessons/${topic.toLowerCase().replace(/\s+/g, '-')}/stage-name"
+  "slideNumber": ${generateSingleSlide},
+  "type": "tipo_do_slide",
+  "title": "Título do slide",
+  "content": "Conteúdo detalhado do slide",
+  "timeEstimate": tempo_em_minutos
+}`
+
+      const completion = await openai.chat.completions.create({
+        model: 'gpt-4o',
+        messages: [{ role: 'user', content: slidePrompt }],
+        temperature: 0.7,
+        max_tokens: 2000
+      })
+
+      let slideContent = completion.choices[0].message.content || '{}'
+      slideContent = slideContent.replace(/```json\n?/g, '').replace(/```\n?/g, '')
+      
+      const slideData = JSON.parse(slideContent)
+      
+      return NextResponse.json({
+        success: true,
+        slide: slideData
+      })
     }
-  ],
-  "feedback": {
-    "progress": "Show progress tracking",
-    "review": "Allow review and revision",
-    "challenges": "Mini-challenges for engagement",
-    "gamification": "Points and badges system"
-  }
-}
 
-Requirements:
-- Create 6-8 interactive stages that progressively build understanding
-- Include diverse activity types: quizzes, open questions, visual animations, discussions
-- Add gamification elements (points, badges, progress tracking)
-- Make content age-appropriate for the inferred grade level
-- Include real-world applications and environmental connections
-- Add reflection and discussion opportunities
-- Ensure accessibility and engagement
-- Infer the most appropriate subject and grade level based on the topic complexity
+    // Use structured lesson prompt for consistent 9-slide format
+    const prompt = `${STRUCTURED_LESSON_PROMPT}
 
-${objectives ? `Specific objectives to address: ${objectives}` : ''}
-${methodology ? `Preferred teaching methodology: ${methodology}` : ''}
+Para o tópico: "${topic}"
 
-IMPORTANT: Respond ONLY with valid JSON. Do not include any markdown formatting, code blocks, or additional text. The response must be parseable JSON only.`
+Primeiro, analise o tópico e determine automaticamente:
+1. A matéria/disciplina apropriada (ex: Matemática, Ciências, História, Geografia, Português, etc.) - DEVE estar em PORTUGUÊS
+2. A série apropriada (1º ao 12º ano) baseada na complexidade e conteúdo - DEVE ser um número entre 1 e 12
+3. O contexto educacional e pré-requisitos
+4. Objetivos de aprendizagem apropriados para a série inferida
+
+Crie uma aula seguindo EXATAMENTE a estrutura de 9 slides especificada acima.`
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.7,
-      max_tokens: 4000
+      max_tokens: 8000
     })
 
     let lessonContent = completion.choices[0].message.content || '{}'
@@ -97,8 +107,13 @@ IMPORTANT: Respond ONLY with valid JSON. Do not include any markdown formatting,
     const lessonData = JSON.parse(lessonContent)
 
     // Validate the generated lesson structure
-    if (!lessonData.title || !lessonData.stages || !Array.isArray(lessonData.stages)) {
-      throw new Error('Invalid lesson structure generated')
+    if (!lessonData.title || !lessonData.slides || !Array.isArray(lessonData.slides)) {
+      throw new Error('Estrutura de aula inválida gerada')
+    }
+    
+    // Ensure we have exactly 9 slides
+    if (lessonData.slides.length !== 9) {
+      throw new Error('Aula deve ter exatamente 9 slides')
     }
     
     // Ensure grade is a valid number
@@ -108,8 +123,43 @@ IMPORTANT: Respond ONLY with valid JSON. Do not include any markdown formatting,
     
     // Ensure subject is specified
     if (!lessonData.subject) {
-      lessonData.subject = 'General' // Default subject
+      lessonData.subject = 'Geral' // Default subject
     }
+
+    // Convert slides to stages format for compatibility
+    const stages = lessonData.slides.map((slide: any, index: number) => {
+      const stageType = slide.type === 'question' ? 'quiz' : 
+                       slide.type === 'closing' ? 'summary' : 'explanation'
+      
+      return {
+        etapa: slide.title,
+        type: stageType,
+        activity: {
+          component: slide.type === 'question' ? 'QuizComponent' : 'AnimationSlide',
+          content: slide.content,
+          prompt: slide.question || slide.content,
+          questions: slide.type === 'question' ? [{
+            q: slide.question,
+            options: slide.options,
+            correct: slide.correctAnswer,
+            explanation: slide.explanation
+          }] : [],
+          media: [], // Will be populated with Unsplash images
+          time: slide.timeEstimate || 5,
+          points: slide.type === 'question' ? 10 : 5,
+          feedback: slide.explanation || 'Bom trabalho!',
+          imagePrompt: slide.imagePrompt,
+          imageUrl: slide.imageUrl // Include the imageUrl from the populated lesson
+        },
+        route: `/lessons/${topic.toLowerCase().replace(/\s+/g, '-')}/slide-${index + 1}`
+      }
+    })
+
+    // Add stages to lessonData for compatibility
+    lessonData.stages = stages
+
+    // Don't populate all images at once - let progressive loading handle it
+    const lessonWithImages = lessonData
 
     // Generate lesson ID
     const lessonId = `lesson_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
@@ -123,16 +173,16 @@ IMPORTANT: Respond ONLY with valid JSON. Do not include any markdown formatting,
         lesson = await prisma.lessons.create({
           data: {
             id: lessonId,
-            title: lessonData.title,
-            subject: lessonData.subject,
-            level: lessonData.grade,
-            objective: lessonData.objectives?.join(', ') || '',
-            outline: lessonData.stages.map((stage: any) => ({
+            title: lessonWithImages.title,
+            subject: lessonWithImages.subject,
+            level: lessonWithImages.grade,
+            objective: lessonWithImages.objectives?.join(', ') || '',
+            outline: lessonWithImages.stages.map((stage: any) => ({
               etapa: stage.etapa,
               type: stage.type,
               route: stage.route
             })),
-            cards: lessonData.stages.map((stage: any) => ({
+            cards: lessonWithImages.stages.map((stage: any) => ({
               type: stage.type,
               title: stage.etapa,
               content: stage.activity?.content || '',
@@ -163,7 +213,7 @@ IMPORTANT: Respond ONLY with valid JSON. Do not include any markdown formatting,
           }
         })
       } catch (dbError) {
-        console.warn('Database operation failed, continuing in demo mode:', dbError instanceof Error ? dbError.message : String(dbError))
+        console.warn('Operação de banco de dados falhou, continuando em modo demo:', dbError instanceof Error ? dbError.message : String(dbError))
         // Continue with demo mode if database fails
       }
     }
@@ -172,21 +222,24 @@ IMPORTANT: Respond ONLY with valid JSON. Do not include any markdown formatting,
       success: true,
       lesson: {
         id: lesson?.id || lessonId,
-        title: lessonData.title,
-        subject: lessonData.subject,
-        level: lessonData.grade,
-        objectives: lessonData.objectives,
-        stages: lessonData.stages,
-        feedback: lessonData.feedback,
+        title: lessonWithImages.title,
+        subject: lessonWithImages.subject,
+        level: lessonWithImages.grade,
+        objectives: lessonWithImages.objectives,
+        introduction: lessonWithImages.introduction,
+        slides: lessonWithImages.slides,
+        stages: lessonWithImages.stages,
+        summary: lessonWithImages.summary,
+        nextSteps: lessonWithImages.nextSteps,
         demoMode: demoMode || !lesson
       }
     })
 
   } catch (error) {
-    console.error('Lesson generation error:', error)
+    console.error('Erro na geração da aula:', error)
     return NextResponse.json({ 
-      error: 'Failed to generate lesson',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      error: 'Falha ao gerar aula',
+      details: error instanceof Error ? error.message : 'Erro desconhecido'
     }, { status: 500 })
   }
 }

@@ -96,10 +96,10 @@ async function processQuestionsRequest(area: string, numQuestions: number, useRe
     let questions = []
     let source = 'database'
 
-    // Use API configuration to determine priority
+    // Use API configuration to determine priority - apenas questões reais
     const shouldUseApi = apiConfig.shouldUseEnemApi() && useRealQuestions
     const shouldUseDatabase = apiConfig.shouldUseEnemDatabase()
-    const shouldUseAi = apiConfig.shouldUseEnemAi()
+    const shouldUseAi = false // Desabilitado - apenas questões reais do ENEM
 
     if (shouldUseApi) {
       // Verificar se a API está disponível primeiro (com cache inteligente)
@@ -257,11 +257,15 @@ async function processQuestionsRequest(area: string, numQuestions: number, useRe
       }
     }
 
-    // Ensure we have at least some questions - create mock questions as final fallback
+    // Ensure we have at least some questions - apenas questões reais do ENEM
     if (questions.length === 0) {
-      console.log('🔄 Creating mock questions as final fallback')
-      questions = generateMockQuestions(area, numQuestions)
-      source = 'mock'
+      console.log('❌ Nenhuma questão real do ENEM disponível')
+      return NextResponse.json({ 
+        error: 'Nenhuma questão real do ENEM disponível. Apenas questões oficiais são permitidas.',
+        questions: [],
+        source: 'none',
+        total: 0
+      }, { status: 404 })
     }
 
     const responseData = { 

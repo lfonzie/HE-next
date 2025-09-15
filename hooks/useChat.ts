@@ -4,6 +4,25 @@ import { Message, ModuleType, Conversation } from '@/types'
 import { useChatContext } from '@/components/providers/ChatContext'
 import { useGlobalLoading } from '@/hooks/useGlobalLoading'
 
+// Função para converter módulo da API para formato do sistema
+function convertApiModuleToSystem(apiModule: string): string {
+  const moduleMapping: Record<string, string> = {
+    'PROFESSOR': 'professor',
+    'AULA_EXPANDIDA': 'aula-expandida',
+    'ENEM_INTERATIVO': 'enem-interativo',
+    'TI': 'ti',
+    'RH': 'rh',
+    'FINANCEIRO': 'financeiro',
+    'COORDENACAO': 'coordenacao',
+    'ATENDIMENTO': 'atendimento',
+    'SOCIAL_MEDIA': 'social-media',
+    'BEM_ESTAR': 'bem-estar',
+    'SECRETARIA': 'secretaria'
+  }
+  
+  return moduleMapping[apiModule] || 'atendimento'
+}
+
 export function useChat(onStreamingStart?: () => void) {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null)
@@ -18,7 +37,7 @@ export function useChat(onStreamingStart?: () => void) {
   const [firstTokenReceived, setFirstTokenReceived] = useState(false)
   
   const { data: session } = useSession()
-  const { setSelectedModule } = useChatContext()
+  const { setSelectedModule, autoSwitchModule } = useChatContext()
   const loading = useGlobalLoading()
   
   // Refs para otimização
@@ -88,40 +107,9 @@ export function useChat(onStreamingStart?: () => void) {
       // const token = localStorage.getItem("token")
       // if (!token) throw new Error("No auth token available")
 
-      // SEMPRE usar OpenAI para classificação - maior certeza
+      // Usar módulo fornecido ou padrão - classificação será feita no orchestrator
       let finalModule = module || "ATENDIMENTO"
-      
-      try {
-        console.log("🔍 Classificando mensagem com OpenAI...")
-        const classifyResponse = await fetch('/api/classify', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ userMessage: message }),
-        })
-        
-        if (classifyResponse.ok) {
-          const classifyData = await classifyResponse.json()
-          if (classifyData.success && classifyData.classification) {
-            finalModule = classifyData.classification.module.toLowerCase()
-            console.log(`✅ Módulo classificado pelo OpenAI: ${finalModule} (${Math.round(classifyData.classification.confidence * 100)}%)`)
-            
-            // Atualizar o módulo selecionado no contexto
-            setSelectedModule(finalModule as ModuleType)
-            
-            // Salvar informações da classificação
-            setLastClassification({
-              module: finalModule,
-              confidence: classifyData.classification.confidence,
-              rationale: classifyData.classification.rationale
-            })
-          }
-        }
-      } catch (classifyError) {
-        console.error("❌ Erro na classificação OpenAI:", classifyError)
-        // Continua com o módulo padrão
-      }
+      console.log(`🎯 Usando módulo: ${finalModule}`)
 
       // Include conversation history for context
       const conversationHistory = currentConversation?.messages || []
@@ -142,10 +130,10 @@ export function useChat(onStreamingStart?: () => void) {
         useWebSearch
       }
       
-      // Retry logic for network failures
+      // Retry logic otimizado para network failures
       let response: Response | undefined
       let currentRetryCount = 0
-      const maxRetries = 3
+      const maxRetries = 1 // Reduzido de 3 para 1
       
       while (currentRetryCount <= maxRetries) {
         try {
@@ -176,7 +164,15 @@ export function useChat(onStreamingStart?: () => void) {
           })
           
           if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+            // Tentar obter detalhes do erro do servidor
+            let errorDetails = response.statusText
+            try {
+              const errorData = await response.json()
+              errorDetails = errorData.error || errorData.message || response.statusText
+            } catch {
+              // Se não conseguir parsear JSON, usar statusText
+            }
+            throw new Error(`HTTP ${response.status}: ${errorDetails}`)
           }
           
           break // Success, exit retry loop
@@ -195,8 +191,9 @@ export function useChat(onStreamingStart?: () => void) {
             throw new Error(`Falha de rede após ${maxRetries} tentativas: ${networkError.message}`)
           }
           
-          // Exponential backoff com jitter
-          const delay = Math.min(1000 * Math.pow(2, currentRetryCount) + Math.random() * 1000, 10000)
+          // Delay otimizado - máximo 3 segundos em vez de 10
+          const delay = Math.min(1000 * Math.pow(1.5, currentRetryCount) + Math.random() * 500, 3000)
+          console.log(`🔄 [RETRY] Tentativa ${currentRetryCount}/${maxRetries} em ${delay}ms`)
           await new Promise(resolve => setTimeout(resolve, delay))
         }
       }
@@ -288,7 +285,8 @@ export function useChat(onStreamingStart?: () => void) {
               role: "assistant" as const,
               content: "",
               timestamp: new Date(),
-              isStreaming: true
+              isStreaming: true,
+              module: undefined // Garantir que não há módulo inicial
             })
           }
           
@@ -327,6 +325,7 @@ export function useChat(onStreamingStart?: () => void) {
                       model: finalModel,
                       tokens: tokenCount,
                       tier: finalTier,
+                      module: finalModule, // Adicionar módulo usado para gerar esta mensagem
                       isStreaming: false
                     }
                   }
@@ -371,6 +370,19 @@ export function useChat(onStreamingStart?: () => void) {
                 if (data.metadata.tier) {
                   finalTier = data.metadata.tier
                 }
+                if (data.metadata.module) {
+                  finalModule = convertApiModuleToSystem(data.metadata.module)
+                  console.log(`🎯 [METADATA] Módulo detectado: ${data.metadata.module} -> ${finalModule}`)
+                }
+                continue // Don't process as content
+              }
+              
+              // Process trace information separately
+              if (data.trace && !data.text && !data.blocks && !data.actions) {
+                if (data.trace.module) {
+                  finalModule = convertApiModuleToSystem(data.trace.module)
+                  console.log(`🎯 [TRACE SEPARADO] Módulo detectado: ${data.trace.module} -> ${finalModule}`)
+                }
                 continue // Don't process as content
               }
               
@@ -379,10 +391,23 @@ export function useChat(onStreamingStart?: () => void) {
                 const text = data.text || ''
                 assistantMessage = text
                 
-                // Hide loading on first token received
+                // Extract module from trace if available
+                if (data.trace && data.trace.module) {
+                  finalModule = convertApiModuleToSystem(data.trace.module)
+                  console.log(`🎯 [ORCHESTRATOR] Módulo detectado: ${data.trace.module} -> ${finalModule}`)
+                }
+                
+                // Also check for trace in separate data chunk
+                if (data.trace) {
+                  finalModule = convertApiModuleToSystem(data.trace.module)
+                  console.log(`🎯 [TRACE] Módulo detectado: ${data.trace.module} -> ${finalModule}`)
+                }
+                
+                // Hide loading on first token received with a longer delay to ensure streaming is visible
                 if (!firstTokenReceived) {
                   setFirstTokenReceived(true)
-                  loading.hide()
+                  // Longer delay to ensure streaming animation is visible
+                  setTimeout(() => loading.hide(), 500)
                 }
                 
                 // Update message with orchestrated payload
@@ -402,7 +427,8 @@ export function useChat(onStreamingStart?: () => void) {
                         structured: true,
                         blocks: data.blocks,
                         actions: data.actions,
-                        trace: data.trace
+                        trace: data.trace,
+                        module: finalModule // Adicionar módulo detectado pelo orchestrator
                       }
                     }
                     return msg
@@ -425,7 +451,8 @@ export function useChat(onStreamingStart?: () => void) {
                 
                 if (!firstTokenReceived) {
                   setFirstTokenReceived(true)
-                  loading.hide()
+                  // Longer delay to ensure streaming animation is visible
+                  setTimeout(() => loading.hide(), 500)
                 }
                 
                 if (data.model) {
@@ -506,6 +533,7 @@ export function useChat(onStreamingStart?: () => void) {
                 model: finalModel,
                 tokens: tokenCount,
                 tier: finalTier,
+                module: finalModule, // Adicionar módulo usado para gerar esta mensagem
                 isStreaming: false
               }
             }

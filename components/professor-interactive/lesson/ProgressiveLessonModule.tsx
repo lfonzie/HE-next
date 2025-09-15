@@ -17,6 +17,7 @@ import {
   AlertCircle,
   Loader2
 } from 'lucide-react';
+import { MarkdownRenderer } from '@/components/chat/MarkdownRenderer';
 import { useProgressiveSlideLoading } from '@/hooks/useProgressiveSlideLoading';
 import { Slide } from '@/types/slides';
 
@@ -323,7 +324,10 @@ export default function ProgressiveLessonModule({
               <CardContent>
                 <div className="prose max-w-none">
                   <div className="text-lg leading-relaxed mb-4">
-                    {currentSlide.content}
+                    <MarkdownRenderer 
+                      content={currentSlide.content} 
+                      className="text-gray-700"
+                    />
                   </div>
                   
                   {/* Key Points */}
@@ -365,7 +369,12 @@ export default function ProgressiveLessonModule({
                             <CheckCircle className="h-4 w-4 text-green-600" />
                             <span className="font-medium text-green-800">Resposta Correta:</span>
                           </div>
-                          <p className="text-green-700 font-medium mb-2">{currentSlide.answer}</p>
+                          <p className="text-green-700 font-medium mb-2">
+                            {typeof currentSlide.answer === 'number' 
+                              ? currentSlide.options?.[currentSlide.answer] || `Opção ${String.fromCharCode(65 + currentSlide.answer)}`
+                              : currentSlide.answer
+                            }
+                          </p>
                           <p className="text-green-600 text-sm">{currentSlide.rationale}</p>
                         </div>
                       )}

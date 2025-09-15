@@ -96,26 +96,39 @@ export function useProfessorProgressiveLoading() {
       const data = await response.json();
       let slide = data.slide;
 
-      // Se for o slide 8, buscar uma imagem diferente
-      if (slideIndex === 8 && slide.card2) {
+      // Buscar imagem do Unsplash para slides 1 e 9 (slides de introdução e encerramento)
+      if ((slideIndex === 1 || slideIndex === 9) && slide.card2) {
         try {
+          // Gerar query baseada no conteúdo do slide
+          const imageQuery = slide.card2.title || slide.title || query || 'education learning';
+          
           const imageResponse = await fetch('/api/unsplash/search', {
-            method: 'GET',
+            method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
+            body: JSON.stringify({
+              query: imageQuery,
+              count: 1
+            }),
           });
           
           if (imageResponse.ok) {
             const imageData = await imageResponse.json();
-            if (imageData.data && imageData.data.results && imageData.data.results.length > 0) {
-              // Pegar uma imagem diferente (segunda da lista)
-              const differentImage = imageData.data.results[1] || imageData.data.results[0];
-              slide.card2.imageUrl = differentImage.urls.regular;
+            if (imageData.photos && imageData.photos.length > 0) {
+              slide.card2.imageUrl = imageData.photos[0].urls.regular;
+              console.log(`✅ Imagem Unsplash carregada para slide ${slideIndex}:`, imageData.photos[0].urls.regular);
+            } else {
+              console.warn(`⚠️ Nenhuma imagem encontrada para slide ${slideIndex}, usando placeholder`);
+              slide.card2.imageUrl = `https://picsum.photos/800/400?random=${slideIndex}`;
             }
+          } else {
+            console.warn(`⚠️ Erro na API Unsplash para slide ${slideIndex}, usando placeholder`);
+            slide.card2.imageUrl = `https://picsum.photos/800/400?random=${slideIndex}`;
           }
         } catch (imageError) {
-          console.warn('Erro ao buscar imagem diferente para slide 8:', imageError);
+          console.warn(`❌ Erro ao buscar imagem Unsplash para slide ${slideIndex}:`, imageError);
+          slide.card2.imageUrl = `https://picsum.photos/800/400?random=${slideIndex}`;
         }
       }
 
@@ -175,6 +188,9 @@ export function useProfessorProgressiveLoading() {
       }));
 
       console.log('✅ Slide 1 pronto - usuário pode começar');
+      
+      // Finalizar loading global do sistema
+      // O loading será finalizado pelo componente pai que chamou startProgressiveLoading
 
       // Gerar slide 2 em paralelo (sem bloquear a UI)
       setTimeout(async () => {

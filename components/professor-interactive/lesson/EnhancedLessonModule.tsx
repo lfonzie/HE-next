@@ -39,6 +39,8 @@ import LessonLoadingScreen from './LessonLoadingScreen';
 import LessonStats from './LessonStats';
 import LessonControls from './LessonControls';
 import QuestionCard from '../quiz/QuestionCard';
+import InteractiveQuestionCard from '../quiz/InteractiveQuestionCard';
+import UnsplashSlideCard from './UnsplashSlideCard';
 
 interface EnhancedLessonModuleProps {
   initialQuery?: string;
@@ -119,10 +121,12 @@ const OptimizedSlideCard = React.memo(({
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Conteúdo principal */}
+        {/* Conteúdo principal - melhorado para preservar quebras de linha */}
         {slide.content && (
           <div className="prose prose-sm max-w-none">
-            <p className="text-gray-700 leading-relaxed">{slide.content}</p>
+            <div className="text-gray-700 leading-relaxed whitespace-pre-line">
+              {slide.content}
+            </div>
           </div>
         )}
 
@@ -133,7 +137,7 @@ const OptimizedSlideCard = React.memo(({
               <CardTitle className="text-lg">{slide.card1.title}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600">{slide.card1.content}</p>
+              <div className="text-gray-600 whitespace-pre-line">{slide.card1.content}</div>
             </CardContent>
           </Card>
         )}
@@ -145,7 +149,7 @@ const OptimizedSlideCard = React.memo(({
               <CardTitle className="text-lg">{slide.card2.title}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-gray-600">{slide.card2.content}</p>
+              <div className="text-gray-600 whitespace-pre-line">{slide.card2.content}</div>
               
               {/* Imagem otimizada */}
               {slide.card2.imageUrl && !imageError && (
@@ -176,9 +180,9 @@ const OptimizedSlideCard = React.memo(({
                 </div>
               )}
 
-              {/* Questão de múltipla escolha */}
+              {/* Questão de múltipla escolha - usando componente interativo */}
               {slide.card2.options && (
-                <QuestionCard
+                <InteractiveQuestionCard
                   question={slide.card2.title}
                   options={slide.card2.options}
                   correctOption={slide.card2.correctOption || 0}
@@ -192,9 +196,9 @@ const OptimizedSlideCard = React.memo(({
           </Card>
         )}
 
-        {/* Questão direta */}
+        {/* Questão direta - usando componente interativo */}
         {slide.question && slide.options && (
-          <QuestionCard
+          <InteractiveQuestionCard
             question={slide.question}
             options={slide.options}
             correctOption={slide.correctOption || 0}
@@ -278,6 +282,7 @@ export default function EnhancedLessonModule({
   
   const { lesson, error: generationError, generateLesson, generateMockLesson, clearLesson } = useLessonGeneration();
   const { loadingState, startLoading, updateProgress, finishLoading, stopLoading } = useLessonLoading();
+  const { start: startGlobalLoading, end: endGlobalLoading } = useLoading();
   const { 
     lessonState, 
     goNext, 
@@ -332,27 +337,31 @@ export default function EnhancedLessonModule({
 
     try {
       setError('');
-      // Start loading immediately
-      startLoading('Gerando aula interativa...');
+      // Start global loading immediately with lesson-specific message
+      startGlobalLoading('lesson-generation', {
+        message: '🎓 Gerando sua aula interativa...',
+        estimatedDuration: 15000, // 15 segundos estimados
+        cancelable: false
+      });
       
       // Detect subject quickly
       const detectedSubject = await detectSubject(query);
       setSubject(detectedSubject || 'Geral');
-      
-      // Complete initial loading
-      finishLoading();
       
       // Start progressive loading with initial slides
       await progressiveLoading.startProgressiveLoading(
         query, 
         detectedSubject || 'Geral'
       );
+      
+      // Finalizar loading global quando a aula estiver pronta
+      endGlobalLoading('lesson-generation');
     } catch (error) {
       console.error('Erro ao gerar aula:', error);
       setError('Erro ao gerar aula. Tente novamente.');
-      finishLoading();
+      endGlobalLoading('lesson-generation');
     }
-  }, [query, progressiveLoading, startLoading, finishLoading]);
+  }, [query, progressiveLoading, startGlobalLoading, endGlobalLoading]);
 
   // Auto-start se houver query inicial
   useEffect(() => {
@@ -604,8 +613,8 @@ export default function EnhancedLessonModule({
         />
       </div>
 
-      {/* Slide atual */}
-      <OptimizedSlideCard
+      {/* Slide atual com integração Unsplash */}
+      <UnsplashSlideCard
         slide={currentStep}
         stepIndex={lessonState.currentStep}
         onAnswer={handleAnswer}

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste das Correções do Chat</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #1d4ed8;
+        }
+        .success {
+            background: #d1fae5;
+            border: 1px solid #10b981;
+            color: #065f46;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .error {
+            background: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #991b1b;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .info {
+            background: #dbeafe;
+            border: 1px solid #3b82f6;
+            color: #1e40af;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .code {
+            background: #f3f4f6;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Teste das Correções do Chat</h1>
+    
+    <div class="test-section">
+        <h2>✅ Correções Implementadas</h2>
+        
+        <div class="success">
+            <strong>1. Problema de Formatação Markdown:</strong><br>
+            - Removida a chave dinâmica do MarkdownRenderer que causava re-renderização<br>
+            - Corrigida a diferença entre StreamingMessage e ChatMessage<br>
+            - Ambos agora usam a mesma lógica de renderização
+        </div>
+        
+        <div class="success">
+            <strong>2. Descrição do Módulo:</strong><br>
+            - Adicionado MessageModuleCard em StreamingMessage e ChatMessage<br>
+            - Agora exibe o nome e descrição do módulo em cada mensagem<br>
+            - Card aparece acima do conteúdo da mensagem
+        </div>
+        
+        <div class="success">
+            <strong>3. Chips IA/IA Super:</strong><br>
+            - Verificada a implementação dos chips de tier<br>
+            - Chips aparecem no avatar e nos metadados<br>
+            - Cores diferenciadas: amarelo para IA Super, azul para IA
+        </div>
+        
+        <div class="success">
+            <strong>4. Logs de Debug:</strong><br>
+            - Adicionados logs detalhados em ChatMessage e StreamingMessage<br>
+            - Permite identificar problemas de renderização<br>
+            - Mostra informações sobre tier, module, content, etc.
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🧪 Como Testar</h2>
+        
+        <div class="info">
+            <strong>Passos para testar:</strong>
+            <ol>
+                <li>Abra o chat em <code>http://localhost:3000/chat</code></li>
+                <li>Envie uma primeira mensagem</li>
+                <li>Verifique se aparece:
+                    <ul>
+                        <li>✅ Formatação markdown correta</li>
+                        <li>✅ Card do módulo com descrição</li>
+                        <li>✅ Chip IA/IA Super no avatar</li>
+                        <li>✅ Chip IA/IA Super nos metadados</li>
+                    </ul>
+                </li>
+                <li>Envie uma segunda mensagem</li>
+                <li>Verifique se a segunda mensagem também tem:
+                    <ul>
+                        <li>✅ Formatação markdown correta (não mais "crua")</li>
+                        <li>✅ Card do módulo com descrição</li>
+                        <li>✅ Chip IA/IA Super</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+        
+        <button class="test-button" onclick="openChat()">Abrir Chat</button>
+        <button class="test-button" onclick="checkConsole()">Verificar Console</button>
+    </div>
+
+    <div class="test-section">
+        <h2>🔍 Logs de Debug</h2>
+        
+        <div class="info">
+            <strong>Logs que devem aparecer no console:</strong>
+        </div>
+        
+        <div class="code">
+// Para StreamingMessage:
+StreamingMessage render: {
+  contentLength: 150,
+  isComplete: false,
+  tier: "IA",
+  module: "PROFESSOR",
+  contentPreview: "# Primeira Mensagem\n\nEsta é a **primeira mensagem** do chat..."
+}
+
+// Para ChatMessage:
+ChatMessage render: {
+  messageId: "assistant-1234567890",
+  isUser: false,
+  contentLength: 150,
+  tier: "IA",
+  module: "PROFESSOR",
+  isStreaming: false,
+  contentPreview: "# Primeira Mensagem\n\nEsta é a **primeira mensagem** do chat..."
+}
+
+// Para MarkdownRenderer:
+MarkdownRenderer render: {
+  contentLength: 150,
+  isStreaming: false,
+  contentPreview: "# Primeira Mensagem\n\nEsta é a **primeira mensagem** do chat...",
+  hasMarkdown: true
+}
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🐛 Problemas Conhecidos</h2>
+        
+        <div class="error">
+            <strong>Se ainda houver problemas:</strong>
+            <ul>
+                <li>Verifique se o servidor está rodando em <code>http://localhost:3000</code></li>
+                <li>Abra o DevTools (F12) e verifique o console</li>
+                <li>Verifique se há erros de JavaScript</li>
+                <li>Teste com diferentes módulos (Professor, TI, RH, etc.)</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function openChat() {
+            window.open('http://localhost:3000/chat', '_blank');
+        }
+        
+        function checkConsole() {
+            alert('Abra o DevTools (F12) e verifique o console para ver os logs de debug.');
+        }
+        
+        // Verificar se o servidor está rodando
+        fetch('http://localhost:3000/api/health')
+            .then(response => {
+                if (response.ok) {
+                    document.body.insertAdjacentHTML('afterbegin', 
+                        '<div class="success">✅ Servidor está rodando em http://localhost:3000</div>'
+                    );
+                } else {
+                    document.body.insertAdjacentHTML('afterbegin', 
+                        '<div class="error">❌ Servidor não está respondendo. Execute: npm run dev</div>'
+                    );
+                }
+            })
+            .catch(error => {
+                document.body.insertAdjacentHTML('afterbegin', 
+                    '<div class="error">❌ Servidor não está rodando. Execute: npm run dev</div>'
+                );
+            });
+    </script>
+</body>
+</html>

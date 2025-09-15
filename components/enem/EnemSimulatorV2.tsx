@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { 
   Clock, 
   ArrowLeft, 
@@ -15,10 +17,88 @@ import {
   RotateCcw,
   Download,
   Share2,
-  AlertTriangle
+  AlertTriangle,
+  Loader2
 } from 'lucide-react';
 import { EnemItem, EnemResponse, EnemScore, EnemMode, EnemArea } from '@/types/enem';
 import { useToast } from '@/hooks/use-toast';
+import { EnemLoadingScreen } from '@/components/ui/LoadingScreen';
+import { ExamGenerationLoading } from '@/components/enem/EnemLoadingStates';
+
+// Função para determinar o texto do chip baseado na origem da pergunta
+function getQuestionSourceChip(question: EnemItem | null): { text: string; variant: "default" | "secondary" | "destructive" | "outline" } {
+  if (!question) {
+    return { text: "ENEM Local", variant: "default" };
+  }
+  
+  // Check metadata first for explicit source information
+  if (question.metadata?.source) {
+    switch (question.metadata.source) {
+      case 'LOCAL_DATABASE':
+        return {
+          text: `ENEM ${question.year || question.metadata.original_year || 'Local'}`,
+          variant: "default"
+        }
+      case 'DATABASE':
+        return {
+          text: `ENEM ${question.year || question.metadata.original_year || 'API'}`,
+          variant: "default"
+        }
+      case 'AI':
+        return {
+          text: "IA",
+          variant: "secondary"
+        }
+    }
+  }
+  
+  // Check if it's an official ENEM question
+  if (question.metadata?.is_official_enem) {
+    return {
+      text: `ENEM ${question.year || question.metadata.original_year || 'Local'}`,
+      variant: "default"
+    }
+  }
+  
+  // Check if it's AI generated
+  if (question.metadata?.is_ai_generated) {
+    return {
+      text: "IA",
+      variant: "secondary"
+    }
+  }
+  
+  // Se tem year definido e não é o ano atual, provavelmente é do banco local
+  if (question.year && question.year !== new Date().getFullYear()) {
+    return {
+      text: `ENEM ${question.year}`,
+      variant: "default"
+    }
+  }
+  
+  // Se tem ID que começa com "enem_", é do banco local
+  if (question.item_id) {
+    if (question.item_id.startsWith('enem_')) {
+      const year = question.year || 'Local'
+      return {
+        text: `ENEM ${year}`,
+        variant: "default"
+      }
+    }
+    if (question.item_id.startsWith('ai_generated_') || question.item_id.startsWith('generated_')) {
+      return {
+        text: "IA",
+        variant: "secondary"
+      }
+    }
+  }
+  
+  // Default: assumir que é do banco local do ENEM
+  return {
+    text: "ENEM Local",
+    variant: "default"
+  }
+}
 
 interface EnemSimulatorV2Props {
   sessionId: string;
@@ -29,7 +109,7 @@ interface EnemSimulatorV2Props {
     numQuestions: number;
     timeLimit?: number;
   };
-  onComplete: (score: EnemScore) => void;
+  onComplete: (score: EnemScore, items: EnemItem[], responses: EnemResponse[]) => void;
 }
 
 export function EnemSimulatorV2({ sessionId, items, config, onComplete }: EnemSimulatorV2Props) {
@@ -39,10 +119,46 @@ export function EnemSimulatorV2({ sessionId, items, config, onComplete }: EnemSi
   const [isCompleted, setIsCompleted] = useState(false);
   const [showWarning, setShowWarning] = useState(false);
   const [tabSwitchCount, setTabSwitchCount] = useState(0);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isGeneratingExam, setIsGeneratingExam] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState(0);
+  const [generationMessage, setGenerationMessage] = useState('');
   const { toast } = useToast();
 
   const currentItem = items[currentQuestionIndex];
   const currentResponse = responses.get(currentItem?.item_id);
+
+  // Simulate exam generation loading when component mounts
+  useEffect(() => {
+    if (items.length === 0) {
+      setIsGeneratingExam(true);
+      setGenerationProgress(0);
+      setGenerationMessage('Gerando simulado ENEM...');
+      
+      // Simulate progressive loading
+      const progressSteps = [
+        { progress: 20, message: 'Configurando simulado ENEM...' },
+        { progress: 40, message: 'Selecionando questões oficiais...' },
+        { progress: 60, message: 'Analisando competências...' },
+        { progress: 80, message: 'Preparando sistema TRI...' },
+        { progress: 100, message: 'Simulado pronto!' }
+      ];
+
+      let currentStep = 0;
+      const progressInterval = setInterval(() => {
+        if (currentStep < progressSteps.length) {
+          setGenerationProgress(progressSteps[currentStep].progress);
+          setGenerationMessage(progressSteps[currentStep].message);
+          currentStep++;
+        } else {
+          clearInterval(progressInterval);
+          setIsGeneratingExam(false);
+        }
+      }, 800);
+
+      return () => clearInterval(progressInterval);
+    }
+  }, [items.length]);
 
   // Initialize timer
   useEffect(() => {
@@ -81,6 +197,17 @@ export function EnemSimulatorV2({ sessionId, items, config, onComplete }: EnemSi
   const handleAnswerSelect = useCallback(async (answer: string) => {
     if (!currentItem || isCompleted) return;
 
+    // Validate session ID
+    if (!sessionId) {
+      console.error('No session ID available');
+      toast({
+        title: "Erro",
+        description: "ID da sessão não encontrado. Reinicie o simulado.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     const startTime = Date.now();
     
     // Save response locally first
@@ -95,9 +222,11 @@ export function EnemSimulatorV2({ sessionId, items, config, onComplete }: EnemSi
     };
 
     setResponses(prev => new Map(prev.set(currentItem.item_id, response)));
+    setIsSaving(true);
 
     // Save to server
     try {
+      console.log('Saving response with session ID:', sessionId);
       const serverResponse = await fetch('/api/enem/responses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -109,16 +238,32 @@ export function EnemSimulatorV2({ sessionId, items, config, onComplete }: EnemSi
         })
       });
 
+      console.log('Response status:', serverResponse.status);
+      
       if (!serverResponse.ok) {
-        throw new Error('Failed to save response');
+        const errorText = await serverResponse.text();
+        console.error('Server response error:', errorText);
+        
+        // For 404 errors (item not found), don't throw error as response is saved locally
+        if (serverResponse.status === 404) {
+          console.log('Item not found in database, but response saved locally');
+          return; // Exit successfully
+        }
+        
+        throw new Error(`Failed to save response: ${serverResponse.status} - ${errorText}`);
       }
+      
+      const responseData = await serverResponse.json();
+      console.log('Response saved successfully:', responseData);
     } catch (error) {
       console.error('Error saving response:', error);
       toast({
         title: "Erro",
-        description: "Falha ao salvar resposta. Tente novamente.",
+        description: `Falha ao salvar resposta: ${error.message}`,
         variant: "destructive"
       });
+    } finally {
+      setIsSaving(false);
     }
   }, [currentItem, sessionId, isCompleted, toast]);
 
@@ -154,23 +299,58 @@ export function EnemSimulatorV2({ sessionId, items, config, onComplete }: EnemSi
 
   const calculateScore = async () => {
     try {
+      // Validações mais robustas
+      if (!sessionId) {
+        throw new Error('ID da sessão não encontrado');
+      }
+
+      if (responses.size === 0) {
+        throw new Error('Nenhuma resposta foi registrada');
+      }
+
+      if (items.length === 0) {
+        throw new Error('Nenhuma questão foi carregada');
+      }
+
+      // Preparar dados de forma mais segura
+      const responseData = {
+        session_id: sessionId,
+        responses: Array.from(responses.values()).filter(r => r && r.item_id),
+        items: items.filter(item => item && item.item_id),
+        config: config
+      };
+
+      // Log apenas em desenvolvimento
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Calculating score for session ID:', sessionId);
+        console.log('Responses count:', responseData.responses.length);
+        console.log('Items count:', responseData.items.length);
+      }
+
       const response = await fetch('/api/enem/scores', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ session_id: sessionId })
+        body: JSON.stringify(responseData)
       });
 
       if (!response.ok) {
-        throw new Error('Failed to calculate score');
+        const errorText = await response.text();
+        console.error('Score calculation error:', errorText);
+        throw new Error(`Failed to calculate score: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
-      onComplete(data.score);
+      
+      if (!data.success || !data.score) {
+        throw new Error('Resposta inválida da API de pontuação');
+      }
+
+      onComplete(data.score, items, Array.from(responses.values()));
     } catch (error) {
       console.error('Error calculating score:', error);
       toast({
         title: "Erro",
-        description: "Falha ao calcular pontuação. Tente novamente.",
+        description: `Falha ao calcular pontuação: ${error.message}`,
         variant: "destructive"
       });
     }
@@ -189,6 +369,17 @@ export function EnemSimulatorV2({ sessionId, items, config, onComplete }: EnemSi
 
   const progress = ((currentQuestionIndex + 1) / items.length) * 100;
   const answeredCount = responses.size;
+
+  // Show loading screen while generating exam
+  if (isGeneratingExam) {
+    return (
+      <ExamGenerationLoading
+        isLoading={isGeneratingExam}
+        progress={generationProgress}
+        message={generationMessage}
+      />
+    );
+  }
 
   if (isCompleted) {
     return (
@@ -217,7 +408,7 @@ export function EnemSimulatorV2({ sessionId, items, config, onComplete }: EnemSi
                 <Badge variant="secondary">{config.areas.join(', ')}</Badge>
               </CardTitle>
               <p className="text-sm text-gray-600 mt-1">
-                Questão {currentQuestionIndex + 1} de {items.length}
+                Questão {currentQuestionIndex + 1} de {items.length} • {getQuestionSourceChip(currentItem).text}
               </p>
             </div>
             <div className="text-right">
@@ -229,6 +420,11 @@ export function EnemSimulatorV2({ sessionId, items, config, onComplete }: EnemSi
               )}
               <div className="text-sm text-gray-600">
                 Respondidas: {answeredCount}/{items.length}
+                {isSaving && (
+                  <span className="ml-2 text-blue-600 text-xs">
+                    💾 Salvando...
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -255,15 +451,74 @@ export function EnemSimulatorV2({ sessionId, items, config, onComplete }: EnemSi
       {/* Question */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <Badge variant="outline">{currentItem?.area}</Badge>
-            <Badge variant="secondary">{currentItem?.estimated_difficulty}</Badge>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <Badge variant="outline" className="text-sm font-semibold">
+                Questão {currentQuestionIndex + 1}
+              </Badge>
+              <Badge variant={getQuestionSourceChip(currentItem).variant} className="text-xs">
+                {getQuestionSourceChip(currentItem).text}
+              </Badge>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline">{currentItem?.area}</Badge>
+              <Badge variant="secondary">{currentItem?.estimated_difficulty}</Badge>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
             <div className="prose max-w-none">
-              <p className="text-lg leading-relaxed">{currentItem?.text}</p>
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  // Custom styling for markdown elements
+                  h1: ({ children }) => (
+                    <h1 className="text-xl font-semibold mb-3 text-gray-900">{children}</h1>
+                  ),
+                  h2: ({ children }) => (
+                    <h2 className="text-lg font-semibold mb-3 text-gray-900">{children}</h2>
+                  ),
+                  h3: ({ children }) => (
+                    <h3 className="text-base font-semibold mb-2 text-gray-900">{children}</h3>
+                  ),
+                  p: ({ children }) => (
+                    <p className="text-gray-800 mb-4 leading-relaxed">{children}</p>
+                  ),
+                  ul: ({ children }) => (
+                    <ul className="list-disc list-inside mb-4 space-y-1 text-gray-800">{children}</ul>
+                  ),
+                  ol: ({ children }) => (
+                    <ol className="list-decimal list-inside mb-4 space-y-1 text-gray-800">{children}</ol>
+                  ),
+                  li: ({ children }) => (
+                    <li className="mb-1">{children}</li>
+                  ),
+                  strong: ({ children }) => (
+                    <strong className="font-semibold text-gray-900">{children}</strong>
+                  ),
+                  em: ({ children }) => (
+                    <em className="italic text-gray-800">{children}</em>
+                  ),
+                  blockquote: ({ children }) => (
+                    <blockquote className="border-l-4 border-blue-200 pl-4 italic text-gray-700 mb-4">
+                      {children}
+                    </blockquote>
+                  ),
+                  code: ({ children }) => (
+                    <code className="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono text-gray-800">
+                      {children}
+                    </code>
+                  ),
+                  pre: ({ children }) => (
+                    <pre className="bg-gray-100 p-3 rounded-lg overflow-x-auto mb-4">
+                      {children}
+                    </pre>
+                  ),
+                }}
+              >
+                {currentItem?.text || ''}
+              </ReactMarkdown>
             </div>
 
             {/* Alternatives */}
@@ -286,7 +541,39 @@ export function EnemSimulatorV2({ sessionId, items, config, onComplete }: EnemSi
                     }`}>
                       {key}
                     </div>
-                    <span>{value}</span>
+                    <div className="flex-1">
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          // Custom styling for markdown elements in alternatives
+                          p: ({ children }) => (
+                            <span className="inline">{children}</span>
+                          ),
+                          strong: ({ children }) => (
+                            <strong className="font-semibold text-gray-900">{children}</strong>
+                          ),
+                          em: ({ children }) => (
+                            <em className="italic text-gray-800">{children}</em>
+                          ),
+                          code: ({ children }) => (
+                            <code className="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono text-gray-800">
+                              {children}
+                            </code>
+                          ),
+                          ul: ({ children }) => (
+                            <ul className="list-disc list-inside space-y-1 text-gray-800">{children}</ul>
+                          ),
+                          ol: ({ children }) => (
+                            <ol className="list-decimal list-inside space-y-1 text-gray-800">{children}</ol>
+                          ),
+                          li: ({ children }) => (
+                            <li className="mb-1">{children}</li>
+                          ),
+                        }}
+                      >
+                        {value}
+                      </ReactMarkdown>
+                    </div>
                   </div>
                 </button>
               ))}
@@ -308,18 +595,6 @@ export function EnemSimulatorV2({ sessionId, items, config, onComplete }: EnemSi
               Anterior
             </Button>
 
-            <div className="flex items-center gap-2">
-              {currentResponse && (
-                <Badge variant={currentResponse.is_correct ? "default" : "destructive"}>
-                  {currentResponse.is_correct ? (
-                    <CheckCircle className="h-3 w-3 mr-1" />
-                  ) : (
-                    <XCircle className="h-3 w-3 mr-1" />
-                  )}
-                  Respondida
-                </Badge>
-              )}
-            </div>
 
             {currentQuestionIndex === items.length - 1 ? (
               <Button onClick={handleCompleteExam} className="bg-green-600 hover:bg-green-700">

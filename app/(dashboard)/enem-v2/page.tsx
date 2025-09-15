@@ -1,9 +1,10 @@
 "use client"
 
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { 
   BookOpen, 
   Target, 
@@ -29,7 +30,9 @@ import {
   FileText,
   User,
   Globe,
-  CheckSquare
+  CheckSquare,
+  ArrowLeft,
+  Loader2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { EnemModeSelector } from '@/components/enem/EnemModeSelector';
@@ -38,6 +41,9 @@ import { EnemSimulatorV2 } from '@/components/enem/EnemSimulatorV2';
 import { EnemResults } from '@/components/enem/EnemResults';
 import { AuthGuard } from '@/components/AuthGuard';
 import { EnemMode, EnemArea, EnemScore } from '@/types/enem';
+import { EnemLoadingScreen } from '@/components/ui/LoadingScreen';
+import { ExamGenerationLoading } from '@/components/enem/EnemLoadingStates';
+import { EnemDatabaseInfo } from '@/components/enem/EnemDatabaseInfo';
 
 type AppState = 'mode-selection' | 'customization' | 'simulation' | 'results';
 
@@ -60,8 +66,12 @@ function EnemSimulatorContent() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [examItems, setExamItems] = useState<any[]>([]);
   const [score, setScore] = useState<EnemScore | null>(null);
+  const [examResponses, setExamResponses] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [loadingMessage, setLoadingMessage] = useState('');
   const [error, setError] = useState<string>('');
+  const [retryCount, setRetryCount] = useState(0);
   const { toast } = useToast();
 
   const areasConfig = [
@@ -107,9 +117,12 @@ function EnemSimulatorContent() {
     }
   ];
 
-  const handleModeSelect = async (mode: EnemMode) => {
+  const handleModeSelect = useCallback(async (mode: EnemMode) => {
     setLoading(true);
     setError('');
+    setRetryCount(0);
+    setLoadingProgress(0);
+    setLoadingMessage('Iniciando simulado...');
 
     try {
       // Create session based on mode
@@ -157,18 +170,58 @@ function EnemSimulatorContent() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   const handleCustomize = () => {
     setAppState('customization');
   };
 
   const handleCustomStart = async (config: SimulationConfig) => {
-    await startSimulation(config);
+    setLoading(true);
+    setError('');
+    setRetryCount(0);
+    setLoadingProgress(0);
+    setLoadingMessage('Iniciando simulado personalizado...');
+    
+    try {
+      await startSimulation(config);
+    } catch (err: any) {
+      console.error('Error starting custom simulation:', err);
+      setError(err.message || 'Falha ao iniciar simulado personalizado. Tente novamente.');
+      toast({
+        title: "Erro",
+        description: err.message || "Falha ao iniciar simulado personalizado",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const startSimulation = async (config: SimulationConfig) => {
+  const startSimulation = useCallback(async (config: SimulationConfig) => {
     try {
+      console.log('Creating session with config:', config);
+      
+      // Simulate progress updates
+      const progressSteps = [
+        { progress: 20, message: 'Configurando simulado...' },
+        { progress: 40, message: 'Selecionando questões...' },
+        { progress: 60, message: 'Preparando ambiente...' },
+        { progress: 80, message: 'Finalizando configuração...' },
+        { progress: 100, message: 'Simulado pronto!' }
+      ];
+
+      let currentStep = 0;
+      const progressInterval = setInterval(() => {
+        if (currentStep < progressSteps.length) {
+          setLoadingProgress(progressSteps[currentStep].progress);
+          setLoadingMessage(progressSteps[currentStep].message);
+          currentStep++;
+        } else {
+          clearInterval(progressInterval);
+        }
+      }, 500);
+
       const response = await fetch('/api/enem/sessions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -184,11 +237,25 @@ function EnemSimulatorContent() {
         })
       });
 
+      clearInterval(progressInterval);
+      setLoadingProgress(100);
+
+      console.log('Session creation response status:', response.status);
+
       if (!response.ok) {
-        throw new Error('Failed to create session');
+        const errorText = await response.text();
+        console.error('Session creation error:', errorText);
+        if (response.status === 401) {
+          throw new Error('Please log in to access the ENEM simulator');
+        }
+        throw new Error(`Failed to create session: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
+      console.log('Session created successfully:', {
+        sessionId: data.session_id,
+        itemsCount: data.items?.length
+      });
       
       setSimulationConfig(config);
       setSessionId(data.session_id);
@@ -198,10 +265,12 @@ function EnemSimulatorContent() {
       console.error('Error creating session:', error);
       throw error;
     }
-  };
+  }, []);
 
-  const handleComplete = (finalScore: EnemScore) => {
+  const handleComplete = (finalScore: EnemScore, items: any[], responses: any[]) => {
     setScore(finalScore);
+    setExamItems(items);
+    setExamResponses(responses);
     setAppState('results');
   };
 
@@ -229,11 +298,12 @@ function EnemSimulatorContent() {
     setSessionId(null);
     setExamItems([]);
     setScore(null);
+    setExamResponses([]);
     setError('');
   };
 
   // Render based on current state
-  if (appState === 'simulation' && sessionId && examItems.length > 0 && simulationConfig) {
+  if (appState === 'simulation' && sessionId && simulationConfig) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
         <div className="bg-white shadow-sm border-b">
@@ -296,6 +366,8 @@ function EnemSimulatorContent() {
             sessionId={sessionId!}
             onRetake={handleRetake}
             onRefocus={handleRefocus}
+            items={examItems}
+            responses={examResponses}
           />
         </div>
       </div>
@@ -341,8 +413,8 @@ function EnemSimulatorContent() {
               Simulador ENEM Avançado
             </h1>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Prepare-se para o ENEM com simulados inteligentes, análise detalhada de desempenho 
-              e questões baseadas em exames reais. Sistema adaptativo com IA especializada.
+              Prepare-se para o ENEM com simulados usando questões oficiais de anos anteriores. 
+              Banco completo com questões reais do ENEM de 2009 a 2023.
             </p>
           </div>
         </div>
@@ -354,16 +426,16 @@ function EnemSimulatorContent() {
           <Card className="text-center hover:shadow-lg transition-shadow">
             <CardContent className="pt-6">
               <Globe className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-              <h3 className="font-semibold">Questões Reais</h3>
-              <p className="text-sm text-gray-600">Questões reais do ENEM</p>
+              <h3 className="font-semibold">Questões Oficiais</h3>
+              <p className="text-sm text-gray-600">Banco completo 2009-2023</p>
             </CardContent>
           </Card>
           
           <Card className="text-center hover:shadow-lg transition-shadow">
             <CardContent className="pt-6">
               <Brain className="h-8 w-8 text-green-600 mx-auto mb-2" />
-              <h3 className="font-semibold">IA Avançada</h3>
-              <p className="text-sm text-gray-600">Análise adaptativa e personalizada</p>
+              <h3 className="font-semibold">Seleção Inteligente</h3>
+              <p className="text-sm text-gray-600">Questões balanceadas por área</p>
             </CardContent>
           </Card>
           
@@ -387,36 +459,35 @@ function EnemSimulatorContent() {
         {/* Error Display */}
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <div className="flex items-center gap-2">
-              <AlertCircle className="h-4 w-4 text-red-600" />
-              <span className="text-red-800">{error}</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 text-red-600" />
+                <span className="text-red-800">{error}</span>
+              </div>
+              {error.includes('log in') && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => window.location.href = '/login'}
+                >
+                  Log In
+                </Button>
+              )}
             </div>
           </div>
         )}
 
-        {/* Loading State */}
+        {/* Enhanced Loading State */}
         {loading && (
-          <Card className="mb-6">
-            <CardContent className="py-8">
-              <div className="text-center">
-                <div className="inline-flex items-center gap-3 text-blue-600 mb-4">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                  <span className="text-lg font-semibold">Gerando Simulado...</span>
-                </div>
-                <div className="space-y-2 text-sm text-gray-600">
-                  <p>🧠 Selecionando questões personalizadas</p>
-                  <p>⚡ Calibrando nível de dificuldade</p>
-                  <p>📊 Preparando sistema de correção TRI</p>
-                </div>
-                <div className="mt-4">
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-blue-600 h-2 rounded-full animate-pulse" style={{ width: '75%' }}></div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <ExamGenerationLoading
+            isLoading={loading}
+            progress={loadingProgress}
+            message={loadingMessage}
+          />
         )}
+
+        {/* Database Information */}
+        <EnemDatabaseInfo />
 
         {/* Mode Selection */}
         <EnemModeSelector 
@@ -438,7 +509,7 @@ function EnemSimulatorContent() {
           </div>
           
           <p className="text-blue-600 font-medium">
-            🤖 Sistema IA Especializada • Questões de alta qualidade geradas automaticamente
+            📚 Banco Oficial ENEM • Questões reais de 2009 a 2023 • Todas as áreas do conhecimento
           </p>
         </div>
       </div>

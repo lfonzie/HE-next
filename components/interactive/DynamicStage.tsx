@@ -80,7 +80,15 @@ export default function DynamicStage({
   }
 
   const handleNext = () => {
-    if (isCompleted || stage.activity.component === 'OpenQuestion') {
+    // Allow navigation for these component types without requiring completion
+    const alwaysAllowNext = [
+      'OpenQuestion',
+      'AnimationSlide',
+      'DiscussionBoard',
+      'UploadTask'
+    ]
+    
+    if (isCompleted || alwaysAllowNext.includes(stage.activity.component)) {
       onNext()
     }
   }
@@ -147,7 +155,7 @@ export default function DynamicStage({
           <AnimationSlide
             title={stage.etapa}
             content={activity.content || ''}
-            media={activity.media || []}
+            media={activity.imageUrl ? [activity.imageUrl] : (activity.media || [])}
             animationSteps={activity.animationSteps || []}
             autoPlay={false}
             showControls={true}
@@ -363,7 +371,7 @@ export default function DynamicStage({
             
             <Button
               onClick={handleNext}
-              disabled={!canGoNext && !isCompleted && stage.activity.component !== 'OpenQuestion'}
+              disabled={!canGoNext && !isCompleted && !['OpenQuestion', 'AnimationSlide', 'DiscussionBoard', 'UploadTask'].includes(stage.activity.component)}
             >
               {stageIndex === totalStages - 1 ? 'Finalizar' : 'Próxima'}
             </Button>

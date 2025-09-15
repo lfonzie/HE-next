@@ -27,8 +27,14 @@ export function WeatherAnswer({ question, answer }: WeatherAnswerProps) {
     // Extract city name from the question
     const extractedCity = extractCityFromQuery(question);
     if (extractedCity && isWeatherQuery(question)) {
-      setCityName(extractedCity);
-      fetchWeatherData(extractedCity);
+      // Validate city name before making API call
+      const validCityPattern = /^[A-Za-z\s]+$/;
+      if (validCityPattern.test(extractedCity) && extractedCity.length > 1 && extractedCity.length < 50) {
+        setCityName(extractedCity);
+        fetchWeatherData(extractedCity);
+      } else {
+        setError(`Invalid city name: "${extractedCity}". Please provide a valid city name.`);
+      }
     }
   }, [question]);
 

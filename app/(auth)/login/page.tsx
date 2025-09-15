@@ -12,6 +12,7 @@ import { Mail, Lock, Eye, EyeOff, AlertCircle, ArrowLeft } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import { useLoading } from '@/lib/loading'
+import { useNavigationLoading } from '@/hooks/useNavigationLoading'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -22,6 +23,7 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false)
   const router = useRouter()
   const { start: startLoading, end: endLoading } = useLoading()
+  const { startLoading: startNavLoading, stopLoading: stopNavLoading } = useNavigationLoading()
   
   // Refs para foco
   const emailRef = useRef<HTMLInputElement>(null)
@@ -51,12 +53,12 @@ export default function LoginPage() {
         setError('Credenciais inválidas')
         endLoading(loadingKey, 'error')
       } else if (result?.ok) {
-        // Update loading message for navigation
-        startLoading('navigation', {
-          message: 'Carregando…',
-          cancelable: false,
-          priority: 'high'
-        })
+        // End login loading first
+        endLoading(loadingKey, 'success')
+        
+        // Start navigation loading using the correct system
+        console.log('Login successful, starting navigation loading');
+        startNavLoading('navigation', 'Redirecionando...')
         
         // Navigate to chat - loading will be hidden when chat page loads
         router.push('/chat')

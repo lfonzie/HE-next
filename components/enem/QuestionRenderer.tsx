@@ -47,7 +47,7 @@ export function QuestionRenderer({
               <li className="mb-1">{children}</li>
             ),
             strong: ({ children }) => (
-              <strong className="font-semibold text-gray-900">{children}</strong>
+              <strong className="font-semibold text-gray-900 inline">{children}</strong>
             ),
             em: ({ children }) => (
               <em className="italic text-gray-800">{children}</em>
@@ -76,6 +76,12 @@ export function QuestionRenderer({
       {/* Image Rendering with Fallback */}
       {imageUrl && (
         <div className="mb-4">
+          {/* Add context when image is present */}
+          <div className="mb-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800 font-medium">
+              📷 Esta questão contém uma imagem. Analise cuidadosamente o conteúdo visual para responder.
+            </p>
+          </div>
           <ImageWithFallback
             src={imageUrl}
             alt={imageAlt || "Imagem da questão"}

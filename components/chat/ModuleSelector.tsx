@@ -114,7 +114,7 @@ export function ModuleSelector({ selectedModule, onSelectModule, isCollapsed = f
                 ${isActive && isHighlighted ? 'module-highlighted' : ''}
                 flex items-center gap-3 w-full px-4 py-3 rounded-lg text-left transition-all duration-200
                 ${isActive 
-                  ? '' 
+                  ? 'bg-yellow-400 text-black border-2 border-yellow-500 shadow-lg' 
                   : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600'
                 }
                 ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:shadow-md'}

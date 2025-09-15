@@ -9,6 +9,13 @@ const openai = new OpenAI({
 // Rate limiting simples
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 
+// Cache de classificação para melhorar performance
+const classificationCache = new Map<string, { 
+  result: any; 
+  timestamp: number; 
+  ttl: number 
+}>();
+
 function checkRateLimit(ip: string): boolean {
   // Bypass rate limiting em desenvolvimento
   if (process.env.NODE_ENV === 'development') {
@@ -31,6 +38,44 @@ function checkRateLimit(ip: string): boolean {
   return true;
 }
 
+function getCachedClassification(message: string, historyLength: number): any | null {
+  // Usar histórico como parte da chave para melhor precisão
+  const cacheKey = `${message.toLowerCase().trim()}_${historyLength}`;
+  const cached = classificationCache.get(cacheKey);
+  
+  if (cached && Date.now() - cached.timestamp < cached.ttl) {
+    console.log(`🚀 [CACHE HIT] Classificação encontrada no cache para: "${message.substring(0, 30)}..." (histórico: ${historyLength})`);
+    return cached.result;
+  }
+  
+  // Remove entrada expirada
+  if (cached) {
+    classificationCache.delete(cacheKey);
+  }
+  
+  return null;
+}
+
+function setCachedClassification(message: string, historyLength: number, result: any): void {
+  // Usar histórico como parte da chave para melhor precisão
+  const cacheKey = `${message.toLowerCase().trim()}_${historyLength}`;
+  const ttl = 5 * 60 * 1000; // 5 minutos
+  
+  classificationCache.set(cacheKey, {
+    result,
+    timestamp: Date.now(),
+    ttl
+  });
+  
+  // Limitar tamanho do cache (máximo 100 entradas)
+  if (classificationCache.size > 100) {
+    const firstKey = classificationCache.keys().next().value;
+    if (firstKey) {
+      classificationCache.delete(firstKey);
+    }
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting
@@ -42,7 +87,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { userMessage } = await request.json();
+    const { userMessage, history = [], currentModule = 'atendimento' } = await request.json();
 
     if (!userMessage) {
       return NextResponse.json(
@@ -51,7 +96,38 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`🔍 [CLASSIFY] "${userMessage.substring(0, 30)}${userMessage.length > 30 ? '...' : ''}"`);
+    console.log(`🔍 [CLASSIFY] "${userMessage.substring(0, 30)}${userMessage.length > 30 ? '...' : ''}" (Histórico: ${history.length} msgs)`);
+
+    // Verificar cache primeiro (usando histórico como parte da chave)
+    const cachedResult = getCachedClassification(userMessage, history.length);
+    if (cachedResult) {
+      return NextResponse.json({
+        success: true,
+        classification: cachedResult,
+        model: "gpt-4o-mini",
+        timestamp: new Date().toISOString(),
+        cached: true
+      });
+    }
+
+    // Preparar contexto com histórico para classificação
+    let contextWithHistory = userMessage;
+    
+    if (history.length > 0) {
+      // Incluir mais contexto das últimas mensagens para melhor classificação
+      const historyContext = history.slice(-3).map((msg: any) => {
+        const content = msg.content || '';
+        const truncated = content.length > 100 ? content.substring(0, 100) + '...' : content;
+        return `${msg.role}: ${truncated}`;
+      }).join('\n');
+      
+      // Adicionar informações sobre módulos mencionados anteriormente
+      const mentionedModules = history.slice(-3).map((msg: any) => msg.module).filter(Boolean);
+      const moduleContext = mentionedModules.length > 0 ? 
+        `\nMódulos mencionados anteriormente: ${mentionedModules.join(', ')}` : '';
+      
+      contextWithHistory = `Histórico da conversa (últimas mensagens):\n${historyContext}${moduleContext}\n\nMensagem atual: ${userMessage}`;
+    }
 
     // Chamar OpenAI para classificação
     const completion = await openai.chat.completions.create({
@@ -65,7 +141,7 @@ export async function POST(request: NextRequest) {
         },
         {
           role: "user",
-          content: userMessage
+          content: contextWithHistory
         }
       ],
       response_format: { type: "json_object" }
@@ -92,11 +168,15 @@ export async function POST(request: NextRequest) {
 
     console.log(`✅ [CLASSIFY] ${parsed.module} (${Math.round(parsed.confidence * 100)}%) - ${parsed.rationale}`);
 
+    // Salvar no cache
+    setCachedClassification(userMessage, history.length, parsed);
+
     return NextResponse.json({
       success: true,
       classification: parsed,
       model: "gpt-4o-mini",
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      cached: false
     });
 
   } catch (error: any) {

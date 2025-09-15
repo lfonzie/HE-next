@@ -101,11 +101,16 @@
 }
 
 .module-button.active .module-icon {
-  color: #000000;
+  color: #000000 !important;
 }
 
 .module-button:not(.active) .module-icon {
   color: #6b7280;
+}
+
+/* Estilo específico para módulo ativo */
+.module-active .module-icon {
+  color: #000000 !important;
 }
 
 .module-name {

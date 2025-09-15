@@ -306,20 +306,26 @@ class EnemLocalDatabase {
    * Converte questão local para formato do simulador
    */
   convertToSimulatorFormat(question: LocalEnemQuestion): any {
+    // Converte para o formato EnemItem esperado pelo gerador
     return {
-      id: `local_${question.year}_${question.index}`,
-      subject: question.discipline,
+      item_id: `local_${question.year}_${question.index}`,
       area: question.discipline,
-      difficulty: 'Médio', // Padrão para questões reais
       year: question.year,
-      question: question.context || '',
-      options: question.alternatives.map(alt => `${alt.letter}) ${alt.text}`),
-      correctAnswer: question.alternatives.findIndex(alt => alt.isCorrect),
-      explanation: `Resposta correta: ${question.correctAlternative}`,
-      topics: [question.discipline],
-      competencies: [question.discipline],
-      files: question.files,
-      source: 'local_database'
+      text: question.context || '',
+      alternatives: {
+        A: question.alternatives[0]?.text || 'Alternativa A',
+        B: question.alternatives[1]?.text || 'Alternativa B',
+        C: question.alternatives[2]?.text || 'Alternativa C',
+        D: question.alternatives[3]?.text || 'Alternativa D',
+        E: question.alternatives[4]?.text || 'Alternativa E'
+      },
+      correct_answer: question.correctAlternative,
+      topic: question.discipline,
+      estimated_difficulty: 'MEDIUM',
+      asset_refs: question.files || [],
+      content_hash: `hash_${question.year}_${question.index}`,
+      dataset_version: '1.0',
+      metadata: {}
     }
   }
 

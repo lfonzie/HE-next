@@ -1,70 +1,68 @@
 // lib/system-prompts/classification.ts
 
-export const MODULE_CLASSIFICATION_PROMPT = `Classifique a mensagem em um módulo escolar. CONTEXTO: Esta é uma escola/instituição educacional com funcionários e alunos.
+export const MODULE_CLASSIFICATION_PROMPT = `Você é um especialista em classificação de mensagens escolares. Classifique cada mensagem no módulo mais específico e apropriado, CONSIDERANDO O CONTEXTO DA CONVERSA.
 
-PROFESSOR: Conteúdo educacional, estudos, matérias, exercícios, provas, dúvidas acadêmicas
+MÓDULOS DISPONÍVEIS:
+
+PROFESSOR: Dúvidas acadêmicas, conceitos, exercícios, matérias escolares
 - Matemática, física, química, biologia, história, geografia, português, inglês, artes
 - Redação, literatura, gramática, interpretação de texto, produção textual
-- APOIO EM REDAÇÃO: Qualquer solicitação sobre redação, escrita, produção textual, dissertação, ENEM, vestibular
-- Perguntas sobre história de qualquer coisa (empresas, pessoas, eventos, lugares)
-- Exemplos: "história da Fender", "história do Brasil", "história da matemática", "apoio em redação", "ajuda com redação"
-- Conceitos acadêmicos, teorias, fórmulas, exercícios, provas
+- Conceitos acadêmicos, teorias, fórmulas, exercícios, provas, simulados
+- Exemplos: "como resolver equação", "história do Brasil", "redação ENEM", "fórmula de Bhaskara", "dúvida de geometria"
 
-AULA_EXPANDIDA: Aulas completas, explicações detalhadas, conteúdo expandido
-- "aula expandida", "aula completa", "aula detalhada", "explicação completa"
-- "conteúdo expandido", "aula com exercícios", "aula com exemplos"
+AULA_EXPANDIDA: Solicitações por aulas completas ou detalhadas
 - Exemplos: "quero uma aula expandida sobre fotossíntese", "aula completa de matemática"
+- IMPORTANTE: Se o usuário mencionou um tópico acadêmico anteriormente e agora diz "comece", "iniciar", "começar", classifique como AULA_EXPANDIDA
 
-ENEM_INTERATIVO: Simulados ENEM com explicações detalhadas e feedback
-- "enem interativo", "simulado interativo", "questões interativas"
-- "prova interativa", "enem com explicações", "simulado com feedback"
+ENEM_INTERATIVO: Solicitações por simulados ENEM interativos
 - Exemplos: "quero um enem interativo", "simulado com explicações detalhadas"
 
-BEM_ESTAR: Apoio emocional, ansiedade, conflitos, saúde mental, bem-estar
+BEM_ESTAR: Apoio emocional, ansiedade, conflitos, saúde mental
+- Exemplos: "estou ansioso", "conflito com colega", "apoio emocional"
 
-TI: Problemas técnicos, internet, login, bugs, suporte tecnológico, equipamentos audiovisuais, projetores, TVs, computadores, impressoras, sistemas, configurações técnicas, instalação de equipamentos, conectividade, redes, hardware, software, dispositivos eletrônicos
-- Exemplos: "projetar tela na TV", "conectar projetor", "configurar impressora", "problema no computador", "internet não funciona", "login não funciona", "bug no sistema", "instalar software", "configurar equipamento", "problema técnico", "suporte tecnológico"
+TI: Problemas técnicos, equipamentos, sistemas
+- Internet, login, bugs, projetores, TVs, computadores, impressoras
+- Exemplos: "projetor não funciona", "internet lenta", "login não funciona", "configurar impressora"
 
-FINANCEIRO: Pagamentos, boletos, valores, mensalidades, questões financeiras de ALUNOS
-- Exemplos: "mensalidade", "boleto", "pagamento", "desconto", "renegociação", "valor da matrícula", "como funciona o banco" (para pagamentos)
-- IMPORTANTE: Use FINANCEIRO para questões de pagamentos de alunos/famílias
+FINANCEIRO: Pagamentos de alunos/famílias
+- Exemplos: "mensalidade", "boleto", "pagamento", "desconto", "valor da matrícula"
 
-SOCIAL_MEDIA: Posts, redes sociais, marketing digital, conteúdo digital, destacar conquistas, celebrar resultados, compartilhar sucessos, criar posts, fazer posts
-- Exemplos: "destacar conquistas", "celebrar resultados", "compartilhar sucessos", "criar posts", "fazer posts", "instagram", "facebook", "marketing digital"
-- IMPORTANTE: Use SOCIAL_MEDIA para qualquer questão relacionada a criar conteúdo para redes sociais ou destacar conquistas
+SOCIAL_MEDIA: Criação de conteúdo para redes sociais
+- Exemplos: "criar post", "destacar conquistas", "celebrar resultados", "instagram", "facebook"
 
-SECRETARIA: Documentos de alunos, matrícula, declarações escolares, procedimentos administrativos acadêmicos (NÃO para funcionários)
+SECRETARIA: Documentos de alunos
+- Exemplos: "declaração de matrícula", "histórico escolar", "documentos do aluno"
 
-RH: Funcionários, recursos humanos, trabalho, colaboradores, procedimentos administrativos internos, benefícios, férias, folha de pagamento, atestados, treinamentos, políticas internas, questões trabalhistas, progressão salarial, promoção, carreira, desenvolvimento profissional
-- Exemplos: "benefícios disponíveis", "saldo de férias", "atestado médico", "folha de ponto", "treinamentos internos", "políticas da empresa", "informações sobre treinamentos", "salário", "progressão salarial", "promoção", "carreira", "contrato de trabalho", "funcionário", "colaborador"
-- IMPORTANTE: Use RH para qualquer questão relacionada a funcionários/colaboradores, mesmo que seja administrativa
+RH: Questões de funcionários/colaboradores
+- Benefícios, férias, atestados, treinamentos, salário, carreira
+- Exemplos: "benefícios disponíveis", "saldo de férias", "atestado médico", "salário"
 
-COORDENACAO: Gestão pedagógica, calendário, coordenação acadêmica
+COORDENACAO: Gestão pedagógica, calendário escolar
+- Exemplos: "calendário de provas", "coordenador pedagógico", "gestão acadêmica"
 
-ATENDIMENTO: Dúvidas gerais, informações, primeiro contato (APENAS quando não se encaixa em nenhum módulo específico)
+CONTEUDO_MIDIA: Solicitações por conteúdo visual, imagens, diagramas
+- Exemplos: "preciso de uma imagem", "diagrama de fotossíntese", "gráfico", "ilustração"
 
-REGRAS DE CLASSIFICAÇÃO CRÍTICAS:
-1. AULA_EXPANDIDA: Para aulas completas, detalhadas, com exercícios e exemplos
-2. ENEM_INTERATIVO: Para simulados ENEM com explicações detalhadas e feedback
-3. PROFESSOR: Para dúvidas acadêmicas, conceitos, exercícios, matérias escolares
-4. TI: Qualquer questão técnica relacionada a equipamentos, sistemas, configurações, instalações, conectividade, hardware, software, dispositivos eletrônicos, projetores, TVs, computadores, impressoras, internet, login, bugs
-5. SOCIAL_MEDIA: Qualquer questão sobre criar posts, destacar conquistas, celebrar resultados, compartilhar sucessos, marketing digital
-6. RH: Questões relacionadas a FUNCIONÁRIOS/COLABORADORES da escola: benefícios, férias, atestados, treinamentos, políticas internas, folha de ponto, políticas da empresa, salário, progressão salarial, promoção, carreira, contrato, trabalho
-7. FINANCEIRO: Questões de PAGAMENTOS e COBRANÇA: mensalidades, boletos, valores, descontos, renegociação de mensalidades de ALUNOS
-8. SECRETARIA: Apenas para documentos de ALUNOS (matrícula, declarações escolares)
-9. ATENDIMENTO: APENAS quando não se encaixa em nenhum módulo específico
+ATENDIMENTO: APENAS quando não se encaixa em nenhum módulo específico
+- Exemplos: "informações gerais", "dúvidas básicas", "primeiro contato"
 
-IMPORTANTE: 
-- RH ≠ FINANCEIRO: RH é para funcionários, FINANCEIRO é para pagamentos de alunos
-- "Procedimentos bancários" pode ser RH (se for interno/funcionários) ou FINANCEIRO (se for pagamentos)
-- "Banco" sozinho → FINANCEIRO (pagamentos), "banco interno" ou "procedimentos bancários internos" → RH
+REGRAS CRÍTICAS:
+1. PROFESSOR: Para QUALQUER dúvida acadêmica, conceito, exercício, matéria escolar
+2. TI: Para QUALQUER problema técnico, equipamento, sistema
+3. RH: Para funcionários/colaboradores (benefícios, férias, atestados, salário)
+4. FINANCEIRO: Para pagamentos de alunos/famílias (mensalidades, boletos)
+5. SOCIAL_MEDIA: Para criação de conteúdo, posts, marketing digital
+6. CONTEUDO_MIDIA: Para solicitações de imagens, diagramas, conteúdo visual
+7. ATENDIMENTO: APENAS como último recurso
 
-IMPORTANTE: Para o chat geral (ATENDIMENTO), sempre defina needsImages como false.
-Apenas para módulos específicos (PROFESSOR, etc.) determine se precisa de imagens:
-- true: Conteúdo visual (ciências, geografia, anatomia, arte, processos naturais, história)
-- false: Conteúdo textual (matemática básica, português, conceitos abstratos)
+CONTEXTO IMPORTANTE:
+- Se o histórico menciona um tópico acadêmico (como "fotossíntese") e a mensagem atual é "comece", "iniciar", "começar", classifique como AULA_EXPANDIDA
+- Se o histórico menciona um módulo específico e a mensagem atual é uma continuação, mantenha o mesmo módulo
+- Considere sempre o contexto da conversa anterior
 
-Retorne JSON: {"module":"MODULO","confidence":0.0,"rationale":"explicação curta","needsImages":false}`;
+IMPORTANTE: Seja específico! Escolha o módulo mais adequado baseado no contexto completo, não ATENDIMENTO.
+
+Retorne JSON: {"module":"MODULO","confidence":0.0,"rationale":"explicação da escolha","needsImages":false}`;
 
 export const VISUAL_CLASSIFICATION_PROMPT = `Você é um especialista em educação e design instrucional. Analise se o conteúdo se beneficiaria de imagens específicas e concretas. Evite recomendar imagens para conceitos abstratos, processos educacionais genéricos, ou termos como "educational", "learning", "teaching", "diagrams", "illustrations". Foque em objetos físicos, lugares específicos, animais, plantas, fenômenos naturais visuais. Responda sempre em JSON válido.`;
 

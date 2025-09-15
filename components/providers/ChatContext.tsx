@@ -8,6 +8,7 @@ interface ChatContextType {
   setSelectedModule: (module: ModuleType | null) => void
   highlightActiveModule: () => void
   isModuleHighlighted: boolean
+  autoSwitchModule: (moduleId: string) => void
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined)
@@ -27,12 +28,25 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     }
   }, [selectedModule])
 
+  const autoSwitchModule = useCallback((moduleId: string) => {
+    // Trocar automaticamente o módulo durante o chat
+    console.log(`🔄 [AUTO_SWITCH] Mudando módulo de ${selectedModule} para ${moduleId}`)
+    setSelectedModule(moduleId as ModuleType)
+    
+    // Destacar o novo módulo ativo
+    setIsModuleHighlighted(true)
+    setTimeout(() => {
+      setIsModuleHighlighted(false)
+    }, 3000)
+  }, [selectedModule])
+
   return (
     <ChatContext.Provider value={{ 
       selectedModule, 
       setSelectedModule, 
       highlightActiveModule,
-      isModuleHighlighted 
+      isModuleHighlighted,
+      autoSwitchModule
     }}>
       {children}
     </ChatContext.Provider>

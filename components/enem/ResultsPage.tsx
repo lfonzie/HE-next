@@ -247,8 +247,8 @@ export function ResultsPage({ resultsData, onRetry, onClose }: ResultsPageProps)
             {wrongAnswers.length > 0 && (
               <div>
                 <h3 className="text-lg font-semibold mb-3">Questões Incorretas</h3>
-                <div className="space-y-3">
-                  {wrongAnswers.slice(0, 5).map((question, index) => {
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {wrongAnswers.slice(0, 6).map((question, index) => {
                     const userAnswer = resultsData.answers[question.id]
                     const alternatives = getAlternatives(question)
                     const correctIndex = alternatives.findIndex(alt => 
@@ -257,23 +257,23 @@ export function ResultsPage({ resultsData, onRetry, onClose }: ResultsPageProps)
                     
                     return (
                       <Card key={question.id} className="border-l-4 border-l-red-500">
-                        <CardHeader className="pb-3">
+                        <CardHeader className="pb-2">
                           <div className="flex items-center justify-between">
-                            <Badge variant="destructive">Incorreta</Badge>
-                            <Badge className={getDifficultyColor(question.difficulty)}>
+                            <Badge variant="destructive" className="text-xs">Incorreta</Badge>
+                            <Badge className={`${getDifficultyColor(question.difficulty)} text-xs`}>
                               {getDifficultyLabel(question.difficulty)}
                             </Badge>
                           </div>
                         </CardHeader>
-                        <CardContent className="space-y-3">
+                        <CardContent className="space-y-2">
                           <QuestionRenderer
                             question={question.stem}
                             imageUrl={question.image_url}
                             imageAlt={question.image_alt}
                           />
                           
-                          <div className="space-y-2">
-                            <h4 className="font-medium text-gray-900">Alternativas:</h4>
+                          <div className="space-y-1">
+                            <h4 className="font-medium text-gray-900 text-sm">Alternativas:</h4>
                             {alternatives.map((alt, altIndex) => {
                               const isUserAnswer = userAnswer?.answer === String.fromCharCode(65 + altIndex)
                               const isCorrectAnswer = altIndex === correctIndex
@@ -289,27 +289,31 @@ export function ResultsPage({ resultsData, onRetry, onClose }: ResultsPageProps)
                                         : 'bg-gray-50 border-gray-200'
                                   }`}
                                 >
-                                  <span className="font-medium">
-                                    {String.fromCharCode(65 + altIndex)}) 
-                                  </span>
-                                  {alt}
-                                  {isCorrectAnswer && (
-                                    <CheckCircle className="h-4 w-4 text-green-600 inline ml-2" />
-                                  )}
-                                  {isUserAnswer && !isCorrectAnswer && (
-                                    <XCircle className="h-4 w-4 text-red-600 inline ml-2" />
-                                  )}
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-medium text-xs flex-shrink-0">
+                                      {String.fromCharCode(65 + altIndex)})
+                                    </span>
+                                    <span className="text-xs flex-1">{alt}</span>
+                                    <div className="flex-shrink-0">
+                                      {isCorrectAnswer && (
+                                        <CheckCircle className="h-3 w-3 text-green-600" />
+                                      )}
+                                      {isUserAnswer && !isCorrectAnswer && (
+                                        <XCircle className="h-3 w-3 text-red-600" />
+                                      )}
+                                    </div>
+                                  </div>
                                 </div>
                               )
                             })}
                           </div>
 
                           {/* Explanation */}
-                          <div className="bg-blue-50 p-4 rounded-lg">
-                            <h4 className="font-medium text-blue-900 mb-2">Explicação:</h4>
+                          <div className="bg-blue-50 p-3 rounded-lg">
+                            <h4 className="font-medium text-blue-900 mb-1 text-sm">Explicação:</h4>
                             <ReactMarkdown
                               remarkPlugins={[remarkGfm]}
-                              className="text-blue-800 prose-sm max-w-none"
+                              className="text-blue-800 prose-sm max-w-none text-xs"
                             >
                               {question.rationale}
                             </ReactMarkdown>

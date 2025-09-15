@@ -2,6 +2,8 @@
 
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 interface AlternativeButtonProps {
   label: string
@@ -58,10 +60,40 @@ export function AlternativeButton({
           {label})
         </span>
         
-        {/* Text content */}
-        <span className="flex-1 leading-relaxed">
-          {cleanText}
-        </span>
+        {/* Text content with Markdown Support */}
+        <div className="flex-1 leading-relaxed">
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={{
+              // Custom styling for markdown elements in alternatives
+              p: ({ children }) => (
+                <span className="inline">{children}</span>
+              ),
+              strong: ({ children }) => (
+                <strong className="font-semibold text-gray-900">{children}</strong>
+              ),
+              em: ({ children }) => (
+                <em className="italic text-gray-800">{children}</em>
+              ),
+              code: ({ children }) => (
+                <code className="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono text-gray-800">
+                  {children}
+                </code>
+              ),
+              ul: ({ children }) => (
+                <ul className="list-disc list-inside space-y-1 text-gray-800">{children}</ul>
+              ),
+              ol: ({ children }) => (
+                <ol className="list-decimal list-inside space-y-1 text-gray-800">{children}</ol>
+              ),
+              li: ({ children }) => (
+                <li className="mb-1">{children}</li>
+              ),
+            }}
+          >
+            {cleanText}
+          </ReactMarkdown>
+        </div>
       </div>
     </Button>
   )

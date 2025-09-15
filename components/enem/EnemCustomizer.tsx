@@ -20,6 +20,7 @@ import {
   Brain
 } from 'lucide-react';
 import { EnemArea, EnemMode } from '@/types/enem';
+import { useToast } from '@/hooks/use-toast';
 
 interface EnemCustomizerProps {
   onBack: () => void;
@@ -41,14 +42,64 @@ interface CustomExamConfig {
 
 export function EnemCustomizer({ onBack, onStart }: EnemCustomizerProps) {
   const [selectedAreas, setSelectedAreas] = useState<EnemArea[]>(['CN', 'CH', 'LC', 'MT']);
-  const [numQuestions, setNumQuestions] = useState(20);
+  const [numQuestions, setNumQuestions] = useState(5);
+  
+  // Auto-balancear distribuição quando número de questões muda
+  const handleNumQuestionsChange = (value: number) => {
+    setNumQuestions(value);
+    
+    // Recalcular distribuição proporcionalmente
+    const currentTotal = difficultyDistribution.easy + difficultyDistribution.medium + difficultyDistribution.hard;
+    if (currentTotal > 0) {
+      const ratio = value / currentTotal;
+      const newEasy = Math.round(difficultyDistribution.easy * ratio);
+      const newMedium = Math.round(difficultyDistribution.medium * ratio);
+      const newHard = Math.round(difficultyDistribution.hard * ratio);
+      
+      // Garantir que pelo menos uma questão seja atribuída a cada nível se possível
+      const total = newEasy + newMedium + newHard;
+      if (total < value && value >= 3) {
+        // Distribuir as questões restantes
+        const remaining = value - total;
+        if (remaining > 0) {
+          setDifficultyDistribution({
+            easy: newEasy + Math.ceil(remaining / 3),
+            medium: newMedium + Math.ceil(remaining / 3),
+            hard: newHard + Math.floor(remaining / 3)
+          });
+        } else {
+          setDifficultyDistribution({ easy: newEasy, medium: newMedium, hard: newHard });
+        }
+      } else {
+        setDifficultyDistribution({ easy: newEasy, medium: newMedium, hard: newHard });
+      }
+    } else {
+      // Distribuição padrão baseada no número de questões
+      if (value <= 3) {
+        // Para poucas questões, distribuir de forma simples
+        setDifficultyDistribution({
+          easy: Math.max(1, Math.floor(value / 2)),
+          medium: Math.max(1, Math.floor(value / 2)),
+          hard: Math.max(0, value - Math.floor(value / 2) * 2)
+        });
+      } else {
+        // Para mais questões, usar distribuição proporcional
+        setDifficultyDistribution({
+          easy: Math.round(value * 0.3),
+          medium: Math.round(value * 0.5),
+          hard: Math.round(value * 0.2)
+        });
+      }
+    }
+  };
   const [timeLimit, setTimeLimit] = useState<number | undefined>(60);
   const [difficultyDistribution, setDifficultyDistribution] = useState({
-    easy: 6,
-    medium: 10,
-    hard: 4
+    easy: 2,
+    medium: 2,
+    hard: 1
   });
   const [selectedYear, setSelectedYear] = useState<number | undefined>(undefined);
+  const { toast } = useToast();
 
   const areas = [
     {
@@ -90,20 +141,63 @@ export function EnemCustomizer({ onBack, onStart }: EnemCustomizerProps) {
   };
 
   const handleDifficultyChange = (type: 'easy' | 'medium' | 'hard', value: number) => {
-    const total = difficultyDistribution.easy + difficultyDistribution.medium + difficultyDistribution.hard;
-    const newTotal = total - difficultyDistribution[type] + value;
+    const currentTotal = difficultyDistribution.easy + difficultyDistribution.medium + difficultyDistribution.hard;
+    const newTotal = currentTotal - difficultyDistribution[type] + value;
     
-    if (newTotal <= numQuestions) {
+    // Garantir que não exceda o número total de questões
+    if (newTotal <= numQuestions && value >= 0) {
       setDifficultyDistribution(prev => ({
         ...prev,
         [type]: value
       }));
+    } else if (value > numQuestions) {
+      // Se o valor exceder o total, ajustar para o máximo possível
+      const maxValue = numQuestions - (currentTotal - difficultyDistribution[type]);
+      if (maxValue > 0) {
+        setDifficultyDistribution(prev => ({
+          ...prev,
+          [type]: maxValue
+        }));
+      }
     }
   };
 
   const handleStartExam = () => {
+    // Validações mais robustas
     if (selectedAreas.length === 0) {
-      alert('Selecione pelo menos uma área');
+      toast({
+        title: "Erro",
+        description: "Selecione pelo menos uma área",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (numQuestions < 5 || numQuestions > 180) {
+      toast({
+        title: "Erro", 
+        description: "Número de questões deve estar entre 5 e 180",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const totalDifficulty = difficultyDistribution.easy + difficultyDistribution.medium + difficultyDistribution.hard;
+    if (totalDifficulty !== numQuestions) {
+      toast({
+        title: "Erro",
+        description: "A distribuição de dificuldade deve somar o número total de questões",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (timeLimit && (timeLimit < 15 || timeLimit > 300)) {
+      toast({
+        title: "Erro",
+        description: "Tempo limite deve estar entre 15 e 300 minutos",
+        variant: "destructive"
+      });
       return;
     }
 
@@ -181,7 +275,7 @@ export function EnemCustomizer({ onBack, onStart }: EnemCustomizerProps) {
               </Label>
               <Slider
                 value={[numQuestions]}
-                onValueChange={(value) => setNumQuestions(value[0])}
+                onValueChange={(value) => handleNumQuestionsChange(value[0])}
                 max={180}
                 min={5}
                 step={5}
@@ -215,12 +309,12 @@ export function EnemCustomizer({ onBack, onStart }: EnemCustomizerProps) {
             {/* Year Selection */}
             <div>
               <Label className="text-base font-medium">Ano da Prova (Opcional)</Label>
-              <Select value={selectedYear?.toString()} onValueChange={(value) => setSelectedYear(value ? parseInt(value) : undefined)}>
+              <Select value={selectedYear?.toString() || "all"} onValueChange={(value) => setSelectedYear(value === "all" ? undefined : parseInt(value))}>
                 <SelectTrigger className="mt-2">
                   <SelectValue placeholder="Selecione um ano" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos os anos</SelectItem>
+                  <SelectItem value="all">Todos os anos</SelectItem>
                   {Array.from({ length: 16 }, (_, i) => 2024 - i).map(year => (
                     <SelectItem key={year} value={year.toString()}>
                       {year}

@@ -35,6 +35,12 @@ interface Question {
   topics: string[]
   competencies: string[]
   source: string
+  metadata?: {
+    source?: string
+    has_image?: boolean
+    original_year?: number
+    generated_at?: string
+  }
 }
 
 interface ResultData {
@@ -95,13 +101,37 @@ export default function ResultPage() {
   }
 
   const getQuestionSourceChip = (question: Question) => {
-    if (question.source === 'enem.dev') {
-      return { text: `ENEM ${question.year}`, variant: "default" as const }
+    // Check metadata first for explicit source information
+    if (question.metadata?.source) {
+      switch (question.metadata.source) {
+        case 'DATABASE':
+          return { text: `ENEM ${question.year || question.metadata.original_year || 'API'}`, variant: "default" as const }
+        case 'LOCAL_DATABASE':
+          return { text: `ENEM ${question.year || question.metadata.original_year || 'Local'}`, variant: "default" as const }
+        case 'AI':
+          return { text: "IA", variant: "secondary" as const }
+      }
     }
-    if (question.source.includes('AI')) {
+    
+    // Legacy source checking
+    if (question.source === 'enem.dev' || question.source === 'api' || question.source === 'DATABASE') {
+      return { text: `ENEM ${question.year || 'API'}`, variant: "default" as const }
+    }
+    if (question.source.includes('AI') || question.source === 'ai' || question.source === 'generated') {
       return { text: "IA", variant: "secondary" as const }
     }
-    return { text: "Mock", variant: "outline" as const }
+    
+    // Check ID patterns
+    if (question.id) {
+      if (question.id.startsWith('enem_')) {
+        return { text: `ENEM ${question.year || 'API'}`, variant: "default" as const }
+      }
+      if (question.id.startsWith('ai_generated_') || question.id.startsWith('generated_')) {
+        return { text: "IA", variant: "secondary" as const }
+      }
+    }
+    
+    return { text: "IA", variant: "secondary" as const }
   }
 
   const handleRestart = () => {

@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import { StreamingMessage } from "@/components/chat/StreamingMessage";
@@ -14,31 +14,45 @@ import { ModuleId, MODULES, convertModuleId, convertToOldModuleId } from "@/lib/
 import { ModuleType } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Plus, Headphones } from "lucide-react";
+import { Plus, Headphones, Settings, History, Download } from "lucide-react";
 import { useChatContext } from "@/components/providers/ChatContext";
 import { useQuota } from "@/components/providers/QuotaProvider";
 import { SupportModal } from "@/components/modals/SupportModal";
 import { useLoading } from "@/lib/loading";
+import { useNavigationLoading } from "@/hooks/useNavigationLoading";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import "@/components/chat/ChatInput.css";
 
 export default function ChatPage() {
   const router = useRouter();
   const { start: startLoading, end: endLoading } = useLoading();
+  const { stopLoading: stopNavLoading } = useNavigationLoading();
   const { 
+    conversations,
     currentConversation, 
     sendMessage, 
     isStreaming, 
     lastClassification,
     startNewConversation,
-    fetchConversations 
+    fetchConversations,
+    setCurrentConversation
   } = useChat(() => endLoading('message')); // Pass endLoading callback to hide overlay when streaming starts
   const { toast } = useToast();
   const { selectedModule, setSelectedModule, highlightActiveModule } = useChatContext();
   const { quota, maxQuota, decrementQuota, resetQuota } = useQuota();
   
+  // Clear navigation loading when page loads
+  useEffect(() => {
+    stopNavLoading('navigation');
+  }, [stopNavLoading]);
+  
   // State
   const [inputMessage, setInputMessage] = useState("");
   const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
+  const [showConversationHistory, setShowConversationHistory] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   
   // Refs
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -139,6 +153,58 @@ export default function ChatPage() {
     await handleSendMessage(`Me ajude com: ${suggestion}`);
   }, [handleSendMessage]);
 
+  // Handle conversation export
+  const handleExportConversation = useCallback(async () => {
+    if (!currentConversation) return;
+    
+    setIsExporting(true);
+    try {
+      const exportData = {
+        conversation: {
+          id: currentConversation.id,
+          title: currentConversation.title,
+          module: currentConversation.module,
+          createdAt: currentConversation.createdAt,
+          updatedAt: currentConversation.updatedAt,
+          tokenCount: currentConversation.tokenCount
+        },
+        messages: currentConversation.messages.map(msg => ({
+          role: msg.role,
+          content: msg.content,
+          timestamp: msg.timestamp,
+          model: msg.model,
+          tokens: msg.tokens,
+          tier: msg.tier
+        }))
+      };
+      
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { 
+        type: 'application/json' 
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `conversa-${currentConversation.id}-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Sucesso",
+        description: "Conversa exportada com sucesso!",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Falha ao exportar conversa",
+        variant: "destructive"
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  }, [currentConversation, toast]);
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -187,10 +253,31 @@ export default function ChatPage() {
                   onClick={handleNewConversation}
                   variant="outline"
                   size="sm"
-                  className="border-yellow-300 text-yellow-700 hover:bg-yellow-50"
+                  className="border-yellow-500 text-yellow-700 hover:bg-yellow-100 bg-yellow-50"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Nova Conversa
+                </Button>
+                {hasMessages && (
+                  <Button
+                    onClick={handleExportConversation}
+                    variant="outline"
+                    size="sm"
+                    disabled={isExporting}
+                    className="border-blue-500 text-blue-700 hover:bg-blue-100 bg-blue-50"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    {isExporting ? "Exportando..." : "Exportar"}
+                  </Button>
+                )}
+                <Button
+                  onClick={() => setShowConversationHistory(!showConversationHistory)}
+                  variant="outline"
+                  size="sm"
+                  className="border-purple-500 text-purple-700 hover:bg-purple-100 bg-purple-50"
+                >
+                  <History className="w-4 h-4 mr-2" />
+                  Histórico
                 </Button>
                 <Button
                   onClick={() => setIsSupportModalOpen(true)}
@@ -206,12 +293,65 @@ export default function ChatPage() {
           </div>
         </div>
 
+        {/* Conversation History Sidebar */}
+        {showConversationHistory && (
+          <div className="w-80 bg-white dark:bg-zinc-800 border-r border-gray-200 dark:border-zinc-700 flex flex-col">
+            <div className="p-4 border-b border-gray-200 dark:border-zinc-700">
+              <h3 className="font-semibold text-gray-900 dark:text-zinc-100">Histórico de Conversas</h3>
+              <p className="text-sm text-gray-600 dark:text-zinc-400">
+                {conversations.length} conversa{conversations.length !== 1 ? 's' : ''}
+              </p>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-2">
+              {conversations.map((conv) => (
+                <Card 
+                  key={conv.id}
+                  className={`cursor-pointer transition-colors ${
+                    currentConversation?.id === conv.id 
+                      ? 'bg-blue-50 border-blue-200' 
+                      : 'hover:bg-gray-50 dark:hover:bg-zinc-700'
+                  }`}
+                  onClick={() => {
+                    setCurrentConversation(conv);
+                    setShowConversationHistory(false);
+                  }}
+                >
+                  <CardContent className="p-3">
+                    <div className="space-y-2">
+                      <h4 className="font-medium text-sm truncate">
+                        {conv.title || 'Nova Conversa'}
+                      </h4>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-xs">
+                          {MODULES[convertModuleId(conv.module)]?.label || conv.module}
+                        </Badge>
+                        <span className="text-xs text-gray-500">
+                          {conv.messages.length} mensagens
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        {new Date(conv.updatedAt).toLocaleDateString('pt-BR')}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+              {conversations.length === 0 && (
+                <div className="text-center py-8">
+                  <History className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500 text-sm">Nenhuma conversa ainda</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Messages Container - Reading Column Layout */}
         <main className="flex-1 overflow-y-auto chat-messages-container chat-content-with-fixed-input bg-gray-50 dark:bg-zinc-900" ref={messagesContainerRef}>
           {hasMessages ? (
             <div className="mx-auto max-w-screen-md px-4 md:px-6 lg:px-8 leading-relaxed text-pretty">
               <div 
-                className="flex flex-col gap-4 md:gap-6 pb-28"
+                className="flex flex-col gap-4 md:gap-6 pb-16"
                 role="log"
                 aria-live="polite"
               >
@@ -225,13 +365,30 @@ export default function ChatPage() {
                   />
                 )}
                 
-                {messages.map((message, index) =>
-                  message.isStreaming ? (
+                {messages.map((message, index) => {
+                  const isLastMessage = index === messages.length - 1;
+                  const shouldRenderStreaming = message.isStreaming;
+                  
+                  // Debug log para verificar streaming (remover em produção)
+                  if (process.env.NODE_ENV === 'development') {
+                    console.log('🔍 Message render debug:', {
+                      messageId: message.id,
+                      index,
+                      isLastMessage,
+                      isStreaming: message.isStreaming,
+                      shouldRenderStreaming,
+                      globalIsStreaming: isStreaming,
+                      content: message.content?.substring(0, 50) + '...',
+                      renderType: shouldRenderStreaming ? 'StreamingMessage' : 'ChatMessage'
+                    });
+                  }
+                  
+                  return shouldRenderStreaming ? (
                     <StreamingMessage
                       key={`streaming-${message.id || index}`}
                       content={message.content}
                       userInitials="U"
-                      isComplete={!isStreaming && index === messages.length - 1}
+                      isComplete={!message.isStreaming}
                       currentModuleId={currentModuleId}
                       tier={message.tier}
                       model={message.model}
@@ -239,7 +396,7 @@ export default function ChatPage() {
                     />
                   ) : (
                     <ChatMessage
-                      key={`message-${message.id || index}`}
+                      key={`message-${message.id || index}-${message.isStreaming ? 'streaming' : 'complete'}`}
                       message={message}
                       isUser={message.role === "user"}
                       userInitials="U"
@@ -247,8 +404,8 @@ export default function ChatPage() {
                       conversationId={currentConversation?.id || ''}
                       messageIndex={index}
                     />
-                  )
-                )}
+                  );
+                })}
                 {/* Scroll sentinel */}
                 <div ref={endRef} />
               </div>

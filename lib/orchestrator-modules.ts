@@ -1,6 +1,23 @@
 import { OrchestratorResponse } from '@/types'
 import { registerModule, DetectedIntent } from './orchestrator'
 
+// Helper function to get the correct classify URL
+function getClassifyUrl(): string {
+  let baseUrl: string;
+  
+  if (typeof window !== 'undefined') {
+    // Client-side: usar window.location.origin
+    baseUrl = window.location.origin;
+  } else {
+    // Server-side: usar variáveis de ambiente ou localhost
+    baseUrl = process.env.NEXTAUTH_URL || 
+              process.env.NEXT_PUBLIC_APP_URL || 
+              'http://localhost:3000';
+  }
+  
+  return `${baseUrl}/api/classify`;
+}
+
 // aula_interativa module
 registerModule({
   id: 'aula_interativa',
@@ -8,13 +25,17 @@ registerModule({
   version: '1.0.0',
   permissions: { requires_auth: false },
   cost_estimate: { tokens: 1000, latency_ms: 1500 },
-  async detect({ text }): Promise<DetectedIntent> {
+  async detect({ text, context }): Promise<DetectedIntent> {
     // Sempre usar OpenAI para detecção - maior certeza
     try {
-      const response = await fetch('/api/classify', {
+      const response = await fetch(getClassifyUrl(), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userMessage: text }),
+        body: JSON.stringify({ 
+          userMessage: text,
+          history: context?.history || [],
+          currentModule: context?.module || 'atendimento'
+        }),
       });
 
       if (response.ok) {
@@ -58,13 +79,17 @@ registerModule({
   version: '1.0.0',
   permissions: { requires_auth: false },
   cost_estimate: { tokens: 1000, latency_ms: 1500 },
-  async detect({ text }): Promise<DetectedIntent> {
+  async detect({ text, context }): Promise<DetectedIntent> {
     // Sempre usar OpenAI para detecção - maior certeza
     try {
-      const response = await fetch('/api/classify', {
+      const response = await fetch(getClassifyUrl(), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userMessage: text }),
+        body: JSON.stringify({ 
+          userMessage: text,
+          history: context?.history || [],
+          currentModule: context?.module || 'atendimento'
+        }),
       });
 
       if (response.ok) {
@@ -110,13 +135,17 @@ registerModule({
   version: '1.0.0',
   permissions: { requires_auth: false },
   cost_estimate: { tokens: 800, latency_ms: 1200 },
-  async detect({ text }): Promise<DetectedIntent> {
+  async detect({ text, context }): Promise<DetectedIntent> {
     // Sempre usar OpenAI para detecção - maior certeza
     try {
-      const response = await fetch('/api/classify', {
+      const response = await fetch(getClassifyUrl(), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userMessage: text }),
+        body: JSON.stringify({ 
+          userMessage: text,
+          history: context?.history || [],
+          currentModule: context?.module || 'atendimento'
+        }),
       });
 
       if (response.ok) {
@@ -175,10 +204,36 @@ registerModule({
   version: '1.0.0',
   permissions: { requires_auth: false },
   cost_estimate: { tokens: 1000, latency_ms: 1500 },
-  async detect({ text }): Promise<DetectedIntent> {
-    const t = text.toLowerCase()
-    const hit = /(enem interativo|simulado interativo|questões interativas|prova interativa|enem com explicações)/.test(t)
-    return { intent: 'quiz_request', module: 'enem-interativo', confidence: hit ? 0.9 : 0.3, slots: {} }
+  async detect({ text, context }): Promise<DetectedIntent> {
+    // Sempre usar OpenAI para detecção - maior certeza
+    try {
+      const response = await fetch(getClassifyUrl(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          userMessage: text,
+          history: context?.history || [],
+          currentModule: context?.module || 'atendimento'
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.classification?.module === 'ENEM_INTERATIVO') {
+          return { 
+            intent: 'quiz_request', 
+            module: 'enem-interativo', 
+            confidence: data.classification.confidence || 0.9, 
+            slots: {} 
+          };
+        }
+      }
+    } catch (error) {
+      console.error('Erro na detecção OpenAI:', error);
+    }
+
+    // Fallback simples apenas em caso de erro
+    return { intent: 'quiz_request', module: 'enem-interativo', confidence: 0.3, slots: {} }
   },
   async execute({ slots, context }): Promise<OrchestratorResponse> {
     const message = context?.text || ''
@@ -219,10 +274,36 @@ registerModule({
   version: '1.0.0',
   permissions: { requires_auth: false },
   cost_estimate: { tokens: 600, latency_ms: 800 },
-  async detect({ text }): Promise<DetectedIntent> {
-    const t = text.toLowerCase()
-    const hit = /(wifi|internet|computador|impressora|problema técnico|erro|bug|travou)/.test(t)
-    return { intent: 'ti_support', module: 'ti_troubleshooting', confidence: hit ? 0.8 : 0.3, slots: {} }
+  async detect({ text, context }): Promise<DetectedIntent> {
+    // Sempre usar OpenAI para detecção - maior certeza
+    try {
+      const response = await fetch(getClassifyUrl(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          userMessage: text,
+          history: context?.history || [],
+          currentModule: context?.module || 'atendimento'
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.classification?.module === 'TI') {
+          return { 
+            intent: 'ti_support', 
+            module: 'ti_troubleshooting', 
+            confidence: data.classification.confidence || 0.8, 
+            slots: {} 
+          };
+        }
+      }
+    } catch (error) {
+      console.error('Erro na detecção OpenAI:', error);
+    }
+
+    // Fallback simples apenas em caso de erro
+    return { intent: 'ti_support', module: 'ti_troubleshooting', confidence: 0.3, slots: {} }
   },
   async execute({ slots }): Promise<OrchestratorResponse> {
     return {
@@ -254,10 +335,36 @@ registerModule({
   version: '1.0.0',
   permissions: { requires_auth: false },
   cost_estimate: { tokens: 400, latency_ms: 500 },
-  async detect({ text }): Promise<DetectedIntent> {
-    const t = text.toLowerCase()
-    const hit = /(matr(í|i)cula|documentos|hor(á|a)rios|secretaria|boleto)/.test(t)
-    return { intent: 'faq_request', module: 'faq_escola', confidence: hit ? 0.75 : 0.25, slots: {} }
+  async detect({ text, context }): Promise<DetectedIntent> {
+    // Sempre usar OpenAI para detecção - maior certeza
+    try {
+      const response = await fetch(getClassifyUrl(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          userMessage: text,
+          history: context?.history || [],
+          currentModule: context?.module || 'atendimento'
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.classification?.module === 'SECRETARIA') {
+          return { 
+            intent: 'faq_request', 
+            module: 'faq_escola', 
+            confidence: data.classification.confidence || 0.75, 
+            slots: {} 
+          };
+        }
+      }
+    } catch (error) {
+      console.error('Erro na detecção OpenAI:', error);
+    }
+
+    // Fallback simples apenas em caso de erro
+    return { intent: 'faq_request', module: 'faq_escola', confidence: 0.25, slots: {} }
   },
   async execute({ slots }): Promise<OrchestratorResponse> {
     return {
@@ -278,33 +385,106 @@ registerModule({
   }
 })
 
-// bem_estar module
+// bem-estar module
 registerModule({
-  id: 'bem_estar',
+  id: 'bem-estar',
   name: 'Bem-Estar',
   version: '1.0.0',
   permissions: { requires_auth: false },
   cost_estimate: { tokens: 700, latency_ms: 1000 },
-  async detect({ text }): Promise<DetectedIntent> {
-    const t = text.toLowerCase()
-    const hit = /(ansiedade|estresse|bem-estar|saúde mental|conflito|bullying)/.test(t)
-    return { intent: 'wellbeing_support', module: 'bem_estar', confidence: hit ? 0.85 : 0.3, slots: {} }
+  async detect({ text, context }): Promise<DetectedIntent> {
+    // Sempre usar OpenAI para detecção - maior certeza
+    try {
+      const response = await fetch(getClassifyUrl(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          userMessage: text,
+          history: context?.history || [],
+          currentModule: context?.module || 'atendimento'
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.classification?.module === 'BEM_ESTAR') {
+          return { 
+            intent: 'wellbeing_support', 
+            module: 'bem-estar', 
+            confidence: data.classification.confidence || 0.85, 
+            slots: {} 
+          };
+        }
+      }
+    } catch (error) {
+      console.error('Erro na detecção OpenAI:', error);
+    }
+
+    // Fallback simples apenas em caso de erro
+    return { intent: 'wellbeing_support', module: 'bem-estar', confidence: 0.3, slots: {} }
   },
-  async execute({ slots }): Promise<OrchestratorResponse> {
+  async execute({ slots, context }): Promise<OrchestratorResponse> {
+    const message = context?.text || ''
+    const lowerMessage = message.toLowerCase()
+    
+    // Detectar estado emocional específico
+    let emotionalState = 'geral'
+    let specificResponse = ''
+    let specificActions = []
+    
+    if (lowerMessage.includes('triste') || lowerMessage.includes('tristeza') || lowerMessage.includes('deprimido') || lowerMessage.includes('depressão')) {
+      emotionalState = 'tristeza'
+      specificResponse = `💙 **Você não está sozinho(a)**\n\nEntendo que você está passando por um momento difícil. É completamente normal sentir tristeza às vezes, e é importante reconhecer esses sentimentos.\n\n## **Lembre-se:**\n\n• **Suas emoções são válidas** - não há problema em se sentir triste\n• **Este momento vai passar** - sentimentos são temporários\n• **Você é mais forte do que imagina** - já superou desafios antes\n• **É corajoso pedir ajuda** - reconhecer que precisa de apoio é um ato de força\n\n## **O que pode ajudar agora:**\n\n🌱 **Respire fundo** - Inspire por 4 segundos, segure por 4, expire por 6\n🌱 **Faça algo gentil por você** - tome um banho quente, ouça música que gosta\n🌱 **Conecte-se com alguém** - um amigo, familiar ou profissional\n🌱 **Movimente-se** - mesmo uma caminhada curta pode ajudar\n🌱 **Expresse-se** - escreva, desenhe, ou simplesmente chore se precisar\n\n## **Recursos de Apoio:**\n\n• **CVV (Centro de Valorização da Vida)**: 188 (24h, gratuito)\n• **Psicólogos escolares**: Disponíveis na escola\n• **Profissionais de saúde mental**: Sempre disponíveis\n\n**💡 Dica**: Pequenos passos são grandes conquistas. Não precisa resolver tudo de uma vez.`
+      
+      specificActions = [
+        { type: 'cta', label: 'Falar com psicólogo da escola', module: 'bem-estar', args: { action: 'school_psychologist' } },
+        { type: 'cta', label: 'Técnicas de respiração', module: 'bem-estar', args: { action: 'breathing_exercises' } },
+        { type: 'cta', label: 'Atividades de autocuidado', module: 'bem-estar', args: { action: 'self_care' } }
+      ]
+    } else if (lowerMessage.includes('ansiedade') || lowerMessage.includes('nervoso') || lowerMessage.includes('preocupado') || lowerMessage.includes('medo')) {
+      emotionalState = 'ansiedade'
+      specificResponse = `🧘 **Respire e se acalme**\n\nEntendo que você está se sentindo ansioso(a) ou preocupado(a). A ansiedade é uma resposta natural do nosso corpo, mas podemos aprender a gerenciá-la.\n\n## **Técnicas Rápidas para Agora:**\n\n### **Respiração 4-7-8**\n• Inspire pelo nariz por 4 segundos\n• Segure a respiração por 7 segundos\n• Expire pela boca por 8 segundos\n• Repita 3-4 vezes\n\n### **Grounding (Técnica 5-4-3-2-1)**\n• **5 coisas** que você pode ver\n• **4 coisas** que você pode tocar\n• **3 coisas** que você pode ouvir\n• **2 coisas** que você pode cheirar\n• **1 coisa** que você pode saborear\n\n## **Lembre-se:**\n\n✅ **A ansiedade é temporária** - vai diminuir\n✅ **Você está seguro(a)** - este momento vai passar\n✅ **Respire fundo** - seu corpo sabe como se acalmar\n✅ **Você não está sozinho(a)** - muitas pessoas sentem isso\n\n## **Quando Buscar Ajuda:**\n\n• Se a ansiedade está interferindo na sua vida diária\n• Se você está evitando atividades que gostava\n• Se os sintomas físicos são intensos\n• Se você tem pensamentos preocupantes\n\n**💡 Dica**: A ansiedade é como uma onda - ela cresce, atinge o pico e depois diminui. Você pode surfar essa onda!`
+      
+      specificActions = [
+        { type: 'cta', label: 'Exercício de respiração guiado', module: 'bem-estar', args: { action: 'guided_breathing' } },
+        { type: 'cta', label: 'Técnica de grounding', module: 'bem-estar', args: { action: 'grounding' } },
+        { type: 'cta', label: 'Falar com psicólogo', module: 'bem-estar', args: { action: 'psychologist' } }
+      ]
+    } else if (lowerMessage.includes('raiva') || lowerMessage.includes('irritado') || lowerMessage.includes('frustrado')) {
+      emotionalState = 'raiva'
+      specificResponse = `🔥 **Vamos acalmar essa energia**\n\nEntendo que você está se sentindo irritado(a) ou com raiva. Esses sentimentos são normais e válidos - o importante é como lidamos com eles.\n\n## **Técnicas para Agora:**\n\n### **Pausa e Respire**\n• Pare por 10 segundos antes de reagir\n• Respire fundo 3 vezes\n• Conte até 10 lentamente\n\n### **Libere a Energia**\n• Bata em uma almofada\n• Faça exercícios físicos\n• Dance ou movimente-se\n• Escreva sobre seus sentimentos\n\n### **Reflita**\n• O que realmente está te incomodando?\n• É algo que você pode controlar?\n• Como você gostaria de resolver isso?\n\n## **Lembre-se:**\n\n✅ **A raiva é uma emoção válida** - não há problema em senti-la\n✅ **Você pode escolher como reagir** - você tem controle\n✅ **Comunicação é chave** - falar sobre seus sentimentos ajuda\n✅ **Buscar soluções** é melhor que ficar preso no problema\n\n## **Quando Buscar Ajuda:**\n\n• Se a raiva está afetando seus relacionamentos\n• Se você está tendo explosões frequentes\n• Se está se machucando ou machucando outros\n• Se a raiva está durando muito tempo\n\n**💡 Dica**: A raiva muitas vezes esconde outros sentimentos como tristeza, medo ou frustração. Que tal explorar o que realmente está acontecendo?`
+      
+      specificActions = [
+        { type: 'cta', label: 'Técnicas de relaxamento', module: 'bem-estar', args: { action: 'relaxation' } },
+        { type: 'cta', label: 'Exercícios físicos', module: 'bem-estar', args: { action: 'physical_exercise' } },
+        { type: 'cta', label: 'Conversar sobre sentimentos', module: 'bem-estar', args: { action: 'talk_about_feelings' } }
+      ]
+    } else {
+      // Resposta geral para outros casos
+      specificResponse = `🤗 **Estou aqui para te apoiar**\n\nVejo que você está passando por um momento difícil. É corajoso da sua parte compartilhar isso comigo.\n\n## **Você não está sozinho(a)**\n\n• **Suas emoções são importantes** - todos os sentimentos são válidos\n• **É normal ter altos e baixos** - faz parte da vida\n• **Buscar ajuda é um sinal de força** - não de fraqueza\n• **Você é capaz de superar isso** - já enfrentou desafios antes\n\n## **Recursos Disponíveis:**\n\n### **Suporte Imediato**\n• **CVV**: 188 (24h, gratuito)\n• **Psicólogos da escola**: Sempre disponíveis\n• **Profissionais de saúde mental**: Para apoio especializado\n\n### **Autocuidado**\n• **Respire fundo** - técnicas de respiração\n• **Movimente-se** - exercícios leves\n• **Conecte-se** - com pessoas que você confia\n• **Expresse-se** - escreva, desenhe, converse\n\n## **Lembre-se:**\n\n✅ **Este momento vai passar** - sentimentos são temporários\n✅ **Você tem recursos internos** - força e resiliência\n✅ **Há pessoas que se importam** - você não está sozinho(a)\n✅ **É okay não estar okay** - todos temos dias difíceis\n\n**💡 Dica**: Pequenos passos diários podem fazer uma grande diferença. Que tal começar com algo simples que te faça bem?`
+      
+      specificActions = [
+        { type: 'cta', label: 'Falar com psicólogo da escola', module: 'bem-estar', args: { action: 'school_psychologist' } },
+        { type: 'cta', label: 'Técnicas de autocuidado', module: 'bem-estar', args: { action: 'self_care_techniques' } },
+        { type: 'cta', label: 'Exercícios de relaxamento', module: 'bem-estar', args: { action: 'relaxation_exercises' } }
+      ]
+    }
+    
     return {
-      text: 'Estou aqui para te apoiar. Vamos trabalhar juntos para melhorar seu bem-estar.',
+      text: specificResponse,
       blocks: [
         { 
           type: 'notice', 
-          title: 'Suporte Emocional Disponível', 
-          body: 'Nossa equipe de psicologia está disponível para conversar. Você não está sozinho(a).',
-          meta: { support_type: 'emotional' }
+          title: '💙 Suporte Emocional Disponível', 
+          body: `Nossa equipe de psicologia está sempre disponível para conversar. Você não está sozinho(a) neste momento.`,
+          meta: { 
+            support_type: 'emotional',
+            emotional_state: emotionalState,
+            timestamp: new Date().toISOString()
+          }
         }
       ],
-      actions: [
-        { type: 'cta', label: 'Agendar conversa com psicólogo', module: 'bem_estar', args: { action: 'schedule' } },
-        { type: 'link', label: 'Exercícios de relaxamento', href: '/wellness/exercises' }
-      ]
+      actions: specificActions
     }
   }
 })
@@ -316,10 +496,36 @@ registerModule({
   version: '1.0.0',
   permissions: { requires_auth: false },
   cost_estimate: { tokens: 500, latency_ms: 600 },
-  async detect({ text }): Promise<DetectedIntent> {
-    const t = text.toLowerCase()
-    const hit = /(pagamento|mensalidade|boleto|financeiro|valor)/.test(t)
-    return { intent: 'financial_support', module: 'financeiro', confidence: hit ? 0.8 : 0.25, slots: {} }
+  async detect({ text, context }): Promise<DetectedIntent> {
+    // Sempre usar OpenAI para detecção - maior certeza
+    try {
+      const response = await fetch(getClassifyUrl(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          userMessage: text,
+          history: context?.history || [],
+          currentModule: context?.module || 'atendimento'
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.classification?.module === 'FINANCEIRO') {
+          return { 
+            intent: 'financial_support', 
+            module: 'financeiro', 
+            confidence: data.classification.confidence || 0.8, 
+            slots: {} 
+          };
+        }
+      }
+    } catch (error) {
+      console.error('Erro na detecção OpenAI:', error);
+    }
+
+    // Fallback simples apenas em caso de erro
+    return { intent: 'financial_support', module: 'financeiro', confidence: 0.25, slots: {} }
   },
   async execute({ slots }): Promise<OrchestratorResponse> {
     return {
@@ -347,10 +553,36 @@ registerModule({
   version: '1.0.0',
   permissions: { requires_auth: false },
   cost_estimate: { tokens: 600, latency_ms: 700 },
-  async detect({ text }): Promise<DetectedIntent> {
-    const t = text.toLowerCase()
-    const hit = /(funcionário|professor|rh|salário|benefício|férias)/.test(t)
-    return { intent: 'hr_support', module: 'rh', confidence: hit ? 0.75 : 0.25, slots: {} }
+  async detect({ text, context }): Promise<DetectedIntent> {
+    // Sempre usar OpenAI para detecção - maior certeza
+    try {
+      const response = await fetch(getClassifyUrl(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          userMessage: text,
+          history: context?.history || [],
+          currentModule: context?.module || 'atendimento'
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.classification?.module === 'RH') {
+          return { 
+            intent: 'hr_support', 
+            module: 'rh', 
+            confidence: data.classification.confidence || 0.75, 
+            slots: {} 
+          };
+        }
+      }
+    } catch (error) {
+      console.error('Erro na detecção OpenAI:', error);
+    }
+
+    // Fallback simples apenas em caso de erro
+    return { intent: 'hr_support', module: 'rh', confidence: 0.25, slots: {} }
   },
   async execute({ slots }): Promise<OrchestratorResponse> {
     return {
@@ -378,10 +610,36 @@ registerModule({
   version: '1.0.0',
   permissions: { requires_auth: false },
   cost_estimate: { tokens: 600, latency_ms: 800 },
-  async detect({ text }): Promise<DetectedIntent> {
-    const t = text.toLowerCase()
-    const hit = /(coordenação|pedagógico|currículo|disciplina|avaliação)/.test(t)
-    return { intent: 'coordination_support', module: 'coordenacao', confidence: hit ? 0.75 : 0.25, slots: {} }
+  async detect({ text, context }): Promise<DetectedIntent> {
+    // Sempre usar OpenAI para detecção - maior certeza
+    try {
+      const response = await fetch(getClassifyUrl(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          userMessage: text,
+          history: context?.history || [],
+          currentModule: context?.module || 'atendimento'
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.classification?.module === 'COORDENACAO') {
+          return { 
+            intent: 'coordination_support', 
+            module: 'coordenacao', 
+            confidence: data.classification.confidence || 0.75, 
+            slots: {} 
+          };
+        }
+      }
+    } catch (error) {
+      console.error('Erro na detecção OpenAI:', error);
+    }
+
+    // Fallback simples apenas em caso de erro
+    return { intent: 'coordination_support', module: 'coordenacao', confidence: 0.25, slots: {} }
   },
   async execute({ slots }): Promise<OrchestratorResponse> {
     return {
@@ -409,10 +667,36 @@ registerModule({
   version: '1.0.0',
   permissions: { requires_auth: false },
   cost_estimate: { tokens: 500, latency_ms: 600 },
-  async detect({ text }): Promise<DetectedIntent> {
-    const t = text.toLowerCase()
-    const hit = /(rede social|instagram|facebook|marketing|comunicação)/.test(t)
-    return { intent: 'social_media_support', module: 'social_media', confidence: hit ? 0.7 : 0.25, slots: {} }
+  async detect({ text, context }): Promise<DetectedIntent> {
+    // Sempre usar OpenAI para detecção - maior certeza
+    try {
+      const response = await fetch(getClassifyUrl(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          userMessage: text,
+          history: context?.history || [],
+          currentModule: context?.module || 'atendimento'
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.classification?.module === 'SOCIAL_MEDIA') {
+          return { 
+            intent: 'social_media_support', 
+            module: 'social_media', 
+            confidence: data.classification.confidence || 0.7, 
+            slots: {} 
+          };
+        }
+      }
+    } catch (error) {
+      console.error('Erro na detecção OpenAI:', error);
+    }
+
+    // Fallback simples apenas em caso de erro
+    return { intent: 'social_media_support', module: 'social_media', confidence: 0.25, slots: {} }
   },
   async execute({ slots }): Promise<OrchestratorResponse> {
     return {
@@ -440,10 +724,36 @@ registerModule({
   version: '1.0.0',
   permissions: { requires_auth: false },
   cost_estimate: { tokens: 800, latency_ms: 1000 },
-  async detect({ text }): Promise<DetectedIntent> {
-    const t = text.toLowerCase()
-    const hit = /(imagem|diagrama|figura|foto|gr(a|á)fico|visual)/.test(t)
-    return { intent: 'media_request', module: 'conteudo_midia', confidence: hit ? 0.7 : 0.25, slots: {} }
+  async detect({ text, context }): Promise<DetectedIntent> {
+    // Sempre usar OpenAI para detecção - maior certeza
+    try {
+      const response = await fetch(getClassifyUrl(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          userMessage: text,
+          history: context?.history || [],
+          currentModule: context?.module || 'atendimento'
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.classification?.module === 'CONTEUDO_MIDIA') {
+          return { 
+            intent: 'media_request', 
+            module: 'conteudo_midia', 
+            confidence: data.classification.confidence || 0.7, 
+            slots: {} 
+          };
+        }
+      }
+    } catch (error) {
+      console.error('Erro na detecção OpenAI:', error);
+    }
+
+    // Fallback simples apenas em caso de erro
+    return { intent: 'media_request', module: 'conteudo_midia', confidence: 0.25, slots: {} }
   },
   async execute({ slots }): Promise<OrchestratorResponse> {
     return {
@@ -470,11 +780,25 @@ registerModule({
 function getSubjectName(message: string): string {
   const lowerMessage = message.toLowerCase()
   
-  if (lowerMessage.includes('geometria')) return 'geometria'
-  if (lowerMessage.includes('matemática') || lowerMessage.includes('matematica')) return 'matemática'
+  // Matemática e suas áreas
+  if (lowerMessage.includes('eq') || lowerMessage.includes('equação') || lowerMessage.includes('equacao') || 
+      lowerMessage.includes('grau') || lowerMessage.includes('bhaskara') || lowerMessage.includes('delta') ||
+      lowerMessage.includes('raiz') || lowerMessage.includes('função') || lowerMessage.includes('funcao') ||
+      lowerMessage.includes('polinômio') || lowerMessage.includes('polinomio')) return 'matemática'
+  if (lowerMessage.includes('geometria') || lowerMessage.includes('triângulo') || lowerMessage.includes('triangulo') ||
+      lowerMessage.includes('círculo') || lowerMessage.includes('circulo') || lowerMessage.includes('área') ||
+      lowerMessage.includes('area') || lowerMessage.includes('perímetro') || lowerMessage.includes('perimetro') ||
+      lowerMessage.includes('volume')) return 'geometria'
+  if (lowerMessage.includes('trigonometria') || lowerMessage.includes('trigonomteria') || lowerMessage.includes('trigonom') ||
+      lowerMessage.includes('seno') || lowerMessage.includes('coseno') || lowerMessage.includes('tangente')) return 'trigonometria'
   if (lowerMessage.includes('álgebra') || lowerMessage.includes('algebra')) return 'álgebra'
-  if (lowerMessage.includes('cálculo') || lowerMessage.includes('calculo')) return 'cálculo'
-  if (lowerMessage.includes('trigonometria') || lowerMessage.includes('trigonomteria') || lowerMessage.includes('trigonom')) return 'trigonometria'
+  if (lowerMessage.includes('cálculo') || lowerMessage.includes('calculo') || lowerMessage.includes('derivada') ||
+      lowerMessage.includes('integral') || lowerMessage.includes('limite')) return 'cálculo'
+  if (lowerMessage.includes('logaritmo') || lowerMessage.includes('exponencial')) return 'matemática'
+  if (lowerMessage.includes('probabilidade') || lowerMessage.includes('estatística') || lowerMessage.includes('estatistica')) return 'matemática'
+  if (lowerMessage.includes('matemática') || lowerMessage.includes('matematica')) return 'matemática'
+  
+  // Outras matérias
   if (lowerMessage.includes('física') || lowerMessage.includes('fisica')) return 'física'
   if (lowerMessage.includes('química') || lowerMessage.includes('quimica')) return 'química'
   if (lowerMessage.includes('fotossíntese') || lowerMessage.includes('fotossintese')) return 'fotossíntese'
@@ -499,13 +823,17 @@ registerModule({
   version: '1.0.0',
   permissions: { requires_auth: false },
   cost_estimate: { tokens: 800, latency_ms: 1000 },
-  async detect({ text }): Promise<DetectedIntent> {
+  async detect({ text, context }): Promise<DetectedIntent> {
     // Sempre usar OpenAI para detecção - maior certeza
     try {
-      const response = await fetch('/api/classify', {
+      const response = await fetch(getClassifyUrl(), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userMessage: text }),
+        body: JSON.stringify({ 
+          userMessage: text,
+          history: context?.history || [],
+          currentModule: context?.module || 'atendimento'
+        }),
       });
 
       if (response.ok) {
@@ -530,18 +858,24 @@ registerModule({
     const message = context?.text || ''
     
     // Debug: Log para ver o que está acontecendo
-    console.log('Professor module execute:', {
-      message,
-      context,
-      slots,
+    const testPattern = /(geometria|matemática|matematica|álgebra|algebra|cálculo|calculo|trigonometria|física|fisica|química|quimica|biologia|história|historia|português|portugues|dúvida|duvida|questão|questao|exercício|exercicio)/i;
+    const testResult = testPattern.test(message);
+    
+    console.log('🔍 [PROFESSOR DEBUG]', {
+      message: message.substring(0, 50) + '...',
+      messageLength: message.length,
       hasGeometria: message.includes('geometria'),
       hasMatematica: message.includes('matematica'),
-      testResult: /(geometria|matemática|matematica|álgebra|algebra|cálculo|calculo|trigonometria|física|fisica|química|quimica|biologia|história|historia|português|portugues|dúvida|duvida|questão|questao|exercício|exercicio)/i.test(message)
+      testResult,
+      pattern: testPattern.toString(),
+      subject: getSubjectName(message)
     })
     
     // Se for uma pergunta específica sobre geometria ou outras matérias, responder diretamente
-    if (/(geometria|matemática|matematica|álgebra|algebra|cálculo|calculo|trigonometria|trigonomteria|trigonom|física|fisica|química|quimica|biologia|fotossíntese|fotossintese|mitose|meiose|genética|genetica|evolução|evolucao|ecossistema|história|historia|português|portugues|literatura|gramática|gramatica|dúvida|duvida|questão|questao|exercício|exercicio)/i.test(message)) {
+    if (/(geometria|matemática|matematica|álgebra|algebra|cálculo|calculo|trigonometria|trigonomteria|trigonom|física|fisica|química|quimica|biologia|fotossíntese|fotossintese|mitose|meiose|genética|genetica|evolução|evolucao|ecossistema|história|historia|português|portugues|literatura|gramática|gramatica|dúvida|duvida|questão|questao|exercício|exercicio|eq|equação|equacao|grau|segundo grau|primeiro grau|bhaskara|delta|raiz|função|funcao|polinômio|polinomio|geometria|triângulo|triangulo|círculo|circulo|área|area|perímetro|perimetro|volume|seno|coseno|tangente|logaritmo|exponencial|derivada|integral|limite|probabilidade|estatística|estatistica)/i.test(message)) {
       const subject = getSubjectName(message)
+      
+      console.log('🎯 [PROFESSOR] Subject detected:', subject, 'for message:', message.substring(0, 50))
       
       // Respostas específicas para cada matéria
       let specificResponse = ''
@@ -567,12 +901,22 @@ registerModule({
           break
           
         case 'matemática':
-          specificResponse = `🔢 **Matemática - A Linguagem Universal**\n\nA matemática é muito mais que números! É a linguagem que descreve o universo, desde as menores partículas até as maiores galáxias. É uma ferramenta poderosa para resolver problemas e entender o mundo ao nosso redor.\n\n## **Principais Áreas da Matemática**\n\n### **Álgebra**\n• **Equações**: Resolução de problemas matemáticos\n• **Funções**: Relações entre variáveis\n• **Gráficos**: Visualização de dados\n• **Polinômios**: Expressões algébricas complexas\n\n### **Geometria**\n• **Formas**: Triângulos, círculos, polígonos\n• **Espaço**: Geometria 3D e sólidos\n• **Medidas**: Área, perímetro, volume\n• **Transformações**: Movimentos geométricos\n\n### **Trigonometria**\n• **Funções**: Seno, cosseno, tangente\n• **Triângulos**: Resolução de problemas\n• **Ondas**: Fenômenos periódicos\n• **Aplicações**: Engenharia, física\n\n### **Cálculo**\n• **Limites**: Comportamento de funções\n• **Derivadas**: Taxa de variação\n• **Integrais**: Área sob curvas\n• **Aplicações**: Otimização, modelagem\n\n### **Estatística**\n• **Análise de dados**: Interpretação de informações\n• **Probabilidade**: Chances e possibilidades\n• **Gráficos**: Visualização estatística\n• **Aplicações**: Pesquisa, medicina, economia\n\n## **Por que a Matemática é Importante?**\n\n• **Desenvolvimento do raciocínio lógico**\n• **Resolução de problemas complexos**\n• **Base para outras ciências**\n• **Aplicações práticas no dia a dia**\n• **Desenvolvimento de habilidades analíticas**\n\n**💡 Dica**: A matemática não é sobre decorar fórmulas, mas sobre entender conceitos e desenvolver o pensamento lógico!\n\n**Qual área você gostaria de explorar?**`
-          specificActions = [
-            { type: 'cta' as const, label: 'Álgebra', module: 'professor', args: { topic: 'algebra' } },
-            { type: 'cta' as const, label: 'Geometria', module: 'professor', args: { topic: 'geometria' } },
-            { type: 'cta' as const, label: 'Trigonometria', module: 'professor', args: { topic: 'trigonometria' } }
-          ]
+          // Check if it's specifically about equations of second degree
+          if (lowerMessage.includes('eq') && lowerMessage.includes('grau')) {
+            specificResponse = `📐 **Equações do Segundo Grau - Guia Completo**\n\nAs equações do segundo grau são fundamentais na matemática! Elas aparecem em muitos problemas práticos e são a base para entender funções quadráticas.\n\n## **Forma Geral da Equação**\n\n**ax² + bx + c = 0**\n\nOnde:\n• **a ≠ 0** (coeficiente do termo quadrático)\n• **b** (coeficiente do termo linear)\n• **c** (termo independente)\n\n## **Como Resolver**\n\n### **1. Fórmula de Bhaskara**\n\n**x = (-b ± √Δ) / 2a**\n\nOnde **Δ = b² - 4ac** (discriminante)\n\n### **2. Análise do Discriminante**\n\n• **Δ > 0**: Duas raízes reais diferentes\n• **Δ = 0**: Uma raiz real (dupla)\n• **Δ < 0**: Duas raízes complexas\n\n## **Exemplo Prático**\n\n**Resolva: x² - 5x + 6 = 0**\n\n1. **Identifique os coeficientes**:\n   • a = 1, b = -5, c = 6\n\n2. **Calcule o discriminante**:\n   • Δ = (-5)² - 4(1)(6) = 25 - 24 = 1\n\n3. **Aplique a fórmula**:\n   • x = (5 ± √1) / 2\n   • x₁ = (5 + 1) / 2 = 3\n   • x₂ = (5 - 1) / 2 = 2\n\n## **Aplicações Práticas**\n\n• **Física**: Movimento de projéteis\n• **Engenharia**: Cálculo de estruturas\n• **Economia**: Análise de lucros\n• **Geometria**: Problemas de área\n• **Gráficos**: Parábolas\n\n## **Dicas Importantes**\n\n✅ **Sempre verifique se a = 0** (não é equação do 2º grau)\n✅ **Calcule o discriminante primeiro**\n✅ **Use a fórmula de Bhaskara quando necessário**\n✅ **Verifique suas respostas substituindo na equação original**\n\n**💡 Dica**: Pratique com muitos exemplos! A resolução de equações do segundo grau fica mais fácil com a prática.\n\n**Quer que eu resolva uma equação específica ou tem alguma dúvida sobre o processo?**`
+            specificActions = [
+              { type: 'cta' as const, label: 'Resolver equação específica', module: 'professor', args: { topic: 'resolver_equacao' } },
+              { type: 'cta' as const, label: 'Mais exemplos', module: 'professor', args: { topic: 'exemplos_equacoes' } },
+              { type: 'cta' as const, label: 'Aula completa sobre equações', module: 'aula_interativa', args: { tema: 'equacoes_segundo_grau' } }
+            ]
+          } else {
+            specificResponse = `🔢 **Matemática - A Linguagem Universal**\n\nA matemática é muito mais que números! É a linguagem que descreve o universo, desde as menores partículas até as maiores galáxias. É uma ferramenta poderosa para resolver problemas e entender o mundo ao nosso redor.\n\n## **Principais Áreas da Matemática**\n\n### **Álgebra**\n• **Equações**: Resolução de problemas matemáticos\n• **Funções**: Relações entre variáveis\n• **Gráficos**: Visualização de dados\n• **Polinômios**: Expressões algébricas complexas\n\n### **Geometria**\n• **Formas**: Triângulos, círculos, polígonos\n• **Espaço**: Geometria 3D e sólidos\n• **Medidas**: Área, perímetro, volume\n• **Transformações**: Movimentos geométricos\n\n### **Trigonometria**\n• **Funções**: Seno, cosseno, tangente\n• **Triângulos**: Resolução de problemas\n• **Ondas**: Fenômenos periódicos\n• **Aplicações**: Engenharia, física\n\n### **Cálculo**\n• **Limites**: Comportamento de funções\n• **Derivadas**: Taxa de variação\n• **Integrais**: Área sob curvas\n• **Aplicações**: Otimização, modelagem\n\n### **Estatística**\n• **Análise de dados**: Interpretação de informações\n• **Probabilidade**: Chances e possibilidades\n• **Gráficos**: Visualização estatística\n• **Aplicações**: Pesquisa, medicina, economia\n\n## **Por que a Matemática é Importante?**\n\n• **Desenvolvimento do raciocínio lógico**\n• **Resolução de problemas complexos**\n• **Base para outras ciências**\n• **Aplicações práticas no dia a dia**\n• **Desenvolvimento de habilidades analíticas**\n\n**💡 Dica**: A matemática não é sobre decorar fórmulas, mas sobre entender conceitos e desenvolver o pensamento lógico!\n\n**Qual área você gostaria de explorar?**`
+            specificActions = [
+              { type: 'cta' as const, label: 'Álgebra', module: 'professor', args: { topic: 'algebra' } },
+              { type: 'cta' as const, label: 'Geometria', module: 'professor', args: { topic: 'geometria' } },
+              { type: 'cta' as const, label: 'Trigonometria', module: 'professor', args: { topic: 'trigonometria' } }
+            ]
+          }
           break
           
         case 'física':
@@ -602,6 +946,15 @@ registerModule({
           ]
           break
           
+        case 'história':
+          specificResponse = `📜 **História - Conhecendo o Passado para Entender o Presente**\n\nA história é a ciência que estuda o passado da humanidade, analisando eventos, sociedades e transformações ao longo do tempo. É através dela que entendemos como chegamos até aqui e podemos construir um futuro melhor!\n\n## **Principais Períodos Históricos**\n\n### **História Antiga**\n• **Civilizações**: Egito, Mesopotâmia, Grécia, Roma\n• **Impérios**: Persa, Macedônico, Romano\n• **Culturas**: Desenvolvimento da escrita, leis, filosofia\n• **Conquistas**: Alexandre, Júlio César, Augusto\n\n### **História Medieval**\n• **Feudalismo**: Sistema social e econômico\n• **Cristianismo**: Expansão e influência religiosa\n• **Impérios**: Bizantino, Carolíngio, Islâmico\n• **Cruzadas**: Conflitos religiosos e comerciais\n\n### **História Moderna**\n• **Renascimento**: Renovação cultural e científica\n• **Reforma**: Transformações religiosas\n• **Absolutismo**: Centralização do poder\n• **Revoluções**: Inglesa, Americana, Francesa\n\n### **História Contemporânea**\n• **Revolução Industrial**: Transformação econômica\n• **Imperialismo**: Expansão colonial\n• **Guerras Mundiais**: Conflitos globais\n• **Guerra Fria**: Polarização política\n\n## **História do Brasil**\n\n### **Período Colonial**\n• **Descobrimento**: 1500 e os primeiros contatos\n• **Capitanias**: Sistema de administração\n• **Ciclo do Açúcar**: Economia colonial\n• **Escravidão**: Sistema de trabalho\n\n### **Período Imperial**\n• **Independência**: 1822 e processo de separação\n• **Primeiro Reinado**: Dom Pedro I\n• **Regência**: Período de transição\n• **Segundo Reinado**: Dom Pedro II e abolição\n\n### **República**\n• **República Velha**: Primeira República\n• **Era Vargas**: Getúlio Vargas e modernização\n• **Ditadura Militar**: 1964-1985\n• **Redemocratização**: Nova República\n\n## **Como Estudar História**\n\n### **Métodos de Estudo**\n• **Linha do tempo**: Organização cronológica\n• **Mapas**: Localização geográfica dos eventos\n• **Causas e consequências**: Análise de relações\n• **Comparações**: Entre períodos e sociedades\n\n### **Dicas para Provas**\n• **Contextualize**: Entenda o período histórico\n• **Conecte**: Relacione eventos e personagens\n• **Analise**: Vá além da memorização\n• **Pratique**: Faça exercícios e simulados\n\n## **Importância da História**\n\n• **Formação cidadã**: Compreensão da sociedade\n• **Pensamento crítico**: Análise de fontes\n• **Identidade cultural**: Conhecimento das raízes\n• **Prevenção de erros**: Aprender com o passado\n• **Visão de futuro**: Planejamento baseado em experiências\n\n**💡 Dica**: A história não é só memorizar datas! É entender processos, causas e consequências. Sempre pergunte "por que" e "como" os eventos aconteceram.\n\n**Qual período ou tema da história você gostaria de estudar?**`
+          specificActions = [
+            { type: 'cta' as const, label: 'História do Brasil', module: 'professor', args: { topic: 'historia_brasil' } },
+            { type: 'cta' as const, label: 'História Mundial', module: 'professor', args: { topic: 'historia_mundial' } },
+            { type: 'cta' as const, label: 'Aula completa', module: 'aula_interativa', args: { tema: 'historia' } }
+          ]
+          break
+          
         default:
           specificResponse = `📚 **${subject.charAt(0).toUpperCase() + subject.slice(1)} - Seu Guia de Estudos**\n\nÓtimo! Vou te ajudar com suas dúvidas sobre ${subject}. Como seu professor virtual, estou aqui para tornar o aprendizado mais fácil e interessante!\n\n## **Como Posso Te Ajudar?**\n\n### **Explicações Detalhadas**\n• Conceitos fundamentais\n• Exemplos práticos\n• Aplicações no dia a dia\n• Conexões com outras matérias\n\n### **Resolução de Exercícios**\n• Passo a passo detalhado\n• Dicas e macetes\n• Métodos alternativos\n• Verificação de respostas\n\n### **Material de Apoio**\n• Resumos organizados\n• Fórmulas importantes\n• Conceitos-chave\n• Exercícios práticos\n\n## **Para Começar, Me Conte:**\n\n1. **Qual é sua dúvida específica?**\n2. **Em que nível você está estudando?** (Fundamental, Médio, Superior)\n3. **Você tem algum exercício ou problema em mente?**\n4. **Há algum tópico que você gostaria de revisar?**\n\n**💡 Dica**: Quanto mais específica for sua pergunta, melhor posso te ajudar! Não tenha medo de perguntar - estou aqui para esclarecer todas as suas dúvidas.\n\n**Vamos começar? Me conte sua dúvida!**`
           specificActions = [
@@ -622,6 +975,8 @@ registerModule({
         actions: specificActions
       }
     }
+    
+    console.log('⚠️ [PROFESSOR] Returning generic response - no specific subject detected')
     
     return {
       text: '🎓 **Professor IA - Seu Assistente de Estudos Pessoal**\n\nOlá! Sou seu professor virtual e estou aqui para tornar o aprendizado mais fácil, interessante e eficiente. Posso te ajudar com qualquer dúvida acadêmica!\n\n## **Matérias que Posso Ensinar:**\n\n### **Exatas**\n• **Matemática**: Álgebra, geometria, trigonometria, cálculo\n• **Física**: Mecânica, eletricidade, óptica, termodinâmica\n• **Química**: Geral, orgânica, inorgânica, físico-química\n\n### **Biológicas**\n• **Biologia**: Celular, genética, ecologia, evolução\n• **Ciências**: Meio ambiente, saúde, anatomia\n\n### **Humanas**\n• **História**: Geral, do Brasil, mundial\n• **Geografia**: Física, humana, política\n• **Português**: Gramática, literatura, redação\n• **Filosofia**: Ética, lógica, história da filosofia\n• **Sociologia**: Sociedade, cultura, política\n\n## **Como Posso Te Ajudar:**\n\n✅ **Explicações detalhadas e didáticas**\n✅ **Resolução de exercícios passo a passo**\n✅ **Criação de aulas interativas**\n✅ **Simulados e provas**\n✅ **Dicas de estudo e memorização**\n✅ **Material de apoio personalizado**\n\n**💡 Dica**: Quanto mais específica for sua pergunta, melhor posso te ajudar! Não tenha medo de perguntar - estou aqui para esclarecer todas as suas dúvidas.\n\n**Me conte: qual é sua dúvida ou o que você gostaria de aprender hoje?**',
@@ -648,13 +1003,17 @@ registerModule({
   version: '1.0.0',
   permissions: { requires_auth: false },
   cost_estimate: { tokens: 400, latency_ms: 500 },
-  async detect({ text }): Promise<DetectedIntent> {
+  async detect({ text, context }): Promise<DetectedIntent> {
     // Sempre usar OpenAI para detecção - maior certeza
     try {
-      const response = await fetch('/api/classify', {
+      const response = await fetch(getClassifyUrl(), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userMessage: text }),
+        body: JSON.stringify({ 
+          userMessage: text,
+          history: context?.history || [],
+          currentModule: context?.module || 'atendimento'
+        }),
       });
 
       if (response.ok) {

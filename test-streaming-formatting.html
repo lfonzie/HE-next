@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Formatação e Streaming</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Simular o indicador de streaming */
+        .streaming-indicator {
+            position: relative;
+        }
+        
+        .streaming-indicator::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #3498db, transparent);
+            animation: streamFlow 2s infinite;
+        }
+        
+        @keyframes streamFlow {
+            0% {
+                transform: translateX(-100%);
+            }
+            100% {
+                transform: translateX(100%);
+            }
+        }
+        
+        /* Simular o indicador de cursor piscando */
+        .typing-cursor {
+            display: inline-block;
+            width: 2px;
+            height: 1em;
+            background-color: #3498db;
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        /* Simular formatação markdown */
+        .prose h1 { font-size: 1.5rem; font-weight: bold; margin: 1rem 0; }
+        .prose h2 { font-size: 1.25rem; font-weight: bold; margin: 0.75rem 0; }
+        .prose h3 { font-size: 1.125rem; font-weight: bold; margin: 0.5rem 0; }
+        .prose p { margin: 0.5rem 0; line-height: 1.6; }
+        .prose strong { font-weight: bold; }
+        .prose em { font-style: italic; }
+        .prose code { background: #f3f4f6; padding: 0.125rem 0.25rem; border-radius: 0.25rem; font-family: monospace; }
+        .prose ul { list-style-type: disc; margin: 0.5rem 0; padding-left: 1.5rem; }
+        .prose ol { list-style-type: decimal; margin: 0.5rem 0; padding-left: 1.5rem; }
+        .prose li { margin: 0.25rem 0; }
+    </style>
+</head>
+<body class="bg-gray-50 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-2xl font-bold mb-8">Teste de Formatação e Streaming</h1>
+        
+        <!-- Mensagem do usuário -->
+        <div class="flex items-start gap-3 mb-6 justify-end">
+            <div class="bg-amber-300 text-black rounded-2xl px-4 py-3 shadow-sm max-w-prose md:max-w-[65ch] break-words hyphens-auto">
+                <div>Me ajude com: Quero tirar uma dúvida de geometria</div>
+                <div class="mt-1 text-xs text-zinc-500 select-none">16:55</div>
+            </div>
+        </div>
+        
+        <!-- Mensagem do assistente COM STREAMING -->
+        <div class="flex items-start gap-3 mb-6 justify-start">
+            <div class="flex flex-col items-center">
+                <div class="w-8 h-8 rounded-full border-2 shadow-sm flex items-center justify-center bg-blue-600 text-white">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 2L3 7v11h4v-6h6v6h4V7l-7-5z"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="flex-1">
+                <article class="self-start rounded-2xl px-4 py-3 shadow-sm border border-zinc-200/60 bg-white/70 max-w-prose md:max-w-[65ch] break-words hyphens-auto">
+                    <div class="message-content">
+                        <!-- ProfessorAnswer -->
+                        <div class="professor-answer">
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                                <h3 class="text-lg font-semibold text-blue-900">Professor IA</h3>
+                                <p class="text-sm text-blue-700">Assistente de estudos</p>
+                            </div>
+                            
+                            <div class="professor-content">
+                                <div class="prose prose-sm max-w-none">
+                                    <p>Claro! 😊 Estou aqui para ajudar. Qual é a sua dúvida sobre geometria?</p>
+                                    <p>Você pode me dar mais detalhes, como:</p>
+                                    <ul>
+                                        <li>O tipo de figura</li>
+                                        <li>O conceito que você está tentando entender</li>
+                                        <li>Se é sobre <strong>área</strong>, <strong>perímetro</strong> ou <em>outro tópico</em></li>
+                                    </ul>
+                                    <p>Vamos juntos resolver isso! 🏗️📐</p>
+                                    
+                                    <!-- Simular streaming em progresso -->
+                                    <span class="typing-cursor"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-1 text-xs text-zinc-500 select-none">16:55 • 0 tokens</div>
+                </article>
+            </div>
+        </div>
+        
+        <!-- Mensagem do assistente SEM STREAMING (completa) -->
+        <div class="flex items-start gap-3 mb-6 justify-start">
+            <div class="flex flex-col items-center">
+                <div class="w-8 h-8 rounded-full border-2 shadow-sm flex items-center justify-center bg-blue-600 text-white">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 2L3 7v11h4v-6h6v6h4V7l-7-5z"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="flex-1">
+                <article class="self-start rounded-2xl px-4 py-3 shadow-sm border border-zinc-200/60 bg-white/70 max-w-prose md:max-w-[65ch] break-words hyphens-auto">
+                    <div class="message-content">
+                        <!-- ProfessorAnswer -->
+                        <div class="professor-answer">
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                                <h3 class="text-lg font-semibold text-blue-900">Professor IA</h3>
+                                <p class="text-sm text-blue-700">Assistente de estudos</p>
+                            </div>
+                            
+                            <div class="professor-content">
+                                <div class="prose prose-sm max-w-none">
+                                    <p>Perfeito! Vou te ajudar com trigonometria. Aqui estão os conceitos básicos:</p>
+                                    
+                                    <h3>Funções Trigonométricas Principais:</h3>
+                                    <ul>
+                                        <li><strong>Sen (θ)</strong> = cateto oposto / hipotenusa</li>
+                                        <li><strong>Cos (θ)</strong> = cateto adjacente / hipotenusa</li>
+                                        <li><strong>Tan (θ)</strong> = cateto oposto / cateto adjacente</li>
+                                    </ul>
+                                    
+                                    <h3>Exemplo Prático:</h3>
+                                    <p>Em um triângulo retângulo com hipotenusa = 5 e cateto oposto = 3:</p>
+                                    <ul>
+                                        <li>Sen (θ) = 3/5 = 0.6</li>
+                                        <li>Cos (θ) = 4/5 = 0.8</li>
+                                        <li>Tan (θ) = 3/4 = 0.75</li>
+                                    </ul>
+                                    
+                                    <p>Precisa de mais detalhes sobre algum conceito específico? 📐</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-1 text-xs text-zinc-500 select-none">16:56 • 150 tokens</div>
+                </article>
+            </div>
+        </div>
+        
+        <!-- Comparação -->
+        <div class="mt-12 p-6 bg-green-50 border border-green-200 rounded-lg">
+            <h2 class="text-lg font-semibold text-green-900 mb-4">Como deveria funcionar:</h2>
+            <ul class="text-green-800 space-y-2">
+                <li>✅ <strong>Formatação Markdown</strong>: Títulos, listas, negrito, itálico</li>
+                <li>✅ <strong>ProfessorAnswer</strong>: Cabeçalho azul com "Professor IA"</li>
+                <li>✅ <strong>Streaming</strong>: Cursor piscando durante o carregamento</li>
+                <li>✅ <strong>Layout</strong>: Bolhas com bordas arredondadas e sombras</li>
+                <li>✅ <strong>Metadados</strong>: Timestamp e tokens na parte inferior</li>
+            </ul>
+        </div>
+        
+        <!-- Problemas identificados -->
+        <div class="mt-6 p-6 bg-red-50 border border-red-200 rounded-lg">
+            <h2 class="text-lg font-semibold text-red-900 mb-4">Problemas corrigidos:</h2>
+            <ul class="text-red-800 space-y-2">
+                <li>🔧 <strong>StreamingMessage</strong>: Restaurado parâmetro isStreaming</li>
+                <li>🔧 <strong>MarkdownRenderer</strong>: Adicionado indicador de streaming</li>
+                <li>🔧 <strong>Classes CSS</strong>: Substituído classes inexistentes por Tailwind</li>
+                <li>🔧 <strong>Lógica de módulo</strong>: Simplificada para usar currentModuleId</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

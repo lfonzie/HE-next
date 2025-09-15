@@ -14,12 +14,12 @@ import { CoordenacaoAnswer } from "./CoordenacaoAnswer";
 import { SecretariaAnswer } from "./SecretariaAnswer";
 import { BemEstarAnswer } from "./BemEstarAnswer";
 import { SocialMediaAnswer } from "./SocialMediaAnswer";
-import { WeatherAnswer } from "./WeatherAnswer";
+// import { WeatherAnswer } from "./WeatherAnswer"; // DISABLED: Weather Card function
 import { MessageRenderer } from "./MessageRenderer";
-import { MarkdownRenderer } from "./MarkdownRenderer";
+import { MarkdownRendererNew as MarkdownRenderer } from "./MarkdownRendererNew";
 import { BlocksRenderer } from "./BlocksRenderer";
 import { ActionsRenderer } from "./ActionsRenderer";
-import { MODULES } from "@/lib/modules";
+import { MODULES, convertToOldModuleId } from "@/lib/modules";
 import { getModuleIcon } from "@/lib/moduleIcons";
 import { useState, useEffect } from "react";
 import { useAutoClassification } from "@/hooks/useAutoClassification";
@@ -111,6 +111,7 @@ export const ChatMessage = memo(function ChatMessage({
   conversationId,
   messageIndex,
 }: Props) {
+
   const msgTime = useMemo(() => formatHourMinute(message.timestamp.getTime()), [message.timestamp]);
   const [autoClassifiedModule, setAutoClassifiedModule] = useState<ModuleId | null>(null);
   const { classifyMessage } = useAutoClassification();
@@ -131,12 +132,30 @@ export const ChatMessage = memo(function ChatMessage({
     }
   }, [isUser, currentModuleId, message.content, classifyMessage]);
 
-  // Use auto-classified module if available, otherwise use currentModuleId
-  const effectiveModuleId = autoClassifiedModule || currentModuleId;
+  // Use message.module if available (from streaming), otherwise use currentModuleId
+  // This ensures consistency between StreamingMessage and ChatMessage
+  const effectiveModuleId = !isUser && message.module 
+    ? convertToOldModuleId(message.module as ModuleId)
+    : currentModuleId;
+
+  // Debug log para verificar consistência de módulos (remover em produção)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('ChatMessage effectiveModuleId debug:', {
+      messageId: message.id,
+      isUser,
+      messageModule: message.module,
+      autoClassifiedModule,
+      currentModuleId,
+      effectiveModuleId,
+      convertedModule: message.module ? convertToOldModuleId(message.module as ModuleId) : 'N/A',
+      willUseProfessorAnswer: !isUser && effectiveModuleId === "professor",
+      willUseStandardMarkdown: !isUser && effectiveModuleId === "atendimento"
+    });
+  }
 
   // Get module info for avatar
-  const moduleInfo = effectiveModuleId ? MODULES[effectiveModuleId] : null;
-  const moduleIconKey = getModuleIconKey(effectiveModuleId || null);
+  const moduleInfo = effectiveModuleId ? MODULES[effectiveModuleId as ModuleId] : null;
+  const moduleIconKey = getModuleIconKey(effectiveModuleId as ModuleId || null);
   const ModuleIcon = getModuleIcon(moduleIconKey);
   const moduleColor = getModuleColor(moduleIconKey);
 
@@ -164,15 +183,16 @@ export const ChatMessage = memo(function ChatMessage({
       {!isUser && (
         <div className={`flex flex-col items-center ${isUser ? 'order-last' : 'order-first'}`}>
           <div 
-            className="w-8 h-8 rounded-full border-2 shadow-sm flex items-center justify-center"
+            className="w-10 h-10 rounded-full border-2 shadow-md flex items-center justify-center transition-all duration-200 hover:scale-105"
             style={{
               backgroundColor: moduleColor,
               color: "#ffffff",
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-              borderColor: `${moduleColor}40`
+              boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
+              borderColor: `${moduleColor}60`
             }}
+            title={`Módulo: ${moduleInfo?.name || 'Assistente'}`}
           >
-            <ModuleIcon className="w-4 h-4 text-white" />
+            <ModuleIcon className="w-5 h-5 text-white" />
           </div>
           {/* Menção de IA/IA Super */}
           {message.tier && (
@@ -188,6 +208,18 @@ export const ChatMessage = memo(function ChatMessage({
               {message.tier === "IA_SUPER" ? "🚀 IA Super" : "⚡ IA"}
             </span>
           )}
+          
+          {/* Descrição do módulo */}
+          {moduleInfo && (
+            <div className="mt-2 text-xs text-center max-w-24">
+              <div className="font-semibold text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-800 px-2 py-1 rounded-md shadow-sm border border-gray-200 dark:border-gray-600">
+                {moduleInfo.name}
+              </div>
+              <div className="text-xs text-gray-600 dark:text-gray-400 mt-1 truncate">
+                {moduleInfo.description}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -198,54 +230,55 @@ export const ChatMessage = memo(function ChatMessage({
         >
           <div className="message-content">
           {/* Renderização especial para módulos com componentes Answer específicos */}
-          {!isUser && effectiveModuleId === "PROFESSOR" ? (
+          {!isUser && effectiveModuleId === "professor" ? (
             <ProfessorAnswer 
               question={message.originalQuery || ""} 
               answer={message.content}
             />
-          ) : !isUser && effectiveModuleId === "TI" ? (
+          ) : !isUser && effectiveModuleId === "ti" ? (
               <TIAnswer 
                 question={message.originalQuery || ""} 
                 answer={message.content}
               />
-            ) : !isUser && effectiveModuleId === "RH" ? (
+            ) : !isUser && effectiveModuleId === "rh" ? (
               <RHAnswer 
                 question={message.originalQuery || ""} 
                 answer={message.content}
               />
-            ) : !isUser && effectiveModuleId === "FINANCEIRO" ? (
+            ) : !isUser && effectiveModuleId === "financeiro" ? (
               <FinanceiroAnswer 
                 question={message.originalQuery || ""} 
                 answer={message.content}
               />
-            ) : !isUser && effectiveModuleId === "COORDENACAO" ? (
+            ) : !isUser && effectiveModuleId === "coordenacao" ? (
               <CoordenacaoAnswer 
                 question={message.originalQuery || ""} 
                 answer={message.content}
               />
-            ) : !isUser && effectiveModuleId === "ATENDIMENTO" ? (
+            ) : !isUser && effectiveModuleId === "atendimento" ? (
               <div className="prose prose-sm max-w-none">
                 <MarkdownRenderer 
                   content={message.content || ""} 
                   className="text-gray-700 dark:text-gray-300"
                 />
               </div>
-            ) : !isUser && effectiveModuleId === "BEM_ESTAR" ? (
+            ) : !isUser && effectiveModuleId === "bem-estar" ? (
               <BemEstarAnswer 
                 question={message.originalQuery || ""} 
                 answer={message.content}
               />
-            ) : !isUser && effectiveModuleId === "SOCIAL_MEDIA" ? (
+            ) : !isUser && effectiveModuleId === "social-media" ? (
               <SocialMediaAnswer 
                 question={message.originalQuery || ""} 
                 answer={message.content}
               />
-            ) : !isUser && isWeatherQuery(message.content || message.originalQuery || "") ? (
+            ) : /* DISABLED: Weather Card function
+            !isUser && isWeatherQuery(message.content || message.originalQuery || "") ? (
               <WeatherAnswer 
                 question={message.originalQuery || message.content || ""} 
                 answer={message.content}
               />
-            ) : (
+            ) : */ (
               <div className="prose prose-sm max-w-none">
                 <MarkdownRenderer 
                   content={message.content || ""} 
@@ -353,7 +386,7 @@ export const ChatMessage = memo(function ChatMessage({
             )}
 
             {/* Respiro inferior apenas no assistente para evitar corte visual */}
-            {!isUser && <div className="pb-4" />}
+            {!isUser && <div className="pb-2" />}
           </div>
 
           {/* Metadados */}

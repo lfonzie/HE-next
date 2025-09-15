@@ -109,11 +109,11 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         <Button
           type="submit"
           disabled={!message.trim() || isStreaming || disabled}
-          className="h-10 rounded-xl px-3 font-medium bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+          className="h-10 rounded-xl px-3 font-medium bg-yellow-500 hover:bg-yellow-600 text-black disabled:opacity-50 disabled:cursor-not-allowed"
           aria-label="Enviar mensagem"
         >
           {isStreaming ? (
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
           ) : (
             <Send className="w-4 h-4" />
           )}

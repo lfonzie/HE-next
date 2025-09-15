@@ -17,20 +17,28 @@ import {
   XCircle,
   AlertCircle,
   BookOpen,
-  BarChart3
+  BarChart3,
+  Lightbulb,
+  Loader2
 } from 'lucide-react';
-import { EnemScore } from '@/types/enem';
+import { EnemScore, EnemItem, EnemResponse } from '@/types/enem';
 import { useToast } from '@/hooks/use-toast';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface EnemResultsProps {
   score: EnemScore;
   sessionId: string;
   onRetake: () => void;
   onRefocus: (topics: string[]) => void;
+  items?: EnemItem[];
+  responses?: EnemResponse[];
 }
 
-export function EnemResults({ score, sessionId, onRetake, onRefocus }: EnemResultsProps) {
+export function EnemResults({ score, sessionId, onRetake, onRefocus, items = [], responses = [] }: EnemResultsProps) {
   const [exporting, setExporting] = useState(false);
+  const [generatingExplanation, setGeneratingExplanation] = useState<string | null>(null);
+  const [explanations, setExplanations] = useState<Record<string, string>>({});
   const { toast } = useToast();
 
   const handleExport = async (format: 'PDF' | 'CSV' | 'JSON') => {
@@ -126,6 +134,74 @@ export function EnemResults({ score, sessionId, onRetake, onRefocus }: EnemResul
   const weakTopics = Object.entries(score.stats.accuracy_by_topic)
     .filter(([_, accuracy]) => accuracy < 0.5)
     .map(([topic, _]) => topic);
+
+  // Identificar questões erradas e não respondidas
+  const wrongAnswers = items.filter(item => {
+    const response = responses.find(r => r.item_id === item.item_id);
+    return response && response.selected_answer !== item.correct_answer;
+  });
+
+  // Identificar questões não respondidas
+  const unansweredQuestions = items.filter(item => {
+    const response = responses.find(r => r.item_id === item.item_id);
+    return !response || !response.selected_answer;
+  });
+
+  // Combinar questões erradas e não respondidas para revisão
+  const questionsToReview = [...wrongAnswers, ...unansweredQuestions];
+
+  // Função para gerar explicação
+  const generateExplanation = async (itemId: string) => {
+    setGeneratingExplanation(itemId);
+    try {
+      // Encontrar a questão e resposta do usuário
+      const item = items.find(i => i.item_id === itemId);
+      const userResponse = responses.find(r => r.item_id === itemId);
+      
+      if (!item) {
+        throw new Error('Questão não encontrada');
+      }
+
+      const response = await fetch('/api/enem/explanation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          item_id: itemId,
+          session_id: sessionId,
+          question_text: item.text,
+          alternatives: item.alternatives,
+          correct_answer: item.correct_answer,
+          user_answer: userResponse?.selected_answer,
+          area: item.area
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Falha ao gerar explicação');
+      }
+
+      const data = await response.json();
+      setExplanations(prev => ({
+        ...prev,
+        [itemId]: data.explanation
+      }));
+
+      toast({
+        title: "Sucesso",
+        description: `Explicação gerada com sucesso! ${data.source === 'openai' ? '(IA)' : '(Fallback)'}`,
+      });
+    } catch (error) {
+      console.error('Error generating explanation:', error);
+      toast({
+        title: "Erro",
+        description: `Falha ao gerar explicação: ${error.message}`,
+        variant: "destructive"
+      });
+    } finally {
+      setGeneratingExplanation(null);
+    }
+  };
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -366,6 +442,218 @@ export function EnemResults({ score, sessionId, onRetake, onRefocus }: EnemResul
           </div>
         </CardContent>
       </Card>
+
+      {/* Questions Review */}
+      {questionsToReview.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-red-600">
+              <XCircle className="h-5 w-5" />
+              Questões para Revisar ({questionsToReview.length})
+            </CardTitle>
+            <p className="text-gray-600">
+              Revise todas as questões que você errou ou não respondeu para melhorar seu desempenho
+            </p>
+            <div className="flex gap-4 text-sm text-gray-500">
+              <span>❌ Erradas: {wrongAnswers.length}</span>
+              <span>⭕ Não respondidas: {unansweredQuestions.length}</span>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {questionsToReview.map((item, index) => {
+                const userResponse = responses.find(r => r.item_id === item.item_id);
+                const hasExplanation = explanations[item.item_id];
+                const isGenerating = generatingExplanation === item.item_id;
+                const isUnanswered = !userResponse || !userResponse.selected_answer;
+                const isWrong = userResponse && userResponse.selected_answer !== item.correct_answer;
+                
+                return (
+                  <Card key={item.item_id} className={`border-2 ${
+                    isUnanswered 
+                      ? 'border-orange-200 bg-orange-50' 
+                      : 'border-red-200 bg-red-50'
+                  }`}>
+                    <CardHeader className="pb-3">
+                      <div className="space-y-3">
+                        {/* Primeira linha: Badges principais */}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Badge variant={isUnanswered ? "secondary" : "destructive"} className="text-sm font-semibold">
+                            Questão {index + 1}
+                          </Badge>
+                          <Badge variant="outline">{item.area}</Badge>
+                          <Badge variant="secondary">{item.estimated_difficulty}</Badge>
+                          {isUnanswered && (
+                            <Badge variant="outline" className="text-orange-600 border-orange-300">
+                              Não respondida
+                            </Badge>
+                          )}
+                        </div>
+                        
+                        {/* Segunda linha: Respostas */}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {isUnanswered ? (
+                            <>
+                              <span className="text-xs text-gray-600">Status:</span>
+                              <Badge variant="secondary" className="text-orange-600 text-xs">Não respondida</Badge>
+                              <span className="text-xs text-gray-600">Correta:</span>
+                              <Badge variant="default" className="bg-green-600 text-xs">{item.correct_answer}</Badge>
+                            </>
+                          ) : (
+                            <>
+                              <span className="text-xs text-gray-600">Sua:</span>
+                              <Badge variant="destructive" className="text-xs">{userResponse?.selected_answer}</Badge>
+                              <span className="text-xs text-gray-600">Correta:</span>
+                              <Badge variant="default" className="bg-green-600 text-xs">{item.correct_answer}</Badge>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {/* Questão */}
+                      <div className="prose max-w-none prose-sm">
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
+                          components={{
+                            h1: ({ children }) => (
+                              <h1 className="text-base font-semibold mb-2 text-gray-900">{children}</h1>
+                            ),
+                            h2: ({ children }) => (
+                              <h2 className="text-sm font-semibold mb-2 text-gray-900">{children}</h2>
+                            ),
+                            p: ({ children }) => (
+                              <p className="text-gray-800 mb-2 leading-relaxed text-sm">{children}</p>
+                            ),
+                            ul: ({ children }) => (
+                              <ul className="list-disc list-inside mb-2 space-y-1 text-gray-800 text-sm">{children}</ul>
+                            ),
+                            ol: ({ children }) => (
+                              <ol className="list-decimal list-inside mb-2 space-y-1 text-gray-800 text-sm">{children}</ol>
+                            ),
+                            strong: ({ children }) => (
+                              <strong className="font-semibold text-gray-900">{children}</strong>
+                            ),
+                            code: ({ children }) => (
+                              <code className="bg-gray-100 px-1 py-0.5 rounded text-xs font-mono text-gray-800">
+                                {children}
+                              </code>
+                            ),
+                          }}
+                        >
+                          {item.text || ''}
+                        </ReactMarkdown>
+                      </div>
+
+                      {/* Alternativas */}
+                      <div className="space-y-1">
+                        <h4 className="font-semibold text-gray-900 text-sm">Alternativas:</h4>
+                        {item.alternatives && Object.entries(item.alternatives).map(([key, value]) => (
+                          <div
+                            key={key}
+                            className={`p-2 rounded border ${
+                              key === item.correct_answer
+                                ? 'border-green-500 bg-green-50 text-green-900'
+                                : key === userResponse?.selected_answer
+                                ? 'border-red-500 bg-red-50 text-red-900'
+                                : 'border-gray-200 bg-gray-50'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center text-xs font-semibold flex-shrink-0 ${
+                                key === item.correct_answer
+                                  ? 'border-green-500 bg-green-500 text-white'
+                                  : key === userResponse?.selected_answer
+                                  ? 'border-red-500 bg-red-500 text-white'
+                                  : 'border-gray-300'
+                              }`}>
+                                {key}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <ReactMarkdown
+                                  remarkPlugins={[remarkGfm]}
+                                  components={{
+                                    p: ({ children }) => (
+                                      <span className="inline text-xs">{children}</span>
+                                    ),
+                                    strong: ({ children }) => (
+                                      <strong className="font-semibold text-xs">{children}</strong>
+                                    ),
+                                  }}
+                                >
+                                  {value}
+                                </ReactMarkdown>
+                              </div>
+                              <div className="flex-shrink-0">
+                                {key === item.correct_answer && (
+                                  <CheckCircle className="h-4 w-4 text-green-600" />
+                                )}
+                                {key === userResponse?.selected_answer && key !== item.correct_answer && (
+                                  <XCircle className="h-4 w-4 text-red-600" />
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Explicação */}
+                      {hasExplanation && (
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                          <h4 className="font-semibold text-blue-900 mb-2 flex items-center gap-2 text-sm">
+                            <Lightbulb className="h-3 w-3" />
+                            Explicação
+                          </h4>
+                          <div className="prose max-w-none text-blue-800 prose-sm">
+                            <ReactMarkdown
+                              remarkPlugins={[remarkGfm]}
+                              components={{
+                                p: ({ children }) => (
+                                  <p className="mb-1 text-xs">{children}</p>
+                                ),
+                                strong: ({ children }) => (
+                                  <strong className="font-semibold text-xs">{children}</strong>
+                                ),
+                              }}
+                            >
+                              {hasExplanation}
+                            </ReactMarkdown>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Botão para gerar explicação */}
+                      {!hasExplanation && (
+                        <div className="flex justify-center">
+                          <Button
+                            onClick={() => generateExplanation(item.item_id)}
+                            disabled={isGenerating}
+                            variant="outline"
+                            size="sm"
+                            className="border-blue-300 text-blue-700 hover:bg-blue-50 text-xs"
+                          >
+                            {isGenerating ? (
+                              <>
+                                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                                Gerando...
+                              </>
+                            ) : (
+                              <>
+                                <Lightbulb className="h-3 w-3 mr-1" />
+                                Explicação
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

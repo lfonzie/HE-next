@@ -34,6 +34,118 @@ export interface ExamGenerationResult {
 
 export class EnemExamGenerator {
   /**
+   * Format text with markdown and proper line breaks
+   */
+  private formatTextWithMarkdown(text: string): string {
+    if (!text) return text;
+    
+    // Remove extra whitespace and normalize line breaks
+    let formatted = text.trim();
+    
+    // Add line breaks after periods, question marks, and exclamation marks
+    formatted = formatted.replace(/([.!?])\s+/g, '$1\n\n');
+    
+    // Add line breaks before numbered lists (1., 2., etc.)
+    formatted = formatted.replace(/(\d+\.\s)/g, '\n$1');
+    
+    // Add line breaks before lettered lists (a), b), etc.)
+    formatted = formatted.replace(/([a-e]\)\s)/g, '\n$1');
+    
+    // Add line breaks before alternatives (A), B), C), D), E))
+    formatted = formatted.replace(/([A-E]\)\s)/g, '\n\n$1');
+    
+    // Clean up multiple line breaks
+    formatted = formatted.replace(/\n{3,}/g, '\n\n');
+    
+    // Add markdown formatting for emphasis
+    formatted = formatted.replace(/\*\*(.*?)\*\*/g, '**$1**');
+    formatted = formatted.replace(/\*(.*?)\*/g, '*$1*');
+    
+    return formatted.trim();
+  }
+
+  /**
+   * Check if text contains image references or URLs
+   */
+  private hasImageReferences(text: string): boolean {
+    if (!text) return false;
+    
+    const imagePatterns = [
+      /\.png\b/i,
+      /\.jpg\b/i,
+      /\.jpeg\b/i,
+      /\.gif\b/i,
+      /\.bmp\b/i,
+      /\.webp\b/i,
+      /\.svg\b/i,
+      /imagem\s*[0-9]*/i,
+      /figura\s*[0-9]*/i,
+      /gráfico\s*[0-9]*/i,
+      /ilustração\s*[0-9]*/i,
+      /desenho\s*[0-9]*/i,
+      /diagrama\s*[0-9]*/i,
+      /esquema\s*[0-9]*/i,
+      /tabela\s*[0-9]*/i,
+      /quadro\s*[0-9]*/i,
+      /mapa\s*[0-9]*/i,
+      /foto\s*[0-9]*/i,
+      /imagem\s*acima/i,
+      /figura\s*acima/i,
+      /gráfico\s*acima/i,
+      /ilustração\s*acima/i,
+      /desenho\s*acima/i,
+      /diagrama\s*acima/i,
+      /esquema\s*acima/i,
+      /tabela\s*acima/i,
+      /quadro\s*acima/i,
+      /mapa\s*acima/i,
+      /foto\s*acima/i,
+      /imagem\s*abaixo/i,
+      /figura\s*abaixo/i,
+      /gráfico\s*abaixo/i,
+      /ilustração\s*abaixo/i,
+      /desenho\s*abaixo/i,
+      /diagrama\s*abaixo/i,
+      /esquema\s*abaixo/i,
+      /tabela\s*abaixo/i,
+      /quadro\s*abaixo/i,
+      /mapa\s*abaixo/i,
+      /foto\s*abaixo/i
+    ];
+    
+    return imagePatterns.some(pattern => pattern.test(text));
+  }
+
+  /**
+   * Determine question source and add metadata
+   */
+  private addSourceMetadata(item: EnemItem, source: 'DATABASE' | 'LOCAL_DATABASE' | 'AI'): EnemItem {
+    const isOfficialEnem = source === 'DATABASE' || source === 'LOCAL_DATABASE';
+    const hasImage = this.hasImageReferences(item.text) || (item.asset_refs && item.asset_refs.length > 0);
+    
+    return {
+      ...item,
+      text: this.formatTextWithMarkdown(item.text),
+      alternatives: {
+        A: this.formatTextWithMarkdown(item.alternatives.A),
+        B: this.formatTextWithMarkdown(item.alternatives.B),
+        C: this.formatTextWithMarkdown(item.alternatives.C),
+        D: this.formatTextWithMarkdown(item.alternatives.D),
+        E: this.formatTextWithMarkdown(item.alternatives.E)
+      },
+      metadata: {
+        ...item.metadata,
+        source: source,
+        is_official_enem: isOfficialEnem,
+        is_ai_generated: source === 'AI',
+        has_image: hasImage,
+        original_year: item.year,
+        formatted_at: new Date().toISOString()
+      }
+    };
+  }
+
+  /**
    * Generate exam based on mode and configuration
    */
   async generateExam(config: ExamConfig): Promise<ExamGenerationResult> {
@@ -164,22 +276,8 @@ export class EnemExamGenerator {
           }
         };
       } else {
-        // If local DB is also unavailable, generate sample questions
-        const items = this.generateSampleQuestions(config.areas, 'MEDIUM', config.numQuestions);
-        
-        return {
-          items,
-          config: {
-            ...config,
-            numQuestions: items.length,
-            timeLimit: this.getOfficialTimeLimit(items.length)
-          },
-          metadata: {
-            estimatedDuration: this.getOfficialTimeLimit(items.length),
-            difficultyBreakdown: this.calculateDifficultyBreakdown(items),
-            areaBreakdown: this.calculateAreaBreakdown(items)
-          }
-        };
+        // If local DB is also unavailable, throw error instead of using AI
+        throw new Error('Nenhuma questão real do ENEM disponível. Apenas questões oficiais são permitidas.');
       }
     }
   }
@@ -246,21 +344,55 @@ export class EnemExamGenerator {
     count: number
   ): Promise<EnemItem[]> {
     try {
-      // Try to use the main database first
+      
+      // Try to use the main database first, filtering out questions with images
       const items = await prisma.enem_item.findMany({
         where: {
           area: { in: areas },
-          estimated_difficulty: difficulty
+          estimated_difficulty: difficulty,
+          // Exclude questions with images/attachments
+          AND: [
+            {
+              OR: [
+                { asset_refs: { equals: [] } },
+                { asset_refs: { equals: null } },
+                { asset_refs: { isEmpty: true } }
+              ]
+            }
+          ]
         },
-        take: count * 2, // Get more than needed to ensure variety
+        take: count * 5, // Get more than needed to ensure variety and filtering
         orderBy: {
           created_at: 'desc'
         }
       });
 
-      // Shuffle and take the requested count
-      const shuffled = this.shuffleArray(items);
-      return shuffled.slice(0, count).map(this.mapPrismaToEnemItem);
+      // Filter out questions with image references in text
+      const filteredItems = items.filter(item => {
+        const hasImageInText = this.hasImageReferences(item.text);
+        const hasImageInAlternatives = Object.values(item.alternatives as Record<string, string>).some(alt => 
+          this.hasImageReferences(alt)
+        );
+        return !hasImageInText && !hasImageInAlternatives;
+      });
+
+      // If main database has filtered items, use them
+      if (filteredItems.length > 0) {
+        const shuffled = this.shuffleArray(filteredItems);
+        const result = shuffled.slice(0, count).map(item => 
+          this.addSourceMetadata(this.mapPrismaToEnemItem(item), 'DATABASE')
+        );
+        return result;
+      } else {
+        
+        // Fallback to local database
+        if (enemLocalDB.isAvailable()) {
+          return this.selectItemsFromLocalDB(areas, difficulty, count);
+        } else {
+          // Não usar IA - apenas questões reais do ENEM
+          throw new Error('Nenhuma questão real do ENEM disponível. Verifique a conexão com o banco de dados.');
+        }
+      }
     } catch (error) {
       console.warn('Database unavailable, falling back to local database:', error);
       
@@ -268,8 +400,8 @@ export class EnemExamGenerator {
       if (enemLocalDB.isAvailable()) {
         return this.selectItemsFromLocalDB(areas, difficulty, count);
       } else {
-        // If local DB is also unavailable, return sample questions
-        return this.generateSampleQuestions(areas, difficulty, count);
+        // Não usar IA - apenas questões reais do ENEM
+        throw new Error('Nenhuma questão real do ENEM disponível. Verifique a conexão com o banco de dados.');
       }
     }
   }
@@ -283,31 +415,63 @@ export class EnemExamGenerator {
     count: number
   ): Promise<EnemItem[]> {
     try {
+      
       // Map areas to local database format
       const localAreas = areas.map(area => AREA_MAPPING[area] || area);
       
-      // Get questions from local database
-      const localQuestions = await enemLocalDB.getQuestions({
-        discipline: localAreas[0], // Use first area for now
-        limit: count * 2,
-        random: true
-      });
-
-      // Convert to EnemItem format
-      const items = localQuestions.slice(0, count).map(question => 
-        enemLocalDB.convertToSimulatorFormat(question)
-      );
-
-      // If no questions found, generate sample questions
-      if (items.length === 0) {
-        console.log('No questions found in local database, generating sample questions');
-        return this.generateSampleQuestions(areas, difficulty, count);
+      // Get questions from all areas
+      const allQuestions = [];
+      const questionsPerArea = Math.ceil(count * 2 / areas.length); // Get more to filter
+      
+      for (const area of localAreas) {
+        try {
+          const areaQuestions = await enemLocalDB.getQuestions({
+            discipline: area,
+            limit: questionsPerArea,
+            random: true
+          });
+          
+          
+      // Convert to EnemItem format and filter out questions with images
+      const convertedQuestions = areaQuestions
+        .map(question => {
+          const converted = enemLocalDB.convertToSimulatorFormat(question);
+          if (converted) {
+            // Check for image references in text and alternatives
+            const hasImageInText = this.hasImageReferences(converted.text);
+            const hasImageInAlternatives = Object.values(converted.alternatives as Record<string, string>).some(alt => 
+              this.hasImageReferences(alt)
+            );
+            
+            // Only include questions without images
+            if (!hasImageInText && !hasImageInAlternatives) {
+              return this.addSourceMetadata(converted, 'LOCAL_DATABASE');
+            }
+          }
+          return null;
+        })
+        .filter(question => question !== null && question !== undefined);
+      
+      allQuestions.push(...convertedQuestions);
+        } catch (error) {
+          console.warn(`Error getting questions for area ${area}:`, error);
+        }
       }
 
-      return items;
+      
+      // Shuffle and take the requested count
+      const shuffled = this.shuffleArray(allQuestions);
+      const selectedItems = shuffled.slice(0, count);
+
+      // If no questions found, throw error instead of using AI
+      if (selectedItems.length === 0) {
+        throw new Error('Nenhuma questão real do ENEM encontrada no banco local. Verifique a disponibilidade das questões.');
+      }
+
+      return selectedItems;
     } catch (error) {
       console.error('Error accessing local database:', error);
-      return this.generateSampleQuestions(areas, difficulty, count);
+      throw new Error('Erro ao acessar banco local do ENEM. Apenas questões reais são permitidas.');
     }
   }
 
@@ -323,26 +487,40 @@ export class EnemExamGenerator {
     
     for (let i = 0; i < count; i++) {
       const area = areas[i % areas.length];
-      sampleQuestions.push({
-        item_id: `sample_${difficulty}_${i}`,
+      const baseQuestion = {
+        item_id: `ai_generated_${difficulty}_${i}`,
         area: area,
-        year: 2023,
-        text: `Esta é uma questão de exemplo de ${this.getAreaSubject(area)} (${difficulty}).`,
+        year: new Date().getFullYear(),
+        text: `Esta é uma questão de exemplo de **${this.getAreaSubject(area)}** (${difficulty}).
+
+Considere as seguintes informações para responder à questão:
+
+* Informação importante 1
+* Informação importante 2
+* Informação importante 3
+
+Qual das alternativas abaixo representa a resposta correta?`,
         alternatives: {
-          A: 'Alternativa A',
-          B: 'Alternativa B',
-          C: 'Alternativa C',
-          D: 'Alternativa D',
-          E: 'Alternativa E'
+          A: '**Alternativa A** - Esta é a primeira opção disponível.',
+          B: '**Alternativa B** - Esta é a segunda opção disponível.',
+          C: '**Alternativa C** - Esta é a terceira opção disponível.',
+          D: '**Alternativa D** - Esta é a quarta opção disponível.',
+          E: '**Alternativa E** - Esta é a quinta opção disponível.'
         },
-        correct_answer: 'A',
+        correct_answer: 'A' as 'A' | 'B' | 'C' | 'D' | 'E',
         topic: 'Tópico de exemplo',
         estimated_difficulty: difficulty,
         asset_refs: [],
         content_hash: `hash_${i}`,
         dataset_version: '1.0',
-        metadata: {}
-      });
+        metadata: {
+          source: 'AI' as const,
+          generated_at: new Date().toISOString(),
+          has_image: false
+        }
+      };
+      
+      sampleQuestions.push(this.addSourceMetadata(baseQuestion, 'AI'));
     }
     
     return sampleQuestions;
@@ -373,14 +551,35 @@ export class EnemExamGenerator {
       const items = await prisma.enem_item.findMany({
         where: {
           year,
-          area: { in: areas }
+          area: { in: areas },
+          // Exclude questions with images/attachments
+          AND: [
+            {
+              OR: [
+                { asset_refs: { equals: [] } },
+                { asset_refs: { equals: null } },
+                { asset_refs: { isEmpty: true } }
+              ]
+            }
+          ]
         },
         orderBy: {
           item_id: 'asc' // Maintain original order
         }
       });
 
-      return items.map(this.mapPrismaToEnemItem);
+      // Filter out questions with image references in text
+      const filteredItems = items.filter(item => {
+        const hasImageInText = this.hasImageReferences(item.text);
+        const hasImageInAlternatives = Object.values(item.alternatives as Record<string, string>).some(alt => 
+          this.hasImageReferences(alt)
+        );
+        return !hasImageInText && !hasImageInAlternatives;
+      });
+
+      return filteredItems.map(item => 
+        this.addSourceMetadata(this.mapPrismaToEnemItem(item), 'DATABASE')
+      );
     } catch (error) {
       console.warn('Database unavailable for official exam items, falling back to local database:', error);
       
@@ -390,12 +589,28 @@ export class EnemExamGenerator {
           random: false // Maintain order for official exam
         });
         
-        return localQuestions.map(question => 
-          enemLocalDB.convertToSimulatorFormat(question)
-        );
+        // Filter and format local questions
+        const filteredQuestions = localQuestions
+          .map(question => {
+            const converted = enemLocalDB.convertToSimulatorFormat(question);
+            if (converted) {
+              const hasImageInText = this.hasImageReferences(converted.text);
+              const hasImageInAlternatives = Object.values(converted.alternatives as Record<string, string>).some(alt => 
+                this.hasImageReferences(alt)
+              );
+              
+              if (!hasImageInText && !hasImageInAlternatives) {
+                return this.addSourceMetadata(converted, 'LOCAL_DATABASE');
+              }
+            }
+            return null;
+          })
+          .filter(question => question !== null);
+        
+        return filteredQuestions;
       } else {
-        // If local DB is also unavailable, generate sample questions
-        return this.generateSampleQuestions(areas, 'MEDIUM', 45); // Default ENEM size
+        // If local DB is also unavailable, throw error instead of using AI
+        throw new Error('Nenhuma questão real do ENEM disponível para o modo oficial. Apenas questões oficiais são permitidas.');
       }
     }
   }
@@ -436,7 +651,9 @@ export class EnemExamGenerator {
     const breakdown: Record<string, number> = {};
     
     for (const item of items) {
-      breakdown[item.area] = (breakdown[item.area] || 0) + 1;
+      if (item && item.area) {
+        breakdown[item.area] = (breakdown[item.area] || 0) + 1;
+      }
     }
     
     return breakdown;
@@ -449,7 +666,12 @@ export class EnemExamGenerator {
     const breakdown = { easy: 0, medium: 0, hard: 0 };
     
     for (const item of items) {
-      breakdown[item.estimated_difficulty.toLowerCase() as keyof typeof breakdown]++;
+      if (item && item.estimated_difficulty) {
+        const difficulty = item.estimated_difficulty.toLowerCase() as keyof typeof breakdown;
+        if (difficulty in breakdown) {
+          breakdown[difficulty]++;
+        }
+      }
     }
     
     return breakdown;
@@ -512,7 +734,10 @@ export class EnemExamGenerator {
       asset_refs: item.asset_refs,
       content_hash: item.content_hash,
       dataset_version: item.dataset_version,
-      metadata: item.metadata
+      metadata: {
+        ...item.metadata,
+        original_year: item.year
+      }
     };
   }
 

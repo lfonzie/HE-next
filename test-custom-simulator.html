@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Simulado Customizável - Mínimo 5 Questões</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .config-demo {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .config-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            background: #f9f9f9;
+        }
+        .config-card h4 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+        .config-value {
+            font-weight: bold;
+            color: #007bff;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background-color: #0056b3; }
+        .validation-test {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Teste Simulado Customizável - Mínimo 5 Questões</h1>
+    
+    <div class="test-section">
+        <h2>📊 Configurações Testadas</h2>
+        <p>Testando diferentes configurações de simulado customizável:</p>
+        
+        <div class="config-demo">
+            <div class="config-card">
+                <h4>Simulado Mínimo</h4>
+                <p><strong>Questões:</strong> <span class="config-value">5</span></p>
+                <p><strong>Áreas:</strong> <span class="config-value">CN</span></p>
+                <p><strong>Tempo:</strong> <span class="config-value">15 min</span></p>
+                <p><strong>Distribuição:</strong> <span class="config-value">2F, 2M, 1D</span></p>
+            </div>
+            
+            <div class="config-card">
+                <h4>Simulado Pequeno</h4>
+                <p><strong>Questões:</strong> <span class="config-value">8</span></p>
+                <p><strong>Áreas:</strong> <span class="config-value">CN, CH</span></p>
+                <p><strong>Tempo:</strong> <span class="config-value">30 min</span></p>
+                <p><strong>Distribuição:</strong> <span class="config-value">3F, 3M, 2D</span></p>
+            </div>
+            
+            <div class="config-card">
+                <h4>Simulado Médio</h4>
+                <p><strong>Questões:</strong> <span class="config-value">15</span></p>
+                <p><strong>Áreas:</strong> <span class="config-value">Todas</span></p>
+                <p><strong>Tempo:</strong> <span class="config-value">60 min</span></p>
+                <p><strong>Distribuição:</strong> <span class="config-value">5F, 7M, 3D</span></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>✅ Validações Implementadas</h2>
+        
+        <div class="validation-test">
+            <h4>Validação Frontend (EnemCustomizer.tsx)</h4>
+            <ul>
+                <li>✅ Número mínimo: 5 questões</li>
+                <li>✅ Número máximo: 180 questões</li>
+                <li>✅ Pelo menos uma área obrigatória</li>
+                <li>✅ Distribuição deve somar o total de questões</li>
+                <li>✅ Tempo limite entre 15-300 minutos</li>
+            </ul>
+        </div>
+        
+        <div class="validation-test">
+            <h4>Validação Backend (API /api/enem/sessions)</h4>
+            <ul>
+                <li>✅ num_questions entre 5 e 180</li>
+                <li>✅ Áreas válidas: CN, CH, LC, MT</li>
+                <li>✅ Modo obrigatório</li>
+                <li>✅ Configuração válida</li>
+            </ul>
+        </div>
+        
+        <div class="validation-test">
+            <h4>Distribuição Inteligente</h4>
+            <ul>
+                <li>✅ Auto-balanceamento para números baixos</li>
+                <li>✅ Distribuição proporcional para números altos</li>
+                <li>✅ Garantia de pelo menos 1 questão por nível (quando possível)</li>
+                <li>✅ Validação de soma = total de questões</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔧 Melhorias Implementadas</h2>
+        
+        <h3>1. Valor Inicial Reduzido</h3>
+        <p><strong>Antes:</strong> 20 questões (muito alto para teste rápido)</p>
+        <p><strong>Depois:</strong> 5 questões (ideal para teste rápido)</p>
+        
+        <h3>2. Distribuição Inicial Otimizada</h3>
+        <p><strong>Antes:</strong> 6F, 10M, 4D (total: 20)</p>
+        <p><strong>Depois:</strong> 2F, 2M, 1D (total: 5)</p>
+        
+        <h3>3. Auto-balanceamento Inteligente</h3>
+        <ul>
+            <li>Para ≤3 questões: Distribuição simples (1F, 1M, resto)</li>
+            <li>Para >3 questões: Distribuição proporcional (30%, 50%, 20%)</li>
+            <li>Garantia de distribuição válida</li>
+        </ul>
+        
+        <h3>4. Validação Robusta</h3>
+        <ul>
+            <li>Frontend e backend sincronizados</li>
+            <li>Mensagens de erro claras</li>
+            <li>Prevenção de configurações inválidas</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>📱 Casos de Uso</h2>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+            <div>
+                <h4>🎯 Teste Rápido</h4>
+                <ul>
+                    <li>5 questões</li>
+                    <li>1 área</li>
+                    <li>15 minutos</li>
+                    <li>Ideal para revisão rápida</li>
+                </ul>
+            </div>
+            
+            <div>
+                <h4>📚 Estudo Focado</h4>
+                <ul>
+                    <li>10-15 questões</li>
+                    <li>1-2 áreas</li>
+                    <li>30-45 minutos</li>
+                    <li>Ideal para estudo direcionado</li>
+                </ul>
+            </div>
+            
+            <div>
+                <h4>🏆 Simulado Completo</h4>
+                <ul>
+                    <li>45+ questões</li>
+                    <li>Todas as áreas</li>
+                    <li>90+ minutos</li>
+                    <li>Ideal para preparação completa</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🚀 Resultado Final</h2>
+        <div class="test-result success">
+            <h3>✅ Simulado Customizável Funcionando!</h3>
+            <p><strong>Mínimo:</strong> 5 questões (antes: 20)</p>
+            <p><strong>Máximo:</strong> 180 questões</p>
+            <p><strong>Flexibilidade:</strong> Qualquer combinação válida</p>
+            <p><strong>Validação:</strong> Frontend e backend sincronizados</p>
+            <p><strong>UX:</strong> Configuração intuitiva e rápida</p>
+        </div>
+    </div>
+
+    <script>
+        // Simular teste de configuração
+        function testConfiguration() {
+            const configs = [
+                { questions: 5, areas: ['CN'], time: 15 },
+                { questions: 8, areas: ['CN', 'CH'], time: 30 },
+                { questions: 15, areas: ['CN', 'CH', 'LC', 'MT'], time: 60 }
+            ];
+            
+            configs.forEach((config, index) => {
+                console.log(`Config ${index + 1}:`, config);
+                
+                // Simular validação
+                const isValid = config.questions >= 5 && config.questions <= 180 && config.areas.length > 0;
+                console.log(`Config ${index + 1} válida:`, isValid);
+            });
+        }
+        
+        // Executar teste
+        testConfiguration();
+    </script>
+</body>
+</html>

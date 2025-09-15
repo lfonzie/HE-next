@@ -50,6 +50,7 @@ export async function POST(request: NextRequest) {
       - Explicação detalhada da resposta correta
       - NÃO repita conteúdo de slides anteriores
       - Foque em aspectos específicos do slide ${slideIndex}
+      - IMPORTANTE: Use formatação markdown no conteúdo (## para títulos, **negrito**, *itálico*, - para listas, quebras de linha duplas)
       
       Responda APENAS com JSON válido:
       {
@@ -104,6 +105,7 @@ export async function POST(request: NextRequest) {
         - Foco em despertar curiosidade e mostrar a importância prática
         - Linguagem envolvente com exemplos do cotidiano
         - Cada card deve ter aproximadamente 100-150 palavras
+        - IMPORTANTE: Use formatação markdown no conteúdo (## para títulos, **negrito**, *itálico*, - para listas, quebras de linha duplas)
         
         Responda APENAS com JSON válido:
         {

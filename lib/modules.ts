@@ -91,6 +91,7 @@ export const MODULE_MAPPING: Record<string, ModuleId> = {
   "coordenacao": "COORDENACAO",
   "atendimento": "ATENDIMENTO",
   "social-media": "SOCIAL_MEDIA",
+  "bem-estar": "BEM_ESTAR",
   "wellbeing": "BEM_ESTAR"
 };
 
@@ -105,7 +106,7 @@ export const REVERSE_MODULE_MAPPING: Record<ModuleId, string> = {
   "COORDENACAO": "coordenacao",
   "ATENDIMENTO": "atendimento",
   "SOCIAL_MEDIA": "social-media",
-  "BEM_ESTAR": "wellbeing"
+  "BEM_ESTAR": "bem-estar"
 };
 
 // Função para converter módulo antigo para novo

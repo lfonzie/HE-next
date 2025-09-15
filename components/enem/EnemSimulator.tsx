@@ -17,6 +17,43 @@ import { sanitizeQuestion, SanitizedQuestion } from '@/lib/enem-data-sanitizer'
 
 // Função para determinar o texto do chip baseado na origem da pergunta
 function getQuestionSourceChip(question: any): { text: string; variant: "default" | "secondary" | "destructive" | "outline" } {
+  // Check metadata first for explicit source information
+  if (question.metadata?.source) {
+    switch (question.metadata.source) {
+      case 'DATABASE':
+        return {
+          text: `ENEM ${question.year || question.metadata.original_year || 'API'}`,
+          variant: "default"
+        }
+      case 'LOCAL_DATABASE':
+        return {
+          text: `ENEM ${question.year || question.metadata.original_year || 'Local'}`,
+          variant: "default"
+        }
+      case 'AI':
+        return {
+          text: "IA",
+          variant: "secondary"
+        }
+    }
+  }
+  
+  // Check if it's an official ENEM question
+  if (question.metadata?.is_official_enem) {
+    return {
+      text: `ENEM ${question.year || question.metadata.original_year || 'API'}`,
+      variant: "default"
+    }
+  }
+  
+  // Check if it's AI generated
+  if (question.metadata?.is_ai_generated) {
+    return {
+      text: "IA",
+      variant: "secondary"
+    }
+  }
+  
   // Se tem year definido e não é o ano atual, provavelmente é da API do ENEM
   if (question.year && question.year !== new Date().getFullYear()) {
     return {
@@ -25,7 +62,7 @@ function getQuestionSourceChip(question: any): { text: string; variant: "default
     }
   }
   
-  // Se tem ID que começa com "enem_" ou "generated_", podemos inferir a origem
+  // Se tem ID que começa com "enem_" ou "ai_generated_", podemos inferir a origem
   if (question.id) {
     if (question.id.startsWith('enem_')) {
       const year = question.year || 'API'
@@ -34,7 +71,7 @@ function getQuestionSourceChip(question: any): { text: string; variant: "default
         variant: "default"
       }
     }
-    if (question.id.startsWith('generated_')) {
+    if (question.id.startsWith('ai_generated_') || question.id.startsWith('generated_')) {
       return {
         text: "IA",
         variant: "secondary"
@@ -44,13 +81,13 @@ function getQuestionSourceChip(question: any): { text: string; variant: "default
   
   // Se tem source definido na resposta da API
   if (question.source) {
-    if (question.source === 'enem.dev' || question.source === 'api') {
+    if (question.source === 'enem.dev' || question.source === 'api' || question.source === 'DATABASE') {
       return {
         text: `ENEM ${question.year || 'API'}`,
         variant: "default"
       }
     }
-    if (question.source === 'ai' || question.source === 'generated') {
+    if (question.source === 'ai' || question.source === 'generated' || question.source === 'AI') {
       return {
         text: "IA",
         variant: "secondary"
@@ -127,6 +164,14 @@ export function EnemSimulator({ area, numQuestions, duration, useRealQuestions =
       }
     }
   }, [area, numQuestions, useRealQuestions, year, useProgressiveLoading, loadQuestions, loadRealQuestions, loadQuestionsProgressive])
+
+  // Auto-save answers to localStorage
+  useEffect(() => {
+    if (Object.keys(answers).length > 0) {
+      const sessionKey = `enem_answers_${area}_${numQuestions}_${sessionId}`
+      localStorage.setItem(sessionKey, JSON.stringify(answers))
+    }
+  }, [answers, area, numQuestions, sessionId])
 
   useEffect(() => {
     let interval: NodeJS.Timeout
@@ -364,10 +409,18 @@ export function EnemSimulator({ area, numQuestions, duration, useRealQuestions =
           {isActive && question && (
             <SimulatorErrorBoundary>
               <div className="space-y-6">
-                {/* Question Header with Source Badge */}
-                <div className="flex items-center gap-3 mb-4">
-                  <Badge variant={getQuestionSourceChip(question).variant} className="text-xs">
-                    {getQuestionSourceChip(question).text}
+                {/* Question Header with Question Number and Source Badge */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <Badge variant="outline" className="text-sm font-semibold">
+                      Questão {currentQuestion + 1}
+                    </Badge>
+                    <Badge variant={getQuestionSourceChip(question).variant} className="text-xs">
+                      {getQuestionSourceChip(question).text}
+                    </Badge>
+                  </div>
+                  <Badge variant="secondary" className="text-xs">
+                    {question.difficulty || question.estimated_difficulty || 'Médio'}
                   </Badge>
                 </div>
 

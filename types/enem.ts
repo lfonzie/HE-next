@@ -34,6 +34,12 @@ export interface EnemItem {
   metadata: {
     bncc_codes?: string[];
     competencies?: string[];
+    source?: 'DATABASE' | 'LOCAL_DATABASE' | 'AI';
+    is_official_enem?: boolean;
+    is_ai_generated?: boolean;
+    has_image?: boolean;
+    original_year?: number;
+    formatted_at?: string;
     [key: string]: any;
   };
 }

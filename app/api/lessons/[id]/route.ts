@@ -11,22 +11,35 @@ export async function GET(
     const session = await getServerSession(authOptions)
     const { id } = await params
     
+    console.log('Fetching lesson:', id, 'for user:', session?.user?.id)
+    
     if (!session?.user?.id) {
+      console.log('No session found, returning 401')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const lesson = await prisma.lessons.findUnique({
-      where: {
-        id,
-        user_id: session.user.id
+    try {
+      const lesson = await prisma.lessons.findUnique({
+        where: {
+          id,
+          user_id: session.user.id
+        }
+      })
+
+      if (!lesson) {
+        console.log('Lesson not found:', id)
+        return NextResponse.json({ error: 'Lesson not found' }, { status: 404 })
       }
-    })
 
-    if (!lesson) {
-      return NextResponse.json({ error: 'Lesson not found' }, { status: 404 })
+      console.log('Lesson found:', lesson.title)
+      return NextResponse.json({ lesson })
+    } catch (dbError) {
+      console.error('Database error:', dbError)
+      return NextResponse.json({ 
+        error: 'Database temporarily unavailable',
+        details: dbError instanceof Error ? dbError.message : 'Unknown database error'
+      }, { status: 503 })
     }
-
-    return NextResponse.json({ lesson })
   } catch (error) {
     console.error('Error fetching lesson:', error)
     return NextResponse.json({ 
