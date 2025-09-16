@@ -55,6 +55,7 @@ interface DynamicStageProps {
   canGoPrevious?: boolean
   timeSpent?: number
   pointsEarned?: number
+  lessonTheme?: string
 }
 
 export default function DynamicStage({
@@ -67,7 +68,8 @@ export default function DynamicStage({
   canGoNext = false,
   canGoPrevious = true,
   timeSpent = 0,
-  pointsEarned = 0
+  pointsEarned = 0,
+  lessonTheme = 'education'
 }: DynamicStageProps) {
   const [isCompleted, setIsCompleted] = useState(false)
   const [stageResult, setStageResult] = useState<any>(null)
@@ -161,6 +163,9 @@ export default function DynamicStage({
             showControls={true}
             allowFullscreen={true}
             onComplete={() => handleStageComplete({ type: 'animation' })}
+            isFirstSlide={stageIndex === 0}
+            isLastSlide={stageIndex === totalStages - 1}
+            lessonTheme={lessonTheme}
           />
         )
 

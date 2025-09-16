@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { CheckCircle, XCircle, Clock, Trophy, Star } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import MarkdownRenderer from '@/components/ui/MarkdownRenderer'
 
 interface Question {
   q: string
@@ -38,6 +39,8 @@ export default function QuizComponent({
   const [timeLeft, setTimeLeft] = useState(timeLimit)
   const [isCompleted, setIsCompleted] = useState(false)
   const [showExplanationsState, setShowExplanationsState] = useState(false)
+  const [showConfirmation, setShowConfirmation] = useState(false)
+  const [pendingAnswer, setPendingAnswer] = useState<number | null>(null)
 
   // Timer effect
   useEffect(() => {
@@ -59,13 +62,23 @@ export default function QuizComponent({
   const handleAnswerSelect = (answerIndex: number) => {
     if (isCompleted) return
     
-    setSelectedAnswer(answerIndex)
+    setPendingAnswer(answerIndex)
+    setShowConfirmation(true)
+  }
+
+  const confirmAnswer = () => {
+    if (pendingAnswer === null) return
+    
+    setSelectedAnswer(pendingAnswer)
     const newAnswers = [...answers]
     const safeCurrentQuestion = Math.min(currentQuestion, questions.length - 1)
-    newAnswers[safeCurrentQuestion] = answerIndex
+    newAnswers[safeCurrentQuestion] = pendingAnswer
     setAnswers(newAnswers)
+    
+    setShowConfirmation(false)
+    setPendingAnswer(null)
 
-    // Auto-advance after selection (optional)
+    // Auto-advance after selection
     setTimeout(() => {
       if (safeCurrentQuestion < questions.length - 1) {
         setCurrentQuestion(prev => prev + 1)
@@ -74,6 +87,11 @@ export default function QuizComponent({
         handleComplete()
       }
     }, 1000)
+  }
+
+  const cancelAnswer = () => {
+    setShowConfirmation(false)
+    setPendingAnswer(null)
   }
 
   // Early return if no questions are provided
@@ -124,10 +142,30 @@ export default function QuizComponent({
 
   const getScoreBadge = (score: number, total: number) => {
     const percentage = (score / total) * 100
-    if (percentage >= 90) return { color: 'bg-green-500', text: 'Excelente!', icon: Trophy }
-    if (percentage >= 70) return { color: 'bg-blue-500', text: 'Bom!', icon: Star }
-    if (percentage >= 50) return { color: 'bg-yellow-500', text: 'Regular', icon: Star }
-    return { color: 'bg-red-500', text: 'Precisa melhorar', icon: XCircle }
+    if (percentage >= 90) return { 
+      color: 'bg-green-500', 
+      text: '🎉 Parabéns! Excelente trabalho!', 
+      icon: Trophy,
+      message: 'Você demonstrou um excelente entendimento do conteúdo!'
+    }
+    if (percentage >= 70) return { 
+      color: 'bg-blue-500', 
+      text: '👏 Muito bom!', 
+      icon: Star,
+      message: 'Você está no caminho certo! Continue assim!'
+    }
+    if (percentage >= 50) return { 
+      color: 'bg-yellow-500', 
+      text: '👍 Bom trabalho!', 
+      icon: Star,
+      message: 'Você acertou mais da metade! Que tal revisar alguns conceitos?'
+    }
+    return { 
+      color: 'bg-red-500', 
+      text: '📚 Continue estudando!', 
+      icon: XCircle,
+      message: 'Não desista! Revise o material e tente novamente.'
+    }
   }
 
   if (showResult) {
@@ -153,6 +191,9 @@ export default function QuizComponent({
               <div className="text-3xl font-bold">{score}/{questions.length}</div>
               <div className="text-gray-600">
                 {Math.round((score / questions.length) * 100)}% de acertos
+              </div>
+              <div className="mt-2 text-sm text-gray-700 italic">
+                {scoreBadge.message}
               </div>
             </div>
           </div>
@@ -191,7 +232,9 @@ export default function QuizComponent({
                         <XCircle className="h-5 w-5 text-red-600 mt-0.5" />
                       )}
                       <div className="flex-1">
-                        <div className="font-medium mb-2">{question.q}</div>
+                        <div className="mb-2">
+                          <MarkdownRenderer content={question.q} className="font-medium" />
+                        </div>
                         <div className="space-y-1">
                           {question.options.map((option, optIndex) => (
                             <div
@@ -210,7 +253,7 @@ export default function QuizComponent({
                         </div>
                         {question.explanation && (
                           <div className="mt-2 text-sm text-gray-600 italic">
-                            💡 {question.explanation}
+                            <MarkdownRenderer content={`💡 ${question.explanation}`} />
                           </div>
                         )}
                       </div>
@@ -275,7 +318,9 @@ export default function QuizComponent({
           exit={{ opacity: 0, x: -20 }}
           transition={{ duration: 0.3 }}
         >
-          <h3 className="text-lg font-semibold mb-6">{currentQ.q}</h3>
+          <div className="mb-6">
+            <MarkdownRenderer content={currentQ.q} className="text-lg font-semibold" />
+          </div>
           
           <div className="space-y-3">
             {currentQ.options.map((option, index) => (
@@ -286,6 +331,8 @@ export default function QuizComponent({
                 className={`w-full p-4 text-left rounded-lg border-2 transition-all ${
                   selectedAnswer === index
                     ? 'border-blue-500 bg-blue-50'
+                    : pendingAnswer === index
+                    ? 'border-yellow-500 bg-yellow-50'
                     : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                 } ${isCompleted ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
                 whileHover={{ scale: 1.02 }}
@@ -293,9 +340,13 @@ export default function QuizComponent({
               >
                 <div className="flex items-center gap-3">
                   <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                    selectedAnswer === index ? 'border-blue-500 bg-blue-500' : 'border-gray-300'
+                    selectedAnswer === index 
+                      ? 'border-blue-500 bg-blue-500' 
+                      : pendingAnswer === index
+                      ? 'border-yellow-500 bg-yellow-500'
+                      : 'border-gray-300'
                   }`}>
-                    {selectedAnswer === index && (
+                    {(selectedAnswer === index || pendingAnswer === index) && (
                       <div className="w-2 h-2 rounded-full bg-white" />
                     )}
                   </div>
@@ -306,6 +357,35 @@ export default function QuizComponent({
               </motion.button>
             ))}
           </div>
+
+          {/* Confirmation Dialog */}
+          {showConfirmation && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            >
+              <Card className="w-full max-w-md mx-4">
+                <CardHeader>
+                  <CardTitle className="text-center">Confirmar Resposta</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-center text-gray-600">
+                    Você tem certeza de que deseja selecionar a opção{' '}
+                    <strong>{String.fromCharCode(65 + (pendingAnswer || 0))}</strong>?
+                  </p>
+                  <div className="flex gap-3 justify-center">
+                    <Button onClick={cancelAnswer} variant="outline">
+                      Cancelar
+                    </Button>
+                    <Button onClick={confirmAnswer}>
+                      Confirmar
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
         </motion.div>
 
         {/* Navigation */}

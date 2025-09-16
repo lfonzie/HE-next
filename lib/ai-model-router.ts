@@ -217,21 +217,55 @@ export interface RoutingResult {
 }
 
 // Função principal de roteamento inteligente
-export function routeAIModel(
+export async function routeAIModel(
   message: string,
   useCase?: UseCaseType,
   preferredProvider?: ProviderType,
   preferredComplexity?: ComplexityType
-): RoutingResult {
+): Promise<RoutingResult> {
   
   // 1. Detectar caso de uso automaticamente se não especificado
   const detectedUseCase = useCase || detectUseCase(message)
   
-  // 2. Detectar complexidade automaticamente se não especificada
-  const detectedComplexity = preferredComplexity || detectComplexity(message, detectedUseCase)
+  // 2. Detectar complexidade via API de IA se não especificada
+  let detectedComplexity: ComplexityType
+  if (preferredComplexity) {
+    detectedComplexity = preferredComplexity
+  } else {
+    try {
+      // Chamar API de classificação de complexidade
+      const response = await fetch('/api/router/classify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message })
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        const aiClassification = data.classification?.toLowerCase()
+        
+        // Mapear classificação da IA para nossos tipos
+        if (aiClassification === 'complexa') {
+          detectedComplexity = 'complex'
+        } else if (aiClassification === 'simples') {
+          detectedComplexity = 'simple'
+        } else {
+          // Fallback para detecção local
+          detectedComplexity = detectComplexity(message, detectedUseCase)
+        }
+      } else {
+        // Fallback para detecção local se API falhar
+        detectedComplexity = detectComplexity(message, detectedUseCase)
+      }
+    } catch (error) {
+      console.warn('Erro na classificação via IA, usando detecção local:', error)
+      // Fallback para detecção local
+      detectedComplexity = detectComplexity(message, detectedUseCase)
+    }
+  }
   
-  // 3. Selecionar provedor baseado no caso de uso e disponibilidade
-  const selectedProvider = selectProviderForUseCase(detectedUseCase, preferredProvider)
+  // 3. Selecionar provedor baseado no caso de uso, complexidade e disponibilidade
+  const selectedProvider = selectProviderForUseCase(detectedUseCase, preferredProvider, detectedComplexity)
   
   // 4. Selecionar modelo baseado na complexidade
   const selectedModel = COMPLEXITY_MODELS[detectedComplexity][selectedProvider]
@@ -331,7 +365,11 @@ function detectComplexity(message: string, useCase: UseCaseType): ComplexityType
   const complexKeywords = [
     'complexo', 'complexa', 'detalhado', 'detalhada', 'profundo', 'profunda',
     'análise', 'analisar', 'avaliação', 'avaliar', 'comparação', 'comparar',
-    'estratégia', 'metodologia', 'metodológico', 'sistemático', 'sistemática'
+    'estratégia', 'metodologia', 'metodológico', 'sistemático', 'sistemática',
+    'impactos', 'socioeconômicos', 'socioeconômico', 'revolução', 'industrial',
+    'científica', 'teoria', 'evolução', 'darwin', 'pedagógicas', 'construtivismo',
+    'behaviorismo', 'estratégia', 'completa', 'matemática', 'avançada', 'criticamente',
+    'fatores', 'império', 'romano', 'metodologia', 'científica', 'abordagens'
   ]
   
   // Palavras-chave que indicam simplicidade
@@ -358,14 +396,15 @@ function detectComplexity(message: string, useCase: UseCaseType): ComplexityType
   const creativeCount = creativeKeywords.filter(keyword => lowerMessage.includes(keyword)).length
   
   // Critérios adicionais
-  const isLongMessage = message.length > 200
+  const isLongMessage = message.length > 150  // Reduzido para capturar mais mensagens
   const hasMultipleQuestions = (message.match(/\?/g) || []).length > 1
-  const hasTechnicalTerms = /\b(metodologia|curriculo|competencia|habilidade|avaliacao|planejamento|estrategia|gestao|administracao)\b/i.test(message)
+  const hasTechnicalTerms = /\b(metodologia|curriculo|competencia|habilidade|avaliacao|planejamento|estrategia|gestao|administracao|socioeconômicos|revolução|industrial|científica|teoria|evolução|pedagógicas|construtivismo|behaviorismo|matemática|avançada|império|romano)\b/i.test(message)
+  const hasComplexPhrases = /\b(faça uma análise|análise detalhada|compare e analise|desenvolva uma estratégia|analise criticamente|metodologia científica|abordagens pedagógicas)\b/i.test(message)
   
   // Determinar complexidade baseada nos critérios
   if (fastCount > 0) return 'fast'
   if (creativeCount > 0) return 'creative'
-  if (complexCount > 0 || isLongMessage || hasMultipleQuestions || hasTechnicalTerms) return 'complex'
+  if (complexCount > 0 || isLongMessage || hasMultipleQuestions || hasTechnicalTerms || hasComplexPhrases) return 'complex'
   if (simpleCount > 0) return 'simple'
   
   // Default baseado no caso de uso
@@ -382,8 +421,8 @@ function detectComplexity(message: string, useCase: UseCaseType): ComplexityType
   }
 }
 
-// Função para selecionar provedor baseado no caso de uso
-function selectProviderForUseCase(useCase: UseCaseType, preferredProvider?: ProviderType): ProviderType {
+// Função para selecionar provedor baseado no caso de uso e complexidade
+function selectProviderForUseCase(useCase: UseCaseType, preferredProvider?: ProviderType, complexity?: ComplexityType): ProviderType {
   const availableProviders = getAvailableProviders()
   
   // Se há um provedor preferido e ele está disponível
@@ -391,7 +430,27 @@ function selectProviderForUseCase(useCase: UseCaseType, preferredProvider?: Prov
     return preferredProvider
   }
   
-  // Obter provedores preferidos para o caso de uso
+  // Seleção baseada na complexidade primeiro
+  if (complexity) {
+    const complexityProviders = {
+      simple: ['google', 'openai'],      // Gemini para simples, GPT-4o-mini como backup
+      complex: ['openai', 'anthropic'], // GPT-4o/GPT-5 para complexas
+      fast: ['google', 'openai'],       // Gemini para rápidas
+      creative: ['openai', 'anthropic'], // GPT-4o para criativas
+      analytical: ['anthropic', 'openai'] // Claude para analíticas
+    }
+    
+    const preferredForComplexity = complexityProviders[complexity] || ['openai']
+    
+    // Encontrar o primeiro provedor preferido para a complexidade que está disponível
+    for (const provider of preferredForComplexity) {
+      if (availableProviders.includes(provider as ProviderType)) {
+        return provider as ProviderType
+      }
+    }
+  }
+  
+  // Fallback: obter provedores preferidos para o caso de uso
   const preferredProviders = USE_CASE_ROUTING[useCase].preferred
   
   // Encontrar o primeiro provedor preferido que está disponível

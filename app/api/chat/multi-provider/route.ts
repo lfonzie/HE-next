@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Usar sistema de roteamento inteligente
-    const routingResult = routeAIModel(
+    const routingResult = await routeAIModel(
       lastMessage.content,
       'education', // Caso de uso padrão para chat educacional
       provider as ProviderType,

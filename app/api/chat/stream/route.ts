@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     // Se o orchestrator retornou texto, usar sistema de roteamento inteligente
     if (orchestratorResult.text) {
       // Usar sistema de roteamento inteligente
-      const routingResult = routeAIModel(
+      const routingResult = await routeAIModel(
         message,
         'education', // Caso de uso padrão para chat educacional
         undefined, // Provedor automático

@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Play, Pause, RotateCcw, Volume2, VolumeX, Maximize2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import MarkdownRenderer from '@/components/ui/MarkdownRenderer'
+import { useUnsplashImage } from '@/hooks/useUnsplashImage'
 
 interface AnimationSlideProps {
   title: string
@@ -22,6 +24,9 @@ interface AnimationSlideProps {
   showControls?: boolean
   allowFullscreen?: boolean
   onComplete?: () => void
+  isFirstSlide?: boolean
+  isLastSlide?: boolean
+  lessonTheme?: string
 }
 
 export default function AnimationSlide({
@@ -32,13 +37,28 @@ export default function AnimationSlide({
   autoPlay = false,
   showControls = true,
   allowFullscreen = true,
-  onComplete
+  onComplete,
+  isFirstSlide = false,
+  isLastSlide = false,
+  lessonTheme = 'education'
 }: AnimationSlideProps) {
   const [currentStep, setCurrentStep] = useState(0)
   const [isPlaying, setIsPlaying] = useState(autoPlay)
   const [isMuted, setIsMuted] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [progress, setProgress] = useState(0)
+
+  // Buscar imagem do Unsplash para primeira ou última slide
+  const imageQuery = isFirstSlide 
+    ? `${lessonTheme} introduction learning` 
+    : isLastSlide 
+    ? `${lessonTheme} conclusion success celebration`
+    : ''
+  
+  const { image: unsplashImage, loading: imageLoading } = useUnsplashImage(
+    imageQuery, 
+    isFirstSlide || isLastSlide
+  )
 
   // Auto-play effect
   useEffect(() => {
@@ -130,8 +150,36 @@ export default function AnimationSlide({
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Content */}
-        <div className="text-center">
-          <h3 className="text-xl font-semibold mb-4">{content}</h3>
+        <div className="text-left space-y-4">
+          {/* Imagem do Unsplash para primeira ou última slide */}
+          {(isFirstSlide || isLastSlide) && unsplashImage && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="flex justify-center mb-6"
+            >
+              <div className="relative w-full max-w-2xl">
+                {imageLoading ? (
+                  <div className="w-full h-48 bg-gray-200 rounded-lg animate-pulse flex items-center justify-center">
+                    <span className="text-gray-500">Carregando imagem...</span>
+                  </div>
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={unsplashImage.urls.regular}
+                    alt={unsplashImage.alt_description || `${lessonTheme} image`}
+                    className="w-full h-48 object-cover rounded-lg shadow-lg"
+                  />
+                )}
+                <div className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                  Foto por {unsplashImage.user.name}
+                </div>
+              </div>
+            </motion.div>
+          )}
+          
+          <MarkdownRenderer content={content} className="text-lg" />
         </div>
 
         {/* Media Display */}

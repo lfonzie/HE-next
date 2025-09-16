@@ -1,84 +1,82 @@
-import { useState, useEffect, useCallback } from 'react';
+'use client'
+
+import { useState, useEffect } from 'react'
 
 interface UnsplashImage {
-  id: string;
+  id: string
   urls: {
-    regular: string;
-    small: string;
-    thumb: string;
-  };
-  alt_description: string;
-  description: string;
+    regular: string
+    small: string
+  }
+  alt_description: string
   user: {
-    name: string;
-    username: string;
-  };
+    name: string
+  }
 }
 
-interface UseUnsplashImageReturn {
-  imageUrl: string | null;
-  isLoading: boolean;
-  error: string | null;
-  refetch: () => void;
-}
-
-export function useUnsplashImage(query: string, enabled: boolean = true): UseUnsplashImageReturn {
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchImage = useCallback(async () => {
-    if (!query || !enabled) return;
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch('/api/unsplash/search', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          query: query,
-          count: 1
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Falha ao buscar imagem');
-      }
-
-      const data = await response.json();
-      
-      if (data.success && data.photos && data.photos.length > 0) {
-        setImageUrl(data.photos[0].urls.regular);
-      } else {
-        throw new Error('Nenhuma imagem encontrada');
-      }
-    } catch (err) {
-      console.error('Erro ao buscar imagem do Unsplash:', err);
-      setError(err instanceof Error ? err.message : 'Erro desconhecido');
-      
-      // Fallback para imagem placeholder
-      setImageUrl('/placeholder-education.jpg');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [query, enabled]);
+export function useUnsplashImage(query: string, enabled: boolean = true) {
+  const [image, setImage] = useState<UnsplashImage | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    fetchImage();
-  }, [fetchImage]);
+    if (!enabled || !query.trim()) return
 
-  const refetch = useCallback(() => {
-    fetchImage();
-  }, [fetchImage]);
+    const fetchImage = async () => {
+      setLoading(true)
+      setError(null)
 
-  return {
-    imageUrl,
-    isLoading,
-    error,
-    refetch
-  };
+      try {
+        // Usar uma API pública do Unsplash (sem chave de API)
+        const response = await fetch(
+          `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=1&orientation=landscape`,
+          {
+            headers: {
+              'Authorization': 'Client-ID YOUR_UNSPLASH_ACCESS_KEY' // Será substituído por uma chave real
+            }
+          }
+        )
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch image')
+        }
+
+        const data = await response.json()
+        
+        if (data.results && data.results.length > 0) {
+          setImage(data.results[0])
+        } else {
+          // Fallback para uma imagem padrão se não encontrar resultados
+          setImage({
+            id: 'default',
+            urls: {
+              regular: `https://source.unsplash.com/800x400/?${encodeURIComponent(query)}`,
+              small: `https://source.unsplash.com/400x200/?${encodeURIComponent(query)}`
+            },
+            alt_description: query,
+            user: { name: 'Unsplash' }
+          })
+        }
+      } catch (err) {
+        console.error('Error fetching Unsplash image:', err)
+        // Fallback para imagem padrão em caso de erro
+        setImage({
+          id: 'fallback',
+          urls: {
+            regular: `https://source.unsplash.com/800x400/?${encodeURIComponent(query)}`,
+            small: `https://source.unsplash.com/400x200/?${encodeURIComponent(query)}`
+          },
+          alt_description: query,
+          user: { name: 'Unsplash' }
+        })
+        setError('Using fallback image')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchImage()
+  }, [query, enabled])
+
+  return { image, loading, error }
 }
