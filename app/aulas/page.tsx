@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2, Sparkles, BookOpen, Target, Users, Send, Lightbulb, TrendingUp, AlertCircle, CheckCircle, Clock } from 'lucide-react'
+import { Loader2, Sparkles, BookOpen, Target, Users, Send, Lightbulb, TrendingUp, AlertCircle, CheckCircle, Clock, RefreshCw } from 'lucide-react'
+import { useDynamicSuggestions } from '@/hooks/useDynamicSuggestions'
 
 // Mock components for demo (replace with actual imports)
 const toast = {
@@ -73,19 +74,7 @@ interface Suggestion {
   level: string
 }
 
-// Enhanced constants
-const SUGGESTIONS = [
-  { text: 'Como funciona a fotossíntese?', category: 'Biologia', level: '6º-8º ano' },
-  { text: 'Explique a teoria da evolução', category: 'Biologia', level: '9º ano' },
-  { text: 'Como calcular área de um triângulo?', category: 'Matemática', level: '7º ano' },
-  { text: 'História do Brasil colonial', category: 'História', level: '8º-9º ano' },
-  { text: 'Química orgânica básica', category: 'Química', level: 'Ensino Médio' },
-  { text: 'Física: leis de Newton', category: 'Física', level: 'Ensino Médio' },
-  { text: 'Literatura brasileira romântica', category: 'Literatura', level: 'Ensino Médio' },
-  { text: 'Geografia: clima e vegetação', category: 'Geografia', level: '6º-7º ano' },
-  { text: 'Equações do segundo grau', category: 'Matemática', level: '9º ano' },
-  { text: 'Revolução Industrial', category: 'História', level: '8º ano' }
-]
+// Removido: SUGGESTIONS estáticas - agora usando sugestões dinâmicas do Gemini
 
 const STATUS_MESSAGES = [
   { progress: 0, message: 'Analisando o tópico e contexto educacional...' },
@@ -111,16 +100,8 @@ export default function AulasPage() {
   const [recentLessons, setRecentLessons] = useState<GeneratedLesson[]>([])
   const [showAdvanced, setShowAdvanced] = useState(false)
 
-  // State for client-side random suggestions to prevent hydration mismatch
-  const [randomSuggestions, setRandomSuggestions] = useState<typeof SUGGESTIONS>([])
-  const [isClient, setIsClient] = useState(false)
-
-  // Generate random suggestions only on client side
-  useEffect(() => {
-    setIsClient(true)
-    const shuffled = [...SUGGESTIONS].sort(() => Math.random() - 0.5)
-    setRandomSuggestions(shuffled.slice(0, 3))
-  }, [])
+  // Usar sugestões dinâmicas do Gemini
+  const { suggestions, loading: suggestionsLoading, error: suggestionsError, refreshSuggestions } = useDynamicSuggestions()
 
   // Load recent lessons from localStorage on mount
   useEffect(() => {
@@ -418,17 +399,36 @@ export default function AulasPage() {
       {/* Enhanced Suggestions */}
       <Card className="border-2 border-blue-100 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 mb-8">
         <CardHeader className="text-center pb-4">
-          <CardTitle className="flex items-center gap-2 justify-center text-2xl">
-            <Lightbulb className="h-7 w-7 text-yellow-500" />
-            Sugestões Inteligentes
-          </CardTitle>
+          <div className="flex items-center justify-center gap-3">
+            <CardTitle className="flex items-center gap-2 text-2xl">
+              <Lightbulb className="h-7 w-7 text-yellow-500" />
+              Sugestões Inteligentes
+            </CardTitle>
+            <Button
+              onClick={refreshSuggestions}
+              variant="outline"
+              size="sm"
+              className="ml-2"
+              disabled={suggestionsLoading}
+            >
+              <RefreshCw className={`h-4 w-4 ${suggestionsLoading ? 'animate-spin' : ''}`} />
+            </Button>
+          </div>
           <CardDescription className="text-base">
-            Clique em qualquer sugestão para gerar sua aula automaticamente
+            Sugestões geradas por IA que mudam a cada carregamento
           </CardDescription>
+          {suggestionsError && (
+            <Alert className="mt-4 border-orange-200 bg-orange-50">
+              <AlertCircle className="h-4 w-4 text-orange-600" />
+              <AlertDescription className="text-orange-800">
+                Usando sugestões de fallback. Recarregue para tentar novamente.
+              </AlertDescription>
+            </Alert>
+          )}
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {!isClient ? (
+            {suggestionsLoading ? (
               // Show loading skeleton while suggestions are being generated
               Array.from({ length: 3 }).map((_, index) => (
                 <div
@@ -449,9 +449,9 @@ export default function AulasPage() {
                 </div>
               ))
             ) : (
-              randomSuggestions.map((suggestion, index) => (
+              suggestions.map((suggestion, index) => (
                 <button
-                  key={index}
+                  key={`${suggestion.text}-${index}`}
                   onClick={() => handleSuggestionClick(suggestion)}
                   className="group p-6 text-left border-2 border-blue-200 rounded-xl hover:border-blue-400 hover:bg-white hover:shadow-xl transition-all duration-300 bg-white/80 backdrop-blur-sm transform hover:scale-105 hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={isGenerating}

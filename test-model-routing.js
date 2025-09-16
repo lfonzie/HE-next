@@ -43,7 +43,7 @@ Object.entries(testMessages).forEach(([tipo, mensagens]) => {
   const chipEsperado = {
     triviais: '🟢 IA Eco (Gemini)',
     simples: '🔵 IA (GPT-4o Mini)', 
-    complexas: '🟣 IA Turbo (GPT-4o/GPT-5)'
+    complexas: '🟣 IA Turbo (GPT-5)'
   }[tipo]
   
   console.log(`\n${chipEsperado} - Mensagens ${tipo.toUpperCase()}:`)
@@ -62,7 +62,7 @@ console.log('• Resposta vem do modelo correto baseado na complexidade')
 console.log('\n📊 RESULTADOS ESPERADOS:')
 console.log('• Triviais → Gemini (rápido e econômico)')
 console.log('• Simples → GPT-4o Mini (equilibrado)')
-console.log('• Complexas → GPT-4o/GPT-5 (avançado)')
+console.log('• Complexas → GPT-5 (avançado)')
 
 console.log('\n🚨 SE ALGO NÃO FUNCIONAR:')
 console.log('• Verifique se as chaves de API estão configuradas')

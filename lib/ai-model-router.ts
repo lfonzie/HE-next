@@ -53,7 +53,7 @@ export const COMPLEXITY_MODELS = {
     groq: 'llama-3.1-8b-instant'
   },
   complex: {
-    openai: 'gpt-4o-chat-latest',
+    openai: 'gpt-5',
     anthropic: 'claude-3-sonnet-20240229',
     google: 'gemini-2.0-flash-exp',
     mistral: 'mistral-large-latest',
@@ -100,6 +100,14 @@ export const MODEL_CONFIGS = {
     cost: 'low',
     speed: 'fast',
     quality: 'good'
+  },
+  'gpt-5': {
+    temperature: 0.7,
+    maxTokens: 4000,
+    timeout: 30000,
+    cost: 'high',
+    speed: 'medium',
+    quality: 'very-high'
   },
   'gpt-3.5-turbo': {
     temperature: 0.7,
@@ -248,7 +256,12 @@ export async function routeAIModel(
         if (aiClassification === 'complexa') {
           detectedComplexity = 'complex'
         } else if (aiClassification === 'simples') {
-          detectedComplexity = 'simple'
+          // Para mensagens simples, verificar se são triviais (curtas) para usar Gemini
+          if (message.length < 50 && !message.includes('explicar') && !message.includes('como')) {
+            detectedComplexity = 'fast' // Usar Gemini para triviais
+          } else {
+            detectedComplexity = 'simple' // Usar GPT-4o-mini para simples
+          }
         } else {
           // Fallback para detecção local
           detectedComplexity = detectComplexity(message, detectedUseCase)
@@ -433,11 +446,11 @@ function selectProviderForUseCase(useCase: UseCaseType, preferredProvider?: Prov
   // Seleção baseada na complexidade primeiro
   if (complexity) {
     const complexityProviders = {
-      simple: ['google', 'openai'],      // Gemini para simples, GPT-4o-mini como backup
-      complex: ['openai', 'anthropic'], // GPT-4o/GPT-5 para complexas
-      fast: ['google', 'openai'],       // Gemini para rápidas
-      creative: ['openai', 'anthropic'], // GPT-4o para criativas
-      analytical: ['anthropic', 'openai'] // Claude para analíticas
+      simple: ['openai'],               // GPT-4o-mini para simples
+      complex: ['openai'],              // GPT-5 para complexas
+      fast: ['google'],                 // Gemini para rápidas/triviais
+      creative: ['openai'],             // GPT-4o/GPT-5 para criativas
+      analytical: ['openai']            // GPT-5 para analíticas
     }
     
     const preferredForComplexity = complexityProviders[complexity] || ['openai']

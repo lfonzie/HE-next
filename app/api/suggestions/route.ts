@@ -1,0 +1,151 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { GoogleGenerativeAI } from '@google/generative-ai'
+
+// Inicializar o Gemini
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY || '')
+
+interface Suggestion {
+  text: string
+  category: string
+  level: string
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    // Verificar se a chave da API está configurada
+    if (!process.env.GOOGLE_GEMINI_API_KEY) {
+      console.error('GOOGLE_GEMINI_API_KEY não está configurada')
+      return NextResponse.json(
+        { error: 'API key não configurada' },
+        { status: 500 }
+      )
+    }
+
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+
+    const prompt = `
+Você é um assistente educacional especializado em criar sugestões de aulas interessantes e envolventes.
+
+Gere exatamente 3 sugestões de tópicos educacionais que sejam:
+- Diversos em matérias (matemática, ciências, história, geografia, literatura, etc.)
+- Adequados para diferentes níveis (do 6º ano ao ensino médio)
+- Interessantes e relevantes para estudantes brasileiros
+- Específicos o suficiente para gerar uma aula completa
+- Atuais e conectados com o mundo real
+
+Para cada sugestão, forneça:
+1. Um tópico específico e interessante
+2. A matéria/disciplina
+3. O nível educacional apropriado
+
+Responda APENAS com um JSON válido no seguinte formato:
+[
+  {
+    "text": "Tópico específico da aula",
+    "category": "Matéria",
+    "level": "Nível educacional"
+  }
+]
+
+Exemplos de bons tópicos:
+- "Como a inteligência artificial está mudando o mundo do trabalho?"
+- "Por que alguns países são mais ricos que outros?"
+- "A matemática por trás dos algoritmos do Instagram"
+- "Como funciona a vacinação e por que é importante?"
+- "A física dos esportes: por que alguns atletas são mais rápidos?"
+
+Gere sugestões criativas e variadas!
+`
+
+    const result = await model.generateContent(prompt)
+    const response = await result.response
+    const text = response.text()
+
+    console.log('Resposta do Gemini:', text)
+
+    // Tentar extrair JSON da resposta
+    let suggestions: Suggestion[]
+    
+    try {
+      // Limpar a resposta para extrair apenas o JSON
+      const jsonMatch = text.match(/\[[\s\S]*\]/)
+      if (jsonMatch) {
+        suggestions = JSON.parse(jsonMatch[0])
+      } else {
+        throw new Error('JSON não encontrado na resposta')
+      }
+    } catch (parseError) {
+      console.error('Erro ao fazer parse do JSON:', parseError)
+      console.error('Texto recebido:', text)
+      
+      // Fallback para sugestões padrão se o parsing falhar
+      suggestions = [
+        {
+          text: "Como funciona a fotossíntese e por que é importante para a vida na Terra?",
+          category: "Biologia",
+          level: "8º ano"
+        },
+        {
+          text: "A matemática por trás dos algoritmos de redes sociais",
+          category: "Matemática",
+          level: "Ensino Médio"
+        },
+        {
+          text: "Por que alguns países são mais desenvolvidos que outros?",
+          category: "Geografia",
+          level: "9º ano"
+        }
+      ]
+    }
+
+    // Validar se temos exatamente 3 sugestões
+    if (!Array.isArray(suggestions) || suggestions.length !== 3) {
+      console.error('Número inválido de sugestões:', suggestions.length)
+      throw new Error('Resposta inválida do Gemini')
+    }
+
+    // Validar estrutura de cada sugestão
+    for (const suggestion of suggestions) {
+      if (!suggestion.text || !suggestion.category || !suggestion.level) {
+        throw new Error('Estrutura de sugestão inválida')
+      }
+    }
+
+    console.log('Sugestões geradas com sucesso:', suggestions)
+
+    return NextResponse.json({
+      success: true,
+      suggestions,
+      generatedAt: new Date().toISOString()
+    })
+
+  } catch (error) {
+    console.error('Erro ao gerar sugestões:', error)
+    
+    // Fallback para sugestões estáticas em caso de erro
+    const fallbackSuggestions: Suggestion[] = [
+      {
+        text: "Como funciona a fotossíntese e por que é importante para a vida na Terra?",
+        category: "Biologia",
+        level: "8º ano"
+      },
+      {
+        text: "A matemática por trás dos algoritmos de redes sociais",
+        category: "Matemática",
+        level: "Ensino Médio"
+      },
+      {
+        text: "Por que alguns países são mais desenvolvidos que outros?",
+        category: "Geografia",
+        level: "9º ano"
+      }
+    ]
+
+    return NextResponse.json({
+      success: true,
+      suggestions: fallbackSuggestions,
+      generatedAt: new Date().toISOString(),
+      fallback: true
+    })
+  }
+}
