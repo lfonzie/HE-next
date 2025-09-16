@@ -203,42 +203,67 @@ export default function AulasPage() {
     }, 300)
 
     try {
-      // Simulate API call with more realistic data
-      await new Promise(resolve => setTimeout(resolve, Math.random() * 3000 + 22000))
+      // Chamar API real para gerar aula
+      console.log('Chamando API para gerar aula:', { topic })
+      
+      const response = await fetch('/api/generate-lesson', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          topic: topic,
+          demoMode: true, // Usar modo demo para evitar problemas de autenticação
+          subject: 'Geral', // Será inferido pela IA
+          grade: '5' // Será inferido pela IA
+        }),
+      })
 
-      const mockLesson: GeneratedLesson = {
-        id: `lesson_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        title: `Aula Interativa: ${topic}`,
-        subject: topicOverride ? 'Matéria Inferida pela IA' : 'Ciências',
-        level: '8º ano',
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Erro ao gerar aula')
+      }
+
+      const result = await response.json()
+      console.log('Resposta da API:', result)
+      
+      if (!result.success || !result.lesson) {
+        throw new Error('Resposta inválida da API')
+      }
+
+      const generatedLesson: GeneratedLesson = {
+        id: result.lesson.id,
+        title: result.lesson.title,
+        subject: result.lesson.subject,
+        level: result.lesson.level,
         estimatedDuration: 45,
         difficulty: 'Intermediário' as const,
-        objectives: [
+        objectives: result.lesson.objectives || [
           `Compreender os conceitos fundamentais sobre ${topic}`,
           `Aplicar conhecimentos através de atividades práticas`,
           `Desenvolver pensamento crítico sobre o tema`,
           `Conectar o aprendizado com situações do cotidiano`
         ],
-        stages: [
+        stages: result.lesson.stages || [
           { etapa: 'Introdução e Contextualização', type: 'Apresentação', activity: {}, route: '/intro', estimatedTime: 8 },
           { etapa: 'Conteúdo Principal', type: 'Lição Interativa', activity: {}, route: '/content', estimatedTime: 20 },
           { etapa: 'Atividade Prática', type: 'Exercício', activity: {}, route: '/activity', estimatedTime: 12 },
           { etapa: 'Quiz de Fixação', type: 'Avaliação', activity: {}, route: '/quiz', estimatedTime: 5 }
         ],
-        feedback: {},
-        demoMode: true,
+        feedback: result.lesson.feedback || {},
+        demoMode: result.lesson.demoMode || true,
         createdAt: new Date().toISOString()
       }
 
       setGenerationProgress(100)
       setGenerationStatus('Aula gerada com sucesso!')
-      setGeneratedLesson(mockLesson)
-      saveToRecentLessons(mockLesson)
+      setGeneratedLesson(generatedLesson)
+      saveToRecentLessons(generatedLesson)
 
       // Store in localStorage for demo mode
-      localStorage.setItem(`demo_lesson_${mockLesson.id}`, JSON.stringify(mockLesson))
+      localStorage.setItem(`demo_lesson_${generatedLesson.id}`, JSON.stringify(generatedLesson))
       
-      toast.success('Aula gerada com sucesso! (Modo Demo)')
+      toast.success('Aula gerada com sucesso!')
     } catch (error) {
       console.error('Generation error:', error)
       setGenerationStatus('Erro na geração da aula')
@@ -278,10 +303,23 @@ export default function AulasPage() {
   }, [isGenerating, handleGenerate])
 
   const handleStartLesson = () => {
-    if (!generatedLesson) return
-    console.log('Starting lesson:', generatedLesson.id)
-    // Mock navigation
-    toast.success(`Iniciando aula: ${generatedLesson.title}`)
+    if (!generatedLesson) {
+      console.error('Nenhuma aula gerada para iniciar')
+      toast.error('Nenhuma aula foi gerada ainda')
+      return
+    }
+    
+    console.log('Iniciando aula com ID:', generatedLesson.id)
+    console.log('Dados da aula:', generatedLesson)
+    
+    // Salvar aula no localStorage para modo demo
+    if (generatedLesson.demoMode) {
+      localStorage.setItem(`demo_lesson_${generatedLesson.id}`, JSON.stringify(generatedLesson))
+      console.log('Aula salva no localStorage para modo demo')
+    }
+    
+    // Navegar para a página da aula
+    window.location.href = `/aulas/${generatedLesson.id}`
   }
 
   const handleSaveLesson = async () => {
