@@ -78,13 +78,13 @@ export function EnemModeSelector({ onModeSelect, onCustomize }: EnemModeSelector
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h2 className="text-2xl font-bold mb-2">Escolha o Modo de Simulado</h2>
+        <h2 className="text-xl font-bold mb-2">Escolha o Modo de Simulado</h2>
         <p className="text-gray-600">
           Selecione o tipo de simulado que melhor se adapta ao seu objetivo
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {modes.map((mode) => (
           <Card 
             key={mode.id}
@@ -94,20 +94,18 @@ export function EnemModeSelector({ onModeSelect, onCustomize }: EnemModeSelector
             onClick={() => handleModeClick(mode.id)}
           >
             <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg ${mode.color} text-white`}>
-                    {mode.icon}
-                  </div>
-                  <div>
-                    <CardTitle className="text-lg">{mode.title}</CardTitle>
-                    {mode.recommended && (
-                      <Badge variant="secondary" className="mt-1">
-                        <CheckCircle className="h-3 w-3 mr-1" />
-                        Recomendado
-                      </Badge>
-                    )}
-                  </div>
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-lg ${mode.color} text-white`}>
+                  {mode.icon}
+                </div>
+                <div>
+                  <CardTitle className="text-lg">{mode.title}</CardTitle>
+                  {mode.recommended && (
+                    <Badge variant="secondary" className="mt-1">
+                      <CheckCircle className="h-3 w-3 mr-1" />
+                      Recomendado
+                    </Badge>
+                  )}
                 </div>
               </div>
             </CardHeader>
@@ -115,15 +113,6 @@ export function EnemModeSelector({ onModeSelect, onCustomize }: EnemModeSelector
             <CardContent className="pt-0">
               <p className="text-gray-600 mb-4">{mode.description}</p>
               
-              <div className="space-y-2 mb-4">
-                {mode.features.map((feature, index) => (
-                  <div key={index} className="flex items-center gap-2 text-sm">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    <span>{feature}</span>
-                  </div>
-                ))}
-              </div>
-
               <Button 
                 className={`w-full bg-gradient-to-r ${mode.gradient} hover:opacity-90`}
                 onClick={() => handleModeClick(mode.id)}
@@ -134,19 +123,6 @@ export function EnemModeSelector({ onModeSelect, onCustomize }: EnemModeSelector
             </CardContent>
           </Card>
         ))}
-      </div>
-
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <div className="flex items-start gap-3">
-          <Info className="h-5 w-5 text-blue-600 mt-0.5" />
-          <div>
-            <h4 className="font-semibold text-blue-900 mb-1">Dica Profissional</h4>
-            <p className="text-blue-800 text-sm">
-              Para máxima precisão na estimativa TRI, recomendamos usar o <strong>Modo Oficial</strong> 
-              com 45 questões por área, simulando as condições reais do ENEM.
-            </p>
-          </div>
-        </div>
       </div>
     </div>
   );

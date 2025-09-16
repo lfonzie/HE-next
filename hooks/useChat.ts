@@ -69,7 +69,9 @@ export function useChat(onStreamingStart?: () => void) {
     conversationId?: string,
     image?: string,
     attachment?: File,
-    useWebSearch?: boolean
+    useWebSearch?: boolean,
+    provider?: 'auto' | 'openai' | 'google' | 'anthropic' | 'mistral' | 'groq',
+    complexity?: 'simple' | 'complex' | 'fast'
   ) => {
     // Limpar erros anteriores
     setError(null)
@@ -137,28 +139,29 @@ export function useChat(onStreamingStart?: () => void) {
       
       while (currentRetryCount <= maxRetries) {
         try {
-          response = await fetch('/api/chat/stream', {
+          // Preparar mensagens para o multi-provider
+          const messages = [
+            ...conversationHistory.slice(-10).map(msg => ({
+              role: msg.role,
+              content: msg.content
+            })),
+            {
+              role: 'user' as const,
+              content: message
+            }
+          ]
+
+          response = await fetch('/api/chat/multi-provider', {
             method: "POST",
             headers: {
               "Content-Type": "application/json; charset=utf-8",
               // Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify({ 
-              message, 
-              context: { 
-                history: conversationHistory.slice(-10),
-                module: finalModule,
-                subject,
-                grade,
-                conversationId,
-                image,
-                attachment: attachment ? {
-                  name: attachment.name,
-                  type: attachment.type,
-                  size: attachment.size
-                } : undefined,
-                useWebSearch
-              } 
+              messages,
+              module: finalModule,
+              provider: provider || 'auto',
+              complexity: complexity || 'simple'
             }),
             signal: abortControllerRef.current.signal
           })
@@ -298,268 +301,94 @@ export function useChat(onStreamingStart?: () => void) {
         }
       })
 
+      // Extrair informações do provedor dos headers
+      const provider = response.headers.get('X-Provider') || 'unknown'
+      const model = response.headers.get('X-Model') || 'unknown'
+      const module = response.headers.get('X-Module') || finalModule
+      
+      finalModel = model
+      finalModule = convertApiModuleToSystem(module)
+
       while (true) {
         const { done, value } = await reader.read()
-        if (done) break
+        if (done) {
+          receivedDone = true
+          
+          // Finalize the assistant message
+          setCurrentConversation(prev => {
+            if (!prev) return prev
+            
+            const updatedMessages = prev.messages.map(msg => {
+              if (msg.id === assistantMessageId) {
+                return {
+                  ...msg,
+                  content: assistantMessage,
+                  model: finalModel,
+                  tokens: tokenCount,
+                  tier: finalTier,
+                  module: finalModule,
+                  isStreaming: false
+                }
+              }
+              return msg
+            })
+            
+            const finalConversation = {
+              ...prev,
+              messages: updatedMessages,
+              updatedAt: new Date()
+            }
+            
+            // Update conversations list
+            setConversations(prevConvs => {
+              const existingIndex = prevConvs.findIndex(conv => conv.id === finalConversation.id)
+              if (existingIndex >= 0) {
+                const updated = [...prevConvs]
+                updated[existingIndex] = finalConversation
+                return updated
+              } else {
+                return [finalConversation, ...prevConvs]
+              }
+            })
+            
+            return finalConversation
+          })
+          
+          break
+        }
 
         const chunk = decoder.decode(value)
-        const lines = chunk.split("\n")
-
-        for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            const dataString = line.slice(6)
-            
-            // Check for [DONE] signal first
-            if (dataString === '[DONE]') {
-              receivedDone = true
-              
-              // Finalize the assistant message
-              setCurrentConversation(prev => {
-                if (!prev) return prev
-                
-                const updatedMessages = prev.messages.map(msg => {
-                  if (msg.id === assistantMessageId) {
-                    return {
-                      ...msg,
-                      content: assistantMessage,
-                      model: finalModel,
-                      tokens: tokenCount,
-                      tier: finalTier,
-                      module: finalModule, // Adicionar módulo usado para gerar esta mensagem
-                      isStreaming: false
-                    }
-                  }
-                  return msg
-                })
-                
-                const finalConversation = {
-                  ...prev,
-                  messages: updatedMessages,
-                  updatedAt: new Date()
-                }
-                
-                // Update conversations list
-                setConversations(prevConvs => {
-                  const existingIndex = prevConvs.findIndex(conv => conv.id === finalConversation.id)
-                  if (existingIndex >= 0) {
-                    const updated = [...prevConvs]
-                    updated[existingIndex] = finalConversation
-                    return updated
-                  } else {
-                    return [finalConversation, ...prevConvs]
-                  }
-                })
-                
-                return finalConversation
-              })
-              
-              break
-            }
-            
-            try {
-              const data = JSON.parse(dataString)
-              
-              // Filter metadata information to not display in UI
-              if (data.metadata) {
-                if (data.metadata.model) {
-                  finalModel = data.metadata.model
-                }
-                if (data.metadata.tokens) {
-                  tokenCount = data.metadata.tokens
-                }
-                if (data.metadata.tier) {
-                  finalTier = data.metadata.tier
-                }
-                if (data.metadata.module) {
-                  finalModule = convertApiModuleToSystem(data.metadata.module)
-                  console.log(`🎯 [METADATA] Módulo detectado: ${data.metadata.module} -> ${finalModule}`)
-                }
-                continue // Don't process as content
-              }
-              
-              // Process trace information separately
-              if (data.trace && !data.text && !data.blocks && !data.actions) {
-                if (data.trace.module) {
-                  finalModule = convertApiModuleToSystem(data.trace.module)
-                  console.log(`🎯 [TRACE SEPARADO] Módulo detectado: ${data.trace.module} -> ${finalModule}`)
-                }
-                continue // Don't process as content
-              }
-              
-              // Support orchestrator JSON payload (text/blocks/actions/trace)
-              if (data.text || data.blocks || data.actions || data.trace) {
-                const text = data.text || ''
-                assistantMessage = text
-                
-                // Extract module from trace if available
-                if (data.trace && data.trace.module) {
-                  finalModule = convertApiModuleToSystem(data.trace.module)
-                  console.log(`🎯 [ORCHESTRATOR] Módulo detectado: ${data.trace.module} -> ${finalModule}`)
-                }
-                
-                // Also check for trace in separate data chunk
-                if (data.trace) {
-                  finalModule = convertApiModuleToSystem(data.trace.module)
-                  console.log(`🎯 [TRACE] Módulo detectado: ${data.trace.module} -> ${finalModule}`)
-                }
-                
-                // Hide loading on first token received with a longer delay to ensure streaming is visible
-                if (!firstTokenReceived) {
-                  setFirstTokenReceived(true)
-                  // Longer delay to ensure streaming animation is visible
-                  setTimeout(() => loading.hide(), 500)
-                }
-                
-                // Update message with orchestrated payload
-                setCurrentConversation(prev => {
-                  if (!prev) return prev
-                  
-                  const updatedMessages = prev.messages.map(msg => {
-                    if (msg.id === assistantMessageId) {
-                      return {
-                        ...msg,
-                        content: assistantMessage,
-                        model: data.model || finalModel,
-                        isStreaming: true,
-                        webSearchUsed: data.webSearchUsed,
-                        citations: data.citations,
-                        searchTime: data.searchTime,
-                        structured: true,
-                        blocks: data.blocks,
-                        actions: data.actions,
-                        trace: data.trace,
-                        module: finalModule // Adicionar módulo detectado pelo orchestrator
-                      }
-                    }
-                    return msg
-                  })
-                  
-                  return {
-                    ...prev,
-                    messages: updatedMessages
-                  }
-                })
-                continue
-              }
-              
-              if (data.content) {
-                // Ensure content is in UTF-8
-                const utf8Content = new TextDecoder('utf-8').decode(
-                  new TextEncoder().encode(data.content)
-                )
-                assistantMessage += utf8Content
-                
-                if (!firstTokenReceived) {
-                  setFirstTokenReceived(true)
-                  // Longer delay to ensure streaming animation is visible
-                  setTimeout(() => loading.hide(), 500)
-                }
-                
-                if (data.model) {
-                  finalModel = data.model
-                }
-                
-                // Update streaming content in real-time
-                setCurrentConversation(prev => {
-                  if (!prev) return prev
-                  
-                  const updatedMessages = prev.messages.map(msg => {
-                    if (msg.id === assistantMessageId) {
-                      return {
-                        ...msg,
-                        content: assistantMessage,
-                        model: data.model || finalModel,
-                        isStreaming: true,
-                        webSearchUsed: data.webSearchUsed,
-                        citations: data.citations,
-                        searchTime: data.searchTime,
-                        structured: data.structured || msg.structured
-                      }
-                    }
-                    return msg
-                  })
-                  
-                  return {
-                    ...prev,
-                    messages: updatedMessages
-                  }
-                })
-              }
-              
-              if (data.error) {
-                console.error('[Chat] Server error received:', data.error)
-                setCurrentConversation(prev => {
-                  if (!prev) return prev
-                  
-                  const updatedMessages = prev.messages.map(msg => {
-                    if (msg.id === assistantMessageId) {
-                      return {
-                        ...msg,
-                        content: `❌ Erro: ${data.error}`,
-                        isStreaming: false,
-                        hasError: true
-                      }
-                    }
-                    return msg
-                  })
-                  
-                  return {
-                    ...prev,
-                    messages: updatedMessages,
-                    updatedAt: new Date()
-                  }
-                })
-                
-                setIsStreaming(false)
-                return
-              }
-            } catch (parseError: any) {
-              console.error('[Chat] Failed to parse streaming data:', parseError)
-              continue
-            }
-          }
-        }
-      }
-
-      // If stream ends without sending [DONE] signal, finalize message
-      if (!receivedDone) {
+        
+        // Multi-provider retorna texto simples, não JSON
+        assistantMessage += chunk
+        
+        // Atualizar mensagem em tempo real
         setCurrentConversation(prev => {
           if (!prev) return prev
+          
           const updatedMessages = prev.messages.map(msg => {
             if (msg.id === assistantMessageId) {
               return {
                 ...msg,
                 content: assistantMessage,
                 model: finalModel,
-                tokens: tokenCount,
-                tier: finalTier,
-                module: finalModule, // Adicionar módulo usado para gerar esta mensagem
-                isStreaming: false
+                module: finalModule
               }
             }
             return msg
           })
           
-          const finalConversation = {
+          return {
             ...prev,
-            messages: updatedMessages,
-            updatedAt: new Date()
+            messages: updatedMessages
           }
-          
-          // Update conversations list
-          setConversations(prevConvs => {
-            const existingIndex = prevConvs.findIndex(conv => conv.id === finalConversation.id)
-            if (existingIndex >= 0) {
-              const updated = [...prevConvs]
-              updated[existingIndex] = finalConversation
-              return updated
-            } else {
-              return [finalConversation, ...prevConvs]
-            }
-          })
-          
-          return finalConversation
         })
+      }
+      
+      // Hide loading when streaming starts
+      if (!firstTokenReceived) {
+        setFirstTokenReceived(true)
+        setTimeout(() => loading.hide(), 500)
       }
 
       return {

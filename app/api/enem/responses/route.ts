@@ -148,7 +148,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'session_id is required' }, { status: 400 });
     }
 
-    let responses = [];
+    let responses: any[] = [];
     
     if (sessionId.startsWith('local_') || sessionId.startsWith('session_')) {
       // For local sessions or generated sessions, return empty responses array

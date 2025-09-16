@@ -5,16 +5,18 @@ import { useRouter } from "next/navigation";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import { StreamingMessage } from "@/components/chat/StreamingMessage";
 import { ChatInput } from "@/components/chat/ChatInput";
+import { ProviderSelector } from "@/components/chat/ProviderSelector";
 import { GeneralWelcome } from "@/components/chat/GeneralWelcome";
 import { ModuleWelcome } from "@/components/chat/ModuleWelcome";
 import { ModuleWelcomeScreen } from "@/components/chat/ModuleWelcomeScreen";
 import { ClassificationIndicator } from "@/components/chat/ClassificationIndicator";
 import { useChat } from "@/hooks/useChat";
 import { ModuleId, MODULES, convertModuleId, convertToOldModuleId } from "@/lib/modules";
-import { ModuleType } from "@/types";
+import { ModuleType, Message as ChatMessageType, Conversation as ChatConversation } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Plus, Headphones, Settings, History, Download } from "lucide-react";
+import { Plus, Headphones, Settings, History, Download, Search, Square } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { useChatContext } from "@/components/providers/ChatContext";
 import { useQuota } from "@/components/providers/QuotaProvider";
 import { SupportModal } from "@/components/modals/SupportModal";
@@ -24,6 +26,27 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import "@/components/chat/ChatInput.css";
+
+type MinimalChatHook = {
+  conversations: ChatConversation[];
+  currentConversation: ChatConversation | null;
+  sendMessage: (
+    message: string,
+    module: string,
+    subject?: string,
+    grade?: string,
+    conversationId?: string,
+    image?: string,
+    attachment?: File,
+    useWebSearch?: boolean
+  ) => Promise<{ conversationId: string | undefined; response: string; tokens: number; model: string }>;
+  isStreaming: boolean;
+  lastClassification: { module: string; confidence: number; rationale: string } | null;
+  startNewConversation: (module: string) => void;
+  fetchConversations: () => Promise<void>;
+  setCurrentConversation: (conv: ChatConversation) => void;
+  cancelCurrentRequest: () => void;
+};
 
 export default function ChatPage() {
   const router = useRouter();
@@ -37,8 +60,9 @@ export default function ChatPage() {
     lastClassification,
     startNewConversation,
     fetchConversations,
-    setCurrentConversation
-  } = useChat(() => endLoading('message')); // Pass endLoading callback to hide overlay when streaming starts
+    setCurrentConversation,
+    cancelCurrentRequest
+  } = useChat(() => endLoading('message')) as unknown as MinimalChatHook; // Pass endLoading callback to hide overlay when streaming starts
   const { toast } = useToast();
   const { selectedModule, setSelectedModule, highlightActiveModule } = useChatContext();
   const { quota, maxQuota, decrementQuota, resetQuota } = useQuota();
@@ -53,6 +77,9 @@ export default function ChatPage() {
   const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
   const [showConversationHistory, setShowConversationHistory] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedProvider, setSelectedProvider] = useState<'auto' | 'openai' | 'google' | 'anthropic' | 'mistral' | 'groq'>('auto');
+  const [selectedComplexity, setSelectedComplexity] = useState<'simple' | 'complex' | 'fast'>('simple');
   
   // Refs
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -66,6 +93,14 @@ export default function ChatPage() {
 
   const messages = useMemo(() => currentConversation?.messages || [], [currentConversation?.messages]);
   const hasMessages = messages.length > 0;
+  const filteredConversations = useMemo(() => {
+    if (!searchQuery.trim()) return conversations;
+    const q = searchQuery.toLowerCase();
+    return conversations.filter((conv: ChatConversation) =>
+      (conv.title || '').toLowerCase().includes(q) ||
+      conv.messages.some((m: ChatMessageType) => (m.content || '').toLowerCase().includes(q))
+    );
+  }, [conversations, searchQuery]);
 
 
   // Handle module selection
@@ -93,12 +128,17 @@ export default function ChatPage() {
     });
     
     try {
-      await sendMessage(
+      await (sendMessage as any)(
         message, 
         selectedModule || "atendimento",
         undefined,
         undefined,
-        currentConversation?.id
+        currentConversation?.id,
+        undefined,
+        undefined,
+        undefined,
+        selectedProvider,
+        selectedComplexity
       );
       setInputMessage("");
       
@@ -152,6 +192,16 @@ export default function ChatPage() {
   const handleSuggestionClick = useCallback(async (suggestion: string) => {
     await handleSendMessage(`Me ajude com: ${suggestion}`);
   }, [handleSendMessage]);
+
+  // Stop streaming
+  const handleStopStreaming = useCallback(() => {
+    try {
+      cancelCurrentRequest();
+      toast({ title: "Interrompido", description: "Geração cancelada." });
+    } catch (e) {
+      // noop
+    }
+  }, [cancelCurrentRequest, toast]);
 
   // Handle conversation export
   const handleExportConversation = useCallback(async () => {
@@ -296,14 +346,24 @@ export default function ChatPage() {
         {/* Conversation History Sidebar */}
         {showConversationHistory && (
           <div className="w-80 bg-white dark:bg-zinc-800 border-r border-gray-200 dark:border-zinc-700 flex flex-col">
-            <div className="p-4 border-b border-gray-200 dark:border-zinc-700">
+            <div className="p-4 border-b border-gray-200 dark:border-zinc-700 space-y-2">
               <h3 className="font-semibold text-gray-900 dark:text-zinc-100">Histórico de Conversas</h3>
               <p className="text-sm text-gray-600 dark:text-zinc-400">
                 {conversations.length} conversa{conversations.length !== 1 ? 's' : ''}
               </p>
+              <div className="relative">
+                <Search className="w-4 h-4 absolute left-2 top-1/2 -translate-y-1/2 text-zinc-400" />
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Buscar no histórico..."
+                  className="pl-8 h-9 text-sm"
+                  aria-label="Buscar conversas"
+                />
+              </div>
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-2">
-              {conversations.map((conv) => (
+              {filteredConversations.map((conv: ChatConversation) => (
                 <Card 
                   key={conv.id}
                   className={`cursor-pointer transition-colors ${
@@ -336,10 +396,10 @@ export default function ChatPage() {
                   </CardContent>
                 </Card>
               ))}
-              {conversations.length === 0 && (
+              {filteredConversations.length === 0 && (
                 <div className="text-center py-8">
                   <History className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500 text-sm">Nenhuma conversa ainda</p>
+                  <p className="text-gray-500 text-sm">Nenhuma conversa encontrada</p>
                 </div>
               )}
             </div>
@@ -430,6 +490,30 @@ export default function ChatPage() {
         {/* Chat Input - Fixed Composer with Blur */}
         <div className="sticky bottom-0 left-0 right-0 backdrop-blur supports-[backdrop-filter]:bg-white/70 dark:supports-[backdrop-filter]:bg-zinc-900/60 border-t border-zinc-200/60 dark:border-zinc-700/50 shadow-[0_-1px_0_0_rgba(0,0,0,0.04)] px-4 md:px-6 lg:px-8 py-3">
           <div className="mx-auto max-w-screen-md">
+            {/* Provider Selector */}
+            <div className="mb-3">
+              <ProviderSelector
+                provider={selectedProvider}
+                complexity={selectedComplexity}
+                onProviderChange={setSelectedProvider}
+                onComplexityChange={setSelectedComplexity}
+                availableProviders={['auto', 'openai', 'google']}
+              />
+            </div>
+            
+            {isStreaming && (
+              <div className="flex justify-end pb-2">
+                <Button
+                  onClick={handleStopStreaming}
+                  variant="destructive"
+                  size="sm"
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                >
+                  <Square className="w-4 h-4 mr-2" />
+                  Parar
+                </Button>
+              </div>
+            )}
             <ChatInput
               message={inputMessage}
               onMessageChange={setInputMessage}

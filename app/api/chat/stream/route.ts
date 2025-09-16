@@ -117,10 +117,8 @@ Contexto atual: Módulo: ${orchestratorResult.trace?.module || 'atendimento'}`
       let tier: any
       
       if (useGoogleAI) {
-        model = google('gemini-2.0-flash-exp', {
-          apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY!
-        })
-        tier = { name: 'google-gemini', cost: 'low' }
+        model = google('gemini-2.0-flash-exp')
+        tier = getModelTier('gemini-2.0-flash-exp')
         console.log('🤖 [CHAT-STREAM] Using Google Gemini with memory')
       } else {
         model = 'gpt-4o-mini'
@@ -147,7 +145,6 @@ Contexto atual: Módulo: ${orchestratorResult.trace?.module || 'atendimento'}`
         model: model,
         messages: messages,
         temperature: 0.7,
-        maxTokens: 2000,
         onFinish: (result) => {
           console.log('✅ [CHAT-STREAM] Stream finished:', {
             finishReason: result.finishReason,

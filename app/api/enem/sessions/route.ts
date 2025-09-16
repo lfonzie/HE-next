@@ -119,12 +119,27 @@ async function getQuestionsFromLocalDB(filter: {
   try {
     // Get available years
     const years = await fs.readdir(questionsPath);
-    const availableYears = years.filter(year => 
-      year.match(/^\d{4}$/) && 
-      fs.stat(path.join(questionsPath, year)).then(stats => stats.isDirectory())
-    );
+    const availableYears = [];
+    
+    for (const year of years) {
+      if (year.match(/^\d{4}$/)) {
+        const yearPath = path.join(questionsPath, year);
+        const yearStats = await fs.stat(yearPath);
+        if (yearStats.isDirectory()) {
+          availableYears.push(year);
+        }
+      }
+    }
 
     let allQuestions: EnemQuestion[] = [];
+
+    // Map area codes to discipline names
+    const areaMapping: Record<string, string> = {
+      'CN': 'ciencias-natureza',
+      'CH': 'ciencias-humanas', 
+      'LC': 'linguagens',
+      'MT': 'matematica'
+    };
 
     // If year is specified, only look in that year
     const yearsToSearch = filter.year ? [filter.year.toString()] : availableYears;
@@ -141,14 +156,57 @@ async function getQuestionsFromLocalDB(filter: {
         const questionDirs = await fs.readdir(questionsDir);
 
         for (const questionDir of questionDirs) {
+          // Skip hidden files and directories
+          if (questionDir.startsWith('.') || questionDir === 'node_modules') {
+            continue;
+          }
+          
           const questionPath = path.join(questionsDir, questionDir, 'details.json');
           
           try {
+            // Check if the question directory is actually a directory
+            const questionDirPath = path.join(questionsDir, questionDir);
+            const questionDirStats = await fs.stat(questionDirPath);
+            if (!questionDirStats.isDirectory()) {
+              continue;
+            }
+            
             const questionData = await fs.readFile(questionPath, 'utf-8');
             const question: EnemQuestion = JSON.parse(questionData);
             
-            // Apply filters
-            if (filter.discipline && question.discipline !== filter.discipline) continue;
+            // Validate question has text content (not only images)
+            if (!question.context || question.context.trim() === '') {
+              console.warn(`Skipping question ${questionDir}: no text content`);
+              continue;
+            }
+            
+            // Check if question text is only an image (starts with ![])
+            if (question.context.trim().startsWith('![]') && question.context.trim().length < 100) {
+              console.warn(`Skipping question ${questionDir}: only image content`);
+              continue;
+            }
+            
+            // Validate alternatives exist and are valid
+            if (!question.alternatives || question.alternatives.length < 4) {
+              console.warn(`Skipping question ${questionDir}: insufficient alternatives`);
+              continue;
+            }
+            
+            // Check if all alternatives have text
+            const hasValidAlternatives = question.alternatives.every(alt => 
+              alt.text && alt.text.trim() !== ''
+            );
+            
+            if (!hasValidAlternatives) {
+              console.warn(`Skipping question ${questionDir}: invalid alternatives`);
+              continue;
+            }
+            
+            // Apply filters - map area code to discipline name
+            if (filter.discipline) {
+              const mappedDiscipline = areaMapping[filter.discipline] || filter.discipline;
+              if (question.discipline !== mappedDiscipline) continue;
+            }
             
             allQuestions.push(question);
           } catch (error) {
@@ -228,8 +286,7 @@ export async function POST(request: NextRequest) {
     console.log('Generating exam from local ENEM database:', {
       mode: body.mode,
       areas: body.area,
-      numQuestions: body.config.num_questions,
-      year: body.config.year
+      numQuestions: body.config.num_questions
     });
     
     const examResult = await generateExamFromLocalDB({
@@ -237,7 +294,7 @@ export async function POST(request: NextRequest) {
       areas: body.area as EnemArea[],
       numQuestions: body.config.num_questions,
       timeLimit: body.config.time_limit,
-      year: body.config.year,
+      year: body.config.year || undefined,
       difficultyDistribution: body.config.difficulty_distribution
     });
     

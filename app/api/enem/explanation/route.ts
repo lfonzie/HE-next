@@ -7,10 +7,12 @@ const openai = new OpenAI({
 });
 
 export async function POST(request: NextRequest) {
+  let body: any;
+  
   try {
     console.log('POST /api/enem/explanation called');
     
-    const body = await request.json();
+    body = await request.json();
     const { item_id, session_id, question_text, alternatives, correct_answer, user_answer, area } = body;
 
     if (!item_id) {

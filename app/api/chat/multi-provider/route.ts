@@ -7,7 +7,8 @@ import {
   selectProvider, 
   getProviderConfig,
   getAvailableProviders,
-  ProviderType 
+  ProviderType,
+  PROVIDER_MODELS
 } from '@/lib/ai-providers'
 import { getSystemPrompt } from '@/lib/ai-sdk-config'
 import { orchestrate } from '@/lib/orchestrator'
@@ -113,8 +114,6 @@ export async function POST(request: NextRequest) {
       model: createModel(selectedProvider.provider, complexity || 'simple'),
       messages: aiMessages,
       temperature: providerConfig.temperature,
-      maxTokens: providerConfig.maxTokens,
-      tools: educationalTools,
       onFinish: (result) => {
         console.log('✅ [MULTI-PROVIDER] Stream finished:', {
           finishReason: result.finishReason,

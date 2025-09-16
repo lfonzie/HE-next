@@ -57,7 +57,8 @@ export async function middleware(request: NextRequest) {
     '/test-progressive',
     '/test-visual',
     '/dark-mode-demo',
-    '/chat-advanced'
+    '/chat-advanced',
+    '/lessons'
   ]
 
   // Check if current route is public
@@ -119,7 +120,6 @@ export const config = {
     '/simulador/:path*',
     '/aula/:path*',
     '/aulas/:path*',
-    '/lessons/:path*',
     '/professor/:path*',
     '/professor-interactive/:path*',
     '/professor-interactive-demo/:path*',

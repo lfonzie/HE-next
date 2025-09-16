@@ -1,376 +1,560 @@
-"use client"
+'use client'
 
-import { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import { 
-  Clock, 
-  ArrowLeft, 
-  ArrowRight, 
-  CheckCircle, 
-  XCircle,
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Progress } from '@/components/ui/progress'
+import { Badge } from '@/components/ui/badge'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import {
+  Clock,
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle,
   Flag,
   RotateCcw,
-  Download,
-  Share2,
   AlertTriangle,
-  Loader2
-} from 'lucide-react';
-import { EnemItem, EnemResponse, EnemScore, EnemMode, EnemArea } from '@/types/enem';
-import { useToast } from '@/hooks/use-toast';
-import { EnemLoadingScreen } from '@/components/ui/LoadingScreen';
-import { ExamGenerationLoading } from '@/components/enem/EnemLoadingStates';
+  Loader2,
+  Keyboard,
+  Eye,
+  EyeOff,
+  BookOpen,
+  Target,
+  Timer,
+} from 'lucide-react'
+import { EnemItem, EnemResponse, EnemScore, EnemMode, EnemArea } from '@/types/enem'
+import { useToast } from '@/hooks/use-toast'
+import { ExamGenerationLoading } from '@/components/enem/EnemLoadingStates'
 
-// Função para determinar o texto do chip baseado na origem da pergunta
-function getQuestionSourceChip(question: EnemItem | null): { text: string; variant: "default" | "secondary" | "destructive" | "outline" } {
-  if (!question) {
-    return { text: "ENEM Local", variant: "default" };
-  }
-  
-  // Check metadata first for explicit source information
+// Enhanced TypeScript Interfaces
+interface QuestionSource {
+  text: string
+  variant: 'default' | 'secondary' | 'destructive' | 'outline'
+  icon?: string
+}
+
+interface ExamSession {
+  startTime: Date
+  questionStartTimes: Map<string, number>
+  tabSwitchEvents: Array<{ timestamp: Date; questionIndex: number }>
+}
+
+// Enhanced Constants
+const PROGRESS_STEPS = [
+  { progress: 15, message: 'Configurando simulado ENEM...', icon: '⚙️' },
+  { progress: 35, message: 'Selecionando questões oficiais...', icon: '📚' },
+  { progress: 55, message: 'Analisando competências...', icon: '🎯' },
+  { progress: 75, message: 'Preparando sistema TRI...', icon: '📊' },
+  { progress: 90, message: 'Otimizando experiência...', icon: '✨' },
+  { progress: 100, message: 'Simulado pronto!', icon: '🚀' },
+]
+
+const KEYBOARD_SHORTCUTS = {
+  'ArrowLeft': 'Questão anterior',
+  'ArrowRight': 'Próxima questão',
+  '1-5': 'Selecionar alternativas A-E',
+  'Space': 'Próxima questão',
+  'Enter': 'Confirmar resposta',
+  'F': 'Finalizar simulado (última questão)',
+} as const
+
+const DIFFICULTY_COLORS = {
+  'Fácil': 'bg-green-100 text-green-800',
+  'Médio': 'bg-yellow-100 text-yellow-800',
+  'Difícil': 'bg-red-100 text-red-800',
+} as const
+
+/**
+ * Enhanced function to determine question source with more detailed information
+ */
+const getQuestionSourceChip = (question: EnemItem | null): QuestionSource => {
+  if (!question) return { text: 'ENEM Local', variant: 'default' }
+
+  // Check metadata source first
   if (question.metadata?.source) {
     switch (question.metadata.source) {
       case 'LOCAL_DATABASE':
-        return {
-          text: `ENEM ${question.year || question.metadata.original_year || 'Local'}`,
-          variant: "default"
-        }
       case 'DATABASE':
         return {
-          text: `ENEM ${question.year || question.metadata.original_year || 'API'}`,
-          variant: "default"
+          text: `ENEM ${question.year || question.metadata.original_year || 'Local'}`,
+          variant: 'default',
+          icon: '📖'
         }
       case 'AI':
-        return {
-          text: "IA",
-          variant: "secondary"
-        }
+        return { text: 'IA Gerada', variant: 'secondary', icon: '🤖' }
     }
   }
-  
-  // Check if it's an official ENEM question
+
+  // Check if it's official ENEM
   if (question.metadata?.is_official_enem) {
     return {
-      text: `ENEM ${question.year || question.metadata.original_year || 'Local'}`,
-      variant: "default"
+      text: `ENEM ${question.year || question.metadata.original_year || 'Oficial'}`,
+      variant: 'default',
+      icon: '🏛️'
     }
   }
-  
+
   // Check if it's AI generated
-  if (question.metadata?.is_ai_generated) {
-    return {
-      text: "IA",
-      variant: "secondary"
-    }
+  if (question.metadata?.is_ai_generated || 
+      question.item_id?.startsWith('ai_generated_') || 
+      question.item_id?.startsWith('generated_')) {
+    return { text: 'IA Gerada', variant: 'secondary', icon: '🤖' }
   }
-  
-  // Se tem year definido e não é o ano atual, provavelmente é do banco local
+
+  // Check year and ID patterns
   if (question.year && question.year !== new Date().getFullYear()) {
-    return {
-      text: `ENEM ${question.year}`,
-      variant: "default"
-    }
+    return { text: `ENEM ${question.year}`, variant: 'default', icon: '📅' }
   }
-  
-  // Se tem ID que começa com "enem_", é do banco local
-  if (question.item_id) {
-    if (question.item_id.startsWith('enem_')) {
-      const year = question.year || 'Local'
-      return {
-        text: `ENEM ${year}`,
-        variant: "default"
-      }
-    }
-    if (question.item_id.startsWith('ai_generated_') || question.item_id.startsWith('generated_')) {
-      return {
-        text: "IA",
-        variant: "secondary"
-      }
-    }
+
+  if (question.item_id?.startsWith('enem_')) {
+    return { text: `ENEM ${question.year || 'Oficial'}`, variant: 'default', icon: '📖' }
   }
-  
-  // Default: assumir que é do banco local do ENEM
-  return {
-    text: "ENEM Local",
-    variant: "default"
-  }
+
+  return { text: 'ENEM Local', variant: 'default', icon: '💾' }
 }
 
+/**
+ * Enhanced props interface
+ */
 interface EnemSimulatorV2Props {
-  sessionId: string;
-  items: EnemItem[];
+  sessionId: string
+  items: EnemItem[]
   config: {
-    mode: EnemMode;
-    areas: EnemArea[];
-    numQuestions: number;
-    timeLimit?: number;
-  };
-  onComplete: (score: EnemScore, items: EnemItem[], responses: EnemResponse[]) => void;
+    mode: EnemMode
+    areas: EnemArea[]
+    numQuestions: number
+    timeLimit?: number
+    showKeyboardShortcuts?: boolean
+    autoSave?: boolean
+    allowReview?: boolean
+  }
+  onComplete: (score: EnemScore, items: EnemItem[], responses: EnemResponse[], session: ExamSession) => void
+  onProgress?: (progress: { current: number; total: number; answered: number }) => void
 }
 
-export function EnemSimulatorV2({ sessionId, items, config, onComplete }: EnemSimulatorV2Props) {
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [responses, setResponses] = useState<Map<string, EnemResponse>>(new Map());
-  const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
-  const [isCompleted, setIsCompleted] = useState(false);
-  const [showWarning, setShowWarning] = useState(false);
-  const [tabSwitchCount, setTabSwitchCount] = useState(0);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isGeneratingExam, setIsGeneratingExam] = useState(false);
-  const [generationProgress, setGenerationProgress] = useState(0);
-  const [generationMessage, setGenerationMessage] = useState('');
-  const { toast } = useToast();
+/**
+ * Enhanced ENEM Simulator component with improved UX and performance
+ */
+export function EnemSimulatorV2({ 
+  sessionId, 
+  items, 
+  config, 
+  onComplete, 
+  onProgress 
+}: EnemSimulatorV2Props) {
+  // Core state
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
+  const [responses, setResponses] = useState<Map<string, EnemResponse>>(new Map())
+  const [timeRemaining, setTimeRemaining] = useState<number | null>(null)
+  const [isCompleted, setIsCompleted] = useState(false)
+  
+  // Enhanced session tracking
+  const [examSession] = useState<ExamSession>(() => ({
+    startTime: new Date(),
+    questionStartTimes: new Map(),
+    tabSwitchEvents: []
+  }))
+  
+  // UI state
+  const [showWarning, setShowWarning] = useState(false)
+  const [tabSwitchCount, setTabSwitchCount] = useState(0)
+  const [isSaving, setIsSaving] = useState(false)
+  const [showKeyboardHelp, setShowKeyboardHelp] = useState(false)
+  const [lastActivity, setLastActivity] = useState(Date.now())
+  
+  // Loading state
+  const [isGeneratingExam, setIsGeneratingExam] = useState(items.length === 0)
+  const [generationProgress, setGenerationProgress] = useState(0)
+  const [generationMessage, setGenerationMessage] = useState('')
+  
+  // Refs for performance
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const questionStartTimeRef = useRef<number>(Date.now())
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  
+  const { toast } = useToast()
 
-  const currentItem = items[currentQuestionIndex];
-  const currentResponse = responses.get(currentItem?.item_id);
+  // Memoized values
+  const currentItem = useMemo(() => items[currentQuestionIndex], [items, currentQuestionIndex])
+  const currentResponse = useMemo(() => 
+    responses.get(currentItem?.item_id ?? ''), 
+    [responses, currentItem?.item_id]
+  )
+  const progress = useMemo(
+    () => ((currentQuestionIndex + 1) / Math.max(items.length, 1)) * 100,
+    [currentQuestionIndex, items.length]
+  )
+  const answeredCount = responses.size
+  const sourceChip = useMemo(() => getQuestionSourceChip(currentItem), [currentItem])
 
-  // Simulate exam generation loading when component mounts
+  /**
+   * Enhanced exam generation with smoother progress
+   */
   useEffect(() => {
-    if (items.length === 0) {
-      setIsGeneratingExam(true);
-      setGenerationProgress(0);
-      setGenerationMessage('Gerando simulado ENEM...');
-      
-      // Simulate progressive loading
-      const progressSteps = [
-        { progress: 20, message: 'Configurando simulado ENEM...' },
-        { progress: 40, message: 'Selecionando questões oficiais...' },
-        { progress: 60, message: 'Analisando competências...' },
-        { progress: 80, message: 'Preparando sistema TRI...' },
-        { progress: 100, message: 'Simulado pronto!' }
-      ];
+    if (!isGeneratingExam) return
 
-      let currentStep = 0;
-      const progressInterval = setInterval(() => {
-        if (currentStep < progressSteps.length) {
-          setGenerationProgress(progressSteps[currentStep].progress);
-          setGenerationMessage(progressSteps[currentStep].message);
-          currentStep++;
-        } else {
-          clearInterval(progressInterval);
-          setIsGeneratingExam(false);
+    let currentStep = 0
+    const progressInterval = setInterval(() => {
+      if (currentStep < PROGRESS_STEPS.length) {
+        const step = PROGRESS_STEPS[currentStep]
+        setGenerationProgress(step.progress)
+        setGenerationMessage(step.message)
+        currentStep++
+      } else {
+        clearInterval(progressInterval)
+        setTimeout(() => setIsGeneratingExam(false), 500)
+      }
+    }, 700)
+
+    return () => clearInterval(progressInterval)
+  }, [isGeneratingExam])
+
+  /**
+   * Enhanced timer with better precision and warnings
+   */
+  useEffect(() => {
+    if (!config.timeLimit || isCompleted) return
+
+    setTimeRemaining(config.timeLimit * 60)
+    
+    timerRef.current = setInterval(() => {
+      setTimeRemaining((prev) => {
+        if (prev === null || prev <= 1) {
+          handleTimeUp()
+          return 0
         }
-      }, 800);
+        
+        // Show warnings at specific intervals
+        if (prev === 300) { // 5 minutes
+          toast({
+            title: '⚠️ Atenção',
+            description: 'Restam apenas 5 minutos!',
+            variant: 'destructive',
+          })
+        } else if (prev === 60) { // 1 minute
+          toast({
+            title: '🚨 Último minuto!',
+            description: 'O tempo está acabando!',
+            variant: 'destructive',
+          })
+        }
+        
+        return prev - 1
+      })
+    }, 1000)
 
-      return () => clearInterval(progressInterval);
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+      }
     }
-  }, [items.length]);
+  }, [config.timeLimit, isCompleted])
 
-  // Initialize timer
-  useEffect(() => {
-    if (config.timeLimit && !isCompleted) {
-      setTimeRemaining(config.timeLimit * 60); // Convert to seconds
-      
-      const timer = setInterval(() => {
-        setTimeRemaining(prev => {
-          if (prev === null || prev <= 1) {
-            handleTimeUp();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-
-      return () => clearInterval(timer);
-    }
-  }, [config.timeLimit, isCompleted]);
-
-  // Track tab switches for anti-cheating
+  /**
+   * Enhanced tab switch tracking with detailed logging
+   */
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        setTabSwitchCount(prev => prev + 1);
-        if (tabSwitchCount >= 3) {
-          setShowWarning(true);
+        const switchEvent = {
+          timestamp: new Date(),
+          questionIndex: currentQuestionIndex
         }
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [tabSwitchCount]);
-
-  const handleAnswerSelect = useCallback(async (answer: string) => {
-    if (!currentItem || isCompleted) return;
-
-    // Validate session ID
-    if (!sessionId) {
-      console.error('No session ID available');
-      toast({
-        title: "Erro",
-        description: "ID da sessão não encontrado. Reinicie o simulado.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const startTime = Date.now();
-    
-    // Save response locally first
-    const response: EnemResponse = {
-      response_id: `resp_${Date.now()}`,
-      session_id: sessionId,
-      item_id: currentItem.item_id,
-      selected_answer: answer as any,
-      time_spent: 0, // Will be calculated when saved
-      is_correct: answer === currentItem.correct_answer,
-      timestamp: new Date()
-    };
-
-    setResponses(prev => new Map(prev.set(currentItem.item_id, response)));
-    setIsSaving(true);
-
-    // Save to server
-    try {
-      console.log('Saving response with session ID:', sessionId);
-      const serverResponse = await fetch('/api/enem/responses', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          session_id: sessionId,
-          item_id: currentItem.item_id,
-          selected_answer: answer,
-          time_spent: Math.floor((Date.now() - startTime) / 1000)
+        
+        examSession.tabSwitchEvents.push(switchEvent)
+        
+        setTabSwitchCount((prev) => {
+          const newCount = prev + 1
+          
+          if (newCount === 2) {
+            toast({
+              title: '⚠️ Aviso',
+              description: 'Evite trocar de abas durante o simulado.',
+            })
+          } else if (newCount >= 3) {
+            setShowWarning(true)
+          }
+          
+          return newCount
         })
-      });
-
-      console.log('Response status:', serverResponse.status);
-      
-      if (!serverResponse.ok) {
-        const errorText = await serverResponse.text();
-        console.error('Server response error:', errorText);
-        
-        // For 404 errors (item not found), don't throw error as response is saved locally
-        if (serverResponse.status === 404) {
-          console.log('Item not found in database, but response saved locally');
-          return; // Exit successfully
-        }
-        
-        throw new Error(`Failed to save response: ${serverResponse.status} - ${errorText}`);
       }
-      
-      const responseData = await serverResponse.json();
-      console.log('Response saved successfully:', responseData);
-    } catch (error) {
-      console.error('Error saving response:', error);
-      toast({
-        title: "Erro",
-        description: `Falha ao salvar resposta: ${error.message}`,
-        variant: "destructive"
-      });
-    } finally {
-      setIsSaving(false);
     }
-  }, [currentItem, sessionId, isCompleted, toast]);
 
-  const handleNext = () => {
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [currentQuestionIndex, examSession.tabSwitchEvents, toast])
+
+  /**
+   * Enhanced keyboard shortcuts with better UX
+   */
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (isCompleted || isSaving) return
+
+      // Prevent shortcuts when typing in input fields
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return
+      }
+
+      setLastActivity(Date.now())
+
+      switch (e.key) {
+        case 'ArrowLeft':
+          e.preventDefault()
+          if (currentQuestionIndex > 0) {
+            handlePrevious()
+          }
+          break
+        
+        case 'ArrowRight':
+        case ' ':
+          e.preventDefault()
+          if (currentQuestionIndex < items.length - 1) {
+            handleNext()
+          }
+          break
+        
+        case 'f':
+        case 'F':
+          if (currentQuestionIndex === items.length - 1) {
+            e.preventDefault()
+            handleCompleteExam()
+          }
+          break
+        
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+          e.preventDefault()
+          const answerMap: Record<string, string> = { 
+            '1': 'A', '2': 'B', '3': 'C', '4': 'D', '5': 'E' 
+          }
+          handleAnswerSelect(answerMap[e.key])
+          break
+        
+        case '?':
+          e.preventDefault()
+          setShowKeyboardHelp(prev => !prev)
+          break
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [currentQuestionIndex, items.length, isCompleted, isSaving])
+
+  /**
+   * Track question start times for detailed analytics
+   */
+  useEffect(() => {
+    if (currentItem?.item_id) {
+      questionStartTimeRef.current = Date.now()
+      examSession.questionStartTimes.set(currentItem.item_id, questionStartTimeRef.current)
+    }
+  }, [currentItem?.item_id, examSession.questionStartTimes])
+
+  /**
+   * Progress reporting
+   */
+  useEffect(() => {
+    onProgress?.({
+      current: currentQuestionIndex + 1,
+      total: items.length,
+      answered: answeredCount
+    })
+  }, [currentQuestionIndex, items.length, answeredCount, onProgress])
+
+  /**
+   * Enhanced answer selection with better UX and error handling
+   */
+  const handleAnswerSelect = useCallback(
+    async (answer: string) => {
+      if (!currentItem || isCompleted || isSaving) return
+
+      const questionStartTime = examSession.questionStartTimes.get(currentItem.item_id) || Date.now()
+      const timeSpent = Math.floor((Date.now() - questionStartTime) / 1000)
+      
+      const response: EnemResponse = {
+        response_id: `resp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        session_id: sessionId,
+        item_id: currentItem.item_id,
+        selected_answer: answer as "A" | "B" | "C" | "D" | "E",
+        time_spent: timeSpent,
+        is_correct: answer === currentItem.correct_answer,
+        timestamp: new Date(),
+      }
+
+      // Optimistic update
+      setResponses((prev) => new Map(prev.set(currentItem.item_id, response)))
+      
+      // Clear any existing save timeout
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current)
+      }
+
+      // Auto-save with debouncing
+      if (config.autoSave !== false) {
+        setIsSaving(true)
+        
+        saveTimeoutRef.current = setTimeout(async () => {
+          try {
+            const serverResponse = await fetch('/api/enem/responses', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                session_id: sessionId,
+                item_id: currentItem.item_id,
+                selected_answer: answer,
+                time_spent: timeSpent,
+                metadata: {
+                  tab_switches: tabSwitchCount,
+                  question_start_time: questionStartTime,
+                }
+              }),
+            })
+
+            if (!serverResponse.ok && serverResponse.status !== 404) {
+              throw new Error(`HTTP ${serverResponse.status}`)
+            }
+
+            if (serverResponse.status === 404) {
+              console.log('Item not found in database, saved locally')
+            }
+          } catch (error) {
+            console.error('Error saving response:', error)
+            // Still keep the local response
+          } finally {
+            setIsSaving(false)
+          }
+        }, 300) // 300ms debounce
+      }
+    },
+    [currentItem, sessionId, isCompleted, isSaving, examSession.questionStartTimes, tabSwitchCount, config.autoSave]
+  )
+
+  /**
+   * Enhanced navigation with smooth transitions
+   */
+  const handleNext = useCallback(() => {
     if (currentQuestionIndex < items.length - 1) {
-      setCurrentQuestionIndex(prev => prev + 1);
+      setCurrentQuestionIndex((prev) => prev + 1)
     }
-  };
+  }, [currentQuestionIndex, items.length])
 
-  const handlePrevious = () => {
+  const handlePrevious = useCallback(() => {
     if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(prev => prev - 1);
+      setCurrentQuestionIndex((prev) => prev - 1)
     }
-  };
+  }, [currentQuestionIndex])
 
-  const handleTimeUp = async () => {
-    setIsCompleted(true);
-    await calculateScore();
-  };
+  /**
+   * Enhanced time up handler
+   */
+  const handleTimeUp = useCallback(async () => {
+    toast({
+      title: '⏰ Tempo Esgotado!',
+      description: 'O simulado foi finalizado automaticamente.',
+      variant: 'destructive',
+    })
+    setIsCompleted(true)
+    await calculateScore()
+  }, [])
 
-  const handleCompleteExam = async () => {
-    if (responses.size < items.length) {
-      const confirmed = confirm(
-        `Você respondeu apenas ${responses.size} de ${items.length} questões. ` +
-        'Deseja finalizar mesmo assim?'
-      );
-      if (!confirmed) return;
+  /**
+   * Enhanced exam completion with better user feedback
+   */
+  const handleCompleteExam = useCallback(async () => {
+    const unanswered = items.length - responses.size
+    
+    if (unanswered > 0) {
+      const confirmMessage = unanswered === 1 
+        ? `Você ainda tem 1 questão sem resposta. Deseja finalizar mesmo assim?`
+        : `Você ainda tem ${unanswered} questões sem resposta. Deseja finalizar mesmo assim?`
+      
+      if (!confirm(confirmMessage)) {
+        return
+      }
     }
+    
+    setIsCompleted(true)
+    await calculateScore()
+  }, [responses.size, items.length])
 
-    setIsCompleted(true);
-    await calculateScore();
-  };
-
-  const calculateScore = async () => {
+  /**
+   * Enhanced score calculation with detailed analytics
+   */
+  const calculateScore = useCallback(async () => {
     try {
-      // Validações mais robustas
-      if (!sessionId) {
-        throw new Error('ID da sessão não encontrado');
-      }
+      if (!sessionId) throw new Error('Session ID not found')
+      if (items.length === 0) throw new Error('No questions loaded')
 
-      if (responses.size === 0) {
-        throw new Error('Nenhuma resposta foi registrada');
-      }
-
-      if (items.length === 0) {
-        throw new Error('Nenhuma questão foi carregada');
-      }
-
-      // Preparar dados de forma mais segura
+      const responseArray = Array.from(responses.values())
       const responseData = {
         session_id: sessionId,
-        responses: Array.from(responses.values()).filter(r => r && r.item_id),
-        items: items.filter(item => item && item.item_id),
-        config: config
-      };
-
-      // Log apenas em desenvolvimento
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Calculating score for session ID:', sessionId);
-        console.log('Responses count:', responseData.responses.length);
-        console.log('Items count:', responseData.items.length);
+        responses: responseArray,
+        items: items,
+        config,
+        session_metadata: {
+          start_time: examSession.startTime,
+          end_time: new Date(),
+          tab_switches: examSession.tabSwitchEvents,
+          total_time_spent: Date.now() - examSession.startTime.getTime(),
+          question_times: Object.fromEntries(examSession.questionStartTimes),
+        }
       }
 
       const response = await fetch('/api/enem/scores', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(responseData)
-      });
+        body: JSON.stringify(responseData),
+      })
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Score calculation error:', errorText);
-        throw new Error(`Failed to calculate score: ${response.status} - ${errorText}`);
+        throw new Error(`Failed to calculate score: ${response.status}`)
       }
 
-      const data = await response.json();
-      
+      const data = await response.json()
       if (!data.success || !data.score) {
-        throw new Error('Resposta inválida da API de pontuação');
+        throw new Error('Invalid API response')
       }
 
-      onComplete(data.score, items, Array.from(responses.values()));
+      onComplete(data.score, items, responseArray, examSession)
     } catch (error) {
-      console.error('Error calculating score:', error);
+      console.error('Error calculating score:', error)
       toast({
-        title: "Erro",
-        description: `Falha ao calcular pontuação: ${error.message}`,
-        variant: "destructive"
-      });
+        title: '❌ Erro',
+        description: `Falha ao calcular pontuação: ${(error as Error).message}`,
+        variant: 'destructive',
+      })
     }
-  };
+  }, [sessionId, responses, items, config, examSession, onComplete, toast])
 
-  const formatTime = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
+  /**
+   * Enhanced time formatting with better readability
+   */
+  const formatTime = useCallback((seconds: number) => {
+    const hours = Math.floor(seconds / 3600)
+    const minutes = Math.floor((seconds % 3600) / 60)
+    const secs = seconds % 60
     
     if (hours > 0) {
-      return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+      return `${hours}h ${minutes.toString().padStart(2, '0')}m ${secs.toString().padStart(2, '0')}s`
     }
-    return `${minutes}:${secs.toString().padStart(2, '0')}`;
-  };
+    return `${minutes}m ${secs.toString().padStart(2, '0')}s`
+  }, [])
 
-  const progress = ((currentQuestionIndex + 1) / items.length) * 100;
-  const answeredCount = responses.size;
+  // Cleanup timeouts
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current)
+      }
+    }
+  }, [])
 
-  // Show loading screen while generating exam
   if (isGeneratingExam) {
     return (
       <ExamGenerationLoading
@@ -378,248 +562,434 @@ export function EnemSimulatorV2({ sessionId, items, config, onComplete }: EnemSi
         progress={generationProgress}
         message={generationMessage}
       />
-    );
+    )
   }
 
   if (isCompleted) {
     return (
-      <Card className="max-w-2xl mx-auto">
-        <CardContent className="pt-6 text-center">
-          <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold mb-2">Simulado Concluído!</h2>
-          <p className="text-gray-600 mb-4">
-            Processando seus resultados...
-          </p>
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+      <Card className="max-w-2xl mx-auto" role="region" aria-label="Simulado concluído">
+        <CardContent className="pt-8 text-center">
+          <div className="space-y-4">
+            <CheckCircle className="h-20 w-20 text-green-500 mx-auto" aria-hidden="true" />
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">Simulado Concluído! 🎉</h2>
+              <p className="text-gray-600 text-lg mb-4">
+                Processando seus resultados com inteligência artificial...
+              </p>
+            </div>
+            <div className="flex items-center justify-center space-x-2">
+              <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+              <span className="text-blue-600 font-medium">Analisando desempenho</span>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-4 mt-6">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <strong>Questões respondidas:</strong> {answeredCount}/{items.length}
+                </div>
+                <div>
+                  <strong>Tempo total:</strong> {formatTime(Math.floor((Date.now() - examSession.startTime.getTime()) / 1000))}
+                </div>
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
-    );
+    )
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      {/* Header */}
-      <Card>
-        <CardHeader>
+    <div className="max-w-5xl mx-auto space-y-6" role="main">
+      {/* Enhanced Header with better visual hierarchy */}
+      <Card className="shadow-lg border-t-4 border-t-blue-600">
+        <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
+            <div className="space-y-2">
+              <CardTitle className="flex items-center gap-3 text-xl">
+                <BookOpen className="h-6 w-6 text-blue-600" />
                 Simulado ENEM - {config.mode}
-                <Badge variant="secondary">{config.areas.join(', ')}</Badge>
+                <Badge variant="secondary" className="text-sm">
+                  {config.areas.join(' • ')}
+                </Badge>
               </CardTitle>
-              <p className="text-sm text-gray-600 mt-1">
-                Questão {currentQuestionIndex + 1} de {items.length} • {getQuestionSourceChip(currentItem).text}
-              </p>
+              <div className="flex items-center gap-4 text-sm text-gray-600">
+                <span className="flex items-center gap-1">
+                  <Target className="h-4 w-4" />
+                  Questão {currentQuestionIndex + 1} de {items.length}
+                </span>
+                <Badge variant={sourceChip.variant} className="text-xs">
+                  {sourceChip.icon && <span className="mr-1">{sourceChip.icon}</span>}
+                  {sourceChip.text}
+                </Badge>
+              </div>
             </div>
-            <div className="text-right">
+            
+            <div className="text-right space-y-2">
               {timeRemaining !== null && (
-                <div className="flex items-center gap-2 text-lg font-semibold">
-                  <Clock className="h-5 w-5" />
+                <div
+                  className={`flex items-center gap-2 text-lg font-bold ${
+                    timeRemaining < 300 ? 'text-red-600' : timeRemaining < 900 ? 'text-orange-600' : 'text-gray-900'
+                  }`}
+                  aria-live="polite"
+                  aria-label={`Tempo restante: ${formatTime(timeRemaining)}`}
+                >
+                  <Timer className="h-5 w-5" />
                   {formatTime(timeRemaining)}
                 </div>
               )}
-              <div className="text-sm text-gray-600">
-                Respondidas: {answeredCount}/{items.length}
+              <div className="flex items-center gap-4 text-sm text-gray-600">
+                <span>Respondidas: {answeredCount}/{items.length}</span>
                 {isSaving && (
-                  <span className="ml-2 text-blue-600 text-xs">
-                    💾 Salvando...
+                  <span className="text-blue-600 flex items-center gap-1">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Salvando...
                   </span>
                 )}
               </div>
             </div>
           </div>
           
-          <Progress value={progress} className="mt-4" />
+          <div className="space-y-2">
+            <Progress 
+              value={progress} 
+              className="h-2" 
+              aria-label={`Progresso: ${Math.round(progress)}%`} 
+            />
+            <div className="flex justify-between text-xs text-gray-500">
+              <span>{Math.round(progress)}% concluído</span>
+              <span>{answeredCount} de {items.length} respondidas</span>
+            </div>
+          </div>
         </CardHeader>
       </Card>
 
-      {/* Tab Switch Warning */}
+      {/* Enhanced Warning System */}
       {showWarning && (
-        <Card className="border-orange-200 bg-orange-50">
+        <Card className="border-orange-300 bg-gradient-to-r from-orange-50 to-yellow-50" role="alert">
           <CardContent className="pt-4">
-            <div className="flex items-center gap-2 text-orange-800">
-              <AlertTriangle className="h-5 w-5" />
-              <span className="font-medium">
-                Atenção: Você trocou de aba {tabSwitchCount} vezes. 
-                Muitas trocas podem afetar a precisão do simulado.
-              </span>
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="h-6 w-6 text-orange-600 mt-0.5" />
+              <div>
+                <h3 className="font-semibold text-orange-900 mb-1">
+                  ⚠️ Múltiplas trocas de aba detectadas
+                </h3>
+                <p className="text-orange-800 text-sm">
+                  Você trocou de aba <strong>{tabSwitchCount} vezes</strong>. 
+                  Isso pode afetar a precisão da análise do seu desempenho no simulado real.
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Question */}
-      <Card>
-        <CardHeader>
+      {/* Enhanced Question Card */}
+      <Card className="shadow-lg">
+        <CardHeader className="border-b">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <Badge variant="outline" className="text-sm font-semibold">
-                Questão {currentQuestionIndex + 1}
+              <Badge variant="outline" className="text-base font-bold px-3 py-1">
+                #{currentQuestionIndex + 1}
               </Badge>
-              <Badge variant={getQuestionSourceChip(currentItem).variant} className="text-xs">
-                {getQuestionSourceChip(currentItem).text}
+              <Badge variant={sourceChip.variant} className="text-sm">
+                {sourceChip.icon && <span className="mr-1">{sourceChip.icon}</span>}
+                {sourceChip.text}
               </Badge>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="outline">{currentItem?.area}</Badge>
-              <Badge variant="secondary">{currentItem?.estimated_difficulty}</Badge>
+            
+            <div className="flex items-center gap-3">
+              <Badge variant="outline" className="text-sm">
+                {currentItem?.area}
+              </Badge>
+              <Badge 
+                className={`text-sm ${
+                  DIFFICULTY_COLORS[currentItem?.estimated_difficulty as keyof typeof DIFFICULTY_COLORS] || 'bg-gray-100 text-gray-800'
+                }`}
+              >
+                {currentItem?.estimated_difficulty}
+              </Badge>
+              {currentResponse && (
+                <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">
+                  ✓ Respondida
+                </Badge>
+              )}
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            <div className="prose max-w-none">
+        
+        <CardContent className="pt-6">
+          <div className="space-y-8">
+            {/* Enhanced Question Text */}
+            <div className="prose max-w-none prose-lg">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={{
-                  // Custom styling for markdown elements
                   h1: ({ children }) => (
-                    <h1 className="text-xl font-semibold mb-3 text-gray-900">{children}</h1>
+                    <h1 className="text-2xl font-bold mb-4 text-gray-900">{children}</h1>
                   ),
                   h2: ({ children }) => (
-                    <h2 className="text-lg font-semibold mb-3 text-gray-900">{children}</h2>
+                    <h2 className="text-xl font-semibold mb-4 text-gray-900">{children}</h2>
                   ),
                   h3: ({ children }) => (
-                    <h3 className="text-base font-semibold mb-2 text-gray-900">{children}</h3>
+                    <h3 className="text-lg font-semibold mb-3 text-gray-900">{children}</h3>
                   ),
                   p: ({ children }) => (
-                    <p className="text-gray-800 mb-4 leading-relaxed">{children}</p>
+                    <p className="text-gray-800 mb-4 leading-relaxed text-base">{children}</p>
                   ),
                   ul: ({ children }) => (
-                    <ul className="list-disc list-inside mb-4 space-y-1 text-gray-800">{children}</ul>
+                    <ul className="list-disc list-inside mb-4 space-y-2 text-gray-800">{children}</ul>
                   ),
                   ol: ({ children }) => (
-                    <ol className="list-decimal list-inside mb-4 space-y-1 text-gray-800">{children}</ol>
+                    <ol className="list-decimal list-inside mb-4 space-y-2 text-gray-800">{children}</ol>
                   ),
-                  li: ({ children }) => (
-                    <li className="mb-1">{children}</li>
-                  ),
+                  li: ({ children }) => <li className="mb-1 leading-relaxed">{children}</li>,
                   strong: ({ children }) => (
-                    <strong className="font-semibold text-gray-900">{children}</strong>
+                    <strong className="font-bold text-gray-900">{children}</strong>
                   ),
-                  em: ({ children }) => (
-                    <em className="italic text-gray-800">{children}</em>
-                  ),
+                  em: ({ children }) => <em className="italic text-gray-800">{children}</em>,
                   blockquote: ({ children }) => (
-                    <blockquote className="border-l-4 border-blue-200 pl-4 italic text-gray-700 mb-4">
+                    <blockquote className="border-l-4 border-blue-300 pl-4 italic text-gray-700 mb-4 bg-blue-50 py-2">
                       {children}
                     </blockquote>
                   ),
                   code: ({ children }) => (
-                    <code className="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono text-gray-800">
+                    <code className="bg-gray-200 px-2 py-1 rounded text-sm font-mono text-gray-900">
                       {children}
                     </code>
                   ),
                   pre: ({ children }) => (
-                    <pre className="bg-gray-100 p-3 rounded-lg overflow-x-auto mb-4">
+                    <pre className="bg-gray-100 p-4 rounded-lg overflow-x-auto mb-4 border">
                       {children}
                     </pre>
                   ),
                 }}
               >
-                {currentItem?.text || ''}
+                {currentItem?.text ?? ''}
               </ReactMarkdown>
             </div>
 
-            {/* Alternatives */}
-            <div className="space-y-3">
-              {currentItem?.alternatives && Object.entries(currentItem.alternatives).map(([key, value]) => (
-                <button
-                  key={key}
-                  onClick={() => handleAnswerSelect(key)}
-                  className={`w-full p-4 text-left border rounded-lg transition-all ${
-                    currentResponse?.selected_answer === key
-                      ? 'border-blue-500 bg-blue-50 text-blue-900'
-                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${
-                      currentResponse?.selected_answer === key
-                        ? 'border-blue-500 bg-blue-500 text-white'
-                        : 'border-gray-300'
-                    }`}>
-                      {key}
-                    </div>
-                    <div className="flex-1">
-                      <ReactMarkdown
-                        remarkPlugins={[remarkGfm]}
-                        components={{
-                          // Custom styling for markdown elements in alternatives
-                          p: ({ children }) => (
-                            <span className="inline">{children}</span>
-                          ),
-                          strong: ({ children }) => (
-                            <strong className="font-semibold text-gray-900">{children}</strong>
-                          ),
-                          em: ({ children }) => (
-                            <em className="italic text-gray-800">{children}</em>
-                          ),
-                          code: ({ children }) => (
-                            <code className="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono text-gray-800">
-                              {children}
-                            </code>
-                          ),
-                          ul: ({ children }) => (
-                            <ul className="list-disc list-inside space-y-1 text-gray-800">{children}</ul>
-                          ),
-                          ol: ({ children }) => (
-                            <ol className="list-decimal list-inside space-y-1 text-gray-800">{children}</ol>
-                          ),
-                          li: ({ children }) => (
-                            <li className="mb-1">{children}</li>
-                          ),
-                        }}
-                      >
-                        {value}
-                      </ReactMarkdown>
-                    </div>
-                  </div>
-                </button>
-              ))}
+            {/* Enhanced Alternatives */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Selecione a alternativa correta:
+              </h3>
+              {currentItem?.alternatives &&
+                Object.entries(currentItem.alternatives).map(([key, value], index) => {
+                  const isSelected = currentResponse?.selected_answer === key
+                  
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => handleAnswerSelect(key)}
+                      disabled={isSaving || isCompleted}
+                      className={`w-full p-5 text-left border-2 rounded-xl transition-all duration-200 ${
+                        isSelected
+                          ? 'border-blue-500 bg-blue-50 text-blue-900 shadow-md'
+                          : 'border-gray-200 hover:border-gray-400 hover:bg-gray-50 hover:shadow-sm'
+                      } ${
+                        isSaving || isCompleted 
+                          ? 'cursor-not-allowed opacity-60' 
+                          : 'cursor-pointer'
+                      }`}
+                      aria-label={`Selecionar alternativa ${key}: ${value.substring(0, 50)}...`}
+                      aria-pressed={isSelected}
+                    >
+                      <div className="flex items-start gap-4">
+                        <div
+                          className={`w-10 h-10 rounded-full border-2 flex items-center justify-center font-bold text-lg ${
+                            isSelected
+                              ? 'border-blue-500 bg-blue-500 text-white'
+                              : 'border-gray-400 text-gray-600'
+                          }`}
+                        >
+                          {key}
+                        </div>
+                        <div className="flex-1 pt-1">
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            components={{
+                              p: ({ children }) => <span className="inline text-base">{children}</span>,
+                              strong: ({ children }) => (
+                                <strong className="font-semibold text-gray-900">{children}</strong>
+                              ),
+                              em: ({ children }) => <em className="italic text-gray-800">{children}</em>,
+                              code: ({ children }) => (
+                                <code className="bg-gray-200 px-1 py-0.5 rounded text-sm font-mono text-gray-800">
+                                  {children}
+                                </code>
+                              ),
+                              ul: ({ children }) => (
+                                <ul className="list-disc list-inside space-y-1 text-gray-800 mt-2">{children}</ul>
+                              ),
+                              ol: ({ children }) => (
+                                <ol className="list-decimal list-inside space-y-1 text-gray-800 mt-2">{children}</ol>
+                              ),
+                              li: ({ children }) => <li className="mb-1">{children}</li>,
+                            }}
+                          >
+                            {value}
+                          </ReactMarkdown>
+                        </div>
+                        {isSelected && (
+                          <div className="text-blue-600 pt-1">
+                            <CheckCircle className="h-5 w-5" />
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  )
+                })}
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Navigation */}
-      <Card>
+      {/* Enhanced Navigation with better UX */}
+      <Card className="shadow-md">
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <Button
               variant="outline"
               onClick={handlePrevious}
-              disabled={currentQuestionIndex === 0}
+              disabled={currentQuestionIndex === 0 || isSaving}
+              aria-label="Questão anterior"
+              className="flex items-center gap-2 px-6"
             >
-              <ArrowLeft className="h-4 w-4 mr-2" />
+              <ArrowLeft className="h-4 w-4" />
               Anterior
+              <kbd className="hidden sm:inline-block ml-2 px-2 py-1 bg-gray-100 text-xs rounded">←</kbd>
             </Button>
-
-
-            {currentQuestionIndex === items.length - 1 ? (
-              <Button onClick={handleCompleteExam} className="bg-green-600 hover:bg-green-700">
-                <Flag className="h-4 w-4 mr-2" />
-                Finalizar Simulado
-              </Button>
-            ) : (
-              <Button onClick={handleNext}>
-                Próxima
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </Button>
-            )}
+            
+            <div className="flex items-center gap-4">
+              <div className="text-center">
+                <div className="text-lg font-bold text-gray-900">
+                  {currentQuestionIndex + 1} / {items.length}
+                </div>
+                <div className="text-xs text-gray-500">questões</div>
+              </div>
+              
+              {config.showKeyboardShortcuts !== false && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowKeyboardHelp(!showKeyboardHelp)}
+                  aria-label={showKeyboardHelp ? "Ocultar atalhos" : "Mostrar atalhos"}
+                  className="text-gray-600 hover:text-gray-900"
+                >
+                  <Keyboard className="h-4 w-4 mr-1" />
+                  {showKeyboardHelp ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                </Button>
+              )}
+            </div>
+            
+            <Button
+              onClick={currentQuestionIndex === items.length - 1 ? handleCompleteExam : handleNext}
+              disabled={isSaving}
+              className={`flex items-center gap-2 px-6 ${
+                currentQuestionIndex === items.length - 1 
+                  ? 'bg-green-600 hover:bg-green-700 text-white' 
+                  : ''
+              }`}
+              aria-label={
+                currentQuestionIndex === items.length - 1 
+                  ? 'Finalizar simulado' 
+                  : 'Próxima questão'
+              }
+            >
+              {currentQuestionIndex === items.length - 1 ? (
+                <>
+                  <Flag className="h-4 w-4" />
+                  Finalizar
+                  <kbd className="hidden sm:inline-block ml-2 px-2 py-1 bg-green-800 text-xs rounded">F</kbd>
+                </>
+              ) : (
+                <>
+                  Próxima
+                  <ArrowRight className="h-4 w-4" />
+                  <kbd className="hidden sm:inline-block ml-2 px-2 py-1 bg-gray-700 text-xs rounded text-white">→</kbd>
+                </>
+              )}
+            </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Keyboard shortcuts info */}
-      <Card className="bg-gray-50">
+      {/* Enhanced Keyboard Shortcuts Panel */}
+      {showKeyboardHelp && (
+        <Card className="shadow-lg border-dashed border-2 border-gray-300 bg-gradient-to-r from-blue-50 to-indigo-50">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <Keyboard className="h-5 w-5" />
+                Atalhos do Teclado
+              </h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowKeyboardHelp(false)}
+                className="text-gray-600 hover:text-gray-900"
+              >
+                <EyeOff className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {Object.entries(KEYBOARD_SHORTCUTS).map(([key, description]) => (
+                <div key={key} className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm border">
+                  <span className="text-sm text-gray-600">{description}</span>
+                  <kbd className="px-2 py-1 bg-gray-100 text-xs font-mono rounded border">
+                    {key}
+                  </kbd>
+                </div>
+              ))}
+            </div>
+            
+            <div className="mt-4 p-3 bg-blue-100 rounded-lg">
+              <p className="text-sm text-blue-800">
+                <strong>💡 Dica:</strong> Use os atalhos para navegar mais rapidamente pelo simulado. 
+                Pressione <kbd className="px-1 bg-white rounded">?</kbd> para alternar esta ajuda.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Enhanced Stats Panel */}
+      <Card className="bg-gradient-to-r from-gray-50 to-blue-50 border border-gray-200">
         <CardContent className="pt-4">
-          <div className="text-sm text-gray-600 text-center">
-            <strong>Atalhos:</strong> Use as teclas 1-5 para selecionar alternativas A-E, 
-            ← → para navegar entre questões
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div className="space-y-1">
+              <div className="text-2xl font-bold text-blue-600">{answeredCount}</div>
+              <div className="text-sm text-gray-600">Respondidas</div>
+            </div>
+            
+            <div className="space-y-1">
+              <div className="text-2xl font-bold text-gray-600">{items.length - answeredCount}</div>
+              <div className="text-sm text-gray-600">Restantes</div>
+            </div>
+            
+            <div className="space-y-1">
+              <div className="text-2xl font-bold text-orange-600">{Math.round(progress)}%</div>
+              <div className="text-sm text-gray-600">Progresso</div>
+            </div>
+            
+            <div className="space-y-1">
+              <div className="text-2xl font-bold text-purple-600">
+                {timeRemaining ? formatTime(timeRemaining) : '--'}
+              </div>
+              <div className="text-sm text-gray-600">Tempo</div>
+            </div>
+          </div>
+          
+          {/* Additional helpful info */}
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <div className="flex items-center justify-center gap-6 text-xs text-gray-500">
+              <span>⌨️ Use atalhos para maior agilidade</span>
+              <span>💾 Respostas salvas automaticamente</span>
+              <span>📊 Sistema TRI ativo</span>
+            </div>
           </div>
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

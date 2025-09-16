@@ -207,7 +207,7 @@ export default function LessonPage() {
 
     // Check if lesson is completed
     const slidesAvailable = progressiveLoading.getAvailableSlides()
-    const totalStages = Math.max(lessonData.stages.length, slidesAvailable.length)
+    const totalStages = Math.max((lessonData?.stages?.length || 0), slidesAvailable.length)
     if (stageIndex === totalStages - 1) {
       setIsCompleted(true)
       toast.success('🎉 Parabéns! Você completou a aula!')
@@ -216,7 +216,7 @@ export default function LessonPage() {
 
   const handleNext = () => {
     const slidesAvailable = progressiveLoading.getAvailableSlides()
-    const totalStages = Math.max(lessonData.stages.length, slidesAvailable.length)
+    const totalStages = Math.max((lessonData?.stages?.length || 0), slidesAvailable.length)
     
     if (currentStage < totalStages - 1) {
       setCurrentStage(prev => prev + 1)

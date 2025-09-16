@@ -180,6 +180,7 @@ export interface EnemSessionRequest {
       medium: number;
       hard: number;
     };
+    year?: number;
   };
 }
 
