@@ -69,11 +69,28 @@ export default function LessonPage() {
 
   // Removed progressive loading - lessons are now saved in database
 
-  // Load lesson data from database
+  // Load lesson data from database or localStorage (demo mode)
   useEffect(() => {
     const loadLesson = async () => {
       try {
-        // Try to load from database first
+        // First, check localStorage for demo mode lessons
+        const demoLessonKey = `demo_lesson_${lessonId}`
+        const demoLesson = localStorage.getItem(demoLessonKey)
+        
+        if (demoLesson) {
+          console.log('Loading demo lesson from localStorage:', lessonId)
+          try {
+            const parsedLesson = JSON.parse(demoLesson)
+            setLessonData(parsedLesson)
+            setIsLoading(false)
+            return
+          } catch (parseError) {
+            console.error('Error parsing demo lesson from localStorage:', parseError)
+            // Continue to try database
+          }
+        }
+
+        // Try to load from database
         try {
           const response = await fetch(`/api/lessons/${lessonId}`)
           if (response.ok) {
@@ -95,8 +112,8 @@ export default function LessonPage() {
             setIsLoading(false)
             return
           } else {
-            // Lesson not found in database
-            console.log('Aula não encontrada no banco de dados:', lessonId)
+            // Lesson not found in database or localStorage
+            console.log('Aula não encontrada no banco de dados nem no localStorage:', lessonId)
             toast.error('Aula não encontrada')
             router.push('/aulas')
             return
@@ -258,13 +275,13 @@ export default function LessonPage() {
           </Button>
           <Badge variant="outline" className="flex items-center gap-1">
             <BookOpen className="h-3 w-3" />
-            {lessonData.metadata.subject}
+            {lessonData.metadata?.subject || 'Matéria'}
           </Badge>
           <Badge variant="outline">
-            {lessonData.metadata.grade}º ano
+            {lessonData.metadata?.grade || 'N/A'}º ano
           </Badge>
-          <Badge className={getDifficultyColor(lessonData.metadata.difficulty)}>
-            {lessonData.metadata.difficulty}
+          <Badge className={getDifficultyColor(lessonData.metadata?.difficulty || 'medium')}>
+            {lessonData.metadata?.difficulty || 'medium'}
           </Badge>
         </div>
 
@@ -275,7 +292,7 @@ export default function LessonPage() {
         <div className="flex items-center gap-6 mb-6">
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-blue-600" />
-            <span className="text-sm">{lessonData.metadata.duration}min</span>
+            <span className="text-sm">{lessonData.metadata?.duration || 'N/A'}min</span>
           </div>
           <div className="flex items-center gap-2">
             <Star className="h-4 w-4 text-yellow-600" />

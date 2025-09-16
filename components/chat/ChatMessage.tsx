@@ -19,6 +19,7 @@ import { MessageRenderer } from "./MessageRenderer";
 import { MarkdownRendererNew as MarkdownRenderer } from "./MarkdownRendererNew";
 import { BlocksRenderer } from "./BlocksRenderer";
 import { ActionsRenderer } from "./ActionsRenderer";
+import { ModelChip, ModelDetails } from "./ModelChip";
 import { MODULES, convertToOldModuleId } from "@/lib/modules";
 import { getModuleIcon } from "@/lib/moduleIcons";
 import { useState, useEffect } from "react";
@@ -194,21 +195,17 @@ export const ChatMessage = memo(function ChatMessage({
           >
             <ModuleIcon className="w-5 h-5 text-white" />
           </div>
-          {/* Menção de IA/IA Turbo/IA Eco */}
-          {message.tier && (
-            <span className={`mt-1 px-1.5 py-0.5 rounded-full text-xs font-medium ${
-              message.tier === "IA_SUPER"
-                ? "bg-gradient-to-r from-yellow-100 to-yellow-200 text-yellow-800 border border-yellow-200"
-                : message.tier === "IA_ECO"
-                ? "bg-gradient-to-r from-green-100 to-green-200 text-green-800 border border-green-200"
-                : "bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border border-blue-200"
-            }`}
-            style={{
-              boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-              fontSize: '10px'
-            }}>
-              {message.tier === "IA_SUPER" ? "🚀 IA Turbo" : message.tier === "IA_ECO" ? "🌱 IA Eco" : "⚡ IA"}
-            </span>
+          {/* Chip do modelo usado */}
+          {!isUser && (
+            <div className="mt-1">
+              <ModelChip 
+                model={message.model}
+                provider={message.provider}
+                complexity={message.complexity}
+                tier={message.tier}
+                className="scale-90"
+              />
+            </div>
           )}
           
           {/* Descrição do módulo */}
@@ -399,6 +396,18 @@ export const ChatMessage = memo(function ChatMessage({
             {typeof message.tokens === "number" && (
               <span className="ml-2">{formatTokens(message.tokens)} tokens</span>
             )}
+            {/* Informações detalhadas do modelo */}
+            {!isUser && (message.model || message.provider || message.complexity) && (
+              <div className="mt-1">
+                <ModelDetails 
+                  model={message.model}
+                  provider={message.provider}
+                  complexity={message.complexity}
+                  tier={message.tier}
+                  tokens={message.tokens}
+                />
+              </div>
+            )}
           </footer>
         </article>
       </div>
@@ -421,6 +430,8 @@ export const ChatMessage = memo(function ChatMessage({
     prev.message.timestamp === next.message.timestamp &&
     prev.message.tokens === next.message.tokens &&
     prev.message.tier === next.message.tier &&
+    prev.message.provider === next.message.provider &&
+    prev.message.complexity === next.message.complexity &&
     prev.message.webSearchUsed === next.message.webSearchUsed &&
     JSON.stringify(prev.message.citations ?? []) === JSON.stringify(next.message.citations ?? []) &&
     JSON.stringify(prev.message.attachment ?? null) === JSON.stringify(next.message.attachment ?? null)

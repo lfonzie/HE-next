@@ -59,6 +59,10 @@ export interface Message {
   image?: string
   attachment?: File
   hasError?: boolean
+  // Informações de roteamento do modelo
+  provider?: string
+  complexity?: string
+  routingReasoning?: string
   // Orchestrated UI payloads
   blocks?: OrchestratorBlock[]
   actions?: OrchestratorAction[]

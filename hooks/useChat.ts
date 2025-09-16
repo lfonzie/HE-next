@@ -306,8 +306,12 @@ export function useChat(onStreamingStart?: () => void) {
       const provider = response.headers.get('X-Provider') || 'unknown'
       const model = response.headers.get('X-Model') || 'unknown'
       const module = response.headers.get('X-Module') || finalModule
+      const complexity = response.headers.get('X-Complexity') || 'simple'
+      const tier = response.headers.get('X-Tier') as "IA" | "IA_SUPER" | "IA_ECO" | undefined
+      const routingReasoning = response.headers.get('X-Routing-Reasoning') || ''
       
       finalModel = model
+      finalTier = tier
       finalModule = convertApiModuleToSystem(module)
 
       while (true) {
@@ -328,6 +332,9 @@ export function useChat(onStreamingStart?: () => void) {
                   tokens: tokenCount,
                   tier: finalTier,
                   module: finalModule,
+                  provider: provider,
+                  complexity: complexity,
+                  routingReasoning: routingReasoning,
                   isStreaming: false
                 }
               }

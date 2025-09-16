@@ -10,6 +10,7 @@ import {
   ProviderType,
   PROVIDER_MODELS
 } from '@/lib/ai-providers'
+import { routeAIModel } from '@/lib/ai-model-router'
 import { getSystemPrompt } from '@/lib/ai-sdk-config'
 import { orchestrate } from '@/lib/orchestrator'
 import { educationalTools } from '@/lib/ai-tools'
@@ -42,48 +43,25 @@ export async function POST(request: NextRequest) {
       messageCount: messages.length
     })
 
-    // Determinar provedor automaticamente baseado no conteúdo da mensagem
-    const messageContent = lastMessage.content.toLowerCase()
-    let autoComplexity = 'simple'
-    let autoProvider = 'auto'
+    // Usar sistema de roteamento inteligente
+    const routingResult = routeAIModel(
+      lastMessage.content,
+      'education', // Caso de uso padrão para chat educacional
+      provider as ProviderType,
+      complexity as any
+    )
     
-    // Detectar complexidade baseada no conteúdo
-    if (messageContent.includes('explicar') || 
-        messageContent.includes('como funciona') || 
-        messageContent.includes('por que') ||
-        messageContent.includes('análise') ||
-        messageContent.includes('detalhado')) {
-      autoComplexity = 'complex'
-    } else if (messageContent.includes('rápido') || 
-               messageContent.includes('urgente') ||
-               messageContent.length < 50) {
-      autoComplexity = 'fast'
-    }
-    
-    // Detectar provedor baseado no tipo de conteúdo
-    if (messageContent.includes('matemática') || 
-        messageContent.includes('física') || 
-        messageContent.includes('química') ||
-        messageContent.includes('cálculo') ||
-        messageContent.includes('equação')) {
-      autoProvider = 'openai' // OpenAI é melhor para matemática
-    } else if (messageContent.includes('história') || 
-               messageContent.includes('geografia') ||
-               messageContent.includes('português') ||
-               messageContent.includes('literatura')) {
-      autoProvider = 'google' // Google é bom para humanidades
-    }
-    
-    console.log('🎯 [AUTO-SELECTION] Detected:', {
-      content: messageContent.substring(0, 50) + '...',
-      autoComplexity,
-      autoProvider,
-      originalProvider: provider
+    console.log('🎯 [ROUTING] Result:', {
+      content: lastMessage.content.substring(0, 50) + '...',
+      provider: routingResult.provider,
+      model: routingResult.model,
+      complexity: routingResult.complexity,
+      reasoning: routingResult.metadata.reasoning
     })
     
     const selectedProvider = selectProvider(
-      autoComplexity,
-      autoProvider as ProviderType
+      routingResult.complexity,
+      routingResult.provider
     )
 
     console.log('🎯 [PROVIDER] Selected:', selectedProvider)
@@ -180,10 +158,13 @@ export async function POST(request: NextRequest) {
     return new Response(stream, {
       headers: {
         'Content-Type': 'text/plain; charset=utf-8',
-        'X-Provider': selectedProvider.provider,
-        'X-Model': selectedProvider.model,
+        'X-Provider': routingResult.provider,
+        'X-Model': routingResult.model,
         'X-Module': targetModule,
-        'X-Complexity': autoComplexity,
+        'X-Complexity': routingResult.complexity,
+        'X-Tier': routingResult.complexity === 'simple' ? 'IA' : 
+                  routingResult.complexity === 'complex' ? 'IA_SUPER' : 'IA_ECO',
+        'X-Routing-Reasoning': routingResult.metadata.reasoning,
         'X-Auto-Selected': 'true',
         'X-Timestamp': Date.now().toString()
       }

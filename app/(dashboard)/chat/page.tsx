@@ -459,6 +459,8 @@ export default function ChatPage() {
                       tier={message.tier}
                       model={message.model}
                       tokens={message.tokens}
+                      provider={message.provider}
+                      complexity={message.complexity}
                     />
                   ) : (
                     <ChatMessage

@@ -5,6 +5,7 @@ import { openai } from '@/lib/openai'
 import { google } from '@ai-sdk/google'
 import { streamText } from 'ai'
 import { getModelTier } from '@/lib/ai-config'
+import { routeAIModel } from '@/lib/ai-model-router'
 import { orchestrate } from '@/lib/orchestrator'
 import '@/lib/orchestrator-modules' // ensure modules are registered
 
@@ -56,19 +57,32 @@ export async function POST(request: NextRequest) {
     let readableStream: ReadableStream<Uint8Array>
     let routingResult: any = null
 
-    // Se o orchestrator retornou texto, usar Google AI para conversas simples
+    // Se o orchestrator retornou texto, usar sistema de roteamento inteligente
     if (orchestratorResult.text) {
-      // Detectar se é uma conversa simples (priorizar Google AI)
-      const isSimpleChat = message.length < 100 && !message.includes('matemática') && !message.includes('física') && !message.includes('química')
+      // Usar sistema de roteamento inteligente
+      const routingResult = routeAIModel(
+        message,
+        'education', // Caso de uso padrão para chat educacional
+        undefined, // Provedor automático
+        undefined  // Complexidade automática
+      )
+      
+      console.log('🎯 [ROUTING] Result:', {
+        message: message.substring(0, 50) + '...',
+        provider: routingResult.provider,
+        model: routingResult.model,
+        complexity: routingResult.complexity,
+        reasoning: routingResult.metadata.reasoning
+      })
       
       // Usar Google AI para conversas simples, OpenAI para outras
-      const useGoogleAI = isSimpleChat && process.env.GOOGLE_GENERATIVE_AI_API_KEY
+      const useGoogleAI = routingResult.provider === 'google' && process.env.GOOGLE_GENERATIVE_AI_API_KEY
       
       console.log('🎯 [CHAT-STREAM] Provider selection:', {
         message: message.substring(0, 50) + '...',
-        isSimpleChat,
         useGoogleAI,
-        provider: useGoogleAI ? 'google' : 'openai'
+        provider: routingResult.provider,
+        model: routingResult.model
       })
 
       // Preparar mensagens com histórico para manter contexto
@@ -175,11 +189,14 @@ Contexto atual: Módulo: ${orchestratorResult.trace?.module || 'atendimento'}`
             // Enviar metadados finais incluindo tier e módulo
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
               metadata: { 
-                model: useGoogleAI ? 'gemini-2.0-flash-exp' : model, 
-                tier: tier,
+                model: routingResult.model, 
+                tier: routingResult.complexity === 'simple' ? 'IA' : 
+                      routingResult.complexity === 'complex' ? 'IA_SUPER' : 'IA_ECO',
                 tokens: 0, // Será calculado pelo cliente
                 module: orchestratorResult.trace?.module,
-                provider: useGoogleAI ? 'google' : 'openai'
+                provider: routingResult.provider,
+                complexity: routingResult.complexity,
+                routingReasoning: routingResult.metadata.reasoning
               } 
             })}\n\n`))
             controller.enqueue(encoder.encode('data: [DONE]\n\n'))

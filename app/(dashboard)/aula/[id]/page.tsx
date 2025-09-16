@@ -55,11 +55,28 @@ export default function AulaPage() {
   useEffect(() => {
     const loadLesson = async () => {
       try {
-        // Try to load from database first
+        // First, check localStorage for demo mode lessons
+        const demoLessonKey = `demo_lesson_${lessonId}`
+        const demoLesson = localStorage.getItem(demoLessonKey)
+        
+        if (demoLesson) {
+          console.log('Loading demo lesson from localStorage:', lessonId)
+          try {
+            const parsedLesson = JSON.parse(demoLesson)
+            setLessonData(parsedLesson)
+            setIsLoading(false)
+            return
+          } catch (parseError) {
+            console.error('Error parsing demo lesson from localStorage:', parseError)
+            // Continue to try database
+          }
+        }
+
+        // Try to load from database
         const response = await fetch(`/api/lessons/${lessonId}`)
         if (response.ok) {
           const data = await response.json()
-          setLessonData(data)
+          setLessonData(data.lesson)
         } else {
           // Fallback to static data for photosynthesis lesson
           if (lessonId === 'photosynthesis') {

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { ModuleId } from "@/lib/modules";
 import { getModuleIcon } from "@/lib/moduleIcons";
 import { MarkdownRendererNew as MarkdownRenderer } from "./MarkdownRendererNew";
+import { ModelChip, ModelDetails } from "./ModelChip";
 
 interface StreamingMessageProps {
   content: string;
@@ -13,6 +14,8 @@ interface StreamingMessageProps {
   tier?: "IA" | "IA_SUPER" | "IA_ECO";
   model?: string;
   tokens?: number;
+  provider?: string;
+  complexity?: string;
 }
 
 // Mapear IDs dos módulos para chaves dos ícones
@@ -61,7 +64,9 @@ export const StreamingMessage: React.FC<StreamingMessageProps> = ({
   currentModuleId,
   tier,
   model,
-  tokens
+  tokens,
+  provider,
+  complexity
 }) => {
   // StreamingMessage representa mensagens do sistema/IA, não do usuário
   // Não fazemos classificação automática aqui pois são respostas do sistema
@@ -108,19 +113,16 @@ export const StreamingMessage: React.FC<StreamingMessageProps> = ({
         >
           <ModuleIcon className="w-5 h-5 text-white" />
         </div>
-        {tier && (
-          <span className={`mt-1 px-1.5 py-0.5 rounded-full text-xs font-medium ${
-            tier === "IA_SUPER"
-              ? "bg-gradient-to-r from-yellow-100 to-yellow-200 text-yellow-800 border border-yellow-200"
-              : "bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border border-blue-200"
-          }`}
-          style={{
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-            fontSize: '10px'
-          }}>
-            {tier === "IA_SUPER" ? "🚀 IA Turbo" : "⚡ IA"}
-          </span>
-        )}
+        {/* Chip do modelo usado */}
+        <div className="mt-1">
+          <ModelChip 
+            model={model}
+            provider={provider}
+            complexity={complexity}
+            tier={tier}
+            className="scale-90"
+          />
+        </div>
         
         {/* Descrição do módulo */}
         {currentModuleId && (
@@ -164,20 +166,16 @@ export const StreamingMessage: React.FC<StreamingMessageProps> = ({
           </div>
           
           {/* Metadados */}
-          <footer className="message-metadata mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500">
-            {tier && (
-              <span className={`px-2 py-0.5 rounded-full font-medium ${
-                tier === "IA_SUPER"
-                  ? "bg-gradient-to-r from-yellow-100 to-yellow-200 text-yellow-800 border border-yellow-200"
-                  : tier === "IA_ECO"
-                  ? "bg-gradient-to-r from-green-100 to-green-200 text-green-800 border border-green-200"
-                  : "bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border border-blue-200"
-              }`}>
-                {tier === "IA_SUPER" ? "🚀 IA Turbo" : tier === "IA_ECO" ? "🌱 IA Eco" : "⚡ IA"}
-              </span>
+          <footer className="message-metadata mt-1 text-xs text-gray-500">
+            {(model || provider || complexity) && (
+              <ModelDetails 
+                model={model}
+                provider={provider}
+                complexity={complexity}
+                tier={tier}
+                tokens={tokens}
+              />
             )}
-            {model && <span>Modelo: {model}</span>}
-            {tokens && <span>{tokens} tokens</span>}
           </footer>
         </article>
       </div>

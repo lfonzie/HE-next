@@ -14,6 +14,10 @@ export interface Message {
   citations?: Citation[];
   searchTime?: number;
   attachment?: Attachment;
+  // Informações de roteamento do modelo
+  provider?: string;
+  complexity?: string;
+  routingReasoning?: string;
 }
 
 export interface Citation {
