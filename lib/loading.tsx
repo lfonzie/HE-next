@@ -492,8 +492,8 @@ const LoadingOverlay: React.FC = () => {
   const hasMultiple = activeLoadings.length > 1;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/70 backdrop-blur-sm">
-      <div className="bg-gray-800/90 rounded-2xl p-6 shadow-xl w-[min(90vw,400px)] text-center border border-gray-700/50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+      <div className="bg-gray-800/95 backdrop-blur-sm rounded-2xl p-6 shadow-xl w-[min(90vw,400px)] text-center border border-gray-700/50">
         <div className="flex flex-col items-center gap-4">
           {hasErrors ? (
             <div className="text-red-400">

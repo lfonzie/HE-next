@@ -102,13 +102,14 @@ export function useProfessorProgressiveLoading() {
           // Gerar query baseada no conteúdo do slide
           const imageQuery = slide.card2.title || slide.title || query || 'education learning';
           
-          const imageResponse = await fetch('/api/unsplash/search', {
+          const imageResponse = await fetch('/api/unsplash/translate-search', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
               query: imageQuery,
+              subject: subject,
               count: 1
             }),
           });
@@ -118,6 +119,7 @@ export function useProfessorProgressiveLoading() {
             if (imageData.photos && imageData.photos.length > 0) {
               slide.card2.imageUrl = imageData.photos[0].urls.regular;
               console.log(`✅ Imagem Unsplash carregada para slide ${slideIndex}:`, imageData.photos[0].urls.regular);
+              console.log(`🎯 Tema traduzido para slide ${slideIndex}:`, imageData.englishTheme);
             } else {
               console.warn(`⚠️ Nenhuma imagem encontrada para slide ${slideIndex}, usando placeholder`);
               slide.card2.imageUrl = `https://picsum.photos/800/400?random=${slideIndex}`;

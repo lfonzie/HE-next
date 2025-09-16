@@ -5,10 +5,66 @@ import { prisma } from '@/lib/db'
 import OpenAI from 'openai'
 import { STRUCTURED_LESSON_PROMPT } from '@/lib/system-prompts/lessons-structured'
 import { populateLessonWithImages } from '@/lib/unsplash-integration'
+import { AutoImageService } from '@/lib/autoImageService'
 
 const openai = new OpenAI({ 
   apiKey: process.env.OPENAI_API_KEY 
 })
+
+// Função para popular imagens com tradução automática
+async function populateLessonWithImagesTranslated(lessonData: any, topic: string): Promise<any> {
+  try {
+    console.log('🖼️ Populando imagens com tradução para:', topic)
+    
+    const slidesWithImages = await Promise.all(
+      lessonData.slides.map(async (slide: any, index: number) => {
+        if (slide.imagePrompt) {
+          try {
+            // Usar nossa nova API de tradução
+            const response = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/unsplash/translate-search`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                query: slide.imagePrompt,
+                subject: lessonData.subject || 'Geral',
+                count: 1
+              }),
+            })
+
+            if (response.ok) {
+              const data = await response.json()
+              if (data.photos && data.photos.length > 0) {
+                console.log(`✅ Imagem traduzida para slide ${index + 1}:`, data.englishTheme)
+                return {
+                  ...slide,
+                  imageUrl: data.photos[0].urls.regular,
+                  translatedPrompt: data.englishTheme
+                }
+              }
+            }
+            
+            console.warn(`⚠️ Falha na tradução para slide ${index + 1}, usando prompt original`)
+            return slide
+          } catch (error) {
+            console.error(`❌ Erro ao traduzir imagem para slide ${index + 1}:`, error)
+            return slide
+          }
+        }
+        return slide
+      })
+    )
+
+    return {
+      ...lessonData,
+      slides: slidesWithImages
+    }
+  } catch (error) {
+    console.error('❌ Erro ao popular imagens com tradução:', error)
+    return lessonData
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -239,8 +295,8 @@ IMPORTANTE: Responda APENAS com JSON válido, sem texto adicional, explicações
     // Add stages to lessonData for compatibility
     lessonData.stages = stages
 
-    // Don't populate all images at once - let progressive loading handle it
-    const lessonWithImages = lessonData
+    // Populate images with translation for better search results
+    const lessonWithImages = await populateLessonWithImagesTranslated(lessonData, topic)
 
     // Generate lesson ID
     const lessonId = `lesson_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`

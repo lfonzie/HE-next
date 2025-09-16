@@ -8,21 +8,47 @@ type ProviderFactory = (modelName: string) => unknown
 
 // Configuração de múltiplos provedores como fábricas de modelos
 export const AI_PROVIDERS = {
-  openai: (modelName: string) => openai(modelName, {
-    apiKey: process.env.OPENAI_API_KEY!,
-  }),
-  anthropic: (modelName: string) => anthropic(modelName, {
-    apiKey: process.env.ANTHROPIC_API_KEY!,
-  }),
-  google: (modelName: string) => google(modelName, {
-    apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GOOGLE_API_KEY!,
-  }),
-  mistral: (modelName: string) => mistral(modelName, {
-    apiKey: process.env.MISTRAL_API_KEY!,
-  }),
-  groq: (modelName: string) => groq(modelName, {
-    apiKey: process.env.GROQ_API_KEY!,
-  }),
+  openai: (modelName: string) => {
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OpenAI API key not configured')
+    }
+    return openai(modelName, {
+      apiKey: process.env.OPENAI_API_KEY,
+    })
+  },
+  anthropic: (modelName: string) => {
+    if (!process.env.ANTHROPIC_API_KEY) {
+      throw new Error('Anthropic API key not configured')
+    }
+    return anthropic(modelName, {
+      apiKey: process.env.ANTHROPIC_API_KEY,
+    })
+  },
+  google: (modelName: string) => {
+    const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GOOGLE_API_KEY
+    if (!apiKey) {
+      throw new Error('Google API key not configured')
+    }
+    return google(modelName, {
+      apiKey: apiKey,
+    })
+  },
+  mistral: (modelName: string) => {
+    if (!process.env.MISTRAL_API_KEY) {
+      throw new Error('Mistral API key not configured')
+    }
+    return mistral(modelName, {
+      apiKey: process.env.MISTRAL_API_KEY,
+    })
+  },
+  groq: (modelName: string) => {
+    if (!process.env.GROQ_API_KEY) {
+      throw new Error('Groq API key not configured')
+    }
+    return groq(modelName, {
+      apiKey: process.env.GROQ_API_KEY,
+    })
+  },
 } satisfies Record<string, ProviderFactory>
 
 // Tipos de provedores
@@ -32,7 +58,7 @@ export type ProviderType = keyof typeof AI_PROVIDERS
 export const PROVIDER_MODELS = {
   openai: {
     simple: 'gpt-4o-mini',
-    complex: 'gpt-5',
+    complex: 'gpt-4o-mini', // Usando gpt-4o-mini em vez de gpt-5 (que pode não estar disponível)
     fast: 'gpt-4o-mini'
   },
   anthropic: {
@@ -62,20 +88,19 @@ export function createModel(provider: ProviderType, modelType: 'simple' | 'compl
   const providerInstance = AI_PROVIDERS[provider]
   const modelName = PROVIDER_MODELS[provider][modelType]
   
-  // Para cada provedor, usar a função correta
-  switch (provider) {
-    case 'openai':
-      return providerInstance(modelName)
-    case 'anthropic':
-      return providerInstance(modelName)
-    case 'google':
-      return providerInstance(modelName)
-    case 'mistral':
-      return providerInstance(modelName)
-    case 'groq':
-      return providerInstance(modelName)
-    default:
-      throw new Error(`Provider ${provider} not supported`)
+  if (!providerInstance) {
+    throw new Error(`Provider ${provider} not found in AI_PROVIDERS`)
+  }
+  
+  if (!modelName) {
+    throw new Error(`Model type ${modelType} not found for provider ${provider}`)
+  }
+  
+  try {
+    return providerInstance(modelName)
+  } catch (error) {
+    console.error(`Error creating model for provider ${provider} with model ${modelName}:`, error)
+    throw new Error(`Failed to create model ${modelName} for provider ${provider}`)
   }
 }
 

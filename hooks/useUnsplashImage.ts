@@ -14,7 +14,7 @@ interface UnsplashImage {
   }
 }
 
-export function useUnsplashImage(query: string, enabled: boolean = true) {
+export function useUnsplashImage(query: string, enabled: boolean = true, subject?: string) {
   const [image, setImage] = useState<UnsplashImage | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -27,15 +27,18 @@ export function useUnsplashImage(query: string, enabled: boolean = true) {
       setError(null)
 
       try {
-        // Usar uma API pública do Unsplash (sem chave de API)
-        const response = await fetch(
-          `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=1&orientation=landscape`,
-          {
-            headers: {
-              'Authorization': 'Client-ID YOUR_UNSPLASH_ACCESS_KEY' // Será substituído por uma chave real
-            }
-          }
-        )
+        // Usar a nova API com tradução
+        const response = await fetch('/api/unsplash/translate-search', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            query: query,
+            subject: subject || '',
+            count: 1
+          }),
+        })
 
         if (!response.ok) {
           throw new Error('Failed to fetch image')
@@ -43,18 +46,18 @@ export function useUnsplashImage(query: string, enabled: boolean = true) {
 
         const data = await response.json()
         
-        if (data.results && data.results.length > 0) {
-          setImage(data.results[0])
+        if (data.photos && data.photos.length > 0) {
+          setImage(data.photos[0])
         } else {
           // Fallback para uma imagem padrão se não encontrar resultados
           setImage({
             id: 'default',
             urls: {
-              regular: `https://source.unsplash.com/800x400/?${encodeURIComponent(query)}`,
-              small: `https://source.unsplash.com/400x200/?${encodeURIComponent(query)}`
+              regular: `https://picsum.photos/800/400?random=${Date.now()}`,
+              small: `https://picsum.photos/400/200?random=${Date.now()}`
             },
             alt_description: query,
-            user: { name: 'Unsplash' }
+            user: { name: 'Placeholder' }
           })
         }
       } catch (err) {
@@ -63,11 +66,11 @@ export function useUnsplashImage(query: string, enabled: boolean = true) {
         setImage({
           id: 'fallback',
           urls: {
-            regular: `https://source.unsplash.com/800x400/?${encodeURIComponent(query)}`,
-            small: `https://source.unsplash.com/400x200/?${encodeURIComponent(query)}`
+            regular: `https://picsum.photos/800/400?random=${Date.now()}`,
+            small: `https://picsum.photos/400/200?random=${Date.now()}`
           },
           alt_description: query,
-          user: { name: 'Unsplash' }
+          user: { name: 'Placeholder' }
         })
         setError('Using fallback image')
       } finally {
@@ -76,7 +79,7 @@ export function useUnsplashImage(query: string, enabled: boolean = true) {
     }
 
     fetchImage()
-  }, [query, enabled])
+  }, [query, enabled, subject])
 
   return { image, loading, error }
 }

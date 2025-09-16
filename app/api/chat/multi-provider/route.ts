@@ -2,15 +2,8 @@ import { NextRequest } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { streamText } from 'ai'
-import { 
-  createModel, 
-  selectProvider, 
-  getProviderConfig,
-  getAvailableProviders,
-  ProviderType,
-  PROVIDER_MODELS
-} from '@/lib/ai-providers'
-import { routeAIModel } from '@/lib/ai-model-router'
+import { openai } from '@ai-sdk/openai'
+import { google } from '@ai-sdk/google'
 import { getSystemPrompt } from '@/lib/ai-sdk-config'
 import { orchestrate } from '@/lib/orchestrator'
 import { educationalTools } from '@/lib/ai-tools'
@@ -43,43 +36,51 @@ export async function POST(request: NextRequest) {
       messageCount: messages.length
     })
 
-    // Usar sistema de roteamento inteligente
-    const routingResult = await routeAIModel(
-      lastMessage.content,
-      'education', // Caso de uso padrão para chat educacional
-      provider as ProviderType,
-      complexity as any
-    )
+    // Usar sistema de roteamento inteligente com 3 níveis
+    let detectedComplexity = 'simples'
+    let selectedProvider = 'openai'
+    let selectedModel = 'gpt-4o-mini'
+    let tier = 'IA'
+    
+    try {
+      // Chamar API de classificação de complexidade
+      const response = await fetch('http://localhost:3000/api/router/classify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: lastMessage.content })
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        const aiClassification = data.classification?.toLowerCase()
+        
+        if (aiClassification === 'trivial') {
+          detectedComplexity = 'trivial'
+          selectedProvider = 'google'
+          selectedModel = 'gemini-2.0-flash-exp'
+          tier = 'IA_ECO'
+        } else if (aiClassification === 'simples') {
+          detectedComplexity = 'simples'
+          selectedProvider = 'openai'
+          selectedModel = 'gpt-4o-mini'
+          tier = 'IA'
+        } else if (aiClassification === 'complexa') {
+          detectedComplexity = 'complexa'
+          selectedProvider = 'openai'
+          selectedModel = 'gpt-5'
+          tier = 'IA_TURBO'
+        }
+      }
+    } catch (error) {
+      console.warn('Classification API error, using simple:', error)
+    }
     
     console.log('🎯 [ROUTING] Result:', {
       content: lastMessage.content.substring(0, 50) + '...',
-      provider: routingResult.provider,
-      model: routingResult.model,
-      complexity: routingResult.complexity,
-      reasoning: routingResult.metadata.reasoning
+      provider: selectedProvider,
+      model: selectedModel,
+      complexity: detectedComplexity
     })
-    
-    const selectedProvider = selectProvider(
-      routingResult.complexity,
-      routingResult.provider
-    )
-
-    console.log('🎯 [PROVIDER] Selected:', selectedProvider)
-
-    // Verificar se o provedor está disponível
-    const availableProviders = getAvailableProviders()
-    if (!availableProviders.includes(selectedProvider.provider)) {
-      return new Response(
-        JSON.stringify({
-          error: `Provider ${selectedProvider.provider} not available. Available: ${availableProviders.join(', ')}`,
-          availableProviders
-        }),
-        { 
-          status: 400,
-          headers: { 'Content-Type': 'application/json' }
-        }
-      )
-    }
 
     // Determinar módulo se não especificado
     let targetModule = module || 'atendimento'
@@ -115,26 +116,43 @@ export async function POST(request: NextRequest) {
       }))
     ]
 
-    // Obter configuração do provedor
-    const providerConfig = getProviderConfig(selectedProvider.provider)
+    // Usar OpenAI diretamente com configuração simples
+    const providerConfig = { temperature: 0.7, maxTokens: 2000, timeout: 20000 }
 
     console.log('🚀 [MULTI-PROVIDER] Starting stream with:', {
-      provider: selectedProvider.provider,
-      model: selectedProvider.model,
+      provider: selectedProvider,
+      model: selectedModel,
+      complexity: detectedComplexity,
+      tier: tier,
       module: targetModule,
       messageCount: aiMessages.length
     })
 
-    // Usar streamText do AI SDK com provedor selecionado
+    // Criar modelo baseado no provedor selecionado
+    let modelInstance;
+    if (selectedProvider === 'google') {
+      modelInstance = google(selectedModel, {
+        apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY!,
+      })
+    } else {
+      modelInstance = openai(selectedModel, {
+        apiKey: process.env.OPENAI_API_KEY!,
+      })
+    }
+
+    // Usar streamText do AI SDK com modelo selecionado
     const result = await streamText({
-      model: createModel(selectedProvider.provider, complexity || 'simple'),
+      model: modelInstance,
       messages: aiMessages,
       temperature: providerConfig.temperature,
       onFinish: (result) => {
         console.log('✅ [MULTI-PROVIDER] Stream finished:', {
           finishReason: result.finishReason,
           usage: result.usage,
-          provider: selectedProvider.provider,
+          provider: selectedProvider,
+          model: selectedModel,
+          complexity: detectedComplexity,
+          tier: tier,
           module: targetModule,
           toolCalls: result.toolCalls?.length || 0
         })
@@ -158,13 +176,11 @@ export async function POST(request: NextRequest) {
     return new Response(stream, {
       headers: {
         'Content-Type': 'text/plain; charset=utf-8',
-        'X-Provider': routingResult.provider,
-        'X-Model': routingResult.model,
+        'X-Provider': selectedProvider,
+        'X-Model': selectedModel,
         'X-Module': targetModule,
-        'X-Complexity': routingResult.complexity,
-        'X-Tier': routingResult.complexity === 'simple' ? 'IA' : 
-                  routingResult.complexity === 'complex' ? 'IA_SUPER' : 'IA_ECO',
-        'X-Routing-Reasoning': routingResult.metadata.reasoning,
+        'X-Complexity': detectedComplexity,
+        'X-Tier': tier,
         'X-Auto-Selected': 'true',
         'X-Timestamp': Date.now().toString()
       }

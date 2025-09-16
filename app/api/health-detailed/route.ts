@@ -26,7 +26,7 @@ export async function GET() {
         port: !!process.env.PORT,
         // Environment variables check (no external API calls)
         openai: !!process.env.OPENAI_API_KEY,
-        unsplash: !!process.env.UNSPLASH_API_KEY,
+        unsplash: !!process.env.UNSPLASH_ACCESS_KEY,
         nextauth: !!process.env.NEXTAUTH_SECRET,
         database: !!process.env.DATABASE_URL
       },

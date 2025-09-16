@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2, Sparkles, BookOpen, Target, Users, Send, Lightbulb, TrendingUp, AlertCircle, CheckCircle, Clock, RefreshCw } from 'lucide-react'
+import { Loader2, Sparkles, BookOpen, Target, Users, Send, Lightbulb, TrendingUp, AlertCircle, CheckCircle, Clock, RefreshCw, Timer } from 'lucide-react'
 import { useDynamicSuggestions } from '@/hooks/useDynamicSuggestions'
 
 // Mock components for demo (replace with actual imports)
@@ -19,23 +19,50 @@ interface LessonProgressProps {
   progress: number
   status: string
   isGenerating: boolean
+  elapsedTime: number
   className?: string
 }
 
-const LessonProgress = ({ progress, status, isGenerating, className }: LessonProgressProps) => (
-  <div className={`space-y-4 ${className}`}>
-    <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-      <div 
-        className="bg-blue-600 h-3 rounded-full transition-all duration-300 ease-out"
-        style={{ width: `${progress}%` }}
-      />
+const LessonProgress = ({ progress, status, isGenerating, elapsedTime, className }: LessonProgressProps) => {
+  const formatTime = (milliseconds: number): string => {
+    const seconds = Math.floor(milliseconds / 1000)
+    const ms = Math.floor((milliseconds % 1000) / 100)
+    
+    if (seconds < 60) {
+      return `${seconds}.${ms}s`
+    }
+    
+    const minutes = Math.floor(seconds / 60)
+    const remainingSeconds = seconds % 60
+    
+    if (remainingSeconds === 0) {
+      return `${minutes}m`
+    }
+    
+    return `${minutes}m ${remainingSeconds}s`
+  }
+
+  return (
+    <div className={`space-y-4 ${className}`}>
+      <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+        <div 
+          className="bg-blue-600 h-3 rounded-full transition-all duration-300 ease-out"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {isGenerating && <Loader2 className="h-4 w-4 animate-spin" />}
+          <span className="text-sm text-gray-600">{status}</span>
+        </div>
+        <div className="flex items-center gap-1 text-sm text-blue-600 font-medium">
+          <Timer className="h-4 w-4" />
+          <span>{formatTime(elapsedTime)}</span>
+        </div>
+      </div>
     </div>
-    <div className="flex items-center gap-2">
-      {isGenerating && <Loader2 className="h-4 w-4 animate-spin" />}
-      <span className="text-sm text-gray-600">{status}</span>
-    </div>
-  </div>
-)
+  )
+}
 
 // Enhanced interfaces
 interface GeneratedLesson {
@@ -97,22 +124,48 @@ export default function AulasPage() {
   const [generationStatus, setGenerationStatus] = useState('')
   const [formData, setFormData] = useState<FormData>({ topic: '' })
   const [formErrors, setFormErrors] = useState<FormErrors>({})
-  const [recentLessons, setRecentLessons] = useState<GeneratedLesson[]>([])
   const [showAdvanced, setShowAdvanced] = useState(false)
+  const [startTime, setStartTime] = useState<number | null>(null)
+  const [elapsedTime, setElapsedTime] = useState(0)
 
   // Usar sugestões dinâmicas do Gemini
   const { suggestions, loading: suggestionsLoading, error: suggestionsError, refreshSuggestions } = useDynamicSuggestions()
 
-  // Load recent lessons from localStorage on mount
+  // Cronômetro
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('recent_lessons')
-      if (saved) {
-        setRecentLessons(JSON.parse(saved).slice(0, 3))
-      }
-    } catch (error) {
-      console.error('Error loading recent lessons:', error)
+    let interval: NodeJS.Timeout | null = null
+    
+    if (isGenerating && startTime) {
+      interval = setInterval(() => {
+        setElapsedTime(Date.now() - startTime)
+      }, 100)
+    } else if (!isGenerating) {
+      setElapsedTime(0)
+      setStartTime(null)
     }
+    
+    return () => {
+      if (interval) clearInterval(interval)
+    }
+  }, [isGenerating, startTime])
+
+  // Função para formatar tempo
+  const formatTime = useCallback((milliseconds: number): string => {
+    const seconds = Math.floor(milliseconds / 1000)
+    const ms = Math.floor((milliseconds % 1000) / 100)
+    
+    if (seconds < 60) {
+      return `${seconds}.${ms}s`
+    }
+    
+    const minutes = Math.floor(seconds / 60)
+    const remainingSeconds = seconds % 60
+    
+    if (remainingSeconds === 0) {
+      return `${minutes}m`
+    }
+    
+    return `${minutes}m ${remainingSeconds}s`
   }, [])
 
   // Form validation
@@ -135,16 +188,6 @@ export default function AulasPage() {
     return Object.keys(errors).length === 0
   }, [formData.topic])
 
-  // Save lesson to recent lessons
-  const saveToRecentLessons = useCallback((lesson: GeneratedLesson) => {
-    try {
-      const updated = [lesson, ...recentLessons.filter(l => l.id !== lesson.id)].slice(0, 5)
-      setRecentLessons(updated)
-      localStorage.setItem('recent_lessons', JSON.stringify(updated))
-    } catch (error) {
-      console.error('Error saving to recent lessons:', error)
-    }
-  }, [recentLessons])
 
   // Enhanced lesson generation with better error handling and progress tracking
   const handleGenerate = useCallback(async (topicOverride: string | null = null) => {
@@ -168,13 +211,14 @@ export default function AulasPage() {
     setGenerationProgress(0)
     setGenerationStatus(STATUS_MESSAGES[0].message)
     setGeneratedLesson(null)
+    setStartTime(Date.now())
 
-    const startTime = Date.now()
+    const generationStartTime = Date.now()
     const estimatedDuration = 25000 // 25 seconds for more realistic timing
 
     // Enhanced progress simulation
     const progressInterval = setInterval(() => {
-      const elapsed = Date.now() - startTime
+      const elapsed = Date.now() - generationStartTime
       const progress = Math.min((elapsed / estimatedDuration) * 95, 95)
       setGenerationProgress(progress)
 
@@ -246,7 +290,6 @@ export default function AulasPage() {
       setGenerationProgress(100)
       setGenerationStatus('Aula gerada com sucesso!')
       setGeneratedLesson(generatedLesson)
-      saveToRecentLessons(generatedLesson)
 
       // Store in localStorage for demo mode
       console.log('Salvando aula no localStorage:', generatedLesson.id, generatedLesson)
@@ -273,7 +316,7 @@ export default function AulasPage() {
         }
       }, 2000)
     }
-  }, [formData.topic, validateForm, saveToRecentLessons])
+  }, [formData.topic, validateForm])
 
   // Enhanced suggestion handler with analytics
   const handleSuggestionClick = useCallback(async (suggestion: Suggestion) => {
@@ -329,75 +372,40 @@ export default function AulasPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl" role="main">
-      {/* Enhanced Header */}
-      <header className="text-center mb-12">
-        <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-6">
-          <BookOpen className="h-10 w-10 text-white" aria-hidden="true" />
-        </div>
-        <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-          Aulas Interativas com IA
-        </h1>
-        <p className="text-xl text-gray-600 mb-2 max-w-2xl mx-auto">
-          Transforme qualquer tópico em uma experiência de aprendizado envolvente e personalizada
-        </p>
-        <div className="flex flex-wrap justify-center gap-2 mt-6">
-          <Badge variant="secondary" className="flex items-center gap-1">
-            <Sparkles className="h-3 w-3" />
-            IA Avançada
-          </Badge>
-          <Badge variant="secondary" className="flex items-center gap-1">
-            <Target className="h-3 w-3" />
-            Personalizado
-          </Badge>
-          <Badge variant="secondary" className="flex items-center gap-1">
-            <Users className="h-3 w-3" />
-            Interativo
-          </Badge>
-        </div>
-      </header>
-
-      {/* Demo Mode Alert */}
-      <Alert className="mb-8 border-blue-200 bg-blue-50">
-        <AlertCircle className="h-4 w-4 text-blue-600" />
-        <AlertDescription className="text-blue-800">
-          <strong>Modo Demo Ativo:</strong> Teste todas as funcionalidades gratuitamente. 
-          Aulas são salvas localmente para esta sessão.
-        </AlertDescription>
-      </Alert>
-
-      {/* Recent Lessons */}
-      {recentLessons.length > 0 && (
-        <Card className="mb-8 border-green-200 bg-green-50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-green-800">
-              <Clock className="h-5 w-5" />
-              Aulas Recentes
-            </CardTitle>
-            <CardDescription className="text-green-700">
-              Continue de onde parou ou gere uma nova aula
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {recentLessons.slice(0, 3).map((lesson, index) => (
-                <div key={lesson.id} className="p-4 bg-white border border-green-200 rounded-lg">
-                  <h4 className="font-medium text-sm mb-1 truncate">{lesson.title}</h4>
-                  <div className="flex gap-1 mb-2">
-                    <Badge variant="outline" className="text-xs">{lesson.subject}</Badge>
-                    <Badge variant="outline" className="text-xs">{lesson.level}</Badge>
-                  </div>
-                  <Button size="sm" variant="outline" className="w-full text-xs">
-                    Continuar Aula
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+      {/* Enhanced Header - Oculto durante carregamento */}
+      {!isGenerating && (
+        <header className="text-center mb-12">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-6">
+            <BookOpen className="h-10 w-10 text-white" aria-hidden="true" />
+          </div>
+          <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Aulas Interativas com IA
+          </h1>
+          <p className="text-xl text-gray-600 mb-2 max-w-2xl mx-auto">
+            Transforme qualquer tópico em uma experiência de aprendizado envolvente e personalizada
+          </p>
+          <div className="flex flex-wrap justify-center gap-2 mt-6">
+            <Badge variant="secondary" className="flex items-center gap-1">
+              <Sparkles className="h-3 w-3" />
+              IA Avançada
+            </Badge>
+            <Badge variant="secondary" className="flex items-center gap-1">
+              <Target className="h-3 w-3" />
+              Personalizado
+            </Badge>
+            <Badge variant="secondary" className="flex items-center gap-1">
+              <Users className="h-3 w-3" />
+              Interativo
+            </Badge>
+          </div>
+        </header>
       )}
 
-      {/* Enhanced Suggestions */}
-      <Card className="border-2 border-blue-100 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 mb-8">
+
+
+      {/* Enhanced Suggestions - Oculto durante carregamento */}
+      {!isGenerating && (
+        <Card className="border-2 border-blue-100 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 mb-8">
         <CardHeader className="text-center pb-4">
           <div className="flex items-center justify-center gap-3">
             <CardTitle className="flex items-center gap-2 text-2xl">
@@ -489,6 +497,7 @@ export default function AulasPage() {
           </div>
         </CardContent>
       </Card>
+      )}
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
@@ -586,6 +595,7 @@ export default function AulasPage() {
                     progress={generationProgress}
                     status={generationStatus}
                     isGenerating={isGenerating}
+                    elapsedTime={elapsedTime}
                     className="min-h-[120px]"
                   />
                 </div>
@@ -696,72 +706,10 @@ export default function AulasPage() {
         </div>
       </div>
 
-      {/* Enhanced Features Section */}
-      <Card className="mt-12 border-2 border-purple-100 bg-gradient-to-br from-purple-50 to-pink-50">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Por que escolher nossas Aulas Interativas?</CardTitle>
-          <CardDescription className="text-lg">
-            Tecnologia educacional de ponta para resultados excepcionais
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center group">
-              <div className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl w-16 h-16 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                <Sparkles className="h-8 w-8 text-white" />
-              </div>
-              <h3 className="font-bold text-lg mb-3">IA Educacional Avançada</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Nossa IA analisa o tópico e cria automaticamente objetivos, atividades e avaliações 
-                personalizadas para o nível ideal do estudante.
-              </p>
-            </div>
-            <div className="text-center group">
-              <div className="bg-gradient-to-br from-green-500 to-teal-600 rounded-2xl w-16 h-16 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                <Target className="h-8 w-8 text-white" />
-              </div>
-              <h3 className="font-bold text-lg mb-3">Gamificação Inteligente</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Sistema completo de pontos, conquistas e progressão que mantém os alunos 
-                engajados e motivados durante toda a jornada de aprendizado.
-              </p>
-            </div>
-            <div className="text-center group">
-              <div className="bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl w-16 h-16 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                <Users className="h-8 w-8 text-white" />
-              </div>
-              <h3 className="font-bold text-lg mb-3">Experiência Interativa</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Quizzes dinâmicos, simulações, atividades práticas e feedback em tempo real 
-                para uma aprendizagem ativa e envolvente.
-              </p>
-            </div>
-          </div>
-          
-          {/* Additional stats section */}
-          <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-            <div className="p-4">
-              <div className="text-3xl font-bold text-blue-600 mb-2">10k+</div>
-              <div className="text-sm text-gray-600">Aulas Geradas</div>
-            </div>
-            <div className="p-4">
-              <div className="text-3xl font-bold text-green-600 mb-2">95%</div>
-              <div className="text-sm text-gray-600">Satisfação</div>
-            </div>
-            <div className="p-4">
-              <div className="text-3xl font-bold text-purple-600 mb-2">50+</div>
-              <div className="text-sm text-gray-600">Matérias</div>
-            </div>
-            <div className="p-4">
-              <div className="text-3xl font-bold text-orange-600 mb-2">24/7</div>
-              <div className="text-sm text-gray-600">Disponível</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* Educational Benefits Section */}
-      <Card className="mt-8 border-2 border-green-100 bg-gradient-to-br from-green-50 to-emerald-50">
+      {/* Educational Benefits Section - Oculto durante carregamento */}
+      {!isGenerating && (
+        <Card className="mt-8 border-2 border-green-100 bg-gradient-to-br from-green-50 to-emerald-50">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-xl">
             <TrendingUp className="h-6 w-6 text-green-600" />
@@ -822,17 +770,8 @@ export default function AulasPage() {
           </div>
         </CardContent>
       </Card>
+      )}
 
-      {/* Call to Action Footer */}
-      <div className="mt-12 text-center">
-        <div className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full font-medium">
-          <Sparkles className="h-5 w-5" />
-          Pronto para revolucionar seu aprendizado?
-        </div>
-        <p className="text-gray-600 mt-2">
-          Comece agora mesmo - é grátis e sem compromisso!
-        </p>
-      </div>
     </div>
   )
 }

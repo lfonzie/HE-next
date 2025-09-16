@@ -42,7 +42,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
   return (
     <div className={cn(
       'min-h-screen flex flex-col items-center justify-center',
-      'bg-gradient-to-br from-yellow-50 to-orange-50',
+      'bg-black/70 backdrop-blur-sm',
       className
     )}>
       {/* Logo Animation */}
@@ -91,7 +91,7 @@ export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
   return (
     <div className="relative">
       {children}
-      <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-50 pointer-events-auto">
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 pointer-events-auto">
         <div className="text-center">
           <LoadingSpinner size="lg" />
           <p className="mt-4 text-gray-600">{message}</p>
@@ -109,7 +109,7 @@ export const PageLoading: React.FC<PageLoadingProps> = ({ className }) => {
   return (
     <div className={cn(
       'min-h-screen flex items-center justify-center',
-      'bg-gradient-to-br from-yellow-50 to-orange-50',
+      'bg-black/70 backdrop-blur-sm',
       className
     )}>
       <div className="text-center">

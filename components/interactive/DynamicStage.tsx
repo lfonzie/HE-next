@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
-import { CheckCircle, Clock, Star, Trophy } from 'lucide-react'
+import { CheckCircle, Clock, Star, Trophy, XCircle } from 'lucide-react'
 
 interface StageActivity {
   component: string
@@ -391,17 +391,46 @@ export default function DynamicStage({
           animate={{ opacity: 1, y: 0 }}
           className="mt-4"
         >
-          <Card className="border-green-200 bg-green-50">
-            <CardContent className="p-4">
-              <div className="flex items-start gap-3">
-                <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
-                <div>
-                  <h4 className="font-medium text-green-800 mb-1">Ótimo trabalho!</h4>
-                  <p className="text-sm text-green-700">{stage.activity.feedback}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {(() => {
+            // Verificar se é um quiz e se a resposta está correta
+            const isQuiz = stage.activity.component === 'QuizComponent'
+            const isCorrectAnswer = isQuiz && stageResult?.type === 'quiz' 
+              ? stageResult.score > 0 // Se acertou pelo menos uma pergunta
+              : true // Para outros tipos de atividade, sempre mostrar feedback positivo
+            
+            if (isCorrectAnswer) {
+              return (
+                <Card className="border-green-200 bg-green-50">
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
+                      <div>
+                        <h4 className="font-medium text-green-800 mb-1">Ótimo trabalho!</h4>
+                        <p className="text-sm text-green-700">{stage.activity.feedback}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            } else {
+              return (
+                <Card className="border-orange-200 bg-orange-50">
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      <XCircle className="h-5 w-5 text-orange-600 mt-0.5" />
+                      <div>
+                        <h4 className="font-medium text-orange-800 mb-1">Continue praticando!</h4>
+                        <p className="text-sm text-orange-700">
+                          Você acertou {stageResult?.score || 0} de {stageResult?.total || 0} questões. 
+                          Revise o conteúdo e tente novamente!
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            }
+          })()}
         </motion.div>
       )}
     </motion.div>

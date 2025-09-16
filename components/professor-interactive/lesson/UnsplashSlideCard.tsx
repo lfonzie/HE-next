@@ -47,7 +47,8 @@ export default function UnsplashSlideCard({
 
   const { imageUrl, isLoading: imageLoading, error: imageError, refetch } = useUnsplashImage(
     getImageQuery(),
-    shouldFetchImage
+    shouldFetchImage,
+    slide.subject // Passar o subject para tradução
   );
 
   const handleImageLoad = useCallback(() => {

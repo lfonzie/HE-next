@@ -117,8 +117,8 @@ export function LoadingScreen({
   const currentStep = steps[currentStepIndex] || steps[0];
 
   return (
-    <div className={`fixed inset-0 bg-gradient-to-br from-blue-50 via-white to-indigo-50 z-50 flex items-center justify-center ${className}`}>
-      <Card className="w-full max-w-2xl mx-4 shadow-2xl border-0">
+    <div className={`fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center ${className}`}>
+      <Card className="w-full max-w-2xl mx-4 shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
         <CardContent className="py-12 px-8">
           <div className="text-center space-y-8">
             {/* Main Loading Animation */}

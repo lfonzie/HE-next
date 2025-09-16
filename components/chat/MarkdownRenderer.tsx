@@ -20,8 +20,11 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
   className = "",
   isStreaming = false
 }) => {
-  // Normaliza quebras de linha para evitar espaçamento excessivo
-  const normalizedContent = content.replace(/\n{2,}/g, '\n').trim();
+  // Preserva quebras de linha mas remove espaçamento excessivo
+  const normalizedContent = content
+    .replace(/\n{3,}/g, '\n\n') // Máximo 2 quebras de linha consecutivas
+    .replace(/[ \t]+$/gm, '') // Remove espaços no final das linhas
+    .trim();
   
   return (
     <div className={`markdown-content ${className}`}>

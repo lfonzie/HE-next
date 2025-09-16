@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 
-// Inicializar o Gemini
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY || '')
-
 interface Suggestion {
   text: string
   category: string
@@ -12,14 +9,46 @@ interface Suggestion {
 
 export async function GET(request: NextRequest) {
   try {
+    console.log('Iniciando geração de sugestões...')
+    
     // Verificar se a chave da API está configurada
-    if (!process.env.GOOGLE_GEMINI_API_KEY) {
-      console.error('GOOGLE_GEMINI_API_KEY não está configurada')
-      return NextResponse.json(
-        { error: 'API key não configurada' },
-        { status: 500 }
-      )
+    const apiKey = process.env.GOOGLE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY
+    if (!apiKey) {
+      console.error('Nenhuma chave do Gemini encontrada')
+      console.log('Variáveis de ambiente disponíveis:', Object.keys(process.env).filter(key => key.includes('GEMINI') || key.includes('GOOGLE')))
+      
+      // Retornar sugestões de fallback se não houver chave da API
+      const fallbackSuggestions: Suggestion[] = [
+        {
+          text: "Como funciona a fotossíntese e por que é importante para a vida na Terra?",
+          category: "Biologia",
+          level: "8º ano"
+        },
+        {
+          text: "A matemática por trás dos algoritmos de redes sociais",
+          category: "Matemática",
+          level: "Ensino Médio"
+        },
+        {
+          text: "Por que alguns países são mais desenvolvidos que outros?",
+          category: "Geografia",
+          level: "9º ano"
+        }
+      ]
+
+      return NextResponse.json({
+        success: true,
+        suggestions: fallbackSuggestions,
+        generatedAt: new Date().toISOString(),
+        fallback: true,
+        reason: 'API key não configurada'
+      })
     }
+
+    console.log('Chave da API encontrada, inicializando Gemini...')
+    
+    // Inicializar o Gemini
+    const genAI = new GoogleGenerativeAI(apiKey)
 
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
 
@@ -57,21 +86,28 @@ Exemplos de bons tópicos:
 Gere sugestões criativas e variadas!
 `
 
+    console.log('Enviando prompt para o Gemini...')
     const result = await model.generateContent(prompt)
     const response = await result.response
     const text = response.text()
 
-    console.log('Resposta do Gemini:', text)
+    console.log('Resposta do Gemini recebida:', text)
 
     // Tentar extrair JSON da resposta
     let suggestions: Suggestion[]
     
     try {
+      console.log('Tentando extrair JSON da resposta...')
+      
       // Limpar a resposta para extrair apenas o JSON
       const jsonMatch = text.match(/\[[\s\S]*\]/)
       if (jsonMatch) {
+        console.log('JSON encontrado:', jsonMatch[0])
         suggestions = JSON.parse(jsonMatch[0])
+        console.log('Sugestões parseadas:', suggestions)
       } else {
+        console.error('JSON não encontrado na resposta')
+        console.error('Texto completo:', text)
         throw new Error('JSON não encontrado na resposta')
       }
     } catch (parseError) {
@@ -96,6 +132,7 @@ Gere sugestões criativas e variadas!
           level: "9º ano"
         }
       ]
+      console.log('Usando sugestões de fallback devido ao erro de parsing')
     }
 
     // Validar se temos exatamente 3 sugestões
@@ -107,6 +144,7 @@ Gere sugestões criativas e variadas!
     // Validar estrutura de cada sugestão
     for (const suggestion of suggestions) {
       if (!suggestion.text || !suggestion.category || !suggestion.level) {
+        console.error('Estrutura de sugestão inválida:', suggestion)
         throw new Error('Estrutura de sugestão inválida')
       }
     }
@@ -120,7 +158,8 @@ Gere sugestões criativas e variadas!
     })
 
   } catch (error) {
-    console.error('Erro ao gerar sugestões:', error)
+    console.error('Erro geral ao gerar sugestões:', error)
+    console.error('Stack trace:', error instanceof Error ? error.stack : 'N/A')
     
     // Fallback para sugestões estáticas em caso de erro
     const fallbackSuggestions: Suggestion[] = [
@@ -141,11 +180,14 @@ Gere sugestões criativas e variadas!
       }
     ]
 
+    console.log('Retornando sugestões de fallback devido ao erro')
+
     return NextResponse.json({
       success: true,
       suggestions: fallbackSuggestions,
       generatedAt: new Date().toISOString(),
-      fallback: true
+      fallback: true,
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
     })
   }
 }

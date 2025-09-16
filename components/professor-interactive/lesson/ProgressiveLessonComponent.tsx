@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, ArrowLeft, ArrowRight, CheckCircle, XCircle, Lightbulb, Download, Printer, RotateCcw, Plus } from 'lucide-react';
+import { Loader2, ArrowLeft, ArrowRight, CheckCircle, XCircle, Lightbulb, Download, Printer, RotateCcw, Plus, Keyboard } from 'lucide-react';
 import { MarkdownRenderer } from '@/components/chat/MarkdownRenderer';
 import { useProgressiveLesson } from '@/hooks/useProgressiveLesson';
 
@@ -29,6 +29,44 @@ export default function ProgressiveLessonComponent({
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [showClosingOptions, setShowClosingOptions] = useState(false);
   
+  // Navegação pelo teclado
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      // Evitar conflitos quando estiver digitando em inputs
+      if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      switch (event.key) {
+        case 'ArrowLeft':
+          if (canGoPrevious()) {
+            handlePreviousSlide();
+          }
+          break;
+        case 'ArrowRight':
+          if (canGoNext() && !(isQuestionSlide() && !showAnswer && !selectedAnswer)) {
+            handleNextSlide();
+          }
+          break;
+        case 'Enter':
+          if (isQuestionSlide() && !showAnswer && selectedAnswer) {
+            setShowAnswer(true);
+          } else if (isQuestionSlide() && showAnswer) {
+            handleNextSlide();
+          }
+          break;
+        case 'Escape':
+          if (showAnswer) {
+            setShowAnswer(false);
+          }
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [canGoNext, canGoPrevious, isQuestionSlide, showAnswer, selectedAnswer]);
+
   const {
     skeleton,
     generatedSlides,
@@ -67,26 +105,29 @@ export default function ProgressiveLessonComponent({
 
   const loadImageForSlide = async (slide: any) => {
     try {
-      console.log('🖼️ Carregando imagem para slide:', currentSlide + 1, 'Prompt:', slide.imagePrompt);
+      const query = slide.imagePrompt || skeleton?.theme || 'education';
+      console.log('🖼️ Carregando imagem para slide:', currentSlide + 1, 'Prompt:', query);
       
-      const response = await fetch('/api/unsplash/search', {
+      const response = await fetch('/api/unsplash/translate-search', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          query: slide.imagePrompt || skeleton?.theme || 'education',
+          query: query,
+          subject: skeleton?.subject || '',
           count: 1
         }),
       });
 
       if (response.ok) {
         const data = await response.json();
-        console.log('📸 Resposta da API Unsplash:', data);
+        console.log('📸 Resposta da API Unsplash com tradução:', data);
         
         if (data.photos && data.photos.length > 0) {
           const imageUrl = data.photos[0].urls.regular;
-          console.log('✅ Imagem carregada:', imageUrl);
+          console.log('✅ Imagem carregada com tradução:', imageUrl);
+          console.log('🎯 Tema traduzido:', data.englishTheme);
           setImageUrl(imageUrl);
         } else {
           console.log('⚠️ Nenhuma foto encontrada, usando placeholder');
@@ -455,44 +496,6 @@ export default function ProgressiveLessonComponent({
           </p>
         </div>
 
-        {showClosingOptions && (
-          <div className="mt-8 p-6 bg-white border border-gray-200 rounded-lg shadow-lg">
-            <h4 className="text-lg font-semibold mb-4 text-gray-800">O que você gostaria de fazer agora?</h4>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Button
-                onClick={handleSavePDF}
-                className="flex flex-col items-center space-y-2 p-4 h-auto bg-blue-600 hover:bg-blue-700"
-              >
-                <Download className="w-6 h-6" />
-                <span className="text-sm">Salvar PDF</span>
-              </Button>
-              
-              <Button
-                onClick={handlePrint}
-                className="flex flex-col items-center space-y-2 p-4 h-auto bg-gray-600 hover:bg-gray-700"
-              >
-                <Printer className="w-6 h-6" />
-                <span className="text-sm">Imprimir</span>
-              </Button>
-              
-              <Button
-                onClick={handleRepeatLesson}
-                className="flex flex-col items-center space-y-2 p-4 h-auto bg-purple-600 hover:bg-purple-700"
-              >
-                <RotateCcw className="w-6 h-6" />
-                <span className="text-sm">Repetir Aula</span>
-              </Button>
-              
-              <Button
-                onClick={handleNewLesson}
-                className="flex flex-col items-center space-y-2 p-4 h-auto bg-green-600 hover:bg-green-700"
-              >
-                <Plus className="w-6 h-6" />
-                <span className="text-sm">Nova Aula</span>
-              </Button>
-            </div>
-          </div>
-        )}
       </div>
     );
   };
@@ -601,6 +604,19 @@ export default function ProgressiveLessonComponent({
         </Card>
       )}
 
+      {/* Keyboard Navigation Help */}
+      <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+        <div className="flex items-center gap-2 text-sm text-blue-700">
+          <Keyboard className="h-4 w-4" />
+          <span className="font-medium">Navegação por teclado:</span>
+          <span>← → para navegar</span>
+          <span>•</span>
+          <span>Enter para confirmar</span>
+          <span>•</span>
+          <span>Esc para voltar</span>
+        </div>
+      </div>
+
       {/* Navigation */}
       <div className="flex items-center justify-between">
         <Button
@@ -620,13 +636,43 @@ export default function ProgressiveLessonComponent({
         </div>
 
         {isClosingSlide() ? (
-          <Button
-            onClick={showClosingOptions ? (onLessonComplete || handleRestart) : handleFinalizeLesson}
-            className="flex items-center space-x-2 bg-green-600 hover:bg-green-700"
-          >
-            <span>{showClosingOptions ? 'Fechar' : 'Finalizar Aula'}</span>
-            <ArrowRight className="w-4 h-4" />
-          </Button>
+          // No último slide, mostrar diretamente as opções de notas
+          <div className="mt-8 p-6 bg-white border border-gray-200 rounded-lg shadow-lg">
+            <h4 className="text-lg font-semibold mb-4 text-gray-800">O que você gostaria de fazer agora?</h4>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <Button
+                onClick={handleSavePDF}
+                className="flex flex-col items-center space-y-2 p-4 h-auto bg-blue-600 hover:bg-blue-700"
+              >
+                <Download className="w-6 h-6" />
+                <span className="text-sm">Salvar PDF</span>
+              </Button>
+              
+              <Button
+                onClick={handlePrint}
+                className="flex flex-col items-center space-y-2 p-4 h-auto bg-gray-600 hover:bg-gray-700"
+              >
+                <Printer className="w-6 h-6" />
+                <span className="text-sm">Imprimir</span>
+              </Button>
+              
+              <Button
+                onClick={handleRepeatLesson}
+                className="flex flex-col items-center space-y-2 p-4 h-auto bg-purple-600 hover:bg-purple-700"
+              >
+                <RotateCcw className="w-6 h-6" />
+                <span className="text-sm">Reiniciar</span>
+              </Button>
+              
+              <Button
+                onClick={handleNewLesson}
+                className="flex flex-col items-center space-y-2 p-4 h-auto bg-green-600 hover:bg-green-700"
+              >
+                <Plus className="w-6 h-6" />
+                <span className="text-sm">Nova Aula</span>
+              </Button>
+            </div>
+          </div>
         ) : (
           <Button
             onClick={handleNextSlide}

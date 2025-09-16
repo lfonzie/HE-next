@@ -40,12 +40,12 @@ export function LoadingOverlay({
 
   return createPortal(
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
       role="status"
       aria-live="polite"
       aria-label={message}
     >
-      <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-sm mx-4 flex flex-col items-center space-y-4">
+      <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8 max-w-sm mx-4 flex flex-col items-center space-y-4">
         {/* Spinner */}
         <div className="relative">
           <div className="w-12 h-12 border-4 border-yellow-200 border-t-yellow-500 rounded-full animate-spin"></div>
