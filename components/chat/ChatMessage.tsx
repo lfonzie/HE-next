@@ -396,8 +396,8 @@ export const ChatMessage = memo(function ChatMessage({
             {typeof message.tokens === "number" && (
               <span className="ml-2">{formatTokens(message.tokens)} tokens</span>
             )}
-            {/* Informações detalhadas do modelo */}
-            {!isUser && (message.model || message.provider || message.complexity) && (
+            {/* Informações detalhadas do modelo - só se houver tokens */}
+            {!isUser && message.tokens && message.tokens > 0 && (
               <div className="mt-1">
                 <ModelDetails 
                   model={message.model}

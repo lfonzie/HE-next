@@ -167,7 +167,7 @@ export const StreamingMessage: React.FC<StreamingMessageProps> = ({
           
           {/* Metadados */}
           <footer className="message-metadata mt-1 text-xs text-gray-500">
-            {(model || provider || complexity) && (
+            {tokens && tokens > 0 && (
               <ModelDetails 
                 model={model}
                 provider={provider}

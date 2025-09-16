@@ -204,6 +204,9 @@ export function ModelDetails({
   tokens,
   className = ""
 }: ModelChipProps & { tokens?: number }) {
+  // Só mostrar informações se tokens estiverem disponíveis ou se for modo debug
+  if (!tokens && process.env.NODE_ENV !== 'development') return null
+  
   const chipConfig = model ? MODEL_CHIP_CONFIG[model as keyof typeof MODEL_CHIP_CONFIG] : null
   
   if (!chipConfig) return null
@@ -211,12 +214,14 @@ export function ModelDetails({
   return (
     <div className={`text-xs text-gray-500 dark:text-gray-400 ${className}`}>
       <div className="flex items-center gap-2">
-        <span>{chipConfig.description}</span>
         {tokens && (
           <span className="flex items-center gap-1">
             <DollarSign className="w-3 h-3" />
             {tokens} tokens
           </span>
+        )}
+        {process.env.NODE_ENV === 'development' && (
+          <span className="text-gray-400">• {chipConfig.description}</span>
         )}
       </div>
     </div>
