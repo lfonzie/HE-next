@@ -5,6 +5,15 @@ import { getServerSession } from "next-auth/next"
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/db"
 
+// Usuário de desenvolvimento temporário
+const DEV_USER = {
+  id: "dev-user-123",
+  email: "dev@hubedu.ia",
+  name: "Usuário Desenvolvimento",
+  role: "STUDENT",
+  password: "dev123" // Senha simples para desenvolvimento
+}
+
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   session: {
@@ -41,16 +50,22 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        // Only log in development or when debug is enabled
-        if (process.env.NEXTAUTH_DEBUG === "true") {
-          console.log("🔐 NextAuth authorize called with:", { email: credentials?.email })
-        }
+        console.log("🔐 NextAuth authorize called with:", { email: credentials?.email })
         
         if (!credentials?.email || !credentials?.password) {
-          if (process.env.NEXTAUTH_DEBUG === "true") {
-            console.log("❌ Missing credentials")
-          }
+          console.log("❌ Missing credentials")
           return null
+        }
+
+        // Verificação simples para desenvolvimento (fallback)
+        if (credentials.email === DEV_USER.email && credentials.password === DEV_USER.password) {
+          console.log("✅ [DEV] Authentication successful for:", DEV_USER.email)
+          return {
+            id: DEV_USER.id,
+            email: DEV_USER.email,
+            name: DEV_USER.name,
+            role: DEV_USER.role,
+          }
         }
 
         try {
@@ -59,9 +74,7 @@ export const authOptions: NextAuthOptions = {
           })
 
           if (!user || !user.password_hash) {
-            if (process.env.NEXTAUTH_DEBUG === "true") {
-              console.log("❌ User not found or no password hash")
-            }
+            console.log("❌ User not found or no password hash")
             return null
           }
 
@@ -71,15 +84,11 @@ export const authOptions: NextAuthOptions = {
           )
 
           if (!isPasswordValid) {
-            if (process.env.NEXTAUTH_DEBUG === "true") {
-              console.log("❌ Invalid password")
-            }
+            console.log("❌ Invalid password")
             return null
           }
 
-          if (process.env.NEXTAUTH_DEBUG === "true") {
-            console.log("✅ Authentication successful for:", user.email)
-          }
+          console.log("✅ Authentication successful for:", user.email)
           return {
             id: user.id,
             email: user.email,
@@ -88,6 +97,16 @@ export const authOptions: NextAuthOptions = {
           }
         } catch (error) {
           console.error("🚨 Auth error:", error)
+          // Fallback para usuário de desenvolvimento em caso de erro de banco
+          if (credentials.email === DEV_USER.email && credentials.password === DEV_USER.password) {
+            console.log("✅ [DEV FALLBACK] Authentication successful for:", DEV_USER.email)
+            return {
+              id: DEV_USER.id,
+              email: DEV_USER.email,
+              name: DEV_USER.name,
+              role: DEV_USER.role,
+            }
+          }
           return null
         }
       }
