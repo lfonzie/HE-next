@@ -132,15 +132,19 @@ export default function AulasPage() {
   // Form validation
   const validateForm = useCallback(() => {
     const errors: FormErrors = {}
+    const trimmedTopic = formData.topic.trim()
     
-    if (!formData.topic.trim()) {
+    console.log('Validando formulário:', { topic: formData.topic, trimmedTopic, length: trimmedTopic.length })
+    
+    if (!trimmedTopic) {
       errors.topic = 'Por favor, descreva o tópico da aula'
-    } else if (formData.topic.trim().length < 5) {
+    } else if (trimmedTopic.length < 5) {
       errors.topic = 'Descreva o tópico com mais detalhes (mínimo 5 caracteres)'
-    } else if (formData.topic.trim().length > 500) {
+    } else if (trimmedTopic.length > 500) {
       errors.topic = 'Descrição muito longa (máximo 500 caracteres)'
     }
 
+    console.log('Erros de validação:', errors)
     setFormErrors(errors)
     return Object.keys(errors).length === 0
   }, [formData.topic])
@@ -160,14 +164,18 @@ export default function AulasPage() {
   const handleGenerate = useCallback(async (topicOverride: string | null = null) => {
     const topic = topicOverride || formData.topic
     
-    if (!topic.trim()) {
-      setFormErrors({ topic: 'Por favor, insira um tópico para a aula' })
-      return
-    }
-
-    if (!validateForm() && !topicOverride) {
-      toast.error('Por favor, corrija os erros no formulário')
-      return
+    // Se não há topicOverride, validar o formulário normalmente
+    if (!topicOverride) {
+      if (!validateForm()) {
+        toast.error('Por favor, corrija os erros no formulário')
+        return
+      }
+    } else {
+      // Se há topicOverride, apenas verificar se não está vazio
+      if (!topic.trim()) {
+        toast.error('Tópico inválido')
+        return
+      }
     }
 
     setIsGenerating(true)
@@ -435,8 +443,13 @@ export default function AulasPage() {
                   placeholder="Exemplo: Como a fotossíntese transforma luz solar em energia química, incluindo as reações e fatores que influenciam o processo..."
                   value={formData.topic}
                   onChange={(e) => {
-                    setFormData({ ...formData, topic: e.target.value })
-                    if (formErrors.topic) {
+                    const newValue = e.target.value
+                    console.log('Mudança no campo topic:', { oldValue: formData.topic, newValue })
+                    setFormData({ ...formData, topic: newValue })
+                    
+                    // Limpar erro se o campo não estiver mais vazio
+                    if (formErrors.topic && newValue.trim().length >= 5) {
+                      console.log('Limpando erro de validação')
                       const newErrors = { ...formErrors }
                       delete newErrors.topic
                       setFormErrors(newErrors)
