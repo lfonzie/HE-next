@@ -53,7 +53,7 @@ export const COMPLEXITY_MODELS = {
     groq: 'llama-3.1-8b-instant'
   },
   complex: {
-    openai: 'gpt-5',
+    openai: 'gpt-5-chat-latest',
     anthropic: 'claude-3-sonnet-20240229',
     google: 'gemini-2.0-flash-exp',
     mistral: 'mistral-large-latest',
@@ -101,7 +101,7 @@ export const MODEL_CONFIGS = {
     speed: 'fast',
     quality: 'good'
   },
-  'gpt-5': {
+  'gpt-5-chat-latest': {
     temperature: 0.7,
     maxTokens: 4000,
     timeout: 30000,

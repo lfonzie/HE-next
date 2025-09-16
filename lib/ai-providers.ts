@@ -58,7 +58,7 @@ export type ProviderType = keyof typeof AI_PROVIDERS
 export const PROVIDER_MODELS = {
   openai: {
     simple: 'gpt-4o-mini',
-    complex: 'gpt-4o-mini', // Usando gpt-4o-mini em vez de gpt-5 (que pode não estar disponível)
+    complex: 'gpt-5-chat-latest', // Usando gpt-5-chat-latest para tarefas complexas
     fast: 'gpt-4o-mini'
   },
   anthropic: {
@@ -156,7 +156,7 @@ export function getProviderInfo(provider: ProviderType) {
       name: 'OpenAI',
       description: 'GPT-5, GPT-4o Mini',
       website: 'https://openai.com',
-      models: ['gpt-5', 'gpt-4o-mini']
+      models: ['gpt-5-chat-latest', 'gpt-4o-mini']
     },
     anthropic: {
       name: 'Anthropic',
@@ -205,7 +205,7 @@ export function getProviderModels(provider: ProviderType): string[] {
 // Função para obter configuração de um modelo
 export function getModelConfig(model: string) {
   const configs = {
-    'gpt-5': { temperature: 0.7, maxTokens: 4000, timeout: 30000 },
+    'gpt-5-chat-latest': { temperature: 0.7, maxTokens: 4000, timeout: 30000 },
     'gpt-4o-mini': { temperature: 0.7, maxTokens: 2000, timeout: 20000 },
     'claude-3-sonnet-20240229': { temperature: 0.7, maxTokens: 4000, timeout: 30000 },
     'claude-3-haiku-20240307': { temperature: 0.7, maxTokens: 2000, timeout: 20000 },

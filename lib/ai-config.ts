@@ -28,18 +28,8 @@ export const AI_MODELS = {
     costPer1kTokens: 0.00015, // Input tokens
     costPer1kOutputTokens: 0.0006, // Output tokens
   },
-  'gpt-5': {
-    model: 'gpt-5',
-    temperature: 0.7,
-    maxTokens: 4000,
-    topP: 0.9,
-    frequencyPenalty: 0.0,
-    presencePenalty: 0.0,
-    costPer1kTokens: 0.0025, // Input tokens (estimated)
-    costPer1kOutputTokens: 0.01, // Output tokens (estimated)
-  },
-  'gpt-5-2025-08-07': {
-    model: 'gpt-5-2025-08-07',
+  'gpt-5-chat-latest': {
+    model: 'gpt-5-chat-latest',
     temperature: 0.7,
     maxTokens: 4000,
     topP: 0.9,
@@ -84,73 +74,73 @@ export const AI_MODELS = {
 export const MODULE_AI_CONFIGS = {
   'professor': {
     defaultModel: 'gpt-4o-mini',
-    complexModel: 'gpt-5',
+    complexModel: 'gpt-5-chat-latest',
     temperature: 0.7,
     maxTokens: 2000,
   },
   'aula-expandida': {
     defaultModel: 'gpt-4o-mini',
-    complexModel: 'gpt-5',
+    complexModel: 'gpt-5-chat-latest',
     temperature: 0.8,
     maxTokens: 3000,
   },
   'enem-interativo': {
     defaultModel: 'gpt-4o-mini',
-    complexModel: 'gpt-5',
+    complexModel: 'gpt-5-chat-latest',
     temperature: 0.6,
     maxTokens: 1500,
   },
   'enem': {
     defaultModel: 'gpt-4o-mini',
-    complexModel: 'gpt-5',
+    complexModel: 'gpt-5-chat-latest',
     temperature: 0.6,
     maxTokens: 1500,
   },
   'ti': {
     defaultModel: 'gpt-4o-mini',
-    complexModel: 'gpt-5',
+    complexModel: 'gpt-5-chat-latest',
     temperature: 0.5,
     maxTokens: 1000,
   },
   'atendimento': {
     defaultModel: 'gpt-4o-mini',
-    complexModel: 'gpt-5',
+    complexModel: 'gpt-5-chat-latest',
     temperature: 0.7,
     maxTokens: 1000,
   },
   'coordenacao': {
     defaultModel: 'gpt-4o-mini',
-    complexModel: 'gpt-5',
+    complexModel: 'gpt-5-chat-latest',
     temperature: 0.7,
     maxTokens: 1500,
   },
   'social-media': {
     defaultModel: 'gpt-4o-mini',
-    complexModel: 'gpt-5',
+    complexModel: 'gpt-5-chat-latest',
     temperature: 0.8,
     maxTokens: 1000,
   },
   'bem-estar': {
     defaultModel: 'gpt-4o-mini',
-    complexModel: 'gpt-5',
+    complexModel: 'gpt-5-chat-latest',
     temperature: 0.8,
     maxTokens: 1500,
   },
   'rh': {
     defaultModel: 'gpt-4o-mini',
-    complexModel: 'gpt-5',
+    complexModel: 'gpt-5-chat-latest',
     temperature: 0.6,
     maxTokens: 1500,
   },
   'financeiro': {
     defaultModel: 'gpt-4o-mini',
-    complexModel: 'gpt-5',
+    complexModel: 'gpt-5-chat-latest',
     temperature: 0.5,
     maxTokens: 1000,
   },
   'secretaria': {
     defaultModel: 'gpt-4o-mini',
-    complexModel: 'gpt-5',
+    complexModel: 'gpt-5-chat-latest',
     temperature: 0.6,
     maxTokens: 1000,
   }
@@ -272,7 +262,7 @@ export function getModelTier(model: string): 'IA_ECO' | 'IA' | 'IA_SUPER' {
   if (model.includes('gemini')) return 'IA_ECO';
   
   // GPT-5 variants - IA Turbo tier (IA_SUPER)
-  if (model === 'gpt-5' || model.startsWith('gpt-5-')) return 'IA_SUPER';
+  if (model === 'gpt-5-chat-latest' || model.startsWith('gpt-5-')) return 'IA_SUPER';
   
   // GPT-4o-mini - IA tier
   if (model === 'gpt-4o-mini') return 'IA';

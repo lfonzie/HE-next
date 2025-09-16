@@ -51,7 +51,7 @@ const MODEL_CHIP_CONFIG = {
     description: 'Respostas avançadas e detalhadas'
   },
   
-  'gpt-5': {
+  'gpt-5-chat-latest': {
     label: 'IA Turbo',
     icon: Sparkles,
     variant: 'destructive' as const,

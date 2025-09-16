@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
         } else if (aiClassification === 'complexa') {
           detectedComplexity = 'complexa'
           selectedProvider = 'openai'
-          selectedModel = 'gpt-5'
+          selectedModel = 'gpt-5-chat-latest'
           tier = 'IA_TURBO'
         }
       }
