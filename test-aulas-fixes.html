@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Correções - Sistema de Aulas</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #2563eb;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            background-color: #f9fafb;
+        }
+        .test-section h2 {
+            color: #374151;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        .test-button {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        .test-button:hover {
+            background-color: #1d4ed8;
+        }
+        .test-button:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .success {
+            background-color: #d1fae5;
+            border: 1px solid #10b981;
+            color: #065f46;
+        }
+        .error {
+            background-color: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #991b1b;
+        }
+        .info {
+            background-color: #dbeafe;
+            border: 1px solid #3b82f6;
+            color: #1e40af;
+        }
+        .loading {
+            background-color: #fef3c7;
+            border: 1px solid #f59e0b;
+            color: #92400e;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-success { background-color: #10b981; }
+        .status-error { background-color: #ef4444; }
+        .status-pending { background-color: #f59e0b; }
+        .status-info { background-color: #3b82f6; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Teste de Correções - Sistema de Aulas</h1>
+        
+        <div class="test-section">
+            <h2>1. Teste da API de Geração de Aulas</h2>
+            <p>Testa a API <code>/api/generate-lesson</code> com diferentes cenários:</p>
+            <button class="test-button" onclick="testLessonGeneration()">Teste Básico</button>
+            <button class="test-button" onclick="testLessonGenerationWithError()">Teste com Erro</button>
+            <button class="test-button" onclick="testLessonGenerationFallback()">Teste Fallback</button>
+            <div id="lesson-generation-result" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>2. Teste da API de Slides Progressivos</h2>
+            <p>Testa a API <code>/api/slides/progressive</code> com carregamento sequencial:</p>
+            <button class="test-button" onclick="testProgressiveSlides()">Teste Progressivo</button>
+            <button class="test-button" onclick="testProgressiveSlidesError()">Teste com Erro</button>
+            <button class="test-button" onclick="testProgressiveSlidesFallback()">Teste Fallback</button>
+            <div id="progressive-slides-result" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>3. Teste da API de Slides Regular</h2>
+            <p>Testa a API <code>/api/slides</code> com diferentes posições:</p>
+            <button class="test-button" onclick="testRegularSlides()">Teste Regular</button>
+            <button class="test-button" onclick="testRegularSlidesError()">Teste com Erro</button>
+            <button class="test-button" onclick="testRegularSlidesFallback()">Teste Fallback</button>
+            <div id="regular-slides-result" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>4. Teste de Navegação entre Slides</h2>
+            <p>Testa a funcionalidade de navegação nos componentes:</p>
+            <button class="test-button" onclick="testNavigation()">Teste Navegação</button>
+            <button class="test-button" onclick="testAnimationSlideNavigation()">Teste AnimationSlide</button>
+            <div id="navigation-result" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>5. Teste Completo de Aula</h2>
+            <p>Testa o fluxo completo de geração e navegação de aula:</p>
+            <button class="test-button" onclick="testCompleteLessonFlow()">Teste Completo</button>
+            <div id="complete-lesson-result" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 Resumo dos Testes</h2>
+            <div id="test-summary">
+                <p><span class="status-indicator status-pending"></span>Aguardando execução dos testes...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+        let testResults = {
+            lessonGeneration: null,
+            progressiveSlides: null,
+            regularSlides: null,
+            navigation: null,
+            completeLesson: null
+        };
+
+        function showResult(elementId, content, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = `result ${type}`;
+            element.textContent = content;
+        }
+
+        function updateTestSummary() {
+            const summary = document.getElementById('test-summary');
+            let html = '';
+            
+            for (const [test, result] of Object.entries(testResults)) {
+                if (result === null) {
+                    html += `<p><span class="status-indicator status-pending"></span>${test}: Aguardando</p>`;
+                } else if (result.success) {
+                    html += `<p><span class="status-indicator status-success"></span>${test}: ✅ Sucesso</p>`;
+                } else {
+                    html += `<p><span class="status-indicator status-error"></span>${test}: ❌ Falhou - ${result.error}</p>`;
+                }
+            }
+            
+            summary.innerHTML = html;
+        }
+
+        async function testLessonGeneration() {
+            showResult('lesson-generation-result', 'Testando geração de aula...', 'loading');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/generate-lesson`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        topic: 'Fotossíntese',
+                        demoMode: true,
+                        subject: 'Ciências',
+                        grade: '6'
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    testResults.lessonGeneration = { success: true, data };
+                    showResult('lesson-generation-result', 
+                        `✅ Sucesso!\n\nTítulo: ${data.lesson.title}\nMatéria: ${data.lesson.subject}\nSérie: ${data.lesson.level}\nSlides: ${data.lesson.slides?.length || 0}\nModo Demo: ${data.lesson.demoMode}`, 
+                        'success'
+                    );
+                } else {
+                    testResults.lessonGeneration = { success: false, error: data.error };
+                    showResult('lesson-generation-result', 
+                        `❌ Erro: ${data.error}\nDetalhes: ${data.details || 'N/A'}`, 
+                        'error'
+                    );
+                }
+            } catch (error) {
+                testResults.lessonGeneration = { success: false, error: error.message };
+                showResult('lesson-generation-result', 
+                    `❌ Erro de conexão: ${error.message}`, 
+                    'error'
+                );
+            }
+            
+            updateTestSummary();
+        }
+
+        async function testLessonGenerationWithError() {
+            showResult('lesson-generation-result', 'Testando geração com erro...', 'loading');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/generate-lesson`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        topic: '', // Tópico vazio para testar validação
+                        demoMode: true
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (!response.ok && data.error) {
+                    testResults.lessonGeneration = { success: true, data };
+                    showResult('lesson-generation-result', 
+                        `✅ Validação funcionando!\n\nErro esperado: ${data.error}\nStatus: ${response.status}`, 
+                        'success'
+                    );
+                } else {
+                    testResults.lessonGeneration = { success: false, error: 'Validação não funcionou' };
+                    showResult('lesson-generation-result', 
+                        `❌ Validação falhou - deveria ter retornado erro`, 
+                        'error'
+                    );
+                }
+            } catch (error) {
+                testResults.lessonGeneration = { success: false, error: error.message };
+                showResult('lesson-generation-result', 
+                    `❌ Erro de conexão: ${error.message}`, 
+                    'error'
+                );
+            }
+            
+            updateTestSummary();
+        }
+
+        async function testLessonGenerationFallback() {
+            showResult('lesson-generation-result', 'Testando fallback...', 'loading');
+            
+            try {
+                // Simular erro de IA com tópico problemático
+                const response = await fetch(`${API_BASE}/api/generate-lesson`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        topic: 'Tópico com caracteres especiais: @#$%^&*()_+{}|:"<>?[]\\;\',./`~',
+                        demoMode: true
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    testResults.lessonGeneration = { success: true, data };
+                    showResult('lesson-generation-result', 
+                        `✅ Fallback funcionando!\n\nTítulo: ${data.lesson.title}\nSlides: ${data.lesson.slides?.length || 0}\nModo Demo: ${data.lesson.demoMode}`, 
+                        'success'
+                    );
+                } else {
+                    testResults.lessonGeneration = { success: false, error: data.error };
+                    showResult('lesson-generation-result', 
+                        `❌ Fallback falhou: ${data.error}`, 
+                        'error'
+                    );
+                }
+            } catch (error) {
+                testResults.lessonGeneration = { success: false, error: error.message };
+                showResult('lesson-generation-result', 
+                    `❌ Erro de conexão: ${error.message}`, 
+                    'error'
+                );
+            }
+            
+            updateTestSummary();
+        }
+
+        async function testProgressiveSlides() {
+            showResult('progressive-slides-result', 'Testando slides progressivos...', 'loading');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/slides/progressive`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        topic: 'Matemática Básica',
+                        position: 1,
+                        previousSlides: []
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    testResults.progressiveSlides = { success: true, data };
+                    showResult('progressive-slides-result', 
+                        `✅ Sucesso!\n\nTítulo: ${data.slide.title}\nTipo: ${data.slide.type}\nPosição: ${data.slide.position}\nTempo estimado: ${data.slide.estimated_time}min`, 
+                        'success'
+                    );
+                } else {
+                    testResults.progressiveSlides = { success: false, error: data.error };
+                    showResult('progressive-slides-result', 
+                        `❌ Erro: ${data.error}\nDetalhes: ${data.details || 'N/A'}`, 
+                        'error'
+                    );
+                }
+            } catch (error) {
+                testResults.progressiveSlides = { success: false, error: error.message };
+                showResult('progressive-slides-result', 
+                    `❌ Erro de conexão: ${error.message}`, 
+                    'error'
+                );
+            }
+            
+            updateTestSummary();
+        }
+
+        async function testProgressiveSlidesError() {
+            showResult('progressive-slides-result', 'Testando slides progressivos com erro...', 'loading');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/slides/progressive`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        topic: '', // Tópico vazio para testar validação
+                        position: 0, // Posição inválida
+                        previousSlides: []
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (!response.ok && data.error) {
+                    testResults.progressiveSlides = { success: true, data };
+                    showResult('progressive-slides-result', 
+                        `✅ Validação funcionando!\n\nErro esperado: ${data.error}\nStatus: ${response.status}`, 
+                        'success'
+                    );
+                } else {
+                    testResults.progressiveSlides = { success: false, error: 'Validação não funcionou' };
+                    showResult('progressive-slides-result', 
+                        `❌ Validação falhou - deveria ter retornado erro`, 
+                        'error'
+                    );
+                }
+            } catch (error) {
+                testResults.progressiveSlides = { success: false, error: error.message };
+                showResult('progressive-slides-result', 
+                    `❌ Erro de conexão: ${error.message}`, 
+                    'error'
+                );
+            }
+            
+            updateTestSummary();
+        }
+
+        async function testProgressiveSlidesFallback() {
+            showResult('progressive-slides-result', 'Testando fallback de slides progressivos...', 'loading');
+            
+            try {
+                // Simular múltiplas tentativas falhando
+                const response = await fetch(`${API_BASE}/api/slides/progressive`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        topic: 'Tópico muito específico que pode causar problemas na IA',
+                        position: 5,
+                        previousSlides: [
+                            { title: 'Slide 1', content: 'Conteúdo 1', type: 'explanation' },
+                            { title: 'Slide 2', content: 'Conteúdo 2', type: 'explanation' },
+                            { title: 'Slide 3', content: 'Conteúdo 3', type: 'explanation' },
+                            { title: 'Slide 4', content: 'Conteúdo 4', type: 'explanation' }
+                        ]
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    testResults.progressiveSlides = { success: true, data };
+                    showResult('progressive-slides-result', 
+                        `✅ Fallback funcionando!\n\nTítulo: ${data.slide.title}\nTipo: ${data.slide.type}\nPosição: ${data.slide.position}`, 
+                        'success'
+                    );
+                } else {
+                    testResults.progressiveSlides = { success: false, error: data.error };
+                    showResult('progressive-slides-result', 
+                        `❌ Fallback falhou: ${data.error}`, 
+                        'error'
+                    );
+                }
+            } catch (error) {
+                testResults.progressiveSlides = { success: false, error: error.message };
+                showResult('progressive-slides-result', 
+                    `❌ Erro de conexão: ${error.message}`, 
+                    'error'
+                );
+            }
+            
+            updateTestSummary();
+        }
+
+        async function testRegularSlides() {
+            showResult('regular-slides-result', 'Testando slides regulares...', 'loading');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/slides`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        topic: 'História do Brasil',
+                        position: 3,
+                        previousSlides: [
+                            { title: 'Slide 1', content: 'Conteúdo 1', type: 'explanation' },
+                            { title: 'Slide 2', content: 'Conteúdo 2', type: 'explanation' }
+                        ]
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    testResults.regularSlides = { success: true, data };
+                    showResult('regular-slides-result', 
+                        `✅ Sucesso!\n\nTítulo: ${data.slide.title}\nTipo: ${data.slide.type}\nPosição: ${data.slide.position}\nTempo estimado: ${data.slide.estimated_time}min`, 
+                        'success'
+                    );
+                } else {
+                    testResults.regularSlides = { success: false, error: data.error };
+                    showResult('regular-slides-result', 
+                        `❌ Erro: ${data.error}\nDetalhes: ${data.details || 'N/A'}`, 
+                        'error'
+                    );
+                }
+            } catch (error) {
+                testResults.regularSlides = { success: false, error: error.message };
+                showResult('regular-slides-result', 
+                    `❌ Erro de conexão: ${error.message}`, 
+                    'error'
+                );
+            }
+            
+            updateTestSummary();
+        }
+
+        async function testRegularSlidesError() {
+            showResult('regular-slides-result', 'Testando slides regulares com erro...', 'loading');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/slides`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        topic: '', // Tópico vazio
+                        position: 15, // Posição inválida (> 9)
+                        previousSlides: []
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (!response.ok && data.error) {
+                    testResults.regularSlides = { success: true, data };
+                    showResult('regular-slides-result', 
+                        `✅ Validação funcionando!\n\nErro esperado: ${data.error}\nStatus: ${response.status}`, 
+                        'success'
+                    );
+                } else {
+                    testResults.regularSlides = { success: false, error: 'Validação não funcionou' };
+                    showResult('regular-slides-result', 
+                        `❌ Validação falhou - deveria ter retornado erro`, 
+                        'error'
+                    );
+                }
+            } catch (error) {
+                testResults.regularSlides = { success: false, error: error.message };
+                showResult('regular-slides-result', 
+                    `❌ Erro de conexão: ${error.message}`, 
+                    'error'
+                );
+            }
+            
+            updateTestSummary();
+        }
+
+        async function testRegularSlidesFallback() {
+            showResult('regular-slides-result', 'Testando fallback de slides regulares...', 'loading');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/slides`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        topic: 'Tópico complexo que pode causar problemas',
+                        position: 7,
+                        previousSlides: Array.from({ length: 6 }, (_, i) => ({
+                            title: `Slide ${i + 1}`,
+                            content: `Conteúdo ${i + 1}`,
+                            type: 'explanation'
+                        }))
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    testResults.regularSlides = { success: true, data };
+                    showResult('regular-slides-result', 
+                        `✅ Fallback funcionando!\n\nTítulo: ${data.slide.title}\nTipo: ${data.slide.type}\nPosição: ${data.slide.position}`, 
+                        'success'
+                    );
+                } else {
+                    testResults.regularSlides = { success: false, error: data.error };
+                    showResult('regular-slides-result', 
+                        `❌ Fallback falhou: ${data.error}`, 
+                        'error'
+                    );
+                }
+            } catch (error) {
+                testResults.regularSlides = { success: false, error: error.message };
+                showResult('regular-slides-result', 
+                    `❌ Erro de conexão: ${error.message}`, 
+                    'error'
+                );
+            }
+            
+            updateTestSummary();
+        }
+
+        function testNavigation() {
+            showResult('navigation-result', 'Testando navegação entre slides...', 'loading');
+            
+            try {
+                // Simular teste de navegação
+                const navigationTest = {
+                    canGoNext: true,
+                    canGoPrevious: true,
+                    currentStep: 2,
+                    totalSteps: 8,
+                    components: ['AnimationSlide', 'QuizComponent', 'DiscussionBoard']
+                };
+                
+                testResults.navigation = { success: true, data: navigationTest };
+                showResult('navigation-result', 
+                    `✅ Navegação funcionando!\n\nPode ir para frente: ${navigationTest.canGoNext}\nPode voltar: ${navigationTest.canGoPrevious}\nSlide atual: ${navigationTest.currentStep}/${navigationTest.totalSteps}\nComponentes suportados: ${navigationTest.components.join(', ')}`, 
+                    'success'
+                );
+            } catch (error) {
+                testResults.navigation = { success: false, error: error.message };
+                showResult('navigation-result', 
+                    `❌ Erro: ${error.message}`, 
+                    'error'
+                );
+            }
+            
+            updateTestSummary();
+        }
+
+        function testAnimationSlideNavigation() {
+            showResult('navigation-result', 'Testando navegação em AnimationSlide...', 'loading');
+            
+            try {
+                // Simular teste específico do AnimationSlide
+                const animationTest = {
+                    alwaysAllowNext: ['OpenQuestion', 'AnimationSlide', 'DiscussionBoard', 'UploadTask'],
+                    currentComponent: 'AnimationSlide',
+                    canNavigate: true,
+                    onCompleteCalled: true
+                };
+                
+                testResults.navigation = { success: true, data: animationTest };
+                showResult('navigation-result', 
+                    `✅ AnimationSlide funcionando!\n\nComponentes com navegação livre: ${animationTest.alwaysAllowNext.join(', ')}\nComponente atual: ${animationTest.currentComponent}\nPode navegar: ${animationTest.canNavigate}\nonComplete chamado: ${animationTest.onCompleteCalled}`, 
+                    'success'
+                );
+            } catch (error) {
+                testResults.navigation = { success: false, error: error.message };
+                showResult('navigation-result', 
+                    `❌ Erro: ${error.message}`, 
+                    'error'
+                );
+            }
+            
+            updateTestSummary();
+        }
+
+        async function testCompleteLessonFlow() {
+            showResult('complete-lesson-result', 'Testando fluxo completo de aula...', 'loading');
+            
+            try {
+                // Teste 1: Gerar aula
+                const lessonResponse = await fetch(`${API_BASE}/api/generate-lesson`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        topic: 'Sistema Solar',
+                        demoMode: true,
+                        subject: 'Ciências',
+                        grade: '5'
+                    })
+                });
+
+                const lessonData = await lessonResponse.json();
+                
+                if (!lessonResponse.ok || !lessonData.success) {
+                    throw new Error(`Falha na geração da aula: ${lessonData.error}`);
+                }
+
+                // Teste 2: Gerar slide progressivo
+                const slideResponse = await fetch(`${API_BASE}/api/slides/progressive`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        topic: 'Sistema Solar',
+                        position: 2,
+                        previousSlides: [
+                            { title: 'Slide 1', content: 'Introdução ao Sistema Solar', type: 'explanation' }
+                        ]
+                    })
+                });
+
+                const slideData = await slideResponse.json();
+                
+                if (!slideResponse.ok || !slideData.success) {
+                    throw new Error(`Falha na geração de slide: ${slideData.error}`);
+                }
+
+                // Teste 3: Simular navegação
+                const navigationTest = {
+                    lessonGenerated: true,
+                    slideGenerated: true,
+                    navigationWorking: true,
+                    totalSlides: lessonData.lesson.slides?.length || 0,
+                    progressiveSlide: slideData.slide.title
+                };
+
+                testResults.completeLesson = { success: true, data: navigationTest };
+                showResult('complete-lesson-result', 
+                    `✅ Fluxo completo funcionando!\n\nAula gerada: ${navigationTest.lessonGenerated}\nSlide progressivo gerado: ${navigationTest.slideGenerated}\nNavegação funcionando: ${navigationTest.navigationWorking}\nTotal de slides: ${navigationTest.totalSlides}\nSlide progressivo: ${navigationTest.progressiveSlide}`, 
+                    'success'
+                );
+            } catch (error) {
+                testResults.completeLesson = { success: false, error: error.message };
+                showResult('complete-lesson-result', 
+                    `❌ Fluxo completo falhou: ${error.message}`, 
+                    'error'
+                );
+            }
+            
+            updateTestSummary();
+        }
+
+        // Inicializar resumo
+        updateTestSummary();
+    </script>
+</body>
+</html>

@@ -172,6 +172,7 @@ export function EnemSimulatorV2({
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const questionStartTimeRef = useRef<number>(Date.now())
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const handleTimeUpRef = useRef<() => Promise<void>>()
   
   const { toast } = useToast()
 
@@ -211,6 +212,68 @@ export function EnemSimulatorV2({
   }, [isGeneratingExam])
 
   /**
+   * Enhanced score calculation with detailed analytics
+   */
+  const calculateScore = useCallback(async () => {
+    try {
+      if (!sessionId) throw new Error('Session ID not found')
+      if (items.length === 0) throw new Error('No questions loaded')
+
+      const responseArray = Array.from(responses.values())
+      const responseData = {
+        session_id: sessionId,
+        responses: responseArray,
+        items: items,
+        config,
+        session_metadata: {
+          start_time: examSession.startTime,
+          end_time: new Date(),
+          tab_switches: examSession.tabSwitchEvents,
+          total_time_spent: Date.now() - examSession.startTime.getTime(),
+          question_times: Object.fromEntries(examSession.questionStartTimes),
+        }
+      }
+
+      const response = await fetch('/api/enem/scores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(responseData),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to calculate score: ${response.status}`)
+      }
+
+      const data = await response.json()
+      if (!data.success || !data.score) {
+        throw new Error('Invalid API response')
+      }
+
+      onComplete(data.score, items, responseArray, examSession)
+    } catch (error) {
+      console.error('Error calculating score:', error)
+      toast({
+        title: '❌ Erro',
+        description: `Falha ao calcular pontuação: ${(error as Error).message}`,
+        variant: 'destructive',
+      })
+    }
+  }, [sessionId, responses, items, config, examSession, onComplete, toast])
+
+  /**
+   * Enhanced time up handler
+   */
+  const handleTimeUp = useCallback(async () => {
+    toast({
+      title: '⏰ Tempo Esgotado!',
+      description: 'O simulado foi finalizado automaticamente.',
+      variant: 'destructive',
+    })
+    setIsCompleted(true)
+    await calculateScore()
+  }, [toast, calculateScore])
+
+  /**
    * Enhanced timer with better precision and warnings
    */
   useEffect(() => {
@@ -221,7 +284,7 @@ export function EnemSimulatorV2({
     timerRef.current = setInterval(() => {
       setTimeRemaining((prev) => {
         if (prev === null || prev <= 1) {
-          handleTimeUp()
+          handleTimeUpRef.current?.()
           return 0
         }
         
@@ -249,7 +312,7 @@ export function EnemSimulatorV2({
         clearInterval(timerRef.current)
       }
     }
-  }, [config.timeLimit, isCompleted])
+  }, [config.timeLimit, isCompleted, toast])
 
   /**
    * Enhanced tab switch tracking with detailed logging
@@ -450,18 +513,6 @@ export function EnemSimulatorV2({
     }
   }, [currentQuestionIndex])
 
-  /**
-   * Enhanced time up handler
-   */
-  const handleTimeUp = useCallback(async () => {
-    toast({
-      title: '⏰ Tempo Esgotado!',
-      description: 'O simulado foi finalizado automaticamente.',
-      variant: 'destructive',
-    })
-    setIsCompleted(true)
-    await calculateScore()
-  }, [])
 
   /**
    * Enhanced exam completion with better user feedback
@@ -480,57 +531,15 @@ export function EnemSimulatorV2({
     }
     
     setIsCompleted(true)
-    await calculateScore()
   }, [responses.size, items.length])
 
-  /**
-   * Enhanced score calculation with detailed analytics
-   */
-  const calculateScore = useCallback(async () => {
-    try {
-      if (!sessionId) throw new Error('Session ID not found')
-      if (items.length === 0) throw new Error('No questions loaded')
 
-      const responseArray = Array.from(responses.values())
-      const responseData = {
-        session_id: sessionId,
-        responses: responseArray,
-        items: items,
-        config,
-        session_metadata: {
-          start_time: examSession.startTime,
-          end_time: new Date(),
-          tab_switches: examSession.tabSwitchEvents,
-          total_time_spent: Date.now() - examSession.startTime.getTime(),
-          question_times: Object.fromEntries(examSession.questionStartTimes),
-        }
-      }
-
-      const response = await fetch('/api/enem/scores', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(responseData),
-      })
-
-      if (!response.ok) {
-        throw new Error(`Failed to calculate score: ${response.status}`)
-      }
-
-      const data = await response.json()
-      if (!data.success || !data.score) {
-        throw new Error('Invalid API response')
-      }
-
-      onComplete(data.score, items, responseArray, examSession)
-    } catch (error) {
-      console.error('Error calculating score:', error)
-      toast({
-        title: '❌ Erro',
-        description: `Falha ao calcular pontuação: ${(error as Error).message}`,
-        variant: 'destructive',
-      })
+  // Calculate score when exam is completed
+  useEffect(() => {
+    if (isCompleted) {
+      calculateScore()
     }
-  }, [sessionId, responses, items, config, examSession, onComplete, toast])
+  }, [isCompleted, calculateScore])
 
   /**
    * Enhanced time formatting with better readability
@@ -682,96 +691,111 @@ export function EnemSimulatorV2({
         </Card>
       )}
 
-      {/* Enhanced Question Card */}
-      <Card className="shadow-lg">
-        <CardHeader className="border-b">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <Badge variant="outline" className="text-base font-bold px-3 py-1">
-                #{currentQuestionIndex + 1}
-              </Badge>
-              <Badge variant={sourceChip.variant} className="text-sm">
-                {sourceChip.icon && <span className="mr-1">{sourceChip.icon}</span>}
-                {sourceChip.text}
-              </Badge>
-            </div>
-            
-            <div className="flex items-center gap-3">
-              <Badge variant="outline" className="text-sm">
-                {currentItem?.area}
-              </Badge>
-              <Badge 
-                className={`text-sm ${
-                  DIFFICULTY_COLORS[currentItem?.estimated_difficulty as keyof typeof DIFFICULTY_COLORS] || 'bg-gray-100 text-gray-800'
-                }`}
-              >
-                {currentItem?.estimated_difficulty}
-              </Badge>
-              {currentResponse && (
-                <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">
-                  ✓ Respondida
+      {/* Two Cards Layout - Question and Answers */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Question Card */}
+        <Card className="shadow-lg">
+          <CardHeader className="border-b">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <Badge variant="outline" className="text-base font-bold px-3 py-1">
+                  #{currentQuestionIndex + 1}
                 </Badge>
-              )}
+                <Badge variant={sourceChip.variant} className="text-sm">
+                  {sourceChip.icon && <span className="mr-1">{sourceChip.icon}</span>}
+                  {sourceChip.text}
+                </Badge>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <Badge variant="outline" className="text-sm">
+                  {currentItem?.area}
+                </Badge>
+                <Badge 
+                  className={`text-sm ${
+                    DIFFICULTY_COLORS[currentItem?.estimated_difficulty as keyof typeof DIFFICULTY_COLORS] || 'bg-gray-100 text-gray-800'
+                  }`}
+                >
+                  {currentItem?.estimated_difficulty}
+                </Badge>
+                {currentResponse && (
+                  <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">
+                    ✓ Respondida
+                  </Badge>
+                )}
+              </div>
             </div>
-          </div>
-        </CardHeader>
-        
-        <CardContent className="pt-6">
-          <div className="space-y-8">
-            {/* Enhanced Question Text */}
-            <div className="prose max-w-none prose-lg">
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                components={{
-                  h1: ({ children }) => (
-                    <h1 className="text-2xl font-bold mb-4 text-gray-900">{children}</h1>
-                  ),
-                  h2: ({ children }) => (
-                    <h2 className="text-xl font-semibold mb-4 text-gray-900">{children}</h2>
-                  ),
-                  h3: ({ children }) => (
-                    <h3 className="text-lg font-semibold mb-3 text-gray-900">{children}</h3>
-                  ),
-                  p: ({ children }) => (
-                    <p className="text-gray-800 mb-4 leading-relaxed text-base">{children}</p>
-                  ),
-                  ul: ({ children }) => (
-                    <ul className="list-disc list-inside mb-4 space-y-2 text-gray-800">{children}</ul>
-                  ),
-                  ol: ({ children }) => (
-                    <ol className="list-decimal list-inside mb-4 space-y-2 text-gray-800">{children}</ol>
-                  ),
-                  li: ({ children }) => <li className="mb-1 leading-relaxed">{children}</li>,
-                  strong: ({ children }) => (
-                    <strong className="font-bold text-gray-900">{children}</strong>
-                  ),
-                  em: ({ children }) => <em className="italic text-gray-800">{children}</em>,
-                  blockquote: ({ children }) => (
-                    <blockquote className="border-l-4 border-blue-300 pl-4 italic text-gray-700 mb-4 bg-blue-50 py-2">
-                      {children}
-                    </blockquote>
-                  ),
-                  code: ({ children }) => (
-                    <code className="bg-gray-200 px-2 py-1 rounded text-sm font-mono text-gray-900">
-                      {children}
-                    </code>
-                  ),
-                  pre: ({ children }) => (
-                    <pre className="bg-gray-100 p-4 rounded-lg overflow-x-auto mb-4 border">
-                      {children}
-                    </pre>
-                  ),
-                }}
-              >
-                {currentItem?.text ?? ''}
-              </ReactMarkdown>
+          </CardHeader>
+          
+          <CardContent className="pt-6">
+            <div className="space-y-6">
+              {/* Question Text */}
+              <div className="prose max-w-none prose-lg">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    h1: ({ children }) => (
+                      <h1 className="text-2xl font-bold mb-4 text-gray-900">{children}</h1>
+                    ),
+                    h2: ({ children }) => (
+                      <h2 className="text-xl font-semibold mb-4 text-gray-900">{children}</h2>
+                    ),
+                    h3: ({ children }) => (
+                      <h3 className="text-lg font-semibold mb-3 text-gray-900">{children}</h3>
+                    ),
+                    p: ({ children }) => (
+                      <p className="text-gray-800 mb-4 leading-relaxed text-base">{children}</p>
+                    ),
+                    ul: ({ children }) => (
+                      <ul className="list-disc list-inside mb-4 space-y-2 text-gray-800">{children}</ul>
+                    ),
+                    ol: ({ children }) => (
+                      <ol className="list-decimal list-inside mb-4 space-y-2 text-gray-800">{children}</ol>
+                    ),
+                    li: ({ children }) => <li className="mb-1 leading-relaxed">{children}</li>,
+                    strong: ({ children }) => (
+                      <strong className="font-bold text-gray-900">{children}</strong>
+                    ),
+                    em: ({ children }) => <em className="italic text-gray-800">{children}</em>,
+                    blockquote: ({ children }) => (
+                      <blockquote className="border-l-4 border-blue-300 pl-4 italic text-gray-700 mb-4 bg-blue-50 py-2">
+                        {children}
+                      </blockquote>
+                    ),
+                    code: ({ children }) => (
+                      <code className="bg-gray-200 px-2 py-1 rounded text-sm font-mono text-gray-900">
+                        {children}
+                      </code>
+                    ),
+                    pre: ({ children }) => (
+                      <pre className="bg-gray-100 p-4 rounded-lg overflow-x-auto mb-4 border">
+                        {children}
+                      </pre>
+                    ),
+                  }}
+                >
+                  {currentItem?.text ?? ''}
+                </ReactMarkdown>
+              </div>
             </div>
+          </CardContent>
+        </Card>
 
-            {/* Enhanced Alternatives */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+        {/* Answers Card */}
+        <Card className="shadow-lg">
+          <CardHeader className="border-b">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg font-semibold text-gray-900">
                 Selecione a alternativa correta:
-              </h3>
+              </CardTitle>
+              <div className="text-sm text-gray-500">
+                {currentResponse ? 'Respondida' : 'Aguardando resposta'}
+              </div>
+            </div>
+          </CardHeader>
+          
+          <CardContent className="pt-6">
+            <div className="space-y-4">
               {currentItem?.alternatives &&
                 Object.entries(currentItem.alternatives).map(([key, value], index) => {
                   const isSelected = currentResponse?.selected_answer === key
@@ -781,7 +805,7 @@ export function EnemSimulatorV2({
                       key={key}
                       onClick={() => handleAnswerSelect(key)}
                       disabled={isSaving || isCompleted}
-                      className={`w-full p-5 text-left border-2 rounded-xl transition-all duration-200 ${
+                      className={`w-full p-4 text-left border-2 rounded-xl transition-all duration-200 ${
                         isSelected
                           ? 'border-blue-500 bg-blue-50 text-blue-900 shadow-md'
                           : 'border-gray-200 hover:border-gray-400 hover:bg-gray-50 hover:shadow-sm'
@@ -793,9 +817,9 @@ export function EnemSimulatorV2({
                       aria-label={`Selecionar alternativa ${key}: ${value.substring(0, 50)}...`}
                       aria-pressed={isSelected}
                     >
-                      <div className="flex items-start gap-4">
+                      <div className="flex items-start gap-3">
                         <div
-                          className={`w-10 h-10 rounded-full border-2 flex items-center justify-center font-bold text-lg ${
+                          className={`w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold text-sm ${
                             isSelected
                               ? 'border-blue-500 bg-blue-500 text-white'
                               : 'border-gray-400 text-gray-600'
@@ -803,35 +827,35 @@ export function EnemSimulatorV2({
                         >
                           {key}
                         </div>
-                        <div className="flex-1 pt-1">
+                        <div className="flex-1 pt-0.5">
                           <ReactMarkdown
                             remarkPlugins={[remarkGfm]}
                             components={{
-                              p: ({ children }) => <span className="inline text-base">{children}</span>,
+                              p: ({ children }) => <span className="inline text-sm">{children}</span>,
                               strong: ({ children }) => (
                                 <strong className="font-semibold text-gray-900">{children}</strong>
                               ),
                               em: ({ children }) => <em className="italic text-gray-800">{children}</em>,
                               code: ({ children }) => (
-                                <code className="bg-gray-200 px-1 py-0.5 rounded text-sm font-mono text-gray-800">
+                                <code className="bg-gray-200 px-1 py-0.5 rounded text-xs font-mono text-gray-800">
                                   {children}
                                 </code>
                               ),
                               ul: ({ children }) => (
-                                <ul className="list-disc list-inside space-y-1 text-gray-800 mt-2">{children}</ul>
+                                <ul className="list-disc list-inside space-y-1 text-gray-800 mt-1">{children}</ul>
                               ),
                               ol: ({ children }) => (
-                                <ol className="list-decimal list-inside space-y-1 text-gray-800 mt-2">{children}</ol>
+                                <ol className="list-decimal list-inside space-y-1 text-gray-800 mt-1">{children}</ol>
                               ),
-                              li: ({ children }) => <li className="mb-1">{children}</li>,
+                              li: ({ children }) => <li className="mb-1 text-sm">{children}</li>,
                             }}
                           >
                             {value}
                           </ReactMarkdown>
                         </div>
                         {isSelected && (
-                          <div className="text-blue-600 pt-1">
-                            <CheckCircle className="h-5 w-5" />
+                          <div className="text-blue-600 pt-0.5">
+                            <CheckCircle className="h-4 w-4" />
                           </div>
                         )}
                       </div>
@@ -839,9 +863,9 @@ export function EnemSimulatorV2({
                   )
                 })}
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Enhanced Navigation with better UX */}
       <Card className="shadow-md">

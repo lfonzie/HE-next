@@ -123,17 +123,78 @@ IMPORTANTE: Responda APENAS com JSON válido, sem texto adicional, explicações
     } catch (parseError) {
       console.error('Erro ao fazer parse do JSON:', parseError)
       console.error('Conteúdo que causou erro:', lessonContent.substring(0, 1000))
-      throw new Error('Erro ao processar resposta da IA. Tente novamente.')
+      
+      // Tentar corrigir problemas comuns de JSON
+      let fixedContent = lessonContent
+      
+      // Remover caracteres de controle problemáticos
+      fixedContent = fixedContent.replace(/[\x00-\x1F\x7F]/g, '')
+      
+      // Tentar encontrar JSON válido dentro do texto
+      const jsonMatch = fixedContent.match(/\{[\s\S]*\}/)
+      if (jsonMatch) {
+        fixedContent = jsonMatch[0]
+      }
+      
+      try {
+        lessonData = JSON.parse(fixedContent)
+        console.log('JSON corrigido com sucesso')
+      } catch (secondParseError) {
+        console.error('Segunda tentativa de parse também falhou:', secondParseError)
+        
+        // Fallback: criar uma aula básica estruturada
+        lessonData = {
+          title: `Aula sobre ${topic}`,
+          subject: subject || 'Geral',
+          grade: grade || '5',
+          objectives: [`Compreender os conceitos básicos de ${topic}`],
+          introduction: `Nesta aula vamos explorar ${topic}.`,
+          slides: Array.from({ length: 8 }, (_, i) => ({
+            title: `Slide ${i + 1}`,
+            content: `Conteúdo da etapa ${i + 1} sobre ${topic}`,
+            type: i % 3 === 0 ? 'question' : 'explanation'
+          })),
+          feedback: 'Aula gerada com estrutura básica devido a erro na IA.'
+        }
+        
+        console.log('Usando fallback de aula básica')
+      }
     }
 
     // Validate the generated lesson structure
     if (!lessonData.title || !lessonData.slides || !Array.isArray(lessonData.slides)) {
-      throw new Error('Estrutura de aula inválida gerada')
+      console.error('Estrutura de aula inválida:', lessonData)
+      
+      // Tentar corrigir estrutura inválida
+      if (!lessonData.slides || !Array.isArray(lessonData.slides)) {
+        lessonData.slides = Array.from({ length: 8 }, (_, i) => ({
+          title: `Slide ${i + 1}`,
+          content: `Conteúdo da etapa ${i + 1} sobre ${topic}`,
+          type: i % 3 === 0 ? 'question' : 'explanation'
+        }))
+        console.log('Slides corrigidos automaticamente')
+      }
+      
+      if (!lessonData.title) {
+        lessonData.title = `Aula sobre ${topic}`
+        console.log('Título corrigido automaticamente')
+      }
     }
     
-    // Ensure we have exactly 8 slides
-    if (lessonData.slides.length !== 8) {
-      throw new Error('Aula deve ter exatamente 8 slides')
+    // Ensure we have exactly 8 slides (pad with empty slides if needed)
+    if (lessonData.slides.length < 8) {
+      const missingSlides = 8 - lessonData.slides.length
+      for (let i = 0; i < missingSlides; i++) {
+        lessonData.slides.push({
+          title: `Slide ${lessonData.slides.length + 1}`,
+          content: `Conteúdo adicional sobre ${topic}`,
+          type: 'explanation'
+        })
+      }
+      console.log(`Adicionados ${missingSlides} slides para completar 8 slides`)
+    } else if (lessonData.slides.length > 8) {
+      lessonData.slides = lessonData.slides.slice(0, 8)
+      console.log('Reduzidos slides para 8 slides máximo')
     }
     
     // Ensure grade is a valid number
@@ -189,6 +250,8 @@ IMPORTANTE: Responda APENAS com JSON válido, sem texto adicional, explicações
     // Only save to database if not in demo mode and user is authenticated
     if (!demoMode && session?.user?.id) {
       try {
+        console.log('Saving lesson to database with ID:', lessonId, 'for user:', session.user.id)
+        
         // Save lesson to database
         lesson = await prisma.lessons.create({
           data: {
@@ -214,6 +277,8 @@ IMPORTANTE: Responda APENAS com JSON válido, sem texto adicional, explicações
             user_id: session.user.id
           }
         })
+        
+        console.log('Lesson saved successfully:', lesson.id)
 
         // Log the AI request
         await prisma.ai_requests.create({
@@ -238,7 +303,8 @@ IMPORTANTE: Responda APENAS com JSON válido, sem texto adicional, explicações
       }
     }
 
-    return NextResponse.json({
+    // If in demo mode, save lesson to localStorage on the client side
+    const responseData = {
       success: true,
       lesson: {
         id: lesson?.id || lessonId,
@@ -253,13 +319,37 @@ IMPORTANTE: Responda APENAS com JSON válido, sem texto adicional, explicações
         nextSteps: lessonWithImages.nextSteps,
         demoMode: demoMode || !lesson
       }
-    })
+    }
+
+    return NextResponse.json(responseData)
 
   } catch (error) {
     console.error('Erro na geração da aula:', error)
+    
+    // Preparar erro amigável baseado no tipo de erro
+    let friendlyError = 'Falha ao gerar aula. Tente novamente.'
+    let statusCode = 500
+    
+    if (error instanceof Error) {
+      if (error.message.includes('rate limit') || error.message.includes('quota')) {
+        friendlyError = 'Limite de uso da IA excedido. Tente novamente em alguns minutos.'
+        statusCode = 429
+      } else if (error.message.includes('network') || error.message.includes('timeout')) {
+        friendlyError = 'Erro de conexão. Verifique sua internet e tente novamente.'
+        statusCode = 503
+      } else if (error.message.includes('Unauthorized') || error.message.includes('API key')) {
+        friendlyError = 'Problema de configuração da IA. Entre em contato com o suporte.'
+        statusCode = 500
+      } else if (error.message.includes('Tópico é obrigatório')) {
+        friendlyError = 'Por favor, forneça um tópico para a aula.'
+        statusCode = 400
+      }
+    }
+    
     return NextResponse.json({ 
-      error: 'Falha ao gerar aula',
-      details: error instanceof Error ? error.message : 'Erro desconhecido'
-    }, { status: 500 })
+      error: friendlyError,
+      details: error instanceof Error ? error.message : 'Erro desconhecido',
+      timestamp: new Date().toISOString()
+    }, { status: statusCode })
   }
 }

@@ -108,6 +108,9 @@ async function generateExamFromLocalDB(params: {
   };
 }
 
+// Cache for validated questions to avoid reprocessing
+const questionValidationCache = new Map<string, { isValid: boolean; reason?: string }>();
+
 async function getQuestionsFromLocalDB(filter: {
   year?: number;
   discipline?: string;
@@ -132,6 +135,8 @@ async function getQuestionsFromLocalDB(filter: {
     }
 
     let allQuestions: EnemQuestion[] = [];
+    let skippedCount = 0;
+    let processedCount = 0;
 
     // Map area codes to discipline names
     const areaMapping: Record<string, string> = {
@@ -171,24 +176,37 @@ async function getQuestionsFromLocalDB(filter: {
               continue;
             }
             
+            // Check cache first to avoid reprocessing
+            const cacheKey = `${year}_${questionDir}`;
+            const cachedResult = questionValidationCache.get(cacheKey);
+            
+            if (cachedResult && !cachedResult.isValid) {
+              skippedCount++;
+              continue;
+            }
+            
             const questionData = await fs.readFile(questionPath, 'utf-8');
             const question: EnemQuestion = JSON.parse(questionData);
+            processedCount++;
             
             // Validate question has text content (not only images)
             if (!question.context || question.context.trim() === '') {
-              console.warn(`Skipping question ${questionDir}: no text content`);
+              questionValidationCache.set(cacheKey, { isValid: false, reason: 'no text content' });
+              skippedCount++;
               continue;
             }
             
             // Check if question text is only an image (starts with ![])
             if (question.context.trim().startsWith('![]') && question.context.trim().length < 100) {
-              console.warn(`Skipping question ${questionDir}: only image content`);
+              questionValidationCache.set(cacheKey, { isValid: false, reason: 'only image content' });
+              skippedCount++;
               continue;
             }
             
             // Validate alternatives exist and are valid
             if (!question.alternatives || question.alternatives.length < 4) {
-              console.warn(`Skipping question ${questionDir}: insufficient alternatives`);
+              questionValidationCache.set(cacheKey, { isValid: false, reason: 'insufficient alternatives' });
+              skippedCount++;
               continue;
             }
             
@@ -198,27 +216,40 @@ async function getQuestionsFromLocalDB(filter: {
             );
             
             if (!hasValidAlternatives) {
-              console.warn(`Skipping question ${questionDir}: invalid alternatives`);
+              questionValidationCache.set(cacheKey, { isValid: false, reason: 'invalid alternatives' });
+              skippedCount++;
               continue;
             }
             
             // Apply filters - map area code to discipline name
             if (filter.discipline) {
               const mappedDiscipline = areaMapping[filter.discipline] || filter.discipline;
-              if (question.discipline !== mappedDiscipline) continue;
+              if (question.discipline !== mappedDiscipline) {
+                continue;
+              }
             }
             
+            // Cache as valid question
+            questionValidationCache.set(cacheKey, { isValid: true });
             allQuestions.push(question);
           } catch (error) {
-            console.warn(`Error reading question ${questionDir}:`, error);
+            // Only log errors for debugging, not warnings for each invalid question
+            if (process.env.NODE_ENV === 'development') {
+              console.warn(`Error reading question ${questionDir}:`, error);
+            }
             continue;
           }
         }
       } catch (error) {
-        console.warn(`Error reading year ${year}:`, error);
+        if (process.env.NODE_ENV === 'development') {
+          console.warn(`Error reading year ${year}:`, error);
+        }
         continue;
       }
     }
+
+    // Log summary instead of individual warnings
+    console.log(`ENEM Database Processing Summary: ${processedCount} processed, ${skippedCount} skipped, ${allQuestions.length} valid questions found`);
 
     // Apply random selection if requested
     if (filter.random) {

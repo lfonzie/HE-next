@@ -10,7 +10,7 @@ import DynamicStage from '@/components/interactive/DynamicStage'
 import { ArrowLeft, BookOpen, Clock, Star, Trophy, Target } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
-import { useLessonsProgressiveLoading } from '@/hooks/useLessonsProgressiveLoading'
+// Removed progressive loading import - lessons are now saved in database
 
 interface LessonData {
   title: string
@@ -67,10 +67,9 @@ export default function LessonPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isCompleted, setIsCompleted] = useState(false)
 
-  // Hook para carregamento progressivo de slides
-  const progressiveLoading = useLessonsProgressiveLoading()
+  // Removed progressive loading - lessons are now saved in database
 
-  // Load lesson data with progressive loading
+  // Load lesson data from database
   useEffect(() => {
     const loadLesson = async () => {
       try {
@@ -86,61 +85,20 @@ export default function LessonPage() {
             throw new Error('Lesson not found in database')
           }
         } catch (dbError) {
-          console.log('Database fetch failed, trying localStorage:', dbError)
+          console.log('Database fetch failed:', dbError)
           
-          // Check if it's a demo lesson in localStorage
-          console.log('Procurando aula no localStorage com chave:', `demo_lesson_${lessonId}`)
-          const demoLesson = localStorage.getItem(`demo_lesson_${lessonId}`)
-          console.log('Aula encontrada no localStorage:', demoLesson ? 'SIM' : 'NÃO')
-          
-          if (demoLesson) {
-            const lessonData = JSON.parse(demoLesson)
-            console.log('Dados da aula carregados do localStorage:', lessonData)
-            
-            // Convert the demo lesson format to the expected format
-            setLessonData({
-              title: lessonData.title,
-              objectives: lessonData.objectives,
-              introduction: lessonData.introduction || 'Aula interativa gerada com IA',
-              stages: lessonData.stages,
-              feedback: lessonData.feedback,
-              metadata: {
-                subject: lessonData.subject,
-                grade: lessonData.level.toString(),
-                duration: '45',
-                difficulty: 'medium',
-                tags: []
-              }
-            })
-            setIsLoading(false)
-            return
-          } else if (lessonId === 'photosynthesis') {
+          // Fallback to static data for photosynthesis lesson
+          if (lessonId === 'photosynthesis') {
             // Fallback to static data for photosynthesis lesson
             const staticData = await import('@/data/photosynthesis-lesson.json')
             setLessonData(staticData.default)
             setIsLoading(false)
             return
           } else {
-            // Se não encontrar aula existente, iniciar carregamento progressivo
-            console.log('🚀 Iniciando carregamento progressivo para nova aula')
-            await progressiveLoading.startProgressiveLoading(lessonId, 'Geral')
-            
-            // Criar estrutura básica da aula
-            setLessonData({
-              title: `Aula sobre ${lessonId}`,
-              objectives: ['Aprender conceitos fundamentais', 'Desenvolver compreensão prática'],
-              introduction: 'Aula interativa gerada com IA',
-              stages: [], // Será preenchido progressivamente
-              feedback: {},
-              metadata: {
-                subject: 'Geral',
-                grade: '5',
-                duration: '45',
-                difficulty: 'medium',
-                tags: []
-              }
-            })
-            setIsLoading(false)
+            // Lesson not found in database
+            console.log('Aula não encontrada no banco de dados:', lessonId)
+            toast.error('Aula não encontrada')
+            router.push('/aulas')
             return
           }
         }
@@ -152,7 +110,7 @@ export default function LessonPage() {
     }
 
     loadLesson()
-  }, [lessonId, router, progressiveLoading])
+  }, [lessonId, router])
 
   // Load progress from localStorage
   useEffect(() => {
@@ -203,16 +161,8 @@ export default function LessonPage() {
     setTotalPoints(prev => prev + pointsEarned)
     setTotalTimeSpent(prev => prev + timeSpent)
 
-    // Carregar próximo slide se necessário
-    const availableSlides = progressiveLoading.getAvailableSlides()
-    if (stageIndex >= availableSlides.length - 1 && availableSlides.length < 8) {
-      console.log('📥 Carregando próximo slide sob demanda...')
-      progressiveLoading.loadNextSlide(lessonId, 'Geral', availableSlides.length)
-    }
-
     // Check if lesson is completed
-    const slidesAvailable = progressiveLoading.getAvailableSlides()
-    const totalStages = Math.max((lessonData?.stages?.length || 0), slidesAvailable.length)
+    const totalStages = lessonData?.stages?.length || 0
     if (stageIndex === totalStages - 1) {
       setIsCompleted(true)
       toast.success('🎉 Parabéns! Você completou a aula!')
@@ -220,17 +170,10 @@ export default function LessonPage() {
   }
 
   const handleNext = () => {
-    const slidesAvailable = progressiveLoading.getAvailableSlides()
-    const totalStages = Math.max((lessonData?.stages?.length || 0), slidesAvailable.length)
+    const totalStages = lessonData?.stages?.length || 0
     
     if (currentStage < totalStages - 1) {
       setCurrentStage(prev => prev + 1)
-      
-      // Carregar próximo slide se necessário
-      if (currentStage >= slidesAvailable.length - 1 && slidesAvailable.length < 8) {
-        console.log('📥 Carregando próximo slide sob demanda...')
-        progressiveLoading.loadNextSlide(lessonId, 'Geral', slidesAvailable.length)
-      }
     }
   }
 
@@ -267,23 +210,13 @@ export default function LessonPage() {
     return 'locked'
   }
 
-  if (isLoading || progressiveLoading.loadingState.isLoading) {
+  if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">
-              {progressiveLoading.loadingState.message || 'Carregando aula...'}
-            </p>
-            {progressiveLoading.loadingState.progress > 0 && (
-              <div className="mt-4 w-64 mx-auto">
-                <Progress value={progressiveLoading.loadingState.progress} className="h-2" />
-                <p className="text-sm text-gray-500 mt-2">
-                  {progressiveLoading.loadingState.progress}% - {progressiveLoading.loadingState.formattedTime}
-                </p>
-              </div>
-            )}
+            <p className="text-gray-600">Carregando aula...</p>
           </div>
         </div>
       </div>
@@ -303,34 +236,9 @@ export default function LessonPage() {
     )
   }
 
-  // Usar slides carregados progressivamente se disponível
-  const availableSlides = progressiveLoading.getAvailableSlides()
-  const totalStages = Math.max(lessonData.stages.length, availableSlides.length)
-  
-  // Converter slides para formato de stages se necessário
-  const stagesToUse = availableSlides.length > 0 ? 
-    availableSlides.map((slide, index) => ({
-      etapa: slide.title,
-      type: slide.type === 'question' ? 'quiz' : 'explanation',
-      activity: {
-        component: slide.type === 'question' ? 'QuizComponent' : 'AnimationSlide',
-        content: slide.content,
-        prompt: slide.question || slide.content,
-        questions: slide.type === 'question' ? [{
-          q: slide.question,
-          options: slide.options,
-          correct: slide.correctAnswer,
-          explanation: slide.explanation
-        }] : [],
-        media: [],
-        time: slide.timeEstimate || 5,
-        points: slide.type === 'question' ? 10 : 5,
-        feedback: slide.explanation || 'Bom trabalho!',
-        imagePrompt: slide.imagePrompt,
-        imageUrl: slide.imageUrl
-      },
-      route: `/aulas/${lessonId}/slide-${index + 1}`
-    })) : lessonData.stages
+  // Use lesson stages from database
+  const totalStages = lessonData.stages.length
+  const stagesToUse = lessonData.stages
 
   const currentStageData = stagesToUse[currentStage]
   const progress = ((currentStage + 1) / totalStages) * 100

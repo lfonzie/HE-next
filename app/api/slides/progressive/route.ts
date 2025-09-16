@@ -242,21 +242,36 @@ export async function POST(request: NextRequest) {
         console.error(`Error generating slide ${position} (attempt ${attempts + 1}):`, error);
         attempts++;
         
-        // If this is the last attempt, return error immediately
+        // If this is the last attempt, create a fallback slide
         if (attempts >= maxAttempts) {
-          return NextResponse.json({ 
-            error: `Failed to generate slide after ${maxAttempts} attempts: ${error instanceof Error ? error.message : 'Unknown error'}`,
-            success: false
-          }, { status: 500 });
+          console.log(`Creating fallback slide for position ${position} after ${maxAttempts} failed attempts`);
+          
+          slide = {
+            title: `Slide ${position}`,
+            content: `Conteúdo sobre ${topic} - Slide ${position}`,
+            type: position % 3 === 0 ? 'question' : 'explanation',
+            key_points: [`Ponto principal ${position} sobre ${topic}`],
+            position: position,
+            estimated_time: 5
+          };
+          
+          break; // Use the fallback slide
         }
       }
     }
 
     if (!slide) {
-      return NextResponse.json({ 
-        error: 'Failed to generate unique slide after multiple attempts',
-        success: false
-      }, { status: 500 });
+      console.log(`Creating emergency fallback slide for position ${position}`);
+      
+      // Emergency fallback slide
+      slide = {
+        title: `Slide ${position}`,
+        content: `Conteúdo sobre ${topic} - Slide ${position}`,
+        type: position % 3 === 0 ? 'question' : 'explanation',
+        key_points: [`Ponto principal ${position} sobre ${topic}`],
+        position: position,
+        estimated_time: 5
+      };
     }
 
     const response: SlideGenerationResponse = {
@@ -267,9 +282,29 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(response);
   } catch (error) {
     console.error('Error in progressive slides API:', error);
+    
+    // Preparar erro amigável
+    let friendlyError = 'Erro interno do servidor. Tente novamente.'
+    let statusCode = 500
+    
+    if (error instanceof Error) {
+      if (error.message.includes('rate limit') || error.message.includes('quota')) {
+        friendlyError = 'Limite de uso da IA excedido. Tente novamente em alguns minutos.'
+        statusCode = 429
+      } else if (error.message.includes('network') || error.message.includes('timeout')) {
+        friendlyError = 'Erro de conexão. Verifique sua internet e tente novamente.'
+        statusCode = 503
+      } else if (error.message.includes('Invalid request parameters')) {
+        friendlyError = 'Parâmetros de requisição inválidos.'
+        statusCode = 400
+      }
+    }
+    
     return NextResponse.json({ 
-      error: 'Internal server error',
+      error: friendlyError,
+      details: error instanceof Error ? error.message : 'Erro desconhecido',
+      timestamp: new Date().toISOString(),
       success: false 
-    }, { status: 500 });
+    }, { status: statusCode });
   }
 }

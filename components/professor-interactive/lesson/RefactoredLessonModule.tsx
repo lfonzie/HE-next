@@ -118,7 +118,7 @@ export default function RefactoredLessonModule({
         });
       }, 1000); // Delay para não interferir na navegação
     }
-  }, [lessonState.currentStep, progressiveLoading, query, subject]);
+  }, [lessonState.currentStep, progressiveLoading.loadingState.loadedSlides.length, progressiveLoading.loadingState.isGeneratingNext, query, subject]);
 
   // Verificar se a aula foi concluída
   useEffect(() => {
@@ -129,7 +129,7 @@ export default function RefactoredLessonModule({
         onLessonComplete();
       }
     }
-  }, [lessonState.currentStep, progressiveLoading.loadingState.loadedSlides, progressiveLoading, onLessonComplete]);
+  }, [lessonState.currentStep, progressiveLoading.loadingState.loadedSlides.length, onLessonComplete]);
 
   // Valores calculados
   const currentSlide = progressiveLoading.loadingState.loadedSlides[lessonState.currentStep];

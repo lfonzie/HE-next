@@ -89,7 +89,7 @@ export default function GenerateAulaPage() {
         learningStyle: formData.learningStyle,
         specialNeeds: formData.specialNeeds,
         duration: formData.duration,
-        demoMode: true // Usar modo demo para evitar problemas de autenticação
+        demoMode: false // Salvar no banco de dados
       }
 
       const response = await fetch('/api/generate-lesson', {
@@ -108,6 +108,8 @@ export default function GenerateAulaPage() {
       
       // A API retorna { success: true, lesson: {...} }
       if (result.success && result.lesson) {
+        // Lesson is now saved in database, no need for localStorage
+        
         setGeneratedLesson(result.lesson)
         toast.success('Aula gerada com sucesso!')
       } else {

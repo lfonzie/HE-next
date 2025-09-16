@@ -19,6 +19,8 @@ export async function GET(
     }
 
     try {
+      console.log('Searching for lesson with ID:', id, 'and user_id:', session.user.id)
+      
       const lesson = await prisma.lessons.findUnique({
         where: {
           id,
@@ -28,6 +30,18 @@ export async function GET(
 
       if (!lesson) {
         console.log('Lesson not found:', id)
+        
+        // Try to find the lesson without user_id filter to see if it exists
+        const lessonWithoutUser = await prisma.lessons.findUnique({
+          where: { id }
+        })
+        
+        if (lessonWithoutUser) {
+          console.log('Lesson exists but belongs to different user:', lessonWithoutUser.user_id)
+        } else {
+          console.log('Lesson does not exist in database at all')
+        }
+        
         return NextResponse.json({ error: 'Lesson not found' }, { status: 404 })
       }
 

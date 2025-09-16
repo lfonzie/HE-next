@@ -63,7 +63,7 @@ export default function ProgressiveLessonComponent({
     if (currentSlideData?.imagePrompt) {
       loadImageForSlide(currentSlideData);
     }
-  }, [getCurrentSlide]);
+  }, [currentSlide, generatedSlides.length]);
 
   const loadImageForSlide = async (slide: any) => {
     try {
