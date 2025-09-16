@@ -34,7 +34,7 @@ export function useLessonsProgressiveLoading() {
     progress: 0,
     message: '',
     loadedSlides: [],
-    totalSlides: 9, // Total de slides esperados
+    totalSlides: 8, // Total de slides esperados
     currentSlideIndex: 0,
     canStart: false,
     startTime: null,
@@ -99,7 +99,7 @@ export function useLessonsProgressiveLoading() {
       progress: 0,
       message: 'Preparando aula...',
       loadedSlides: [],
-      totalSlides: 9,
+      totalSlides: 8,
       currentSlideIndex: 0,
       canStart: false,
       startTime: Date.now(),
@@ -161,8 +161,8 @@ export function useLessonsProgressiveLoading() {
     subject: string = 'Geral',
     slideIndex: number
   ) => {
-    if (slideIndex >= 9) {
-      console.log('⚠️ Máximo de slides atingido (9)')
+    if (slideIndex >= 8) {
+      console.log('⚠️ Máximo de slides atingido (8)')
       return
     }
 
@@ -220,7 +220,7 @@ export function useLessonsProgressiveLoading() {
       progress: 0,
       message: '',
       loadedSlides: [],
-      totalSlides: 9,
+      totalSlides: 8,
       currentSlideIndex: 0,
       canStart: false,
       startTime: null,

@@ -78,21 +78,41 @@ export default function GenerateAulaPage() {
     setIsGenerating(true)
     
     try {
+      // Preparar dados no formato esperado pela API
+      const requestData = {
+        topic: formData.title, // A API espera 'topic' como campo principal
+        subject: formData.subject,
+        grade: formData.grade,
+        objectives: formData.objectives,
+        context: formData.context,
+        difficulty: formData.difficulty,
+        learningStyle: formData.learningStyle,
+        specialNeeds: formData.specialNeeds,
+        duration: formData.duration,
+        demoMode: true // Usar modo demo para evitar problemas de autenticação
+      }
+
       const response = await fetch('/api/generate-lesson', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(requestData),
       })
 
       if (!response.ok) {
         throw new Error('Erro ao gerar aula')
       }
 
-      const lesson = await response.json()
-      setGeneratedLesson(lesson)
-      toast.success('Aula gerada com sucesso!')
+      const result = await response.json()
+      
+      // A API retorna { success: true, lesson: {...} }
+      if (result.success && result.lesson) {
+        setGeneratedLesson(result.lesson)
+        toast.success('Aula gerada com sucesso!')
+      } else {
+        throw new Error('Resposta inválida da API')
+      }
     } catch (error) {
       console.error('Error generating lesson:', error)
       toast.error('Erro ao gerar aula. Tente novamente.')
@@ -103,7 +123,19 @@ export default function GenerateAulaPage() {
 
   const handleStartLesson = () => {
     if (generatedLesson) {
+      console.log('Iniciando aula com ID:', generatedLesson.id)
+      console.log('Dados da aula:', generatedLesson)
+      
+      // Salvar aula no localStorage para modo demo
+      if (generatedLesson.demoMode) {
+        localStorage.setItem(`demo_lesson_${generatedLesson.id}`, JSON.stringify(generatedLesson))
+        console.log('Aula salva no localStorage para modo demo')
+      }
+      
       router.push(`/aulas/${generatedLesson.id}`)
+    } else {
+      console.error('Nenhuma aula gerada para iniciar')
+      toast.error('Nenhuma aula foi gerada ainda')
     }
   }
 

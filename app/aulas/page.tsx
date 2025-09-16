@@ -145,26 +145,6 @@ export default function AulasPage() {
     return Object.keys(errors).length === 0
   }, [formData.topic])
 
-  // Enhanced suggestion handler with analytics
-  const handleSuggestionClick = useCallback(async (suggestion: Suggestion) => {
-    setFormData({ topic: suggestion.text })
-    setFormErrors({})
-    
-    // Simulate analytics tracking
-    console.log('Suggestion clicked:', { text: suggestion.text, category: suggestion.category })
-    
-    // Auto-generate after suggestion click
-    await handleGenerate(suggestion.text)
-  }, [])
-
-  // Enhanced form submission handler
-  const handleKeyPress = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey && !isGenerating) {
-      e.preventDefault()
-      handleGenerate()
-    }
-  }, [isGenerating])
-
   // Save lesson to recent lessons
   const saveToRecentLessons = useCallback((lesson: GeneratedLesson) => {
     try {
@@ -177,7 +157,7 @@ export default function AulasPage() {
   }, [recentLessons])
 
   // Enhanced lesson generation with better error handling and progress tracking
-  const handleGenerate = async (topicOverride: string | null = null) => {
+  const handleGenerate = useCallback(async (topicOverride: string | null = null) => {
     const topic = topicOverride || formData.topic
     
     if (!topic.trim()) {
@@ -267,7 +247,27 @@ export default function AulasPage() {
         }
       }, 2000)
     }
-  }
+  }, [formData.topic, validateForm, saveToRecentLessons])
+
+  // Enhanced suggestion handler with analytics
+  const handleSuggestionClick = useCallback(async (suggestion: Suggestion) => {
+    setFormData({ topic: suggestion.text })
+    setFormErrors({})
+    
+    // Simulate analytics tracking
+    console.log('Suggestion clicked:', { text: suggestion.text, category: suggestion.category })
+    
+    // Auto-generate after suggestion click
+    await handleGenerate(suggestion.text)
+  }, [handleGenerate])
+
+  // Enhanced form submission handler
+  const handleKeyPress = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey && !isGenerating) {
+      e.preventDefault()
+      handleGenerate()
+    }
+  }, [isGenerating, handleGenerate])
 
   const handleStartLesson = () => {
     if (!generatedLesson) return

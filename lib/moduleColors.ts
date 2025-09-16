@@ -19,6 +19,7 @@ export const MODULE_ID_MAPPING: Record<string, string> = {
   "coordenacao": "coordenacao",
   "atendimento": "atendimento",
   "wellbeing": "wellbeing",
+  "bem-estar": "wellbeing",
   "social-media": "social-media",
   "secretaria": "secretaria",
 };

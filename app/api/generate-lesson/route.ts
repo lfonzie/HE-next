@@ -111,9 +111,9 @@ Crie uma aula seguindo EXATAMENTE a estrutura de 9 slides especificada acima.`
       throw new Error('Estrutura de aula inválida gerada')
     }
     
-    // Ensure we have exactly 9 slides
-    if (lessonData.slides.length !== 9) {
-      throw new Error('Aula deve ter exatamente 9 slides')
+    // Ensure we have exactly 8 slides
+    if (lessonData.slides.length !== 8) {
+      throw new Error('Aula deve ter exatamente 8 slides')
     }
     
     // Ensure grade is a valid number

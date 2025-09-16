@@ -200,7 +200,7 @@ export default function LessonPage() {
 
     // Carregar próximo slide se necessário
     const availableSlides = progressiveLoading.getAvailableSlides()
-    if (stageIndex >= availableSlides.length - 1 && availableSlides.length < 9) {
+    if (stageIndex >= availableSlides.length - 1 && availableSlides.length < 8) {
       console.log('📥 Carregando próximo slide sob demanda...')
       progressiveLoading.loadNextSlide(lessonId, 'Geral', availableSlides.length)
     }
@@ -222,7 +222,7 @@ export default function LessonPage() {
       setCurrentStage(prev => prev + 1)
       
       // Carregar próximo slide se necessário
-      if (currentStage >= slidesAvailable.length - 1 && slidesAvailable.length < 9) {
+      if (currentStage >= slidesAvailable.length - 1 && slidesAvailable.length < 8) {
         console.log('📥 Carregando próximo slide sob demanda...')
         progressiveLoading.loadNextSlide(lessonId, 'Geral', slidesAvailable.length)
       }

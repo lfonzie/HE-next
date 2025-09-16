@@ -35,6 +35,7 @@ export const ModuleIcons = {
   coordenacao: ClipboardList,     // 📋 Lista de verificação
   atendimento: Headphones,       // 🎧 Fones de ouvido
   wellbeing: Heart,              // ❤️ Coração
+  "bem-estar": Heart,            // ❤️ Coração (alias)
   "social-media": Smartphone,    // 📱 Smartphone
   secretaria: Building2,         // 🏢 Prédio
 } as const;

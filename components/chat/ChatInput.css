@@ -218,6 +218,46 @@ body {
   z-index: 1000 !important;
 }
 
+/* Ensure clickable elements are above everything */
+.chat-input-fixed button,
+.chat-input-fixed input,
+.chat-input-fixed textarea {
+  z-index: 1001 !important;
+  position: relative !important;
+}
+
+/* Fix pointer events */
+.chat-input-fixed button:not(:disabled) {
+  pointer-events: auto !important;
+}
+
+.chat-input-fixed button:disabled {
+  pointer-events: none !important;
+}
+
+/* Fix suggestion clicks */
+.suggestion-clickable {
+  position: relative !important;
+  z-index: 10 !important;
+  pointer-events: auto !important;
+}
+
+.suggestion-clickable:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+.suggestion-clickable:active {
+  transform: translateY(0) !important;
+}
+
+/* Ensure suggestions are clickable */
+.space-y-3 > div {
+  position: relative !important;
+  z-index: 10 !important;
+  pointer-events: auto !important;
+}
+
 /* Smooth animations */
 .chat-input-fixed {
   animation: slideUp 0.3s ease-out !important;

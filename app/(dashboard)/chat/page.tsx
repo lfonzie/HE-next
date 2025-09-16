@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import { StreamingMessage } from "@/components/chat/StreamingMessage";
 import { ChatInput } from "@/components/chat/ChatInput";
-import { ProviderSelector } from "@/components/chat/ProviderSelector";
 import { GeneralWelcome } from "@/components/chat/GeneralWelcome";
 import { ModuleWelcome } from "@/components/chat/ModuleWelcome";
 import { ModuleWelcomeScreen } from "@/components/chat/ModuleWelcomeScreen";
@@ -78,8 +77,6 @@ export default function ChatPage() {
   const [showConversationHistory, setShowConversationHistory] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedProvider, setSelectedProvider] = useState<'auto' | 'openai' | 'google' | 'anthropic' | 'mistral' | 'groq'>('auto');
-  const [selectedComplexity, setSelectedComplexity] = useState<'simple' | 'complex' | 'fast'>('simple');
   
   // Refs
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -117,7 +114,12 @@ export default function ChatPage() {
 
   // Handle send message with optimized loading
   const handleSendMessage = useCallback(async (message: string) => {
-    if (!message.trim()) return;
+    console.log('🚀 handleSendMessage called with:', { message, selectedModule, currentConversationId: currentConversation?.id });
+    
+    if (!message.trim()) {
+      console.log('❌ Empty message, returning');
+      return;
+    }
     
     // Start loading with optimized system
     const loadingKey = startLoading('message', {
@@ -128,6 +130,7 @@ export default function ChatPage() {
     });
     
     try {
+      console.log('📤 Calling sendMessage API...');
       await (sendMessage as any)(
         message, 
         selectedModule || "atendimento",
@@ -137,15 +140,17 @@ export default function ChatPage() {
         undefined,
         undefined,
         undefined,
-        selectedProvider,
-        selectedComplexity
+        'auto',
+        'simple'
       );
+      console.log('✅ Message sent successfully');
       setInputMessage("");
       
       // Destacar o módulo ativo após enviar a mensagem
       highlightActiveModule();
       
     } catch (error: any) {
+      console.error('❌ Error sending message:', error);
       endLoading(loadingKey, 'error'); // Hide overlay on error
       
       // Show retry option for network errors
@@ -190,6 +195,7 @@ export default function ChatPage() {
 
   // Handle suggestion click
   const handleSuggestionClick = useCallback(async (suggestion: string) => {
+    console.log('🎯 handleSuggestionClick called with:', suggestion);
     await handleSendMessage(`Me ajude com: ${suggestion}`);
   }, [handleSendMessage]);
 
@@ -490,16 +496,6 @@ export default function ChatPage() {
         {/* Chat Input - Fixed Composer with Blur */}
         <div className="sticky bottom-0 left-0 right-0 backdrop-blur supports-[backdrop-filter]:bg-white/70 dark:supports-[backdrop-filter]:bg-zinc-900/60 border-t border-zinc-200/60 dark:border-zinc-700/50 shadow-[0_-1px_0_0_rgba(0,0,0,0.04)] px-4 md:px-6 lg:px-8 py-3">
           <div className="mx-auto max-w-screen-md">
-            {/* Provider Selector */}
-            <div className="mb-3">
-              <ProviderSelector
-                provider={selectedProvider}
-                complexity={selectedComplexity}
-                onProviderChange={setSelectedProvider}
-                onComplexityChange={setSelectedComplexity}
-                availableProviders={['auto', 'openai', 'google']}
-              />
-            </div>
             
             {isStreaming && (
               <div className="flex justify-end pb-2">

@@ -42,10 +42,48 @@ export async function POST(request: NextRequest) {
       messageCount: messages.length
     })
 
-    // Determinar provedor
+    // Determinar provedor automaticamente baseado no conteúdo da mensagem
+    const messageContent = lastMessage.content.toLowerCase()
+    let autoComplexity = 'simple'
+    let autoProvider = 'auto'
+    
+    // Detectar complexidade baseada no conteúdo
+    if (messageContent.includes('explicar') || 
+        messageContent.includes('como funciona') || 
+        messageContent.includes('por que') ||
+        messageContent.includes('análise') ||
+        messageContent.includes('detalhado')) {
+      autoComplexity = 'complex'
+    } else if (messageContent.includes('rápido') || 
+               messageContent.includes('urgente') ||
+               messageContent.length < 50) {
+      autoComplexity = 'fast'
+    }
+    
+    // Detectar provedor baseado no tipo de conteúdo
+    if (messageContent.includes('matemática') || 
+        messageContent.includes('física') || 
+        messageContent.includes('química') ||
+        messageContent.includes('cálculo') ||
+        messageContent.includes('equação')) {
+      autoProvider = 'openai' // OpenAI é melhor para matemática
+    } else if (messageContent.includes('história') || 
+               messageContent.includes('geografia') ||
+               messageContent.includes('português') ||
+               messageContent.includes('literatura')) {
+      autoProvider = 'google' // Google é bom para humanidades
+    }
+    
+    console.log('🎯 [AUTO-SELECTION] Detected:', {
+      content: messageContent.substring(0, 50) + '...',
+      autoComplexity,
+      autoProvider,
+      originalProvider: provider
+    })
+    
     const selectedProvider = selectProvider(
-      complexity || 'simple',
-      provider as ProviderType
+      autoComplexity,
+      autoProvider as ProviderType
     )
 
     console.log('🎯 [PROVIDER] Selected:', selectedProvider)
@@ -145,6 +183,8 @@ export async function POST(request: NextRequest) {
         'X-Provider': selectedProvider.provider,
         'X-Model': selectedProvider.model,
         'X-Module': targetModule,
+        'X-Complexity': autoComplexity,
+        'X-Auto-Selected': 'true',
         'X-Timestamp': Date.now().toString()
       }
     })
