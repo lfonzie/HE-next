@@ -89,9 +89,14 @@ export default function LessonPage() {
           console.log('Database fetch failed, trying localStorage:', dbError)
           
           // Check if it's a demo lesson in localStorage
+          console.log('Procurando aula no localStorage com chave:', `demo_lesson_${lessonId}`)
           const demoLesson = localStorage.getItem(`demo_lesson_${lessonId}`)
+          console.log('Aula encontrada no localStorage:', demoLesson ? 'SIM' : 'NÃO')
+          
           if (demoLesson) {
             const lessonData = JSON.parse(demoLesson)
+            console.log('Dados da aula carregados do localStorage:', lessonData)
+            
             // Convert the demo lesson format to the expected format
             setLessonData({
               title: lessonData.title,

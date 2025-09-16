@@ -261,7 +261,12 @@ export default function AulasPage() {
       saveToRecentLessons(generatedLesson)
 
       // Store in localStorage for demo mode
+      console.log('Salvando aula no localStorage:', generatedLesson.id, generatedLesson)
       localStorage.setItem(`demo_lesson_${generatedLesson.id}`, JSON.stringify(generatedLesson))
+      
+      // Verificar se foi salvo corretamente
+      const saved = localStorage.getItem(`demo_lesson_${generatedLesson.id}`)
+      console.log('Aula salva no localStorage:', saved ? 'SIM' : 'NÃO')
       
       toast.success('Aula gerada com sucesso!')
     } catch (error) {
