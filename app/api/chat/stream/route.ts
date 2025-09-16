@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { openai } from '@/lib/openai'
+import { google } from '@ai-sdk/google'
+import { streamText } from 'ai'
 import { getModelTier } from '@/lib/ai-config'
 import { orchestrate } from '@/lib/orchestrator'
 import '@/lib/orchestrator-modules' // ensure modules are registered
@@ -49,16 +51,28 @@ export async function POST(request: NextRequest) {
       intent: orchestratorResult.trace?.intent
     })
 
-    // Declarar readableStream fora dos blocos condicionais
+    // Declarar readableStream e routingResult fora dos blocos condicionais
     const encoder = new TextEncoder()
     let readableStream: ReadableStream<Uint8Array>
+    let routingResult: any = null
 
-    // Se o orchestrator retornou texto, usar OpenAI para streaming
+    // Se o orchestrator retornou texto, usar Google AI para conversas simples
     if (orchestratorResult.text) {
-      const messages = [
-        {
-          role: 'system' as const,
-          content: `Você é um professor virtual especializado em educação brasileira. Você é paciente, didático e sempre busca explicar conceitos de forma clara e envolvente. 
+      // Detectar se é uma conversa simples (priorizar Google AI)
+      const isSimpleChat = message.length < 100 && !message.includes('matemática') && !message.includes('física') && !message.includes('química')
+      
+      // Usar Google AI para conversas simples, OpenAI para outras
+      const useGoogleAI = isSimpleChat && process.env.GOOGLE_GENERATIVE_AI_API_KEY
+      
+      console.log('🎯 [CHAT-STREAM] Provider selection:', {
+        message: message.substring(0, 50) + '...',
+        isSimpleChat,
+        useGoogleAI,
+        provider: useGoogleAI ? 'google' : 'openai'
+      })
+
+      // Preparar mensagens com histórico para manter contexto
+      const systemPrompt = `Você é um professor virtual especializado em educação brasileira. Você é paciente, didático e sempre busca explicar conceitos de forma clara e envolvente. 
 
 Sua personalidade:
 - Amigável e encorajador
@@ -77,24 +91,71 @@ Quando responder:
 - NUNCA use LaTeX, KaTeX, $...$, $$...$$, \\(...\\), \\[...\\]
 
 Contexto atual: Módulo: ${orchestratorResult.trace?.module || 'atendimento'}`
+
+      // Incluir histórico da conversa para manter contexto
+      const conversationHistory = orchestratorContext.history || []
+      const recentHistory = conversationHistory.slice(-6) // Últimas 6 mensagens para contexto
+
+      const messages = [
+        {
+          role: 'system' as const,
+          content: systemPrompt
         },
+        // Incluir histórico da conversa
+        ...recentHistory.map((msg: any) => ({
+          role: msg.role as 'user' | 'assistant',
+          content: msg.content
+        })),
         {
           role: 'user' as const,
           content: message
         }
       ]
 
-      // Usar modelo rápido por padrão
-      const model = 'gpt-4o-mini'
-      const tier = getModelTier(model)
+      // Usar Google Gemini ou OpenAI baseado na configuração
+      let model: any
+      let tier: any
       
-      // Chamar OpenAI com streaming
-      const completion = await openai.chat.completions.create({
+      if (useGoogleAI) {
+        model = google('gemini-2.0-flash-exp', {
+          apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY!
+        })
+        tier = { name: 'google-gemini', cost: 'low' }
+        console.log('🤖 [CHAT-STREAM] Using Google Gemini with memory')
+      } else {
+        model = 'gpt-4o-mini'
+        tier = getModelTier(model)
+        console.log('🤖 [CHAT-STREAM] Using OpenAI GPT-4o-mini')
+      }
+      
+      // Configurar routing result para headers
+      routingResult = {
+        provider: useGoogleAI ? 'google' : 'openai',
+        model: useGoogleAI ? 'gemini-2.0-flash-exp' : model,
+        complexity: 'simple',
+        useCase: 'chat',
+        metadata: {
+          cost: useGoogleAI ? 'low' : 'low',
+          speed: useGoogleAI ? 'very-fast' : 'fast',
+          quality: useGoogleAI ? 'high' : 'good',
+          reasoning: useGoogleAI ? 'Google Gemini selecionado para chat educacional' : 'OpenAI selecionado para chat educacional'
+        }
+      }
+      
+      // Usar AI SDK para streaming (compatível com Google e OpenAI)
+      const result = await streamText({
         model: model,
-        messages: messages as any,
-        max_completion_tokens: 2000,
+        messages: messages,
         temperature: 0.7,
-        stream: true
+        maxTokens: 2000,
+        onFinish: (result) => {
+          console.log('✅ [CHAT-STREAM] Stream finished:', {
+            finishReason: result.finishReason,
+            usage: result.usage,
+            provider: useGoogleAI ? 'google' : 'openai',
+            module: orchestratorResult.trace?.module || 'atendimento'
+          })
+        }
       })
 
       readableStream = new ReadableStream({
@@ -110,19 +171,18 @@ Contexto atual: Módulo: ${orchestratorResult.trace?.module || 'atendimento'}`
               }
             })}\n\n`))
 
-            for await (const chunk of completion) {
-              const content = chunk.choices[0]?.delta?.content || ''
-              if (content) {
-                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content })}\n\n`))
-              }
+            // Usar AI SDK stream
+            for await (const chunk of result.textStream) {
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content: chunk })}\n\n`))
             }
             // Enviar metadados finais incluindo tier e módulo
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
               metadata: { 
-                model: model, 
+                model: useGoogleAI ? 'gemini-2.0-flash-exp' : model, 
                 tier: tier,
                 tokens: 0, // Será calculado pelo cliente
-                module: orchestratorResult.trace?.module
+                module: orchestratorResult.trace?.module,
+                provider: useGoogleAI ? 'google' : 'openai'
               } 
             })}\n\n`))
             controller.enqueue(encoder.encode('data: [DONE]\n\n'))
@@ -180,6 +240,14 @@ Contexto atual: Módulo: ${orchestratorResult.trace?.module || 'atendimento'}`
         'Cache-Control': 'no-cache, no-transform',
         'Connection': 'keep-alive',
         'X-Accel-Buffering': 'no',
+        'X-Provider': routingResult?.provider || 'openai',
+        'X-Model': routingResult?.model || 'gpt-4o-mini',
+        'X-UseCase': routingResult?.useCase || 'chat',
+        'X-Complexity': routingResult?.complexity || 'simple',
+        'X-Cost': routingResult?.metadata?.cost || 'low',
+        'X-Speed': routingResult?.metadata?.speed || 'fast',
+        'X-Quality': routingResult?.metadata?.quality || 'good',
+        'X-Reasoning': routingResult?.metadata?.reasoning || 'Default routing',
       },
     })
 

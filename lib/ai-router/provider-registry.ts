@@ -112,7 +112,7 @@ export class ProviderRegistry {
       id: 'google-gemini-pro',
       name: 'Google Gemini Pro',
       type: 'google',
-      enabled: false, // Desabilitado inicialmente
+      enabled: true, // Ativado para uso
       capabilities: {
         supportsJsonStrict: true,
         supportsToolUse: false,
@@ -142,7 +142,7 @@ export class ProviderRegistry {
         }
       },
       config: {
-        model: 'gemini-pro',
+        model: 'gemini-2.0-flash-exp',
         temperature: 0.7,
         maxTokens: 8000
       },
