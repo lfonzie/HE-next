@@ -88,7 +88,9 @@ Primeiro, analise o tópico e determine automaticamente:
 3. O contexto educacional e pré-requisitos
 4. Objetivos de aprendizagem apropriados para a série inferida
 
-Crie uma aula seguindo EXATAMENTE a estrutura de 9 slides especificada acima.`
+Crie uma aula seguindo EXATAMENTE a estrutura de 9 slides especificada acima.
+
+IMPORTANTE: Responda APENAS com JSON válido, sem texto adicional, explicações ou formatação markdown.`
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o',
@@ -99,12 +101,30 @@ Crie uma aula seguindo EXATAMENTE a estrutura de 9 slides especificada acima.`
 
     let lessonContent = completion.choices[0].message.content || '{}'
     
+    console.log('Conteúdo bruto da IA:', lessonContent.substring(0, 200) + '...')
+    
     // Clean up markdown formatting if present
     if (lessonContent.includes('```json')) {
       lessonContent = lessonContent.replace(/```json\n?/g, '').replace(/```\n?/g, '')
     }
     
-    const lessonData = JSON.parse(lessonContent)
+    // Remove any leading/trailing whitespace
+    lessonContent = lessonContent.trim()
+    
+    // Check if the content looks like JSON
+    if (!lessonContent.startsWith('{') && !lessonContent.startsWith('[')) {
+      console.error('Resposta da IA não é JSON válido:', lessonContent.substring(0, 500))
+      throw new Error('A IA retornou uma resposta em formato inválido. Tente novamente.')
+    }
+    
+    let lessonData
+    try {
+      lessonData = JSON.parse(lessonContent)
+    } catch (parseError) {
+      console.error('Erro ao fazer parse do JSON:', parseError)
+      console.error('Conteúdo que causou erro:', lessonContent.substring(0, 1000))
+      throw new Error('Erro ao processar resposta da IA. Tente novamente.')
+    }
 
     // Validate the generated lesson structure
     if (!lessonData.title || !lessonData.slides || !Array.isArray(lessonData.slides)) {
