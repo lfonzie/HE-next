@@ -45,7 +45,7 @@ export default function UnsplashSlideCard({
     return 'education learning';
   };
 
-  const { imageUrl, isLoading: imageLoading, error: imageError: unsplashError, refetch } = useUnsplashImage(
+  const { imageUrl, isLoading: imageLoading, error: imageError, refetch } = useUnsplashImage(
     getImageQuery(),
     shouldFetchImage
   );

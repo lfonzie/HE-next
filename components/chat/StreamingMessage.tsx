@@ -10,7 +10,7 @@ interface StreamingMessageProps {
   userInitials: string;
   isComplete: boolean;
   currentModuleId?: ModuleId | null;
-  tier?: "IA" | "IA_SUPER";
+  tier?: "IA" | "IA_SUPER" | "IA_ECO";
   model?: string;
   tokens?: number;
 }
@@ -118,7 +118,7 @@ export const StreamingMessage: React.FC<StreamingMessageProps> = ({
             boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
             fontSize: '10px'
           }}>
-            {tier === "IA_SUPER" ? "🚀 IA Super" : "⚡ IA"}
+            {tier === "IA_SUPER" ? "🚀 IA Turbo" : "⚡ IA"}
           </span>
         )}
         
@@ -169,9 +169,11 @@ export const StreamingMessage: React.FC<StreamingMessageProps> = ({
               <span className={`px-2 py-0.5 rounded-full font-medium ${
                 tier === "IA_SUPER"
                   ? "bg-gradient-to-r from-yellow-100 to-yellow-200 text-yellow-800 border border-yellow-200"
+                  : tier === "IA_ECO"
+                  ? "bg-gradient-to-r from-green-100 to-green-200 text-green-800 border border-green-200"
                   : "bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border border-blue-200"
               }`}>
-                {tier === "IA_SUPER" ? "🚀 IA Super" : "⚡ IA"}
+                {tier === "IA_SUPER" ? "🚀 IA Turbo" : tier === "IA_ECO" ? "🌱 IA Eco" : "⚡ IA"}
               </span>
             )}
             {model && <span>Modelo: {model}</span>}

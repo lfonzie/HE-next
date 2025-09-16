@@ -6,7 +6,7 @@ export interface Message {
   module?: string;
   model?: string;
   tokens?: number;
-  tier?: "IA" | "IA_SUPER";
+  tier?: "IA" | "IA_SUPER" | "IA_ECO";
   isStreaming?: boolean;
   originalQuery?: string;
   structured?: boolean;

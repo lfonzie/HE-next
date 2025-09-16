@@ -38,15 +38,45 @@ export const AI_MODELS = {
     costPer1kTokens: 0.0025, // Input tokens (estimated)
     costPer1kOutputTokens: 0.01, // Output tokens (estimated)
   },
-  'gpt-4o': {
-    model: 'gpt-4o',
+  'gpt-5-2025-08-07': {
+    model: 'gpt-5-2025-08-07',
     temperature: 0.7,
     maxTokens: 4000,
     topP: 0.9,
     frequencyPenalty: 0.0,
     presencePenalty: 0.0,
-    costPer1kTokens: 0.005, // Input tokens
-    costPer1kOutputTokens: 0.015, // Output tokens
+    costPer1kTokens: 0.0025, // Input tokens (estimated)
+    costPer1kOutputTokens: 0.01, // Output tokens (estimated)
+  },
+  'gemini-2.0-flash-exp': {
+    model: 'gemini-2.0-flash-exp',
+    temperature: 0.7,
+    maxTokens: 4000,
+    topP: 0.9,
+    frequencyPenalty: 0.0,
+    presencePenalty: 0.0,
+    costPer1kTokens: 0.00075, // Input tokens (estimated)
+    costPer1kOutputTokens: 0.003, // Output tokens (estimated)
+  },
+  'gemini-1.5-pro': {
+    model: 'gemini-1.5-pro',
+    temperature: 0.7,
+    maxTokens: 4000,
+    topP: 0.9,
+    frequencyPenalty: 0.0,
+    presencePenalty: 0.0,
+    costPer1kTokens: 0.00125, // Input tokens
+    costPer1kOutputTokens: 0.005, // Output tokens
+  },
+  'gemini-1.5-flash': {
+    model: 'gemini-1.5-flash',
+    temperature: 0.7,
+    maxTokens: 2000,
+    topP: 0.9,
+    frequencyPenalty: 0.0,
+    presencePenalty: 0.0,
+    costPer1kTokens: 0.000075, // Input tokens
+    costPer1kOutputTokens: 0.0003, // Output tokens
   }
 } as const;
 
@@ -78,49 +108,49 @@ export const MODULE_AI_CONFIGS = {
   },
   'ti': {
     defaultModel: 'gpt-4o-mini',
-    complexModel: 'gpt-4o',
+    complexModel: 'gpt-5',
     temperature: 0.5,
     maxTokens: 1000,
   },
   'atendimento': {
     defaultModel: 'gpt-4o-mini',
-    complexModel: 'gpt-4o',
+    complexModel: 'gpt-5',
     temperature: 0.7,
     maxTokens: 1000,
   },
   'coordenacao': {
     defaultModel: 'gpt-4o-mini',
-    complexModel: 'gpt-4o',
+    complexModel: 'gpt-5',
     temperature: 0.7,
     maxTokens: 1500,
   },
   'social-media': {
     defaultModel: 'gpt-4o-mini',
-    complexModel: 'gpt-4o',
+    complexModel: 'gpt-5',
     temperature: 0.8,
     maxTokens: 1000,
   },
   'bem-estar': {
     defaultModel: 'gpt-4o-mini',
-    complexModel: 'gpt-4o',
+    complexModel: 'gpt-5',
     temperature: 0.8,
     maxTokens: 1500,
   },
   'rh': {
     defaultModel: 'gpt-4o-mini',
-    complexModel: 'gpt-4o',
+    complexModel: 'gpt-5',
     temperature: 0.6,
     maxTokens: 1500,
   },
   'financeiro': {
     defaultModel: 'gpt-4o-mini',
-    complexModel: 'gpt-4o',
+    complexModel: 'gpt-5',
     temperature: 0.5,
     maxTokens: 1000,
   },
   'secretaria': {
     defaultModel: 'gpt-4o-mini',
-    complexModel: 'gpt-4o',
+    complexModel: 'gpt-5',
     temperature: 0.6,
     maxTokens: 1000,
   }
@@ -237,9 +267,17 @@ export function estimateCost(config: AIConfig, inputTokens: number, outputTokens
 }
 
 // Function to get model tier for UI display
-export function getModelTier(model: string): 'IA' | 'IA_SUPER' {
-  if (model === 'gpt-5') return 'IA_SUPER';
-  if (model === 'gpt-4o') return 'IA_SUPER';
+export function getModelTier(model: string): 'IA_ECO' | 'IA' | 'IA_SUPER' {
+  // Google/Gemini models - IA Eco tier
+  if (model.includes('gemini')) return 'IA_ECO';
+  
+  // GPT-5 variants - IA Turbo tier (IA_SUPER)
+  if (model === 'gpt-5' || model.startsWith('gpt-5-')) return 'IA_SUPER';
+  
+  // GPT-4o-mini - IA tier
+  if (model === 'gpt-4o-mini') return 'IA';
+  
+  // Default to IA tier
   return 'IA';
 }
 

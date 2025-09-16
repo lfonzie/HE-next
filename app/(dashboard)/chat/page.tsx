@@ -323,7 +323,7 @@ export default function ChatPage() {
                       </h4>
                       <div className="flex items-center gap-2">
                         <Badge variant="outline" className="text-xs">
-                          {MODULES[convertModuleId(conv.module)]?.label || conv.module}
+                          {MODULES[convertModuleId(conv.module) || 'PROFESSOR']?.label || conv.module}
                         </Badge>
                         <span className="text-xs text-gray-500">
                           {conv.messages.length} mensagens

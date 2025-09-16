@@ -142,7 +142,7 @@ export default function LessonPage() {
       } catch (error) {
         console.error('Erro ao carregar aula:', error)
         toast.error('Erro ao carregar a aula')
-        router.push('/lessons')
+        router.push('/aulas')
       }
     }
 
@@ -290,7 +290,7 @@ export default function LessonPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Aula não encontrada</h1>
-          <Button onClick={() => router.push('/lessons')}>
+          <Button onClick={() => router.push('/aulas')}>
             Voltar para Aulas
           </Button>
         </div>
@@ -324,7 +324,7 @@ export default function LessonPage() {
         imagePrompt: slide.imagePrompt,
         imageUrl: slide.imageUrl
       },
-      route: `/lessons/${lessonId}/slide-${index + 1}`
+      route: `/aulas/${lessonId}/slide-${index + 1}`
     })) : lessonData.stages
 
   const currentStageData = stagesToUse[currentStage]
@@ -336,7 +336,7 @@ export default function LessonPage() {
       <div className="mb-8">
         <div className="flex items-center gap-4 mb-4">
           <Button
-            onClick={() => router.push('/lessons')}
+            onClick={() => router.push('/aulas')}
             variant="outline"
             size="sm"
           >
@@ -453,7 +453,7 @@ export default function LessonPage() {
                 </Button>
                 {isCompleted && (
                   <Button
-                    onClick={() => router.push('/lessons')}
+                    onClick={() => router.push('/aulas')}
                     size="sm"
                     className="w-full"
                   >

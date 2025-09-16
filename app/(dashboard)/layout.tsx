@@ -61,8 +61,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   // Verificar se estamos na página de apresentação
   const isApresentacaoPage = pathname === '/apresentacao'
   
-  // Verificar se estamos na página enem-v2 (sem sidebar)
-  const isEnemV2Page = pathname === '/enem-v2'
+  // Verificar se estamos na página enem (sem sidebar)
+  const isEnemPage = pathname === '/enem'
 
   // Temporariamente desabilitado para desenvolvimento
   // useEffect(() => {
@@ -78,8 +78,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   //   return null
   // }
 
-  // Layout especial para enem-v2 - sem sidebar
-  if (isEnemV2Page) {
+  // Layout especial para enem - sem sidebar
+  if (isEnemPage) {
     return (
       <ChatProvider>
         <QuotaProvider>

@@ -13,7 +13,7 @@ interface Message {
   isStreaming?: boolean
   tokens?: number
   model?: string
-  tier?: "IA" | "IA_SUPER"
+  tier?: "IA" | "IA_SUPER" | "IA_ECO"
   originalQuery?: string
   structured?: boolean
   webSearchUsed?: boolean

@@ -214,7 +214,7 @@ export function useChat(onStreamingStart?: () => void) {
       let finalConversationId = conversationId
       let tokenCount = 0
       let finalModel = ""
-      let finalTier: "IA" | "IA_SUPER" | undefined = undefined
+      let finalTier: "IA" | "IA_SUPER" | "IA_ECO" | undefined = undefined
       let receivedDone = false
 
       // Create unique message IDs for proper tracking

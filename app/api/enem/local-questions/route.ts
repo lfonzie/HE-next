@@ -267,7 +267,7 @@ function shuffleArray<T>(array: T[]): T[] {
 }
 
 // Helper function to get available years and areas
-export async function getAvailableData() {
+async function getAvailableData() {
   try {
     const questionsPath = path.join(process.cwd(), 'QUESTOES_ENEM', 'public');
     const years = await fs.readdir(questionsPath);

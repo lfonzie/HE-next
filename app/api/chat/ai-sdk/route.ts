@@ -92,19 +92,12 @@ export async function POST(request: NextRequest) {
       useGoogleAI
     })
 
-    // Usar streamText do AI SDK com provedor selecionado
+    // Usar streamText do AI SDK com OpenAI
     const result = await streamText({
-      model: useGoogleAI 
-        ? google('gemini-2.0-flash-exp', {
-            apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY!,
-          })
-        : openai('gpt-4o-mini', {
-            apiKey: process.env.OPENAI_API_KEY!,
-          }),
+      model: openai('gpt-4o-mini'),
       messages: aiMessages,
       temperature: 0.7,
-      maxTokens: 2000,
-      tools: educationalTools,
+      // tools: educationalTools, // Temporariamente desabilitado para build
       onFinish: (result) => {
         console.log('✅ [AI SDK] Stream finished:', {
           finishReason: result.finishReason,

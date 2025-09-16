@@ -23,13 +23,13 @@ const navigationItems = [
   },
   {
     name: 'Aulas Interativas',
-    href: '/lessons',
+    href: '/aulas',
     icon: BookOpen,
     badge: 'NOVO',
   },
   {
     name: 'Gerar Aula',
-    href: '/lessons/generate',
+    href: '/aulas/generate',
     icon: Sparkles,
     badge: 'IA',
   },

@@ -97,10 +97,12 @@ export function MessageItem({ message, isLast = false }: MessageItemProps) {
                       className={`text-xs font-medium ${
                         message.tier === "IA_SUPER"
                           ? "bg-gradient-to-r from-yellow-100 to-yellow-200 text-yellow-800 border-yellow-200"
+                          : message.tier === "IA_ECO"
+                          ? "bg-gradient-to-r from-green-100 to-green-200 text-green-800 border-green-200"
                           : "bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border-blue-200"
                       }`}
                     >
-                      {message.tier === "IA_SUPER" ? "🚀 IA Super" : "⚡ IA"}
+                      {message.tier === "IA_SUPER" ? "🚀 IA Turbo" : message.tier === "IA_ECO" ? "🌱 IA Eco" : "⚡ IA"}
                     </Badge>
                   )}
                   

@@ -39,25 +39,6 @@ export default function QuizComponent({
   const [isCompleted, setIsCompleted] = useState(false)
   const [showExplanationsState, setShowExplanationsState] = useState(false)
 
-  // Early return if no questions are provided
-  if (!questions || questions.length === 0) {
-    return (
-      <Card className="w-full max-w-2xl mx-auto">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Badge variant="outline">Quiz Interativo</Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="text-center py-8">
-          <div className="text-gray-500">
-            <p className="text-lg mb-2">Nenhuma questão disponível</p>
-            <p className="text-sm">Este quiz não possui questões para exibir.</p>
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
-
   // Timer effect
   useEffect(() => {
     if (timeLimit > 0 && !isCompleted) {
@@ -93,6 +74,25 @@ export default function QuizComponent({
         handleComplete()
       }
     }, 1000)
+  }
+
+  // Early return if no questions are provided
+  if (!questions || questions.length === 0) {
+    return (
+      <Card className="w-full max-w-2xl mx-auto">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Badge variant="outline">Quiz Interativo</Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="text-center py-8">
+          <div className="text-gray-500">
+            <p className="text-lg mb-2">Nenhuma questão disponível</p>
+            <p className="text-sm">Este quiz não possui questões para exibir.</p>
+          </div>
+        </CardContent>
+      </Card>
+    )
   }
 
   const handleComplete = () => {

@@ -194,18 +194,20 @@ export const ChatMessage = memo(function ChatMessage({
           >
             <ModuleIcon className="w-5 h-5 text-white" />
           </div>
-          {/* Menção de IA/IA Super */}
+          {/* Menção de IA/IA Turbo/IA Eco */}
           {message.tier && (
             <span className={`mt-1 px-1.5 py-0.5 rounded-full text-xs font-medium ${
               message.tier === "IA_SUPER"
                 ? "bg-gradient-to-r from-yellow-100 to-yellow-200 text-yellow-800 border border-yellow-200"
+                : message.tier === "IA_ECO"
+                ? "bg-gradient-to-r from-green-100 to-green-200 text-green-800 border border-green-200"
                 : "bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border border-blue-200"
             }`}
             style={{
               boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
               fontSize: '10px'
             }}>
-              {message.tier === "IA_SUPER" ? "🚀 IA Super" : "⚡ IA"}
+              {message.tier === "IA_SUPER" ? "🚀 IA Turbo" : message.tier === "IA_ECO" ? "🌱 IA Eco" : "⚡ IA"}
             </span>
           )}
           
