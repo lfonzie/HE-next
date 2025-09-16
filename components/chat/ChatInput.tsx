@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState, useRef, useEffect } from "react";
+import { encodeMessage, normalizeUnicode } from '@/utils/unicode';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send, Upload, Mic } from "lucide-react";
@@ -28,14 +29,22 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+    console.log('🚀 ChatInput handleSubmit called:', { message: message.trim(), isStreaming, disabled });
     if (message.trim() && !isStreaming && !disabled) {
-      onSendMessage(message);
+      const processedMessage = encodeMessage(message); // Processar Unicode
+      console.log('✅ Sending message:', processedMessage);
+      onSendMessage(processedMessage);
+    } else {
+      console.log('❌ Cannot send message:', { hasMessage: !!message.trim(), isStreaming, disabled });
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    console.log('⌨️ Key pressed:', e.key, 'Shift:', e.shiftKey);
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
+      console.log('🚀 Enter key triggered submit');
       handleSubmit(e);
     }
   };
@@ -109,7 +118,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         <Button
           type="submit"
           disabled={!message.trim() || isStreaming || disabled}
-          className="h-10 rounded-xl px-3 font-medium bg-yellow-500 hover:bg-yellow-600 text-black disabled:opacity-50 disabled:cursor-not-allowed"
+          className="h-10 rounded-xl px-3 font-medium bg-yellow-500 hover:bg-yellow-600 text-black disabled:opacity-50 disabled:cursor-not-allowed relative z-10"
           aria-label="Enviar mensagem"
         >
           {isStreaming ? (

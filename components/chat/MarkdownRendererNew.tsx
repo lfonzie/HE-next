@@ -8,6 +8,7 @@ import rehypeKatex from "rehype-katex";
 import rehypeHighlight from "rehype-highlight";
 import "katex/dist/katex.min.css";
 import "highlight.js/styles/github.css";
+import { normalizeUnicode, processMessageForDisplay, convertMathToUnicode } from "@/utils/unicode";
 
 interface MarkdownRendererProps {
   content: string;
@@ -20,8 +21,10 @@ export const MarkdownRendererNew: React.FC<MarkdownRendererProps> = ({
   className = "",
   isStreaming = false
 }) => {
-  // Normaliza quebras de linha para evitar espaçamento excessivo
-  const normalizedContent = content.replace(/\n{2,}/g, '\n').trim();
+  // Processar Unicode e normalizar conteúdo
+  const processedContent = processMessageForDisplay(content);
+  const mathProcessedContent = convertMathToUnicode(processedContent);
+  const normalizedContent = mathProcessedContent.replace(/\n{2,}/g, '\n').trim();
   
   return (
     <div className={`markdown-content ${className}`}>

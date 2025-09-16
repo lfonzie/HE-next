@@ -3,6 +3,7 @@ import { useSession } from 'next-auth/react'
 import { Message, ModuleType, Conversation } from '@/types'
 import { useChatContext } from '@/components/providers/ChatContext'
 import { useGlobalLoading } from '@/hooks/useGlobalLoading'
+import { encodeMessage, decodeMessage, normalizeUnicode } from '@/utils/unicode'
 
 // Função para converter módulo da API para formato do sistema
 function convertApiModuleToSystem(apiModule: string): string {
@@ -63,7 +64,7 @@ export function useChat(onStreamingStart?: () => void) {
 
   const sendMessage = useCallback(async (
     message: string,
-    module: string,
+    moduleParam: string,
     subject?: string,
     grade?: string,
     conversationId?: string,
@@ -110,7 +111,7 @@ export function useChat(onStreamingStart?: () => void) {
       // if (!token) throw new Error("No auth token available")
 
       // Usar módulo fornecido ou padrão - classificação será feita no orchestrator
-      let finalModule = module || "ATENDIMENTO"
+      let finalModule = moduleParam || "ATENDIMENTO"
       console.log(`🎯 Usando módulo: ${finalModule}`)
 
       // Include conversation history for context
@@ -143,11 +144,11 @@ export function useChat(onStreamingStart?: () => void) {
           const messages = [
             ...conversationHistory.slice(-10).map(msg => ({
               role: msg.role,
-              content: msg.content
+              content: decodeMessage(msg.content) // Decodificar mensagens do histórico
             })),
             {
               role: 'user' as const,
-              content: message
+              content: encodeMessage(message) // Codificar mensagem atual
             }
           ]
 
@@ -160,8 +161,8 @@ export function useChat(onStreamingStart?: () => void) {
             body: JSON.stringify({ 
               messages,
               module: finalModule,
-              provider: provider || 'auto',
-              complexity: complexity || 'simple'
+              provider: 'auto',
+              complexity: 'simple'
             }),
             signal: abortControllerRef.current.signal
           })
@@ -248,7 +249,7 @@ export function useChat(onStreamingStart?: () => void) {
                 isStreaming: true
               }
             ],
-            module: module || "ATENDIMENTO",
+            module: moduleParam || "ATENDIMENTO",
             subject,
             grade,
             tokenCount: 0,
@@ -360,7 +361,7 @@ export function useChat(onStreamingStart?: () => void) {
         const chunk = decoder.decode(value)
         
         // Multi-provider retorna texto simples, não JSON
-        assistantMessage += chunk
+        assistantMessage += decodeMessage(chunk) // Decodificar chunk Unicode
         
         // Atualizar mensagem em tempo real
         setCurrentConversation(prev => {
