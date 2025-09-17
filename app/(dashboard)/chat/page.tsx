@@ -91,9 +91,17 @@ export default function ChatPage() {
   const messages = useMemo(() => currentConversation?.messages || [], [currentConversation?.messages]);
   const hasMessages = messages.length > 0;
   const filteredConversations = useMemo(() => {
-    if (!searchQuery.trim()) return conversations;
+    // Remove duplicates based on ID to prevent React key conflicts
+    const uniqueConversations = conversations.reduce((acc: ChatConversation[], conv: ChatConversation) => {
+      if (!acc.find(c => c.id === conv.id)) {
+        acc.push(conv);
+      }
+      return acc;
+    }, []);
+    
+    if (!searchQuery.trim()) return uniqueConversations;
     const q = searchQuery.toLowerCase();
-    return conversations.filter((conv: ChatConversation) =>
+    return uniqueConversations.filter((conv: ChatConversation) =>
       (conv.title || '').toLowerCase().includes(q) ||
       conv.messages.some((m: ChatMessageType) => (m.content || '').toLowerCase().includes(q))
     );

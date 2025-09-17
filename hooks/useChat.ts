@@ -221,16 +221,18 @@ export function useChat(onStreamingStart?: () => void) {
       let finalTier: "IA" | "IA_SUPER" | "IA_ECO" | undefined = undefined
       let receivedDone = false
 
-      // Create unique message IDs for proper tracking
-      const userMessageId = `user-${Date.now()}`
-      const assistantMessageId = `assistant-${Date.now()}`
+      // Create unique message IDs for proper tracking with additional randomness
+      const timestamp = Date.now()
+      const randomSuffix = Math.random().toString(36).substring(2, 8)
+      const userMessageId = `user-${timestamp}-${randomSuffix}`
+      const assistantMessageId = `assistant-${timestamp}-${randomSuffix}`
 
       // Create assistant message immediately to ensure it appears
       setCurrentConversation(prev => {
         if (!prev) {
           // Create new conversation if it doesn't exist
           const newConversation = {
-            id: conversationId || `conv-${Date.now()}`,
+            id: conversationId || `conv-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
             title: message.slice(0, 50),
             messages: [
               { 
@@ -454,8 +456,9 @@ export function useChat(onStreamingStart?: () => void) {
   }, [session])
 
   const startNewConversation = useCallback((module: string) => {
+    const uniqueId = `conv-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`
     setCurrentConversation({
-      id: "",
+      id: uniqueId,
       module,
       messages: [],
       tokenCount: 0,
