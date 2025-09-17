@@ -1,10 +1,26 @@
 import { openai } from '@ai-sdk/openai'
-import { anthropic } from '@ai-sdk/anthropic'
 import { google } from '@ai-sdk/google'
-import { mistral } from '@ai-sdk/mistral'
-import { groq } from '@ai-sdk/groq'
 
 type ProviderFactory = (modelName: string) => unknown
+
+type OptionalProvider = 'anthropic' | 'mistral' | 'groq'
+
+const OPTIONAL_PROVIDER_CONFIG: Record<OptionalProvider, { envVar: string; packageName: string }> = {
+  anthropic: { envVar: 'ANTHROPIC_API_KEY', packageName: '@ai-sdk/anthropic' },
+  mistral: { envVar: 'MISTRAL_API_KEY', packageName: '@ai-sdk/mistral' },
+  groq: { envVar: 'GROQ_API_KEY', packageName: '@ai-sdk/groq' },
+}
+
+const missingProviderWarnings = new Set<OptionalProvider>()
+
+const createUnavailableProvider = (provider: OptionalProvider): ProviderFactory => {
+  return () => {
+    const { envVar, packageName } = OPTIONAL_PROVIDER_CONFIG[provider]
+    throw new Error(
+      `${provider} provider is not available in this deployment. Install ${packageName} and configure ${envVar} to enable it.`
+    )
+  }
+}
 
 // Configuração de múltiplos provedores como fábricas de modelos
 export const AI_PROVIDERS = {
@@ -16,14 +32,7 @@ export const AI_PROVIDERS = {
       apiKey: process.env.OPENAI_API_KEY,
     })
   },
-  anthropic: (modelName: string) => {
-    if (!process.env.ANTHROPIC_API_KEY) {
-      throw new Error('Anthropic API key not configured')
-    }
-    return anthropic(modelName, {
-      apiKey: process.env.ANTHROPIC_API_KEY,
-    })
-  },
+  anthropic: createUnavailableProvider('anthropic'),
   google: (modelName: string) => {
     const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GOOGLE_API_KEY
     if (!apiKey) {
@@ -33,22 +42,8 @@ export const AI_PROVIDERS = {
       apiKey: apiKey,
     })
   },
-  mistral: (modelName: string) => {
-    if (!process.env.MISTRAL_API_KEY) {
-      throw new Error('Mistral API key not configured')
-    }
-    return mistral(modelName, {
-      apiKey: process.env.MISTRAL_API_KEY,
-    })
-  },
-  groq: (modelName: string) => {
-    if (!process.env.GROQ_API_KEY) {
-      throw new Error('Groq API key not configured')
-    }
-    return groq(modelName, {
-      apiKey: process.env.GROQ_API_KEY,
-    })
-  },
+  mistral: createUnavailableProvider('mistral'),
+  groq: createUnavailableProvider('groq'),
 } satisfies Record<string, ProviderFactory>
 
 // Tipos de provedores
@@ -85,9 +80,26 @@ export const PROVIDER_MODELS = {
 
 // Função para criar modelo de qualquer provedor
 export function createModel(provider: ProviderType, modelType: 'simple' | 'complex' | 'fast' = 'simple') {
+  const availableProviders = getAvailableProviders()
+
+  if (!availableProviders.includes(provider)) {
+    const fallbackOrder: ProviderType[] = ['openai', 'google']
+    const fallbackProvider = fallbackOrder.find(candidate => availableProviders.includes(candidate)) ?? 'openai'
+    const fallbackModel =
+      PROVIDER_MODELS[fallbackProvider][modelType] || PROVIDER_MODELS[fallbackProvider].simple
+
+    if (process.env.NODE_ENV !== 'test') {
+      console.warn(
+        `[ai-providers] Provider ${provider} is not available. Falling back to ${fallbackProvider} with model ${fallbackModel}.`
+      )
+    }
+
+    return AI_PROVIDERS[fallbackProvider](fallbackModel)
+  }
+
   const providerInstance = AI_PROVIDERS[provider]
   const modelName = PROVIDER_MODELS[provider][modelType]
-  
+
   if (!providerInstance) {
     throw new Error(`Provider ${provider} not found in AI_PROVIDERS`)
   }
@@ -124,28 +136,41 @@ export function getProvider(providerName?: string): ProviderType {
 // Função para obter provedores disponíveis
 export function getAvailableProviders(): ProviderType[] {
   const available: ProviderType[] = []
-  
+
   if (process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY.length > 10) {
     available.push('openai')
   }
-  
-  if (process.env.ANTHROPIC_API_KEY && process.env.ANTHROPIC_API_KEY.length > 10) {
-    available.push('anthropic')
-  }
-  
-  if ((process.env.GOOGLE_GENERATIVE_AI_API_KEY && process.env.GOOGLE_GENERATIVE_AI_API_KEY.length > 10) ||
-      (process.env.GOOGLE_API_KEY && process.env.GOOGLE_API_KEY.length > 10)) {
+
+  const googleApiKey =
+    process.env.GOOGLE_GENERATIVE_AI_API_KEY && process.env.GOOGLE_GENERATIVE_AI_API_KEY.length > 10
+      ? process.env.GOOGLE_GENERATIVE_AI_API_KEY
+      : process.env.GOOGLE_API_KEY
+
+  if (googleApiKey && googleApiKey.length > 10) {
     available.push('google')
   }
-  
-  if (process.env.MISTRAL_API_KEY && process.env.MISTRAL_API_KEY.length > 10) {
-    available.push('mistral')
+
+  for (const provider of Object.keys(OPTIONAL_PROVIDER_CONFIG) as OptionalProvider[]) {
+    const { envVar, packageName } = OPTIONAL_PROVIDER_CONFIG[provider]
+    const apiKey = process.env[envVar as keyof NodeJS.ProcessEnv]
+
+    if (apiKey && apiKey.length > 10) {
+      if (!missingProviderWarnings.has(provider) && process.env.NODE_ENV !== 'test') {
+        missingProviderWarnings.add(provider)
+        console.warn(
+          `[ai-providers] ${provider} provider is configured via ${envVar}, but the optional dependency ${packageName} ` +
+            'is not installed in this build. The provider will be ignored until the dependency is added to package.json.'
+        )
+      }
+    }
   }
-  
-  if (process.env.GROQ_API_KEY && process.env.GROQ_API_KEY.length > 10) {
-    available.push('groq')
+
+  if (available.length === 0 && process.env.NODE_ENV !== 'test') {
+    console.warn(
+      '[ai-providers] No AI providers configured. Set OPENAI_API_KEY or GOOGLE_GENERATIVE_AI_API_KEY to enable AI routing.'
+    )
   }
-  
+
   return available
 }
 

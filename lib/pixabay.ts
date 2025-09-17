@@ -313,7 +313,7 @@ class PixabayService {
   /**
    * Converte resultado Pixabay para formato padronizado
    */
-  static formatImageResult(image: PixabayImage): any {
+  formatImageResult(image: PixabayImage): any {
     return {
       id: `pixabay_${image.id}`,
       url: image.webformatURL,
@@ -341,7 +341,7 @@ class PixabayService {
   /**
    * Converte resultado de vídeo Pixabay para formato padronizado
    */
-  static formatVideoResult(video: PixabayVideo): any {
+  formatVideoResult(video: PixabayVideo): any {
     return {
       id: `pixabay_video_${video.id}`,
       url: video.videos.medium.url,

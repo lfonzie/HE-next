@@ -5,15 +5,15 @@ services:
     repo: https://github.com/lfonzie/HE-next
     branch: main
     rootDir: .
-    buildCommand: npm install --prefer-offline --no-audit && npm run build
-    startCommand: npm start
+    buildCommand: npm install --include=dev --no-audit && npx prisma generate && npm run build
+    startCommand: npx prisma migrate deploy && npm start
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 10000
       - key: ENEM_FALLBACK_MODEL
         value: gpt-4o-mini
+      - key: DIRECT_URL
+        sync: false
       - key: NEXTAUTH_URL
         value: https://your-hubedu-app.onrender.com
       - key: NEXTAUTH_SECRET
