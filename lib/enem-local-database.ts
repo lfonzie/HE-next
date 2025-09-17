@@ -53,6 +53,12 @@ class EnemLocalDatabase {
   private basePath: string
   private cache: Map<string, any> = new Map()
   private cacheTimeout = 5 * 60 * 1000 // 5 minutos
+  
+  // Cache de questões válidas para evitar verificações repetidas
+  private validQuestionsCache: Map<string, Set<number>> = new Map()
+  private invalidQuestionsCache: Map<string, Set<number>> = new Map()
+  private validationCacheTimeout = 30 * 60 * 1000 // 30 minutos para cache de validação
+  private lastValidationTime: Map<string, number> = new Map()
 
   constructor() {
     this.basePath = path.join(process.cwd(), 'QUESTOES_ENEM', 'public')
@@ -67,6 +73,170 @@ class EnemLocalDatabase {
     } catch {
       return false
     }
+  }
+
+  /**
+   * Valida prévia de questões para um ano/disciplina específico
+   */
+  async preValidateQuestions(year: number, discipline?: string): Promise<void> {
+    const cacheKey = `${year}_${discipline || 'all'}`
+    const now = Date.now()
+    
+    // Verifica se já foi validado recentemente
+    const lastValidation = this.lastValidationTime.get(cacheKey)
+    if (lastValidation && (now - lastValidation) < this.validationCacheTimeout) {
+      console.log(`✅ Cache de validação ainda válido para ${year} ${discipline || 'todas disciplinas'}`)
+      return
+    }
+
+    console.log(`🔍 Iniciando validação prévia de questões para ${year} ${discipline || 'todas disciplinas'}...`)
+    
+    const yearPath = path.join(this.basePath, year.toString())
+    if (!fs.existsSync(yearPath)) {
+      console.log(`❌ Ano ${year} não encontrado`)
+      return
+    }
+
+    const detailsPath = path.join(yearPath, 'details.json')
+    if (!fs.existsSync(detailsPath)) {
+      console.log(`❌ Arquivo details.json não encontrado para ${year}`)
+      return
+    }
+
+    const detailsData = fs.readFileSync(detailsPath, 'utf-8')
+    const yearDetails = JSON.parse(detailsData)
+    
+    let questionsToValidate = yearDetails.questions || []
+    
+    // Filtra por disciplina se especificado
+    if (discipline) {
+      questionsToValidate = questionsToValidate.filter((q: any) => q.discipline === discipline)
+    }
+
+    const validQuestions = new Set<number>()
+    const invalidQuestions = new Set<number>()
+    let processedCount = 0
+    let skippedCount = 0
+
+    console.log(`📚 Validando ${questionsToValidate.length} questões...`)
+
+    for (const questionInfo of questionsToValidate) {
+      try {
+        const isValid = await this.validateQuestionContent(year, questionInfo.index, questionInfo.language)
+        
+        if (isValid) {
+          validQuestions.add(questionInfo.index)
+        } else {
+          invalidQuestions.add(questionInfo.index)
+          skippedCount++
+        }
+        
+        processedCount++
+        
+        // Log de progresso a cada 50 questões
+        if (processedCount % 50 === 0) {
+          console.log(`📊 Progresso: ${processedCount}/${questionsToValidate.length} questões validadas`)
+        }
+        
+      } catch (error) {
+        invalidQuestions.add(questionInfo.index)
+        skippedCount++
+        processedCount++
+        
+        if (process.env.NODE_ENV === 'development') {
+          console.warn(`⚠️ Erro ao validar questão ${questionInfo.index}:`, error)
+        }
+      }
+    }
+
+    // Atualiza cache
+    this.validQuestionsCache.set(cacheKey, validQuestions)
+    this.invalidQuestionsCache.set(cacheKey, invalidQuestions)
+    this.lastValidationTime.set(cacheKey, now)
+
+    console.log(`✅ Validação concluída: ${validQuestions.size} válidas, ${invalidQuestions.size} inválidas`)
+    console.log(`📈 Taxa de sucesso: ${((validQuestions.size / processedCount) * 100).toFixed(1)}%`)
+  }
+
+  /**
+   * Valida o conteúdo de uma questão específica
+   */
+  private async validateQuestionContent(year: number, index: number, language?: string | null): Promise<boolean> {
+    try {
+      // Verifica se a questão existe fisicamente
+      const exists = await this.questionExists(year, index, language)
+      if (!exists) {
+        return false
+      }
+
+      // Carrega a questão
+      const question = await this.loadQuestion(year, index, language)
+      if (!question) {
+        return false
+      }
+
+      // Validações de conteúdo
+      if (!question.context || question.context.trim() === '') {
+        return false
+      }
+
+      // Verifica se o texto não é apenas uma imagem
+      if (question.context.trim().startsWith('![') || question.context.trim().startsWith('![]')) {
+        return false
+      }
+
+      // Verifica se tem alternativas válidas
+      if (!question.alternatives || question.alternatives.length < 5) {
+        return false
+      }
+
+      // Verifica se todas as alternativas têm conteúdo
+      const hasEmptyAlternatives = question.alternatives.some(alt => 
+        !alt.text || alt.text.trim() === '' || alt.text.trim().startsWith('![')
+      )
+      
+      if (hasEmptyAlternatives) {
+        return false
+      }
+
+      // Verifica se tem resposta correta
+      if (!question.correctAlternative || !['A', 'B', 'C', 'D', 'E'].includes(question.correctAlternative)) {
+        return false
+      }
+
+      return true
+    } catch (error) {
+      return false
+    }
+  }
+
+  /**
+   * Obtém questões válidas pré-validadas
+   */
+  getValidQuestions(year: number, discipline?: string): number[] {
+    const cacheKey = `${year}_${discipline || 'all'}`
+    const validQuestions = this.validQuestionsCache.get(cacheKey)
+    return validQuestions ? Array.from(validQuestions) : []
+  }
+
+  /**
+   * Verifica se uma questão é válida (usando cache)
+   */
+  isQuestionValid(year: number, index: number, discipline?: string): boolean {
+    const cacheKey = `${year}_${discipline || 'all'}`
+    const validQuestions = this.validQuestionsCache.get(cacheKey)
+    const invalidQuestions = this.invalidQuestionsCache.get(cacheKey)
+    
+    if (validQuestions && validQuestions.has(index)) {
+      return true
+    }
+    
+    if (invalidQuestions && invalidQuestions.has(index)) {
+      return false
+    }
+    
+    // Se não está no cache, retorna true para não bloquear (será validada individualmente)
+    return true
   }
 
   /**
@@ -104,20 +274,33 @@ class EnemLocalDatabase {
 
     for (const targetYear of years) {
       try {
-        // Busca mais questões para compensar as que podem ser puladas
-        const multiplier = year ? 2 : 1.5 // Se especificou ano, busca mais questões
-        const questionsToRequest = Math.ceil(limit * multiplier)
+        // Otimização: Se random=true e não especificou ano, faz seleção aleatória de anos também
+        let questionsToRequest = limit
+        if (random && !year) {
+          // Para seleção aleatória sem ano específico, pega menos questões por ano
+          questionsToRequest = Math.ceil(limit / years.length) + 2 // +2 para compensar questões puladas
+        } else {
+          // Busca mais questões para compensar as que podem ser puladas
+          const multiplier = year ? 2 : 1.5 // Se especificou ano, busca mais questões
+          questionsToRequest = Math.ceil(limit * multiplier)
+        }
         
         const yearQuestions = await this.getQuestionsByYear(targetYear, {
           discipline,
           language,
           limit: questionsToRequest,
-          random: false
+          random: random
         })
         allQuestions.push(...yearQuestions)
         
         // Se já temos questões suficientes e especificou um ano, para de buscar
         if (year && allQuestions.length >= limit) {
+          break
+        }
+        
+        // Para seleção aleatória sem ano específico, para quando tem questões suficientes
+        if (random && !year && allQuestions.length >= limit) {
+          console.log(`🎲 Seleção aleatória: ${allQuestions.length} questões coletadas de ${targetYear}`)
           break
         }
       } catch (error) {
@@ -184,6 +367,35 @@ class EnemLocalDatabase {
         questionsToLoad = questionsToLoad.filter((q: any) => q.language === filters.language)
       }
 
+      // NOVA OTIMIZAÇÃO: Usa questões pré-validadas se disponível
+      let questionsToProcess = questionsToLoad
+      
+      if (filters.random && filters.limit) {
+        // Primeiro, faz validação prévia se necessário
+        await this.preValidateQuestions(year, filters.discipline)
+        
+        // Obtém apenas questões válidas do cache
+        const validQuestionIndexes = this.getValidQuestions(year, filters.discipline)
+        
+        if (validQuestionIndexes.length > 0) {
+          // Filtra apenas questões válidas
+          const validQuestions = questionsToLoad.filter((q: any) => 
+            validQuestionIndexes.includes(q.index)
+          )
+          
+          // Embaralha e seleciona apenas questões válidas
+          const shuffled = this.shuffleArray([...validQuestions])
+          questionsToProcess = shuffled.slice(0, filters.limit * 2)
+          
+          console.log(`🎲 Seleção aleatória otimizada: ${questionsToProcess.length} questões válidas de ${validQuestions.length} disponíveis`)
+        } else {
+          // Fallback para método anterior se não há cache de validação
+          const shuffled = this.shuffleArray([...questionsToLoad])
+          questionsToProcess = shuffled.slice(0, filters.limit * 2)
+          console.log(`🎲 Seleção aleatória (fallback): processando ${questionsToProcess.length} questões de ${questionsToLoad.length} disponíveis`)
+        }
+      }
+
       // Carrega as questões individuais, pulando as que não existem
       const questions: LocalEnemQuestion[] = []
       const skippedQuestions: Array<{index: number, reason: string}> = []
@@ -191,7 +403,7 @@ class EnemLocalDatabase {
 
       console.log(`📚 Carregando questões do ano ${year}...`)
 
-      for (const questionInfo of questionsToLoad) {
+      for (const questionInfo of questionsToProcess) {
         try {
           // Verifica se a questão existe antes de tentar carregar
           const exists = await this.questionExists(year, questionInfo.index, questionInfo.language)
@@ -211,6 +423,12 @@ class EnemLocalDatabase {
               index: questionInfo.index,
               reason: 'erro ao carregar questão'
             })
+          }
+
+          // Se já temos questões suficientes e não é modo aleatório, para de carregar
+          if (!filters.random && filters.limit && questions.length >= filters.limit) {
+            console.log(`✅ Limite atingido: ${questions.length} questões carregadas`)
+            break
           }
         } catch (error) {
           console.error(`Error loading question ${questionInfo.index} from year ${year}:`, error)

@@ -1,0 +1,315 @@
+'use client'
+
+import { useState } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
+import { Badge } from '@/components/ui/badge'
+import { Loader2, Image, MessageSquare, BookOpen } from 'lucide-react'
+import QuizDemo from '@/components/demo/QuizDemo'
+
+export default function EnhancedFeaturesDemo() {
+  const [message, setMessage] = useState('')
+  const [processedMessage, setProcessedMessage] = useState('')
+  const [generatedImages, setGeneratedImages] = useState<any[]>([])
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [activeTab, setActiveTab] = useState<'quiz' | 'images' | 'message'>('quiz')
+
+  const processMessage = async () => {
+    if (!message.trim()) return
+
+    setIsProcessing(true)
+    try {
+      const response = await fetch('/api/process-message', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Erro ao processar mensagem')
+      }
+
+      const data = await response.json()
+      setProcessedMessage(data.processedMessage)
+      setGeneratedImages(data.generatedImages)
+    } catch (error) {
+      console.error('Erro ao processar mensagem:', error)
+      alert('Erro ao processar mensagem. Tente novamente.')
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  const exampleMessages = [
+    'Na aula de fotossíntese, vamos aprender sobre o processo. <<<criar um diagrama da fotossíntese, sem letras somente imagem>>>',
+    'Vamos comparar os diferentes tipos de células. <<<criar uma tabela comparativa>>>',
+    'O gráfico mostra a evolução da população. <<<criar um gráfico da evolução populacional>>>',
+    'Esta ilustração representa o sistema solar. <<<criar uma ilustração do sistema solar>>>'
+  ]
+
+  return (
+    <div className="max-w-6xl mx-auto p-6 space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold text-center">
+            🚀 Sistema Educacional Aprimorado
+          </CardTitle>
+          <p className="text-center text-gray-600">
+            Demonstração das novas funcionalidades implementadas
+          </p>
+        </CardHeader>
+      </Card>
+
+      {/* Tab Navigation */}
+      <div className="flex justify-center space-x-2">
+        <Button
+          variant={activeTab === 'quiz' ? 'default' : 'outline'}
+          onClick={() => setActiveTab('quiz')}
+          className="flex items-center gap-2"
+        >
+          <BookOpen className="h-4 w-4" />
+          Novo Quiz
+        </Button>
+        <Button
+          variant={activeTab === 'images' ? 'default' : 'outline'}
+          onClick={() => setActiveTab('images')}
+          className="flex items-center gap-2"
+        >
+          <Image className="h-4 w-4" />
+          Criação de Imagens
+        </Button>
+        <Button
+          variant={activeTab === 'message' ? 'default' : 'outline'}
+          onClick={() => setActiveTab('message')}
+          className="flex items-center gap-2"
+        >
+          <MessageSquare className="h-4 w-4" />
+          Processamento de Mensagens
+        </Button>
+      </div>
+
+      {/* Quiz Tab */}
+      {activeTab === 'quiz' && (
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BookOpen className="h-5 w-5" />
+                Sistema de Quiz Reescrito
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Badge variant="outline" className="p-2">
+                    ✅ Formato A, B, C, D
+                  </Badge>
+                  <Badge variant="outline" className="p-2">
+                    ✅ Resposta correta clara
+                  </Badge>
+                  <Badge variant="outline" className="p-2">
+                    ✅ Explicações detalhadas
+                  </Badge>
+                </div>
+                <p className="text-sm text-gray-600">
+                  O novo sistema de quiz foi completamente reescrito com formato padronizado A, B, C, D 
+                  e integração direta com a API da OpenAI para geração de questões educacionais.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+          <QuizDemo />
+        </div>
+      )}
+
+      {/* Images Tab */}
+      {activeTab === 'images' && (
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Image className="h-5 w-5" />
+                Sistema de Criação de Imagens
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="font-semibold mb-2">Wikimedia Commons</h3>
+                    <p className="text-sm text-gray-600">
+                      Integração com Wikimedia Commons para imagens educacionais de alta qualidade.
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold mb-2">Gemini 2.5 Nano</h3>
+                    <p className="text-sm text-gray-600">
+                      Criação de diagramas, tabelas e ilustrações educacionais usando IA.
+                    </p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+                  <Badge variant="outline" className="p-2">
+                    📊 Diagramas
+                  </Badge>
+                  <Badge variant="outline" className="p-2">
+                    📋 Tabelas
+                  </Badge>
+                  <Badge variant="outline" className="p-2">
+                    📈 Gráficos
+                  </Badge>
+                  <Badge variant="outline" className="p-2">
+                    🎨 Ilustrações
+                  </Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Message Processing Tab */}
+      {activeTab === 'message' && (
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5" />
+                Processamento de Mensagens com Comandos Especiais
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Digite uma mensagem com comandos especiais:
+                </label>
+                <Textarea
+                  placeholder="Ex: Na aula de fotossíntese... <<<criar um diagrama da fotossíntese, sem letras somente imagem>>>"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  rows={4}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Exemplos de comandos:</p>
+                <div className="space-y-1">
+                  {exampleMessages.map((example, index) => (
+                    <Button
+                      key={index}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setMessage(example)}
+                      className="text-left justify-start h-auto p-2"
+                    >
+                      <span className="text-xs">{example}</span>
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              <Button 
+                onClick={processMessage} 
+                disabled={!message.trim() || isProcessing}
+                className="w-full"
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Processando...
+                  </>
+                ) : (
+                  'Processar Mensagem'
+                )}
+              </Button>
+
+              {processedMessage && (
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="font-semibold mb-2">Mensagem Processada:</h3>
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <p className="whitespace-pre-wrap">{processedMessage}</p>
+                    </div>
+                  </div>
+
+                  {generatedImages.length > 0 && (
+                    <div>
+                      <h3 className="font-semibold mb-2">Imagens Geradas:</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {generatedImages.map((image, index) => (
+                          <Card key={index}>
+                            <CardContent className="p-4">
+                              <img 
+                                src={image.imageUrl} 
+                                alt={image.description}
+                                className="w-full h-48 object-cover rounded-lg mb-2"
+                              />
+                              <p className="text-sm text-gray-600">{image.description}</p>
+                              <Badge variant={image.success ? 'default' : 'destructive'} className="mt-2">
+                                {image.success ? 'Sucesso' : 'Erro'}
+                              </Badge>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Features Summary */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Funcionalidades Implementadas</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-3">
+              <h3 className="font-semibold">🖼️ Sistema de Imagens</h3>
+              <ul className="space-y-1 text-sm text-gray-600">
+                <li>• Integração com Wikimedia Commons</li>
+                <li>• Fallback para Unsplash</li>
+                <li>• Imagens apenas no slide 1 e 9</li>
+                <li>• Busca por conteúdo educacional</li>
+              </ul>
+            </div>
+            <div className="space-y-3">
+              <h3 className="font-semibold">🎨 Criação de Conteúdo Visual</h3>
+              <ul className="space-y-1 text-sm text-gray-600">
+                <li>• Gemini 2.5 Nano para diagramas</li>
+                <li>• Comandos especiais em mensagens</li>
+                <li>• Tabelas comparativas</li>
+                <li>• Gráficos e ilustrações</li>
+              </ul>
+            </div>
+            <div className="space-y-3">
+              <h3 className="font-semibold">📝 Sistema de Quiz</h3>
+              <ul className="space-y-1 text-sm text-gray-600">
+                <li>• Formato A, B, C, D padronizado</li>
+                <li>• Geração via OpenAI</li>
+                <li>• Explicações detalhadas</li>
+                <li>• Interface moderna e responsiva</li>
+              </ul>
+            </div>
+            <div className="space-y-3">
+              <h3 className="font-semibold">🔄 Processamento Inteligente</h3>
+              <ul className="space-y-1 text-sm text-gray-600">
+                <li>• Detecção automática de comandos</li>
+                <li>• Processamento de mensagens</li>
+                <li>• Integração com múltiplas APIs</li>
+                <li>• Fallbacks robustos</li>
+              </ul>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}

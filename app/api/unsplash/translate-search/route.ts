@@ -17,6 +17,12 @@ export async function POST(request: NextRequest) {
 
     console.log('🖼️ Buscando imagem com tradução para:', query);
 
+    // Verificar se a API key está configurada
+    if (!process.env.UNSPLASH_ACCESS_KEY) {
+      console.warn('⚠️ UNSPLASH_ACCESS_KEY não configurada, usando fallback');
+      return getFallbackResponse(query, count);
+    }
+
     // 1. Detectar e traduzir o tema
     let englishQuery: string;
     let themeInfo: any = {};
@@ -37,14 +43,27 @@ export async function POST(request: NextRequest) {
     console.log('🔍 Query expandida:', expandedQuery);
 
     // 3. Buscar imagens no Unsplash
-    const searchResults = await unsplashService.searchPhotos(expandedQuery, 1, count);
+    let searchResults;
+    try {
+      searchResults = await unsplashService.searchPhotos(expandedQuery, 1, count);
+    } catch (error) {
+      console.error('❌ Erro na API Unsplash:', error);
+      return getFallbackResponse(query, count);
+    }
 
     if (!searchResults.results || searchResults.results.length === 0) {
       console.log('⚠️ Nenhuma imagem encontrada, tentando busca alternativa...');
       
       // Tentar busca alternativa por categoria
       const alternativeQuery = getAlternativeQuery(themeInfo.category);
-      const alternativeResults = await unsplashService.searchPhotos(alternativeQuery, 1, count);
+      let alternativeResults;
+      
+      try {
+        alternativeResults = await unsplashService.searchPhotos(alternativeQuery, 1, count);
+      } catch (error) {
+        console.error('❌ Erro na busca alternativa:', error);
+        return getFallbackResponse(query, count);
+      }
       
       if (alternativeResults.results && alternativeResults.results.length > 0) {
         return NextResponse.json({
@@ -68,7 +87,13 @@ export async function POST(request: NextRequest) {
       }
 
       // Último fallback: imagens educacionais genéricas
-      const educationResults = await unsplashService.getEducationPhotos(1, count);
+      let educationResults;
+      try {
+        educationResults = await unsplashService.getEducationPhotos(1, count);
+      } catch (error) {
+        console.error('❌ Erro na busca educacional:', error);
+        return getFallbackResponse(query, count);
+      }
       
       return NextResponse.json({
         success: true,
@@ -115,14 +140,41 @@ export async function POST(request: NextRequest) {
 
   } catch (error: any) {
     console.error('❌ Erro na busca de imagem com tradução:', error);
-    return NextResponse.json(
-      { 
-        error: 'Failed to search images with translation',
-        details: error.message 
-      },
-      { status: 500 }
-    );
+    return getFallbackResponse(query || 'education', count || 1);
   }
+}
+
+/**
+ * Resposta de fallback quando a API Unsplash não está disponível
+ */
+function getFallbackResponse(query: string, count: number) {
+  const fallbackImages = Array.from({ length: count }, (_, index) => ({
+    id: `fallback-${index}`,
+    urls: {
+      raw: `https://picsum.photos/800/400?random=${Date.now() + index}`,
+      full: `https://picsum.photos/800/400?random=${Date.now() + index}`,
+      regular: `https://picsum.photos/800/400?random=${Date.now() + index}`,
+      small: `https://picsum.photos/400/200?random=${Date.now() + index}`,
+      thumb: `https://picsum.photos/200/100?random=${Date.now() + index}`
+    },
+    alt_description: query,
+    description: `Fallback image for ${query}`,
+    user: { name: 'Placeholder', username: 'placeholder' },
+    width: 800,
+    height: 400,
+    color: '#cccccc',
+    likes: 0
+  }));
+
+  return NextResponse.json({
+    success: true,
+    photos: fallbackImages,
+    query: query,
+    theme: query,
+    englishTheme: query,
+    fallback: true,
+    error: 'Unsplash API unavailable, using fallback images'
+  });
 }
 
 /**

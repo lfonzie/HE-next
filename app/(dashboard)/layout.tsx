@@ -10,8 +10,8 @@ import { UnifiedSidebar } from '@/components/layout/UnifiedSidebar'
 import { ChatProvider, useChatContext } from '@/components/providers/ChatContext'
 import { QuotaProvider } from '@/components/providers/QuotaProvider'
 import { ModuleType } from '@/types'
-import { LoadingScreen, LoadingOverlay } from '@/components/ui/loading'
-import { useNavigationLoading } from '@/hooks/useNavigationLoading'
+import { LoadingCard, LoadingOverlay } from '@/components/ui/Loading'
+import { useLoading } from '@/components/ui/Loading'
 import { MessageSquare, BookOpen, Settings, GraduationCap } from 'lucide-react'
 import '../globals.css'
 
@@ -48,12 +48,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { data: session, status } = useSession()
   const router = useRouter()
   const pathname = usePathname()
-  const { isLoading, getLoadingMessage } = useNavigationLoading()
-  
-  // Debug: Log loading state
-  useEffect(() => {
-    console.log('Dashboard layout - isLoading:', isLoading(), 'message:', getLoadingMessage('navigation'));
-  }, [isLoading, getLoadingMessage]);
+  const { isVisible } = useLoading()
   
   // Verificar se estamos na página do chat
   const isChatPage = pathname === '/chat'
@@ -86,9 +81,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50">
             {/* Layout sem sidebar - conteúdo ocupa toda a tela */}
             <div className="w-full h-screen overflow-y-auto">
-              <LoadingOverlay isLoading={isLoading()} message={getLoadingMessage('navigation')}>
-                {children}
-              </LoadingOverlay>
+              {children}
             </div>
           </div>
         </QuotaProvider>
@@ -152,9 +145,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
               {/* Main content - fullscreen para apresentação */}
               <div className="flex-1 overflow-hidden">
-                <LoadingOverlay isLoading={isLoading()} message={getLoadingMessage('navigation')}>
-                  {children}
-                </LoadingOverlay>
+                {children}
               </div>
             </div>
           </div>
@@ -167,9 +158,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     <ChatProvider>
       <QuotaProvider>
         <SidebarWrapper>
-          <LoadingOverlay isLoading={isLoading()} message={getLoadingMessage('navigation')}>
-            {children}
-          </LoadingOverlay>
+          {children}
         </SidebarWrapper>
       </QuotaProvider>
     </ChatProvider>

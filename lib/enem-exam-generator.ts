@@ -419,6 +419,21 @@ export class EnemExamGenerator {
       // Map areas to local database format
       const localAreas = areas.map(area => AREA_MAPPING[area] || area);
       
+      // NOVA OTIMIZAÇÃO: Inicializa validação prévia para melhor performance
+      console.log(`🔍 Inicializando validação prévia para áreas: ${localAreas.join(', ')}`);
+      
+      // Faz validação prévia para anos recentes (2020-2023)
+      const recentYears = [2020, 2021, 2022, 2023];
+      for (const year of recentYears) {
+        for (const area of localAreas) {
+          try {
+            await enemLocalDB.preValidateQuestions(year, area);
+          } catch (error) {
+            console.warn(`⚠️ Erro na validação prévia para ${year} ${area}:`, error);
+          }
+        }
+      }
+      
       // Get questions from all areas
       const allQuestions = [];
       const questionsPerArea = Math.ceil(count * 2 / areas.length); // Get more to filter

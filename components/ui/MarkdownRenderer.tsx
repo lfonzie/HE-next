@@ -57,7 +57,7 @@ export default function MarkdownRenderer({ content, className = '' }: MarkdownRe
   }
 
   return (
-    <div className={`text-left ${className}`}>
+    <div className={`text-left whitespace-pre-line ${className}`}>
       {processMarkdown(content)}
     </div>
   )

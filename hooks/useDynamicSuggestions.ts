@@ -26,16 +26,16 @@ export function useDynamicSuggestions() {
       setLoading(true)
       setError(null)
 
-      // Verificar cache local (válido por 1 hora)
+      // Verificar cache local (válido por 30 minutos para banco local)
       const cacheKey = 'dynamic_suggestions_cache'
       const cached = localStorage.getItem(cacheKey)
       
       if (!forceRefresh && cached) {
         const { suggestions: cachedSuggestions, generatedAt } = JSON.parse(cached)
-        const oneHourAgo = Date.now() - (60 * 60 * 1000)
+        const thirtyMinutesAgo = Date.now() - (30 * 60 * 1000)
         
-        if (new Date(generatedAt).getTime() > oneHourAgo) {
-          console.log('Usando sugestões do cache')
+        if (new Date(generatedAt).getTime() > thirtyMinutesAgo) {
+          console.log('Usando sugestões do cache (banco local)')
           setSuggestions(cachedSuggestions)
           setLastGenerated(generatedAt)
           setLoading(false)
@@ -43,9 +43,9 @@ export function useDynamicSuggestions() {
         }
       }
 
-      console.log('Buscando novas sugestões do Gemini...')
+      console.log('Buscando sugestões do banco de dados local...')
       
-      const response = await fetch('/api/suggestions', {
+      const response = await fetch('/api/suggestions-database', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

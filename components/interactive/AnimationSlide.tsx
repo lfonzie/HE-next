@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Play, Pause, RotateCcw, Volume2, VolumeX, Maximize2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import MarkdownRenderer from '@/components/ui/MarkdownRenderer'
+import ContentProcessor from './ContentProcessor'
 import { useUnsplashImage } from '@/hooks/useUnsplashImage'
 
 interface AnimationSlideProps {
@@ -27,6 +27,7 @@ interface AnimationSlideProps {
   isFirstSlide?: boolean
   isLastSlide?: boolean
   lessonTheme?: string
+  imageUrl?: string // Add imageUrl prop for dynamic images
 }
 
 export default function AnimationSlide({
@@ -40,7 +41,8 @@ export default function AnimationSlide({
   onComplete,
   isFirstSlide = false,
   isLastSlide = false,
-  lessonTheme = 'education'
+  lessonTheme = 'education',
+  imageUrl
 }: AnimationSlideProps) {
   const [currentStep, setCurrentStep] = useState(0)
   const [isPlaying, setIsPlaying] = useState(autoPlay)
@@ -151,8 +153,8 @@ export default function AnimationSlide({
       <CardContent className="space-y-6">
         {/* Content */}
         <div className="text-left space-y-4">
-          {/* Imagem do Unsplash para primeira ou última slide */}
-          {(isFirstSlide || isLastSlide) && unsplashImage && (
+          {/* Imagem dinâmica - priorizar imageUrl da API, depois Unsplash para primeira/última slide */}
+          {(imageUrl || (isFirstSlide || isLastSlide)) && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -160,26 +162,47 @@ export default function AnimationSlide({
               className="flex justify-center mb-6"
             >
               <div className="relative w-full max-w-2xl">
-                {imageLoading ? (
-                  <div className="w-full h-48 bg-gray-200 rounded-lg animate-pulse flex items-center justify-center">
-                    <span className="text-gray-500">Carregando imagem...</span>
-                  </div>
-                ) : (
+                {imageUrl ? (
+                  // Usar imagem dinâmica da API
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={unsplashImage.urls.regular}
-                    alt={unsplashImage.alt_description || `${lessonTheme} image`}
+                    src={imageUrl}
+                    alt={`${lessonTheme} - ${title}`}
                     className="w-full h-48 object-cover rounded-lg shadow-lg"
+                    onError={(e) => {
+                      // Fallback para imagem genérica se a dinâmica falhar
+                      e.currentTarget.src = `https://picsum.photos/800/400?random=${Date.now()}`
+                    }}
                   />
+                ) : (
+                  // Usar Unsplash para primeira/última slide (comportamento original)
+                  <>
+                    {imageLoading ? (
+                      <div className="w-full h-48 bg-gray-200 rounded-lg animate-pulse flex items-center justify-center">
+                        <span className="text-gray-500">Carregando imagem...</span>
+                      </div>
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={unsplashImage.urls.regular}
+                        alt={unsplashImage.alt_description || `${lessonTheme} image`}
+                        className="w-full h-48 object-cover rounded-lg shadow-lg"
+                      />
+                    )}
+                    <div className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                      Foto por {unsplashImage.user.name}
+                    </div>
+                  </>
                 )}
-                <div className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
-                  Foto por {unsplashImage.user.name}
-                </div>
               </div>
             </motion.div>
           )}
           
-          <MarkdownRenderer content={content} className="text-lg" />
+            <ContentProcessor 
+              content={content} 
+              subject={subject}
+              className="text-lg"
+            />
         </div>
 
         {/* Media Display */}

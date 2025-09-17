@@ -49,39 +49,48 @@ function calculateLessonDuration(slides, mode = 'sync') {
 }
 
 function generateImageQuery(topic, slideNumber, slideType) {
-  // Limpar o tópico para criar queries mais específicas
+  // Limpar o tópico para criar queries mais específicas e precisas
   const cleanTopic = topic.toLowerCase()
     .replace(/[?¿!¡.,;:]/g, '') // Remove pontuação
     .replace(/\s+/g, ' ') // Normaliza espaços
     .trim();
   
-  // Queries específicas por tipo de slide e número
+  // Queries específicas e precisas por tipo de slide e número
   const queries = {
-    1: `${cleanTopic} introduction concept overview`, // Abertura - conceito geral
-    2: `${cleanTopic} fundamentals basics principles`, // Conceitos fundamentais
-    3: `${cleanTopic} process mechanism steps`, // Desenvolvimento - processo
-    4: `${cleanTopic} quiz test question`, // Quiz 1
-    5: `${cleanTopic} application examples real world`, // Aplicações práticas
-    6: `${cleanTopic} variations adaptations types`, // Variações
-    7: `${cleanTopic} advanced connections relationships`, // Conexões avançadas
-    8: `${cleanTopic} analysis evaluation assessment`, // Quiz 2
-    9: `${cleanTopic} summary conclusion recap` // Encerramento
+    1: `${cleanTopic} introduction concept overview educational`, // Abertura - conceito geral
+    2: `${cleanTopic} fundamentals basics principles educational`, // Conceitos fundamentais
+    3: `${cleanTopic} process mechanism steps educational`, // Desenvolvimento - processo
+    4: `${cleanTopic} quiz test question educational`, // Quiz 1
+    5: `${cleanTopic} application examples real world educational`, // Aplicações práticas
+    6: `${cleanTopic} variations adaptations types educational`, // Variações
+    7: `${cleanTopic} advanced connections relationships educational`, // Conexões avançadas
+    8: `${cleanTopic} analysis evaluation assessment educational`, // Quiz 2
+    9: `${cleanTopic} summary conclusion recap educational` // Encerramento
   };
   
   // Fallback mais específico se não encontrar
   const fallbackQueries = {
-    1: `${cleanTopic} concept`,
-    2: `${cleanTopic} basics`,
-    3: `${cleanTopic} process`,
-    4: `${cleanTopic} quiz`,
-    5: `${cleanTopic} examples`,
-    6: `${cleanTopic} types`,
-    7: `${cleanTopic} advanced`,
-    8: `${cleanTopic} analysis`,
-    9: `${cleanTopic} summary`
+    1: `${cleanTopic} concept educational`,
+    2: `${cleanTopic} basics educational`,
+    3: `${cleanTopic} process educational`,
+    4: `${cleanTopic} quiz educational`,
+    5: `${cleanTopic} examples educational`,
+    6: `${cleanTopic} types educational`,
+    7: `${cleanTopic} advanced educational`,
+    8: `${cleanTopic} analysis educational`,
+    9: `${cleanTopic} summary educational`
   };
   
-  return queries[slideNumber] || fallbackQueries[slideNumber] || `${cleanTopic} education`;
+  return queries[slideNumber] || fallbackQueries[slideNumber] || `${cleanTopic} education learning`;
+}
+
+// Função para gerar URL de imagem dinâmica baseada no tema
+function generateDynamicImageUrl(topic, slideNumber, slideType) {
+  const imageQuery = generateImageQuery(topic, slideNumber, slideType);
+  
+  // Usar API Unsplash oficial através do endpoint interno
+  // Retorna um placeholder que será substituído pela API
+  return `PLACEHOLDER_UNSPLASH_${encodeURIComponent(imageQuery)}`;
 }
 
 /**
@@ -99,6 +108,9 @@ REGRAS IMPORTANTES:
 - Cada slide deve ter conteúdo educativo direto e objetivo
 - Use linguagem clara e didática em português brasileiro
 - NÃO use frases como "imagine uma tabela", "crie um gráfico" ou "desenhe um diagrama"
+- Use \\n\\n para quebras de linha entre parágrafos no conteúdo dos slides
+- Para quiz, use "correct" como número (0, 1, 2, 3) correspondente ao índice da opção correta
+- CADA SLIDE DEVE TER MÍNIMO 500 TOKENS DE CONTEÚDO (conteúdo extenso e detalhado)
 
 ESTRUTURA DA AULA (45-60 minutos):
 1. Abertura: Apresente o tema e objetivos de aprendizagem
@@ -117,10 +129,26 @@ FORMATO JSON OBRIGATÓRIO:
     {
       "number": 1,
       "title": "Título do slide",
-      "content": "Conteúdo educativo detalhado (mínimo 300 palavras)",
+      "content": "Conteúdo educativo detalhado com quebras de linha usando \\n\\n para parágrafos\\n\\nExemplo de segundo parágrafo com mais informações detalhadas.\\n\\nTerceiro parágrafo com exemplos práticos e aplicações reais.",
       "type": "content",
       "imageQuery": "query para busca de imagem no Unsplash",
-      "tokenEstimate": 400
+      "tokenEstimate": 500
+    },
+    {
+      "number": 2,
+      "title": "Título do slide",
+      "content": "Conteúdo educativo detalhado sem imagem.",
+      "type": "content",
+      "imageQuery": null,
+      "tokenEstimate": 500
+    },
+    {
+      "number": 9,
+      "title": "Título do slide",
+      "content": "Conteúdo educativo detalhado com imagem de encerramento.",
+      "type": "content",
+      "imageQuery": "query para busca de imagem no Unsplash",
+      "tokenEstimate": 500
     }
   ]
 }
@@ -131,13 +159,13 @@ Para slides de quiz (type: "quiz"), inclua:
   "title": "Quiz: Conceitos Básicos",
   "content": "Conteúdo do quiz",
   "type": "quiz",
-  "imageQuery": "query para imagem",
-  "tokenEstimate": 300,
+  "imageQuery": null,
+  "tokenEstimate": 500,
   "questions": [
     {
       "q": "Pergunta clara e objetiva?",
-      "options": ["Alternativa A", "Alternativa B", "Alternativa C", "Alternativa D"],
-      "correct": 0,
+      "options": ["A) Alternativa A detalhada", "B) Alternativa B detalhada", "C) Alternativa C detalhada", "D) Alternativa D detalhada"],
+      "correct": "B",
       "explanation": "Explicação detalhada da resposta correta"
     }
   ]
@@ -145,13 +173,19 @@ Para slides de quiz (type: "quiz"), inclua:
 
 IMPORTANTE: 
 - O campo "content" deve conter APENAS conteúdo educativo
+- Use \\n\\n para separar parágrafos no conteúdo
 - NÃO inclua instruções como "imagine uma tabela" ou "crie um gráfico"
 - Use linguagem direta e objetiva
 - Foque em explicações claras e exemplos práticos
+- CADA SLIDE DEVE TER MÍNIMO 500 TOKENS DE CONTEÚDO
 - O campo "imageQuery" deve ser específico e relevante ao conteúdo do slide
-- Para slide 1 (abertura): use termos como "introduction", "concept", "overview"
-- Para slide 9 (encerramento): use termos como "summary", "conclusion", "recap"
+- APENAS slides 1 e 9 devem ter imageQuery (outros slides devem ter imageQuery: null)
+- Para slides 1 e 9: use termos específicos do tema + "educational"
 - Evite termos genéricos como "education", "classroom", "learning"
+- Para quiz: "correct" deve ser uma letra (A, B, C, D) indicando a resposta correta
+- As alternativas devem ser claramente identificadas como A), B), C), D) no conteúdo das opções
+- Use quebras de linha \\n\\n para separar parágrafos e melhorar a legibilidade
+- Para diagramas e tabelas, use a sintaxe especial: <<<criar um diagrama da fotossíntese, sem letras somente imagem>>> ou <<<criar uma tabela comparativa>>>
 
 Tópico: ${topic}
 
@@ -247,7 +281,7 @@ function validateLessonStructure(lessonData) {
   });
   
   if (shortSlides.length > 0) {
-    issues.push(`${shortSlides.length} slide(s) com menos de 500 tokens`);
+    issues.push(`${shortSlides.length} slide(s) com menos de 500 tokens (mínimo obrigatório)`);
   }
   
   return {
@@ -391,11 +425,94 @@ export async function POST(request) {
       slidesCount: generatedContent.slides?.length || 0
     });
     
-    // Adicionar queries de imagem otimizadas (sem buscar imagens por enquanto)
-    const slidesWithImageQueries = generatedContent.slides.map((slide, index) => ({
-      ...slide,
-      imageQuery: slide.imageQuery || generateImageQuery(topic, slide.number, slide.type),
-      subject: topic // Para contexto educacional
+    // Adicionar queries de imagem otimizadas e URLs dinâmicas APENAS para slides 1 e 9
+    const slidesWithImageQueries = await Promise.all(generatedContent.slides.map(async (slide, index) => {
+      // Apenas slides 1 e 9 devem ter imagens
+      if (slide.number === 1 || slide.number === 9) {
+        const imageQuery = slide.imageQuery || generateImageQuery(topic, slide.number, slide.type);
+        
+        // Tentar múltiplas fontes de imagem
+        let imageUrl = null;
+        let imageSource = 'fallback';
+        
+        // 1. Tentar Wikimedia Commons primeiro
+        try {
+          const wikimediaResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/wikimedia/search`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              query: imageQuery,
+              subject: topic,
+              count: 1
+            }),
+          });
+
+          if (wikimediaResponse.ok) {
+            const wikimediaData = await wikimediaResponse.json();
+            if (wikimediaData.success && wikimediaData.photos && wikimediaData.photos.length > 0) {
+              imageUrl = wikimediaData.photos[0].urls.regular;
+              imageSource = 'wikimedia';
+              console.log(`✅ Imagem Wikimedia Commons carregada para slide ${slide.number}:`, imageUrl);
+            }
+          }
+        } catch (error) {
+          console.warn(`⚠️ Erro ao buscar imagem Wikimedia Commons para slide ${slide.number}:`, error);
+        }
+
+        // 2. Se Wikimedia falhar, tentar Unsplash
+        if (!imageUrl) {
+          try {
+            const unsplashResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/unsplash/translate-search`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                query: imageQuery,
+                subject: topic,
+                count: 1
+              }),
+            });
+
+            if (unsplashResponse.ok) {
+              const unsplashData = await unsplashResponse.json();
+              if (unsplashData.photos && unsplashData.photos.length > 0) {
+                imageUrl = unsplashData.photos[0].urls.regular;
+                imageSource = 'unsplash';
+                console.log(`✅ Imagem Unsplash carregada para slide ${slide.number}:`, imageUrl);
+              }
+            }
+          } catch (error) {
+            console.warn(`⚠️ Erro ao buscar imagem Unsplash para slide ${slide.number}:`, error);
+          }
+        }
+
+        // 3. Se ambas falharem, usar placeholder
+        if (!imageUrl) {
+          imageUrl = `https://picsum.photos/800/400?random=${slide.number}`;
+          imageSource = 'placeholder';
+          console.log(`⚠️ Usando placeholder para slide ${slide.number}`);
+        }
+
+        return {
+          ...slide,
+          imageQuery: imageQuery,
+          imageUrl: imageUrl,
+          imageSource: imageSource,
+          subject: topic // Para contexto educacional
+        };
+      } else {
+        // Slides 2-8 não devem ter imagens
+        return {
+          ...slide,
+          imageQuery: null,
+          imageUrl: null,
+          imageSource: null,
+          subject: topic
+        };
+      }
     }));
     
     log.timeEnd(imageTimer, 'preparacao-imagens', baseContext);
@@ -407,7 +524,7 @@ export async function POST(request) {
       slidesCount: slidesWithImageQueries.length
     });
     
-    // Usar slides sem imagens por enquanto (para evitar problemas de API)
+    // Usar slides com imagens para todos os slides
     const slidesWithImages = slidesWithImageQueries;
     
     // Calcular métricas completas

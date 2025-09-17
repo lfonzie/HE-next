@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import QuizComponent from './QuizComponent'
+import NewQuizComponent from './NewQuizComponent'
 import DrawingPrompt from './DrawingPrompt'
 import AnimationSlide from './AnimationSlide'
 import DiscussionBoard from './DiscussionBoard'
@@ -132,7 +133,7 @@ export default function DynamicStage({
     switch (activity.component) {
       case 'QuizComponent':
         return (
-          <QuizComponent
+          <NewQuizComponent
             questions={activity.questions || []}
             onComplete={(score, total) => handleStageComplete({ score, total, type: 'quiz' })}
             timeLimit={activity.time ? activity.time * 60 : 0}
@@ -157,7 +158,7 @@ export default function DynamicStage({
           <AnimationSlide
             title={stage.etapa}
             content={activity.content || ''}
-            media={activity.imageUrl ? [activity.imageUrl] : (activity.media || [])}
+            media={activity.media || []}
             animationSteps={activity.animationSteps || []}
             autoPlay={false}
             showControls={true}
@@ -166,6 +167,7 @@ export default function DynamicStage({
             isFirstSlide={stageIndex === 0}
             isLastSlide={stageIndex === totalStages - 1}
             lessonTheme={lessonTheme}
+            imageUrl={activity.imageUrl} // Pass dynamic image URL
           />
         )
 

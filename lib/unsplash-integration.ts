@@ -77,6 +77,9 @@ export async function populateLessonWithImages(lessonData: any): Promise<any> {
   try {
     console.log('🖼️ Populando imagens apenas no primeiro e último slide')
     
+    // Import Wikimedia integration
+    const { getBestEducationalImage } = await import('./wikimedia-integration')
+    
     const slidesWithImages = await Promise.all(
       lessonData.slides.map(async (slide: any, index: number) => {
         // Apenas primeiro slide (index 0) e último slide (index slides.length - 1)
@@ -84,11 +87,12 @@ export async function populateLessonWithImages(lessonData: any): Promise<any> {
         const isLastSlide = index === lessonData.slides.length - 1
         
         if (slide.imagePrompt && (isFirstSlide || isLastSlide)) {
-          const images = await getUnsplashImages(slide.imagePrompt, 1)
-          console.log(`✅ Imagem adicionada ao slide ${index + 1} (${isFirstSlide ? 'primeiro' : 'último'})`)
+          // Try Wikimedia Commons first, fallback to Unsplash
+          const imageUrl = await getBestEducationalImage(slide.imagePrompt)
+          console.log(`✅ Imagem educacional adicionada ao slide ${index + 1} (${isFirstSlide ? 'primeiro' : 'último'})`)
           return {
             ...slide,
-            imageUrl: images[0] || null
+            imageUrl: imageUrl || null
           }
         }
         

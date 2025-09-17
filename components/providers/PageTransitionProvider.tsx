@@ -2,8 +2,6 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
-import PageLoadingOverlay from '@/components/ui/PageLoadingOverlay';
-import { loadingConfig, getLoadingMessage } from '@/lib/loading-config';
 
 interface PageTransitionContextType {
   isLoading: boolean;
@@ -20,17 +18,12 @@ interface PageTransitionProviderProps {
 
 export function PageTransitionProvider({ children }: PageTransitionProviderProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState(loadingConfig.pageTransition.defaultMessage);
+  const [message, setMessage] = useState('Carregando...');
   const pathname = usePathname();
-
-  // Verificar se o loading está habilitado
-  if (!loadingConfig.pageTransition.enabled) {
-    return <>{children}</>;
-  }
 
   const startTransition = (customMessage?: string) => {
     setIsLoading(true);
-    setMessage(customMessage || loadingConfig.pageTransition.defaultMessage);
+    setMessage(customMessage || 'Carregando...');
   };
 
   const endTransition = () => {
@@ -39,10 +32,10 @@ export function PageTransitionProvider({ children }: PageTransitionProviderProps
 
   // Auto-end loading quando a página muda
   useEffect(() => {
-    if (isLoading && loadingConfig.autoHide) {
+    if (isLoading) {
       const timer = setTimeout(() => {
         setIsLoading(false);
-      }, loadingConfig.pageTransition.duration);
+      }, 1000);
 
       return () => clearTimeout(timer);
     }
@@ -58,7 +51,14 @@ export function PageTransitionProvider({ children }: PageTransitionProviderProps
       }}
     >
       {children}
-      <PageLoadingOverlay isLoading={isLoading} message={message} />
+      {isLoading && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 flex items-center gap-3">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+            <span>{message}</span>
+          </div>
+        </div>
+      )}
     </PageTransitionContext.Provider>
   );
 }

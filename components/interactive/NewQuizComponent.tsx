@@ -5,26 +5,31 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
-import { CheckCircle, XCircle, Clock, Trophy, Star } from 'lucide-react'
+import { CheckCircle, XCircle, Clock, Trophy, Star, RotateCcw } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import MarkdownRenderer from '@/components/ui/MarkdownRenderer'
 
-interface Question {
-  q: string
-  options: string[]
-  correct: number | string // Support both number (0,1,2,3) and string ('a','b','c','d') formats
+interface QuizQuestion {
+  question: string
+  options: {
+    a: string
+    b: string
+    c: string
+    d: string
+  }
+  correct: 'a' | 'b' | 'c' | 'd'
   explanation?: string
 }
 
 interface QuizComponentProps {
-  questions: Question[]
+  questions: QuizQuestion[]
   onComplete: (score: number, totalQuestions: number) => void
   timeLimit?: number // in seconds
   showExplanations?: boolean
   allowRetry?: boolean
 }
 
-export default function QuizComponent({ 
+export default function NewQuizComponent({ 
   questions, 
   onComplete, 
   timeLimit = 0,
@@ -32,30 +37,17 @@ export default function QuizComponent({
   allowRetry = false
 }: QuizComponentProps) {
   
-  // Helper function to normalize correct answer format
-  const normalizeCorrectAnswer = (correct: number | string): number => {
-    if (typeof correct === 'string') {
-      // Handle both lowercase and uppercase letters
-      const normalizedCorrect = correct.toLowerCase();
-      if (normalizedCorrect === 'a') return 0;
-      if (normalizedCorrect === 'b') return 1;
-      if (normalizedCorrect === 'c') return 2;
-      if (normalizedCorrect === 'd') return 3;
-      // Fallback to charCodeAt for other cases
-      return normalizedCorrect.charCodeAt(0) - 97; // 'a' = 0, 'b' = 1, etc.
-    }
-    return correct;
-  }
   const [currentQuestion, setCurrentQuestion] = useState(0)
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
-  const [answers, setAnswers] = useState<(number | null)[]>(new Array(questions.length).fill(null))
+  const [selectedAnswer, setSelectedAnswer] = useState<'a' | 'b' | 'c' | 'd' | null>(null)
+  const [answers, setAnswers] = useState<(string | null)[]>(new Array(questions.length).fill(null))
   const [showResult, setShowResult] = useState(false)
   const [score, setScore] = useState(0)
   const [timeLeft, setTimeLeft] = useState(timeLimit)
   const [isCompleted, setIsCompleted] = useState(false)
   const [showExplanationsState, setShowExplanationsState] = useState(false)
   const [showConfirmation, setShowConfirmation] = useState(false)
-  const [pendingAnswer, setPendingAnswer] = useState<number | null>(null)
+  const [pendingAnswer, setPendingAnswer] = useState<'a' | 'b' | 'c' | 'd' | null>(null)
+  const [questionStartTime, setQuestionStartTime] = useState(Date.now())
 
   // Timer effect
   useEffect(() => {
@@ -74,19 +66,24 @@ export default function QuizComponent({
     }
   }, [timeLimit, isCompleted])
 
-  const handleAnswerSelect = (answerIndex: number) => {
+  // Reset question timer when question changes
+  useEffect(() => {
+    setQuestionStartTime(Date.now())
+  }, [currentQuestion])
+
+  const handleAnswerSelect = (answer: 'a' | 'b' | 'c' | 'd') => {
     if (isCompleted) return
     
-    setPendingAnswer(answerIndex)
+    setPendingAnswer(answer)
     setShowConfirmation(true)
   }
 
   const confirmAnswer = () => {
     if (pendingAnswer === null) return
     
-    console.log('🔍 DEBUG: confirmAnswer chamado');
-    console.log('🔍 DEBUG: pendingAnswer:', pendingAnswer);
-    console.log('🔍 DEBUG: currentQuestion:', currentQuestion);
+    console.log('🔍 DEBUG: confirmAnswer chamado')
+    console.log('🔍 DEBUG: pendingAnswer:', pendingAnswer)
+    console.log('🔍 DEBUG: currentQuestion:', currentQuestion)
     
     setSelectedAnswer(pendingAnswer)
     const newAnswers = [...answers]
@@ -94,7 +91,7 @@ export default function QuizComponent({
     newAnswers[safeCurrentQuestion] = pendingAnswer
     setAnswers(newAnswers)
     
-    console.log('🔍 DEBUG: newAnswers após confirmação:', newAnswers);
+    console.log('🔍 DEBUG: newAnswers após confirmação:', newAnswers)
     
     setShowConfirmation(false)
     setPendingAnswer(null)
@@ -105,10 +102,10 @@ export default function QuizComponent({
         setCurrentQuestion(prev => prev + 1)
         setSelectedAnswer(null)
       } else {
-        console.log('🔍 DEBUG: Última pergunta respondida, chamando handleComplete');
+        console.log('🔍 DEBUG: Última pergunta respondida, chamando handleComplete')
         handleComplete()
       }
-    }, 1000)
+    }, 1500) // Increased delay for better UX
   }
 
   const cancelAnswer = () => {
@@ -136,14 +133,14 @@ export default function QuizComponent({
   }
 
   const handleComplete = () => {
-    console.log('🔍 DEBUG: handleComplete chamado');
-    console.log('🔍 DEBUG: answers array:', answers);
-    console.log('🔍 DEBUG: questions array:', questions);
+    console.log('🔍 DEBUG: handleComplete chamado')
+    console.log('🔍 DEBUG: answers array:', answers)
+    console.log('🔍 DEBUG: questions array:', questions)
     
     const correctAnswers = answers.filter((answer, index) => {
-      const correctIndex = normalizeCorrectAnswer(questions[index].correct)
-      console.log(`🔍 DEBUG Question ${index + 1}: User answer: ${answer}, Correct answer: ${questions[index].correct}, Normalized: ${correctIndex}, Match: ${answer === correctIndex}`)
-      return answer === correctIndex
+      const correctAnswer = questions[index].correct
+      console.log(`🔍 DEBUG Question ${index + 1}: User answer: ${answer}, Correct answer: ${correctAnswer}, Match: ${answer === correctAnswer}`)
+      return answer === correctAnswer
     }).length
     
     console.log(`🔍 DEBUG: Quiz completed: ${correctAnswers}/${questions.length} correct answers`)
@@ -163,6 +160,7 @@ export default function QuizComponent({
     setScore(0)
     setIsCompleted(false)
     setTimeLeft(timeLimit)
+    setShowExplanationsState(false)
   }
 
   const formatTime = (seconds: number) => {
@@ -244,8 +242,7 @@ export default function QuizComponent({
               <h3 className="font-semibold">Revisão das Respostas:</h3>
               {questions.map((question, index) => {
                 const userAnswer = answers[index]
-                const correctIndex = normalizeCorrectAnswer(question.correct)
-                const isCorrect = userAnswer === correctIndex
+                const isCorrect = userAnswer === question.correct
                 
                 return (
                   <motion.div
@@ -265,16 +262,16 @@ export default function QuizComponent({
                       )}
                       <div className="flex-1">
                         <div className="mb-2">
-                          <MarkdownRenderer content={question.q} className="font-medium" />
+                          <MarkdownRenderer content={question.question} className="font-medium" />
                         </div>
                         <div className="space-y-1">
-                          {question.options.map((option, optIndex) => {
-                            const isUserAnswer = optIndex === userAnswer
-                            const isCorrectAnswer = optIndex === correctIndex
+                          {Object.entries(question.options).map(([key, option]) => {
+                            const isUserAnswer = key === userAnswer
+                            const isCorrectAnswer = key === question.correct
                             
                             return (
                               <div
-                                key={optIndex}
+                                key={key}
                                 className={`text-sm p-2 rounded flex items-center gap-2 ${
                                   isCorrectAnswer
                                     ? 'bg-green-100 text-green-800 font-medium'
@@ -286,7 +283,7 @@ export default function QuizComponent({
                                 {isCorrectAnswer && <CheckCircle className="h-4 w-4 text-green-600" />}
                                 {isUserAnswer && !isCorrect && <XCircle className="h-4 w-4 text-red-600" />}
                                 <span>
-                                  {String.fromCharCode(65 + optIndex)}. {option}
+                                  {key.toUpperCase()}. {option}
                                 </span>
                               </div>
                             )
@@ -315,6 +312,7 @@ export default function QuizComponent({
             </Button>
             {allowRetry && (
               <Button onClick={handleRetry}>
+                <RotateCcw className="h-4 w-4 mr-2" />
                 Tentar Novamente
               </Button>
             )}
@@ -360,19 +358,19 @@ export default function QuizComponent({
           transition={{ duration: 0.3 }}
         >
           <div className="mb-6">
-            <MarkdownRenderer content={currentQ.q} className="text-lg font-semibold" />
+            <MarkdownRenderer content={currentQ.question} className="text-lg font-semibold" />
           </div>
           
           <div className="space-y-3">
-            {currentQ.options.map((option, index) => (
+            {Object.entries(currentQ.options).map(([key, option]) => (
               <motion.button
-                key={index}
-                onClick={() => handleAnswerSelect(index)}
+                key={key}
+                onClick={() => handleAnswerSelect(key as 'a' | 'b' | 'c' | 'd')}
                 disabled={isCompleted}
                 className={`w-full p-4 text-left rounded-lg border-2 transition-all ${
-                  selectedAnswer === index
+                  selectedAnswer === key
                     ? 'border-blue-500 bg-blue-50'
-                    : pendingAnswer === index
+                    : pendingAnswer === key
                     ? 'border-yellow-500 bg-yellow-50'
                     : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                 } ${isCompleted ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
@@ -381,18 +379,18 @@ export default function QuizComponent({
               >
                 <div className="flex items-center gap-3">
                   <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                    selectedAnswer === index 
+                    selectedAnswer === key 
                       ? 'border-blue-500 bg-blue-500' 
-                      : pendingAnswer === index
+                      : pendingAnswer === key
                       ? 'border-yellow-500 bg-yellow-500'
                       : 'border-gray-300'
                   }`}>
-                    {(selectedAnswer === index || pendingAnswer === index) && (
+                    {(selectedAnswer === key || pendingAnswer === key) && (
                       <div className="w-2 h-2 rounded-full bg-white" />
                     )}
                   </div>
                   <span className="font-medium">
-                    {String.fromCharCode(65 + index)}. {option}
+                    {key.toUpperCase()}. {option}
                   </span>
                 </div>
               </motion.button>
@@ -413,7 +411,7 @@ export default function QuizComponent({
                 <CardContent className="space-y-4">
                   <p className="text-center text-gray-600">
                     Você tem certeza de que deseja selecionar a opção{' '}
-                    <strong>{String.fromCharCode(65 + (pendingAnswer || 0))}</strong>?
+                    <strong>{pendingAnswer?.toUpperCase()}</strong>?
                   </p>
                   <div className="flex gap-3 justify-center">
                     <Button onClick={cancelAnswer} variant="outline">

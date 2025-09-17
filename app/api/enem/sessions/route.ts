@@ -176,6 +176,15 @@ async function getQuestionsFromLocalDB(filter: {
               continue;
             }
             
+            // Check if details.json exists before trying to read it
+            try {
+              await fs.access(questionPath);
+            } catch (accessError) {
+              // details.json doesn't exist, skip this question
+              console.log(`⚠️ Skipping question ${questionDir}: details.json not found`);
+              continue;
+            }
+            
             // Check cache first to avoid reprocessing
             const cacheKey = `${year}_${questionDir}`;
             const cachedResult = questionValidationCache.get(cacheKey);
@@ -250,6 +259,15 @@ async function getQuestionsFromLocalDB(filter: {
 
     // Log summary instead of individual warnings
     console.log(`ENEM Database Processing Summary: ${processedCount} processed, ${skippedCount} skipped, ${allQuestions.length} valid questions found`);
+
+    // Check if we have enough questions
+    if (allQuestions.length === 0) {
+      throw new Error('No valid questions found in ENEM database');
+    }
+
+    if (allQuestions.length < 10) {
+      console.warn(`⚠️ Only ${allQuestions.length} valid questions found. Consider checking the database integrity.`);
+    }
 
     // Apply random selection if requested
     if (filter.random) {

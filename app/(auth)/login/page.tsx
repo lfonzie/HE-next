@@ -11,8 +11,7 @@ import { Separator } from '@/components/ui/separator'
 import { Mail, Lock, Eye, EyeOff, AlertCircle, ArrowLeft } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
-import { useLoading } from '@/lib/loading'
-import { useNavigationLoading } from '@/hooks/useNavigationLoading'
+import { useLoading } from '@/components/ui/Loading'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -23,7 +22,6 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false)
   const router = useRouter()
   const { start: startLoading, end: endLoading } = useLoading()
-  const { startLoading: startNavLoading, stopLoading: stopNavLoading } = useNavigationLoading()
   
   // Refs para foco
   const emailRef = useRef<HTMLInputElement>(null)
@@ -58,7 +56,7 @@ export default function LoginPage() {
         
         // Start navigation loading using the correct system
         console.log('Login successful, starting navigation loading');
-        startNavLoading('navigation', 'Redirecionando...')
+        startLoading('login-redirect', { message: 'Redirecionando...' })
         
         // Navigate to chat - loading will be hidden when chat page loads
         router.push('/chat')
