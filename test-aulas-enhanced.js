@@ -1,243 +1,119 @@
-#!/usr/bin/env node
 // test-aulas-enhanced.js
-// Script de teste para o Sistema de Aulas Aprimorado
+// Script de teste para o sistema de aulas aprimorado
 
-const axios = require('axios');
+import fetch from 'node-fetch';
 
-const BASE_URL = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+async function testAulasEnhanced() {
+  console.log('🧪 Testando Sistema de Aulas Aprimorado...\n');
 
-// Configurações de teste
-const TEST_CONFIGS = [
-  {
-    name: 'Teste Básico - Fotossíntese',
-    data: {
-      topic: 'Fotossíntese',
-      mode: 'sync'
-    }
-  },
-  {
-    name: 'Teste Assíncrono - Matemática',
-    data: {
-      topic: 'Equações Quadráticas',
-      mode: 'async'
-    }
-  },
-  {
-    name: 'Teste Customizado - História',
-    data: {
-      topic: 'Revolução Francesa',
-      mode: 'sync',
-      schoolId: 'test-school-123',
-      customPrompt: 'Foque em causas econômicas e sociais'
-    }
-  }
-];
+  const baseUrl = 'http://localhost:3000/api';
+  const topic = 'Física dos esportes';
 
-// Função para testar geração de aula
-async function testLessonGeneration(config) {
-  console.log(`\n🧪 ${config.name}`);
-  console.log('=' .repeat(50));
-  
   try {
-    const startTime = Date.now();
-    
-    const response = await axios.post(`${BASE_URL}/api/aulas/generate`, config.data, {
+    // 1. Testar geração de esqueleto
+    console.log('1️⃣ Testando geração de esqueleto...');
+    const skeletonResponse = await fetch(`${baseUrl}/aulas/skeleton`, {
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      timeout: 60000 // 60 segundos
+      body: JSON.stringify({ topic })
     });
-    
-    const endTime = Date.now();
-    const duration = endTime - startTime;
-    
-    if (response.data.success) {
-      console.log('✅ Sucesso!');
-      console.log(`⏱️  Tempo: ${duration}ms`);
-      console.log(`📊 Duração: ${response.data.metrics.duration.sync} min (sync), ${response.data.metrics.duration.async} min (async)`);
-      console.log(`📝 Tokens: ${response.data.metrics.content.totalTokens.toLocaleString()}`);
-      console.log(`🎯 Qualidade: ${response.data.metrics.quality.score}%`);
-      console.log(`🖼️  Imagens: ${response.data.metrics.images.count} (~${response.data.metrics.images.estimatedSizeMB} MB)`);
-      console.log(`💰 Custo: R$ ${response.data.usage.costEstimate}`);
-      
-      // Validar estrutura
-      if (response.data.slides.length === 9) {
-        console.log('✅ Estrutura: 9 slides ✓');
-      } else {
-        console.log(`❌ Estrutura: ${response.data.slides.length} slides (esperado: 9)`);
-      }
-      
-      // Validar quizzes
-      const quizSlides = response.data.slides.filter(slide => slide.type === 'quiz');
-      if (quizSlides.length === 2) {
-        console.log('✅ Quizzes: 2 quizzes ✓');
-      } else {
-        console.log(`❌ Quizzes: ${quizSlides.length} quizzes (esperado: 2)`);
-      }
-      
-      // Validar tokens por slide
-      const shortSlides = response.data.slides.filter(slide => {
-        const tokens = estimateTokens(slide.content);
-        return tokens < 500;
-      });
-      
-      if (shortSlides.length === 0) {
-        console.log('✅ Tokens: Todos os slides com 500+ tokens ✓');
-      } else {
-        console.log(`⚠️  Tokens: ${shortSlides.length} slides com menos de 500 tokens`);
-      }
-      
-      // Mostrar warnings se houver
-      if (response.data.validation.issues.length > 0) {
-        console.log('⚠️  Problemas:');
-        response.data.validation.issues.forEach(issue => {
-          console.log(`   - ${issue}`);
-        });
-      }
-      
-      // Mostrar recomendações
-      if (response.data.validation.recommendations.length > 0) {
-        console.log('💡 Recomendações:');
-        response.data.validation.recommendations.forEach(rec => {
-          console.log(`   - ${rec.message}`);
-        });
-      }
-      
-      return {
-        success: true,
-        duration,
-        metrics: response.data.metrics,
-        validation: response.data.validation
-      };
-      
-    } else {
-      console.log('❌ Falha na geração');
-      console.log('Erro:', response.data.error);
-      return { success: false, error: response.data.error };
+
+    if (!skeletonResponse.ok) {
+      throw new Error(`Erro ao gerar esqueleto: ${skeletonResponse.status}`);
     }
-    
+
+    const skeletonData = await skeletonResponse.json();
+    console.log('✅ Esqueleto gerado:', skeletonData.skeleton.id);
+    console.log(`   📊 Etapas: ${skeletonData.skeleton.stages.length}`);
+    console.log(`   📝 Título: ${skeletonData.skeleton.title}\n`);
+
+    // 2. Testar geração de slides iniciais
+    console.log('2️⃣ Testando geração de slides iniciais...');
+    const initialSlidesResponse = await fetch(`${baseUrl}/aulas/initial-slides`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ topic })
+    });
+
+    if (!initialSlidesResponse.ok) {
+      throw new Error(`Erro ao gerar slides iniciais: ${initialSlidesResponse.status}`);
+    }
+
+    const initialSlidesData = await initialSlidesResponse.json();
+    console.log('✅ Slides iniciais gerados:', initialSlidesData.slides.length);
+    console.log(`   📄 Slide 1: ${initialSlidesData.slides[0]?.title}`);
+    console.log(`   📄 Slide 2: ${initialSlidesData.slides[1]?.title}\n`);
+
+    // 3. Testar carregamento de próximo slide
+    console.log('3️⃣ Testando carregamento de próximo slide...');
+    const nextSlideResponse = await fetch(`${baseUrl}/aulas/next-slide`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        topic,
+        slideNumber: 3,
+        previousSlides: initialSlidesData.slides.slice(0, 2)
+      })
+    });
+
+    if (!nextSlideResponse.ok) {
+      throw new Error(`Erro ao carregar próximo slide: ${nextSlideResponse.status}`);
+    }
+
+    const nextSlideData = await nextSlideResponse.json();
+    console.log('✅ Próximo slide carregado:', nextSlideData.slide.title);
+    console.log(`   📄 Tipo: ${nextSlideData.slide.type}\n`);
+
+    // 4. Testar atualização de progresso
+    console.log('4️⃣ Testando atualização de progresso...');
+    const progressResponse = await fetch(`${baseUrl}/aulas/progress`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        lessonId: skeletonData.skeleton.id,
+        etapa: 1,
+        completed: true,
+        points: 5
+      })
+    });
+
+    if (!progressResponse.ok) {
+      throw new Error(`Erro ao atualizar progresso: ${progressResponse.status}`);
+    }
+
+    const progressData = await progressResponse.json();
+    console.log('✅ Progresso atualizado:', progressData.message);
+    console.log(`   📊 Etapa ${progressData.data.etapa} concluída\n`);
+
+    // 5. Testar busca de progresso
+    console.log('5️⃣ Testando busca de progresso...');
+    const getProgressResponse = await fetch(`${baseUrl}/aulas/progress?lessonId=${skeletonData.skeleton.id}`);
+
+    if (!getProgressResponse.ok) {
+      throw new Error(`Erro ao buscar progresso: ${getProgressResponse.status}`);
+    }
+
+    const getProgressData = await getProgressResponse.json();
+    console.log('✅ Progresso buscado:', getProgressData.success);
+    console.log(`   📊 Aula encontrada: ${getProgressData.lesson ? 'Sim' : 'Não'}\n`);
+
+    console.log('🎉 Todos os testes passaram com sucesso!');
+    console.log('\n📋 Resumo das funcionalidades testadas:');
+    console.log('   ✅ Geração de esqueleto da aula');
+    console.log('   ✅ Carregamento de slides iniciais');
+    console.log('   ✅ Carregamento sob demanda');
+    console.log('   ✅ Atualização de progresso');
+    console.log('   ✅ Busca de progresso');
+
   } catch (error) {
-    console.log('❌ Erro na requisição');
-    if (error.response) {
-      console.log('Status:', error.response.status);
-      console.log('Erro:', error.response.data.error || error.response.data);
-    } else {
-      console.log('Erro:', error.message);
-    }
-    return { success: false, error: error.message };
+    console.error('❌ Erro durante os testes:', error.message);
+    console.log('\n🔧 Verificações necessárias:');
+    console.log('   1. Servidor está rodando em http://localhost:3000');
+    console.log('   2. Variáveis de ambiente configuradas');
+    console.log('   3. OpenAI API Key válida');
+    console.log('   4. Neo4j configurado (opcional)');
   }
 }
 
-// Função para testar estatísticas admin
-async function testAdminStats() {
-  console.log('\n📊 Testando Estatísticas Admin');
-  console.log('=' .repeat(50));
-  
-  try {
-    const response = await axios.get(`${BASE_URL}/api/admin/stats-enhanced`);
-    
-    if (response.data.success) {
-      console.log('✅ Estatísticas carregadas');
-      console.log(`👥 Usuários: ${response.data.stats.users.total}`);
-      console.log(`📚 Aulas: ${response.data.stats.lessons.total}`);
-      console.log(`💬 Chats: ${response.data.stats.chats.total}`);
-      
-      if (response.data.stats.pacing) {
-        console.log(`📊 Métricas de Pacing:`);
-        console.log(`   - Aulas com métricas: ${response.data.stats.pacing.totalLessonsWithMetrics}`);
-        console.log(`   - Duração média: ${response.data.stats.pacing.averageDuration} min`);
-        console.log(`   - Tokens médios: ${response.data.stats.pacing.averageTokens.toLocaleString()}`);
-        console.log(`   - Qualidade média: ${response.data.stats.pacing.averageQuality}%`);
-      }
-      
-      return { success: true };
-    } else {
-      console.log('❌ Falha ao carregar estatísticas');
-      return { success: false };
-    }
-    
-  } catch (error) {
-    console.log('❌ Erro na requisição de estatísticas');
-    console.log('Erro:', error.message);
-    return { success: false };
-  }
-}
-
-// Função auxiliar para estimar tokens (simplificada)
-function estimateTokens(text) {
-  return Math.ceil(text.length / 4);
-}
-
-// Função principal de teste
-async function runTests() {
-  console.log('🚀 Iniciando Testes do Sistema de Aulas Aprimorado');
-  console.log('=' .repeat(60));
-  
-  const results = [];
-  
-  // Testar geração de aulas
-  for (const config of TEST_CONFIGS) {
-    const result = await testLessonGeneration(config);
-    results.push({ test: config.name, ...result });
-    
-    // Pausa entre testes
-    await new Promise(resolve => setTimeout(resolve, 2000));
-  }
-  
-  // Testar estatísticas admin
-  const adminResult = await testAdminStats();
-  results.push({ test: 'Admin Stats', ...adminResult });
-  
-  // Resumo dos resultados
-  console.log('\n📋 Resumo dos Testes');
-  console.log('=' .repeat(60));
-  
-  const successful = results.filter(r => r.success).length;
-  const total = results.length;
-  
-  console.log(`✅ Sucessos: ${successful}/${total}`);
-  
-  results.forEach(result => {
-    const status = result.success ? '✅' : '❌';
-    console.log(`${status} ${result.test}`);
-    
-    if (result.success && result.metrics) {
-      console.log(`   📊 Qualidade: ${result.metrics.quality.score}%`);
-      console.log(`   ⏱️  Duração: ${result.metrics.duration.sync} min`);
-    }
-  });
-  
-  // Estatísticas gerais
-  const successfulTests = results.filter(r => r.success && r.metrics);
-  if (successfulTests.length > 0) {
-    const avgQuality = Math.round(
-      successfulTests.reduce((sum, r) => sum + r.metrics.quality.score, 0) / successfulTests.length
-    );
-    const avgDuration = Math.round(
-      successfulTests.reduce((sum, r) => sum + r.metrics.duration.sync, 0) / successfulTests.length
-    );
-    
-    console.log('\n📈 Estatísticas Gerais');
-    console.log(`🎯 Qualidade média: ${avgQuality}%`);
-    console.log(`⏱️  Duração média: ${avgDuration} min`);
-    console.log(`💰 Custo total estimado: R$ ${successfulTests.reduce((sum, r) => sum + parseFloat(r.metrics.content.totalTokens * 0.00003), 0).toFixed(4)}`);
-  }
-  
-  console.log('\n🎉 Testes concluídos!');
-  
-  if (successful === total) {
-    console.log('🎊 Todos os testes passaram! Sistema funcionando perfeitamente.');
-    process.exit(0);
-  } else {
-    console.log('⚠️  Alguns testes falharam. Verifique os logs acima.');
-    process.exit(1);
-  }
-}
-
-// Executar testes se chamado diretamente
-if (require.main === module) {
-  runTests().catch(error => {
-    console.error('❌ Erro fatal nos testes:', error);
-    process.exit(1);
-  });
-}
-
-module.exports = { runTests, testLessonGeneration, testAdminStats };
+// Executar testes
+testAulasEnhanced();

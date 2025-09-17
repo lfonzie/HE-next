@@ -55,33 +55,52 @@ function generateImageQuery(topic, slideNumber, slideType) {
     .replace(/\s+/g, ' ') // Normaliza espaços
     .trim();
   
-  // Queries específicas e precisas por tipo de slide e número
+  // Extrair palavras-chave principais do tópico
+  const topicKeywords = cleanTopic.split(' ').filter(word => 
+    word.length > 2 && 
+    !['sobre', 'para', 'como', 'quando', 'onde', 'porque', 'que', 'uma', 'um', 'de', 'da', 'do', 'das', 'dos'].includes(word)
+  );
+  
+  const mainKeyword = topicKeywords[0] || cleanTopic;
+  const secondaryKeyword = topicKeywords[1] || '';
+  
+  // Queries específicas e precisas por tipo de slide e número com palavras-chave relevantes
   const queries = {
-    1: `${cleanTopic} introduction concept overview educational`, // Abertura - conceito geral
-    2: `${cleanTopic} fundamentals basics principles educational`, // Conceitos fundamentais
-    3: `${cleanTopic} process mechanism steps educational`, // Desenvolvimento - processo
-    4: `${cleanTopic} quiz test question educational`, // Quiz 1
-    5: `${cleanTopic} application examples real world educational`, // Aplicações práticas
-    6: `${cleanTopic} variations adaptations types educational`, // Variações
-    7: `${cleanTopic} advanced connections relationships educational`, // Conexões avançadas
-    8: `${cleanTopic} analysis evaluation assessment educational`, // Quiz 2
-    9: `${cleanTopic} summary conclusion recap educational` // Encerramento
+    1: `${mainKeyword} ${secondaryKeyword} introduction concept overview educational classroom`, // Abertura
+    2: `${mainKeyword} ${secondaryKeyword} fundamentals basics principles educational`, // Conceitos fundamentais
+    3: `${mainKeyword} ${secondaryKeyword} process mechanism steps educational`, // Desenvolvimento
+    4: `${mainKeyword} ${secondaryKeyword} application examples real world educational`, // Aplicações práticas
+    5: `${mainKeyword} ${secondaryKeyword} variations adaptations types educational`, // Variações
+    6: `${mainKeyword} ${secondaryKeyword} advanced connections relationships educational`, // Conexões avançadas
+    7: `${mainKeyword} ${secondaryKeyword} quiz test question educational`, // Quiz 1
+    8: `${mainKeyword} ${secondaryKeyword} deep dive analysis educational`, // Aprofundamento
+    9: `${mainKeyword} ${secondaryKeyword} practical examples demonstration educational`, // Exemplos práticos
+    10: `${mainKeyword} ${secondaryKeyword} critical analysis evaluation educational`, // Análise crítica
+    11: `${mainKeyword} ${secondaryKeyword} synthesis summary educational`, // Síntese intermediária
+    12: `${mainKeyword} ${secondaryKeyword} situational analysis quiz educational`, // Quiz 2
+    13: `${mainKeyword} ${secondaryKeyword} future applications innovation educational`, // Aplicações futuras
+    14: `${mainKeyword} ${secondaryKeyword} conclusion summary recap educational` // Encerramento
   };
   
   // Fallback mais específico se não encontrar
   const fallbackQueries = {
-    1: `${cleanTopic} concept educational`,
-    2: `${cleanTopic} basics educational`,
-    3: `${cleanTopic} process educational`,
-    4: `${cleanTopic} quiz educational`,
-    5: `${cleanTopic} examples educational`,
-    6: `${cleanTopic} types educational`,
-    7: `${cleanTopic} advanced educational`,
-    8: `${cleanTopic} analysis educational`,
-    9: `${cleanTopic} summary educational`
+    1: `${mainKeyword} concept educational classroom`,
+    2: `${mainKeyword} basics educational`,
+    3: `${mainKeyword} process educational`,
+    4: `${mainKeyword} examples educational`,
+    5: `${mainKeyword} types educational`,
+    6: `${mainKeyword} advanced educational`,
+    7: `${mainKeyword} quiz educational`,
+    8: `${mainKeyword} analysis educational`,
+    9: `${mainKeyword} practical educational`,
+    10: `${mainKeyword} critical educational`,
+    11: `${mainKeyword} synthesis educational`,
+    12: `${mainKeyword} situational educational`,
+    13: `${mainKeyword} future educational`,
+    14: `${mainKeyword} conclusion educational`
   };
   
-  return queries[slideNumber] || fallbackQueries[slideNumber] || `${cleanTopic} education learning`;
+  return queries[slideNumber] || fallbackQueries[slideNumber] || `${mainKeyword} education learning`;
 }
 
 // Função para gerar URL de imagem dinâmica baseada no tema
@@ -109,24 +128,24 @@ REGRAS IMPORTANTES:
 - Use linguagem clara e didática em português brasileiro
 - NÃO use frases como "imagine uma tabela", "crie um gráfico" ou "desenhe um diagrama"
 - Use \\n\\n para quebras de linha entre parágrafos no conteúdo dos slides
-- Para quiz, use "correct" como número (0, 1, 2, 3) correspondente ao índice da opção correta
+- Para quiz, NÃO inclua campo "correct" - apenas forneça as opções e explicação
 - CADA SLIDE DEVE TER MÍNIMO 500 TOKENS DE CONTEÚDO (conteúdo extenso e detalhado)
 
-ESTRUTURA DA AULA (45-60 minutos) - MÍNIMO 14 SLIDES:
-1. Abertura: Apresente o tema e objetivos de aprendizagem
-2. Conceitos fundamentais: Explique os princípios básicos
-3. Desenvolvimento: Detalhe os processos principais
-4. Aplicações práticas: Mostre exemplos reais e casos de uso
-5. Variações e adaptações: Explore diferentes contextos
-6. Conexões avançadas: Relacione com outros conhecimentos
-7. Quiz 1: Questão de múltipla escolha sobre conceitos básicos
-8. Aprofundamento: Detalhe aspectos específicos do tema
-9. Exemplos práticos: Demonstre aplicações concretas
-10. Análise crítica: Desenvolva pensamento crítico
-11. Síntese intermediária: Consolide conhecimentos até aqui
-12. Quiz 2: Questão situacional ou de análise
-13. Aplicações futuras: Conecte com conhecimentos futuros
-14. Encerramento: Síntese final e próximos passos
+ESTRUTURA DA AULA (45-60 minutos) - EXATAMENTE 14 SLIDES:
+1. Abertura: Tema e Objetivos (Conteúdo)
+2. Conceitos Fundamentais (Conteúdo)
+3. Desenvolvimento dos Processos (Conteúdo)
+4. Aplicações Práticas (Conteúdo)
+5. Variações e Adaptações (Conteúdo)
+6. Conexões Avançadas (Conteúdo)
+7. Quiz: Conceitos Básicos (Avaliação, 0 pontos)
+8. Aprofundamento (Conteúdo)
+9. Exemplos Práticos (Conteúdo)
+10. Análise Crítica (Conteúdo)
+11. Síntese Intermediária (Conteúdo)
+12. Quiz: Análise Situacional (Avaliação, 0 pontos)
+13. Aplicações Futuras (Conteúdo)
+14. Encerramento: Síntese Final (Conteúdo)
 
 FORMATO JSON OBRIGATÓRIO - EXATAMENTE 14 SLIDES:
 {
@@ -183,9 +202,10 @@ FORMATO JSON OBRIGATÓRIO - EXATAMENTE 14 SLIDES:
       "number": 7,
       "title": "Quiz: Conceitos Básicos",
       "content": "Conteúdo educativo detalhado com imagem.",
-      "type": "content",
+      "type": "quiz",
       "imageQuery": "query específica para busca de imagem no Unsplash",
-      "tokenEstimate": 500
+      "tokenEstimate": 500,
+      "points": 0
     },
     {
       "number": 8,
@@ -223,9 +243,10 @@ FORMATO JSON OBRIGATÓRIO - EXATAMENTE 14 SLIDES:
       "number": 12,
       "title": "Quiz: Análise Situacional",
       "content": "Conteúdo educativo detalhado sem imagem.",
-      "type": "content",
+      "type": "quiz",
       "imageQuery": null,
-      "tokenEstimate": 500
+      "tokenEstimate": 500,
+      "points": 0
     },
     {
       "number": 13,
@@ -248,17 +269,17 @@ FORMATO JSON OBRIGATÓRIO - EXATAMENTE 14 SLIDES:
 
 Para slides de quiz (type: "quiz"), inclua:
 {
-  "number": 4,
+  "number": 7,
   "title": "Quiz: Conceitos Básicos",
   "content": "Conteúdo do quiz",
   "type": "quiz",
   "imageQuery": null,
   "tokenEstimate": 500,
+  "points": 0,
   "questions": [
     {
       "q": "Pergunta clara e objetiva?",
       "options": ["A) Alternativa A detalhada", "B) Alternativa B detalhada", "C) Alternativa C detalhada", "D) Alternativa D detalhada"],
-      "correct": "B",
       "explanation": "Explicação detalhada da resposta correta"
     }
   ]
@@ -806,18 +827,18 @@ export async function POST(request) {
     console.log(`   🎯 Qualidade: ${metrics.quality.score}%`);
     console.log(`   💰 Custo: R$ ${responseData.usage.costEstimate}`);
     
-    // TODO: Salvar no Neo4j
-    // const saveQuery = `
-    //   CREATE (l:Lesson {id: apoc.create.uuid(), topic: $topic, content: $content, tokens: $tokens, createdAt: datetime()})
-    //   MERGE (s:School {id: $schoolId})-[:HAS_LESSON]->(l)
-    //   RETURN l.id as id
-    // `;
-    // await queryNeo4j(saveQuery, { 
-    //   topic, 
-    //   content: JSON.stringify(slidesWithImages), 
-    //   tokens: metrics.totalTokens, 
-    //   schoolId 
-    // });
+    // Salvar no Neo4j se configurado
+    if (process.env.NEO4J_URI && process.env.NEO4J_USER && process.env.NEO4J_PASSWORD) {
+      try {
+        const { saveLessonToNeo4j } = await import('@/lib/neo4j');
+        const lessonId = await saveLessonToNeo4j(responseData.lesson, 'default-user');
+        console.log('✅ Aula salva no Neo4j com ID:', lessonId);
+        responseData.lesson.id = lessonId;
+      } catch (neo4jError) {
+        console.warn('⚠️ Erro ao salvar no Neo4j:', neo4jError.message);
+        // Continue mesmo se não conseguir salvar no Neo4j
+      }
+    }
     
     return NextResponse.json(responseData);
     
