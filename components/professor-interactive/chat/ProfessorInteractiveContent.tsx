@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { detectSubject } from '@/utils/professor-interactive/subjectDetection';
+import { CuripodLessonModule, CuripodLesson } from '../curipod';
 
 
 interface InteractiveStep {
@@ -34,6 +35,13 @@ interface InteractiveLesson {
   title: string;
   subject: string;
   introduction: string;
+  themeImage?: string;
+  timing?: {
+    hook: string;
+    instruction: string;
+    task: string;
+    exit: string;
+  };
   steps: InteractiveStep[];
   finalTest: {
     question: string;
@@ -43,6 +51,13 @@ interface InteractiveLesson {
     // Novas propriedades para múltipla escolha no teste final
     options?: string[];
     correctOption?: number;
+    // Suporte para múltiplas perguntas no exit ticket
+    questions?: Array<{
+      question: string;
+      options: string[];
+      correctOption: number;
+      explanation: string;
+    }>;
   };
   summary: string;
   nextSteps: string[];
@@ -81,6 +96,7 @@ export default function ProfessorInteractiveContent({
   const [loadingMessage, setLoadingMessage] = useState('');
   const [loadingStartTime, setLoadingStartTime] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [useCuripodMethodology, setUseCuripodMethodology] = useState(true); // Nova metodologia por padrão
   
   const handleSubmit = useCallback(async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -240,13 +256,52 @@ export default function ProfessorInteractiveContent({
   };
 
 
-  // Auto-start se houver query inicial
-  useEffect(() => {
-    if (initialQuery && initialQuery.trim()) {
-      setQuery(initialQuery);
-      handleSubmit();
-    }
-  }, [initialQuery, handleSubmit]);
+  // Função para converter aula para formato Curipod
+  const convertToCuripodLesson = (lesson: InteractiveLesson): CuripodLesson => {
+    return {
+      title: lesson.title,
+      subject: lesson.subject,
+      introduction: lesson.introduction,
+      themeImage: lesson.themeImage || '',
+      timing: lesson.timing || {
+        hook: '3-5 minutos',
+        instruction: '20 minutos',
+        task: '10-12 minutos',
+        exit: '10 minutos'
+      },
+      steps: lesson.steps.map(step => ({
+        type: step.type === 'question' ? 'checkpoint' : 'explanation',
+        card1: {
+          title: step.type === 'question' ? 'Pergunta' : 'Conceito',
+          content: step.content
+        },
+        card2: {
+          title: step.type === 'question' ? 'Opções' : 'Detalhes',
+          content: step.correctAnswer || '',
+          options: step.options,
+          correctOption: step.correctOption,
+          helpMessage: step.helpMessage,
+          correctAnswer: step.correctAnswer
+        }
+      })),
+      finalTest: {
+        questions: lesson.finalTest.questions || [{
+          question: lesson.finalTest.question,
+          options: lesson.finalTest.options || ['A', 'B', 'C', 'D'],
+          correctOption: lesson.finalTest.correctOption || 0,
+          explanation: lesson.finalTest.correctAnswer
+        }]
+      },
+      summary: lesson.summary,
+      nextSteps: lesson.nextSteps
+    };
+  };
+
+  // Função para lidar com conclusão da aula Curipod
+  const handleCuripodComplete = (results: any) => {
+    console.log('Aula Curipod concluída:', results);
+    // Aqui você pode adicionar lógica adicional como salvar resultados, analytics, etc.
+  };
 
   // Renderização simplificada para teste
   return (
@@ -295,48 +350,86 @@ export default function ProfessorInteractiveContent({
             
             {lesson && (
               <div className="mt-6">
-                <h3 className="text-lg font-semibold mb-4">{lesson.title}</h3>
-                <p className="text-gray-700 mb-4">{lesson.introduction}</p>
-                
-                <div className="space-y-4">
-                  {lesson.steps.map((step, index) => (
-                    <Card key={index} className="p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge variant="outline">{step.type}</Badge>
-                        <span className="text-sm text-gray-500">Passo {index + 1}</span>
+                {/* Toggle para escolher metodologia */}
+                <Card className="mb-6">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-semibold text-gray-900">Metodologia de Ensino</h3>
+                        <p className="text-sm text-gray-600">Escolha como deseja apresentar a aula</p>
                       </div>
-                      <div className="prose max-w-none">
-                        <p>{step.content}</p>
-                        {step.question && (
-                          <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-                            <h4 className="font-semibold mb-2">{step.question}</h4>
-                            {step.options && (
-                              <div className="space-y-2">
-                                {step.options.map((option, optIndex) => (
-                                  <div key={optIndex} className="text-sm">
-                                    {option}
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => setUseCuripodMethodology(false)}
+                          variant={!useCuripodMethodology ? "default" : "outline"}
+                          size="sm"
+                        >
+                          Método Tradicional
+                        </Button>
+                        <Button
+                          onClick={() => setUseCuripodMethodology(true)}
+                          variant={useCuripodMethodology ? "default" : "outline"}
+                          size="sm"
+                        >
+                          Metodologia Curipod
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Renderizar aula baseada na metodologia escolhida */}
+                {useCuripodMethodology ? (
+                  <CuripodLessonModule
+                    lesson={convertToCuripodLesson(lesson)}
+                    onComplete={handleCuripodComplete}
+                  />
+                ) : (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">{lesson.title}</h3>
+                    <p className="text-gray-700 mb-4">{lesson.introduction}</p>
+                    
+                    <div className="space-y-4">
+                      {lesson.steps.map((step, index) => (
+                        <Card key={index} className="p-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Badge variant="outline">{step.type}</Badge>
+                            <span className="text-sm text-gray-500">Passo {index + 1}</span>
+                          </div>
+                          <div className="prose max-w-none">
+                            <p>{step.content}</p>
+                            {step.question && (
+                              <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+                                <h4 className="font-semibold mb-2">{step.question}</h4>
+                                {step.options && (
+                                  <div className="space-y-2">
+                                    {step.options.map((option, optIndex) => (
+                                      <div key={optIndex} className="text-sm">
+                                        {option}
+                                      </div>
+                                    ))}
                                   </div>
-                                ))}
+                                )}
                               </div>
                             )}
                           </div>
-                        )}
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-                
-                {lesson.finalTest && (
-                  <Card className="mt-6 p-4 bg-green-50">
-                    <h4 className="font-semibold mb-2">Teste Final</h4>
-                    <p>{lesson.finalTest.question}</p>
-                  </Card>
+                        </Card>
+                      ))}
+                    </div>
+                    
+                    {lesson.finalTest && (
+                      <Card className="mt-6 p-4 bg-green-50">
+                        <h4 className="font-semibold mb-2">Teste Final</h4>
+                        <p>{lesson.finalTest.question}</p>
+                      </Card>
+                    )}
+                    
+                    <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                      <h4 className="font-semibold mb-2">Resumo</h4>
+                      <p className="text-sm text-gray-700">{lesson.summary}</p>
+                    </div>
+                  </div>
                 )}
-                
-                <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-                  <h4 className="font-semibold mb-2">Resumo</h4>
-                  <p className="text-sm text-gray-700">{lesson.summary}</p>
-                </div>
               </div>
             )}
           </CardContent>

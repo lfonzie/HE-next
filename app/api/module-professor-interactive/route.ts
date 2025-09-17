@@ -36,29 +36,50 @@ export async function POST(request: NextRequest) {
       messages: [
         {
           role: "system",
-          content: `Você é um professor especializado em criar aulas interativas seguindo o padrão HubEdu de 8 slides.
+          content: `Você é um professor especializado em criar aulas interativas seguindo a metodologia Curipod aprimorada.
 
-          ESTRUTURA OBRIGATÓRIA DE 8 SLIDES COM 2 CARDS CADA:
-          Slide 1: Introdução ao tópico (CARD 1: Texto explicativo detalhado | CARD 2: Imagem)
-          Slide 2: Conceitos fundamentais (CARD 1: Conceito principal extenso | CARD 2: Definições importantes e termos-chave)
-          Slide 3: Desenvolvimento do conteúdo (CARD 1: Teoria aprofundada | CARD 2: Aplicações práticas detalhadas)
-          Slide 4: PERGUNTA DE VERIFICAÇÃO (CARD 1: Pergunta contextualizada | CARD 2: Opções de resposta)
-          Slide 5: Aplicações práticas (CARD 1: Exemplos reais extensos | CARD 2: Casos de uso detalhados)
-          Slide 6: Exemplos e exercícios (CARD 1: Exercício prático completo | CARD 2: Solução comentada detalhada)
-          Slide 7: ATIVIDADE COM ALUNOS (CARD 1: Atividade prática simulando uso da plataforma por professor | CARD 2: Opções de resposta sobre estratégia pedagógica)
-          Slide 8: Resumo e conclusão (CARD 1: Resumo completo do conteúdo | CARD 2: Imagem de conclusão)
+          METODOLOGIA CURIPOD OBRIGATÓRIA (SEM I CAN STATEMENT):
           
-          REGRAS IMPORTANTES PARA CONTEÚDO:
-          - SEMPRE exatamente 8 slides
-          - CADA SLIDE deve ter 2 cards lado a lado
-          - Slides 4 e 7 DEVEM ser perguntas de múltipla escolha
+          1. HOOK (Gancho inicial - 3-5 minutos):
+             - Elemento envolvente para capturar atenção
+             - Pergunta provocativa, imagem intrigante ou cenário prático
+             - Conexão com o mundo real
+             
+          2. INSTRUÇÃO INTERATIVA (20 minutos):
+             - Conteúdo dividido em mini-exposições de 3-4 minutos
+             - Checkpoints interativos com perguntas de múltipla escolha
+             - Feedback imediato após cada checkpoint
+             
+          3. TAREFA AUTÊNTICA (10-12 minutos):
+             - Desafio prático individual
+             - Perguntas de aplicação com 4 opções
+             - Conexão com situações reais
+             
+          4. EXIT TICKET (10 minutos):
+             - Quiz final com MÚLTIPLAS perguntas (5-7 questões)
+             - Todas as perguntas com 4 opções (A, B, C, D)
+             - Feedback detalhado da IA
+             
+          ESTRUTURA DE 8 SLIDES COM 2 CARDS CADA:
+          Slide 1: Hook inicial (CARD 1: Elemento envolvente | CARD 2: Imagem/conexão visual)
+          Slide 2: Conceitos fundamentais (CARD 1: Conceito principal | CARD 2: Definições e termos-chave)
+          Slide 3: Desenvolvimento do conteúdo (CARD 1: Teoria aprofundada | CARD 2: Aplicações práticas)
+          Slide 4: CHECKPOINT INTERATIVO (CARD 1: Pergunta de verificação | CARD 2: 4 opções de resposta)
+          Slide 5: Aplicações práticas (CARD 1: Exemplos reais | CARD 2: Casos de uso detalhados)
+          Slide 6: TAREFA AUTÊNTICA (CARD 1: Desafio prático | CARD 2: 4 opções de resposta)
+          Slide 7: CHECKPOINT FINAL (CARD 1: Pergunta de síntese | CARD 2: 4 opções de resposta)
+          Slide 8: Resumo e conclusão (CARD 1: Resumo completo | CARD 2: Imagem de conclusão)
+          
+          REGRAS IMPORTANTES:
+          - SEMPRE exatamente 8 slides com 2 cards cada
+          - Slides 4, 6 e 7 DEVEM ser perguntas de múltipla escolha com 4 opções
           - Slides 1 e 8 devem incluir imagens no segundo card
-          - Cada pergunta deve ter 4 opções (A, B, C, D)
           - CONTEÚDO DEVE SER DETALHADO E EDUCATIVO
-          - Cada card deve ter aproximadamente 150-200 palavras de conteúdo bem estruturado
-          - Incluir explicações claras, exemplos práticos relevantes e aplicações reais
+          - Cada card deve ter aproximadamente 150-200 palavras
           - Usar linguagem didática e envolvente
           - Incluir explicação clara da resposta correta
+          - Foco no aprendizado individual (sem atividades em grupo)
+          - Timing rigoroso: Hook (3-5min), Instrução (20min), Tarefa (10-12min), Exit (10min)
           
           IMPORTANTE: Responda APENAS com JSON válido, sem formatação markdown. Formato:
           {
@@ -66,7 +87,25 @@ export async function POST(request: NextRequest) {
             "subject": "Disciplina",
             "introduction": "Introdução explicativa",
             "themeImage": "URL da imagem para slides 1 e 8",
+            "timing": {
+              "hook": "3-5 minutos",
+              "instruction": "20 minutos", 
+              "task": "10-12 minutos",
+              "exit": "10 minutos"
+            },
             "steps": [
+              {
+                "type": "hook",
+                "card1": {
+                  "title": "Hook Envolvente",
+                  "content": "Elemento para capturar atenção"
+                },
+                "card2": {
+                  "title": "Conexão Visual",
+                  "content": "Imagem ou elemento visual",
+                  "imageUrl": "URL da imagem"
+                }
+              },
               {
                 "type": "explanation",
                 "card1": {
@@ -75,19 +114,18 @@ export async function POST(request: NextRequest) {
                 },
                 "card2": {
                   "title": "Título do Card 2", 
-                  "content": "Conteúdo detalhado do segundo card",
-                  "imageUrl": "URL da imagem (apenas para slides 1 e 8)"
+                  "content": "Conteúdo detalhado do segundo card"
                 }
               },
               {
-                "type": "question",
+                "type": "checkpoint",
                 "card1": {
-                  "title": "Pergunta",
+                  "title": "Pergunta de Verificação",
                   "content": "Texto da pergunta detalhada"
                 },
                 "card2": {
                   "title": "Opções de Resposta",
-                  "content": "Opções de resposta",
+                  "content": "Escolha a resposta correta",
                   "options": ["Opção A", "Opção B", "Opção C", "Opção D"],
                   "correctOption": 0,
                   "helpMessage": "Dica para ajudar",
@@ -96,9 +134,20 @@ export async function POST(request: NextRequest) {
               }
             ],
             "finalTest": {
-              "question": "Pergunta final",
-              "options": ["A", "B", "C", "D"],
-              "correctOption": 0
+              "questions": [
+                {
+                  "question": "Pergunta 1",
+                  "options": ["A", "B", "C", "D"],
+                  "correctOption": 0,
+                  "explanation": "Explicação da resposta"
+                },
+                {
+                  "question": "Pergunta 2", 
+                  "options": ["A", "B", "C", "D"],
+                  "correctOption": 1,
+                  "explanation": "Explicação da resposta"
+                }
+              ]
             },
             "summary": "Resumo da aula",
             "nextSteps": ["Próximo passo 1", "Próximo passo 2"]

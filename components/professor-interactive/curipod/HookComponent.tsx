@@ -1,0 +1,168 @@
+"use client";
+
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Timer, Lightbulb, Target, Clock } from 'lucide-react';
+
+interface HookComponentProps {
+  hook: {
+    title: string;
+    content: string;
+    type: 'question' | 'scenario' | 'image' | 'video';
+    duration: number; // em minutos
+    engagementLevel: 'high' | 'medium' | 'low';
+  };
+  onComplete: () => void;
+  onNext: () => void;
+}
+
+export default function HookComponent({ hook, onComplete, onNext }: HookComponentProps) {
+  const [timeRemaining, setTimeRemaining] = useState(hook.duration * 60); // converter para segundos
+  const [isActive, setIsActive] = useState(true);
+  const [isCompleted, setIsCompleted] = useState(false);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    if (isActive && timeRemaining > 0) {
+      interval = setInterval(() => {
+        setTimeRemaining((prev) => {
+          if (prev <= 1) {
+            setIsActive(false);
+            setIsCompleted(true);
+            onComplete();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+
+    return () => clearInterval(interval);
+  }, [isActive, timeRemaining, onComplete]);
+
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const getEngagementColor = (level: string) => {
+    switch (level) {
+      case 'high': return 'bg-red-100 text-red-800 border-red-200';
+      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'low': return 'bg-green-100 text-green-800 border-green-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const getEngagementIcon = (level: string) => {
+    switch (level) {
+      case 'high': return '🔥';
+      case 'medium': return '⚡';
+      case 'low': return '💡';
+      default: return '📌';
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header com timing */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center">
+            <Lightbulb className="h-6 w-6 text-white" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">Hook - Gancho Inicial</h2>
+            <p className="text-sm text-gray-600">Capturando sua atenção para o tema</p>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-4">
+          <Badge className={getEngagementColor(hook.engagementLevel)}>
+            {getEngagementIcon(hook.engagementLevel)} {hook.engagementLevel.toUpperCase()}
+          </Badge>
+          
+          <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-lg border border-blue-200">
+            <Clock className="h-4 w-4 text-blue-600" />
+            <span className="text-sm font-medium text-blue-800">
+              {formatTime(timeRemaining)}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Conteúdo do Hook */}
+      <Card className="border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-red-50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-xl">
+            <Target className="h-6 w-6 text-orange-600" />
+            {hook.title}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="prose prose-lg max-w-none">
+            <p className="text-gray-800 leading-relaxed mb-6">
+              {hook.content}
+            </p>
+            
+            {/* Indicador de progresso do tempo */}
+            <div className="w-full bg-gray-200 rounded-full h-3 mb-6">
+              <div 
+                className="bg-gradient-to-r from-orange-500 to-red-500 h-3 rounded-full transition-all duration-1000"
+                style={{ 
+                  width: `${((hook.duration * 60 - timeRemaining) / (hook.duration * 60)) * 100}%` 
+                }}
+              />
+            </div>
+            
+            {/* Instruções */}
+            <div className="bg-white/60 rounded-lg p-4 border border-orange-200">
+              <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                <Lightbulb className="h-4 w-4 text-orange-600" />
+                O que fazer agora:
+              </h4>
+              <ul className="text-sm text-gray-700 space-y-1">
+                <li>• Leia atentamente o conteúdo acima</li>
+                <li>• Reflita sobre a conexão com o tema</li>
+                <li>• Prepare-se para mergulhar no conteúdo</li>
+                <li>• Aguarde o tempo acabar para continuar</li>
+              </ul>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Botão de ação */}
+      <div className="flex justify-center">
+        {isCompleted ? (
+          <Button 
+            onClick={onNext}
+            className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 px-8 py-3 text-lg"
+          >
+            ✅ Hook Concluído - Continuar para Instrução
+          </Button>
+        ) : (
+          <div className="text-center text-gray-600">
+            <p className="text-sm">Aguarde o tempo acabar para continuar...</p>
+            <p className="text-xs mt-1">Ou clique em "Pular" se já refletiu sobre o tema</p>
+            <Button 
+              onClick={() => {
+                setIsActive(false);
+                setIsCompleted(true);
+                onComplete();
+              }}
+              variant="outline"
+              className="mt-2"
+            >
+              Pular Hook
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
