@@ -105,7 +105,14 @@ export default function ProgressiveLessonComponent({
 
   const loadImageForSlide = async (slide: any) => {
     try {
-      const query = slide.imagePrompt || skeleton?.theme || 'education';
+      const query = slide.imagePrompt || skeleton?.theme || '';
+      
+      // Se não temos uma query válida, não buscar imagem
+      if (!query.trim()) {
+        console.log('⚠️ Query vazia, não buscando imagem');
+        return;
+      }
+      
       console.log('🖼️ Carregando imagem para slide:', currentSlide + 1, 'Prompt:', query);
       
       const response = await fetch('/api/unsplash/translate-search', {
@@ -375,6 +382,110 @@ export default function ProgressiveLessonComponent({
     
     const showFeedback = showAnswer;
 
+    // Se o slide tem estrutura card1/card2, renderizar em 2 cards
+    if (slide.card1 && slide.card2) {
+      return (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Card 1 - Pergunta */}
+          <Card className="border-l-4 border-l-blue-500">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">{slide.card1.title}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-gray-600 whitespace-pre-line">
+                <MarkdownRenderer 
+                  content={slide.card1.content} 
+                  className="text-gray-700 leading-relaxed"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Card 2 - Opções de Resposta */}
+          <Card className="border-l-4 border-l-green-500">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">{slide.card2.title}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Opções de resposta */}
+              <div className="grid gap-3">
+                {slide.card2.options?.map((option: string, index: number) => {
+                  const optionLetter = String.fromCharCode(65 + index);
+                  const isSelected = selectedAnswer === optionLetter;
+                  const isCorrectOption = index === correctAnswer;
+                  
+                  let buttonClass = "w-full p-4 text-left border-2 rounded-lg transition-all duration-200 ";
+                  
+                  if (showFeedback) {
+                    if (isCorrectOption) {
+                      buttonClass += "border-green-500 bg-green-50 text-green-800";
+                    } else if (isSelected && !isCorrectOption) {
+                      buttonClass += "border-red-500 bg-red-50 text-red-800";
+                    } else {
+                      buttonClass += "border-gray-300 bg-gray-50";
+                    }
+                  } else {
+                    buttonClass += isSelected 
+                      ? "border-blue-500 bg-blue-50 text-blue-800"
+                      : "border-gray-300 hover:border-gray-400 hover:bg-gray-50";
+                  }
+
+                  return (
+                    <button
+                      key={index}
+                      className={buttonClass}
+                      onClick={() => handleAnswerSelect(optionLetter)}
+                      disabled={showFeedback}
+                    >
+                      <div className="flex items-center space-x-3">
+                        {showFeedback && isCorrectOption && (
+                          <CheckCircle className="w-5 h-5 text-green-600" />
+                        )}
+                        {showFeedback && isSelected && !isCorrectOption && (
+                          <XCircle className="w-5 h-5 text-red-600" />
+                        )}
+                        <span className="font-semibold">{optionLetter})</span>
+                        <span>{option}</span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Botão de verificação */}
+              {!showFeedback && selectedAnswer && (
+                <Button 
+                  onClick={handleSubmitAnswer} 
+                  className="w-full bg-blue-600 hover:bg-blue-700"
+                >
+                  Verificar Resposta
+                </Button>
+              )}
+
+              {/* Explicação da resposta */}
+              {showFeedback && (
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-start space-x-3">
+                    <Lightbulb className="w-5 h-5 text-blue-600 mt-0.5" />
+                    <div>
+                      <h4 className="font-semibold text-blue-800 mb-2">Explicação:</h4>
+                      <div className="text-blue-700">
+                        <MarkdownRenderer 
+                          content={slide.card2.correctAnswer || 'Explicação da resposta correta'} 
+                          className="text-blue-700"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
+
+    // Fallback para slides sem estrutura card1/card2
     return (
       <div className="space-y-6">
         <div className="text-center">
@@ -460,6 +571,44 @@ export default function ProgressiveLessonComponent({
   };
 
   const renderExplanationSlide = (slide: any) => {
+    // Se o slide tem estrutura card1/card2, renderizar em 2 cards
+    if (slide.card1 && slide.card2) {
+      return (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Card 1 */}
+          <Card className="border-l-4 border-l-blue-500">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">{slide.card1.title}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-gray-600 whitespace-pre-line">
+                <MarkdownRenderer 
+                  content={slide.card1.content} 
+                  className="text-gray-700 leading-relaxed"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Card 2 */}
+          <Card className="border-l-4 border-l-green-500">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">{slide.card2.title}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-gray-600 whitespace-pre-line">
+                <MarkdownRenderer 
+                  content={slide.card2.content} 
+                  className="text-gray-700 leading-relaxed"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
+
+    // Fallback para slides sem estrutura card1/card2
     return (
       <div className="space-y-6">
         <div className="text-center">
@@ -596,9 +745,10 @@ export default function ProgressiveLessonComponent({
             <Image
               src={imageUrl}
               alt={currentSlideData.imagePrompt}
-              width={800}
-              height={256}
-              className="w-full h-64 object-cover rounded-lg"
+              width={1350}
+              height={1080}
+              className="w-full h-auto object-cover rounded-lg"
+              style={{ aspectRatio: '1350/1080' }}
             />
           </CardContent>
         </Card>

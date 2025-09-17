@@ -1,5 +1,5 @@
 // AI Configuration for HubEdu.ai
-// Uses GPT-4o-mini as default and GPT-5 for complex tasks
+// Uses GPT-4o-mini, GPT-5-chat-latest and Gemini 2.0 Flash Exp
 
 export interface AIConfig {
   model: string;
@@ -16,7 +16,7 @@ export interface TaskComplexity {
   rationale: string;
 }
 
-// Model configurations
+// Model configurations - GPT-4o-mini, GPT-5-chat-latest e Gemini 2.0 Flash Exp
 export const AI_MODELS = {
   'gpt-4o-mini': {
     model: 'gpt-4o-mini',
@@ -47,26 +47,6 @@ export const AI_MODELS = {
     presencePenalty: 0.0,
     costPer1kTokens: 0.00075, // Input tokens (estimated)
     costPer1kOutputTokens: 0.003, // Output tokens (estimated)
-  },
-  'gemini-1.5-pro': {
-    model: 'gemini-1.5-pro',
-    temperature: 0.7,
-    maxTokens: 4000,
-    topP: 0.9,
-    frequencyPenalty: 0.0,
-    presencePenalty: 0.0,
-    costPer1kTokens: 0.00125, // Input tokens
-    costPer1kOutputTokens: 0.005, // Output tokens
-  },
-  'gemini-1.5-flash': {
-    model: 'gemini-1.5-flash',
-    temperature: 0.7,
-    maxTokens: 2000,
-    topP: 0.9,
-    frequencyPenalty: 0.0,
-    presencePenalty: 0.0,
-    costPer1kTokens: 0.000075, // Input tokens
-    costPer1kOutputTokens: 0.0003, // Output tokens
   }
 } as const;
 

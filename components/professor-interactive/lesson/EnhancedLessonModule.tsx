@@ -162,8 +162,8 @@ const OptimizedSlideCard = React.memo(({
                   <Image
                     src={slide.card2.imageUrl}
                     alt={slide.card2.title}
-                    width={500}
-                    height={300}
+                    width={1350}
+                    height={1080}
                     className={`w-full h-auto object-cover rounded-lg transition-opacity duration-300 ${
                       imageLoaded ? 'opacity-100' : 'opacity-0'
                     }`}
@@ -171,8 +171,7 @@ const OptimizedSlideCard = React.memo(({
                     style={{ 
                       aspectRatio: '1350/1080',
                       width: 'auto',
-                      height: 'auto',
-                      maxHeight: '300px'
+                      height: 'auto'
                     }}
                     onLoad={handleImageLoad}
                     onError={handleImageError}

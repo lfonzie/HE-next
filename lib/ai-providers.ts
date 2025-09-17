@@ -58,7 +58,7 @@ export type ProviderType = keyof typeof AI_PROVIDERS
 export const PROVIDER_MODELS = {
   openai: {
     simple: 'gpt-4o-mini',
-    complex: 'gpt-5-chat-latest', // Usando gpt-5-chat-latest para tarefas complexas
+    complex: 'gpt-5-chat-latest',
     fast: 'gpt-4o-mini'
   },
   anthropic: {

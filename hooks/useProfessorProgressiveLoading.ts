@@ -100,7 +100,7 @@ export function useProfessorProgressiveLoading() {
       if ((slideIndex === 1 || slideIndex === 9) && slide.card2) {
         try {
           // Gerar query baseada no conteúdo do slide
-          const imageQuery = slide.card2.title || slide.title || query || 'education learning';
+          const imageQuery = slide.card2.title || slide.title || query || '';
           
           const imageResponse = await fetch('/api/unsplash/translate-search', {
             method: 'POST',

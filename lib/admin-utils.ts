@@ -1,0 +1,416 @@
+import { PrismaClient } from '@prisma/client';
+import OpenAI from 'openai';
+
+const prisma = new PrismaClient();
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+export async function getAdminStats() {
+  try {
+    const [
+      totalSchools,
+      totalUsers,
+      totalConversations,
+      totalModels,
+      totalPrompts,
+      totalLessons,
+      totalEnemQuestions,
+      totalEnemSessions,
+      recentAnalytics,
+      openaiUsage
+    ] = await Promise.all([
+      prisma.schools.count(),
+      prisma.user.count(),
+      prisma.conversations.count(),
+      prisma.models.count(),
+      prisma.system_messages.count(),
+      prisma.lessons.count(),
+      prisma.enemQuestion.count(),
+      prisma.enemSession.count(),
+      prisma.analytics.findMany({
+        take: 100,
+        orderBy: { date: 'desc' },
+        include: {
+          schools: true
+        }
+      }),
+      getOpenAIUsage()
+    ]);
+
+    // Calculate total tokens used from analytics
+    const totalTokensUsed = recentAnalytics.reduce((sum, analytics) => sum + analytics.tokens_used, 0);
+    
+    // Calculate average response time
+    const avgResponseTime = recentAnalytics
+      .filter(a => a.response_time)
+      .reduce((sum, analytics) => sum + (analytics.response_time || 0), 0) / 
+      recentAnalytics.filter(a => a.response_time).length || 0;
+
+    return {
+      totalSchools,
+      totalUsers,
+      totalConversations,
+      totalModels,
+      totalPrompts,
+      totalLessons,
+      totalEnemQuestions,
+      totalEnemSessions,
+      totalTokensUsed,
+      avgResponseTime: Math.round(avgResponseTime),
+      openaiUsage
+    };
+  } catch (error) {
+    console.error('Error fetching admin stats:', error);
+    throw error;
+  }
+}
+
+export async function getSchoolsData() {
+  try {
+    const schools = await prisma.schools.findMany({
+      include: {
+        analytics: {
+          select: {
+            tokens_used: true,
+            response_time: true
+          }
+        },
+        school_prompts: {
+          select: {
+            id: true,
+            module: true,
+            is_active: true
+          }
+        },
+        _count: {
+          select: {
+            analytics: true
+          }
+        }
+      },
+      orderBy: {
+        created_at: 'desc'
+      }
+    });
+
+    return schools.map(school => ({
+      id: school.id,
+      name: school.name,
+      domain: school.domain,
+      plan: school.plan,
+      city: school.city,
+      state: school.state,
+      created_at: school.created_at,
+      totalUsers: school._count.analytics,
+      totalPrompts: school.school_prompts.length,
+      activePrompts: school.school_prompts.filter(p => p.is_active).length,
+      totalTokensUsed: school.analytics.reduce((sum, a) => sum + a.tokens_used, 0),
+      avgResponseTime: school.analytics.length > 0 
+        ? Math.round(school.analytics.reduce((sum, a) => sum + (a.response_time || 0), 0) / school.analytics.length)
+        : 0
+    }));
+  } catch (error) {
+    console.error('Error fetching schools data:', error);
+    throw error;
+  }
+}
+
+export async function getUsersData() {
+  try {
+    const users = await prisma.user.findMany({
+      include: {
+        schools: true,
+        conversations: {
+          select: {
+            id: true,
+            token_count: true,
+            created_at: true
+          }
+        },
+        analytics: {
+          select: {
+            tokens_used: true,
+            module: true,
+            created_at: true
+          }
+        }
+      },
+      orderBy: {
+        created_at: 'desc'
+      }
+    });
+
+    return users.map(user => ({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      school: user.schools?.name || 'N/A',
+      created_at: user.created_at,
+      totalConversations: user.conversations.length,
+      totalTokensUsed: user.analytics.reduce((sum, a) => sum + a.tokens_used, 0),
+      lastActivity: user.analytics.length > 0 
+        ? user.analytics.sort((a, b) => b.created_at.getTime() - a.created_at.getTime())[0].created_at
+        : user.created_at
+    }));
+  } catch (error) {
+    console.error('Error fetching users data:', error);
+    throw error;
+  }
+}
+
+export async function getConversationsData() {
+  try {
+    const conversations = await prisma.conversations.findMany({
+      include: {
+        user: {
+          select: {
+            name: true,
+            email: true,
+            schools: true
+          }
+        },
+        message_votes: {
+          select: {
+            is_upvoted: true
+          }
+        }
+      },
+      orderBy: {
+        created_at: 'desc'
+      },
+      take: 1000 // Limit for performance
+    });
+
+    return conversations.map(conv => ({
+      id: conv.id,
+      userId: conv.user_id,
+      userName: conv.user?.name || 'Unknown',
+      userEmail: conv.user?.email || 'Unknown',
+      school: conv.user?.schools?.name || 'N/A',
+      module: conv.module,
+      subject: conv.subject,
+      grade: conv.grade,
+      model: conv.model,
+      tokenCount: conv.token_count,
+      messageCount: Array.isArray(conv.messages) ? conv.messages.length : 0,
+      upvotes: conv.message_votes.filter(v => v.is_upvoted).length,
+      downvotes: conv.message_votes.filter(v => !v.is_upvoted).length,
+      created_at: conv.created_at,
+      updated_at: conv.updated_at
+    }));
+  } catch (error) {
+    console.error('Error fetching conversations data:', error);
+    throw error;
+  }
+}
+
+export async function getModelsData() {
+  try {
+    const models = await prisma.models.findMany({
+      include: {
+        _count: {
+          select: {
+            // We'll need to count conversations that used each model
+          }
+        }
+      },
+      orderBy: {
+        created_at: 'desc'
+      }
+    });
+
+    // Get usage statistics for each model
+    const modelUsage = await Promise.all(
+      models.map(async (model) => {
+        const conversations = await prisma.conversations.count({
+          where: { model: model.name }
+        });
+        
+        const analytics = await prisma.analytics.findMany({
+          where: { model: model.name },
+          select: {
+            tokens_used: true,
+            response_time: true
+          }
+        });
+
+        const totalTokens = analytics.reduce((sum, a) => sum + a.tokens_used, 0);
+        const avgResponseTime = analytics.length > 0 
+          ? Math.round(analytics.reduce((sum, a) => sum + (a.response_time || 0), 0) / analytics.length)
+          : 0;
+
+        return {
+          id: model.id,
+          name: model.name,
+          available: model.available,
+          isDefault: model.is_default,
+          costPerInput: model.cost_per_input,
+          costPerOutput: model.cost_per_output,
+          totalConversations: conversations,
+          totalTokensUsed: totalTokens,
+          avgResponseTime,
+          created_at: model.created_at
+        };
+      })
+    );
+
+    return modelUsage;
+  } catch (error) {
+    console.error('Error fetching models data:', error);
+    throw error;
+  }
+}
+
+export async function getPromptsData() {
+  try {
+    const [systemPrompts, schoolPrompts] = await Promise.all([
+      prisma.system_messages.findMany({
+        orderBy: {
+          created_at: 'desc'
+        }
+      }),
+      prisma.school_prompts.findMany({
+        include: {
+          schools: {
+            select: {
+              name: true,
+              domain: true
+            }
+          }
+        },
+        orderBy: {
+          created_at: 'desc'
+        }
+      })
+    ]);
+
+    const systemPromptsData = systemPrompts.map(prompt => ({
+      id: prompt.id,
+      module: prompt.module,
+      text: prompt.system_prompt,
+      description: prompt.description,
+      isActive: prompt.is_active,
+      temperature: prompt.temperature,
+      maxTokens: prompt.max_tokens,
+      tone: prompt.tone,
+      type: 'system',
+      school: null,
+      created_at: prompt.created_at
+    }));
+
+    const schoolPromptsData = schoolPrompts.map(prompt => ({
+      id: prompt.id,
+      module: prompt.module,
+      text: prompt.prompt,
+      description: null,
+      isActive: prompt.is_active,
+      temperature: null,
+      maxTokens: null,
+      tone: null,
+      type: 'school',
+      school: prompt.schools?.name || 'Unknown',
+      created_at: prompt.created_at
+    }));
+
+    return [...systemPromptsData, ...schoolPromptsData];
+  } catch (error) {
+    console.error('Error fetching prompts data:', error);
+    throw error;
+  }
+}
+
+export async function getSystemInfo() {
+  try {
+    const [
+      dbStats,
+      recentErrors,
+      featureFlags,
+      jobs
+    ] = await Promise.all([
+      // Database statistics
+      prisma.$queryRaw`
+        SELECT 
+          schemaname,
+          tablename,
+          n_tup_ins as inserts,
+          n_tup_upd as updates,
+          n_tup_del as deletes,
+          n_live_tup as live_tuples,
+          n_dead_tup as dead_tuples
+        FROM pg_stat_user_tables 
+        ORDER BY n_live_tup DESC
+        LIMIT 10
+      `,
+      // Recent errors
+      prisma.errors.findMany({
+        take: 10,
+        orderBy: {
+          occurred_at: 'desc'
+        }
+      }),
+      // Feature flags
+      prisma.feature_flags.findMany(),
+      // Recent jobs
+      prisma.jobs.findMany({
+        take: 10,
+        orderBy: {
+          queued_at: 'desc'
+        }
+      })
+    ]);
+
+    return {
+      dbStats,
+      recentErrors,
+      featureFlags,
+      jobs,
+      environment: process.env.NODE_ENV,
+      database: 'PostgreSQL',
+      apiIntegration: 'OpenAI',
+      adminTokenConfigured: !!process.env.ADMIN_TOKEN,
+      deploymentDate: new Date().toISOString()
+    };
+  } catch (error) {
+    console.error('Error fetching system info:', error);
+    throw error;
+  }
+}
+
+async function getOpenAIUsage() {
+  try {
+    // Get usage from our analytics table
+    const usage = await prisma.analytics.aggregate({
+      _sum: {
+        tokens_used: true
+      },
+      _count: {
+        id: true
+      }
+    });
+
+    // Get cost data from cost_log table
+    const costData = await prisma.cost_log.aggregate({
+      _sum: {
+        cost_usd: true,
+        cost_brl: true
+      }
+    });
+
+    return {
+      totalTokens: usage._sum.tokens_used || 0,
+      totalRequests: usage._count.id || 0,
+      estimatedCostUSD: costData._sum.cost_usd || 0,
+      estimatedCostBRL: costData._sum.cost_brl || 0
+    };
+  } catch (error) {
+    console.error('Error fetching OpenAI usage:', error);
+    return {
+      totalTokens: 0,
+      totalRequests: 0,
+      estimatedCostUSD: 0,
+      estimatedCostBRL: 0
+    };
+  }
+}
+
+export { prisma };

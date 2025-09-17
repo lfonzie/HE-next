@@ -75,16 +75,26 @@ function generatePlaceholderImages(count: number): string[] {
 
 export async function populateLessonWithImages(lessonData: any): Promise<any> {
   try {
+    console.log('🖼️ Populando imagens apenas no primeiro e último slide')
+    
     const slidesWithImages = await Promise.all(
-      lessonData.slides.map(async (slide: any) => {
-        if (slide.imagePrompt) {
+      lessonData.slides.map(async (slide: any, index: number) => {
+        // Apenas primeiro slide (index 0) e último slide (index slides.length - 1)
+        const isFirstSlide = index === 0
+        const isLastSlide = index === lessonData.slides.length - 1
+        
+        if (slide.imagePrompt && (isFirstSlide || isLastSlide)) {
           const images = await getUnsplashImages(slide.imagePrompt, 1)
+          console.log(`✅ Imagem adicionada ao slide ${index + 1} (${isFirstSlide ? 'primeiro' : 'último'})`)
           return {
             ...slide,
             imageUrl: images[0] || null
           }
         }
-        return slide
+        
+        // Para slides intermediários, remover imageUrl se existir
+        const { imageUrl, ...slideWithoutImage } = slide
+        return slideWithoutImage
       })
     )
 

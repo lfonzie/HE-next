@@ -39,7 +39,12 @@
     "test:ci": "npm run test:unit && npm run test:integration && npm run test:e2e",
     "migrate:from-hubedu": "node scripts/migrate-from-hubedu.js",
     "migrate:finalize": "node scripts/finalize-migration.js",
-    "migrate:complete": "npm run migrate:from-hubedu && npm run migrate:finalize"
+    "migrate:complete": "npm run migrate:from-hubedu && npm run migrate:finalize",
+    "benchmark": "node scripts/run-benchmark.js",
+    "benchmark:quick": "node scripts/benchmark-quick.js",
+    "benchmark:aulas": "node scripts/benchmark-aulas-final.js",
+    "benchmark:models": "node scripts/benchmark-real-models.js",
+    "benchmark:multi": "node scripts/benchmark-models-comparison.js"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.17",
@@ -82,7 +87,7 @@
     "@tanstack/react-query": "^5.0.0",
     "@tanstack/react-query-devtools": "^5.0.0",
     "ai": "^5.0.44",
-    "axios": "^1.6.0",
+    "axios": "^1.12.2",
     "bcryptjs": "^2.4.3",
     "canvg": "^4.0.3",
     "class-variance-authority": "^0.7.0",
@@ -125,6 +130,7 @@
     "sonner": "^1.0.0",
     "tailwind-merge": "^2.0.0",
     "tailwindcss-animate": "^1.0.7",
+    "unsplash-js": "^7.0.20",
     "wouter": "^3.0.0",
     "y18n": "^5.0.8",
     "zod": "^3.25.76",

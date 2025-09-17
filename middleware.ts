@@ -106,6 +106,20 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/dashboard', request.url))
     }
   }
+
+  // Admin API routes authentication
+  if (request.nextUrl.pathname.startsWith('/api/admin')) {
+    const authHeader = request.headers.get('authorization');
+    const adminToken = process.env.ADMIN_TOKEN;
+    
+    if (!adminToken) {
+      return NextResponse.json({ error: 'Admin token not configured' }, { status: 500 });
+    }
+    
+    if (!authHeader || authHeader !== `Bearer ${adminToken}`) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+  }
   
   return NextResponse.next()
 }

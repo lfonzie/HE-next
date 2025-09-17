@@ -27,7 +27,7 @@ export async function classifySubject(query: string): Promise<string> {
     // Try OpenAI classification first
     if (process.env.OPENAI_API_KEY) {
       const completion = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
+        model: "gpt-4o-mini",
         messages: [
           {
             role: "system",

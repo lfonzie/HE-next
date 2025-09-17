@@ -112,7 +112,7 @@ Responda APENAS com JSON válido:
             type: "explanation",
             objective: "Apresentar o tema e motivar o aprendizado",
             contentSummary: "Contexto histórico e relevância atual do tema",
-            imagePrompt: `${query} education learning`
+            imagePrompt: query
           },
           {
             slideNumber: 2,
@@ -120,7 +120,7 @@ Responda APENAS com JSON válido:
             type: "explanation", 
             objective: "Estabelecer os conceitos básicos",
             contentSummary: "Definições importantes e termos-chave",
-            imagePrompt: `${query} concepts fundamentals`
+            imagePrompt: query
           }
         ]
       };

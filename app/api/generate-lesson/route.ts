@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import OpenAI from 'openai'
 import { STRUCTURED_LESSON_PROMPT } from '@/lib/system-prompts/lessons-structured'
+import { PROFESSIONAL_PACING_LESSON_PROMPT, validateProfessionalPacing, calculatePacingMetrics } from '@/lib/system-prompts/lessons-professional-pacing'
 import { populateLessonWithImages } from '@/lib/unsplash-integration'
 import { AutoImageService } from '@/lib/autoImageService'
 
@@ -14,11 +15,15 @@ const openai = new OpenAI({
 // Função para popular imagens com tradução automática
 async function populateLessonWithImagesTranslated(lessonData: any, topic: string): Promise<any> {
   try {
-    console.log('🖼️ Populando imagens com tradução para:', topic)
+    console.log('🖼️ Populando imagens apenas no primeiro e último slide para:', topic)
     
     const slidesWithImages = await Promise.all(
       lessonData.slides.map(async (slide: any, index: number) => {
-        if (slide.imagePrompt) {
+        // Apenas primeiro slide (index 0) e último slide (index slides.length - 1)
+        const isFirstSlide = index === 0
+        const isLastSlide = index === lessonData.slides.length - 1
+        
+        if (slide.imagePrompt && (isFirstSlide || isLastSlide)) {
           try {
             // Usar nossa nova API de tradução
             const response = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/unsplash/translate-search`, {
@@ -36,7 +41,7 @@ async function populateLessonWithImagesTranslated(lessonData: any, topic: string
             if (response.ok) {
               const data = await response.json()
               if (data.photos && data.photos.length > 0) {
-                console.log(`✅ Imagem traduzida para slide ${index + 1}:`, data.englishTheme)
+                console.log(`✅ Imagem traduzida para slide ${index + 1} (${isFirstSlide ? 'primeiro' : 'último'}):`, data.englishTheme)
                 return {
                   ...slide,
                   imageUrl: data.photos[0].urls.regular,
@@ -52,7 +57,10 @@ async function populateLessonWithImagesTranslated(lessonData: any, topic: string
             return slide
           }
         }
-        return slide
+        
+        // Para slides intermediários, remover imageUrl se existir
+        const { imageUrl, translatedPrompt, ...slideWithoutImage } = slide
+        return slideWithoutImage
       })
     )
 
@@ -69,7 +77,7 @@ async function populateLessonWithImagesTranslated(lessonData: any, topic: string
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    const { topic, demoMode, subject, grade, generateSingleSlide } = await request.json()
+    const { topic, demoMode, subject, grade, generateSingleSlide, pacingMode = 'professional' } = await request.json()
 
     if (!topic) {
       return NextResponse.json({ 
@@ -116,7 +124,7 @@ Retorne APENAS um objeto JSON com a estrutura do slide:
 }`
 
       const completion = await openai.chat.completions.create({
-        model: 'gpt-4o',
+        model: 'gpt-4o-mini',
         messages: [{ role: 'user', content: slidePrompt }],
         temperature: 0.7,
         max_tokens: 2000
@@ -133,8 +141,8 @@ Retorne APENAS um objeto JSON com a estrutura do slide:
       })
     }
 
-    // Use structured lesson prompt for consistent 9-slide format
-    const prompt = `${STRUCTURED_LESSON_PROMPT}
+    // Use professional pacing prompt for consistent 9-slide format
+    const prompt = `${PROFESSIONAL_PACING_LESSON_PROMPT}
 
 Para o tópico: "${topic}"
 
@@ -144,15 +152,15 @@ Primeiro, analise o tópico e determine automaticamente:
 3. O contexto educacional e pré-requisitos
 4. Objetivos de aprendizagem apropriados para a série inferida
 
-Crie uma aula seguindo EXATAMENTE a estrutura de 9 slides especificada acima.
+Crie uma aula seguindo EXATAMENTE a estrutura de 9 slides especificada acima com pacing profissional.
 
 IMPORTANTE: Responda APENAS com JSON válido, sem texto adicional, explicações ou formatação markdown.`
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: 'gpt-4o-mini',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.7,
-      max_tokens: 8000
+      max_tokens: 10000 // Aumentado para acomodar conteúdo mais extenso
     })
 
     let lessonContent = completion.choices[0].message.content || '{}'
@@ -176,6 +184,18 @@ IMPORTANTE: Responda APENAS com JSON válido, sem texto adicional, explicações
     let lessonData
     try {
       lessonData = JSON.parse(lessonContent)
+      
+      // Validar pacing profissional
+      const validation = validateProfessionalPacing(lessonData)
+      if (!validation.isValid) {
+        console.warn('Problemas de pacing detectados:', validation.issues)
+        // Adicionar warnings ao response mas não falhar
+        lessonData.pacingWarnings = validation.issues
+      }
+
+      // Adicionar métricas calculadas
+      lessonData.pacingMetrics = validation.metrics
+      
     } catch (parseError) {
       console.error('Erro ao fazer parse do JSON:', parseError)
       console.error('Conteúdo que causou erro:', lessonContent.substring(0, 1000))
@@ -343,7 +363,7 @@ IMPORTANTE: Responda APENAS com JSON válido, sem texto adicional, explicações
             user_id: session.user.id,
             session_id: `lesson_gen_${Date.now()}`,
             provider: 'openai',
-            model: 'gpt-4o',
+            model: 'gpt-4o-mini',
             prompt_tokens: completion.usage?.prompt_tokens || 0,
             completion_tokens: completion.usage?.completion_tokens || 0,
             total_tokens: completion.usage?.total_tokens || 0,
@@ -374,7 +394,9 @@ IMPORTANTE: Responda APENAS com JSON válido, sem texto adicional, explicações
         summary: lessonWithImages.summary,
         nextSteps: lessonWithImages.nextSteps,
         demoMode: demoMode || !lesson
-      }
+      },
+      pacingMetrics: lessonWithImages.pacingMetrics || null,
+      warnings: lessonWithImages.pacingWarnings || null
     }
 
     return NextResponse.json(responseData)

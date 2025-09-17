@@ -42,7 +42,7 @@ export default function UnsplashSlideCard({
       const words = slide.content.split(' ').slice(0, 3).join(' ');
       return words;
     }
-    return 'education learning';
+    return '';
   };
 
   const { imageUrl, isLoading: imageLoading, error: imageError, refetch } = useUnsplashImage(
@@ -135,8 +135,8 @@ export default function UnsplashSlideCard({
                       <Image
                         src={imageUrl}
                         alt={slide.card2.title || 'Imagem educacional'}
-                        width={500}
-                        height={300}
+                        width={1350}
+                        height={1080}
                         className={`w-full h-auto object-cover rounded-lg transition-opacity duration-300 ${
                           imageLoaded ? 'opacity-100' : 'opacity-0'
                         }`}
@@ -144,8 +144,7 @@ export default function UnsplashSlideCard({
                         style={{ 
                           aspectRatio: '1350/1080',
                           width: 'auto',
-                          height: 'auto',
-                          maxHeight: '300px'
+                          height: 'auto'
                         }}
                         onLoad={handleImageLoad}
                         onError={handleImageError}

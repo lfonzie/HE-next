@@ -163,9 +163,10 @@ export default function Slide({ slide, slideNumber, totalSlides }: SlideProps) {
                 <Image
                   src={`/api/image?prompt=${encodeURIComponent(slide.image_prompt)}`}
                   alt={slide.title}
-                  width={400}
-                  height={300}
+                  width={1350}
+                  height={1080}
                   className="w-full h-auto rounded-lg shadow-sm transition-transform group-hover:scale-105"
+                  style={{ aspectRatio: '1350/1080' }}
                   loading="lazy"
                   onError={(e) => {
                     // Hide image if it fails to load

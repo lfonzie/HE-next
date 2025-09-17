@@ -43,7 +43,7 @@ export const USE_CASE_ROUTING = {
   }
 } as const
 
-// Configuração de modelos por complexidade - GPT-4o-mini como padrão
+// Configuração de modelos por complexidade - GPT-4o-mini, GPT-5-chat-latest e Gemini 2.0 Flash Exp
 export const COMPLEXITY_MODELS = {
   simple: {
     openai: 'gpt-4o-mini',
@@ -67,14 +67,14 @@ export const COMPLEXITY_MODELS = {
     groq: 'llama-3.1-8b-instant'
   },
   creative: {
-    openai: 'gpt-4o-chat-latest',
+    openai: 'gpt-5-chat-latest',
     anthropic: 'claude-3-sonnet-20240229',
     google: 'gemini-2.0-flash-exp',
     mistral: 'mistral-large-latest',
     groq: 'llama-3.1-70b-versatile'
   },
   analytical: {
-    openai: 'gpt-4o-chat-latest',
+    openai: 'gpt-5-chat-latest',
     anthropic: 'claude-3-sonnet-20240229',
     google: 'gemini-2.0-flash-exp',
     mistral: 'mistral-large-latest',
@@ -82,17 +82,9 @@ export const COMPLEXITY_MODELS = {
   }
 } as const
 
-// Configurações específicas por modelo
+// Configurações específicas por modelo - GPT-4o-mini, GPT-5-chat-latest e Gemini 2.0 Flash Exp
 export const MODEL_CONFIGS = {
-  // OpenAI Models
-  'gpt-4o-chat-latest': {
-    temperature: 0.7,
-    maxTokens: 4000,
-    timeout: 30000,
-    cost: 'high',
-    speed: 'medium',
-    quality: 'very-high'
-  },
+  // OpenAI Models - GPT-4o-mini e GPT-5-chat-latest
   'gpt-4o-mini': {
     temperature: 0.7,
     maxTokens: 2000,
@@ -108,14 +100,6 @@ export const MODEL_CONFIGS = {
     cost: 'high',
     speed: 'medium',
     quality: 'very-high'
-  },
-  'gpt-3.5-turbo': {
-    temperature: 0.7,
-    maxTokens: 1500,
-    timeout: 15000,
-    cost: 'very-low',
-    speed: 'very-fast',
-    quality: 'good'
   },
   
   // Anthropic Models

@@ -83,9 +83,9 @@ export async function POST(request: NextRequest) {
           color: photo.color,
           likes: photo.likes
         })),
-        query: 'education learning',
+        query: '',
         theme: themeInfo.theme || query,
-        englishTheme: 'education learning',
+        englishTheme: '',
         fallback: true,
         generic: true
       });
@@ -195,7 +195,7 @@ function getAlternativeQuery(category?: string): string {
     'educacao-fisica': 'sports fitness health'
   };
 
-  return alternatives[category || ''] || 'education learning';
+  return alternatives[category || ''] || '';
 }
 
 /**

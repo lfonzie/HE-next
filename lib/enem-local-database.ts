@@ -100,15 +100,26 @@ class EnemLocalDatabase {
     const years = year ? [year] : await this.getAvailableYears()
     let allQuestions: LocalEnemQuestion[] = []
 
+    console.log(`🔍 Buscando questões com filtros:`, { year, discipline, language, limit, random })
+
     for (const targetYear of years) {
       try {
+        // Busca mais questões para compensar as que podem ser puladas
+        const multiplier = year ? 2 : 1.5 // Se especificou ano, busca mais questões
+        const questionsToRequest = Math.ceil(limit * multiplier)
+        
         const yearQuestions = await this.getQuestionsByYear(targetYear, {
           discipline,
           language,
-          limit: limit * 2, // Busca mais para ter opções
+          limit: questionsToRequest,
           random: false
         })
         allQuestions.push(...yearQuestions)
+        
+        // Se já temos questões suficientes e especificou um ano, para de buscar
+        if (year && allQuestions.length >= limit) {
+          break
+        }
       } catch (error) {
         console.error(`Error loading questions for year ${targetYear}:`, error)
       }
@@ -131,7 +142,11 @@ class EnemLocalDatabase {
     }
 
     // Limita o resultado
-    return filteredQuestions.slice(0, limit)
+    const finalQuestions = filteredQuestions.slice(0, limit)
+    
+    console.log(`✅ Retornando ${finalQuestions.length} questões válidas (solicitadas: ${limit})`)
+    
+    return finalQuestions
   }
 
   /**
@@ -169,31 +184,93 @@ class EnemLocalDatabase {
         questionsToLoad = questionsToLoad.filter((q: any) => q.language === filters.language)
       }
 
-      // Limita a quantidade se especificado
-      if (filters.limit) {
-        questionsToLoad = questionsToLoad.slice(0, filters.limit)
-      }
-
-      // Carrega as questões individuais
+      // Carrega as questões individuais, pulando as que não existem
       const questions: LocalEnemQuestion[] = []
+      const skippedQuestions: Array<{index: number, reason: string}> = []
       const questionsPath = path.join(yearPath, 'questions')
+
+      console.log(`📚 Carregando questões do ano ${year}...`)
 
       for (const questionInfo of questionsToLoad) {
         try {
+          // Verifica se a questão existe antes de tentar carregar
+          const exists = await this.questionExists(year, questionInfo.index, questionInfo.language)
+          if (!exists) {
+            skippedQuestions.push({
+              index: questionInfo.index,
+              reason: 'questão não encontrada nos arquivos'
+            })
+            continue
+          }
+
           const question = await this.loadQuestion(year, questionInfo.index, questionInfo.language)
           if (question) {
             questions.push(question)
+          } else {
+            skippedQuestions.push({
+              index: questionInfo.index,
+              reason: 'erro ao carregar questão'
+            })
           }
         } catch (error) {
           console.error(`Error loading question ${questionInfo.index} from year ${year}:`, error)
+          skippedQuestions.push({
+            index: questionInfo.index,
+            reason: `erro: ${error instanceof Error ? error.message : 'erro desconhecido'}`
+          })
         }
       }
 
-      this.setCache(cacheKey, questions)
-      return questions
+      // Log das questões puladas
+      if (skippedQuestions.length > 0) {
+        console.log(`⚠️ ${skippedQuestions.length} questões puladas em ${year}:`)
+        skippedQuestions.forEach(skipped => {
+          console.log(`   - Questão ${skipped.index}: ${skipped.reason}`)
+        })
+      }
+
+      console.log(`✅ ${questions.length} questões carregadas com sucesso de ${year}`)
+
+      // Limita a quantidade se especificado
+      const finalQuestions = filters.limit ? questions.slice(0, filters.limit) : questions
+
+      this.setCache(cacheKey, finalQuestions)
+      return finalQuestions
     } catch (error) {
       console.error(`Error loading questions for year ${year}:`, error)
       return []
+    }
+  }
+
+  /**
+   * Verifica se uma questão existe nos arquivos
+   */
+  async questionExists(year: number, index: number, language?: string | null): Promise<boolean> {
+    try {
+      const yearPath = path.join(this.basePath, year.toString(), 'questions')
+      
+      // Determina o caminho da questão baseado no idioma
+      let questionPath: string
+      if (language && language !== 'null') {
+        questionPath = path.join(yearPath, `${index}-${language}`)
+      } else {
+        questionPath = path.join(yearPath, index.toString())
+      }
+
+      // Se não encontrou com idioma, tenta sem
+      if (!fs.existsSync(questionPath)) {
+        questionPath = path.join(yearPath, index.toString())
+      }
+
+      if (!fs.existsSync(questionPath)) {
+        return false
+      }
+
+      const detailsPath = path.join(questionPath, 'details.json')
+      return fs.existsSync(detailsPath)
+    } catch (error) {
+      console.error(`Error checking if question ${index} exists for year ${year}:`, error)
+      return false
     }
   }
 
@@ -218,13 +295,13 @@ class EnemLocalDatabase {
       }
 
       if (!fs.existsSync(questionPath)) {
-        console.log(`Question ${index} not found for year ${year}`)
+        console.log(`⚠️ Questão ${index} não encontrada para o ano ${year} - pulando`)
         return null
       }
 
       const detailsPath = path.join(questionPath, 'details.json')
       if (!fs.existsSync(detailsPath)) {
-        console.log(`Details file not found for question ${index} in year ${year}`)
+        console.log(`⚠️ Arquivo details.json não encontrado para questão ${index} do ano ${year} - pulando`)
         return null
       }
 
@@ -371,6 +448,89 @@ class EnemLocalDatabase {
     return stats
   }
 
+  /**
+   * Estatísticas das questões realmente disponíveis (que existem nos arquivos)
+   */
+  async getAvailableStats(): Promise<{
+    totalYears: number
+    totalAvailableQuestions: number
+    totalListedQuestions: number
+    availabilityRate: number
+    questionsByYear: Record<number, { listed: number, available: number, rate: number }>
+    questionsByDiscipline: Record<string, { listed: number, available: number, rate: number }>
+  }> {
+    const years = await this.getAvailableYears()
+    const stats = {
+      totalYears: years.length,
+      totalAvailableQuestions: 0,
+      totalListedQuestions: 0,
+      availabilityRate: 0,
+      questionsByYear: {} as Record<number, { listed: number, available: number, rate: number }>,
+      questionsByDiscipline: {} as Record<string, { listed: number, available: number, rate: number }>
+    }
+
+    console.log('📊 Calculando estatísticas de disponibilidade das questões...')
+
+    for (const year of years) {
+      try {
+        const yearPath = path.join(this.basePath, year.toString(), 'details.json')
+        const data = fs.readFileSync(yearPath, 'utf-8')
+        const yearDetails = JSON.parse(data)
+        const listedQuestions = yearDetails.questions || []
+        
+        let availableCount = 0
+        const yearStats = { listed: listedQuestions.length, available: 0, rate: 0 }
+
+        for (const questionInfo of listedQuestions) {
+          const exists = await this.questionExists(year, questionInfo.index, questionInfo.language)
+          if (exists) {
+            availableCount++
+          }
+        }
+
+        yearStats.available = availableCount
+        yearStats.rate = listedQuestions.length > 0 ? (availableCount / listedQuestions.length) * 100 : 0
+
+        stats.totalListedQuestions += listedQuestions.length
+        stats.totalAvailableQuestions += availableCount
+        stats.questionsByYear[year] = yearStats
+
+        // Conta por disciplina
+        for (const q of listedQuestions) {
+          const discipline = q.discipline
+          if (!stats.questionsByDiscipline[discipline]) {
+            stats.questionsByDiscipline[discipline] = { listed: 0, available: 0, rate: 0 }
+          }
+          stats.questionsByDiscipline[discipline].listed++
+          
+          const exists = await this.questionExists(year, q.index, q.language)
+          if (exists) {
+            stats.questionsByDiscipline[discipline].available++
+          }
+        }
+
+        console.log(`📅 ${year}: ${availableCount}/${listedQuestions.length} questões disponíveis (${yearStats.rate.toFixed(1)}%)`)
+
+      } catch (error) {
+        console.error(`Error getting available stats for year ${year}:`, error)
+      }
+    }
+
+    // Calcula taxas por disciplina
+    Object.keys(stats.questionsByDiscipline).forEach(discipline => {
+      const discStats = stats.questionsByDiscipline[discipline]
+      discStats.rate = discStats.listed > 0 ? (discStats.available / discStats.listed) * 100 : 0
+    })
+
+    stats.availabilityRate = stats.totalListedQuestions > 0 ? 
+      (stats.totalAvailableQuestions / stats.totalListedQuestions) * 100 : 0
+
+    console.log(`📊 Taxa geral de disponibilidade: ${stats.availabilityRate.toFixed(1)}%`)
+    console.log(`📊 Total: ${stats.totalAvailableQuestions}/${stats.totalListedQuestions} questões disponíveis`)
+
+    return stats
+  }
+
   // Métodos de cache
   private getFromCache(key: string): any {
     const cached = this.cache.get(key)
@@ -420,3 +580,4 @@ export const DISCIPLINE_MAPPING = {
   'ciencias-natureza': 'Ciências da Natureza e suas Tecnologias',
   'matematica': 'Matemática e suas Tecnologias'
 } as const
+

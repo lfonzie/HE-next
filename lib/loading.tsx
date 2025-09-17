@@ -477,7 +477,7 @@ const LoadingCard: React.FC<{
 };
 
 // ============================================================================
-// OVERLAY GLOBAL MELHORADO
+// OVERLAY GLOBAL MELHORADO - USANDO SISTEMA UNIFICADO
 // ============================================================================
 
 const LoadingOverlay: React.FC = () => {

@@ -52,7 +52,7 @@ Responda APENAS com JSON válido:
   "correctOption": 0,
   "helpMessage": "Dica para ajudar na resposta",
   "correctAnswer": "Explicação detalhada da resposta correta com **formatação markdown**",
-  "imagePrompt": "${slideInfo.imagePrompt || query + ' education'}"
+  "imagePrompt": "${slideInfo.imagePrompt || query}"
 }`;
 
       userPrompt = `Crie uma pergunta ÚNICA sobre ${query} para o slide ${slideNumber}.
@@ -89,7 +89,7 @@ Responda APENAS com JSON válido:
   "type": "explanation",
   "title": "${slideInfo.title}",
   "content": "Conteúdo principal detalhado com **formatação markdown** e quebras de linha adequadas",
-  "imagePrompt": "${slideInfo.imagePrompt || query + ' education'}"
+  "imagePrompt": "${slideInfo.imagePrompt || query}"
 }`;
 
       userPrompt = `Crie um slide de ${slideType} sobre ${query} para o slide ${slideNumber}.
@@ -162,7 +162,7 @@ O slide deve:
           helpMessage: `Pense no que aprendemos sobre ${query} e considere o objetivo deste slide.`,
           correctAnswer: `A resposta correta é a **Opção A**, pois representa uma compreensão sólida dos conceitos fundamentais de ${query}.`
         }),
-        imagePrompt: slideInfo.imagePrompt || `${query} education`
+        imagePrompt: slideInfo.imagePrompt || query
       };
     }
 

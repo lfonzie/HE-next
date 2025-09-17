@@ -12,7 +12,7 @@ import MarkdownRenderer from '@/components/ui/MarkdownRenderer'
 interface Question {
   q: string
   options: string[]
-  correct: number
+  correct: number | string // Support both number (0,1,2,3) and string ('a','b','c','d') formats
   explanation?: string
 }
 
@@ -31,6 +31,14 @@ export default function QuizComponent({
   showExplanations = true,
   allowRetry = false
 }: QuizComponentProps) {
+  
+  // Helper function to normalize correct answer format
+  const normalizeCorrectAnswer = (correct: number | string): number => {
+    if (typeof correct === 'string') {
+      return correct.charCodeAt(0) - 97 // 'a' = 0, 'b' = 1, etc.
+    }
+    return correct
+  }
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
   const [answers, setAnswers] = useState<(number | null)[]>(new Array(questions.length).fill(null))
@@ -114,9 +122,10 @@ export default function QuizComponent({
   }
 
   const handleComplete = () => {
-    const correctAnswers = answers.filter((answer, index) => 
-      answer === questions[index].correct
-    ).length
+    const correctAnswers = answers.filter((answer, index) => {
+      const correctIndex = normalizeCorrectAnswer(questions[index].correct)
+      return answer === correctIndex
+    }).length
     
     setScore(correctAnswers)
     setIsCompleted(true)
@@ -213,7 +222,8 @@ export default function QuizComponent({
               <h3 className="font-semibold">Revisão das Respostas:</h3>
               {questions.map((question, index) => {
                 const userAnswer = answers[index]
-                const isCorrect = userAnswer === question.correct
+                const correctIndex = normalizeCorrectAnswer(question.correct)
+                const isCorrect = userAnswer === correctIndex
                 
                 return (
                   <motion.div
@@ -236,20 +246,29 @@ export default function QuizComponent({
                           <MarkdownRenderer content={question.q} className="font-medium" />
                         </div>
                         <div className="space-y-1">
-                          {question.options.map((option, optIndex) => (
-                            <div
-                              key={optIndex}
-                              className={`text-sm p-2 rounded ${
-                                optIndex === question.correct
-                                  ? 'bg-green-100 text-green-800 font-medium'
-                                  : optIndex === userAnswer && !isCorrect
-                                  ? 'bg-red-100 text-red-800'
-                                  : 'bg-gray-100'
-                              }`}
-                            >
-                              {String.fromCharCode(65 + optIndex)}. {option}
-                            </div>
-                          ))}
+                          {question.options.map((option, optIndex) => {
+                            const isUserAnswer = optIndex === userAnswer
+                            const isCorrectAnswer = optIndex === correctIndex
+                            
+                            return (
+                              <div
+                                key={optIndex}
+                                className={`text-sm p-2 rounded flex items-center gap-2 ${
+                                  isCorrectAnswer
+                                    ? 'bg-green-100 text-green-800 font-medium'
+                                    : isUserAnswer && !isCorrect
+                                    ? 'bg-red-100 text-red-800'
+                                    : 'bg-gray-100'
+                                }`}
+                              >
+                                {isCorrectAnswer && <CheckCircle className="h-4 w-4 text-green-600" />}
+                                {isUserAnswer && !isCorrect && <XCircle className="h-4 w-4 text-red-600" />}
+                                <span>
+                                  {String.fromCharCode(65 + optIndex)}. {option}
+                                </span>
+                              </div>
+                            )
+                          })}
                         </div>
                         {question.explanation && (
                           <div className="mt-2 text-sm text-gray-600 italic">

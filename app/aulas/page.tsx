@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2, Sparkles, BookOpen, Target, Users, Send, Lightbulb, TrendingUp, AlertCircle, CheckCircle, Clock, RefreshCw, Timer } from 'lucide-react'
+import { Loader2, Sparkles, BookOpen, Target, Users, Send, Lightbulb, TrendingUp, AlertCircle, CheckCircle, Clock, RefreshCw, Timer, BarChart3, FileText, AlertTriangle } from 'lucide-react'
 import { useDynamicSuggestions } from '@/hooks/useDynamicSuggestions'
 
 // Mock components for demo (replace with actual imports)
@@ -64,6 +64,70 @@ const LessonProgress = ({ progress, status, isGenerating, elapsedTime, className
   )
 }
 
+// Componente para exibir métricas de pacing profissional
+interface PacingMetricsProps {
+  metrics?: {
+    totalTokens: number
+    totalWords: number
+    synchronousTime: number
+    asynchronousTime: number
+    tokenPerSlide: number
+    wordsPerSlide: number
+  }
+  warnings?: string[]
+  className?: string
+}
+
+const PacingMetrics = ({ metrics, warnings, className }: PacingMetricsProps) => {
+  if (!metrics) return null
+
+  return (
+    <div className={`space-y-4 ${className}`}>
+      <div className="flex items-center gap-2">
+        <BarChart3 className="h-5 w-5 text-blue-600" />
+        <h3 className="text-lg font-semibold">📊 Métricas de Pacing Profissional</h3>
+      </div>
+      
+      <div className="grid grid-cols-2 gap-4 text-sm">
+        <div className="flex items-center gap-2">
+          <Clock className="h-4 w-4 text-green-600" />
+          <span className="font-medium">Tempo Síncrono:</span>
+          <span className="text-green-600 font-semibold">{metrics.synchronousTime} min</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Timer className="h-4 w-4 text-blue-600" />
+          <span className="font-medium">Tempo Assíncrono:</span>
+          <span className="text-blue-600 font-semibold">{metrics.asynchronousTime} min</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <FileText className="h-4 w-4 text-purple-600" />
+          <span className="font-medium">Total de Tokens:</span>
+          <span className="text-purple-600 font-semibold">{metrics.totalTokens.toLocaleString()}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Target className="h-4 w-4 text-orange-600" />
+          <span className="font-medium">Palavras por Slide:</span>
+          <span className="text-orange-600 font-semibold">{metrics.wordsPerSlide}</span>
+        </div>
+      </div>
+      
+      {warnings && warnings.length > 0 && (
+        <Alert className="border-yellow-200 bg-yellow-50">
+          <AlertTriangle className="h-4 w-4 text-yellow-600" />
+          <AlertDescription className="text-yellow-800">
+            <div className="font-medium mb-2">⚠️ Avisos de Qualidade:</div>
+            <ul className="list-disc list-inside space-y-1">
+              {warnings.map((warning, index) => (
+                <li key={index} className="text-sm">{warning}</li>
+              ))}
+            </ul>
+          </AlertDescription>
+        </Alert>
+      )}
+    </div>
+  )
+}
+
 // Enhanced interfaces
 interface GeneratedLesson {
   id: string
@@ -83,6 +147,15 @@ interface GeneratedLesson {
   feedback: any
   demoMode?: boolean
   createdAt: string
+  pacingMetrics?: {
+    totalTokens: number
+    totalWords: number
+    synchronousTime: number
+    asynchronousTime: number
+    tokenPerSlide: number
+    wordsPerSlide: number
+  }
+  pacingWarnings?: string[]
 }
 
 interface FormData {
@@ -120,6 +193,8 @@ export default function AulasPage() {
   // State management
   const [isGenerating, setIsGenerating] = useState(false)
   const [generatedLesson, setGeneratedLesson] = useState<GeneratedLesson | null>(null)
+  const [pacingMetrics, setPacingMetrics] = useState<any>(null)
+  const [pacingWarnings, setPacingWarnings] = useState<string[]>([])
   const [generationProgress, setGenerationProgress] = useState(0)
   const [generationStatus, setGenerationStatus] = useState('')
   const [formData, setFormData] = useState<FormData>({ topic: '' })
@@ -236,16 +311,16 @@ export default function AulasPage() {
       // Chamar API real para gerar aula
       console.log('Chamando API para gerar aula:', { topic })
       
-      const response = await fetch('/api/generate-lesson', {
+      const response = await fetch('/api/aulas/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           topic: topic,
-          demoMode: false, // Salvar no banco de dados
-          subject: 'Geral', // Será inferido pela IA
-          grade: '5' // Será inferido pela IA
+          mode: 'sync',
+          schoolId: '',
+          customPrompt: ''
         }),
       })
 
@@ -256,8 +331,16 @@ export default function AulasPage() {
 
       const result = await response.json()
       console.log('Resposta da API:', result)
+      console.log('result.success:', result.success)
+      console.log('result.lesson:', result.lesson)
+      console.log('typeof result.lesson:', typeof result.lesson)
       
       if (!result.success || !result.lesson) {
+        console.error('Validação falhou:', {
+          success: result.success,
+          hasLesson: !!result.lesson,
+          lessonType: typeof result.lesson
+        })
         throw new Error('Resposta inválida da API')
       }
 
@@ -290,6 +373,14 @@ export default function AulasPage() {
       setGenerationProgress(100)
       setGenerationStatus('Aula gerada com sucesso!')
       setGeneratedLesson(generatedLesson)
+      
+      // Capturar métricas de pacing profissional
+      if (result.pacingMetrics) {
+        setPacingMetrics(result.pacingMetrics)
+      }
+      if (result.warnings) {
+        setPacingWarnings(result.warnings)
+      }
 
       // Store in localStorage for demo mode
       console.log('Salvando aula no localStorage:', generatedLesson.id, generatedLesson)
@@ -678,6 +769,13 @@ export default function AulasPage() {
                       ))}
                     </div>
                   </div>
+
+                  {/* Métricas de Pacing Profissional */}
+                  <PacingMetrics 
+                    metrics={pacingMetrics} 
+                    warnings={pacingWarnings}
+                    className="bg-blue-50 p-4 rounded-lg border border-blue-200"
+                  />
 
                   <div className="grid grid-cols-2 gap-3 pt-4">
                     <Button 

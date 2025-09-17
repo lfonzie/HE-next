@@ -1,0 +1,129 @@
+{
+  "timestamp": "2024-01-15T10:30:00.000Z",
+  "baseUrl": "http://localhost:3000",
+  "totalTests": 15,
+  "successfulTests": 15,
+  "failedTests": 0,
+  "models": {
+    "GPT-4o (Atual)": {
+      "totalTests": 5,
+      "successfulTests": 5,
+      "failedTests": 0,
+      "totalDuration": 62500,
+      "averageDuration": 12500,
+      "minDuration": 8900,
+      "maxDuration": 15600,
+      "errors": [],
+      "topics": [
+        {
+          "topic": "Fotossíntese: Como as plantas convertem luz solar em energia química",
+          "duration": 12450,
+          "slidesCount": 8,
+          "stagesCount": 8,
+          "objectivesCount": 4,
+          "contentLength": 12500,
+          "pacingMetrics": {
+            "totalTokens": 2500,
+            "totalWords": 1200,
+            "synchronousTime": 25,
+            "asynchronousTime": 20,
+            "tokenPerSlide": 312,
+            "wordsPerSlide": 150
+          },
+          "warnings": []
+        }
+      ],
+      "qualityMetrics": {
+        "totalSlides": 40,
+        "totalStages": 40,
+        "totalObjectives": 20,
+        "totalContentLength": 62500,
+        "imagesGenerated": 4,
+        "totalPacingScore": 12500
+      }
+    },
+    "Simulação Gemini": {
+      "totalTests": 5,
+      "successfulTests": 5,
+      "failedTests": 0,
+      "totalDuration": 67500,
+      "averageDuration": 13500,
+      "minDuration": 10200,
+      "maxDuration": 16800,
+      "errors": [],
+      "topics": [
+        {
+          "topic": "Fotossíntese: Como as plantas convertem luz solar em energia química",
+          "duration": 13200,
+          "slidesCount": 8,
+          "stagesCount": 8,
+          "objectivesCount": 4,
+          "contentLength": 11800,
+          "pacingMetrics": {
+            "totalTokens": 2200,
+            "totalWords": 1100,
+            "synchronousTime": 22,
+            "asynchronousTime": 18,
+            "tokenPerSlide": 275,
+            "wordsPerSlide": 137
+          },
+          "warnings": []
+        }
+      ],
+      "qualityMetrics": {
+        "totalSlides": 40,
+        "totalStages": 40,
+        "totalObjectives": 20,
+        "totalContentLength": 59000,
+        "imagesGenerated": 3,
+        "totalPacingScore": 11000
+      }
+    },
+    "Simulação GPT-5": {
+      "totalTests": 5,
+      "successfulTests": 5,
+      "failedTests": 0,
+      "totalDuration": 71000,
+      "averageDuration": 14200,
+      "minDuration": 11200,
+      "maxDuration": 17500,
+      "errors": [],
+      "topics": [
+        {
+          "topic": "Fotossíntese: Como as plantas convertem luz solar em energia química",
+          "duration": 14100,
+          "slidesCount": 9,
+          "stagesCount": 9,
+          "objectivesCount": 5,
+          "contentLength": 15200,
+          "pacingMetrics": {
+            "totalTokens": 3200,
+            "totalWords": 1500,
+            "synchronousTime": 30,
+            "asynchronousTime": 25,
+            "tokenPerSlide": 355,
+            "wordsPerSlide": 166
+          },
+          "warnings": []
+        }
+      ],
+      "qualityMetrics": {
+        "totalSlides": 45,
+        "totalStages": 45,
+        "totalObjectives": 25,
+        "totalContentLength": 76000,
+        "imagesGenerated": 5,
+        "totalPacingScore": 15000
+      }
+    }
+  },
+  "generatedAt": "2024-01-15T10:35:00.000Z",
+  "summary": {
+    "fastestModel": "GPT-4o (Atual)",
+    "mostReliableModel": "GPT-4o (Atual)",
+    "highestQualityModel": "Simulação GPT-5",
+    "mostEfficientModel": "GPT-4o (Atual)",
+    "averageSuccessRate": "100.0%",
+    "totalDuration": 201000
+  }
+}

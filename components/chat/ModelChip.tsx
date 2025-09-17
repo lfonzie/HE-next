@@ -41,16 +41,7 @@ const MODEL_CHIP_CONFIG = {
     description: 'Respostas equilibradas'
   },
   
-  // GPT-4o/GPT-5 (IA Turbo - complexas)
-  'gpt-4o-chat-latest': {
-    label: 'IA Turbo',
-    icon: Sparkles,
-    variant: 'destructive' as const,
-    color: 'text-purple-600',
-    bgColor: 'bg-purple-50 border-purple-200',
-    description: 'Respostas avançadas e detalhadas'
-  },
-  
+  // GPT-5 (IA Turbo - complexas)
   'gpt-5-chat-latest': {
     label: 'IA Turbo',
     icon: Sparkles,
@@ -150,7 +141,7 @@ export function ModelChip({
         chipConfig = MODEL_CHIP_CONFIG['gpt-4o-mini']
         break
       case 'IA_SUPER':
-        chipConfig = MODEL_CHIP_CONFIG['gpt-4o-chat-latest']
+        chipConfig = MODEL_CHIP_CONFIG['gpt-5-chat-latest']
         break
       default:
         chipConfig = MODEL_CHIP_CONFIG['gpt-4o-mini']
