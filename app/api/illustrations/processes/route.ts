@@ -244,8 +244,9 @@ const EDUCATIONAL_PROCESSES_DETAILED = {
 };
 
 // Função para buscar imagens específicas de um processo
-async function searchProcessImages(process: string, level: string, limit: number) {
-  const processInfo = EDUCATIONAL_PROCESSES_DETAILED[process.toLowerCase() as keyof typeof EDUCATIONAL_PROCESSES_DETAILED];
+async function searchProcessImages(processName: string, level: string, limit: number) {
+  const processInfo =
+    EDUCATIONAL_PROCESSES_DETAILED[processName.toLowerCase() as keyof typeof EDUCATIONAL_PROCESSES_DETAILED];
   
   if (!processInfo) {
     throw new Error(`Processo '${process}' não encontrado`);
@@ -264,7 +265,8 @@ async function searchProcessImages(process: string, level: string, limit: number
   // Buscar para cada query
   for (const query of queries) {
     try {
-      const response = await fetch(`${processprocess.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/illustrations/search`, {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+      const response = await fetch(`${baseUrl}/api/illustrations/search`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -272,7 +274,7 @@ async function searchProcessImages(process: string, level: string, limit: number
         body: JSON.stringify({
           query,
           category: processInfo.categories[0],
-          process,
+          process: processName,
           limit: Math.ceil(limit / queries.length)
         })
       });

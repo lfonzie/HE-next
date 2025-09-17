@@ -252,8 +252,8 @@ async function searchPixabay(query: string, limit: number): Promise<any[]> {
       image_type: 'photo',
       orientation: 'horizontal',
       category: 'education,science,nature',
-      min_width: 800,
-      min_height: 600
+      min_width: '800',
+      min_height: '600'
     });
 
     const response = await fetch(`https://pixabay.com/api/?${params}`);
@@ -428,7 +428,13 @@ function calculateEducationalSuitability(image: any, subject: string, grade?: st
 
 function classifyBySubject(image: any, subject: string, grade?: string) {
   const gradeLevel = grade || '5';
-  const difficulty = parseInt(gradeLevel) <= 6 ? 'easy' : parseInt(gradeLevel) <= 9 ? 'medium' : 'hard';
+  const numericGrade = Number.parseInt(gradeLevel, 10);
+  const difficulty: 'easy' | 'medium' | 'hard' =
+    Number.isNaN(numericGrade) || numericGrade <= 6
+      ? 'easy'
+      : numericGrade <= 9
+        ? 'medium'
+        : 'hard';
   
   const tags = [];
   if (image.tags) {
