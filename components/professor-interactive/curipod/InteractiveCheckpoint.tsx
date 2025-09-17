@@ -66,7 +66,7 @@ export default function InteractiveCheckpoint({
       
       onComplete(correct, timeSpent);
     }
-  }, [selectedOption, onSubmit]);
+  }, [selectedOption, checkpoint.correctOption, onComplete, timeSpent]);
 
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);

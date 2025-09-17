@@ -257,7 +257,7 @@ export default function AulasPage() {
                   
                   <div className="text-center">
                     <div className="flex items-center justify-center mb-2">
-                      <Image className="h-5 w-5 text-orange-600 mr-1" alt="Ícone de imagens" />
+                      <Image className="h-5 w-5 text-orange-600 mr-1"  />
                       <span className="text-sm font-medium">Imagens</span>
                     </div>
                     <div className="text-2xl font-bold text-orange-600">
@@ -308,7 +308,7 @@ export default function AulasPage() {
                         <p className="text-xs text-gray-600 line-clamp-2">{slide.card1.content.substring(0, 100)}...</p>
                         {slide.card2?.imageUrl && (
                           <div className="mt-2 flex items-center gap-1 text-xs text-orange-600">
-                            <Image className="h-3 w-3" alt="" />
+                            <Image className="h-3 w-3"  />
                             <span>Imagem incluída</span>
                           </div>
                         )}
@@ -354,7 +354,7 @@ export default function AulasPage() {
                   
                   <div className="text-center">
                     <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <Image className="h-6 w-6 text-green-600" alt="" />
+                      <Image className="h-6 w-6 text-green-600"  />
                     </div>
                     <h3 className="font-semibold mb-2">Imagens Otimizadas</h3>
                     <p className="text-sm text-gray-600">

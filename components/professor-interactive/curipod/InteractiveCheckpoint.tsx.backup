@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -53,9 +53,9 @@ export default function InteractiveCheckpoint({
     }
 
     return () => clearInterval(interval);
-  }, [isActive, timeRemaining]);
+  }, [isActive, timeRemaining, handleSubmit]);
 
-  const handleSubmit = (optionIndex: number) => {
+  const handleSubmit = useCallback((optionIndex: number) => {
     if (selectedOption !== null || optionIndex !== -1) {
       const answer = optionIndex === -1 ? -1 : selectedOption;
       const correct = answer === checkpoint.correctOption;
@@ -66,7 +66,7 @@ export default function InteractiveCheckpoint({
       
       onComplete(correct, timeSpent);
     }
-  };
+  }, [selectedOption, checkpoint.correctOption, onComplete, timeSpent]);
 
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);

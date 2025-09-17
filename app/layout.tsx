@@ -8,6 +8,7 @@ import { LoadingProvider } from '@/components/ui/Loading'
 import { PageTransitionProvider } from '@/components/providers/PageTransitionProvider'
 import { SplashScreen } from '@/components/ui/SplashScreen'
 import { Toaster } from '@/components/ui/toaster'
+import { GlobalLoadingProvider } from '@/hooks/useGlobalLoading'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -82,14 +83,16 @@ export default function RootLayout({
         <SessionProvider>
           <PWAProvider>
             <LoadingProvider>
-              <PageTransitionProvider>
-                <LessonProvider>
-                  <NotificationProvider>
-                    {children}
-                    <Toaster />
-                  </NotificationProvider>
-                </LessonProvider>
-              </PageTransitionProvider>
+              <GlobalLoadingProvider>
+                <PageTransitionProvider>
+                  <LessonProvider>
+                    <NotificationProvider>
+                      {children}
+                      <Toaster />
+                    </NotificationProvider>
+                  </LessonProvider>
+                </PageTransitionProvider>
+              </GlobalLoadingProvider>
             </LoadingProvider>
           </PWAProvider>
         </SessionProvider>

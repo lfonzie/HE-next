@@ -39,7 +39,7 @@ export function useChat(onStreamingStart?: () => void) {
   
   const { data: session } = useSession()
   const { setSelectedModule, autoSwitchModule } = useChatContext()
-  const loading = useGlobalLoading()
+  const { startLoading, stopLoading, updateProgress } = useGlobalLoading()
   
   // Refs para otimização
   const abortControllerRef = useRef<AbortController | null>(null)
@@ -89,18 +89,8 @@ export function useChat(onStreamingStart?: () => void) {
     // Temporariamente desabilitado para desenvolvimento
     // if (!session) throw new Error("User not authenticated")
 
-    // Mostrar loading global com opção de cancelar
-    loading.show(300, { 
-      message: "Carregando…",
-      showCancelButton: true,
-      onCancel: () => {
-        if (abortControllerRef.current) {
-          abortControllerRef.current.abort()
-        }
-        loading.hide()
-        setIsStreaming(false)
-      }
-    })
+    // Mostrar loading global
+    startLoading("Carregando…", 'data')
 
     setIsStreaming(true)
     onStreamingStart?.() // Hide global loading overlay when streaming starts
@@ -398,7 +388,7 @@ export function useChat(onStreamingStart?: () => void) {
       // Hide loading when streaming starts
       if (!firstTokenReceived) {
         setFirstTokenReceived(true)
-        setTimeout(() => loading.hide(), 500)
+        setTimeout(() => stopLoading(), 500)
       }
 
       return {
@@ -410,16 +400,16 @@ export function useChat(onStreamingStart?: () => void) {
       
     } catch (error) {
       setIsStreaming(false)
-      loading.hide()
+      stopLoading()
       throw error
     } finally {
       setIsStreaming(false)
       // Garantir que o loading seja escondido mesmo em caso de erro
       if (!firstTokenReceived) {
-        loading.hide()
+        stopLoading()
       }
     }
-  }, [session, currentConversation, setSelectedModule])
+  }, [session, currentConversation, setSelectedModule, startLoading, stopLoading])
 
   const fetchConversations = useCallback(async () => {
     if (!session) return

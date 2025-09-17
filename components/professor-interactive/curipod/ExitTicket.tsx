@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -54,7 +54,7 @@ export default function ExitTicket({
     }
 
     return () => clearInterval(interval);
-  }, [isActive, timeRemaining]);
+  }, [isActive, timeRemaining, handleFinish]);
 
   const handleAnswerSelect = (optionIndex: number) => {
     const newSelectedOptions = [...selectedOptions];
@@ -78,7 +78,7 @@ export default function ExitTicket({
     }
   };
 
-  const handleFinish = () => {
+  const handleFinish = useCallback(() => {
     setIsActive(false);
     setIsCompleted(true);
     
@@ -89,7 +89,7 @@ export default function ExitTicket({
     
     setScore(correctAnswers);
     onComplete(correctAnswers, questions.length, timeSpent);
-  };
+  }, [questions, selectedOptions, onComplete, timeSpent]);
 
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);

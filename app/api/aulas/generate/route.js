@@ -461,7 +461,37 @@ export async function POST(request) {
           console.warn(`⚠️ Erro ao buscar imagem Wikimedia Commons para slide ${slide.number}:`, error);
         }
 
-        // 2. Se Wikimedia falhar, tentar Unsplash
+        // 2. Se Wikimedia falhar, tentar Pixabay
+        if (!imageUrl) {
+          try {
+            const pixabayResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/pixabay`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                action: 'search',
+                query: imageQuery,
+                perPage: 1,
+                category: 'education',
+                type: 'images'
+              }),
+            });
+
+            if (pixabayResponse.ok) {
+              const pixabayData = await pixabayResponse.json();
+              if (pixabayData.success && pixabayData.data && pixabayData.data.length > 0) {
+                imageUrl = pixabayData.data[0].url;
+                imageSource = 'pixabay';
+                console.log(`✅ Imagem Pixabay carregada para slide ${slide.number}:`, imageUrl);
+              }
+            }
+          } catch (error) {
+            console.warn(`⚠️ Erro ao buscar imagem Pixabay para slide ${slide.number}:`, error);
+          }
+        }
+
+        // 3. Se Pixabay falhar, tentar Unsplash
         if (!imageUrl) {
           try {
             const unsplashResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/unsplash/translate-search`, {

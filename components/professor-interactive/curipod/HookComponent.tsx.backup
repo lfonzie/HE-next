@@ -148,7 +148,7 @@ export default function HookComponent({ hook, onComplete, onNext }: HookComponen
         ) : (
           <div className="text-center text-gray-600">
             <p className="text-sm">Aguarde o tempo acabar para continuar...</p>
-            <p className="text-xs mt-1">Ou clique em "Pular" se já refletiu sobre o tema</p>
+            <p className="text-xs mt-1">Ou clique em &quot;Pular&quot; se já refletiu sobre o tema</p>
             <Button 
               onClick={() => {
                 setIsActive(false);

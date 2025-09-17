@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -41,11 +41,14 @@ export default function AuthenticTask({
     
     if (isActive && timeRemaining > 0) {
       interval = setInterval(() => {
-        setTimeRemaining((prev) => {
-          setTimeSpent(prev => prev + 1);
+        setTimeRemaining(prev => {
           if (prev <= 1) {
             setIsActive(false);
-            handleSubmit(-1); // Timeout
+            onComplete({
+              type: 'authentic-task',
+              timeSpent: timeSpent,
+              completed: true
+            });
             return 0;
           }
           return prev - 1;
@@ -54,7 +57,7 @@ export default function AuthenticTask({
     }
 
     return () => clearInterval(interval);
-  }, [isActive, timeRemaining]);
+  }, [isActive, timeRemaining, onComplete, timeSpent]);
 
   const handleSubmit = (optionIndex: number) => {
     if (selectedOption !== null || optionIndex !== -1) {
