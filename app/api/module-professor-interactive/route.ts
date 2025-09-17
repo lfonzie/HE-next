@@ -60,22 +60,26 @@ export async function POST(request: NextRequest) {
              - Todas as perguntas com 4 opções (A, B, C, D)
              - Feedback detalhado da IA
              
-          ESTRUTURA DE 8 SLIDES COM 2 CARDS CADA:
+          ESTRUTURA DE 12 SLIDES COM 2 CARDS CADA (CONTEÚDO DISTRIBUÍDO):
           Slide 1: Hook inicial (CARD 1: Elemento envolvente | CARD 2: Imagem/conexão visual)
-          Slide 2: Conceitos fundamentais (CARD 1: Conceito principal | CARD 2: Definições e termos-chave)
-          Slide 3: Desenvolvimento do conteúdo (CARD 1: Teoria aprofundada | CARD 2: Aplicações práticas)
-          Slide 4: CHECKPOINT INTERATIVO (CARD 1: Pergunta de verificação | CARD 2: 4 opções de resposta)
-          Slide 5: Aplicações práticas (CARD 1: Exemplos reais | CARD 2: Casos de uso detalhados)
-          Slide 6: TAREFA AUTÊNTICA (CARD 1: Desafio prático | CARD 2: 4 opções de resposta)
-          Slide 7: CHECKPOINT FINAL (CARD 1: Pergunta de síntese | CARD 2: 4 opções de resposta)
-          Slide 8: Resumo e conclusão (CARD 1: Resumo completo | CARD 2: Imagem de conclusão)
+          Slide 2: Conceitos fundamentais - Parte 1 (CARD 1: Conceito principal | CARD 2: Definições básicas)
+          Slide 3: Conceitos fundamentais - Parte 2 (CARD 1: Conceito aprofundado | CARD 2: Termos-chave importantes)
+          Slide 4: Desenvolvimento do conteúdo - Parte 1 (CARD 1: Teoria inicial | CARD 2: Primeiros exemplos)
+          Slide 5: Desenvolvimento do conteúdo - Parte 2 (CARD 1: Teoria avançada | CARD 2: Exemplos complexos)
+          Slide 6: CHECKPOINT INTERATIVO (CARD 1: Pergunta de verificação | CARD 2: 4 opções de resposta)
+          Slide 7: Aplicações práticas - Parte 1 (CARD 1: Exemplos reais básicos | CARD 2: Casos simples)
+          Slide 8: Aplicações práticas - Parte 2 (CARD 1: Exemplos reais avançados | CARD 2: Casos complexos)
+          Slide 9: TAREFA AUTÊNTICA (CARD 1: Desafio prático | CARD 2: 4 opções de resposta)
+          Slide 10: CHECKPOINT FINAL (CARD 1: Pergunta de síntese | CARD 2: 4 opções de resposta)
+          Slide 11: Resumo e conclusão - Parte 1 (CARD 1: Resumo dos conceitos | CARD 2: Pontos principais)
+          Slide 12: Resumo e conclusão - Parte 2 (CARD 1: Conclusão final | CARD 2: Imagem de conclusão)
           
           REGRAS IMPORTANTES:
-          - SEMPRE exatamente 8 slides com 2 cards cada
-          - Slides 4, 6 e 7 DEVEM ser perguntas de múltipla escolha com 4 opções
-          - Slides 1 e 8 devem incluir imagens no segundo card
-          - CONTEÚDO DEVE SER DETALHADO E EDUCATIVO
-          - Cada card deve ter aproximadamente 150-200 palavras
+          - SEMPRE exatamente 12 slides com 2 cards cada
+          - Slides 6, 9 e 10 DEVEM ser perguntas de múltipla escolha com 4 opções
+          - Slides 1 e 12 devem incluir imagens no segundo card
+          - CONTEÚDO DEVE SER DISTRIBUÍDO - máximo 100-150 palavras por card
+          - Cada slide deve focar em UM conceito específico
           - Usar linguagem didática e envolvente
           - Incluir explicação clara da resposta correta
           - Foco no aprendizado individual (sem atividades em grupo)

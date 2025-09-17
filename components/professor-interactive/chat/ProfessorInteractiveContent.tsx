@@ -269,21 +269,30 @@ export default function ProfessorInteractiveContent({
         task: '10-12 minutos',
         exit: '10 minutos'
       },
-      steps: lesson.steps.map(step => ({
-        type: step.type === 'question' ? 'checkpoint' : 'explanation',
-        card1: {
-          title: step.type === 'question' ? 'Pergunta' : 'Conceito',
-          content: step.content
-        },
-        card2: {
-          title: step.type === 'question' ? 'Opções' : 'Detalhes',
-          content: step.correctAnswer || '',
-          options: step.options,
-          correctOption: step.correctOption,
-          helpMessage: step.helpMessage,
-          correctAnswer: step.correctAnswer
-        }
-      })),
+      steps: lesson.steps.map((step, index) => {
+        // Determinar o tipo baseado na posição do slide
+        let stepType: 'hook' | 'explanation' | 'checkpoint' | 'task' = 'explanation';
+        
+        if (index === 0) stepType = 'hook';
+        else if (index === 5 || index === 9) stepType = 'checkpoint'; // Slides 6 e 10
+        else if (index === 8) stepType = 'task'; // Slide 9
+        
+        return {
+          type: stepType,
+          card1: {
+            title: step.type === 'question' ? 'Pergunta' : 'Conceito',
+            content: step.content
+          },
+          card2: {
+            title: step.type === 'question' ? 'Opções' : 'Detalhes',
+            content: step.correctAnswer || '',
+            options: step.options,
+            correctOption: step.correctOption,
+            helpMessage: step.helpMessage,
+            correctAnswer: step.correctAnswer
+          }
+        };
+      }),
       finalTest: {
         questions: lesson.finalTest.questions || [{
           question: lesson.finalTest.question,

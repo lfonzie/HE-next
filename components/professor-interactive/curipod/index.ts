@@ -4,6 +4,7 @@ export { default as InteractiveCheckpoint } from './InteractiveCheckpoint';
 export { default as AuthenticTask } from './AuthenticTask';
 export { default as ExitTicket } from './ExitTicket';
 export { default as CuripodLessonModule } from './CuripodLessonModule';
+export { default as InstructionSlides } from './InstructionSlides';
 
 // Tipos e interfaces
 export interface CuripodLesson {
@@ -85,7 +86,7 @@ export interface ExitTicketQuestion {
   explanation: string;
 }
 
-export type LessonPhase = 'hook' | 'instruction' | 'task' | 'exit' | 'completed';
+export type LessonPhase = 'hook' | 'instruction' | 'instruction-checkpoint' | 'task' | 'exit' | 'completed';
 
 export interface LessonResults {
   hookCompleted: boolean;

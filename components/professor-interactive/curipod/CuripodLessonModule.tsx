@@ -12,6 +12,7 @@ import HookComponent from './HookComponent';
 import InteractiveCheckpoint from './InteractiveCheckpoint';
 import AuthenticTask from './AuthenticTask';
 import ExitTicket from './ExitTicket';
+import InstructionSlides from './InstructionSlides';
 
 interface CuripodLesson {
   title: string;
@@ -63,7 +64,7 @@ interface CuripodLessonModuleProps {
   }) => void;
 }
 
-type LessonPhase = 'hook' | 'instruction' | 'task' | 'exit' | 'completed';
+type LessonPhase = 'hook' | 'instruction' | 'instruction-checkpoint' | 'task' | 'exit' | 'completed';
 
 export default function CuripodLessonModule({ lesson, onComplete }: CuripodLessonModuleProps) {
   const [currentPhase, setCurrentPhase] = useState<LessonPhase>('hook');
@@ -105,10 +106,18 @@ export default function CuripodLessonModule({ lesson, onComplete }: CuripodLesso
       case 'instruction':
         return {
           title: 'Instrução Interativa',
-          description: 'Aprendendo com checkpoints',
+          description: 'Aprendendo com slides distribuídos',
           icon: <BookOpen className="h-6 w-6" />,
           color: 'from-blue-500 to-purple-500',
           progress: 25
+        };
+      case 'instruction-checkpoint':
+        return {
+          title: 'Checkpoint de Verificação',
+          description: 'Testando sua compreensão',
+          icon: <Target className="h-6 w-6" />,
+          color: 'from-blue-500 to-purple-500',
+          progress: 35
         };
       case 'task':
         return {
@@ -185,7 +194,8 @@ export default function CuripodLessonModule({ lesson, onComplete }: CuripodLesso
       case 'hook':
         return lesson.steps.find(step => step.type === 'hook');
       case 'instruction':
-        return lesson.steps.find(step => step.type === 'explanation');
+        // Para instrução, vamos usar os slides 2-5 (conceitos e desenvolvimento)
+        return lesson.steps.slice(1, 5);
       case 'task':
         return lesson.steps.find(step => step.type === 'task');
       case 'exit':
@@ -196,7 +206,13 @@ export default function CuripodLessonModule({ lesson, onComplete }: CuripodLesso
   };
 
   const getCurrentCheckpoint = () => {
+    // Primeiro checkpoint está no slide 6
     return lesson.steps.find(step => step.type === 'checkpoint');
+  };
+
+  const getSecondCheckpoint = () => {
+    // Segundo checkpoint está no slide 10
+    return lesson.steps.find((step, index) => step.type === 'checkpoint' && index > 5);
   };
 
   const phaseInfo = getPhaseInfo(currentPhase);
@@ -357,37 +373,25 @@ export default function CuripodLessonModule({ lesson, onComplete }: CuripodLesso
 
         {currentPhase === 'instruction' && (
           <div className="space-y-6">
-            {/* Conteúdo explicativo */}
-            <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-purple-50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BookOpen className="h-6 w-6 text-blue-600" />
-                  {lesson.steps[1]?.card1.title || 'Conceitos Fundamentais'}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="prose prose-lg max-w-none">
-                    <h3 className="font-semibold text-gray-900 mb-3">
-                      {lesson.steps[1]?.card1.title}
-                    </h3>
-                    <p className="text-gray-800 leading-relaxed">
-                      {lesson.steps[1]?.card1.content}
-                    </p>
-                  </div>
-                  <div className="prose prose-lg max-w-none">
-                    <h3 className="font-semibold text-gray-900 mb-3">
-                      {lesson.steps[1]?.card2.title}
-                    </h3>
-                    <p className="text-gray-800 leading-relaxed">
-                      {lesson.steps[1]?.card2.content}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Usar o componente InstructionSlides para múltiplos slides */}
+            {getCurrentStep() && Array.isArray(getCurrentStep()) && (
+              <InstructionSlides
+                slides={(getCurrentStep() as any[]).map(step => ({
+                  card1: step.card1,
+                  card2: step.card2
+                }))}
+                onComplete={() => {
+                  // Após completar os slides de instrução, mostrar o checkpoint
+                  setCurrentPhase('instruction-checkpoint');
+                }}
+              />
+            )}
+          </div>
+        )}
 
-            {/* Checkpoint */}
+        {currentPhase === 'instruction-checkpoint' && (
+          <div className="space-y-6">
+            {/* Primeiro Checkpoint */}
             {getCurrentCheckpoint() && (
               <InteractiveCheckpoint
                 checkpoint={{

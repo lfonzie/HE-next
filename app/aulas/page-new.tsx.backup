@@ -257,7 +257,7 @@ export default function AulasPage() {
                   
                   <div className="text-center">
                     <div className="flex items-center justify-center mb-2">
-                      <Image className="h-5 w-5 text-orange-600 mr-1" alt="Ícone de imagens" />
+                      <Image className="h-5 w-5 text-orange-600 mr-1" />
                       <span className="text-sm font-medium">Imagens</span>
                     </div>
                     <div className="text-2xl font-bold text-orange-600">
