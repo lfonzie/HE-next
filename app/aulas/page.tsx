@@ -463,8 +463,48 @@ export default function AulasPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl" role="main">
-      {/* Enhanced Header - Oculto durante carregamento */}
-      {!isGenerating && (
+      {/* Header quando aula foi gerada */}
+      {generatedLesson && (
+        <header className="text-center mb-8">
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-500 to-blue-600 rounded-2xl">
+              <CheckCircle className="h-8 w-8 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
+                Aula Gerada com Sucesso!
+              </h1>
+              <p className="text-lg text-gray-600">{generatedLesson.title}</p>
+            </div>
+          </div>
+          <div className="flex justify-center gap-4">
+            <Button 
+              onClick={() => {
+                setGeneratedLesson(null)
+                setFormData({ topic: '' })
+                setFormErrors({})
+                setPacingMetrics(null)
+                setPacingWarnings([])
+              }}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Gerar Nova Aula
+            </Button>
+            <Button 
+              onClick={handleStartLesson}
+              className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 flex items-center gap-2"
+            >
+              <Users className="h-4 w-4" />
+              Iniciar Aula
+            </Button>
+          </div>
+        </header>
+      )}
+
+      {/* Enhanced Header - Oculto durante carregamento E quando aula foi gerada */}
+      {!isGenerating && !generatedLesson && (
         <header className="text-center mb-12">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-6">
             <BookOpen className="h-10 w-10 text-white" aria-hidden="true" />
@@ -494,8 +534,8 @@ export default function AulasPage() {
 
 
 
-      {/* Enhanced Suggestions - Oculto durante carregamento */}
-      {!isGenerating && (
+      {/* Enhanced Suggestions - Oculto durante carregamento E quando aula foi gerada */}
+      {!isGenerating && !generatedLesson && (
         <Card className="border-2 border-blue-100 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 mb-8">
         <CardHeader className="text-center pb-4">
           <div className="flex items-center justify-center gap-3">
@@ -590,8 +630,9 @@ export default function AulasPage() {
       </Card>
       )}
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+      {/* Main Content Grid - Oculto quando aula foi gerada */}
+      {!generatedLesson && (
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
         {/* Generation Form - Larger */}
         <div className="lg:col-span-3">
           <Card className="h-fit">
@@ -803,10 +844,110 @@ export default function AulasPage() {
           </Card>
         </div>
       </div>
+      )}
 
+      {/* Aula Gerada - Layout completo quando aula está presente */}
+      {generatedLesson && (
+        <div className="max-w-4xl mx-auto">
+          <Card className="border-2 border-green-200 bg-gradient-to-br from-green-50 to-blue-50">
+            <CardContent className="p-8">
+              <div className="space-y-8">
+                {/* Informações principais da aula */}
+                <div className="text-center">
+                  <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <CheckCircle className="h-10 w-10 text-white" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">{generatedLesson.title}</h2>
+                  <div className="flex flex-wrap justify-center gap-2 mb-4">
+                    <Badge className="bg-blue-100 text-blue-800">{generatedLesson.subject}</Badge>
+                    <Badge className="bg-purple-100 text-purple-800">{generatedLesson.level}</Badge>
+                    <Badge className="bg-orange-100 text-orange-800">{generatedLesson.difficulty}</Badge>
+                  </div>
+                  <div className="flex justify-center gap-6 text-sm text-gray-600">
+                    <span className="flex items-center gap-1">
+                      <Clock className="h-4 w-4" />
+                      {generatedLesson.estimatedDuration} min
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Target className="h-4 w-4" />
+                      {generatedLesson.stages.length} etapas
+                    </span>
+                  </div>
+                </div>
 
-      {/* Educational Benefits Section - Oculto durante carregamento */}
-      {!isGenerating && (
+                {/* Objetivos de Aprendizagem */}
+                <div>
+                  <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                    <Target className="h-5 w-5 text-blue-600" />
+                    Objetivos de Aprendizagem
+                  </h3>
+                  <ul className="space-y-3">
+                    {generatedLesson.objectives.map((objective: string, index: number) => (
+                      <li key={index} className="flex items-start gap-3">
+                        <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
+                        <span className="text-gray-700">{objective}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Estrutura da Aula */}
+                <div>
+                  <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                    <BookOpen className="h-5 w-5 text-purple-600" />
+                    Estrutura da Aula
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {generatedLesson.stages.map((stage: any, index: number) => (
+                      <div key={index} className="flex items-center gap-4 p-4 bg-white rounded-lg border border-gray-200">
+                        <div className="w-10 h-10 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center flex-shrink-0">
+                          <span className="text-sm font-bold text-white">{index + 1}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-gray-900">{stage.etapa}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant="secondary" className="text-xs">{stage.type}</Badge>
+                            <span className="text-xs text-gray-500">{stage.estimatedTime} min</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Métricas de Pacing Profissional */}
+                <PacingMetrics 
+                  metrics={pacingMetrics} 
+                  warnings={pacingWarnings}
+                  className="bg-blue-50 p-6 rounded-lg border border-blue-200"
+                />
+
+                {/* Botões de ação */}
+                <div className="flex flex-col sm:flex-row gap-4 pt-6">
+                  <Button 
+                    onClick={handleStartLesson} 
+                    className="flex-1 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 h-12 text-lg"
+                  >
+                    <Users className="mr-2 h-5 w-5" />
+                    Iniciar Aula Agora
+                  </Button>
+                  <Button 
+                    onClick={handleSaveLesson} 
+                    variant="outline" 
+                    className="sm:w-auto h-12"
+                  >
+                    <FileText className="mr-2 h-4 w-4" />
+                    Salvar Aula
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Educational Benefits Section - Oculto durante carregamento E quando aula foi gerada */}
+      {!isGenerating && !generatedLesson && (
         <Card className="mt-8 border-2 border-green-100 bg-gradient-to-br from-green-50 to-emerald-50">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-xl">

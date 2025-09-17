@@ -3,6 +3,7 @@
 
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
+import { log } from '@/lib/lesson-logger';
 
 const openai = new OpenAI({ 
   apiKey: process.env.OPENAI_API_KEY 
@@ -48,19 +49,39 @@ function calculateLessonDuration(slides, mode = 'sync') {
 }
 
 function generateImageQuery(topic, slideNumber, slideType) {
+  // Limpar o tópico para criar queries mais específicas
+  const cleanTopic = topic.toLowerCase()
+    .replace(/[?¿!¡.,;:]/g, '') // Remove pontuação
+    .replace(/\s+/g, ' ') // Normaliza espaços
+    .trim();
+  
+  // Queries específicas por tipo de slide e número
   const queries = {
-    1: `${topic} introduction education classroom`,
-    2: `${topic} concept overview education`,
-    3: `${topic} process mechanism education`,
-    4: `${topic} quiz test education classroom`,
-    5: `${topic} application practice education`,
-    6: `${topic} advanced concepts education`,
-    7: `${topic} connections real world education`,
-    8: `${topic} analysis quiz education`,
-    9: `${topic} summary conclusion education`
+    1: `${cleanTopic} introduction concept overview`, // Abertura - conceito geral
+    2: `${cleanTopic} fundamentals basics principles`, // Conceitos fundamentais
+    3: `${cleanTopic} process mechanism steps`, // Desenvolvimento - processo
+    4: `${cleanTopic} quiz test question`, // Quiz 1
+    5: `${cleanTopic} application examples real world`, // Aplicações práticas
+    6: `${cleanTopic} variations adaptations types`, // Variações
+    7: `${cleanTopic} advanced connections relationships`, // Conexões avançadas
+    8: `${cleanTopic} analysis evaluation assessment`, // Quiz 2
+    9: `${cleanTopic} summary conclusion recap` // Encerramento
   };
   
-  return queries[slideNumber] || `${topic} education slide ${slideNumber}`;
+  // Fallback mais específico se não encontrar
+  const fallbackQueries = {
+    1: `${cleanTopic} concept`,
+    2: `${cleanTopic} basics`,
+    3: `${cleanTopic} process`,
+    4: `${cleanTopic} quiz`,
+    5: `${cleanTopic} examples`,
+    6: `${cleanTopic} types`,
+    7: `${cleanTopic} advanced`,
+    8: `${cleanTopic} analysis`,
+    9: `${cleanTopic} summary`
+  };
+  
+  return queries[slideNumber] || fallbackQueries[slideNumber] || `${cleanTopic} education`;
 }
 
 /**
@@ -70,36 +91,73 @@ function generateImageQuery(topic, slideNumber, slideType) {
  * @returns {string} - Template formatado
  */
 function getLessonPromptTemplate(topic, systemPrompt = '') {
-  return `Gere uma aula completa sobre ${topic}, em PT-BR, estruturada em exatamente 9 slides. Cada slide deve ter no mínimo 500 tokens (aprox. 375 palavras), com texto detalhado, explicações profundas, exemplos reais e conexões práticas. Inclua sugestões de imagens do Unsplash (1 por slide, com query de busca como '${topic.toLowerCase()} cloroplastos ilustracao'). Formate a saída como JSON: { "slides": [{ "number": 1, "title": "...", "content": "...", "type": "content/quiz/closing", "imageQuery": "...", "tokenEstimate": number, "questions": [{ "q": "pergunta", "options": ["A", "B", "C", "D"], "correct": 0, "explanation": "explicação" }] }] }.
+  return `Você é um professor especialista em ${topic}. Crie uma aula completa e envolvente estruturada em exatamente 9 slides.
 
-Metas por slide (pacing para 45-60 min síncrono):
-1. Abertura (4 min): Ative conhecimentos prévios, apresente objetivos. Inclua micro-tarefa: "Lembre de um exemplo cotidiano de ${topic}".
-2. Slide 2 (5 min): Visão geral de ${topic} (equações, estruturas chave). Conecte a contextos reais (ex.: impacto climático).
-3. Slide 3 (5 min): Detalhe fase inicial (ex.: fase clara em fotossíntese). Use diagramas conceituais; insira checagem: "O que acontece se [variável] mudar?".
-4. Slide 4 - Quiz 1 (4 min): 4 opções múltipla escolha. Bloco de feedback padronizado: Para cada alternativa, explique por quê correto/incorreto com exemplo. Tempo para reflexão: 2 min. INCLUA PROPRIEDADE "questions" COM ARRAY DE QUESTÕES.
-5. Slide 5 (5 min): Detalhe fase intermediária (ex.: ciclo de Calvin). Inclua balanço energético e fatores limitantes.
-6. Slide 6 (5 min): Adaptações e variações (ex.: C3 vs C4). Compare com tabelas e exemplos práticos.
-7. Slide 7 (5 min): Aplicações avançadas ou extensões. Insira micro-pausa para discussão.
-8. Slide 8 - Quiz 2 (4 min): Questão situacional (ex.: análise de gráfico). Feedback rico: Explique raciocínio passo a passo, corrija erros comuns. INCLUA PROPRIEDADE "questions" COM ARRAY DE QUESTÕES.
-9. Encerramento (3 min): Síntese, erros comuns, mini-desafio (ex.: "Esboce o fluxo em 3 passos"). Chamada à ação: "Aplique isso em [cenário real]".
+REGRAS IMPORTANTES:
+- Responda APENAS com JSON válido, sem texto adicional
+- NÃO inclua instruções, metadados ou explicações no conteúdo dos slides
+- Cada slide deve ter conteúdo educativo direto e objetivo
+- Use linguagem clara e didática em português brasileiro
+- NÃO use frases como "imagine uma tabela", "crie um gráfico" ou "desenhe um diagrama"
 
-IMPORTANTE: Para slides de quiz (type: "quiz"), SEMPRE inclua a propriedade "questions" com pelo menos 1 questão no formato:
+ESTRUTURA DA AULA (45-60 minutos):
+1. Abertura: Apresente o tema e objetivos de aprendizagem
+2. Conceitos fundamentais: Explique os princípios básicos
+3. Desenvolvimento: Detalhe os processos principais
+4. Quiz 1: Questão de múltipla escolha sobre conceitos básicos
+5. Aplicações práticas: Mostre exemplos reais e casos de uso
+6. Variações e adaptações: Explore diferentes contextos
+7. Conexões avançadas: Relacione com outros conhecimentos
+8. Quiz 2: Questão situacional ou de análise
+9. Encerramento: Síntese e próximos passos
+
+FORMATO JSON OBRIGATÓRIO:
 {
-  "q": "Pergunta aqui?",
-  "options": ["Alternativa A", "Alternativa B", "Alternativa C", "Alternativa D"],
-  "correct": 0,
-  "explanation": "Explicação detalhada da resposta correta"
+  "slides": [
+    {
+      "number": 1,
+      "title": "Título do slide",
+      "content": "Conteúdo educativo detalhado (mínimo 300 palavras)",
+      "type": "content",
+      "imageQuery": "query para busca de imagem no Unsplash",
+      "tokenEstimate": 400
+    }
+  ]
 }
 
-Truques para pacing:
-- Insira micro-tarefas a cada 4-6 min (ex.: "Desenhe o ciclo em 3 passos" - 2 min).
-- Feedback em quizzes: Não seco; detalhe "Por quê esta alternativa é tentadora mas errada?".
-- Ancoragem: Conecte a agricultura, meio ambiente.
-- Para alongar: Adicione simulação guiada ou estudo de caso (600-700 tokens/slide).
+Para slides de quiz (type: "quiz"), inclua:
+{
+  "number": 4,
+  "title": "Quiz: Conceitos Básicos",
+  "content": "Conteúdo do quiz",
+  "type": "quiz",
+  "imageQuery": "query para imagem",
+  "tokenEstimate": 300,
+  "questions": [
+    {
+      "q": "Pergunta clara e objetiva?",
+      "options": ["Alternativa A", "Alternativa B", "Alternativa C", "Alternativa D"],
+      "correct": 0,
+      "explanation": "Explicação detalhada da resposta correta"
+    }
+  ]
+}
+
+IMPORTANTE: 
+- O campo "content" deve conter APENAS conteúdo educativo
+- NÃO inclua instruções como "imagine uma tabela" ou "crie um gráfico"
+- Use linguagem direta e objetiva
+- Foque em explicações claras e exemplos práticos
+- O campo "imageQuery" deve ser específico e relevante ao conteúdo do slide
+- Para slide 1 (abertura): use termos como "introduction", "concept", "overview"
+- Para slide 9 (encerramento): use termos como "summary", "conclusion", "recap"
+- Evite termos genéricos como "education", "classroom", "learning"
+
+Tópico: ${topic}
 
 ${systemPrompt ? `[SISTEMA PROMPT CUSTOMIZADO: ${systemPrompt}]` : ''}
 
-Garanta total mínimo 4.500 tokens; otimize para retenção com interações.`;
+Responda apenas com o JSON válido:`;
 }
 
 /**
@@ -205,21 +263,36 @@ function validateLessonStructure(lessonData) {
 
 export async function POST(request) {
   const startTime = Date.now();
+  const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   
   try {
     const { topic, schoolId, mode = 'sync', customPrompt } = await request.json();
     
+    // Contexto base para todos os logs desta requisição
+    const baseContext = {
+      requestId,
+      topic,
+      schoolId,
+      mode,
+      timestamp: new Date().toISOString()
+    };
+    
+    log.info('🎓 Iniciando geração de aula', baseContext, {
+      topic,
+      mode,
+      schoolId: schoolId || 'N/A',
+      hasCustomPrompt: !!customPrompt
+    });
+    
     if (!topic) {
+      log.validationError('topic', topic, 'string não vazia', baseContext);
       return NextResponse.json({ 
         error: 'Tópico é obrigatório' 
       }, { status: 400 });
     }
     
-    console.log(`🎓 [${new Date().toISOString()}] Iniciando geração de aula:`);
-    console.log(`   📝 Tópico: ${topic}`);
-    console.log(`   ⚙️ Modo: ${mode}`);
-    console.log(`   🏫 Escola ID: ${schoolId || 'N/A'}`);
-    console.log(`   🤖 Prompt customizado: ${customPrompt ? 'Sim' : 'Não'}`);
+    // Timer para preparação do prompt
+    const promptTimer = log.timeStart('preparacao-prompt', baseContext);
     
     // TODO: Integrar com Neo4j para prompts customizados por escola
     // const customPromptQuery = `
@@ -231,15 +304,26 @@ export async function POST(request) {
     
     const systemPrompt = customPrompt || 'Gere conteúdo educacional detalhado em PT-BR.';
     
-    const elapsedSeconds = Math.round((Date.now() - startTime) / 1000);
-    console.log(`📋 [${elapsedSeconds}s] Preparando prompt de geração...`);
-    
     // Gerar conteúdo usando template plug-and-play
     const generationPrompt = getLessonPromptTemplate(topic, systemPrompt);
     
-    const elapsedSeconds2 = Math.round((Date.now() - startTime) / 1000);
-    console.log(`🤖 [${elapsedSeconds2}s] Chamando OpenAI GPT-4o Mini...`);
-    console.log(`   📊 Prompt tokens estimados: ${Math.ceil(generationPrompt.length / 4)}`);
+    log.timeEnd(promptTimer, 'preparacao-prompt', baseContext);
+    
+    log.info('📋 Prompt preparado', baseContext, {
+      promptLength: generationPrompt.length,
+      estimatedTokens: Math.ceil(generationPrompt.length / 4),
+      hasCustomPrompt: !!customPrompt
+    });
+    
+    // Timer para chamada OpenAI
+    const openaiTimer = log.timeStart('openai-generation', baseContext);
+    
+    log.info('🤖 Chamando OpenAI GPT-4o Mini', baseContext, {
+      model: 'gpt-4o-mini',
+      maxTokens: 10000,
+      temperature: 0.7,
+      estimatedPromptTokens: Math.ceil(generationPrompt.length / 4)
+    });
     
     const openaiStartTime = Date.now();
     const response = await openai.chat.completions.create({
@@ -250,36 +334,62 @@ export async function POST(request) {
     });
     
     const openaiDuration = Math.round((Date.now() - openaiStartTime) / 1000);
-    const elapsedSeconds3 = Math.round((Date.now() - startTime) / 1000);
-    console.log(`✅ [${elapsedSeconds3}s] OpenAI respondeu em ${openaiDuration}s`);
-    console.log(`   📊 Tokens utilizados: ${response.usage?.total_tokens || 'N/A'}`);
-    console.log(`   💰 Custo estimado: R$ ${((response.usage?.total_tokens || 0) * 0.000015).toFixed(4)}`);
+    log.timeEnd(openaiTimer, 'openai-generation', baseContext);
     
-    const elapsedSeconds4 = Math.round((Date.now() - startTime) / 1000);
-    console.log(`🔄 [${elapsedSeconds4}s] Processando conteúdo gerado...`);
+    log.success('✅ Resposta OpenAI recebida', baseContext, {
+      duration: openaiDuration,
+      usage: response.usage,
+      finishReason: response.choices[0]?.finish_reason,
+      responseLength: response.choices[0]?.message?.content?.length || 0
+    });
+    // Timer para parsing do conteúdo
+    const parsingTimer = log.timeStart('parsing-conteudo', baseContext);
     
-    const generatedContent = parseGeneratedContent(response.choices[0].message.content);
+    log.info('🔍 Parseando conteúdo da IA', baseContext, {
+      responseLength: response.choices[0]?.message?.content?.length || 0,
+      estimatedCost: ((response.usage?.total_tokens || 0) * 0.000015).toFixed(4)
+    });
     
-    const elapsedSeconds5 = Math.round((Date.now() - startTime) / 1000);
-    console.log(`📊 [${elapsedSeconds5}s] Conteúdo processado:`);
-    console.log(`   📄 Slides gerados: ${generatedContent.slides.length}`);
-    console.log(`   📝 Total de caracteres: ${response.choices[0].message.content.length}`);
+    const rawContent = response.choices[0]?.message?.content || '';
+    const generatedContent = parseGeneratedContent(rawContent);
     
-    // Validar estrutura
+    log.timeEnd(parsingTimer, 'parsing-conteudo', baseContext);
+    
+    log.parsing('conteudo-ia', true, {
+      slidesCount: generatedContent.slides?.length || 0,
+      rawContentLength: rawContent.length,
+      parsedSuccessfully: !!generatedContent.slides
+    }, baseContext);
+    
+    // Timer para validação
+    const validationTimer = log.timeStart('validacao-estrutura', baseContext);
+    
+    log.info('🔍 Validando estrutura da aula', baseContext, {
+      slidesCount: generatedContent.slides?.length || 0
+    });
+    
     const validation = validateLessonStructure(generatedContent);
+    
+    log.timeEnd(validationTimer, 'validacao-estrutura', baseContext);
+    
     if (!validation.isValid) {
-      const elapsedSeconds6 = Math.round((Date.now() - startTime) / 1000);
-      console.warn(`⚠️ [${elapsedSeconds6}s] Problemas de estrutura detectados:`);
-      validation.issues.forEach((issue, index) => {
-        console.warn(`   ${index + 1}. ${issue}`);
+      log.validationError('lesson-structure', generatedContent, 'estrutura válida', baseContext);
+      log.error('❌ Validação da estrutura falhou', baseContext, {
+        errors: validation.errors,
+        warnings: validation.warnings
       });
     } else {
-      const elapsedSeconds6 = Math.round((Date.now() - startTime) / 1000);
-      console.log(`✅ [${elapsedSeconds6}s] Estrutura validada com sucesso`);
+      log.success('✅ Validação da estrutura passou', baseContext, {
+        warnings: validation.warnings?.length || 0
+      });
     }
     
-    const elapsedSeconds7 = Math.round((Date.now() - startTime) / 1000);
-    console.log(`🖼️ [${elapsedSeconds7}s] Preparando queries de imagem...`);
+    // Timer para preparação de imagens
+    const imageTimer = log.timeStart('preparacao-imagens', baseContext);
+    
+    log.info('🖼️ Preparando queries de imagem', baseContext, {
+      slidesCount: generatedContent.slides?.length || 0
+    });
     
     // Adicionar queries de imagem otimizadas (sem buscar imagens por enquanto)
     const slidesWithImageQueries = generatedContent.slides.map((slide, index) => ({
@@ -288,8 +398,14 @@ export async function POST(request) {
       subject: topic // Para contexto educacional
     }));
     
-    const elapsedSeconds8 = Math.round((Date.now() - startTime) / 1000);
-    console.log(`📈 [${elapsedSeconds8}s] Calculando métricas de qualidade...`);
+    log.timeEnd(imageTimer, 'preparacao-imagens', baseContext);
+    
+    // Timer para cálculo de métricas
+    const metricsTimer = log.timeStart('calculo-metricas', baseContext);
+    
+    log.info('📈 Calculando métricas de qualidade', baseContext, {
+      slidesCount: slidesWithImageQueries.length
+    });
     
     // Usar slides sem imagens por enquanto (para evitar problemas de API)
     const slidesWithImages = slidesWithImageQueries;
@@ -302,29 +418,27 @@ export async function POST(request) {
     });
     const validSlides = slideValidations.filter(v => v.isValid).length;
     
-    // Verificar se todos os slides têm pelo menos 500 tokens
-    const slidesWithMinTokens = slidesWithImages.map(slide => {
-      let currentContent = slide.content;
-      let tokens = estimateTokens(currentContent);
-      
-      // Expandir conteúdo até atingir pelo menos 500 tokens
-      while (tokens < 500) {
-        const expansionText = `\n\nPara aprofundar este tópico, vamos explorar aspectos adicionais que complementam nossa compreensão. Esta seção expandida nos permite consolidar o conhecimento através de exemplos práticos e aplicações diretas. Considerando a importância deste conteúdo educacional, é fundamental que tenhamos informações suficientes para uma compreensão completa e abrangente do tema abordado. Vamos também considerar diferentes perspectivas e aplicações práticas que enriquecem nosso entendimento sobre o assunto.`;
-        currentContent += expansionText;
-        tokens = estimateTokens(currentContent);
-      }
-      
-      return { ...slide, content: currentContent };
+    log.debug('📊 Validação inicial de tokens', baseContext, {
+      totalSlides: slidesWithImages.length,
+      validSlides,
+      averageTokens: Math.round(slideValidations.reduce((sum, v) => sum + v.tokens, 0) / slideValidations.length)
     });
     
-    // Recalcular métricas com slides expandidos
-    const finalSlides = slidesWithMinTokens;
+    // Usar slides originais sem expansão automática
+    const finalSlides = slidesWithImages;
     const finalDuration = calculateLessonDuration(finalSlides, mode);
     const finalValidations = finalSlides.map(slide => {
       const tokens = estimateTokens(slide.content);
       return { isValid: tokens >= 500, tokens };
     });
     const finalValidSlides = finalValidations.filter(v => v.isValid).length;
+    
+    log.debug('📊 Validação final de tokens', baseContext, {
+      totalSlides: finalSlides.length,
+      validSlides: finalValidSlides,
+      averageTokens: Math.round(finalValidations.reduce((sum, v) => sum + v.tokens, 0) / finalValidations.length),
+      note: 'Usando conteúdo original sem expansão automática'
+    });
     
     const metrics = {
       duration: {
@@ -347,13 +461,17 @@ export async function POST(request) {
       }
     };
     
-    const elapsedSeconds9 = Math.round((Date.now() - startTime) / 1000);
-    console.log(`📊 [${elapsedSeconds9}s] Métricas calculadas:`);
-    console.log(`   ⏱️ Duração: ${metrics.duration.sync} min (sync) / ${metrics.duration.async} min (async)`);
-    console.log(`   📝 Tokens: ${metrics.content.totalTokens.toLocaleString()} (média: ${metrics.content.averageTokensPerSlide}/slide)`);
-    console.log(`   📖 Palavras: ${metrics.content.totalWords.toLocaleString()}`);
-    console.log(`   🎯 Qualidade: ${metrics.quality.score}% (${metrics.quality.validSlides}/${metrics.quality.totalSlides} slides válidos)`);
-    console.log(`   🖼️ Imagens: ${metrics.images.count} (~${metrics.images.estimatedSizeMB} MB)`);
+    log.timeEnd(metricsTimer, 'calculo-metricas', baseContext);
+    
+    log.performance('geracao-aula', metrics, baseContext);
+    
+    log.success('📊 Métricas calculadas', baseContext, {
+      duration: `${metrics.duration.sync} min (sync) / ${metrics.duration.async} min (async)`,
+      tokens: `${metrics.content.totalTokens.toLocaleString()} (média: ${metrics.content.averageTokensPerSlide}/slide)`,
+      words: metrics.content.totalWords.toLocaleString(),
+      quality: `${metrics.quality.score}% (${metrics.quality.validSlides}/${metrics.quality.totalSlides} slides válidos)`,
+      images: `${metrics.images.count} (~${metrics.images.estimatedSizeMB} MB)`
+    });
     
     // Preparar resposta
     const responseData = {
