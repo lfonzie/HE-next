@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { detectTheme, translateThemeToEnglish } from '@/lib/themeDetection';
 import { unsplashService } from '@/lib/unsplash';
+import { enhancedImageService } from '@/lib/enhanced-image-service';
 
 export async function POST(request: NextRequest) {
   try {

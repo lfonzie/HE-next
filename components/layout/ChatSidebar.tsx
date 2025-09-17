@@ -25,6 +25,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
 import { useChatContext } from '@/components/providers/ChatContext'
 import { ModuleType } from '@/types'
+import { getModuleIcon } from '@/lib/moduleIcons'
+import { getModuleIconKey, getModuleColor, getModuleName } from '@/lib/iconMapping'
 
 interface ChatSidebarProps {
   className?: string
@@ -36,6 +38,31 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({ className }) => {
   const { selectedModule, setSelectedModule } = useChatContext()
   const [isOpen, setIsOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+
+  // Helper function to render module icon with consistent styling
+  const renderModuleIcon = (moduleId: string, isSelected: boolean) => {
+    const iconKey = getModuleIconKey(moduleId)
+    const Icon = getModuleIcon(iconKey)
+    const color = getModuleColor(moduleId)
+    const name = getModuleName(moduleId)
+    
+    return (
+      <div 
+        className={cn(
+          "w-12 h-12 rounded-lg flex items-center justify-center cursor-pointer transition-colors",
+          isSelected 
+            ? "text-white shadow-lg" 
+            : "bg-gray-200 text-gray-600 hover:bg-gray-300"
+        )}
+        style={isSelected ? { backgroundColor: color } : {}}
+        title={name}
+        data-module-id={moduleId}
+        data-icon-key={iconKey}
+      >
+        <Icon className="w-6 h-6" />
+      </div>
+    )
+  }
 
   // Detectar tipo de dispositivo
   useEffect(() => {
@@ -301,45 +328,18 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({ className }) => {
       {/* Navigation Icons */}
       <div className="flex-1 p-4 space-y-2">
         {/* Professor */}
-        <div 
-          className={cn(
-            "w-12 h-12 rounded-lg flex items-center justify-center cursor-pointer transition-colors",
-            selectedModule === 'professor' 
-              ? "bg-yellow-500 text-white" 
-              : "bg-gray-200 text-gray-600 hover:bg-gray-300"
-          )}
-          onClick={() => setSelectedModule('professor' as ModuleType)}
-          title="Professor"
-        >
-          <GraduationCap className="w-6 h-6" />
+        <div onClick={() => setSelectedModule('professor' as ModuleType)}>
+          {renderModuleIcon('PROFESSOR', selectedModule === 'professor')}
         </div>
 
         {/* Atendimento */}
-        <div 
-          className={cn(
-            "w-12 h-12 rounded-lg flex items-center justify-center cursor-pointer transition-colors",
-            selectedModule === 'atendimento' 
-              ? "bg-blue-500 text-white" 
-              : "bg-gray-200 text-gray-600 hover:bg-gray-300"
-          )}
-          onClick={() => setSelectedModule('atendimento' as ModuleType)}
-          title="Atendimento"
-        >
-          <Headphones className="w-6 h-6" />
+        <div onClick={() => setSelectedModule('atendimento' as ModuleType)}>
+          {renderModuleIcon('ATENDIMENTO', selectedModule === 'atendimento')}
         </div>
 
         {/* Aula Expandida */}
-        <div 
-          className={cn(
-            "w-12 h-12 rounded-lg flex items-center justify-center cursor-pointer transition-colors",
-            selectedModule === 'aula-expandida' 
-              ? "bg-yellow-500 text-white" 
-              : "bg-gray-200 text-gray-600 hover:bg-gray-300"
-          )}
-          onClick={() => setSelectedModule('aula-expandida' as ModuleType)}
-          title="Aula Expandida"
-        >
-          <BookOpen className="w-6 h-6" />
+        <div onClick={() => setSelectedModule('aula-expandida' as ModuleType)}>
+          {renderModuleIcon('AULA_EXPANDIDA', selectedModule === 'aula-expandida')}
         </div>
 
         {/* Chat */}

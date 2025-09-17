@@ -57,8 +57,9 @@ export async function searchWikimediaImages(query: string, count: number = 1): P
 
     const searchData = await searchResponse.json()
     
-    if (!searchData.query?.search?.length) {
-      console.warn('No images found in Wikimedia Commons for query:', query)
+    // Check for batchcomplete response (empty search result)
+    if (searchData.batchcomplete === '' || !searchData.query?.search?.length) {
+      console.warn('No images found in Wikimedia Commons for query:', query, 'Response:', searchData)
       return []
     }
 

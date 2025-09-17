@@ -117,7 +117,7 @@ export default function ProgressiveLessonComponent({
       
       console.log('🖼️ Carregando imagem para slide:', currentSlide + 1, 'Prompt:', query);
       
-      const response = await fetch('/api/unsplash/translate-search', {
+      const response = await fetch('/api/images/enhanced-search', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -125,25 +125,36 @@ export default function ProgressiveLessonComponent({
         body: JSON.stringify({ 
           query: query,
           subject: skeleton?.subject || '',
-          count: 1
+          count: 1,
+          forceRefresh: false
         }),
       });
 
       if (response.ok) {
         const data = await response.json();
-        console.log('📸 Resposta da API Unsplash com tradução:', data);
+        console.log('📸 Enhanced image search response:', data);
         
         if (data.photos && data.photos.length > 0) {
-          const imageUrl = data.photos[0].urls.regular;
-          console.log('✅ Imagem carregada com tradução:', imageUrl);
-          console.log('🎯 Tema traduzido:', data.englishTheme);
+          const selectedImage = data.photos[0];
+          const imageUrl = selectedImage.urls.regular;
+          
+          console.log('✅ Enhanced image loaded:', {
+            imageUrl,
+            relevanceScore: selectedImage.relevanceScore,
+            theme: data.theme,
+            englishTheme: data.englishTheme,
+            searchTime: data.searchTime,
+            cacheHit: data.cacheHit,
+            fallback: data.fallback
+          });
+          
           setImageUrl(imageUrl);
         } else {
-          console.log('⚠️ Nenhuma foto encontrada, usando placeholder');
+          console.log('⚠️ No photos found, using placeholder');
           setImageUrl(`https://picsum.photos/800/400?random=${currentSlide + 1}`);
         }
       } else {
-        console.error('❌ Erro na resposta da API:', response.status, response.statusText);
+        console.error('❌ Enhanced image search failed:', response.status, response.statusText);
         setImageUrl(`https://picsum.photos/800/400?random=${currentSlide + 1}`);
       }
     } catch (error) {

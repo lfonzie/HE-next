@@ -7,10 +7,11 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import DynamicStage from '@/components/interactive/DynamicStage'
-import { ArrowLeft, BookOpen, Clock, Star, Trophy, Target } from 'lucide-react'
+import { ArrowLeft, BookOpen, Clock, Star, Trophy, Target, Loader2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
-// Removed progressive loading import - lessons are now saved in database
+import { useProgressiveLoading } from '@/lib/progressive-lesson-loader'
+import { ensureLessonStructure } from '@/lib/lesson-data-transformer'
 
 interface LessonData {
   title: string
@@ -54,6 +55,25 @@ interface StageResult {
   pointsEarned: number
 }
 
+// Default lesson structure for loading states
+const DEFAULT_LESSON: LessonData = {
+  title: 'Carregando aula...',
+  objectives: [],
+  introduction: 'Preparando conteúdo educacional...',
+  slides: [],
+  stages: [],
+  summary: '',
+  nextSteps: [],
+  feedback: {},
+  metadata: {
+    subject: 'Carregando',
+    grade: 'N/A',
+    duration: 'N/A',
+    difficulty: 'medium',
+    tags: []
+  }
+}
+
 export default function LessonPage() {
   const params = useParams()
   const router = useRouter()
@@ -64,45 +84,42 @@ export default function LessonPage() {
   const [stageResults, setStageResults] = useState<StageResult[]>([])
   const [totalPoints, setTotalPoints] = useState(0)
   const [totalTimeSpent, setTotalTimeSpent] = useState(0)
-  const [isLoading, setIsLoading] = useState(true)
   const [isCompleted, setIsCompleted] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [retryCount, setRetryCount] = useState(0)
 
-  // Removed progressive loading - lessons are now saved in database
+  // Progressive loading system
+  const { loadingState, isLoading: progressiveLoading, progress, startLoading } = useProgressiveLoading(lessonId)
 
   // Load lesson data from database or localStorage (demo mode)
   useEffect(() => {
     const loadLesson = async () => {
       try {
-        // 1. Primeiro, verificar cache local
-        const { lessonCache } = await import('@/lib/lesson-cache')
-        const cachedLesson = lessonCache.get(lessonId)
+        setIsLoading(true)
+        setError(null)
         
-        if (cachedLesson) {
-          console.log('⚡ Carregando aula do cache:', lessonId)
-          setLessonData(cachedLesson)
-          setIsLoading(false)
-          return
-        }
-
-        // 2. Verificar localStorage para aulas demo
-        const demoLessonKey = `demo_lesson_${lessonId}`
-        const demoLesson = localStorage.getItem(demoLessonKey)
+        console.log(`[DEBUG] Loading lesson: ${lessonId}, attempt: ${retryCount + 1}`)
         
-        if (demoLesson) {
-          console.log('Loading demo lesson from localStorage:', lessonId)
-          try {
-            const parsedLesson = JSON.parse(demoLesson)
-            setLessonData(parsedLesson)
+        // 1. Verificar cache local primeiro
+        try {
+          const { lessonCache } = await import('@/lib/lesson-cache')
+          const cachedLesson = lessonCache.get(lessonId)
+          
+          if (cachedLesson) {
+            console.log('⚡ Carregando aula do cache:', lessonId)
+            const transformedLesson = ensureLessonStructure(cachedLesson)
+            setLessonData(transformedLesson)
             setIsLoading(false)
             return
-          } catch (parseError) {
-            console.error('Error parsing demo lesson from localStorage:', parseError)
-            // Continue to try database
           }
+        } catch (cacheError) {
+          console.warn('Cache not available:', cacheError)
         }
 
-        // 3. Tentar carregamento rápido do banco
+        // 2. Carregamento rápido do banco (com autenticação)
         try {
+          console.log(`[DEBUG] Loading lesson from database: ${lessonId}`)
           const response = await fetch(`/api/lessons/fast-load`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -111,58 +128,118 @@ export default function LessonPage() {
           
           if (response.ok) {
             const data = await response.json()
-            setLessonData(data.lesson)
+            console.log(`[DEBUG] Lesson found in database:`, data.lesson?.title)
+            const transformedLesson = ensureLessonStructure(data.lesson)
+            setLessonData(transformedLesson)
             
             // Adicionar ao cache para próximas vezes
-            lessonCache.set(lessonId, data.lesson)
+            try {
+              const { lessonCache } = await import('@/lib/lesson-cache')
+              lessonCache.set(lessonId, data.lesson)
+            } catch (cacheError) {
+              console.warn('Could not cache lesson:', cacheError)
+            }
             
             setIsLoading(false)
             return
-          } else {
+          } else if (response.status === 404) {
+            const errorData = await response.json()
+            
+            // Check if lesson is being generated
+            if (errorData.status === 'generating') {
+              console.log('Lesson is being generated, showing loading state')
+              setLessonData({ 
+                ...DEFAULT_LESSON, 
+                id: lessonId,
+                title: `Gerando aula sobre ${lessonId}`,
+                metadata: {
+                  ...DEFAULT_LESSON.metadata,
+                  status: 'generating'
+                }
+              })
+              
+              // Retry after 3 seconds
+              setTimeout(() => {
+                console.log('Retrying lesson load after generation delay')
+                loadLesson()
+              }, 3000)
+              
+              return
+            }
+            
             throw new Error('Lesson not found in database')
+          } else if (response.status === 401) {
+            throw new Error('Authentication required')
+          } else {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`)
           }
         } catch (dbError) {
           console.log('Fast load failed, trying regular load:', dbError)
           
-          // 4. Fallback para carregamento regular
+          // 3. Fallback para carregamento regular
           try {
             const response = await fetch(`/api/lessons/${lessonId}`)
             if (response.ok) {
               const data = await response.json()
-              setLessonData(data.lesson)
+              const transformedLesson = ensureLessonStructure(data.lesson)
+              setLessonData(transformedLesson)
               
               // Adicionar ao cache
-              lessonCache.set(lessonId, data.lesson)
+              try {
+                const { lessonCache } = await import('@/lib/lesson-cache')
+                lessonCache.set(lessonId, data.lesson)
+              } catch (cacheError) {
+                console.warn('Could not cache lesson:', cacheError)
+              }
               
               setIsLoading(false)
               return
+            } else if (response.status === 401) {
+              throw new Error('Authentication required')
+            } else {
+              throw new Error(`HTTP ${response.status}: ${response.statusText}`)
             }
           } catch (regularError) {
             console.log('Regular load also failed:', regularError)
-          }
-          
-          // 5. Fallback para dados estáticos
-          if (lessonId === 'photosynthesis') {
-            const staticData = await import('@/data/photosynthesis-lesson.json')
-            setLessonData(staticData.default)
-            setIsLoading(false)
-            return
-          } else {
-            console.log('Aula não encontrada:', lessonId)
-            toast.error('Aula não encontrada')
-            router.push('/aulas')
-            return
+            throw regularError
           }
         }
+        
+        // 4. Se chegou até aqui, a aula não foi encontrada
+        console.log('Aula não encontrada:', lessonId)
+        setError('Aula não encontrada')
+        setIsLoading(false)
+        return
       } catch (error) {
         console.error('Erro ao carregar aula:', error)
-        toast.error('Erro ao carregar a aula')
-        router.push('/aulas')
+        
+        // Handle authentication errors specifically
+        if (error instanceof Error && error.message === 'Authentication required') {
+          setError('Você precisa estar logado para acessar esta aula')
+          setIsLoading(false)
+          return
+        }
+        
+        setError(error instanceof Error ? error.message : 'Erro desconhecido')
+        
+        // Only show error after multiple failed attempts
+        if (retryCount >= 3) {
+          toast.error('Erro ao carregar a aula')
+          setIsLoading(false)
+        } else {
+          // Retry with exponential backoff
+          const delay = Math.min(1000 * Math.pow(2, retryCount), 10000)
+          console.log(`Retrying lesson load in ${delay}ms (attempt ${retryCount + 1})`)
+          setTimeout(() => {
+            setRetryCount(prev => prev + 1)
+            loadLesson()
+          }, delay)
+        }
       }
     }
 
     loadLesson()
-  }, [lessonId, router])
+  }, [lessonId, retryCount])
 
   // Load progress from localStorage
   useEffect(() => {
@@ -262,38 +339,243 @@ export default function LessonPage() {
     return 'locked'
   }
 
-  if (isLoading) {
+  if (isLoading || progressiveLoading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Carregando aula...</p>
-          </div>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
+        <Card className="w-full max-w-md mx-4">
+          <CardContent className="pt-6">
+            <div className="text-center space-y-6">
+              <div className="flex justify-center">
+                <div className="relative">
+                  <Loader2 className="h-16 w-16 text-blue-600 animate-spin" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="h-8 w-8 bg-blue-100 rounded-full"></div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Carregando Aula Progressivamente
+                </h2>
+                <p className="text-gray-600">
+                  Preparando conteúdo educacional otimizado...
+                </p>
+              </div>
+              
+              {/* Progress bar */}
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm text-gray-600">
+                  <span>Progresso</span>
+                  <span>{progress}%</span>
+                </div>
+                <Progress value={progress} className="w-full" />
+              </div>
+              
+              {/* Loading steps */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
+                  <BookOpen className="h-4 w-4" />
+                  <span>Carregando estrutura da aula</span>
+                </div>
+                <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
+                  <Target className="h-4 w-4" />
+                  <span>Preparando primeiros slides</span>
+                </div>
+                <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
+                  <Clock className="h-4 w-4" />
+                  <span>Otimizando carregamento em background</span>
+                </div>
+              </div>
+              
+              {/* Estimated time */}
+              <div className="bg-blue-50 rounded-lg p-4">
+                <div className="text-sm text-blue-800">
+                  <p className="font-medium mb-1">Carregamento Inteligente:</p>
+                  <ul className="space-y-1 text-left">
+                    <li>• Primeiros slides: Instantâneo</li>
+                    <li>• Slides restantes: Carregamento em background</li>
+                    <li>• Tempo total estimado: ~30 segundos</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     )
   }
 
-  if (!lessonData) {
+  if (!lessonData && error) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Aula não encontrada</h1>
-          <Button onClick={() => router.push('/aulas')}>
-            Voltar para Aulas
-          </Button>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 flex items-center justify-center">
+        <Card className="w-full max-w-md mx-4">
+          <CardContent className="pt-6">
+            <div className="text-center space-y-6">
+              <div className="flex justify-center">
+                <div className="relative">
+                  <div className="h-16 w-16 bg-red-100 rounded-full flex items-center justify-center">
+                    <BookOpen className="h-8 w-8 text-red-600" />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Aula não encontrada
+                </h2>
+                <p className="text-gray-600">
+                  {error}
+                </p>
+              </div>
+              
+              <div className="space-y-3">
+                {error === 'Você precisa estar logado para acessar esta aula' ? (
+                  <>
+                    <Button 
+                      onClick={() => router.push('/login')}
+                      className="w-full"
+                    >
+                      Fazer Login
+                    </Button>
+                    <Button 
+                      onClick={() => router.push('/aulas')}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      Voltar para Aulas
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button 
+                      onClick={() => {
+                        setError(null)
+                        setRetryCount(0)
+                        setIsLoading(true)
+                      }}
+                      className="w-full"
+                    >
+                      Tentar Novamente
+                    </Button>
+                    <Button 
+                      onClick={() => router.push('/aulas')}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      Voltar para Aulas
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     )
   }
 
-  // Use lesson stages from database
-  const totalStages = lessonData.stages.length
-  const stagesToUse = lessonData.stages
+  // Use lesson stages from database with validation
+  const totalStages = lessonData.stages?.length || 0
+  const stagesToUse = lessonData.stages || []
+
+  // Add debugging for stage data
+  console.log('[DEBUG] Lesson data structure:', {
+    hasStages: !!lessonData.stages,
+    stagesLength: lessonData.stages?.length,
+    currentStage,
+    totalStages
+  });
+
+  if (totalStages === 0) {
+    console.error('[ERROR] No stages found in lesson data:', lessonData);
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 flex items-center justify-center">
+        <Card className="w-full max-w-md mx-4">
+          <CardContent className="pt-6">
+            <div className="text-center space-y-6">
+              <div className="flex justify-center">
+                <div className="relative">
+                  <div className="h-16 w-16 bg-red-100 rounded-full flex items-center justify-center">
+                    <BookOpen className="h-8 w-8 text-red-600" />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Aula sem conteúdo
+                </h2>
+                <p className="text-gray-600">
+                  Esta aula não possui etapas definidas.
+                </p>
+              </div>
+              
+              <div className="space-y-3">
+                <Button 
+                  onClick={() => router.push('/aulas')}
+                  className="w-full"
+                >
+                  Voltar para Aulas
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   const currentStageData = stagesToUse[currentStage]
-  const progress = ((currentStage + 1) / totalStages) * 100
+  
+  // Validate current stage data
+  if (!currentStageData) {
+    console.error('[ERROR] Current stage data is undefined:', { currentStage, totalStages, stagesToUse });
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 flex items-center justify-center">
+        <Card className="w-full max-w-md mx-4">
+          <CardContent className="pt-6">
+            <div className="text-center space-y-6">
+              <div className="flex justify-center">
+                <div className="relative">
+                  <div className="h-16 w-16 bg-red-100 rounded-full flex items-center justify-center">
+                    <BookOpen className="h-8 w-8 text-red-600" />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Etapa não encontrada
+                </h2>
+                <p className="text-gray-600">
+                  A etapa {currentStage + 1} não foi encontrada nesta aula.
+                </p>
+              </div>
+              
+              <div className="space-y-3">
+                <Button 
+                  onClick={() => setCurrentStage(0)}
+                  className="w-full"
+                >
+                  Ir para Primeira Etapa
+                </Button>
+                <Button 
+                  onClick={() => router.push('/aulas')}
+                  variant="outline"
+                  className="w-full"
+                >
+                  Voltar para Aulas
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const stageProgress = ((currentStage + 1) / totalStages) * 100
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
@@ -343,9 +625,9 @@ export default function LessonPage() {
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
             <span>Progresso da Aula</span>
-            <span>{Math.round(progress)}%</span>
+            <span>{Math.round(stageProgress)}%</span>
           </div>
-          <Progress value={progress} className="h-3" />
+          <Progress value={stageProgress} className="h-3" />
         </div>
       </div>
 
@@ -434,20 +716,31 @@ export default function LessonPage() {
         {/* Main Content */}
         <div className="lg:col-span-3">
           <AnimatePresence mode="wait">
-            <DynamicStage
-              key={currentStage}
-              stage={currentStageData}
-              stageIndex={currentStage}
-              totalStages={totalStages}
-              onComplete={handleStageComplete}
-              onNext={handleNext}
-              onPrevious={handlePrevious}
-              canGoNext={currentStage < totalStages - 1}
-              canGoPrevious={currentStage > 0}
-              timeSpent={stageResults.find(sr => sr.stageIndex === currentStage)?.timeSpent || 0}
-              pointsEarned={stageResults.find(sr => sr.stageIndex === currentStage)?.pointsEarned || 0}
-              lessonTheme={lessonData.metadata?.subject || 'education'}
-            />
+            {(() => {
+              console.log('[DEBUG] Rendering DynamicStage with data:', {
+                currentStage,
+                stageData: currentStageData,
+                hasActivity: !!currentStageData?.activity,
+                activityComponent: currentStageData?.activity?.component
+              });
+              
+              return (
+                <DynamicStage
+                  key={currentStage}
+                  stage={currentStageData}
+                  stageIndex={currentStage}
+                  totalStages={totalStages}
+                  onComplete={handleStageComplete}
+                  onNext={handleNext}
+                  onPrevious={handlePrevious}
+                  canGoNext={currentStage < totalStages - 1}
+                  canGoPrevious={currentStage > 0}
+                  timeSpent={stageResults.find(sr => sr.stageIndex === currentStage)?.timeSpent || 0}
+                  pointsEarned={stageResults.find(sr => sr.stageIndex === currentStage)?.pointsEarned || 0}
+                  lessonTheme={lessonData.metadata?.subject || 'education'}
+                />
+              );
+            })()}
           </AnimatePresence>
         </div>
       </div>

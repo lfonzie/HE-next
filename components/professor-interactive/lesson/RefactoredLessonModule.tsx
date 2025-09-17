@@ -18,7 +18,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { MarkdownRenderer } from '@/components/chat/MarkdownRenderer';
-import { useProgressiveSlideLoading } from '@/hooks/useProgressiveSlideLoading';
+import { useProfessorProgressiveLoading } from '@/hooks/useProfessorProgressiveLoading';
 import { Slide } from '@/types/slides';
 
 interface RefactoredLessonModuleProps {
@@ -45,7 +45,7 @@ export default function RefactoredLessonModule({
     isCompleted: false
   });
 
-  const progressiveLoading = useProgressiveSlideLoading();
+  const progressiveLoading = useProfessorProgressiveLoading();
 
   // Handlers
   const handleSubmit = useCallback(async (e?: any) => {

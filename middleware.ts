@@ -5,7 +5,10 @@ export async function middleware(request: NextRequest) {
   // Skip middleware for static files and API routes to improve performance
   if (request.nextUrl.pathname.startsWith('/_next/') ||
       request.nextUrl.pathname.startsWith('/api/') ||
-      request.nextUrl.pathname.match(/\.(ico|png|jpg|jpeg|gif|svg|css|js|woff|woff2|ttf|eot)$/)) {
+      request.nextUrl.pathname.match(/\.(ico|png|jpg|jpeg|gif|svg|css|js|woff|woff2|ttf|eot|webmanifest|json)$/) ||
+      request.nextUrl.pathname === '/manifest.webmanifest' ||
+      request.nextUrl.pathname === '/robots.txt' ||
+      request.nextUrl.pathname === '/sitemap.xml') {
     return NextResponse.next()
   }
 
@@ -38,7 +41,9 @@ export async function middleware(request: NextRequest) {
   
   // Allow access to auth pages
   if (request.nextUrl.pathname.startsWith('/login') || 
-      request.nextUrl.pathname.startsWith('/register')) {
+      request.nextUrl.pathname.startsWith('/register') ||
+      request.nextUrl.pathname.startsWith('/forgot-password') ||
+      request.nextUrl.pathname.startsWith('/reset-password')) {
     return NextResponse.next()
   }
   
@@ -65,8 +70,7 @@ export async function middleware(request: NextRequest) {
     '/test-progressive',
     '/test-visual',
     '/dark-mode-demo',
-    '/chat-advanced',
-    '/lessons'
+    '/chat-advanced'
   ]
 
   // Check if current route is public
@@ -80,7 +84,10 @@ export async function middleware(request: NextRequest) {
   // Require authentication for all protected routes
   if (!isPublicRoute && !request.nextUrl.pathname.startsWith('/api/')) {
     if (!token) {
-      return NextResponse.redirect(new URL('/login', request.url))
+      // Preserve the original URL for redirect after login
+      const loginUrl = new URL('/login', request.url)
+      loginUrl.searchParams.set('callbackUrl', request.nextUrl.pathname + request.nextUrl.search)
+      return NextResponse.redirect(loginUrl)
     }
   }
   
@@ -128,6 +135,6 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     // Only match routes that actually need middleware processing
-    '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:ico|png|jpg|jpeg|gif|svg|css|js|woff|woff2|ttf|eot)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest|.*\\.(?:ico|png|jpg|jpeg|gif|svg|css|js|woff|woff2|ttf|eot|webmanifest|json)$).*)',
   ]
 }

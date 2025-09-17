@@ -66,10 +66,13 @@ export default function ChatPage() {
   const { selectedModule, setSelectedModule, highlightActiveModule } = useChatContext();
   const { quota, maxQuota, decrementQuota, resetQuota } = useQuota();
   
-  // Clear navigation loading when page loads
+  // Clear all loading states when page loads
   useEffect(() => {
     stopNavLoading();
-  }, [stopNavLoading]);
+    // Clear any remaining loading keys from login
+    endLoading('login-redirect', 'success');
+    endLoading('login', 'success');
+  }, [stopNavLoading, endLoading]);
   
   // State
   const [inputMessage, setInputMessage] = useState("");

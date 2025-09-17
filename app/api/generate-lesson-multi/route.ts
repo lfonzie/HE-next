@@ -86,10 +86,15 @@ async function populateLessonWithImagesTranslated(lessonData: any, topic: string
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    const { topic, demoMode = false, provider = 'google', complexity = 'simple' } = await request.json()
+    const { topic, provider = 'google', complexity = 'simple' } = await request.json()
 
     if (!topic) {
       return NextResponse.json({ error: 'Tópico é obrigatório' }, { status: 400 })
+    }
+
+    // Check if user is authenticated
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Você precisa estar logado para gerar aulas' }, { status: 401 })
     }
 
     console.log(`🚀 Gerando aula com ${provider} (${complexity}) para: ${topic}`)
@@ -208,8 +213,8 @@ IMPORTANTE: Responda APENAS com JSON válido, sem texto adicional, explicações
 
     let lesson = null
     
-    // Only save to database if not in demo mode and user is authenticated
-    if (!demoMode && session?.user?.id) {
+    // Save to database (user is authenticated)
+    if (session?.user?.id) {
       try {
         console.log('Saving lesson to database with ID:', lessonId, 'for user:', session.user.id)
         

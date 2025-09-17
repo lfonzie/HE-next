@@ -29,8 +29,9 @@ export async function POST(request: NextRequest) {
 
     const data = await response.json();
     
-    if (!data.query || !data.query.search || data.query.search.length === 0) {
-      console.log('⚠️ Nenhuma imagem encontrada no Wikimedia Commons');
+    // Check for batchcomplete response (empty search result)
+    if (data.batchcomplete === '' || !data.query || !data.query.search || data.query.search.length === 0) {
+      console.log('⚠️ Nenhuma imagem encontrada no Wikimedia Commons:', data);
       return NextResponse.json({
         success: false,
         photos: [],

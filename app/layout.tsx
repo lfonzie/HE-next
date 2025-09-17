@@ -1,6 +1,13 @@
 import type { Metadata, Viewport } from 'next'
 import type { ReactNode } from 'react'
+import { Inter } from 'next/font/google'
 import { SessionProvider } from '@/components/providers/SessionProvider'
+
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+})
 import { LessonProvider } from '@/components/providers/LessonProvider'
 import { PWAProvider } from '@/components/providers/PWAProvider'
 import { LoadingProvider } from '@/components/ui/loading'
@@ -72,7 +79,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" className={inter.variable}>
       <body className="min-h-screen bg-background font-sans text-foreground antialiased">
         {/* <SplashScreen /> */}
         <SessionProvider>

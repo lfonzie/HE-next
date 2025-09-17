@@ -264,7 +264,7 @@ export default function AulasPage() {
   }, [formData.topic])
 
 
-  // Enhanced lesson generation with better error handling and progress tracking
+  // Progressive lesson generation with skeleton UI and initial slides
   const handleGenerate = useCallback(async (topicOverride: string | null = null) => {
     const topic = topicOverride || formData.topic
     
@@ -284,130 +284,171 @@ export default function AulasPage() {
 
     setIsGenerating(true)
     setGenerationProgress(0)
-    setGenerationStatus(STATUS_MESSAGES[0].message)
+    setGenerationStatus('Iniciando geração da aula...')
     setGeneratedLesson(null)
     setStartTime(Date.now())
 
-    const generationStartTime = Date.now()
-    const estimatedDuration = 25000 // 25 seconds for more realistic timing
-
-    // Enhanced progress simulation
-    const progressInterval = setInterval(() => {
-      const elapsed = Date.now() - generationStartTime
-      const progress = Math.min((elapsed / estimatedDuration) * 95, 95)
-      setGenerationProgress(progress)
-
-      const currentStatus = STATUS_MESSAGES.find(
-        (status) => progress >= status.progress
-      ) || STATUS_MESSAGES[STATUS_MESSAGES.length - 1]
-      setGenerationStatus(currentStatus.message)
-
-      if (progress >= 95) {
-        clearInterval(progressInterval)
-      }
-    }, 300)
-
     try {
-      // Chamar API real para gerar aula
-      console.log('Chamando API para gerar aula:', { topic })
+      // Step 1: Generate skeleton (immediate)
+      setGenerationProgress(10)
+      setGenerationStatus('Gerando estrutura da aula...')
       
-      const response = await fetch('/api/aulas/generate', {
+      const skeletonResponse = await fetch('/api/aulas/skeleton', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          topic: topic,
-          mode: 'sync',
-          schoolId: '',
-          customPrompt: ''
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ topic, schoolId: formData.schoolId })
       })
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Erro ao gerar aula')
+      if (!skeletonResponse.ok) {
+        throw new Error('Erro ao gerar estrutura da aula')
       }
 
-      const result = await response.json()
-      console.log('Resposta da API:', result)
-      console.log('result.success:', result.success)
-      console.log('result.lesson:', result.lesson)
-      console.log('typeof result.lesson:', typeof result.lesson)
+      const skeletonData = await skeletonResponse.json()
+      const skeleton = skeletonData.skeleton
+
+      // Step 2: Generate initial slides (5-10 seconds)
+      setGenerationProgress(30)
+      setGenerationStatus('Gerando primeiros slides...')
       
-      if (!result.success || !result.lesson) {
-        console.error('Validação falhou:', {
-          success: result.success,
-          hasLesson: !!result.lesson,
-          lessonType: typeof result.lesson
-        })
-        throw new Error('Resposta inválida da API')
+      const initialSlidesResponse = await fetch('/api/aulas/initial-slides', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ topic, schoolId: formData.schoolId })
+      })
+
+      if (!initialSlidesResponse.ok) {
+        throw new Error('Erro ao gerar slides iniciais')
       }
 
-      // Lesson is now saved in database, no need for localStorage
+      const initialSlidesData = await initialSlidesResponse.json()
+      const initialSlides = initialSlidesData.slides
 
-      const generatedLesson: GeneratedLesson = {
-        id: result.lesson.id,
-        title: result.lesson.title,
-        subject: result.lesson.subject,
-        level: result.lesson.level,
-        estimatedDuration: 45,
-        difficulty: 'Intermediário' as const,
-        objectives: result.lesson.objectives || [
-          `Compreender os conceitos fundamentais sobre ${topic}`,
-          `Aplicar conhecimentos através de atividades práticas`,
-          `Desenvolver pensamento crítico sobre o tema`,
-          `Conectar o aprendizado com situações do cotidiano`
-        ],
-        stages: result.lesson.stages || [
-          { etapa: 'Introdução e Contextualização', type: 'Apresentação', activity: {}, route: '/intro', estimatedTime: 8 },
-          { etapa: 'Conteúdo Principal', type: 'Lição Interativa', activity: {}, route: '/content', estimatedTime: 20 },
-          { etapa: 'Atividade Prática', type: 'Exercício', activity: {}, route: '/activity', estimatedTime: 12 },
-          { etapa: 'Quiz de Fixação', type: 'Avaliação', activity: {}, route: '/quiz', estimatedTime: 5 }
-        ],
-        feedback: result.lesson.feedback || {},
-        demoMode: result.lesson.demoMode || true,
-        createdAt: new Date().toISOString()
-      }
-
-      setGenerationProgress(100)
-      setGenerationStatus('Aula gerada com sucesso!')
-      setGeneratedLesson(generatedLesson)
+      // Step 3: Update skeleton with initial slides
+      setGenerationProgress(60)
+      setGenerationStatus('Preparando aula inicial...')
       
-      // Capturar métricas de pacing profissional
-      if (result.pacingMetrics) {
-        setPacingMetrics(result.pacingMetrics)
-      }
-      if (result.warnings) {
-        setPacingWarnings(result.warnings)
-      }
-
-      // Store in localStorage for demo mode
-      console.log('Salvando aula no localStorage:', generatedLesson.id, generatedLesson)
-      localStorage.setItem(`demo_lesson_${(generatedLesson as any)?.id || ""}`, JSON.stringify(generatedLesson))
-      
-      // Verificar se foi salvo corretamente
-      const saved = localStorage.getItem(`demo_lesson_${(generatedLesson as any)?.id || ""}`)
-      console.log('Aula salva no localStorage:', saved ? 'SIM' : 'NÃO')
-      
-      toast.success('Aula gerada com sucesso!')
-    } catch (error) {
-      console.error('Generation error:', error)
-      setGenerationStatus('Erro na geração da aula')
-      toast.error(error instanceof Error ? error.message : 'Erro ao gerar aula. Tente novamente.')
-    } finally {
-      clearInterval(progressInterval)
-      setIsGenerating(false)
-      
-      // Clear progress after delay
-      setTimeout(() => {
-        if (!isGenerating) {
-          setGenerationProgress(0)
-          setGenerationStatus('')
+      const updatedStages = skeleton.stages.map((stage: any, index: number) => {
+        if (index < 2 && initialSlides[index]) {
+          return {
+            ...stage,
+            activity: {
+              ...stage.activity,
+              content: initialSlides[index].content,
+              imageUrl: initialSlides[index].imageUrl,
+              imagePrompt: initialSlides[index].imageQuery
+            },
+            loading: false
+          }
         }
-      }, 2000)
+        return stage
+      })
+
+      const lessonData = {
+        ...skeleton,
+        stages: updatedStages,
+        slides: initialSlides,
+        metadata: {
+          ...skeleton.metadata,
+          status: 'initial_ready',
+          initialSlidesLoaded: 2,
+          totalSlides: 14
+        }
+      }
+
+      setGenerationProgress(80)
+      setGenerationStatus('Finalizando preparação...')
+      
+      setGeneratedLesson(lessonData)
+      setGenerationProgress(100)
+      setGenerationStatus('Aula inicial pronta!')
+      
+      toast.success('Aula inicial carregada! Os demais slides serão carregados conforme necessário.')
+      
+      // Step 4: Start background loading of remaining slides
+      setTimeout(() => {
+        loadRemainingSlides(topic, lessonData)
+      }, 1000)
+
+    } catch (error) {
+      console.error('Error generating lesson:', error)
+      toast.error(`Erro ao gerar aula: ${error instanceof Error ? error.message : 'Erro desconhecido'}`)
+      setGenerationProgress(0)
+      setGenerationStatus('Erro na geração')
+    } finally {
+      setIsGenerating(false)
     }
-  }, [formData.topic, validateForm, isGenerating])
+  }, [formData.topic, formData.schoolId, validateForm])
+
+  // Background loading of remaining slides
+  const loadRemainingSlides = useCallback(async (topic: string, lessonData: any) => {
+    try {
+      setGenerationStatus('Carregando slides restantes em segundo plano...')
+      
+      // Load slides 3-14 in batches
+      const slidePromises = []
+      for (let i = 3; i <= 14; i++) {
+        slidePromises.push(
+          fetch('/api/aulas/next-slide', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              topic, 
+              slideNumber: i, 
+              schoolId: formData.schoolId 
+            })
+          }).then(res => res.json())
+        )
+      }
+
+      // Process slides as they become available
+      const results = await Promise.allSettled(slidePromises)
+      
+      const updatedStages = [...lessonData.stages]
+      const loadedSlides = [...lessonData.slides]
+      
+      results.forEach((result, index) => {
+        const slideNumber = index + 3
+        if (result.status === 'fulfilled' && result.value.success) {
+          const slide = result.value.slide
+          loadedSlides.push(slide)
+          
+          // Update the corresponding stage
+          if (updatedStages[slideNumber - 1]) {
+            updatedStages[slideNumber - 1] = {
+              ...updatedStages[slideNumber - 1],
+              activity: {
+                ...updatedStages[slideNumber - 1].activity,
+                content: slide.content,
+                imageUrl: slide.imageUrl,
+                imagePrompt: slide.imageQuery,
+                questions: slide.questions
+              },
+              loading: false
+            }
+          }
+        }
+      })
+
+      // Update the lesson with all loaded slides
+      setGeneratedLesson(prev => ({
+        ...prev,
+        stages: updatedStages,
+        slides: loadedSlides,
+        metadata: {
+          ...prev?.metadata,
+          status: 'complete',
+          allSlidesLoaded: true
+        }
+      }))
+
+      setGenerationStatus('Todos os slides carregados!')
+      toast.success('Aula completa carregada!')
+      
+    } catch (error) {
+      console.error('Error loading remaining slides:', error)
+      setGenerationStatus('Erro ao carregar slides restantes')
+    }
+  }, [formData.schoolId])
 
   // Enhanced suggestion handler with analytics
   const handleSuggestionClick = useCallback(async (suggestion: Suggestion) => {
@@ -439,11 +480,8 @@ export default function AulasPage() {
     console.log('Iniciando aula com ID:', generatedLesson.id)
     console.log('Dados da aula:', generatedLesson)
     
-    // Salvar aula no localStorage para modo demo
-    if (generatedLesson.demoMode) {
-      localStorage.setItem(`demo_lesson_${(generatedLesson as any)?.id || ""}`, JSON.stringify(generatedLesson))
-      console.log('Aula salva no localStorage para modo demo')
-    }
+    // Aula gerada e salva no banco de dados
+    console.log('Aula gerada e salva no banco de dados:', generatedLesson.id)
     
     // Navegar para a página da aula
     window.location.href = `/aulas/${(generatedLesson as any)?.id || ""}`

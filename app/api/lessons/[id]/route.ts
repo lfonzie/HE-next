@@ -46,11 +46,28 @@ export async function GET(
             lesson = lessonWithoutUser
           } else {
             console.log('Lesson belongs to different user, denying access')
-            return NextResponse.json({ error: 'Lesson not found' }, { status: 404 })
+            return NextResponse.json({ 
+              error: 'Lesson not found',
+              details: 'Lesson exists but belongs to different user'
+            }, { status: 404 })
           }
         } else {
           console.log('Lesson does not exist in database at all')
-          return NextResponse.json({ error: 'Lesson not found' }, { status: 404 })
+          
+          // Check if this might be a lesson being generated (starts with lesson_)
+          if (id.startsWith('lesson_')) {
+            console.log('This appears to be a lesson being generated, returning loading state')
+            return NextResponse.json({ 
+              error: 'Lesson not found',
+              details: 'Lesson is being generated, please try again in a moment',
+              status: 'generating'
+            }, { status: 404 })
+          }
+          
+          return NextResponse.json({ 
+            error: 'Lesson not found',
+            details: 'Lesson does not exist in database'
+          }, { status: 404 })
         }
       }
 

@@ -23,7 +23,19 @@ export const authOptions: NextAuthOptions = {
     signIn: '/login',
     error: '/error',
   },
-  debug: false,
+  debug: true, // Always enable debug for troubleshooting
+  useSecureCookies: false, // Disable secure cookies in development
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: false, // Allow HTTP in development
+      },
+    },
+  },
   logger: {
     error: (code, metadata) => {
       if (isDevelopment) {
@@ -44,25 +56,37 @@ export const authOptions: NextAuthOptions = {
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
+        console.log('🔐 NextAuth authorize called with:', { email: credentials?.email })
+        
         if (!credentials?.email || !credentials?.password) {
+          console.log('❌ Missing credentials')
           return null
         }
 
         try {
+          console.log('🔍 Looking up user:', credentials.email)
           const user = await prisma.user.findUnique({
             where: { email: credentials.email },
           })
 
-          if (!user?.password_hash) {
+          if (!user) {
+            console.log('❌ User not found:', credentials.email)
             return null
           }
 
+          if (!user?.password_hash) {
+            console.log('❌ User has no password hash:', credentials.email)
+            return null
+          }
+
+          console.log('🔍 Checking password for user:', user.email)
           const isPasswordValid = await bcrypt.compare(
             credentials.password,
             user.password_hash
           )
 
           if (!isPasswordValid) {
+            console.log('❌ Invalid password for user:', credentials.email)
             return null
           }
 
@@ -71,6 +95,7 @@ export const authOptions: NextAuthOptions = {
               ? user.role
               : undefined
 
+          console.log('✅ Authentication successful for:', user.email, 'Role:', userRole)
           return {
             id: user.id,
             email: user.email,
@@ -78,9 +103,7 @@ export const authOptions: NextAuthOptions = {
             role: userRole,
           }
         } catch (error) {
-          if (isDevelopment) {
-            console.error('Authentication error:', error)
-          }
+          console.error('❌ Authentication error:', error)
           throw new Error('Unable to sign in')
         }
       },
@@ -88,27 +111,44 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id
+      try {
+        if (user) {
+          token.id = user.id
 
-        if ('role' in user && typeof user.role === 'string') {
-          ;(token as Record<string, unknown>).role = user.role
+          if ('role' in user && typeof user.role === 'string') {
+            ;(token as Record<string, unknown>).role = user.role
+          }
         }
-      }
 
-      return token
+        return token
+      } catch (error) {
+        console.error('NextAuth JWT callback error:', error)
+        return token
+      }
     },
     async session({ session, token }) {
-      if (token && session.user) {
-        session.user.id = token.id as string
+      try {
+        if (token && session.user) {
+          session.user.id = token.id as string
 
-        const tokenRole = (token as Record<string, unknown>).role
-        if (typeof tokenRole === 'string') {
-          ;(session.user as Record<string, unknown>).role = tokenRole
+          const tokenRole = (token as Record<string, unknown>).role
+          if (typeof tokenRole === 'string') {
+            ;(session.user as Record<string, unknown>).role = tokenRole
+          }
         }
-      }
 
-      return session
+        return session
+      } catch (error) {
+        console.error('NextAuth session callback error:', error)
+        return session
+      }
+    },
+    async redirect({ url, baseUrl }) {
+      // Allows relative callback URLs
+      if (url.startsWith("/")) return `${baseUrl}${url}`
+      // Allows callback URLs on the same origin
+      else if (new URL(url).origin === baseUrl) return url
+      return baseUrl
     },
   },
 }

@@ -8,6 +8,7 @@ import { Play, Pause, RotateCcw, Volume2, VolumeX, Maximize2 } from 'lucide-reac
 import { motion, AnimatePresence } from 'framer-motion'
 import ContentProcessor from './ContentProcessor'
 import { useUnsplashImage } from '@/hooks/useUnsplashImage'
+import { EnhancedImage } from '@/components/ui/EnhancedImage'
 
 interface AnimationSlideProps {
   title: string
@@ -163,34 +164,47 @@ export default function AnimationSlide({
             >
               <div className="relative w-full max-w-2xl">
                 {imageUrl ? (
-                  // Usar imagem dinâmica da API
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
+                  // Use enhanced dynamic image from API
+                  <EnhancedImage
                     src={imageUrl}
                     alt={`${lessonTheme} - ${title}`}
-                    className="w-full h-48 object-cover rounded-lg shadow-lg"
-                    onError={(e) => {
-                      // Fallback para imagem genérica se a dinâmica falhar
-                      e.currentTarget.src = `https://picsum.photos/800/400?random=${Date.now()}`
-                    }}
+                    title={`Educational image for: ${title}`}
+                    width={800}
+                    height={400}
+                    className="w-full h-48"
+                    priority={isFirstSlide}
+                    quality={85}
+                    placeholder="blur"
+                    showRelevanceInfo={true}
+                    theme={lessonTheme}
+                    englishTheme={lessonTheme}
                   />
                 ) : (
-                  // Usar Unsplash para primeira/última slide (comportamento original)
+                  // Use Unsplash for first/last slides (original behavior)
                   <>
                     {imageLoading ? (
                       <div className="w-full h-48 bg-gray-200 rounded-lg animate-pulse flex items-center justify-center">
-                        <span className="text-gray-500">Carregando imagem...</span>
+                        <span className="text-gray-500">Loading image...</span>
                       </div>
                     ) : (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
+                      <EnhancedImage
                         src={unsplashImage.urls.regular}
                         alt={unsplashImage.alt_description || `${lessonTheme} image`}
-                        className="w-full h-48 object-cover rounded-lg shadow-lg"
+                        title={`Photo by ${unsplashImage.user.name}`}
+                        width={800}
+                        height={400}
+                        className="w-full h-48"
+                        priority={isFirstSlide}
+                        quality={85}
+                        placeholder="blur"
+                        showRelevanceInfo={true}
+                        theme={lessonTheme}
+                        englishTheme={lessonTheme}
+                        fallback={false}
                       />
                     )}
                     <div className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
-                      Foto por {unsplashImage.user.name}
+                      Photo by {unsplashImage.user.name}
                     </div>
                   </>
                 )}

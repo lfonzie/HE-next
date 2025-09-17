@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { signIn } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -21,6 +21,8 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const callbackUrl = searchParams.get('callbackUrl') || '/chat'
   const { start: startLoading, end: endLoading } = useLoading()
   
   // Refs para foco
@@ -41,27 +43,40 @@ export default function LoginPage() {
     })
 
     try {
+      console.log('🔐 Attempting login with:', { email, callbackUrl })
+      
       const result = await signIn('credentials', {
         email,
         password,
         redirect: false,
       })
 
+      console.log('🔐 Login result:', result)
+
       if (result?.error) {
+        console.error('❌ Login error:', result.error)
         setError('Credenciais inválidas')
         endLoading(loadingKey, 'error')
       } else if (result?.ok) {
+        console.log('✅ Login successful, redirecting to:', callbackUrl)
+        
         // End login loading first
         endLoading(loadingKey, 'success')
         
-        // Start navigation loading using the correct system
-        console.log('Login successful, starting navigation loading');
-        startLoading('login-redirect', { message: 'Redirecionando...' })
-        
-        // Navigate to chat - loading will be hidden when chat page loads
-        router.push('/chat')
+        // Add a small delay to ensure session is properly set
+        setTimeout(async () => {
+          console.log('🚀 Navigating to:', callbackUrl)
+          // Force refresh the session before navigation
+          await fetch('/api/auth/session', { method: 'GET' })
+          router.push(callbackUrl)
+        }, 500)
+      } else {
+        console.error('❌ Unexpected login result:', result)
+        setError('Erro inesperado no login')
+        endLoading(loadingKey, 'error')
       }
     } catch (error) {
+      console.error('❌ Login exception:', error)
       setError('Erro ao fazer login')
       endLoading(loadingKey, 'error')
     } finally {
@@ -71,17 +86,17 @@ export default function LoginPage() {
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true)
-    await signIn('google', { callbackUrl: '/chat' })
+    await signIn('google', { callbackUrl })
   }
 
   const togglePasswordVisibility = () => setShowPassword(prev => !prev)
 
-  // Auto-focus no email ao carregar and prefetch chat
+  // Auto-focus no email ao carregar and prefetch callback route
   useEffect(() => {
     emailRef.current?.focus()
-    // Prefetch chat route to reduce navigation latency
-    router.prefetch('/chat')
-  }, [router])
+    // Prefetch callback route to reduce navigation latency
+    router.prefetch(callbackUrl)
+  }, [router, callbackUrl])
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-yellow-50 via-orange-50 to-white p-4 relative overflow-hidden">

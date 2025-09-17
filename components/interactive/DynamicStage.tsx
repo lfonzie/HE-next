@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import QuizComponent from './QuizComponent'
 import NewQuizComponent from './NewQuizComponent'
+import EnhancedQuizComponent from './EnhancedQuizComponent'
+import ImprovedQuizComponent from './ImprovedQuizComponent'
 import DrawingPrompt from './DrawingPrompt'
 import AnimationSlide from './AnimationSlide'
 import DiscussionBoard from './DiscussionBoard'
@@ -128,17 +130,87 @@ export default function DynamicStage({
   }
 
   const renderActivity = () => {
-    const { activity } = stage
+    // Add defensive checks for stage and activity
+    if (!stage) {
+      console.error('[ERROR] Stage is undefined:', stage);
+      return (
+        <Card className="w-full max-w-2xl mx-auto">
+          <CardContent className="p-6">
+            <div className="text-center text-red-600">
+              <h3 className="text-lg font-semibold mb-2">Erro: Etapa não encontrada</h3>
+              <p className="text-sm">A etapa não foi carregada corretamente.</p>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    if (!stage.activity) {
+      console.error('[ERROR] Stage missing activity property:', stage);
+      return (
+        <Card className="w-full max-w-2xl mx-auto">
+          <CardContent className="p-6">
+            <div className="text-center text-orange-600">
+              <h3 className="text-lg font-semibold mb-2">Erro: Atividade não encontrada</h3>
+              <p className="text-sm">Esta etapa não possui uma atividade definida.</p>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    const { activity } = stage;
+
+    if (!activity.component) {
+      console.error('[ERROR] Activity missing component:', activity);
+      return (
+        <Card className="w-full max-w-2xl mx-auto">
+          <CardContent className="p-6">
+            <div className="text-center text-orange-600">
+              <h3 className="text-lg font-semibold mb-2">Erro: Componente não especificado</h3>
+              <p className="text-sm">A atividade não possui um componente definido.</p>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    console.log('[DEBUG] Rendering activity:', { component: activity.component, stage: stage.etapa });
 
     switch (activity.component) {
       case 'QuizComponent':
+        // Convert old format to new format
+        const enhancedQuestions = (activity.questions || []).map((q: any) => ({
+          id: q.id || `q_${Math.random()}`,
+          question: q.q || q.question || 'Pergunta não disponível',
+          options: {
+            A: q.options?.[0] || q.a || 'Opção A',
+            B: q.options?.[1] || q.b || 'Opção B', 
+            C: q.options?.[2] || q.c || 'Opção C',
+            D: q.options?.[3] || q.d || 'Opção D'
+          },
+          correctAnswer: typeof q.correct === 'string' ? q.correct.toUpperCase() : 
+                        typeof q.correct === 'number' ? ['A', 'B', 'C', 'D'][q.correct] : 'A',
+          explanation: q.explanation || 'Explicação não disponível',
+          difficulty: q.difficulty || 'MEDIUM',
+          points: q.points || 10,
+          timeEstimate: q.timeEstimate || 30,
+          hint: q.hint
+        }))
+
         return (
-          <NewQuizComponent
-            questions={activity.questions || []}
-            onComplete={(score, total) => handleStageComplete({ score, total, type: 'quiz' })}
+          <ImprovedQuizComponent
+            questions={enhancedQuestions}
+            onComplete={(score, total, results) => handleStageComplete({ 
+              score, 
+              total, 
+              results,
+              type: 'quiz' 
+            })}
             timeLimit={activity.time ? activity.time * 60 : 0}
             showExplanations={true}
             allowRetry={true}
+            showHints={true}
           />
         )
 
@@ -267,12 +339,18 @@ export default function DynamicStage({
         )
 
       default:
+        console.warn('[WARN] Unknown activity component:', activity.component);
         return (
           <Card className="w-full max-w-2xl mx-auto">
             <CardContent className="p-6">
-              <h3 className="text-lg font-semibold mb-4">{stage.etapa}</h3>
-              <div className="prose max-w-none">
-                <p>{activity.content}</p>
+              <div className="text-center text-orange-600">
+                <h3 className="text-lg font-semibold mb-2">Componente não suportado</h3>
+                <p className="text-sm mb-4">Tipo: {activity.component}</p>
+                {activity.content && (
+                  <div className="prose max-w-none text-left">
+                    <p>{activity.content}</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

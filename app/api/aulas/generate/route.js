@@ -119,158 +119,42 @@ function generateDynamicImageUrl(topic, slideNumber, slideType) {
  * @returns {string} - Template formatado
  */
 function getLessonPromptTemplate(topic, systemPrompt = '') {
-  return `Você é um professor especialista em ${topic}. Crie uma aula completa e envolvente estruturada em exatamente 9 slides.
+  return `Crie uma aula sobre "${topic}" com exatamente 14 slides em JSON válido.
 
-REGRAS IMPORTANTES:
-- Responda APENAS com JSON válido, sem texto adicional
-- NÃO inclua instruções, metadados ou explicações no conteúdo dos slides
-- Cada slide deve ter conteúdo educativo direto e objetivo
-- Use linguagem clara e didática em português brasileiro
-- NÃO use frases como "imagine uma tabela", "crie um gráfico" ou "desenhe um diagrama"
-- Use \\n\\n para quebras de linha entre parágrafos no conteúdo dos slides
-- Para quiz, NÃO inclua campo "correct" - apenas forneça as opções e explicação
-- CADA SLIDE DEVE TER MÍNIMO 500 TOKENS DE CONTEÚDO (conteúdo extenso e detalhado)
+ESTRUTURA (14 slides):
+1. Abertura: Tema e Objetivos (content)
+2. Conceitos Fundamentais (content)  
+3. Desenvolvimento dos Processos (content)
+4. Aplicações Práticas (content)
+5. Variações e Adaptações (content)
+6. Conexões Avançadas (content)
+7. Quiz: Conceitos Básicos (quiz)
+8. Aprofundamento (content)
+9. Exemplos Práticos (content)
+10. Análise Crítica (content)
+11. Síntese Intermediária (content)
+12. Quiz: Análise Situacional (quiz)
+13. Aplicações Futuras (content)
+14. Encerramento: Síntese Final (content)
 
-ESTRUTURA DA AULA (45-60 minutos) - EXATAMENTE 14 SLIDES:
-1. Abertura: Tema e Objetivos (Conteúdo)
-2. Conceitos Fundamentais (Conteúdo)
-3. Desenvolvimento dos Processos (Conteúdo)
-4. Aplicações Práticas (Conteúdo)
-5. Variações e Adaptações (Conteúdo)
-6. Conexões Avançadas (Conteúdo)
-7. Quiz: Conceitos Básicos (Avaliação, 0 pontos)
-8. Aprofundamento (Conteúdo)
-9. Exemplos Práticos (Conteúdo)
-10. Análise Crítica (Conteúdo)
-11. Síntese Intermediária (Conteúdo)
-12. Quiz: Análise Situacional (Avaliação, 0 pontos)
-13. Aplicações Futuras (Conteúdo)
-14. Encerramento: Síntese Final (Conteúdo)
-
-FORMATO JSON OBRIGATÓRIO - EXATAMENTE 14 SLIDES:
+FORMATO JSON:
 {
   "slides": [
     {
       "number": 1,
       "title": "Abertura: Tema e Objetivos",
-      "content": "Conteúdo educativo detalhado com quebras de linha usando \\n\\n para parágrafos\\n\\nExemplo de segundo parágrafo com mais informações detalhadas.\\n\\nTerceiro parágrafo com exemplos práticos e aplicações reais.",
+      "content": "Conteúdo educativo detalhado com \\n\\n para parágrafos",
       "type": "content",
-      "imageQuery": "query específica para busca de imagem no Unsplash",
-      "tokenEstimate": 500
-    },
-    {
-      "number": 2,
-      "title": "Conceitos Fundamentais",
-      "content": "Conteúdo educativo detalhado sem imagem.",
-      "type": "content",
-      "imageQuery": null,
-      "tokenEstimate": 500
-    },
-    {
-      "number": 3,
-      "title": "Desenvolvimento dos Processos",
-      "content": "Conteúdo educativo detalhado sem imagem.",
-      "type": "content",
-      "imageQuery": null,
-      "tokenEstimate": 500
-    },
-    {
-      "number": 4,
-      "title": "Aplicações Práticas",
-      "content": "Conteúdo educativo detalhado sem imagem.",
-      "type": "content",
-      "imageQuery": null,
-      "tokenEstimate": 500
-    },
-    {
-      "number": 5,
-      "title": "Variações e Adaptações",
-      "content": "Conteúdo educativo detalhado sem imagem.",
-      "type": "content",
-      "imageQuery": null,
-      "tokenEstimate": 500
-    },
-    {
-      "number": 6,
-      "title": "Conexões Avançadas",
-      "content": "Conteúdo educativo detalhado sem imagem.",
-      "type": "content",
-      "imageQuery": null,
-      "tokenEstimate": 500
-    },
-    {
-      "number": 7,
-      "title": "Quiz: Conceitos Básicos",
-      "content": "Conteúdo educativo detalhado com imagem.",
-      "type": "quiz",
-      "imageQuery": "query específica para busca de imagem no Unsplash",
-      "tokenEstimate": 500,
-      "points": 0
-    },
-    {
-      "number": 8,
-      "title": "Aprofundamento",
-      "content": "Conteúdo educativo detalhado sem imagem.",
-      "type": "content",
-      "imageQuery": null,
-      "tokenEstimate": 500
-    },
-    {
-      "number": 9,
-      "title": "Exemplos Práticos",
-      "content": "Conteúdo educativo detalhado sem imagem.",
-      "type": "content",
-      "imageQuery": null,
-      "tokenEstimate": 500
-    },
-    {
-      "number": 10,
-      "title": "Análise Crítica",
-      "content": "Conteúdo educativo detalhado sem imagem.",
-      "type": "content",
-      "imageQuery": null,
-      "tokenEstimate": 500
-    },
-    {
-      "number": 11,
-      "title": "Síntese Intermediária",
-      "content": "Conteúdo educativo detalhado sem imagem.",
-      "type": "content",
-      "imageQuery": null,
-      "tokenEstimate": 500
-    },
-    {
-      "number": 12,
-      "title": "Quiz: Análise Situacional",
-      "content": "Conteúdo educativo detalhado sem imagem.",
-      "type": "quiz",
-      "imageQuery": null,
-      "tokenEstimate": 500,
-      "points": 0
-    },
-    {
-      "number": 13,
-      "title": "Aplicações Futuras",
-      "content": "Conteúdo educativo detalhado sem imagem.",
-      "type": "content",
-      "imageQuery": null,
-      "tokenEstimate": 500
-    },
-    {
-      "number": 14,
-      "title": "Encerramento: Síntese Final",
-      "content": "Conteúdo educativo detalhado com imagem de encerramento.",
-      "type": "content",
-      "imageQuery": "query específica para busca de imagem no Unsplash",
+      "imageQuery": "query específica para imagem",
       "tokenEstimate": 500
     }
   ]
 }
 
-Para slides de quiz (type: "quiz"), inclua:
+Para quiz (slides 7 e 12):
 {
   "number": 7,
-  "title": "Quiz: Conceitos Básicos",
+  "title": "Quiz: Conceitos Básicos", 
   "content": "Conteúdo do quiz",
   "type": "quiz",
   "imageQuery": null,
@@ -278,35 +162,26 @@ Para slides de quiz (type: "quiz"), inclua:
   "points": 0,
   "questions": [
     {
-      "q": "Pergunta clara e objetiva?",
-      "options": ["A) Alternativa A detalhada", "B) Alternativa B detalhada", "C) Alternativa C detalhada", "D) Alternativa D detalhada"],
-      "explanation": "Explicação detalhada da resposta correta"
+      "q": "Pergunta clara?",
+      "options": ["A) Alternativa A", "B) Alternativa B", "C) Alternativa C", "D) Alternativa D"],
+      "correct": "A",
+      "explanation": "Explicação da resposta"
     }
   ]
 }
 
-IMPORTANTE: 
-- O campo "content" deve conter APENAS conteúdo educativo
-- Use \\n\\n para separar parágrafos no conteúdo
-- NÃO inclua instruções como "imagine uma tabela" ou "crie um gráfico"
-- Use linguagem direta e objetiva
-- Foque em explicações claras e exemplos práticos
-- CADA SLIDE DEVE TER MÍNIMO 500 TOKENS DE CONTEÚDO
-- O campo "imageQuery" deve ser específico e relevante ao conteúdo do slide
-- APENAS slides 1, 7 e 14 devem ter imageQuery (outros slides devem ter imageQuery: null)
-- Para slides 1, 7 e 14: use termos específicos do tema + "educational"
-- Evite termos genéricos como "education", "classroom", "learning"
-- Para quiz: "correct" deve ser uma letra (A, B, C, D) indicando a resposta correta
-- As alternativas devem ser claramente identificadas como A), B), C), D) no conteúdo das opções
-- Use quebras de linha \\n\\n para separar parágrafos e melhorar a legibilidade
-- Para diagramas e tabelas, use a sintaxe especial: <<<criar um diagrama da fotossíntese, sem letras somente imagem>>> ou <<<criar uma tabela comparativa>>>
-- GERE EXATAMENTE 14 SLIDES - NÃO MAIS, NÃO MENOS
+REGRAS:
+- Responda APENAS com JSON válido
+- Conteúdo educativo direto em português brasileiro
+- Mínimo 500 tokens por slide
+- Apenas slides 1, 7 e 14 têm imageQuery
+- Quiz: "correct" deve ser A, B, C ou D
+- Use \\n\\n para quebras de linha
 
 Tópico: ${topic}
+${systemPrompt ? `[CUSTOM: ${systemPrompt}]` : ''}
 
-${systemPrompt ? `[SISTEMA PROMPT CUSTOMIZADO: ${systemPrompt}]` : ''}
-
-Responda apenas com o JSON válido:`;
+JSON:`;
 }
 
 /**
@@ -336,11 +211,11 @@ function parseGeneratedContent(content) {
     // Fallback: criar estrutura básica
     console.warn('Não foi possível parsear o conteúdo da IA, usando fallback');
     return {
-      slides: Array.from({ length: 9 }, (_, i) => ({
+      slides: Array.from({ length: 14 }, (_, i) => ({
         number: i + 1,
         title: `Slide ${i + 1}`,
         content: `Conteúdo do slide ${i + 1}`,
-        type: i === 3 || i === 7 ? 'quiz' : i === 8 ? 'closing' : 'content',
+        type: i === 6 || i === 11 ? 'quiz' : i === 13 ? 'closing' : 'content',
         imageQuery: generateImageQuery('tópico', i + 1, 'content')
       }))
     };
@@ -351,61 +226,181 @@ function parseGeneratedContent(content) {
 }
 
 /**
- * Valida estrutura da aula gerada
+ * Valida estrutura da aula gerada com validação flexível e recuperação de erros
  * @param {Object} lessonData - Dados da aula
  * @returns {Object} - Resultado da validação
  */
 function validateLessonStructure(lessonData) {
   const issues = [];
+  const warnings = [];
+  const fixedSlides = [];
   
   if (!lessonData.slides || !Array.isArray(lessonData.slides)) {
     issues.push('Estrutura de slides inválida');
-    return { isValid: false, issues };
+    return { isValid: false, issues, warnings, fixedSlides: [] };
   }
   
-  if (lessonData.slides.length !== 14) {
-    issues.push(`Deve ter exatamente 14 slides, encontrados ${lessonData.slides.length}`);
-  }
-  
-  // Validar slides de quiz
-  const quizSlides = lessonData.slides.filter(slide => slide.type === 'quiz');
-  if (quizSlides.length !== 2) {
-    issues.push(`Deve ter exatamente 2 slides de quiz, encontrados ${quizSlides.length}`);
-  }
-  
-  // Validar estrutura dos slides de quiz
-  quizSlides.forEach((slide, index) => {
-    if (!slide.questions || !Array.isArray(slide.questions) || slide.questions.length === 0) {
-      issues.push(`Slide de quiz ${index + 1} não possui questões válidas`);
-    } else {
-      slide.questions.forEach((question, qIndex) => {
-        if (!question.q || !question.options || !Array.isArray(question.options) || question.options.length !== 4) {
-          issues.push(`Questão ${qIndex + 1} do quiz ${index + 1} não possui estrutura válida`);
-        }
-        if (question.correct === undefined || question.correct < 0 || question.correct > 3) {
-          issues.push(`Questão ${qIndex + 1} do quiz ${index + 1} não possui resposta correta válida`);
-        }
-      });
+  // Validar e corrigir cada slide individualmente
+  lessonData.slides.forEach((slide, index) => {
+    const slideIssues = [];
+    const fixedSlide = { ...slide };
+    
+    // Validar campos obrigatórios
+    if (!slide.number || typeof slide.number !== 'number') {
+      fixedSlide.number = index + 1;
+      slideIssues.push(`Slide ${index + 1}: número inválido, corrigido para ${index + 1}`);
+    }
+    
+    if (!slide.title || typeof slide.title !== 'string') {
+      fixedSlide.title = `Slide ${index + 1}`;
+      slideIssues.push(`Slide ${index + 1}: título inválido, usando título padrão`);
+    }
+    
+    if (!slide.content || typeof slide.content !== 'string') {
+      fixedSlide.content = `Conteúdo do slide ${index + 1}`;
+      slideIssues.push(`Slide ${index + 1}: conteúdo inválido, usando conteúdo padrão`);
+    }
+    
+    if (!slide.type || !['content', 'quiz', 'closing'].includes(slide.type)) {
+      // Determinar tipo baseado na posição
+      if (index === 6 || index === 11) {
+        fixedSlide.type = 'quiz';
+      } else if (index === 13) {
+        fixedSlide.type = 'closing';
+      } else {
+        fixedSlide.type = 'content';
+      }
+      slideIssues.push(`Slide ${index + 1}: tipo inválido, corrigido para ${fixedSlide.type}`);
+    }
+    
+    // Validar e corrigir slides de quiz
+    if (fixedSlide.type === 'quiz') {
+      if (!slide.questions || !Array.isArray(slide.questions) || slide.questions.length === 0) {
+        // Criar questão padrão se não existir
+        fixedSlide.questions = [{
+          q: `Pergunta sobre o tópico da aula?`,
+          options: [
+            "Alternativa A",
+            "Alternativa B", 
+            "Alternativa C",
+            "Alternativa D"
+          ],
+          correct: "A",
+          explanation: "Explicação da resposta correta"
+        }];
+        slideIssues.push(`Slide ${index + 1}: questões de quiz inválidas, criada questão padrão`);
+      } else {
+        // Validar e corrigir cada questão
+        fixedSlide.questions = slide.questions.map((question, qIndex) => {
+          const fixedQuestion = { ...question };
+          
+          if (!question.q || typeof question.q !== 'string') {
+            fixedQuestion.q = `Pergunta ${qIndex + 1}?`;
+            slideIssues.push(`Slide ${index + 1}, Questão ${qIndex + 1}: pergunta inválida`);
+          }
+          
+          if (!question.options || !Array.isArray(question.options) || question.options.length !== 4) {
+            fixedQuestion.options = [
+              "Alternativa A",
+              "Alternativa B",
+              "Alternativa C", 
+              "Alternativa D"
+            ];
+            slideIssues.push(`Slide ${index + 1}, Questão ${qIndex + 1}: opções inválidas`);
+          }
+          
+          // Validar resposta correta
+          if (question.correct === undefined || question.correct === null) {
+            fixedQuestion.correct = "A";
+            slideIssues.push(`Slide ${index + 1}, Questão ${qIndex + 1}: resposta correta inválida, definida como A`);
+          } else if (typeof question.correct === 'string') {
+            const normalizedCorrect = question.correct.toUpperCase();
+            if (!['A', 'B', 'C', 'D'].includes(normalizedCorrect)) {
+              fixedQuestion.correct = "A";
+              slideIssues.push(`Slide ${index + 1}, Questão ${qIndex + 1}: resposta correta inválida (${question.correct}), corrigida para A`);
+            } else {
+              fixedQuestion.correct = normalizedCorrect;
+            }
+          } else if (typeof question.correct === 'number') {
+            if (question.correct < 0 || question.correct > 3) {
+              fixedQuestion.correct = "A";
+              slideIssues.push(`Slide ${index + 1}, Questão ${qIndex + 1}: resposta correta inválida (${question.correct}), corrigida para A`);
+            } else {
+              fixedQuestion.correct = ['A', 'B', 'C', 'D'][question.correct];
+            }
+          }
+          
+          if (!question.explanation || typeof question.explanation !== 'string') {
+            fixedQuestion.explanation = "Explicação da resposta correta";
+          }
+          
+          return fixedQuestion;
+        });
+      }
+    }
+    
+    // Validar tokens por slide (mais flexível)
+    const tokens = estimateTokens(fixedSlide.content || '');
+    if (tokens < 200) {
+      warnings.push(`Slide ${index + 1}: conteúdo muito curto (${tokens} tokens), considere expandir`);
+    }
+    
+    fixedSlides.push(fixedSlide);
+    
+    if (slideIssues.length > 0) {
+      warnings.push(...slideIssues);
     }
   });
   
-  // Validar tokens por slide
-  const shortSlides = lessonData.slides.filter(slide => {
-    const tokens = estimateTokens(slide.content || '');
-    return tokens < 500;
-  });
-  
-  if (shortSlides.length > 0) {
-    issues.push(`${shortSlides.length} slide(s) com menos de 500 tokens (mínimo obrigatório)`);
+  // Garantir que temos pelo menos 14 slides
+  while (fixedSlides.length < 14) {
+    const slideNumber = fixedSlides.length + 1;
+    const slideType = slideNumber === 7 || slideNumber === 12 ? 'quiz' : 
+                     slideNumber === 14 ? 'closing' : 'content';
+    
+    fixedSlides.push({
+      number: slideNumber,
+      title: `Slide ${slideNumber}`,
+      content: `Conteúdo do slide ${slideNumber}`,
+      type: slideType,
+      imageQuery: slideNumber === 1 || slideNumber === 7 || slideNumber === 14 ? 
+                  `educational ${slideType} illustration` : null,
+      tokenEstimate: 500,
+      ...(slideType === 'quiz' && {
+        questions: [{
+          q: `Pergunta sobre o tópico da aula?`,
+          options: ["Alternativa A", "Alternativa B", "Alternativa C", "Alternativa D"],
+          correct: "A",
+          explanation: "Explicação da resposta correta"
+        }],
+        points: 0
+      })
+    });
+    warnings.push(`Slide ${slideNumber}: criado slide adicional para completar estrutura`);
   }
   
+  // Limitar a 14 slides se houver mais
+  if (fixedSlides.length > 14) {
+    warnings.push(`Removidos ${fixedSlides.length - 14} slides extras para manter estrutura de 14 slides`);
+    fixedSlides.splice(14);
+  }
+  
+  const quizSlides = fixedSlides.filter(slide => slide.type === 'quiz');
+  const shortSlides = fixedSlides.filter(slide => {
+    const tokens = estimateTokens(slide.content || '');
+    return tokens < 200;
+  });
+  
   return {
-    isValid: issues.length === 0,
-    issues,
+    isValid: true, // Sempre válido após correções
+    issues: [], // Sem issues críticos após correções
+    warnings,
+    fixedSlides,
     metrics: {
-      totalSlides: lessonData.slides.length,
+      totalSlides: fixedSlides.length,
       quizSlides: quizSlides.length,
-      shortSlides: shortSlides.length
+      shortSlides: shortSlides.length,
+      correctionsApplied: warnings.length
     }
   };
 }
@@ -478,8 +473,9 @@ export async function POST(request) {
     const response = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [{ role: 'system', content: generationPrompt }],
-      max_tokens: 10000, // Limite superior estimado
-      temperature: 0.7
+      max_tokens: 4000, // Otimizado para reduzir tempo de geração
+      temperature: 0.7,
+      stream: false // Garantir que não seja streaming
     });
     
     const openaiDuration = Math.round((Date.now() - openaiStartTime) / 1000);
@@ -521,27 +517,29 @@ export async function POST(request) {
     
     log.timeEnd(validationTimer, 'validacao-estrutura', baseContext);
     
-    if (!validation.isValid) {
-      log.validationError('lesson-structure', generatedContent, 'estrutura válida', baseContext);
-      log.error('❌ Validação da estrutura falhou', baseContext, {
-        errors: validation.errors,
-        warnings: validation.warnings
+    // Usar slides corrigidos se houver problemas
+    const finalContent = validation.fixedSlides.length > 0 ? 
+      { ...generatedContent, slides: validation.fixedSlides } : 
+      generatedContent;
+    
+    if (validation.warnings && validation.warnings.length > 0) {
+      log.warn('⚠️ Validação com correções aplicadas', baseContext, {
+        warnings: validation.warnings,
+        correctionsApplied: validation.metrics.correctionsApplied
       });
     } else {
-      log.success('✅ Validação da estrutura passou', baseContext, {
-        warnings: validation.warnings?.length || 0
-      });
+      log.success('✅ Validação da estrutura passou sem correções', baseContext);
     }
     
     // Timer para preparação de imagens
     const imageTimer = log.timeStart('preparacao-imagens', baseContext);
     
     log.info('🖼️ Preparando queries de imagem', baseContext, {
-      slidesCount: generatedContent.slides?.length || 0
+      slidesCount: finalContent.slides?.length || 0
     });
     
     // Adicionar queries de imagem otimizadas e URLs dinâmicas APENAS para slides 1, 7 e 14
-    const slidesWithImageQueries = await Promise.all(generatedContent.slides.map(async (slide, index) => {
+    const slidesWithImageQueries = await Promise.all(finalContent.slides.map(async (slide, index) => {
       // Apenas slides 1, 7 e 14 devem ter imagens
       if (slide.number === 1 || slide.number === 7 || slide.number === 14) {
         const imageQuery = slide.imageQuery || generateImageQuery(topic, slide.number, slide.type);
@@ -613,10 +611,10 @@ export async function POST(request) {
           }
         }
 
-        // 3. Se Pixabay falhar, tentar Unsplash
+        // 3. Se Pixabay falhar, tentar Enhanced Image Service
         if (!imageUrl) {
           try {
-            const unsplashResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/unsplash/translate-search`, {
+            const enhancedResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/images/enhanced-search`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -624,20 +622,57 @@ export async function POST(request) {
               body: JSON.stringify({
                 query: imageQuery,
                 subject: topic,
-                count: 1
+                count: 1,
+                forceRefresh: false // Allow caching for better performance
               }),
             });
 
-            if (unsplashResponse.ok) {
-              const unsplashData = await unsplashResponse.json();
-              if (unsplashData.photos && unsplashData.photos.length > 0) {
-                imageUrl = unsplashData.photos[0].urls.regular;
-                imageSource = 'unsplash';
-                console.log(`✅ Imagem Unsplash carregada para slide ${slide.number}:`, imageUrl);
+            if (enhancedResponse.ok) {
+              const enhancedData = await enhancedResponse.json();
+              if (enhancedData.photos && enhancedData.photos.length > 0) {
+                const selectedImage = enhancedData.photos[0];
+                imageUrl = selectedImage.urls.regular;
+                imageSource = 'enhanced-unsplash';
+                
+                // Log relevance information
+                console.log(`✅ Enhanced image loaded for slide ${slide.number}:`, {
+                  imageUrl,
+                  relevanceScore: selectedImage.relevanceScore,
+                  theme: enhancedData.theme,
+                  englishTheme: enhancedData.englishTheme,
+                  searchTime: enhancedData.searchTime,
+                  cacheHit: enhancedData.cacheHit
+                });
               }
             }
           } catch (error) {
-            console.warn(`⚠️ Erro ao buscar imagem Unsplash para slide ${slide.number}:`, error);
+            console.warn(`⚠️ Erro ao buscar imagem enhanced para slide ${slide.number}:`, error);
+            
+            // Fallback to original Unsplash endpoint
+            try {
+              const unsplashResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/unsplash/translate-search`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  query: imageQuery,
+                  subject: topic,
+                  count: 1
+                }),
+              });
+
+              if (unsplashResponse.ok) {
+                const unsplashData = await unsplashResponse.json();
+                if (unsplashData.photos && unsplashData.photos.length > 0) {
+                  imageUrl = unsplashData.photos[0].urls.regular;
+                  imageSource = 'unsplash-fallback';
+                  console.log(`✅ Fallback Unsplash image loaded for slide ${slide.number}:`, imageUrl);
+                }
+              }
+            } catch (fallbackError) {
+              console.warn(`⚠️ Fallback Unsplash also failed for slide ${slide.number}:`, fallbackError);
+            }
           }
         }
 

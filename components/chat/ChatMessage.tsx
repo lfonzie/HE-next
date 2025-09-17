@@ -97,11 +97,22 @@ export const ChatMessage = memo(function ChatMessage({
     }
   }, [isUser, currentModuleId, message.content, classifyMessage]);
 
-  // Use message.module if available (from streaming), otherwise use currentModuleId
-  // This ensures consistency between StreamingMessage and ChatMessage
-  const effectiveModuleId = !isUser && message.module 
-    ? convertToOldModuleId(message.module as ModuleId)
-    : currentModuleId;
+  // Determine the effective module ID with priority:
+  // 1. message.module (from streaming/API response) - highest priority for assistant messages
+  // 2. autoClassifiedModule (from classification) - for user messages
+  // 3. currentModuleId (from context) - fallback
+  const effectiveModuleId = useMemo(() => {
+    if (!isUser && message.module) {
+      // For assistant messages, use the module from the message (from API response)
+      return convertToOldModuleId(message.module as ModuleId);
+    }
+    if (isUser && autoClassifiedModule) {
+      // For user messages, use auto-classified module if available
+      return convertToOldModuleId(autoClassifiedModule);
+    }
+    // Fallback to current module context
+    return currentModuleId;
+  }, [isUser, message.module, autoClassifiedModule, currentModuleId]);
 
   // Debug log para verificar consistência de módulos (remover em produção)
   if (process.env.NODE_ENV === 'development') {
@@ -153,14 +164,16 @@ export const ChatMessage = memo(function ChatMessage({
       {!isUser && (
         <div className={`flex flex-col items-center ${isUser ? 'order-last' : 'order-first'}`}>
           <div 
-            className="w-10 h-10 rounded-full border-2 shadow-md flex items-center justify-center transition-all duration-200 hover:scale-105"
+            className="w-10 h-10 rounded-full border-2 shadow-md flex items-center justify-center transition-all duration-200 hover:scale-105 cursor-help"
             style={{
               backgroundColor: moduleColor,
               color: "#ffffff",
               boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
               borderColor: `${moduleColor}60`
             }}
-            title={`Módulo: ${moduleInfo?.name || 'Assistente'}`}
+            title={`Módulo: ${moduleInfo?.name || 'Assistente'}\nID: ${effectiveModuleId || 'N/A'}\nÍcone: ${moduleIconKey}`}
+            data-module-id={effectiveModuleId}
+            data-icon-key={moduleIconKey}
           >
             <ModuleIcon className="w-5 h-5 text-white" />
           </div>

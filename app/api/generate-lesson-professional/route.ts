@@ -24,7 +24,6 @@ export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions)
     const { 
       topic, 
-      demoMode, 
       subject, 
       grade, 
       pacingMode = 'professional', // 'professional' | 'photosynthesis' | 'custom'
@@ -38,9 +37,9 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Check if demo mode is enabled or if user is authenticated
-    if (!demoMode && !session?.user?.id) {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+    // Check if user is authenticated
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Você precisa estar logado para gerar aulas' }, { status: 401 })
     }
 
     // Se for geração de slide único, usar prompt específico
@@ -184,8 +183,8 @@ IMPORTANTE: Responda APENAS com JSON válido, sem texto adicional, explicações
       // Continue sem imagens se houver erro
     }
 
-    // Save to database if user is authenticated
-    if (session?.user?.id && !demoMode) {
+    // Save to database (user is authenticated)
+    if (session?.user?.id) {
       try {
         const savedLesson = await prisma.lessons.create({
           data: {
