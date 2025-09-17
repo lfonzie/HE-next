@@ -9,6 +9,23 @@ import { orchestrate } from '@/lib/orchestrator'
 import { educationalTools } from '@/lib/ai-tools'
 import '@/lib/orchestrator-modules' // ensure modules are registered
 
+// Provider configurations
+const PROVIDER_MODELS = {
+  openai: {
+    'gpt-4o': 'GPT-4 Omni',
+    'gpt-4o-mini': 'GPT-4 Omni Mini',
+    'gpt-4-turbo': 'GPT-4 Turbo',
+    'gpt-3.5-turbo': 'GPT-3.5 Turbo'
+  },
+  google: {
+    'gemini-1.5-pro': 'Gemini 1.5 Pro',
+    'gemini-1.5-flash': 'Gemini 1.5 Flash',
+    'gemini-pro': 'Gemini Pro'
+  }
+}
+
+const getAvailableProviders = () => Object.keys(PROVIDER_MODELS)
+
 export async function POST(request: NextRequest) {
   try {
     // Verificar autenticação (desabilitado temporariamente para desenvolvimento)
@@ -131,13 +148,9 @@ export async function POST(request: NextRequest) {
     // Criar modelo baseado no provedor selecionado
     let modelInstance;
     if (selectedProvider === 'google') {
-      modelInstance = google(selectedModel, {
-        apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY!,
-      })
+      modelInstance = google(selectedModel)
     } else {
-      modelInstance = openai(selectedModel, {
-        apiKey: process.env.OPENAI_API_KEY!,
-      })
+      modelInstance = openai(selectedModel)
     }
 
     // Usar streamText do AI SDK com modelo selecionado
@@ -216,7 +229,7 @@ export async function GET() {
       id: provider,
       name: provider.charAt(0).toUpperCase() + provider.slice(1),
       available: true,
-      models: Object.keys(PROVIDER_MODELS[provider])
+      models: Object.keys(PROVIDER_MODELS[provider as keyof typeof PROVIDER_MODELS])
     }))
 
     return new Response(

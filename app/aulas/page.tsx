@@ -407,7 +407,7 @@ export default function AulasPage() {
         }
       }, 2000)
     }
-  }, [formData.topic, validateForm])
+  }, [formData.topic, validateForm, isGenerating])
 
   // Enhanced suggestion handler with analytics
   const handleSuggestionClick = useCallback(async (suggestion: Suggestion) => {

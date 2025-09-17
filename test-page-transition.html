@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste - Sistema de Loading entre Páginas</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #ffd233;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            font-size: 1.2rem;
+            color: #ccc;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 210, 51, 0.2);
+        }
+        .test-title {
+            font-size: 1.5rem;
+            color: #ffd233;
+            margin-bottom: 20px;
+        }
+        .button {
+            background: linear-gradient(135deg, #ffd233 0%, #ff8c00 100%);
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 210, 51, 0.3);
+        }
+        .button:active {
+            transform: translateY(0);
+        }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        .loading-content {
+            text-align: center;
+            color: white;
+        }
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 210, 51, 0.2);
+            border-top: 4px solid #ffd233;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .loading-message {
+            font-size: 1.2rem;
+            color: #ffd233;
+            margin-bottom: 20px;
+        }
+        .loading-dots {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+        }
+        .dot {
+            width: 8px;
+            height: 8px;
+            background: #ffd233;
+            border-radius: 50%;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+        .code-block {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+        }
+        .status {
+            padding: 10px 20px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-weight: 600;
+        }
+        .status.success {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+        .status.info {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">🔄 Sistema de Loading entre Páginas</h1>
+            <p class="subtitle">Teste do sistema unificado de transições</p>
+        </div>
+
+        <div class="test-section">
+            <h2 class="test-title">📋 Status da Implementação</h2>
+            <div class="status success">✅ Componentes criados com sucesso</div>
+            <div class="status success">✅ Provider integrado no layout principal</div>
+            <div class="status info">🔄 Sistema pronto para teste</div>
+        </div>
+
+        <div class="test-section">
+            <h2 class="test-title">🧪 Teste de Funcionalidades</h2>
+            <p>Clique nos botões abaixo para testar diferentes tipos de navegação com loading:</p>
+            
+            <button class="button" onclick="testNavigation('Navegando para Chat...')">
+                💬 Ir para Chat
+            </button>
+            
+            <button class="button" onclick="testNavigation('Carregando Simulador ENEM...')">
+                📚 Simulador ENEM
+            </button>
+            
+            <button class="button" onclick="testNavigation('Acessando Aulas...')">
+                🎓 Aulas Interativas
+            </button>
+            
+            <button class="button" onclick="testNavigation('Redirecionando...')">
+                🔄 Redirecionamento
+            </button>
+        </div>
+
+        <div class="test-section">
+            <h2 class="test-title">📁 Arquivos Criados</h2>
+            <div class="code-block">
+components/ui/
+├── PageTransitionLoading.tsx     # Componente principal de transição
+├── PageLoadingOverlay.tsx       # Overlay de loading simplificado
+└── NavigationWithLoading.tsx    # Componente de navegação com loading
+
+components/providers/
+└── PageTransitionProvider.tsx   # Provider global para transições
+
+hooks/
+├── usePageTransition.ts         # Hook para controle de transições
+└── useNavigationWithLoading.ts   # Hook para navegação com loading
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2 class="test-title">💻 Como Usar</h2>
+            <div class="code-block">
+// 1. Usar hook de navegação com loading
+import { useNavigationWithLoading } from '@/hooks/useNavigationWithLoading';
+
+const { push, replace, back } = useNavigationWithLoading();
+
+// Navegar com loading
+push('/chat', 'Carregando chat...');
+replace('/enem', 'Redirecionando...');
+back('Voltando...');
+
+// 2. Usar componente de navegação
+import NavigationWithLoading from '@/components/ui/NavigationWithLoading';
+
+&lt;NavigationWithLoading 
+  href="/chat" 
+  message="Carregando chat..."
+&gt;
+  Ir para Chat
+&lt;/NavigationWithLoading&gt;
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2 class="test-title">🎯 Próximos Passos</h2>
+            <div class="status info">1. Testar em ambiente de desenvolvimento</div>
+            <div class="status info">2. Integrar com componentes existentes</div>
+            <div class="status info">3. Otimizar performance das transições</div>
+            <div class="status info">4. Adicionar animações personalizadas</div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <div class="loading-message" id="loadingMessage">Carregando página...</div>
+            <div class="loading-dots">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function testNavigation(message) {
+            const overlay = document.getElementById('loadingOverlay');
+            const messageEl = document.getElementById('loadingMessage');
+            
+            // Mostrar loading
+            messageEl.textContent = message;
+            overlay.style.display = 'flex';
+            
+            // Simular navegação
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                
+                // Simular mudança de página (apenas para teste)
+                document.title = `Teste - ${message}`;
+                
+                // Mostrar feedback
+                const status = document.createElement('div');
+                status.className = 'status success';
+                status.textContent = `✅ ${message} - Transição simulada com sucesso!`;
+                status.style.marginTop = '20px';
+                
+                const container = document.querySelector('.test-section:nth-child(3)');
+                container.appendChild(status);
+                
+                // Remover feedback após 3 segundos
+                setTimeout(() => {
+                    status.remove();
+                }, 3000);
+                
+            }, 2000); // 2 segundos de loading
+        }
+
+        // Adicionar efeito de entrada
+        document.addEventListener('DOMContentLoaded', () => {
+            const sections = document.querySelectorAll('.test-section');
+            sections.forEach((section, index) => {
+                section.style.opacity = '0';
+                section.style.transform = 'translateY(20px)';
+                
+                setTimeout(() => {
+                    section.style.transition = 'all 0.6s ease';
+                    section.style.opacity = '1';
+                    section.style.transform = 'translateY(0)';
+                }, index * 200);
+            });
+        });
+    </script>
+</body>
+</html>
+

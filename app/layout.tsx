@@ -7,6 +7,7 @@ import { PWAProvider } from '@/components/providers/PWAProvider'
 import { LoadingProvider } from '@/lib/loading'
 import { GlobalLoadingProvider } from '@/hooks/useGlobalLoading'
 import { GlobalLoading } from '@/components/providers/GlobalLoading'
+import { PageTransitionProvider } from '@/components/providers/PageTransitionProvider'
 import { SplashScreen } from '@/components/ui/SplashScreen'
 import { Toaster } from '@/components/ui/toaster'
 import './globals.css'
@@ -85,13 +86,15 @@ export default function RootLayout({
           <PWAProvider>
             <LoadingProvider>
               <GlobalLoadingProvider>
-                <LessonProvider>
-                  <NotificationProvider>
-                    {children}
-                    {/* <GlobalLoading /> */}
-                    <Toaster />
-                  </NotificationProvider>
-                </LessonProvider>
+                <PageTransitionProvider>
+                  <LessonProvider>
+                    <NotificationProvider>
+                      {children}
+                      {/* <GlobalLoading /> */}
+                      <Toaster />
+                    </NotificationProvider>
+                  </LessonProvider>
+                </PageTransitionProvider>
               </GlobalLoadingProvider>
             </LoadingProvider>
           </PWAProvider>

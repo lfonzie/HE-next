@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -265,7 +266,7 @@ const SlidePreview = ({ slide, index }: { slide: GeneratedLesson['slides'][0], i
             
             {slide.image && (
               <div className="border rounded-lg p-4 bg-gray-50">
-                <img 
+                <Image 
                   src={slide.image.url} 
                   alt={slide.image.alt}
                   className="w-full h-auto rounded-lg shadow-sm"
@@ -281,7 +282,7 @@ const SlidePreview = ({ slide, index }: { slide: GeneratedLesson['slides'][0], i
             {slide.imageQuery && !slide.image && (
               <div className="border rounded-lg p-4 bg-yellow-50 border-yellow-200">
                 <p className="text-sm text-yellow-800">
-                  🔍 Query de imagem: "{slide.imageQuery}"
+                  🔍 Query de imagem: &quot;{slide.imageQuery}&quot;
                 </p>
               </div>
             )}
@@ -560,7 +561,7 @@ export default function AulasEnhanced() {
                 Pronto para criar sua primeira aula?
               </h3>
               <p className="text-gray-600 mb-6">
-                Digite um tópico acima e clique em "Gerar Aula Profissional" para começar.
+                Digite um tópico acima e clique em &quot;Gerar Aula Profissional&quot; para começar.
               </p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-500">
                 <div className="flex items-center justify-center gap-2">

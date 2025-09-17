@@ -241,16 +241,14 @@ export default function LoginPage() {
                     autoComplete="current-password"
                     className="h-12 pl-12 pr-12 rounded-xl border-gray-200 focus:border-yellow-400 focus:ring-yellow-400 text-lg"
                   />
-                  <motion.button
+                  <button
                     type="button"
                     onClick={togglePasswordVisibility}
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none focus:text-gray-600 transition-colors"
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
                     aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
                   >
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                  </motion.button>
+                  </button>
                 </div>
                 <p className="text-gray-500 text-sm">Mínimo de 6 caracteres</p>
               </motion.div>
@@ -287,26 +285,20 @@ export default function LoginPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1 }}
               >
-                <motion.button
+                <button
                   type="submit"
                   className="w-full h-12 bg-yellow-400 hover:bg-yellow-500 active:bg-yellow-600 text-black font-semibold text-lg rounded-xl transition-all duration-200 hover:shadow-lg mt-8 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center"
                   disabled={isLoading}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
                 >
                   {isLoading ? (
                     <>
-                      <motion.span 
-                        className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full mr-3"
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                      />
+                      <span className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full mr-3 animate-spin" />
                       Entrando...
                     </>
                   ) : (
                     "Entrar no HubEdu.ia"
                   )}
-                </motion.button>
+                </button>
               </motion.div>
             </form>
 
@@ -326,13 +318,11 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <motion.button
+              <button
                 type="button"
                 className="w-full mt-6 h-12 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 active:bg-gray-100 text-gray-700 font-medium transition-all duration-200 hover:shadow-md inline-flex items-center justify-center"
                 onClick={handleGoogleSignIn}
                 disabled={isLoading}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
               >
                 <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24" aria-hidden="true">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -341,7 +331,7 @@ export default function LoginPage() {
                   <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                 </svg>
                 Continuar com Google
-              </motion.button>
+              </button>
             </motion.div>
 
             <motion.div 
@@ -353,15 +343,13 @@ export default function LoginPage() {
               <p className="text-gray-600 text-sm">
                 Entre em contato com a administração da sua escola para obter acesso.
               </p>
-              <motion.button 
+              <button 
                 className="text-gray-600 hover:text-yellow-600 font-medium text-sm inline-flex items-center gap-2 transition-colors"
                 onClick={() => router.push('/')}
-                whileHover={{ x: -5 }}
-                transition={{ type: "spring", stiffness: 300 }}
               >
                 <ArrowLeft className="w-4 h-4" />
                 Voltar à página inicial
-              </motion.button>
+              </button>
             </motion.div>
           </CardContent>
         </Card>

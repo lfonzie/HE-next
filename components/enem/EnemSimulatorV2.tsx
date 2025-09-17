@@ -553,7 +553,7 @@ export function EnemSimulatorV2({
       return `${hours}h ${minutes.toString().padStart(2, '0')}m ${secs.toString().padStart(2, '0')}s`
     }
     return `${minutes}m ${secs.toString().padStart(2, '0')}s`
-  }, [])
+  }, [handleAnswerSelect, handleCompleteExam, handleNext, handlePrevious])
 
   // Cleanup timeouts
   useEffect(() => {

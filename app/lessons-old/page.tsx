@@ -43,7 +43,11 @@ export default function LessonsPage() {
   })
 
   // Sugestões randômicas para o campo de chat
-  const suggestions = [
+  
+
+  // Gerar sugestões randômicas apenas no cliente para evitar hidratação
+  useEffect(() => {
+    const suggestions = [
     'Como funciona a fotossíntese?',
     'Explique a teoria da evolução',
     'O que é a fotossíntese?',
@@ -54,13 +58,10 @@ export default function LessonsPage() {
     'Literatura brasileira',
     'Geografia: clima e vegetação',
     'Matemática: equações do segundo grau'
-  ]
-
-  // Gerar sugestões randômicas apenas no cliente para evitar hidratação
-  useEffect(() => {
+  ];
     const shuffled = [...suggestions].sort(() => Math.random() - 0.5)
     setRandomSuggestions(shuffled.slice(0, 3))
-  }, [])
+  }, [suggestions])
 
   // Verificar se há query na URL
   useEffect(() => {
@@ -76,7 +77,7 @@ export default function LessonsPage() {
     setTimeout(() => {
       handleGenerate()
     }, 100)
-  }, [])
+  }, [handleGenerate])
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -85,7 +86,7 @@ export default function LessonsPage() {
     }
   }
 
-  const handleGenerate = async () => {
+  const handleGenerate = useCallback(async () => {
     if (!formData.topic) {
       toast.error('Por favor, descreva o que você quer aprender')
       return
@@ -174,7 +175,7 @@ export default function LessonsPage() {
         setGenerationStatus('')
       }, 1000)
     }
-  }
+  }, [])
 
   const handleStartLesson = () => {
     if (generatedLesson) {

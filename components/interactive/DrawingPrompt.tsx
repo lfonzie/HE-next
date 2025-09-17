@@ -76,7 +76,7 @@ export default function DrawingPrompt({
 
     // Save initial state
     saveToHistory()
-  }, [])
+  }, [handleSubmit])
 
   const saveToHistory = () => {
     const canvas = canvasRef.current
