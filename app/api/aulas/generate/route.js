@@ -112,31 +112,84 @@ REGRAS IMPORTANTES:
 - Para quiz, use "correct" como número (0, 1, 2, 3) correspondente ao índice da opção correta
 - CADA SLIDE DEVE TER MÍNIMO 500 TOKENS DE CONTEÚDO (conteúdo extenso e detalhado)
 
-ESTRUTURA DA AULA (45-60 minutos):
+ESTRUTURA DA AULA (45-60 minutos) - MÍNIMO 14 SLIDES:
 1. Abertura: Apresente o tema e objetivos de aprendizagem
 2. Conceitos fundamentais: Explique os princípios básicos
 3. Desenvolvimento: Detalhe os processos principais
-4. Quiz 1: Questão de múltipla escolha sobre conceitos básicos
-5. Aplicações práticas: Mostre exemplos reais e casos de uso
-6. Variações e adaptações: Explore diferentes contextos
-7. Conexões avançadas: Relacione com outros conhecimentos
-8. Quiz 2: Questão situacional ou de análise
-9. Encerramento: Síntese e próximos passos
+4. Aplicações práticas: Mostre exemplos reais e casos de uso
+5. Variações e adaptações: Explore diferentes contextos
+6. Conexões avançadas: Relacione com outros conhecimentos
+7. Quiz 1: Questão de múltipla escolha sobre conceitos básicos
+8. Aprofundamento: Detalhe aspectos específicos do tema
+9. Exemplos práticos: Demonstre aplicações concretas
+10. Análise crítica: Desenvolva pensamento crítico
+11. Síntese intermediária: Consolide conhecimentos até aqui
+12. Quiz 2: Questão situacional ou de análise
+13. Aplicações futuras: Conecte com conhecimentos futuros
+14. Encerramento: Síntese final e próximos passos
 
-FORMATO JSON OBRIGATÓRIO:
+FORMATO JSON OBRIGATÓRIO - EXATAMENTE 14 SLIDES:
 {
   "slides": [
     {
       "number": 1,
-      "title": "Título do slide",
+      "title": "Abertura: Tema e Objetivos",
       "content": "Conteúdo educativo detalhado com quebras de linha usando \\n\\n para parágrafos\\n\\nExemplo de segundo parágrafo com mais informações detalhadas.\\n\\nTerceiro parágrafo com exemplos práticos e aplicações reais.",
       "type": "content",
-      "imageQuery": "query para busca de imagem no Unsplash",
+      "imageQuery": "query específica para busca de imagem no Unsplash",
       "tokenEstimate": 500
     },
     {
       "number": 2,
-      "title": "Título do slide",
+      "title": "Conceitos Fundamentais",
+      "content": "Conteúdo educativo detalhado sem imagem.",
+      "type": "content",
+      "imageQuery": null,
+      "tokenEstimate": 500
+    },
+    {
+      "number": 3,
+      "title": "Desenvolvimento dos Processos",
+      "content": "Conteúdo educativo detalhado sem imagem.",
+      "type": "content",
+      "imageQuery": null,
+      "tokenEstimate": 500
+    },
+    {
+      "number": 4,
+      "title": "Aplicações Práticas",
+      "content": "Conteúdo educativo detalhado sem imagem.",
+      "type": "content",
+      "imageQuery": null,
+      "tokenEstimate": 500
+    },
+    {
+      "number": 5,
+      "title": "Variações e Adaptações",
+      "content": "Conteúdo educativo detalhado sem imagem.",
+      "type": "content",
+      "imageQuery": null,
+      "tokenEstimate": 500
+    },
+    {
+      "number": 6,
+      "title": "Conexões Avançadas",
+      "content": "Conteúdo educativo detalhado sem imagem.",
+      "type": "content",
+      "imageQuery": null,
+      "tokenEstimate": 500
+    },
+    {
+      "number": 7,
+      "title": "Quiz: Conceitos Básicos",
+      "content": "Conteúdo educativo detalhado com imagem.",
+      "type": "content",
+      "imageQuery": "query específica para busca de imagem no Unsplash",
+      "tokenEstimate": 500
+    },
+    {
+      "number": 8,
+      "title": "Aprofundamento",
       "content": "Conteúdo educativo detalhado sem imagem.",
       "type": "content",
       "imageQuery": null,
@@ -144,10 +197,50 @@ FORMATO JSON OBRIGATÓRIO:
     },
     {
       "number": 9,
-      "title": "Título do slide",
+      "title": "Exemplos Práticos",
+      "content": "Conteúdo educativo detalhado sem imagem.",
+      "type": "content",
+      "imageQuery": null,
+      "tokenEstimate": 500
+    },
+    {
+      "number": 10,
+      "title": "Análise Crítica",
+      "content": "Conteúdo educativo detalhado sem imagem.",
+      "type": "content",
+      "imageQuery": null,
+      "tokenEstimate": 500
+    },
+    {
+      "number": 11,
+      "title": "Síntese Intermediária",
+      "content": "Conteúdo educativo detalhado sem imagem.",
+      "type": "content",
+      "imageQuery": null,
+      "tokenEstimate": 500
+    },
+    {
+      "number": 12,
+      "title": "Quiz: Análise Situacional",
+      "content": "Conteúdo educativo detalhado sem imagem.",
+      "type": "content",
+      "imageQuery": null,
+      "tokenEstimate": 500
+    },
+    {
+      "number": 13,
+      "title": "Aplicações Futuras",
+      "content": "Conteúdo educativo detalhado sem imagem.",
+      "type": "content",
+      "imageQuery": null,
+      "tokenEstimate": 500
+    },
+    {
+      "number": 14,
+      "title": "Encerramento: Síntese Final",
       "content": "Conteúdo educativo detalhado com imagem de encerramento.",
       "type": "content",
-      "imageQuery": "query para busca de imagem no Unsplash",
+      "imageQuery": "query específica para busca de imagem no Unsplash",
       "tokenEstimate": 500
     }
   ]
@@ -179,13 +272,14 @@ IMPORTANTE:
 - Foque em explicações claras e exemplos práticos
 - CADA SLIDE DEVE TER MÍNIMO 500 TOKENS DE CONTEÚDO
 - O campo "imageQuery" deve ser específico e relevante ao conteúdo do slide
-- APENAS slides 1 e 9 devem ter imageQuery (outros slides devem ter imageQuery: null)
-- Para slides 1 e 9: use termos específicos do tema + "educational"
+- APENAS slides 1, 7 e 14 devem ter imageQuery (outros slides devem ter imageQuery: null)
+- Para slides 1, 7 e 14: use termos específicos do tema + "educational"
 - Evite termos genéricos como "education", "classroom", "learning"
 - Para quiz: "correct" deve ser uma letra (A, B, C, D) indicando a resposta correta
 - As alternativas devem ser claramente identificadas como A), B), C), D) no conteúdo das opções
 - Use quebras de linha \\n\\n para separar parágrafos e melhorar a legibilidade
 - Para diagramas e tabelas, use a sintaxe especial: <<<criar um diagrama da fotossíntese, sem letras somente imagem>>> ou <<<criar uma tabela comparativa>>>
+- GERE EXATAMENTE 14 SLIDES - NÃO MAIS, NÃO MENOS
 
 Tópico: ${topic}
 
@@ -248,8 +342,8 @@ function validateLessonStructure(lessonData) {
     return { isValid: false, issues };
   }
   
-  if (lessonData.slides.length !== 9) {
-    issues.push(`Deve ter exatamente 9 slides, encontrados ${lessonData.slides.length}`);
+  if (lessonData.slides.length !== 14) {
+    issues.push(`Deve ter exatamente 14 slides, encontrados ${lessonData.slides.length}`);
   }
   
   // Validar slides de quiz
@@ -425,19 +519,19 @@ export async function POST(request) {
       slidesCount: generatedContent.slides?.length || 0
     });
     
-    // Adicionar queries de imagem otimizadas e URLs dinâmicas APENAS para slides 1 e 9
+    // Adicionar queries de imagem otimizadas e URLs dinâmicas APENAS para slides 1, 7 e 14
     const slidesWithImageQueries = await Promise.all(generatedContent.slides.map(async (slide, index) => {
-      // Apenas slides 1 e 9 devem ter imagens
-      if (slide.number === 1 || slide.number === 9) {
+      // Apenas slides 1, 7 e 14 devem ter imagens
+      if (slide.number === 1 || slide.number === 7 || slide.number === 14) {
         const imageQuery = slide.imageQuery || generateImageQuery(topic, slide.number, slide.type);
         
         // Tentar múltiplas fontes de imagem
         let imageUrl = null;
         let imageSource = 'fallback';
         
-        // 1. Tentar Wikimedia Commons primeiro
+        // 1. Usar nova API de classificação de imagens com múltiplas fontes
         try {
-          const wikimediaResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/wikimedia/search`, {
+          const classifyResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/images/classify-source`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -445,20 +539,27 @@ export async function POST(request) {
             body: JSON.stringify({
               query: imageQuery,
               subject: topic,
+              grade: '5',
               count: 1
             }),
           });
 
-          if (wikimediaResponse.ok) {
-            const wikimediaData = await wikimediaResponse.json();
-            if (wikimediaData.success && wikimediaData.photos && wikimediaData.photos.length > 0) {
-              imageUrl = wikimediaData.photos[0].urls.regular;
-              imageSource = 'wikimedia';
-              console.log(`✅ Imagem Wikimedia Commons carregada para slide ${slide.number}:`, imageUrl);
+          if (classifyResponse.ok) {
+            const classifyData = await classifyResponse.json();
+            if (classifyData.success && classifyData.images && classifyData.images.length > 0) {
+              const bestImage = classifyData.images[0];
+              imageUrl = bestImage.url;
+              imageSource = bestImage.source.source;
+              console.log(`✅ Imagem classificada para slide ${slide.number}:`, {
+                source: bestImage.source.name,
+                relevance: bestImage.relevanceScore,
+                themeMatch: bestImage.themeMatch,
+                educationalSuitability: bestImage.educationalSuitability
+              });
             }
           }
         } catch (error) {
-          console.warn(`⚠️ Erro ao buscar imagem Wikimedia Commons para slide ${slide.number}:`, error);
+          console.warn(`⚠️ Erro ao classificar imagem para slide ${slide.number}:`, error);
         }
 
         // 2. Se Wikimedia falhar, tentar Pixabay
@@ -534,7 +635,7 @@ export async function POST(request) {
           subject: topic // Para contexto educacional
         };
       } else {
-        // Slides 2-8 não devem ter imagens
+        // Slides intermediários não devem ter imagens (exceto 1, 7 e 14)
         return {
           ...slide,
           imageQuery: null,

@@ -73,7 +73,18 @@ export default function LessonPage() {
   useEffect(() => {
     const loadLesson = async () => {
       try {
-        // First, check localStorage for demo mode lessons
+        // 1. Primeiro, verificar cache local
+        const { lessonCache } = await import('@/lib/lesson-cache')
+        const cachedLesson = lessonCache.get(lessonId)
+        
+        if (cachedLesson) {
+          console.log('⚡ Carregando aula do cache:', lessonId)
+          setLessonData(cachedLesson)
+          setIsLoading(false)
+          return
+        }
+
+        // 2. Verificar localStorage para aulas demo
         const demoLessonKey = `demo_lesson_${lessonId}`
         const demoLesson = localStorage.getItem(demoLessonKey)
         
@@ -90,30 +101,54 @@ export default function LessonPage() {
           }
         }
 
-        // Try to load from database
+        // 3. Tentar carregamento rápido do banco
         try {
-          const response = await fetch(`/api/lessons/${lessonId}`)
+          const response = await fetch(`/api/lessons/fast-load`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ lessonId })
+          })
+          
           if (response.ok) {
             const data = await response.json()
             setLessonData(data.lesson)
+            
+            // Adicionar ao cache para próximas vezes
+            lessonCache.set(lessonId, data.lesson)
+            
             setIsLoading(false)
             return
           } else {
             throw new Error('Lesson not found in database')
           }
         } catch (dbError) {
-          console.log('Database fetch failed:', dbError)
+          console.log('Fast load failed, trying regular load:', dbError)
           
-          // Fallback to static data for photosynthesis lesson
+          // 4. Fallback para carregamento regular
+          try {
+            const response = await fetch(`/api/lessons/${lessonId}`)
+            if (response.ok) {
+              const data = await response.json()
+              setLessonData(data.lesson)
+              
+              // Adicionar ao cache
+              lessonCache.set(lessonId, data.lesson)
+              
+              setIsLoading(false)
+              return
+            }
+          } catch (regularError) {
+            console.log('Regular load also failed:', regularError)
+          }
+          
+          // 5. Fallback para dados estáticos
           if (lessonId === 'photosynthesis') {
-            // Fallback to static data for photosynthesis lesson
             const staticData = await import('@/data/photosynthesis-lesson.json')
             setLessonData(staticData.default)
             setIsLoading(false)
             return
           } else {
-            // Lesson not found in database or localStorage
-            console.log('Aula não encontrada no banco de dados nem no localStorage:', lessonId)
+            console.log('Aula não encontrada:', lessonId)
             toast.error('Aula não encontrada')
             router.push('/aulas')
             return

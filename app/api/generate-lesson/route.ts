@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import OpenAI from 'openai'
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import { ensureQuizFormat } from '@/lib/quiz-validation'
 import { STRUCTURED_LESSON_PROMPT } from '@/lib/system-prompts/lessons-structured'
 import { PROFESSIONAL_PACING_LESSON_PROMPT, validateProfessionalPacing, calculatePacingMetrics } from '@/lib/system-prompts/lessons-professional-pacing'
 import { populateLessonWithImages } from '@/lib/unsplash-integration'
@@ -30,8 +31,8 @@ async function populateLessonWithImagesTranslated(lessonData: any, topic: string
         
         if (slide.imagePrompt && (isFirstSlide || isLastSlide)) {
           try {
-            // Usar nossa nova API de tradução
-            const response = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/unsplash/translate-search`, {
+            // Usar nova API de classificação de imagens com múltiplas fontes
+            const response = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/images/classify-source`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -39,26 +40,39 @@ async function populateLessonWithImagesTranslated(lessonData: any, topic: string
               body: JSON.stringify({
                 query: slide.imagePrompt,
                 subject: lessonData.subject || 'Geral',
+                grade: lessonData.grade || '5',
                 count: 1
               }),
             })
 
             if (response.ok) {
               const data = await response.json()
-              if (data.photos && data.photos.length > 0) {
-                console.log(`✅ Imagem traduzida para slide ${index + 1} (${isFirstSlide ? 'primeiro' : 'último'}):`, data.englishTheme)
+              if (data.success && data.images && data.images.length > 0) {
+                const bestImage = data.images[0]
+                console.log(`✅ Imagem classificada para slide ${index + 1} (${isFirstSlide ? 'primeiro' : 'último'}):`, {
+                  source: bestImage.source.name,
+                  relevance: bestImage.relevanceScore,
+                  themeMatch: bestImage.themeMatch,
+                  educationalSuitability: bestImage.educationalSuitability
+                })
                 return {
                   ...slide,
-                  imageUrl: data.photos[0].urls.regular,
-                  translatedPrompt: data.englishTheme
+                  imageUrl: bestImage.url,
+                  imageSource: bestImage.source,
+                  imageClassification: bestImage.classification,
+                  imageMetrics: {
+                    relevanceScore: bestImage.relevanceScore,
+                    themeMatch: bestImage.themeMatch,
+                    educationalSuitability: bestImage.educationalSuitability
+                  }
                 }
               }
             }
             
-            console.warn(`⚠️ Falha na tradução para slide ${index + 1}, usando prompt original`)
+            console.warn(`⚠️ Falha na classificação para slide ${index + 1}, usando fallback`)
             return slide
           } catch (error) {
-            console.error(`❌ Erro ao traduzir imagem para slide ${index + 1}:`, error)
+            console.error(`❌ Erro ao classificar imagem para slide ${index + 1}:`, error)
             return slide
           }
         }
@@ -292,12 +306,12 @@ IMPORTANTE: Responda APENAS com JSON válido, sem texto adicional, explicações
           component: slide.type === 'question' ? 'QuizComponent' : 'AnimationSlide',
           content: slide.content,
           prompt: slide.question || slide.content,
-          questions: slide.type === 'question' ? [{
+          questions: slide.type === 'question' ? ensureQuizFormat([{
             q: slide.question,
             options: slide.options,
             correct: slide.correctAnswer,
             explanation: slide.explanation
-          }] : [],
+          }]) : [],
           media: [], // Will be populated with Unsplash images
           time: slide.timeEstimate || 5,
           points: slide.type === 'question' ? 10 : 5,

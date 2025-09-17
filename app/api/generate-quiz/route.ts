@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { openai } from '@/lib/openai'
+import { ensureQuizFormat, ValidatedQuizQuestion } from '@/lib/quiz-validation'
 
 interface QuizGenerationRequest {
   topic: string
@@ -107,42 +108,33 @@ IMPORTANTE:
       throw new Error('Estrutura de quiz inválida: questions não encontrado')
     }
 
-    // Validate each question
-    for (let i = 0; i < quizData.questions.length; i++) {
-      const question = quizData.questions[i]
-      
-      if (!question.question || typeof question.question !== 'string') {
-        throw new Error(`Questão ${i + 1}: campo 'question' inválido`)
-      }
-      
-      if (!question.options || typeof question.options !== 'object') {
-        throw new Error(`Questão ${i + 1}: campo 'options' inválido`)
-      }
-      
-      const requiredOptions = ['a', 'b', 'c', 'd']
-      for (const option of requiredOptions) {
-        if (!question.options[option] || typeof question.options[option] !== 'string') {
-          throw new Error(`Questão ${i + 1}: opção '${option}' inválida`)
-        }
-      }
-      
-      if (!question.correct || !['a', 'b', 'c', 'd'].includes(question.correct)) {
-        throw new Error(`Questão ${i + 1}: campo 'correct' deve ser 'a', 'b', 'c' ou 'd'`)
-      }
-      
-      if (!question.explanation || typeof question.explanation !== 'string') {
-        throw new Error(`Questão ${i + 1}: campo 'explanation' inválido`)
-      }
+    // Validar e corrigir questões usando a nova validação
+    const validatedQuestions = ensureQuizFormat(quizData.questions)
+    
+    // Verificar se temos questões válidas
+    if (validatedQuestions.length === 0) {
+      throw new Error('Nenhuma questão válida foi gerada')
+    }
+    
+    // Log de questões corrigidas
+    const invalidQuestions = validatedQuestions.filter(q => !q.isValid)
+    if (invalidQuestions.length > 0) {
+      console.warn(`⚠️ ${invalidQuestions.length} questões foram corrigidas automaticamente`)
     }
 
-    console.log(`✅ Quiz gerado com sucesso: ${quizData.questions.length} questões`)
+    console.log(`✅ Quiz gerado com sucesso: ${validatedQuestions.length} questões`)
 
     return NextResponse.json({
       success: true,
       topic,
       difficulty,
-      questions: quizData.questions,
-      totalQuestions: quizData.questions.length
+      questions: validatedQuestions,
+      totalQuestions: validatedQuestions.length,
+      validationInfo: {
+        totalGenerated: quizData.questions.length,
+        totalValidated: validatedQuestions.length,
+        correctedQuestions: invalidQuestions.length
+      }
     })
 
   } catch (error) {

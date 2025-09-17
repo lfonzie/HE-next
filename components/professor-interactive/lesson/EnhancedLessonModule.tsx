@@ -339,7 +339,7 @@ export default function EnhancedLessonModule({
       // Start global loading immediately with lesson-specific message
       startGlobalLoading('lesson-generation', {
         message: '🎓 Gerando sua aula interativa...',
-        estimatedDuration: 15000, // 15 segundos estimados
+        estimatedDuration: 50000, // 50 segundos estimados
         cancelable: false
       });
       

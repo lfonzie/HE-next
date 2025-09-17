@@ -46,7 +46,7 @@ export function LessonProgress({ progress, status, isGenerating, className = '' 
           {status || 'Preparando geração da aula...'}
         </p>
         <p className="text-xs text-gray-400 mt-1">
-          Tempo estimado: ~20 segundos
+          Tempo estimado: ~50 segundos
         </p>
       </div>
 
