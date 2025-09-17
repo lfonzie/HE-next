@@ -245,9 +245,7 @@ export async function POST(request: NextRequest) {
             title: `Slide ${position}`,
             content: `Conteúdo sobre ${topic} - Slide ${position}`,
             type: position % 3 === 0 ? 'question' : 'explanation',
-            key_points: [`Ponto principal ${position} sobre ${topic}`],
-            position: position,
-            estimated_time: 5
+            key_points: [`Ponto principal ${position} sobre ${topic}`]
           };
           
           break; // Use the fallback slide
@@ -263,9 +261,7 @@ export async function POST(request: NextRequest) {
         title: `Slide ${position}`,
         content: `Conteúdo sobre ${topic} - Slide ${position}`,
         type: position % 3 === 0 ? 'question' : 'explanation',
-        key_points: [`Ponto principal ${position} sobre ${topic}`],
-        position: position,
-        estimated_time: 5
+        key_points: [`Ponto principal ${position} sobre ${topic}`]
       };
     }
 

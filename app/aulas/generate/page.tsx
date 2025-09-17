@@ -129,10 +129,8 @@ export default function GenerateAulaPage() {
       console.log('Dados da aula:', generatedLesson)
       
       // Salvar aula no localStorage para modo demo
-      if (generatedLesson.demoMode) {
-        localStorage.setItem(`demo_lesson_${generatedLesson.id}`, JSON.stringify(generatedLesson))
-        console.log('Aula salva no localStorage para modo demo')
-      }
+      localStorage.setItem(`demo_lesson_${generatedLesson.id}`, JSON.stringify(generatedLesson))
+      console.log('Aula salva no localStorage para modo demo')
       
       router.push(`/aulas/${generatedLesson.id}`)
     } else {

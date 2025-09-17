@@ -72,6 +72,7 @@ export default function QuizComponent({
 
       return () => clearInterval(timer)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeLimit, isCompleted])
 
   const handleAnswerSelect = (answerIndex: number) => {

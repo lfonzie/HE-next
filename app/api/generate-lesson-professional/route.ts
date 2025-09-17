@@ -177,7 +177,7 @@ IMPORTANTE: Responda APENAS com JSON válido, sem texto adicional, explicações
     // Populate with images using the existing service
     try {
       console.log('🖼️ Populando imagens para aula profissional...')
-      lessonData = await populateLessonWithImages(lessonData, topic)
+      lessonData = await populateLessonWithImages(lessonData)
       console.log('✅ Imagens populadas com sucesso')
     } catch (imageError) {
       console.error('Erro ao popular imagens:', imageError)
@@ -187,15 +187,16 @@ IMPORTANTE: Responda APENAS com JSON válido, sem texto adicional, explicações
     // Save to database if user is authenticated
     if (session?.user?.id && !demoMode) {
       try {
-        const savedLesson = await prisma.lesson.create({
+        const savedLesson = await prisma.lessons.create({
           data: {
+            id: `lesson_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             title: lessonData.title,
             subject: lessonData.subject,
-            grade: lessonData.grade,
-            content: JSON.stringify(lessonData),
-            userId: session.user.id,
-            pacingMode: pacingMode,
-            pacingMetrics: JSON.stringify(validation.metrics)
+            level: lessonData.grade,
+            objective: lessonData.objectives?.join(', ') || 'Objetivo da aula',
+            outline: lessonData.outline || {},
+            cards: lessonData.slides || [],
+            user_id: session.user.id
           }
         })
         

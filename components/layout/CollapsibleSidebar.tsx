@@ -9,6 +9,7 @@ import { ASSETS } from "../../constants/assets";
 import { useModuleNavigation } from "../../hooks/useModuleNavigation";
 import { Link } from "wouter";
 import { getSidebarIcon } from "../../utils/sidebarIcons";
+import { getIconMapping, getFontAwesomeClass, getModuleName } from "../../lib/iconMapping";
 import { MODULES, type ModuleId } from "../../lib/modules";
 import { getModuleColors, MODULE_ID_MAPPING } from "../../lib/moduleColors";
 import "./CollapsibleSidebar.css";
@@ -209,23 +210,14 @@ export function CollapsibleSidebar({ selectedModule, onSelectModule }: Collapsib
     .join("")
     .toUpperCase() || "U";
 
-  // Mapeamento de módulos para ícones usando getSidebarIcon
+  // Mapeamento de módulos para ícones usando centralized icon mapping
   const getModuleIcon = (moduleId: string) => {
-    // Mapear IDs dos módulos para os IDs usados no sistema
-    const moduleMapping: Record<string, ModuleId> = {
-      "professor": "PROFESSOR",
-      "aula": "AULA_EXPANDIDA",
-      "ti": "TI", 
-      "rh": "RH",
-      "financeiro": "FINANCEIRO",
-      "coordenacao": "COORDENACAO",
-      "atendimento": "ATENDIMENTO",
-      "social-media": "SOCIAL_MEDIA",
-      "wellbeing": "BEM_ESTAR"
+    const iconMapping = getIconMapping(moduleId);
+    return {
+      icon: iconMapping.fontAwesomeClass,
+      name: iconMapping.name,
+      color: iconMapping.color
     };
-    
-    const moduleIdUpper = moduleMapping[moduleId] || moduleId.toUpperCase() as ModuleId;
-    return getSidebarIcon(moduleIdUpper);
   };
 
   return (

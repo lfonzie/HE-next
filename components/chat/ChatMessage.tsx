@@ -22,6 +22,7 @@ import { ActionsRenderer } from "./ActionsRenderer";
 import { ModelChip, ModelDetails } from "./ModelChip";
 import { MODULES, convertToOldModuleId } from "@/lib/modules";
 import { getModuleIcon } from "@/lib/moduleIcons";
+import { getModuleIconKey, getModuleColor, debugIconMapping } from "@/lib/iconMapping";
 import { useState, useEffect } from "react";
 import { useAutoClassification } from "@/hooks/useAutoClassification";
 import { isWeatherQuery } from "@/utils/weatherApi";
@@ -52,44 +53,7 @@ const formatTokens = (tokens: number) => {
   return `${(tokens / 1000).toFixed(1)}k`;
 };
 
-// Mapear IDs dos módulos para chaves dos ícones
-const getModuleIconKey = (moduleId: ModuleId | null): string => {
-  if (!moduleId) return "professor";
-  
-  const mapping: Record<ModuleId, string> = {
-    PROFESSOR: "professor",
-    AULA_EXPANDIDA: "aula-expandida",
-    ENEM_INTERACTIVE: "enem-interativo",
-    TI: "ti",
-    RH: "rh",
-    FINANCEIRO: "financeiro",
-    COORDENACAO: "coordenacao",
-    ATENDIMENTO: "atendimento",
-    BEM_ESTAR: "wellbeing",
-    SOCIAL_MEDIA: "social-media"
-  };
-  
-  return mapping[moduleId] || "professor";
-};
-
-// Obter cor do módulo baseada no iconKey
-const getModuleColor = (iconKey: string): string => {
-  const colors: Record<string, string> = {
-    "professor": "#2563eb",
-    "aula-expandida": "#f59e0b",
-    "enem-interativo": "#3b82f6",
-    "ti": "#6b7280",
-    "atendimento": "#ef4444",
-    "rh": "#8b5cf6",
-    "financeiro": "#10b981",
-    "social-media": "#ec4899",
-    "wellbeing": "#f97316",
-    "coordenacao": "#6366f1",
-    "secretaria": "#059669"
-  };
-  
-  return colors[iconKey] || "#2563eb";
-};
+// Note: getModuleIconKey and getModuleColor are now imported from lib/iconMapping.ts
 
 type Props = {
   message: Message;
@@ -154,11 +118,16 @@ export const ChatMessage = memo(function ChatMessage({
     });
   }
 
-  // Get module info for avatar
+  // Get module info for avatar using centralized icon mapping
   const moduleInfo = effectiveModuleId ? MODULES[effectiveModuleId as ModuleId] : null;
   const moduleIconKey = getModuleIconKey(effectiveModuleId as ModuleId || null);
   const ModuleIcon = getModuleIcon(moduleIconKey);
-  const moduleColor = getModuleColor(moduleIconKey);
+  const moduleColor = getModuleColor(effectiveModuleId as ModuleId || null);
+  
+  // Debug icon mapping in development
+  if (process.env.NODE_ENV === 'development') {
+    debugIconMapping(effectiveModuleId);
+  }
 
   // Bubble classes based on role
   const bubbleClass = (role: 'user' | 'assistant' | 'system') => {

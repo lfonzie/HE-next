@@ -120,6 +120,7 @@ export default function ProgressiveLessonModule({
         });
       }, 1000); // Delay para não interferir na navegação
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lessonState.currentStep, progressiveLoading.loadingState.loadedSlides.length, progressiveLoading.loadingState.isGeneratingNext, query, subject]);
 
   // Verificar se a aula foi concluída
@@ -131,6 +132,7 @@ export default function ProgressiveLessonModule({
         onLessonComplete();
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lessonState.currentStep, progressiveLoading.loadingState.loadedSlides.length, onLessonComplete]);
 
   // Valores calculados

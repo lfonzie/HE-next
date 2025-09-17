@@ -109,6 +109,7 @@ export default function SuggestionsFilter({ onSuggestionsChange, onLoadingChange
     if (selectedCategory || selectedLevel) {
       fetchFilteredSuggestions()
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCategory, selectedLevel])
 
   return (

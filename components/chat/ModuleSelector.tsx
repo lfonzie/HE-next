@@ -4,21 +4,22 @@ import { useModuleNavigation } from "../../hooks/useModuleNavigation";
 import { hasModulePermission, getAvailableModules, ALL_MODULES } from "../../utils/modulePermissions";
 import { ModuleIcons, getModuleIcon } from "../../lib/moduleIcons";
 import { getModuleColors, MODULE_ID_MAPPING } from "../../lib/moduleColors";
+import { getIconMapping, apiToFrontendModuleId } from "../../lib/iconMapping";
 import "./ModuleSelector.css";
 
-// Lista completa de todos os módulos disponíveis com cores e ícones únicos
+// Generate modules list from centralized icon mapping
 const MODULES = [
-  { id: "professor", name: "Professor", iconKey: "professor", color: "#2563eb" }, // Azul - GraduationCap
-  { id: "aula-expandida", name: "Aula Expandida", iconKey: "aula-expandida", color: "#f59e0b" }, // Amarelo - BookOpen
-  { id: "enem-interativo", name: "ENEM Interativo", iconKey: "enem-interativo", color: "#3b82f6" }, // Azul claro - FileText
-  { id: "ti", name: "TI", iconKey: "ti", color: "#6b7280" }, // Cinza - Laptop
-  { id: "atendimento", name: "Atendimento", iconKey: "atendimento", color: "#ef4444" }, // Vermelho - Headphones
-  { id: "rh", name: "RH", iconKey: "rh", color: "#8b5cf6" }, // Roxo - Users
-  { id: "financeiro", name: "Financeiro", iconKey: "financeiro", color: "#10b981" }, // Verde - DollarSign
-  { id: "social-media", name: "Social Media", iconKey: "social-media", color: "#ec4899" }, // Rosa - Smartphone
-  { id: "bem-estar", name: "Bem-Estar", iconKey: "bem-estar", color: "#f97316" }, // Laranja - Heart
-  { id: "coordenacao", name: "Coordenação", iconKey: "coordenacao", color: "#6366f1" }, // Índigo - ClipboardList
-  { id: "secretaria", name: "Secretaria", iconKey: "secretaria", color: "#059669" }, // Verde escuro - Building2
+  { id: "professor", name: "Professor", iconKey: "professor", color: "#2563eb" },
+  { id: "aula-expandida", name: "Aula Expandida", iconKey: "aula-expandida", color: "#f59e0b" },
+  { id: "enem-interativo", name: "ENEM Interativo", iconKey: "enem-interativo", color: "#3b82f6" },
+  { id: "ti", name: "TI", iconKey: "ti", color: "#6b7280" },
+  { id: "atendimento", name: "Atendimento", iconKey: "atendimento", color: "#ef4444" },
+  { id: "rh", name: "RH", iconKey: "rh", color: "#8b5cf6" },
+  { id: "financeiro", name: "Financeiro", iconKey: "financeiro", color: "#10b981" },
+  { id: "social-media", name: "Social Media", iconKey: "social-media", color: "#ec4899" },
+  { id: "bem-estar", name: "Bem-Estar", iconKey: "bem-estar", color: "#f97316" },
+  { id: "coordenacao", name: "Coordenação", iconKey: "coordenacao", color: "#6366f1" },
+  { id: "secretaria", name: "Secretaria", iconKey: "secretaria", color: "#059669" },
 ];
 
 interface ModuleSelectorProps {

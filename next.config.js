@@ -12,7 +12,6 @@ const nextConfig = {
     optimizePackageImports: ['@radix-ui/react-icons', 'lucide-react'],
   },
   // Enable faster compilation
-  swcMinify: true,
   async headers() {
     return [
       {

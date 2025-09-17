@@ -407,6 +407,7 @@ export function EnemSimulatorV2({
 
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentQuestionIndex, items.length, isCompleted, isSaving])
 
   /**
@@ -553,6 +554,7 @@ export function EnemSimulatorV2({
       return `${hours}h ${minutes.toString().padStart(2, '0')}m ${secs.toString().padStart(2, '0')}s`
     }
     return `${minutes}m ${secs.toString().padStart(2, '0')}s`
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [handleAnswerSelect, handleCompleteExam, handleNext, handlePrevious])
 
   // Cleanup timeouts
@@ -567,9 +569,9 @@ export function EnemSimulatorV2({
   if (isGeneratingExam) {
     return (
       <ExamGenerationLoading
-        isLoading={isGeneratingExam}
-        progress={generationProgress}
+        currentStep={Math.ceil((generationProgress / 100) * 3)}
         message={generationMessage}
+        showSteps={true}
       />
     )
   }

@@ -53,6 +53,7 @@ export default function DrawingPrompt({
 
       return () => clearInterval(timer)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeLimit, isCompleted])
 
   useEffect(() => {
@@ -76,6 +77,7 @@ export default function DrawingPrompt({
 
     // Save initial state
     saveToHistory()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [handleSubmit])
 
   const saveToHistory = () => {

@@ -64,6 +64,7 @@ export default function NewQuizComponent({
 
       return () => clearInterval(timer)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeLimit, isCompleted])
 
   // Reset question timer when question changes
@@ -326,6 +327,17 @@ export default function NewQuizComponent({
   const safeCurrentQuestion = Math.min(currentQuestion, questions.length - 1)
   const currentQ = questions[safeCurrentQuestion]
   const progress = ((safeCurrentQuestion + 1) / questions.length) * 100
+
+  // Early return if no questions available
+  if (!questions.length || !currentQ) {
+    return (
+      <Card className="w-full max-w-2xl mx-auto">
+        <CardContent className="p-6 text-center">
+          <p className="text-gray-500">Nenhuma pergunta disponível.</p>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <Card className="w-full max-w-2xl mx-auto">

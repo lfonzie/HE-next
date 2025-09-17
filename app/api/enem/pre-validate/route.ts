@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     await enemLocalDB.preValidateQuestions(year, discipline);
 
     // Obtém estatísticas da validação
-    const validQuestions = enemLocalDB.getValidQuestions(year, discipline);
+    const validQuestions = enemLocalDB.getValidQuestions(year, discipline || undefined);
     
     return NextResponse.json({
       success: true,
@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
       }, { status: 503 });
     }
 
-    const validQuestions = enemLocalDB.getValidQuestions(year, discipline);
+    const validQuestions = enemLocalDB.getValidQuestions(year, discipline || undefined);
     
     return NextResponse.json({
       success: true,

@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import OpenAI from 'openai'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 import { STRUCTURED_LESSON_PROMPT } from '@/lib/system-prompts/lessons-structured'
 import { PROFESSIONAL_PACING_LESSON_PROMPT, validateProfessionalPacing, calculatePacingMetrics } from '@/lib/system-prompts/lessons-professional-pacing'
 import { populateLessonWithImages } from '@/lib/unsplash-integration'
@@ -11,6 +12,10 @@ import { AutoImageService } from '@/lib/autoImageService'
 const openai = new OpenAI({ 
   apiKey: process.env.OPENAI_API_KEY 
 })
+
+// Google Gemini configuration
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GOOGLE_API_KEY || '')
+const geminiModel = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' })
 
 // Função para popular imagens com tradução automática
 async function populateLessonWithImagesTranslated(lessonData: any, topic: string): Promise<any> {
@@ -123,14 +128,10 @@ Retorne APENAS um objeto JSON com a estrutura do slide:
   "timeEstimate": tempo_em_minutos
 }`
 
-      const completion = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
-        messages: [{ role: 'user', content: slidePrompt }],
-        temperature: 0.7,
-        max_tokens: 2000
-      })
-
-      let slideContent = completion.choices[0].message.content || '{}'
+      // Using Google Gemini instead of OpenAI
+      const result = await geminiModel.generateContent(slidePrompt)
+      const response = await result.response
+      let slideContent = response.text() || '{}'
       slideContent = slideContent.replace(/```json\n?/g, '').replace(/```\n?/g, '')
       
       const slideData = JSON.parse(slideContent)
@@ -156,14 +157,10 @@ Crie uma aula seguindo EXATAMENTE a estrutura de 9 slides especificada acima com
 
 IMPORTANTE: Responda APENAS com JSON válido, sem texto adicional, explicações ou formatação markdown.`
 
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.7,
-      max_tokens: 10000 // Aumentado para acomodar conteúdo mais extenso
-    })
-
-    let lessonContent = completion.choices[0].message.content || '{}'
+    // Using Google Gemini instead of OpenAI for main lesson generation
+    const result = await geminiModel.generateContent(prompt)
+    const response = await result.response
+    let lessonContent = response.text() || '{}'
     
     console.log('Conteúdo bruto da IA:', lessonContent.substring(0, 200) + '...')
     
@@ -362,12 +359,12 @@ IMPORTANTE: Responda APENAS com JSON válido, sem texto adicional, explicações
             tenant_id: 'default',
             user_id: session.user.id,
             session_id: `lesson_gen_${Date.now()}`,
-            provider: 'openai',
-            model: 'gpt-4o-mini',
-            prompt_tokens: completion.usage?.prompt_tokens || 0,
-            completion_tokens: completion.usage?.completion_tokens || 0,
-            total_tokens: completion.usage?.total_tokens || 0,
-            cost_brl: ((completion.usage?.total_tokens || 0) * 0.00003).toString(),
+            provider: 'google',
+            model: 'gemini-2.0-flash-exp',
+            prompt_tokens: 0, // Gemini doesn't provide detailed token usage
+            completion_tokens: 0,
+            total_tokens: 0,
+            cost_brl: '0.00', // Gemini is free for now
             latency_ms: 0,
             success: true,
             cache_hit: false

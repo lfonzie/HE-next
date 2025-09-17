@@ -460,7 +460,7 @@ export const LoadingCard: React.FC<{
   );
 };
 
-const LoadingOverlay: React.FC = () => {
+export const LoadingOverlay: React.FC = () => {
   const { isVisible, activeLoadings, cancel, hasErrors } = useLoading();
   
   if (!isVisible || activeLoadings.length === 0) return null;
@@ -819,7 +819,7 @@ export const useInputLoading = () => {
 // EXPORTS
 // ============================================================================
 
-export default {
+const LoadingComponents = {
   LoadingProvider,
   useLoading,
   Spinner,
@@ -835,3 +835,5 @@ export default {
   useButtonLoading,
   useInputLoading
 };
+
+export default LoadingComponents;

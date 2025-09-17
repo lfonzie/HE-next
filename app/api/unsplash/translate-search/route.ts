@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error: any) {
     console.error('❌ Erro na busca de imagem com tradução:', error);
-    return getFallbackResponse(query || 'education', count || 1);
+    return getFallbackResponse('education', 1);
   }
 }
 
@@ -225,7 +225,7 @@ function expandSearchQuery(baseQuery: string, category?: string): string {
   ];
   
   // Remover duplicatas e limitar tamanho
-  const uniqueTerms = [...new Set(allTerms)].slice(0, 6);
+  const uniqueTerms = Array.from(new Set(allTerms)).slice(0, 6);
   
   return uniqueTerms.join(' ');
 }

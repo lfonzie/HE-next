@@ -3,13 +3,18 @@
 import React from 'react'
 
 interface MarkdownRendererProps {
-  content: string
+  content?: string
   className?: string
 }
 
-export default function MarkdownRenderer({ content, className = '' }: MarkdownRendererProps) {
+export default function MarkdownRenderer({ content = '', className = '' }: MarkdownRendererProps) {
   // Função para processar markdown básico
   const processMarkdown = (text: string) => {
+    // Verificar se text é válido
+    if (!text || typeof text !== 'string') {
+      return <p className="text-gray-500 italic">Conteúdo não disponível</p>
+    }
+    
     // Quebrar linhas
     const lines = text.split('\n')
     

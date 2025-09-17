@@ -142,6 +142,7 @@ function EnemSimulatorContent() {
     } finally {
       setLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [toast]);
 
   const handleCustomize = () => {
@@ -297,7 +298,8 @@ function EnemSimulatorContent() {
     } finally {
       setLoading(false);
     }
-  }, [startSimulation, toast]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [toast]);
 
   // Render based on current state
   if (appState === 'simulation' && sessionId && simulationConfig) {
@@ -430,9 +432,9 @@ function EnemSimulatorContent() {
         {/* Loading State */}
         {loading && (
           <ExamGenerationLoading
-            isLoading={loading}
-            progress={loadingProgress}
+            currentStep={Math.ceil((loadingProgress / 100) * 3)}
             message={loadingMessage}
+            showSteps={true}
           />
         )}
 

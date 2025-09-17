@@ -200,7 +200,7 @@ export default function AnimationSlide({
           
             <ContentProcessor 
               content={content} 
-              subject={subject}
+              subject={lessonTheme}
               className="text-lg"
             />
         </div>

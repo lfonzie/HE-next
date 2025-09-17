@@ -106,7 +106,7 @@ export default function AulasPage() {
       }
     } catch (error) {
       console.error('Error generating lesson:', error);
-      toast.error(`Erro ao gerar aula: ${error.message}`);
+      toast.error(`Erro ao gerar aula: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     } finally {
       setLoading(false);
     }
@@ -257,7 +257,7 @@ export default function AulasPage() {
                   
                   <div className="text-center">
                     <div className="flex items-center justify-center mb-2">
-                      <Image className="h-5 w-5 text-orange-600 mr-1" alt="" />
+                      <Image className="h-5 w-5 text-orange-600 mr-1" />
                       <span className="text-sm font-medium">Imagens</span>
                     </div>
                     <div className="text-2xl font-bold text-orange-600">
@@ -288,14 +288,7 @@ export default function AulasPage() {
               <CardContent>
                 <div className="mb-4">
                   <h4 className="font-semibold mb-2">Objetivos de Aprendizagem:</h4>
-                  <ul className="space-y-1">
-                    {lesson.objective.map((objective, index) => (
-                      <li key={index} className="flex items-start gap-2 text-sm">
-                        <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                        <span>{objective}</span>
-                      </li>
-                    ))}
-                  </ul>
+                  <p className="text-sm text-gray-600">{lesson.objective}</p>
                 </div>
 
                 <div className="mb-6">

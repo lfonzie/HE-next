@@ -65,6 +65,7 @@ export default function ProgressiveLessonComponent({
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canGoNext, canGoPrevious, isQuestionSlide, showAnswer, selectedAnswer]);
 
   const {
@@ -101,6 +102,7 @@ export default function ProgressiveLessonComponent({
     if (currentSlideData?.imagePrompt) {
       loadImageForSlide(currentSlideData);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSlide, generatedSlides.length]);
 
   const loadImageForSlide = async (slide: any) => {

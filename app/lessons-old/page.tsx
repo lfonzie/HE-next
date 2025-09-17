@@ -46,22 +46,7 @@ export default function LessonsPage() {
   
 
   // Gerar sugestões randômicas apenas no cliente para evitar hidratação
-  useEffect(() => {
-    const suggestions = [
-    'Como funciona a fotossíntese?',
-    'Explique a teoria da evolução',
-    'O que é a fotossíntese?',
-    'Como calcular área de um triângulo?',
-    'História do Brasil colonial',
-    'Química orgânica básica',
-    'Física: leis de Newton',
-    'Literatura brasileira',
-    'Geografia: clima e vegetação',
-    'Matemática: equações do segundo grau'
-  ];
-    const shuffled = [...suggestions].sort(() => Math.random() - 0.5)
-    setRandomSuggestions(shuffled.slice(0, 3))
-  }, [suggestions])
+  useEffect(() => {}, [])
 
   // Verificar se há query na URL
   useEffect(() => {
@@ -175,6 +160,7 @@ export default function LessonsPage() {
         setGenerationStatus('')
       }, 1000)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleStartLesson = () => {

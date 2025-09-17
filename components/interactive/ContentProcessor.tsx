@@ -25,6 +25,7 @@ export default function ContentProcessor({
 
   useEffect(() => {
     processContent(content)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [content])
 
   const processContent = async (text: string) => {

@@ -78,6 +78,7 @@ export default function EnhancedFeaturesDemo() {
           onClick={() => setActiveTab('images')}
           className="flex items-center gap-2"
         >
+          {/* eslint-disable-next-line jsx-a11y/alt-text */}
           <Image className="h-4 w-4" />
           Criação de Imagens
         </Button>
@@ -131,6 +132,7 @@ export default function EnhancedFeaturesDemo() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
+                {/* eslint-disable-next-line jsx-a11y/alt-text */}
                 <Image className="h-5 w-5" />
                 Sistema de Criação de Imagens
               </CardTitle>
@@ -242,6 +244,7 @@ export default function EnhancedFeaturesDemo() {
                         {generatedImages.map((image, index) => (
                           <Card key={index}>
                             <CardContent className="p-4">
+                              {/* eslint-disable-next-line jsx-a11y/alt-text */}
                               <img 
                                 src={image.imageUrl} 
                                 alt={image.description}
