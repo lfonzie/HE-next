@@ -20,18 +20,18 @@ export async function GET(request: NextRequest) {
       // Retornar sugestões de fallback se não houver chave da API
       const fallbackSuggestions: Suggestion[] = [
         {
-          text: "Como funciona a fotossíntese e por que é importante para a vida na Terra?",
+          text: "Como funciona a fotossíntese?",
           category: "Biologia",
           level: "8º ano"
         },
         {
-          text: "A matemática por trás dos algoritmos de redes sociais",
+          text: "Matemática dos algoritmos",
           category: "Matemática",
           level: "Ensino Médio"
         },
         {
-          text: "Por que alguns países são mais desenvolvidos que outros?",
-          category: "Geografia",
+          text: "Causas da Revolução Francesa",
+          category: "História",
           level: "9º ano"
         }
       ]
@@ -59,11 +59,11 @@ Gere exatamente 3 sugestões de tópicos educacionais que sejam:
 - Diversos em matérias (matemática, ciências, história, geografia, literatura, etc.)
 - Adequados para diferentes níveis (do 6º ano ao ensino médio)
 - Interessantes e relevantes para estudantes brasileiros
+- CURTOS E DIRETOS (máximo 8 palavras)
 - Específicos o suficiente para gerar uma aula completa
-- Atuais e conectados com o mundo real
 
 Para cada sugestão, forneça:
-1. Um tópico específico e interessante
+1. Um tópico específico e interessante (BEM CURTO)
 2. A matéria/disciplina
 3. O nível educacional apropriado
 
@@ -76,14 +76,14 @@ Responda APENAS com um JSON válido no seguinte formato:
   }
 ]
 
-Exemplos de bons tópicos:
-- "Como a inteligência artificial está mudando o mundo do trabalho?"
-- "Por que alguns países são mais ricos que outros?"
-- "A matemática por trás dos algoritmos do Instagram"
-- "Como funciona a vacinação e por que é importante?"
-- "A física dos esportes: por que alguns atletas são mais rápidos?"
+Exemplos de bons tópicos CURTOS:
+- "Como funciona a fotossíntese?"
+- "Causas da Revolução Francesa"
+- "Matemática dos algoritmos"
+- "Como funciona a vacinação?"
+- "Física dos esportes"
 
-Gere sugestões criativas e variadas!
+IMPORTANTE: Mantenha os tópicos BEM CURTOS e diretos. Evite explicações longas ou perguntas extensas.
 `
 
     console.log('Enviando prompt para o Gemini...')
@@ -117,18 +117,18 @@ Gere sugestões criativas e variadas!
       // Fallback para sugestões padrão se o parsing falhar
       suggestions = [
         {
-          text: "Como funciona a fotossíntese e por que é importante para a vida na Terra?",
+          text: "Como funciona a fotossíntese?",
           category: "Biologia",
           level: "8º ano"
         },
         {
-          text: "A matemática por trás dos algoritmos de redes sociais",
+          text: "Matemática dos algoritmos",
           category: "Matemática",
           level: "Ensino Médio"
         },
         {
-          text: "Por que alguns países são mais desenvolvidos que outros?",
-          category: "Geografia",
+          text: "Causas da Revolução Francesa",
+          category: "História",
           level: "9º ano"
         }
       ]
@@ -164,18 +164,18 @@ Gere sugestões criativas e variadas!
     // Fallback para sugestões estáticas em caso de erro
     const fallbackSuggestions: Suggestion[] = [
       {
-        text: "Como funciona a fotossíntese e por que é importante para a vida na Terra?",
+        text: "Como funciona a fotossíntese?",
         category: "Biologia",
         level: "8º ano"
       },
       {
-        text: "A matemática por trás dos algoritmos de redes sociais",
+        text: "Matemática dos algoritmos",
         category: "Matemática",
         level: "Ensino Médio"
       },
       {
-        text: "Por que alguns países são mais desenvolvidos que outros?",
-        category: "Geografia",
+        text: "Causas da Revolução Francesa",
+        category: "História",
         level: "9º ano"
       }
     ]

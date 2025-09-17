@@ -87,18 +87,18 @@ export function useDynamicSuggestions() {
       // Fallback para sugestões estáticas
       const fallbackSuggestions: Suggestion[] = [
         {
-          text: "Como funciona a fotossíntese e por que é importante para a vida na Terra?",
+          text: "Como funciona a fotossíntese?",
           category: "Biologia",
           level: "8º ano"
         },
         {
-          text: "A matemática por trás dos algoritmos de redes sociais",
+          text: "Matemática dos algoritmos",
           category: "Matemática",
           level: "Ensino Médio"
         },
         {
-          text: "Por que alguns países são mais desenvolvidos que outros?",
-          category: "Geografia",
+          text: "Causas da Revolução Francesa",
+          category: "História",
           level: "9º ano"
         }
       ]

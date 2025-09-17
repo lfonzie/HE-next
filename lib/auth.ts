@@ -15,31 +15,28 @@ const DEV_USER = {
 }
 
 export const authOptions: NextAuthOptions = {
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET || "dev-secret-key",
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 7 * 24 * 60 * 60, // 7 days (reduced from 30)
   },
   pages: {
     signIn: "/login",
     error: "/error",
   },
-  debug: process.env.NEXTAUTH_DEBUG === "true",
+  debug: false, // Disable debug in production
   logger: {
     error: (code, metadata) => {
-      console.error("NextAuth Error:", code, metadata)
+      // Only log errors in development
+      if (process.env.NODE_ENV === "development") {
+        console.error("NextAuth Error:", code, metadata)
+      }
     },
     warn: (code) => {
-      // Only log warnings in development
-      if (process.env.NODE_ENV === "development") {
-        console.warn("NextAuth Warning:", code)
-      }
+      // Suppress warnings in production
     },
     debug: (code, metadata) => {
-      // Only log debug info if explicitly enabled
-      if (process.env.NEXTAUTH_DEBUG === "true") {
-        console.log("NextAuth Debug:", code, metadata)
-      }
+      // Suppress debug logs
     }
   },
   providers: [
@@ -60,6 +57,18 @@ export const authOptions: NextAuthOptions = {
         // Verificação simples para desenvolvimento (fallback)
         if (credentials.email === DEV_USER.email && credentials.password === DEV_USER.password) {
           console.log("✅ [DEV] Authentication successful for:", DEV_USER.email)
+          return {
+            id: DEV_USER.id,
+            email: DEV_USER.email,
+            name: DEV_USER.name,
+            role: DEV_USER.role,
+          }
+        }
+
+        // Para desenvolvimento, usar usuário padrão se não conseguir conectar ao banco
+        console.log("⚠️ [DEV] Database not available, using fallback authentication")
+        if (credentials.email === "dev@hubedu.ia" && credentials.password === "dev123") {
+          console.log("✅ [DEV] Fallback authentication successful")
           return {
             id: DEV_USER.id,
             email: DEV_USER.email,

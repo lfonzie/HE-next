@@ -7,10 +7,12 @@ const nextConfig = {
   outputFileTracingExcludes: {
     '*': ['./enem-api-main/**/*']
   },
-  // Ensure proper development mode handling
+  // Performance optimizations (Turbopack alternative for macOS)
   experimental: {
-    // Additional experimental features can be added here if needed
+    optimizePackageImports: ['@radix-ui/react-icons', 'lucide-react'],
   },
+  // Enable faster compilation
+  swcMinify: true,
   async headers() {
     return [
       {
@@ -49,15 +51,7 @@ const nextConfig = {
     NEXTAUTH_URL: process.env.NEXTAUTH_URL,
     OPENAI_API_KEY: process.env.OPENAI_API_KEY
   },
-  // Nova configuração do Turbopack (substitui experimental.turbo)
-  turbopack: {
-    rules: {
-      '*.svg': {
-        loaders: ['@svgr/webpack'],
-        as: '*.js',
-      },
-    },
-  },
+  // Turbopack configuration removed due to macOS permission issues
   webpack: (config, { dev, isServer }) => {
     if (dev && !isServer) {
       config.resolve.fallback = {

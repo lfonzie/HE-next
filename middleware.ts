@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getToken } from 'next-auth/jwt'
 
 export async function middleware(request: NextRequest) {
+  // Skip middleware for static files and API routes to improve performance
+  if (request.nextUrl.pathname.startsWith('/_next/') ||
+      request.nextUrl.pathname.startsWith('/api/') ||
+      request.nextUrl.pathname.match(/\.(ico|png|jpg|jpeg|gif|svg|css|js|woff|woff2|ttf|eot)$/)) {
+    return NextResponse.next()
+  }
+
   // Handle missing development files in Next.js 15 App Router
   if (process.env.NODE_ENV === 'development') {
     if (request.nextUrl.pathname.includes('react-refresh.js')) {
@@ -26,6 +33,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // Only get token for protected routes
   const token = await getToken({ req: request })
   
   // Allow access to auth pages
@@ -67,14 +75,7 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith(route + '/')
   )
 
-  // Allow Next.js static files and assets
-  if (request.nextUrl.pathname.startsWith('/_next/') ||
-      request.nextUrl.pathname.startsWith('/favicon') ||
-      request.nextUrl.pathname.startsWith('/robots.txt') ||
-      request.nextUrl.pathname.startsWith('/sitemap.xml') ||
-      request.nextUrl.pathname.match(/\.(ico|png|jpg|jpeg|gif|svg|css|js|woff|woff2|ttf|eot)$/)) {
-    return NextResponse.next()
-  }
+  // Allow Next.js static files and assets (already handled above)
 
   // Require authentication for all protected routes
   if (!isPublicRoute && !request.nextUrl.pathname.startsWith('/api/')) {
@@ -126,68 +127,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Protected routes that require authentication
-    '/dashboard/:path*',
-    '/chat/:path*',
-    '/enem/:path*',
-    '/enem-old/:path*',
-    '/simulador/:path*',
-    '/aula/:path*',
-    '/aulas/:path*',
-    '/professor/:path*',
-    '/professor-interactive/:path*',
-    '/professor-interactive-demo/:path*',
-    '/professor-optimized/:path*',
-    '/analytics/:path*',
-    '/profile/:path*',
-    '/admin/:path*',
-    '/admin-dashboard/:path*',
-    '/admin-system-prompts/:path*',
-    '/admin-escola/:path*',
-    
-    // Public routes (for explicit handling)
-    '/',
-    '/contato/:path*',
-    '/apresentacao/:path*',
-    '/about/:path*',
-    '/faq/:path*',
-    '/privacidade/:path*',
-    '/termos/:path*',
-    '/suporte/:path*',
-    '/demo/:path*',
-    '/demo-register/:path*',
-    '/demo-simple/:path*',
-    '/api-demo/:path*',
-    '/unsplash-demo/:path*',
-    '/math-demo/:path*',
-    '/math-test/:path*',
-    '/test-auth/:path*',
-    '/test-hubedu-interactive/:path*',
-    '/test-math/:path*',
-    '/test-progressive/:path*',
-    '/test-visual/:path*',
-    '/dark-mode-demo/:path*',
-    '/chat-advanced/:path*',
-    
-    // Auth routes
-    '/login/:path*',
-    '/register/:path*',
-    '/forgot-password/:path*',
-    '/reset-password/:path*',
-    
-    // API routes
-    '/api/chat/:path*',
-    '/api/enem/:path*',
-    '/api/professor/:path*',
-    '/api/module-professor-interactive/:path*',
-    '/api/support/:path*',
-    '/api/admin/:path*',
-    
-    // Static files
-    '/_next/static/:path*',
-    '/_next/image/:path*',
-    '/favicon.ico',
-    '/robots.txt',
-    '/sitemap.xml'
+    // Only match routes that actually need middleware processing
+    '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:ico|png|jpg|jpeg|gif|svg|css|js|woff|woff2|ttf|eot)$).*)',
   ]
 }
