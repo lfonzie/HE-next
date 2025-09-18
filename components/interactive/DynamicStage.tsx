@@ -262,7 +262,7 @@ export default function DynamicStage({
                 {stage.etapa}
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               <div className="prose max-w-none">
                 <MarkdownRenderer 
                   content={activity.content || ''} 
@@ -270,9 +270,9 @@ export default function DynamicStage({
                 />
               </div>
               
-              {/* Show image if available */}
+              {/* Show image if available - depois do texto */}
               {activity.imageUrl && (
-                <div className="mt-4">
+                <div className="mt-6">
                   <img 
                     src={activity.imageUrl} 
                     alt={stage.etapa}
@@ -416,7 +416,7 @@ export default function DynamicStage({
                 🎉 {stage.etapa}
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               <div className="prose max-w-none text-center">
                 <MarkdownRenderer 
                   content={activity.content || 'Parabéns! Você completou esta aula com sucesso!'} 
@@ -424,9 +424,9 @@ export default function DynamicStage({
                 />
               </div>
               
-              {/* Show image if available */}
+              {/* Show image if available - depois do texto */}
               {activity.imageUrl && (
-                <div className="mt-4">
+                <div className="mt-6">
                   <img 
                     src={activity.imageUrl} 
                     alt={stage.etapa}
@@ -465,7 +465,7 @@ export default function DynamicStage({
                   {stage.etapa}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6">
                 <div className="prose max-w-none">
                   <MarkdownRenderer 
                     content={activity.content || ''} 
@@ -473,7 +473,7 @@ export default function DynamicStage({
                   />
                 </div>
                 
-                {/* Show image if available */}
+                {/* Show image if available - depois do texto */}
                 {activity.imageUrl && (
                   <div className="mt-6">
                     <img 

@@ -532,3 +532,5 @@ export function useMessageComposer(config: MessageComposerConfig = {
     remainingChars: config.maxMessageLength - state.content.length
   }
 }
+
+

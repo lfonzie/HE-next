@@ -491,3 +491,5 @@ export function useChatKeyboard(config: KeyboardConfig = {
     isComposing: isComposingRef.current
   }
 }
+
+

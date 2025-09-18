@@ -165,14 +165,21 @@ export default function AnimationSlide({
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Content */}
-        <div className="text-left space-y-4">
-          {/* Imagem dinâmica - priorizar imageUrl da API, depois Unsplash para primeira/última slide */}
+        <div className="text-left space-y-6">
+          {/* Texto primeiro */}
+          <ContentProcessor 
+            content={content} 
+            subject={lessonTheme}
+            className="text-lg"
+          />
+          
+          {/* Imagem depois do texto */}
           {(imageUrl || (isFirstSlide || isLastSlide)) && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
-              className="flex justify-center mb-6"
+              className="flex justify-center mt-6"
             >
               <div className="relative w-full max-w-2xl">
                 {imageUrl ? (
@@ -227,12 +234,6 @@ export default function AnimationSlide({
               </div>
             </motion.div>
           )}
-          
-            <ContentProcessor 
-              content={content} 
-              subject={lessonTheme}
-              className="text-lg"
-            />
         </div>
 
         {/* Media Display */}

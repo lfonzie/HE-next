@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import DynamicStage from '@/components/interactive/DynamicStage'
-import { ArrowLeft, BookOpen, Clock, Star, Trophy, Target, Loader2 } from 'lucide-react'
+import { ArrowLeft, BookOpen, Clock, Star, Trophy, Target, Loader2, Keyboard } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
 import { useProgressiveLoading } from '@/lib/progressive-lesson-loader'
@@ -339,47 +339,50 @@ export default function LessonPage() {
     }
   }
 
+  // Navegação por teclado
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      // Evitar conflitos quando estiver digitando em inputs
+      if (event.target instanceof HTMLInputElement || 
+          event.target instanceof HTMLTextAreaElement ||
+          event.target instanceof HTMLSelectElement) {
+        return
+      }
 
-  // Wait for all slides to be ready before showing the lesson
+      // Verificar se estamos em transição ou carregando
+      if (isLoading || progressiveLoading) {
+        return
+      }
+
+      switch (event.key) {
+        case 'ArrowLeft':
+          event.preventDefault()
+          handlePrevious()
+          break
+        case 'ArrowRight':
+          event.preventDefault()
+          handleNext()
+          break
+        case 'Escape':
+          event.preventDefault()
+          // Voltar para a lista de aulas
+          router.push('/aulas')
+          break
+        default:
+          break
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyPress)
+    return () => window.removeEventListener('keydown', handleKeyPress)
+  }, [currentStage, isLoading, progressiveLoading, router])
+
+
+  // Show lesson immediately when lessonData is available
   useEffect(() => {
     if (lessonData && lessonData.stages && lessonData.stages.length > 0) {
-      // Check if all slides are ready (no placeholder content)
-      const allSlidesReady = lessonData.stages.every(stage => 
-        stage.activity?.content && 
-        !stage.activity.content.includes('Carregando conteúdo do slide') &&
-        !stage.activity.content.includes('Conteúdo sendo carregado') &&
-        !stage.activity.content.includes('Preparando conteúdo educacional') &&
-        stage.activity.content.length > 50 // Ensure content is substantial
-      )
-      
-      if (allSlidesReady) {
-        console.log('[DEBUG] All slides are ready, showing lesson')
-        setIsLoading(false)
-      } else {
-        console.log('[DEBUG] Slides not ready yet, waiting...')
-        // Wait for slides to be ready
-        const checkInterval = setInterval(() => {
-          const currentAllReady = lessonData.stages.every(stage => 
-            stage.activity?.content && 
-            !stage.activity.content.includes('Carregando conteúdo do slide') &&
-            !stage.activity.content.includes('Conteúdo sendo carregado') &&
-            !stage.activity.content.includes('Preparando conteúdo educacional') &&
-            stage.activity.content.length > 50
-          )
-          
-          if (currentAllReady) {
-            console.log('[DEBUG] All slides ready, showing lesson')
-            setIsLoading(false)
-            clearInterval(checkInterval)
-          }
-        }, 1000) // Check every 1 second
-        
-        // Cleanup interval after 60 seconds
-        setTimeout(() => {
-          clearInterval(checkInterval)
-          setIsLoading(false)
-        }, 60000)
-      }
+      console.log('[DEBUG] Lesson data loaded, showing lesson immediately')
+      setIsLoading(false)
     }
   }, [lessonData])
 
@@ -660,6 +663,17 @@ export default function LessonPage() {
             <span>{Math.round(stageProgress)}%</span>
           </div>
           <Progress value={stageProgress} className="h-3" />
+        </div>
+
+        {/* Keyboard Navigation Help */}
+        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-center gap-2 text-sm text-blue-700">
+            <Keyboard className="h-4 w-4" />
+            <span className="font-medium">Navegação por teclado:</span>
+            <span>← → para navegar entre slides</span>
+            <span>•</span>
+            <span>Esc para voltar</span>
+          </div>
         </div>
       </div>
 
