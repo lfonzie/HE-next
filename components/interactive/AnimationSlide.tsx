@@ -172,7 +172,7 @@ export default function AnimationSlide({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
-              className="flex justify-center mb-6"
+              className="flex justify-center mb-8"
             >
               <div className="relative w-full max-w-2xl">
                 {imageUrl ? (
@@ -182,8 +182,8 @@ export default function AnimationSlide({
                     alt={`${lessonTheme} - ${title}`}
                     title={`Educational image for: ${title}`}
                     width={800}
-                    height={400}
-                    className="w-full h-48"
+                    height={300}
+                    className="w-full h-40 object-cover rounded-lg shadow-md"
                     priority={isFirstSlide}
                     quality={85}
                     placeholder="blur"
@@ -195,7 +195,7 @@ export default function AnimationSlide({
                   // Use Unsplash for first/last slides (original behavior)
                   <>
                     {imageLoading || !unsplashImage ? (
-                      <div className="w-full h-48 bg-gray-200 rounded-lg animate-pulse flex items-center justify-center">
+                      <div className="w-full h-40 bg-gray-200 rounded-lg animate-pulse flex items-center justify-center">
                         <span className="text-gray-500">
                           {imageLoading ? 'Loading image...' : 'No image available'}
                         </span>
@@ -207,8 +207,8 @@ export default function AnimationSlide({
                           alt={unsplashImage.alt_description || `${lessonTheme} image`}
                           title={`Photo by ${unsplashImage.user.name}`}
                           width={800}
-                          height={400}
-                          className="w-full h-48"
+                          height={300}
+                          className="w-full h-40 object-cover rounded-lg shadow-md"
                           priority={isFirstSlide}
                           quality={85}
                           placeholder="blur"

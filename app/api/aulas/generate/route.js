@@ -66,7 +66,7 @@ function generateImageQuery(topic, slideNumber, slideType) {
   
   // Queries específicas e precisas por tipo de slide e número com palavras-chave relevantes
   const queries = {
-    1: `${mainKeyword} ${secondaryKeyword} introduction concept overview educational classroom`, // Abertura
+    1: `${mainKeyword} ${secondaryKeyword} beginning start learning education classroom students`, // Abertura - mais específico
     2: `${mainKeyword} ${secondaryKeyword} fundamentals basics principles educational`, // Conceitos fundamentais
     3: `${mainKeyword} ${secondaryKeyword} process mechanism steps educational`, // Desenvolvimento
     4: `${mainKeyword} ${secondaryKeyword} application examples real world educational`, // Aplicações práticas
@@ -79,12 +79,12 @@ function generateImageQuery(topic, slideNumber, slideType) {
     11: `${mainKeyword} ${secondaryKeyword} synthesis summary educational`, // Síntese intermediária
     12: `${mainKeyword} ${secondaryKeyword} situational analysis quiz educational`, // Quiz 2
     13: `${mainKeyword} ${secondaryKeyword} future applications innovation educational`, // Aplicações futuras
-    14: `${mainKeyword} ${secondaryKeyword} conclusion summary recap educational` // Encerramento
+    14: `${mainKeyword} ${secondaryKeyword} completion finish achievement success education` // Encerramento - mais específico
   };
   
   // Fallback mais específico se não encontrar
   const fallbackQueries = {
-    1: `${mainKeyword} concept educational classroom`,
+    1: `${mainKeyword} learning education classroom students beginning`,
     2: `${mainKeyword} basics educational`,
     3: `${mainKeyword} process educational`,
     4: `${mainKeyword} examples educational`,
@@ -97,7 +97,7 @@ function generateImageQuery(topic, slideNumber, slideType) {
     11: `${mainKeyword} synthesis educational`,
     12: `${mainKeyword} situational educational`,
     13: `${mainKeyword} future educational`,
-    14: `${mainKeyword} conclusion educational`
+    14: `${mainKeyword} completion success achievement education finish`
   };
   
   return queries[slideNumber] || fallbackQueries[slideNumber] || `${mainKeyword} education learning`;
