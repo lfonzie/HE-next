@@ -98,6 +98,8 @@ export async function POST(request: NextRequest) {
     // Buscar imagens de múltiplas fontes
     const imageResults = await searchMultipleSources(query, subject, count);
     
+    console.log(`[DEBUG] Found ${imageResults.length} total images from all sources`);
+    
     // Classificar e pontuar as imagens
     const classifiedImages = await classifyImages(imageResults, query, subject, grade);
     
@@ -108,9 +110,12 @@ export async function POST(request: NextRequest) {
       return scoreB - scoreA;
     });
 
+    const finalImages = classifiedImages.slice(0, count);
+    console.log(`[DEBUG] Returning ${finalImages.length} classified images`);
+
     return NextResponse.json({
       success: true,
-      images: classifiedImages.slice(0, count),
+      images: finalImages,
       query,
       subject,
       totalFound: classifiedImages.length,
@@ -124,8 +129,13 @@ export async function POST(request: NextRequest) {
     console.error('❌ Erro na classificação de imagens:', error);
     return NextResponse.json(
       { 
+        success: false,
         error: 'Erro ao classificar imagens',
-        details: error instanceof Error ? error.message : 'Erro desconhecido'
+        details: error instanceof Error ? error.message : 'Erro desconhecido',
+        images: [],
+        query: '',
+        subject: '',
+        totalFound: 0
       },
       { status: 500 }
     );
@@ -169,32 +179,104 @@ async function searchMultipleSources(query: string, subject: string, count: numb
 
 async function searchWikimedia(query: string, limit: number): Promise<any[]> {
   try {
+    console.log(`[DEBUG] Searching Wikimedia for: ${query}`);
+    
     const searchUrl = `https://commons.wikimedia.org/w/api.php?action=query&format=json&list=search&srsearch=${encodeURIComponent(query)}&srnamespace=6&srlimit=${limit}&srprop=size&origin=*`;
     
-    const response = await fetch(searchUrl);
-    if (!response.ok) return [];
+    const response = await fetch(searchUrl, {
+      headers: {
+        'User-Agent': 'HubEdu-IA/1.0 (Educational Content Generator)',
+        'Accept': 'application/json',
+      },
+      timeout: 10000, // 10 second timeout
+    });
+    
+    if (!response.ok) {
+      console.warn(`Wikimedia search API returned ${response.status}: ${response.statusText}`);
+      return [];
+    }
 
     const data = await response.json();
-    if (!data.query?.search) return [];
+    console.log(`[DEBUG] Wikimedia search response:`, data);
+    
+    // Check for various response structures
+    if (!data || typeof data !== 'object') {
+      console.warn('Wikimedia API returned invalid response format');
+      return [];
+    }
+    
+    // Handle different response structures
+    if (data.error) {
+      console.warn('Wikimedia API error:', data.error);
+      return [];
+    }
+    
+    if (data.batchcomplete === '' || !data.query?.search || !Array.isArray(data.query.search)) {
+      console.warn('Wikimedia API response structure invalid or empty:', {
+        batchcomplete: data.batchcomplete,
+        hasQuery: !!data.query,
+        hasSearch: !!data.query?.search,
+        searchType: Array.isArray(data.query?.search) ? 'array' : typeof data.query?.search,
+        data: data
+      });
+      return [];
+    }
 
-    const imageTitles = data.query.search.map((item: any) => item.title);
+    const searchResults = data.query.search;
+    if (searchResults.length === 0) {
+      console.log('No Wikimedia images found for query:', query);
+      return [];
+    }
+
+    const imageTitles = searchResults.map((item: any) => item.title);
     const imageInfoUrl = `https://commons.wikimedia.org/w/api.php?action=query&format=json&titles=${imageTitles.join('|')}&prop=imageinfo&iiprop=url|size|mime&origin=*`;
     
-    const imageInfoResponse = await fetch(imageInfoUrl);
-    if (!imageInfoResponse.ok) return [];
+    console.log(`[DEBUG] Fetching image info for ${imageTitles.length} images`);
+    
+    const imageInfoResponse = await fetch(imageInfoUrl, {
+      headers: {
+        'User-Agent': 'HubEdu-IA/1.0 (Educational Content Generator)',
+        'Accept': 'application/json',
+      },
+      timeout: 15000, // 15 second timeout for image info
+    });
+    
+    if (!imageInfoResponse.ok) {
+      console.warn(`Wikimedia image info API returned ${imageInfoResponse.status}: ${imageInfoResponse.statusText}`);
+      return [];
+    }
 
     const imageInfoData = await imageInfoResponse.json();
-    const pages = imageInfoData.query.pages;
+    console.log(`[DEBUG] Wikimedia image info response:`, imageInfoData);
     
-    return Object.values(pages).map((page: any) => ({
+    // Verificar se a estrutura da resposta está correta
+    if (!imageInfoData || !imageInfoData.query || !imageInfoData.query.pages) {
+      console.warn('Wikimedia image info API response structure invalid:', imageInfoData);
+      return [];
+    }
+    
+    const pages = imageInfoData.query.pages;
+    const validPages = Object.values(pages).filter((page: any) => 
+      page && page.imageinfo && Array.isArray(page.imageinfo) && page.imageinfo.length > 0
+    );
+    
+    if (validPages.length === 0) {
+      console.warn('No valid image info found in Wikimedia response');
+      return [];
+    }
+    
+    const images = validPages.map((page: any) => ({
       url: page.imageinfo?.[0]?.url || null,
       source: 'wikimedia',
-      title: page.title,
-      description: page.title,
+      title: page.title || 'Untitled',
+      description: page.title || 'Wikimedia Commons image',
       author: 'Wikimedia Commons',
       width: page.imageinfo?.[0]?.width || 0,
       height: page.imageinfo?.[0]?.height || 0
-    })).filter(img => img.url);
+    })).filter(img => img.url && img.url.startsWith('http'));
+    
+    console.log(`[DEBUG] Found ${images.length} valid Wikimedia images`);
+    return images;
   } catch (error) {
     console.error('Erro ao buscar Wikimedia:', error);
     return [];
@@ -252,8 +334,8 @@ async function searchPixabay(query: string, limit: number): Promise<any[]> {
       image_type: 'photo',
       orientation: 'horizontal',
       category: 'education,science,nature',
-      min_width: 800,
-      min_height: 600
+      min_width: '800',
+      min_height: '600'
     });
 
     const response = await fetch(`https://pixabay.com/api/?${params}`);
@@ -364,18 +446,34 @@ function calculateRelevanceScore(text: string, query: string): number {
   const textLower = text.toLowerCase();
   const queryLower = query.toLowerCase();
   
-  // Pontuação baseada em correspondências exatas
+  // Pontuação baseada em correspondências exatas e parciais
   let score = 0;
-  const queryWords = queryLower.split(' ');
+  const queryWords = queryLower.split(' ').filter(word => word.length > 2);
   
+  // Correspondências exatas
   queryWords.forEach(word => {
     if (textLower.includes(word)) {
       score += 1;
     }
   });
   
+  // Bonus por correspondências parciais
+  queryWords.forEach(word => {
+    if (textLower.includes(word.substring(0, Math.max(3, word.length - 2)))) {
+      score += 0.5;
+    }
+  });
+  
+  // Bonus por palavras-chave educacionais
+  const educationalKeywords = ['educational', 'education', 'learning', 'teaching', 'school', 'classroom', 'study'];
+  educationalKeywords.forEach(keyword => {
+    if (textLower.includes(keyword)) {
+      score += 0.3;
+    }
+  });
+  
   // Normalizar para 0-1
-  return Math.min(1, score / queryWords.length);
+  return Math.min(1, score / Math.max(1, queryWords.length));
 }
 
 function calculateThemeMatch(image: any, subject: string): number {
@@ -385,7 +483,11 @@ function calculateThemeMatch(image: any, subject: string): number {
     'física': ['physics', 'energy', 'force', 'motion', 'wave', 'particle', 'quantum'],
     'matemática': ['math', 'mathematics', 'geometry', 'algebra', 'equation', 'graph'],
     'história': ['history', 'ancient', 'war', 'civilization', 'culture', 'historical'],
-    'geografia': ['geography', 'map', 'country', 'landscape', 'climate', 'earth']
+    'geografia': ['geography', 'map', 'country', 'landscape', 'climate', 'earth'],
+    'tecnologia': ['technology', 'computer', 'digital', 'electronic', 'software', 'hardware'],
+    'internet': ['internet', 'network', 'web', 'connection', 'data', 'transmission', 'protocol', 'infrastructure', 'server', 'router', 'cable', 'wireless', 'bandwidth', 'fiber', 'ethernet', 'tcp', 'ip', 'dns', 'http', 'https', 'diagram', 'architecture', 'topology'],
+    'informática': ['computing', 'computer', 'software', 'programming', 'algorithm', 'database', 'system'],
+    'ciências': ['science', 'scientific', 'experiment', 'research', 'discovery', 'laboratory', 'analysis']
   };
   
   const keywords = subjectKeywords[subject.toLowerCase()] || [];
@@ -428,7 +530,13 @@ function calculateEducationalSuitability(image: any, subject: string, grade?: st
 
 function classifyBySubject(image: any, subject: string, grade?: string) {
   const gradeLevel = grade || '5';
-  const difficulty = parseInt(gradeLevel) <= 6 ? 'easy' : parseInt(gradeLevel) <= 9 ? 'medium' : 'hard';
+  const numericGrade = Number.parseInt(gradeLevel, 10);
+  const difficulty: 'easy' | 'medium' | 'hard' =
+    Number.isNaN(numericGrade) || numericGrade <= 6
+      ? 'easy'
+      : numericGrade <= 9
+        ? 'medium'
+        : 'hard';
   
   const tags = [];
   if (image.tags) {

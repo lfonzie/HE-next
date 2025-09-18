@@ -224,19 +224,8 @@ export const openAIRateLimiter = new RateLimiter(10, 60000)
 // Unsplash Rate Limiter (50 requests per hour)
 export const unsplashRateLimiter = new RateLimiter(50, 3600000)
 
-// Timeout utility
-export function withTimeout<T>(
-  promise: Promise<T>,
-  timeoutMs: number,
-  errorMessage: string = 'Operation timed out'
-): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error(errorMessage)), timeoutMs)
-    ),
-  ])
-}
+// Timeout utility re-export
+export { withTimeout } from './async'
 
 // Health check utility
 export class HealthChecker {

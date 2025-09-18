@@ -6,14 +6,13 @@ const prisma = new PrismaClient();
 
 export async function POST(request: NextRequest) {
   try {
-    // Verify authentication with development bypass
+    // Verify authentication - OBRIGATÓRIO
     const session = await auth();
-    if (!session?.user?.id && process.env.NODE_ENV === 'production') {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Use development user ID if no session in development
-    const userId = session?.user?.id || 'dev-user-123';
+    const userId = session.user.id;
 
     const body = await request.json();
     const { session_id, item_id, selected_answer, time_spent } = body;
@@ -32,15 +31,20 @@ export async function POST(request: NextRequest) {
       console.log('Local session detected, allowing response save');
     } else {
       // Verify session belongs to user for database sessions
-      const dbSession = await prisma.enem_session.findUnique({
-        where: { 
-          session_id,
-          user_id: userId
-        }
-      });
+      try {
+        const dbSession = await prisma.enem_session.findUnique({
+          where: { 
+            session_id,
+            user_id: userId
+          }
+        });
 
-      if (!dbSession) {
-        return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+        if (!dbSession) {
+          return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+        }
+      } catch (dbError) {
+        // If there's a database error (like UUID validation), treat as local session
+        console.warn('Database error during session lookup, treating as local session:', dbError);
       }
     }
 
@@ -132,14 +136,13 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    // Verify authentication with development bypass
+    // Verify authentication - OBRIGATÓRIO
     const session = await auth();
-    if (!session?.user?.id && process.env.NODE_ENV === 'production') {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Use development user ID if no session in development
-    const userId = session?.user?.id || 'dev-user-123';
+    const userId = session.user.id;
 
     const { searchParams } = new URL(request.url);
     const sessionId = searchParams.get('session_id');
@@ -156,22 +159,28 @@ export async function GET(request: NextRequest) {
       responses = [];
     } else {
       // Verify session belongs to user for database sessions
-      const dbSession = await prisma.enem_session.findUnique({
-        where: { 
-          session_id: sessionId,
-          user_id: userId
+      try {
+        const dbSession = await prisma.enem_session.findUnique({
+          where: { 
+            session_id: sessionId,
+            user_id: userId
+          }
+        });
+
+        if (!dbSession) {
+          return NextResponse.json({ error: 'Session not found' }, { status: 404 });
         }
-      });
 
-      if (!dbSession) {
-        return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+        // Get responses for session
+        responses = await prisma.enem_response.findMany({
+          where: { session_id: sessionId },
+          orderBy: { timestamp: 'asc' }
+        });
+      } catch (dbError) {
+        // If there's a database error (like UUID validation), treat as local session
+        console.warn('Database error during session lookup, treating as local session:', dbError);
+        responses = [];
       }
-
-      // Get responses for session
-      responses = await prisma.enem_response.findMany({
-        where: { session_id: sessionId },
-        orderBy: { timestamp: 'asc' }
-      });
     }
 
     return NextResponse.json({

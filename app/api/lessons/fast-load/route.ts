@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     console.log(`🚀 Carregamento rápido da aula: ${lessonId}`)
 
     // Buscar aula no banco com campos otimizados
-    const lesson = await prisma.lessons.findFirst({
+    let lesson = await prisma.lessons.findFirst({
       where: {
         id: lessonId,
         user_id: session.user.id
@@ -46,7 +46,40 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    // If not found with user_id, try to find lesson without user_id filter for demo purposes
     if (!lesson) {
+      console.log('Lesson not found with user_id filter, trying without user_id filter for demo purposes')
+      
+      lesson = await prisma.lessons.findFirst({
+        where: {
+          id: lessonId,
+          user_id: null  // Demo lessons have user_id: null
+        },
+        select: {
+          id: true,
+          title: true,
+          subject: true,
+          level: true,
+          objective: true,
+          outline: true,
+          cards: true,
+          created_at: true,
+          updated_at: true
+        }
+      })
+    }
+
+    if (!lesson) {
+      // Check if this might be a lesson being generated (starts with lesson_)
+      if (lessonId.startsWith('lesson_')) {
+        console.log('This appears to be a lesson being generated, returning loading state')
+        return NextResponse.json({ 
+          error: 'Lesson not found',
+          details: 'Lesson is being generated, please try again in a moment',
+          status: 'generating'
+        }, { status: 404 })
+      }
+      
       return NextResponse.json({ 
         error: 'Lesson not found' 
       }, { status: 404 })
@@ -136,7 +169,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Buscar aula com campos mínimos para listagem rápida
-    const lesson = await prisma.lessons.findFirst({
+    let lesson = await prisma.lessons.findFirst({
       where: {
         id: lessonId,
         user_id: session.user.id
@@ -149,6 +182,25 @@ export async function GET(request: NextRequest) {
         created_at: true
       }
     })
+
+    // If not found with user_id, try to find lesson without user_id filter for demo purposes
+    if (!lesson) {
+      console.log('Lesson not found with user_id filter, trying without user_id filter for demo purposes')
+      
+      lesson = await prisma.lessons.findFirst({
+        where: {
+          id: lessonId,
+          user_id: null  // Demo lessons have user_id: null
+        },
+        select: {
+          id: true,
+          title: true,
+          subject: true,
+          level: true,
+          created_at: true
+        }
+      })
+    }
 
     if (!lesson) {
       return NextResponse.json({ 

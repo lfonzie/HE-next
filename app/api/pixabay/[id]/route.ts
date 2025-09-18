@@ -7,10 +7,11 @@ import { pixabayService } from '@/lib/pixabay';
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const imageId = parseInt(params.id);
+    const { id } = await params;
+    const imageId = Number.parseInt(id, 10);
     
     if (isNaN(imageId)) {
       return NextResponse.json({

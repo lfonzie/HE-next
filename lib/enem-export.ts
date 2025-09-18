@@ -1,5 +1,4 @@
 import { PrismaClient } from '@prisma/client';
-import jsPDF from 'jspdf';
 import { EnemExportData, EnemSession, EnemResponse, EnemScore, EnemItem } from '@/types/enem';
 
 const prisma = new PrismaClient();
@@ -35,6 +34,11 @@ export class EnemExportService {
    * Gather all data needed for export
    */
   private async gatherExportData(sessionId: string): Promise<EnemExportData> {
+    // Check if this is a local session (starts with 'local_')
+    if (sessionId.startsWith('local_') || sessionId.startsWith('session_')) {
+      throw new Error('Cannot export local sessions - no database data available');
+    }
+
     // Get session
     const session = await prisma.enem_session.findUnique({
       where: { session_id: sessionId }
@@ -77,7 +81,10 @@ export class EnemExportService {
    * Export to PDF format
    */
   private async exportToPDF(data: EnemExportData, options: ExportOptions): Promise<Buffer> {
-    const doc = new jsPDF();
+    try {
+      // Dynamic import to avoid SSR issues
+      const { default: jsPDF } = await import('jspdf');
+      const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     let yPosition = 20;
@@ -187,7 +194,11 @@ export class EnemExportService {
       }
     }
 
-    return Buffer.from(doc.output('arraybuffer'));
+      return Buffer.from(doc.output('arraybuffer'));
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      throw new Error(`Failed to generate PDF: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 
   /**

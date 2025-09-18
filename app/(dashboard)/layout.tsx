@@ -10,8 +10,8 @@ import { UnifiedSidebar } from '@/components/layout/UnifiedSidebar'
 import { ChatProvider, useChatContext } from '@/components/providers/ChatContext'
 import { QuotaProvider } from '@/components/providers/QuotaProvider'
 import { ModuleType } from '@/types'
-import { LoadingCard, LoadingOverlay } from '@/components/ui/Loading'
-import { useLoading } from '@/components/ui/Loading'
+import { LoadingCard, LoadingOverlay } from '@/components/ui/loading'
+import { useLoading } from '@/components/ui/loading'
 import { MessageSquare, BookOpen, Settings, GraduationCap } from 'lucide-react'
 import '../globals.css'
 
@@ -59,19 +59,32 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   // Verificar se estamos na página enem (sem sidebar)
   const isEnemPage = pathname === '/enem'
 
-  // Temporariamente desabilitado para desenvolvimento
-  // useEffect(() => {
-  //   if (status === 'loading') return
-  //   if (!session) router.push('/login')
-  // }, [session, status, router])
+  // Verificar autenticação para rotas protegidas
+  useEffect(() => {
+    console.log('🔍 Dashboard layout - Session check:', { status, session: !!session, pathname })
+    if (status === 'loading') return
+    if (!session) {
+      console.log('❌ No session found, redirecting to login')
+      router.push('/login')
+    } else {
+      console.log('✅ Session found, user:', session.user?.email)
+    }
+  }, [session, status, router, pathname])
 
-  // if (status === 'loading') {
-  //   return <LoadingScreen message="Verificando autenticação..." />
-  // }
+  if (status === 'loading') {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="flex items-center space-x-3">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+          <span className="text-gray-600">Verificando autenticação...</span>
+        </div>
+      </div>
+    )
+  }
 
-  // if (!session) {
-  //   return null
-  // }
+  if (!session) {
+    return null
+  }
 
   // Layout especial para enem - sem sidebar
   if (isEnemPage) {

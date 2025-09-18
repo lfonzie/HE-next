@@ -167,21 +167,23 @@ function EnemSimulatorContent() {
         description: err.message || "Falha ao iniciar simulado personalizado",
         variant: "destructive"
       });
-    } finally {
-      setLoading(false);
+      setLoading(false); // Only set loading to false on error
     }
+    // Note: setLoading(false) is handled in startSimulation on success
   };
 
   const startSimulation = useCallback(async (config: SimulationConfig) => {
     try {
       console.log('Creating session with config:', config);
       
-      // Simulate progress updates
+      // Progress steps that reflect the actual process
       const progressSteps = [
-        { progress: 20, message: 'Configurando simulado...' },
-        { progress: 40, message: 'Selecionando questões...' },
-        { progress: 60, message: 'Preparando ambiente...' },
-        { progress: 80, message: 'Finalizando configuração...' },
+        { progress: 10, message: 'Configurando simulado...' },
+        { progress: 25, message: 'Acessando banco de questões...' },
+        { progress: 40, message: 'Selecionando questões por área...' },
+        { progress: 60, message: 'Aplicando distribuição de dificuldade...' },
+        { progress: 75, message: 'Convertendo formato das questões...' },
+        { progress: 90, message: 'Criando sessão no banco de dados...' },
         { progress: 100, message: 'Simulado pronto!' }
       ];
 
@@ -194,8 +196,9 @@ function EnemSimulatorContent() {
         } else {
           clearInterval(progressInterval);
         }
-      }, 500);
+      }, 800); // Increased interval to make progress more realistic
 
+      // Start the actual API call
       const response = await fetch('/api/enem/sessions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -211,8 +214,10 @@ function EnemSimulatorContent() {
         })
       });
 
+      // Clear progress interval and set final progress
       clearInterval(progressInterval);
       setLoadingProgress(100);
+      setLoadingMessage('Simulado pronto!');
 
       console.log('Session creation response status:', response.status);
 
@@ -231,6 +236,9 @@ function EnemSimulatorContent() {
         itemsCount: data.items?.length
       });
       
+      // Small delay to show completion message
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       setSimulationConfig(config);
       setSessionId(data.session_id);
       setExamItems(data.items);
@@ -241,9 +249,13 @@ function EnemSimulatorContent() {
         config,
         itemsCount: Array.isArray(data.items) ? data.items.length : 0,
       });
+      
+      // Set loading to false only after everything is ready
+      setLoading(false);
       setAppState('simulation');
     } catch (error) {
       console.error('Error creating session:', error);
+      setLoading(false); // Ensure loading is stopped on error
       throw error;
     }
   }, [saveRecentSession]);
@@ -398,6 +410,7 @@ function EnemSimulatorContent() {
           <EnemCustomizer 
             onBack={() => setAppState('mode-selection')}
             onStart={handleCustomStart}
+            isCreating={loading}
           />
         </div>
       </div>

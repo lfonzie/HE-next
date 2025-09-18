@@ -210,11 +210,11 @@ ${previousContext}`;
 
 export async function POST(request: NextRequest) {
   try {
-    // Verify authentication (temporarily disabled for development)
-    // const session = await auth();
-    // if (!session?.user) {
-    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    // }
+    // Verify authentication - OBRIGATÓRIO
+    const session = await auth();
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     const { topic, position, previousSlides }: SlideGenerationRequest = await request.json();
 

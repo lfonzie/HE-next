@@ -1,17 +1,23 @@
 import type { Metadata, Viewport } from 'next'
+import type { ReactNode } from 'react'
 import { Inter } from 'next/font/google'
 import { SessionProvider } from '@/components/providers/SessionProvider'
+
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+})
 import { LessonProvider } from '@/components/providers/LessonProvider'
-import { NotificationProvider } from '@/components/providers/NotificationProvider'
 import { PWAProvider } from '@/components/providers/PWAProvider'
-import { LoadingProvider } from '@/components/ui/Loading'
+import { LoadingProvider } from '@/components/ui/loading'
 import { PageTransitionProvider } from '@/components/providers/PageTransitionProvider'
 import { SplashScreen } from '@/components/ui/SplashScreen'
 import { Toaster } from '@/components/ui/toaster'
 import { GlobalLoadingProvider } from '@/hooks/useGlobalLoading'
+import { NotificationProvider } from '@/components/providers/NotificationProvider'
+import { ToastProvider } from '@/hooks/use-toast'
 import './globals.css'
-
-const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'HubEdu.ia - Plataforma Educacional com IA',
@@ -71,14 +77,10 @@ export const viewport: Viewport = {
   themeColor: '#ffd233',
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="pt-BR">
-      <body className={inter.className}>
+    <html lang="pt-BR" className={inter.variable}>
+      <body className="min-h-screen bg-background font-sans text-foreground antialiased">
         {/* <SplashScreen /> */}
         <SessionProvider>
           <PWAProvider>
@@ -86,10 +88,12 @@ export default function RootLayout({
               <GlobalLoadingProvider>
                 <PageTransitionProvider>
                   <LessonProvider>
-                    <NotificationProvider>
-                      {children}
-                      <Toaster />
-                    </NotificationProvider>
+                    <ToastProvider>
+                      <NotificationProvider>
+                        {children}
+                        <Toaster />
+                      </NotificationProvider>
+                    </ToastProvider>
                   </LessonProvider>
                 </PageTransitionProvider>
               </GlobalLoadingProvider>

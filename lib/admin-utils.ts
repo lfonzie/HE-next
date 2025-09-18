@@ -117,41 +117,73 @@ export async function getSchoolsData() {
 export async function getUsersData() {
   try {
     const users = await prisma.user.findMany({
-      include: {
-        schools: true,
-        conversations: {
-          select: {
-            id: true,
-            token_count: true,
-            created_at: true
-          }
-        },
-        analytics: {
-          select: {
-            tokens_used: true,
-            module: true,
-            created_at: true
-          }
-        }
-      },
       orderBy: {
         created_at: 'desc'
       }
     });
 
-    return users.map(user => ({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      school: user.schools?.name || 'N/A',
-      created_at: user.created_at,
-      totalConversations: user.conversations.length,
-      totalTokensUsed: user.analytics.reduce((sum, a) => sum + a.tokens_used, 0),
-      lastActivity: user.analytics.length > 0 
-        ? user.analytics.sort((a, b) => b.created_at.getTime() - a.created_at.getTime())[0].created_at
-        : user.created_at
-    }));
+    // Get additional data for each user
+    const usersWithData = await Promise.all(
+      users.map(async (user) => {
+        try {
+          // Get school information
+          const school = user.school_id ? await prisma.schools.findUnique({
+            where: { id: user.school_id },
+            select: { name: true }
+          }) : null;
+
+          // Get conversations count
+          const conversations = await prisma.conversations.findMany({
+            where: { user_id: user.id },
+            select: {
+              id: true,
+              token_count: true,
+              created_at: true
+            }
+          });
+
+          // Get analytics data
+          const analytics = await prisma.analytics.findMany({
+            where: { user_id: user.id },
+            select: {
+              tokens_used: true,
+              module: true,
+              date: true
+            }
+          });
+
+          return {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            school: school?.name || 'N/A',
+            created_at: user.created_at,
+            totalConversations: conversations.length,
+            totalTokensUsed: analytics.reduce((sum, a) => sum + a.tokens_used, 0),
+            lastActivity: analytics.length > 0 
+              ? analytics.sort((a, b) => b.date.getTime() - a.date.getTime())[0].date
+              : user.created_at
+          };
+        } catch (userError) {
+          console.error(`Error processing user ${user.id}:`, userError);
+          // Return basic user data if there's an error with additional data
+          return {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            school: 'N/A',
+            created_at: user.created_at,
+            totalConversations: 0,
+            totalTokensUsed: 0,
+            lastActivity: user.created_at
+          };
+        }
+      })
+    );
+
+    return usersWithData;
   } catch (error) {
     console.error('Error fetching users data:', error);
     throw error;
@@ -162,13 +194,6 @@ export async function getConversationsData() {
   try {
     const conversations = await prisma.conversations.findMany({
       include: {
-        user: {
-          select: {
-            name: true,
-            email: true,
-            schools: true
-          }
-        },
         message_votes: {
           select: {
             is_upvoted: true
@@ -181,23 +206,59 @@ export async function getConversationsData() {
       take: 1000 // Limit for performance
     });
 
-    return conversations.map(conv => ({
-      id: conv.id,
-      userId: conv.user_id,
-      userName: conv.user?.name || 'Unknown',
-      userEmail: conv.user?.email || 'Unknown',
-      school: conv.user?.schools?.name || 'N/A',
-      module: conv.module,
-      subject: conv.subject,
-      grade: conv.grade,
-      model: conv.model,
-      tokenCount: conv.token_count,
-      messageCount: Array.isArray(conv.messages) ? conv.messages.length : 0,
-      upvotes: conv.message_votes.filter(v => v.is_upvoted).length,
-      downvotes: conv.message_votes.filter(v => !v.is_upvoted).length,
-      created_at: conv.created_at,
-      updated_at: conv.updated_at
-    }));
+    // Get user information for conversations
+    const userIds = conversations.map(conv => conv.user_id).filter(Boolean);
+    const users = await prisma.user.findMany({
+      where: {
+        id: {
+          in: userIds
+        }
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        school_id: true
+      }
+    });
+
+    // Get school information for users
+    const schoolIds = users.map(user => user.school_id).filter(Boolean);
+    const schools = await prisma.schools.findMany({
+      where: {
+        id: {
+          in: schoolIds
+        }
+      },
+      select: {
+        id: true,
+        name: true
+      }
+    });
+
+    const userMap = new Map(users.map(user => [user.id, user]));
+    const schoolMap = new Map(schools.map(school => [school.id, school.name]));
+
+    return conversations.map(conv => {
+      const user = userMap.get(conv.user_id);
+      return {
+        id: conv.id,
+        userId: conv.user_id,
+        userName: user?.name || 'Unknown',
+        userEmail: user?.email || 'Unknown',
+        school: user?.school_id ? schoolMap.get(user.school_id) || 'N/A' : 'N/A',
+        module: conv.module,
+        subject: conv.subject,
+        grade: conv.grade,
+        model: conv.model,
+        tokenCount: conv.token_count,
+        messageCount: Array.isArray(conv.messages) ? conv.messages.length : 0,
+        upvotes: conv.message_votes.filter(v => v.is_upvoted).length,
+        downvotes: conv.message_votes.filter(v => !v.is_upvoted).length,
+        created_at: conv.created_at,
+        updated_at: conv.updated_at
+      };
+    });
   } catch (error) {
     console.error('Error fetching conversations data:', error);
     throw error;
@@ -207,13 +268,6 @@ export async function getConversationsData() {
 export async function getModelsData() {
   try {
     const models = await prisma.models.findMany({
-      include: {
-        _count: {
-          select: {
-            // We'll need to count conversations that used each model
-          }
-        }
-      },
       orderBy: {
         created_at: 'desc'
       }
@@ -326,7 +380,7 @@ export async function getSystemInfo() {
       recentErrors,
       featureFlags,
       jobs
-    ] = await Promise.all([
+    ] = await Promise.allSettled([
       // Database statistics
       prisma.$queryRaw`
         SELECT 
@@ -360,10 +414,10 @@ export async function getSystemInfo() {
     ]);
 
     return {
-      dbStats,
-      recentErrors,
-      featureFlags,
-      jobs,
+      dbStats: dbStats.status === 'fulfilled' ? dbStats.value : [],
+      recentErrors: recentErrors.status === 'fulfilled' ? recentErrors.value : [],
+      featureFlags: featureFlags.status === 'fulfilled' ? featureFlags.value : [],
+      jobs: jobs.status === 'fulfilled' ? jobs.value : [],
       environment: process.env.NODE_ENV,
       database: 'PostgreSQL',
       apiIntegration: 'OpenAI',

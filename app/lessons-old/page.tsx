@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -30,7 +30,7 @@ interface GeneratedLesson {
   feedback: any
 }
 
-export default function LessonsPage() {
+function LessonsPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [isGenerating, setIsGenerating] = useState(false)
@@ -476,5 +476,23 @@ export default function LessonsPage() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+export default function LessonsPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold mb-4 flex items-center justify-center gap-3">
+            <BookOpen className="h-10 w-10 text-blue-600" />
+            Aulas Interativas
+          </h1>
+          <p className="text-xl text-gray-600 mb-2">Carregando...</p>
+        </div>
+      </div>
+    }>
+      <LessonsPageContent />
+    </Suspense>
   )
 }

@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
+import { withTimeout } from '@/lib/async';
 import { openai, selectModel, getModelConfig } from '@/lib/openai';
 import { ENEMItem, ENEMBatchRequest, ENEMBatchResponse } from '@/types/slides';
-import { enemLocalDB } from '@/lib/enem-local-database';
-import { enemApi } from '@/lib/enem-api';
+
+const GENERATION_TIMEOUT_MS = 15_000;
 
 async function generateENEMItems(area: string, count: number): Promise<ENEMItem[]> {
-  const model = selectModel('gpt-4o-mini');
-  const config = getModelConfig(model);
-  
   const prompt = `Gere ${count} questões no estilo ENEM para a área ${area}, com 5 alternativas (A–E, apenas uma correta). Retorne um array JSON com: area, year_hint (opcional, estilo ENEM 2023), content (enunciado), options, answer, rationale (1–3 frases), tags (subassuntos variados, ex.: função, genética), difficulty (easy|medium|hard). Use linguagem clara, brasileira, sem jargões. Evite repetir subassuntos no mesmo lote.`;
 
   const messages = [
@@ -17,18 +15,26 @@ async function generateENEMItems(area: string, count: number): Promise<ENEMItem[
   ];
 
   try {
+    const model = selectModel(prompt, 'enem-interativo');
+    const { temperature = 0.7, max_tokens = 2000 } = getModelConfig(model);
+
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model,
       messages: messages as any,
-      temperature: 0.7,
-      max_tokens: 2000,
+      temperature,
+      max_tokens: Math.min(max_tokens ?? 2000, 2000),
     });
 
     const content = response.choices[0]?.message?.content;
     if (!content) throw new Error('No content generated');
 
-    const items = JSON.parse(content) as ENEMItem[];
-    
+    let items: ENEMItem[];
+    try {
+      items = JSON.parse(content) as ENEMItem[];
+    } catch (parseError) {
+      throw new Error('Failed to parse ENEM items from OpenAI response');
+    }
+
     // Validate and fix items
     return items.map((item, index) => ({
       ...item,
@@ -73,54 +79,23 @@ async function generateFallbackItems(startIndex: number, count: number): Promise
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await auth();
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
+    const { startIndex = 0, count, area }: ENEMBatchRequest = await request.json();
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// Verify authentication (temporarily disabled for development)
-    // const session = await auth();
-    // if (!session?.user) {
-    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    // }
-
-    const { startIndex, count, area }: ENEMBatchRequest = await request.json();
-
-    if (!area || !count || count < 1 || count > 10) {
+    if (!area || typeof area !== 'string' || !count || typeof count !== 'number' || count < 1 || count > 10) {
       return NextResponse.json({ error: 'Invalid request parameters' }, { status: 400 });
     }
 
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 15000); // 15s timeout
-
     try {
-      // Try to generate ENEM items with AI
-      const items = await generateENEMItems(area, count);
-      clearTimeout(timeout);
+      const items = await withTimeout(
+        generateENEMItems(area, count),
+        GENERATION_TIMEOUT_MS,
+        'Generation timed out'
+      );
 
       const response: ENEMBatchResponse = {
         items,
@@ -130,10 +105,8 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json(response);
     } catch (error) {
-      clearTimeout(timeout);
-      
       console.error('Error generating ENEM items:', error);
-      
+
       // Fallback to single item if this is the first batch
       if (startIndex === 0) {
         const fallbackItems = await generateFallbackItems(startIndex, 1);

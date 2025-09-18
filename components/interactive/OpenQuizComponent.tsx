@@ -5,13 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
-import { CheckCircle, Clock, Trophy, Star, BookOpen } from 'lucide-react'
+import { CheckCircle, XCircle, Clock, Trophy, Star, BookOpen } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import MarkdownRenderer from '@/components/ui/MarkdownRenderer'
 
 interface Question {
   q: string
   options: string[]
+  correct: number | string // OBRIGATÓRIO: índice da resposta correta (0,1,2,3) ou letra ('a','b','c','d')
   explanation?: string
 }
 
@@ -31,6 +32,21 @@ export default function OpenQuizComponent({
   allowRetry = false
 }: OpenQuizComponentProps) {
   
+  // Helper function to normalize correct answer format
+  const normalizeCorrectAnswer = (correct: number | string): number => {
+    if (typeof correct === 'string') {
+      // Handle both lowercase and uppercase letters
+      const normalizedCorrect = correct.toLowerCase();
+      if (normalizedCorrect === 'a') return 0;
+      if (normalizedCorrect === 'b') return 1;
+      if (normalizedCorrect === 'c') return 2;
+      if (normalizedCorrect === 'd') return 3;
+      // Fallback to charCodeAt for other cases
+      return normalizedCorrect.charCodeAt(0) - 97; // 'a' = 0, 'b' = 1, etc.
+    }
+    return correct;
+  }
+  
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
   const [answers, setAnswers] = useState<(number | null)[]>(new Array(questions.length).fill(null))
@@ -38,6 +54,7 @@ export default function OpenQuizComponent({
   const [timeLeft, setTimeLeft] = useState(timeLimit)
   const [isCompleted, setIsCompleted] = useState(false)
   const [showExplanationsState, setShowExplanationsState] = useState(false)
+  const [score, setScore] = useState(0)
 
   // Timer effect
   useEffect(() => {
@@ -88,9 +105,22 @@ export default function OpenQuizComponent({
   }
 
   const handleComplete = () => {
+    // Calcular pontuação baseada nas respostas corretas
+    let correctAnswers = 0
+    questions.forEach((question, index) => {
+      const userAnswer = answers[index]
+      if (userAnswer !== null) {
+        const correctAnswer = normalizeCorrectAnswer(question.correct)
+        if (userAnswer === correctAnswer) {
+          correctAnswers++
+        }
+      }
+    })
+    
+    setScore(correctAnswers)
     setIsCompleted(true)
     if (onComplete) {
-      onComplete(answers.filter(answer => answer !== null).length, questions.length)
+      onComplete(correctAnswers, questions.length)
     }
   }
 
@@ -102,6 +132,7 @@ export default function OpenQuizComponent({
     setIsCompleted(false)
     setShowExplanationsState(false)
     setTimeLeft(timeLimit)
+    setScore(0)
   }
 
   const formatTime = (seconds: number) => {
@@ -125,10 +156,15 @@ export default function OpenQuizComponent({
         <CardContent className="space-y-6">
           <div className="text-center space-y-4">
             <div className="text-3xl font-bold text-green-600">
-              {answeredQuestions}/{questions.length} questões respondidas
+              {score}/{questions.length} questões corretas
             </div>
             <div className="text-lg text-gray-600">
-              Parabéns por completar o quiz!
+              {score === questions.length ? 'Perfeito! 🎉' : 
+               score >= questions.length * 0.7 ? 'Muito bem! 👏' : 
+               'Continue estudando! 📚'}
+            </div>
+            <div className="text-sm text-gray-500">
+              {answeredQuestions}/{questions.length} questões respondidas
             </div>
           </div>
 
@@ -150,41 +186,64 @@ export default function OpenQuizComponent({
                     exit={{ opacity: 0, height: 0 }}
                     className="space-y-4"
                   >
-                    {questions.map((question, index) => (
-                      <Card key={index} className="border-l-4 border-l-blue-500">
-                        <CardHeader>
-                          <CardTitle className="text-sm">
-                            Questão {index + 1}
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="space-y-3">
-                            <p className="font-medium">{question.q}</p>
-                            <div className="space-y-2">
-                              {question.options.map((option, optionIndex) => (
-                                <div 
-                                  key={optionIndex}
-                                  className={`p-3 rounded-lg border ${
-                                    answers[index] === optionIndex 
-                                      ? 'bg-blue-50 border-blue-300' 
-                                      : 'bg-gray-50 border-gray-200'
-                                  }`}
-                                >
-                                  <MarkdownRenderer content={option} />
-                                </div>
-                              ))}
-                            </div>
-                            {question.explanation && (
-                              <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                                <p className="text-sm text-green-800">
-                                  <strong>Explicação:</strong> {question.explanation}
-                                </p>
+                    {questions.map((question, index) => {
+                      const userAnswer = answers[index]
+                      const correctAnswer = normalizeCorrectAnswer(question.correct)
+                      const isCorrect = userAnswer === correctAnswer
+                      
+                      return (
+                        <Card key={index} className={`border-l-4 ${isCorrect ? 'border-l-green-500' : 'border-l-red-500'}`}>
+                          <CardHeader>
+                            <CardTitle className="text-sm flex items-center gap-2">
+                              Questão {index + 1}
+                              {isCorrect ? (
+                                <CheckCircle className="h-4 w-4 text-green-500" />
+                              ) : (
+                                <XCircle className="h-4 w-4 text-red-500" />
+                              )}
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="space-y-3">
+                              <p className="font-medium">{question.q}</p>
+                              <div className="space-y-2">
+                                {question.options.map((option, optionIndex) => {
+                                  let className = 'p-3 rounded-lg border '
+                                  if (optionIndex === correctAnswer) {
+                                    className += 'bg-green-50 border-green-300'
+                                  } else if (answers[index] === optionIndex && !isCorrect) {
+                                    className += 'bg-red-50 border-red-300'
+                                  } else {
+                                    className += 'bg-gray-50 border-gray-200'
+                                  }
+                                  
+                                  return (
+                                    <div key={optionIndex} className={className}>
+                                      <div className="flex items-center gap-2">
+                                        {optionIndex === correctAnswer && (
+                                          <CheckCircle className="h-4 w-4 text-green-500" />
+                                        )}
+                                        {answers[index] === optionIndex && !isCorrect && (
+                                          <XCircle className="h-4 w-4 text-red-500" />
+                                        )}
+                                        <MarkdownRenderer content={option} />
+                                      </div>
+                                    </div>
+                                  )
+                                })}
                               </div>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                              {question.explanation && (
+                                <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                                  <p className="text-sm text-green-800">
+                                    <strong>Explicação:</strong> {question.explanation}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )
+                    })}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -273,19 +332,43 @@ export default function OpenQuizComponent({
             animate={{ opacity: 1, y: 0 }}
             className="space-y-4"
           >
-            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <div className="flex items-center gap-2 text-blue-800">
-                <CheckCircle className="h-5 w-5" />
-                <span className="font-medium">Resposta registrada!</span>
-              </div>
-              <p className="text-sm text-blue-700 mt-2">
-                Sua resposta foi salva. Continue para a próxima questão.
-              </p>
-            </div>
+            {(() => {
+              const correctAnswer = normalizeCorrectAnswer(currentQ.correct)
+              const isCorrect = selectedAnswer === correctAnswer
+              
+              return (
+                <div className={`p-4 border rounded-lg ${
+                  isCorrect 
+                    ? 'bg-green-50 border-green-200' 
+                    : 'bg-red-50 border-red-200'
+                }`}>
+                  <div className={`flex items-center gap-2 ${
+                    isCorrect ? 'text-green-800' : 'text-red-800'
+                  }`}>
+                    {isCorrect ? (
+                      <CheckCircle className="h-5 w-5" />
+                    ) : (
+                      <XCircle className="h-5 w-5" />
+                    )}
+                    <span className="font-medium">
+                      {isCorrect ? 'Correto! 🎉' : 'Incorreto ❌'}
+                    </span>
+                  </div>
+                  <p className={`text-sm mt-2 ${
+                    isCorrect ? 'text-green-700' : 'text-red-700'
+                  }`}>
+                    {isCorrect 
+                      ? 'Parabéns! Você acertou esta questão.'
+                      : `A resposta correta era a alternativa ${String.fromCharCode(65 + correctAnswer)}.`
+                    }
+                  </p>
+                </div>
+              )
+            })()}
 
             {currentQ.explanation && (
-              <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                <p className="text-sm text-green-800">
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800">
                   <strong>Explicação:</strong> {currentQ.explanation}
                 </p>
               </div>

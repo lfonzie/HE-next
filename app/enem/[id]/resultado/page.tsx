@@ -70,13 +70,29 @@ export default function ResultPage() {
   const [showDetailedFeedback, setShowDetailedFeedback] = useState(false)
 
   useEffect(() => {
-    const loadResultData = () => {
+    const loadResultData = async () => {
       try {
         // Load from localStorage (in a real app, this would come from an API)
         const stored = localStorage.getItem(`simulator_result_${simulatorId}`)
         if (stored) {
           const data = JSON.parse(stored)
-          setResultData(data)
+          
+          // Ensure all values are properly calculated
+          const enhancedData = {
+            ...data,
+            // Ensure scores are properly calculated
+            totalScore: data.totalScore || calculateTotalScore(data.questions, data.answers),
+            correctAnswers: data.correctAnswers || calculateCorrectAnswers(data.questions, data.answers),
+            totalQuestions: data.totalQuestions || data.questions?.length || 0,
+            accuracy: data.accuracy || calculateAccuracy(data.questions, data.answers),
+            timeSpent: data.timeSpent || 0,
+            // Ensure all required fields exist
+            questions: data.questions || [],
+            answers: data.answers || {},
+            metadata: data.metadata || {}
+          }
+          
+          setResultData(enhancedData)
         } else {
           // If no result data, redirect to simulator
           router.push(`/enem/${simulatorId}`)
@@ -92,6 +108,24 @@ export default function ResultPage() {
 
     loadResultData()
   }, [simulatorId, router])
+
+  // Helper functions to ensure proper calculations
+  const calculateTotalScore = (questions: Question[], answers: Record<string, string>) => {
+    if (!questions || !answers) return 0
+    const correct = questions.filter(q => answers[q.id] === q.correct).length
+    return Math.round((correct / questions.length) * 1000) // ENEM scale
+  }
+
+  const calculateCorrectAnswers = (questions: Question[], answers: Record<string, string>) => {
+    if (!questions || !answers) return 0
+    return questions.filter(q => answers[q.id] === q.correct).length
+  }
+
+  const calculateAccuracy = (questions: Question[], answers: Record<string, string>) => {
+    if (!questions || !answers || questions.length === 0) return 0
+    const correct = questions.filter(q => answers[q.id] === q.correct).length
+    return Math.round((correct / questions.length) * 100)
+  }
 
   const getPerformanceLevel = (score: number) => {
     if (score >= 800) return { level: 'Excelente', color: 'text-green-600', bgColor: 'bg-green-50' }
@@ -144,10 +178,10 @@ export default function ResultPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Carregando resultados...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Carregando resultados...</p>
         </div>
       </div>
     )
@@ -155,12 +189,20 @@ export default function ResultPage() {
 
   if (!resultData) {
     return (
-      <div className="text-center p-8">
-        <p>Não foi possível carregar os resultados.</p>
-        <Button onClick={() => router.push('/simulador')} className="mt-4">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Voltar ao Simulador
-        </Button>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 mb-4">
+            <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Erro ao carregar resultados</h2>
+          <p className="text-gray-600 mb-4">Não foi possível carregar os dados do simulado.</p>
+          <Button onClick={() => router.push(`/enem/${simulatorId}`)}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Voltar ao Simulado
+          </Button>
+        </div>
       </div>
     )
   }

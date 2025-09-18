@@ -347,15 +347,14 @@ function shuffleArray<T>(array: T[]): T[] {
 
 export async function POST(request: NextRequest) {
   try {
-    // Verify authentication with development bypass
+    // Verify authentication - OBRIGATÓRIO
     const session = await auth();
-    if (!session?.user?.id && process.env.NODE_ENV === 'production') {
+    if (!session?.user?.id) {
       console.log('Authentication failed: No session or user ID');
       return NextResponse.json({ error: 'Unauthorized - Please log in to access ENEM simulator' }, { status: 401 });
     }
 
-    // Use development user ID if no session in development
-    const userId = session?.user?.id || 'dev-user-123';
+    const userId = session.user.id;
 
     const body: EnemSessionRequest = await request.json();
     

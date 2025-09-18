@@ -1,143 +1,162 @@
-import NextAuth from "next-auth"
-import { NextAuthOptions } from "next-auth"
-import CredentialsProvider from "next-auth/providers/credentials"
-import { getServerSession } from "next-auth/next"
-import bcrypt from "bcryptjs"
-import { prisma } from "@/lib/db"
+import NextAuth from 'next-auth'
+import type { NextAuthOptions } from 'next-auth'
+import CredentialsProvider from 'next-auth/providers/credentials'
+import { getServerSession } from 'next-auth/next'
+import bcrypt from 'bcryptjs'
 
-// Usuário de desenvolvimento temporário
-const DEV_USER = {
-  id: "dev-user-123",
-  email: "dev@hubedu.ia",
-  name: "Usuário Desenvolvimento",
-  role: "STUDENT",
-  password: "dev123" // Senha simples para desenvolvimento
+import { prisma } from '@/lib/db'
+
+const authSecret = process.env.NEXTAUTH_SECRET
+const isDevelopment = process.env.NODE_ENV === 'development'
+
+if (!authSecret && process.env.NODE_ENV === 'production') {
+  throw new Error('NEXTAUTH_SECRET must be defined in production environments')
 }
 
 export const authOptions: NextAuthOptions = {
-  secret: process.env.NEXTAUTH_SECRET || "dev-secret-key",
+  secret: authSecret,
   session: {
-    strategy: "jwt",
-    maxAge: 7 * 24 * 60 * 60, // 7 days (reduced from 30)
+    strategy: 'jwt',
+    maxAge: 7 * 24 * 60 * 60,
   },
   pages: {
-    signIn: "/login",
-    error: "/error",
+    signIn: '/login',
+    error: '/error',
   },
-  debug: false, // Disable debug in production
+  debug: true, // Always enable debug for troubleshooting
+  useSecureCookies: false, // Disable secure cookies in development
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: false, // Allow HTTP in development
+      },
+    },
+  },
   logger: {
     error: (code, metadata) => {
-      // Only log errors in development
-      if (process.env.NODE_ENV === "development") {
-        console.error("NextAuth Error:", code, metadata)
+      if (isDevelopment) {
+        console.error('NextAuth error:', code, metadata)
+        // Log mais detalhado para debugging
+        if (code === 'JW' || code?.includes('JWT')) {
+          console.error('JWT Error details:', { code, metadata, timestamp: new Date().toISOString() })
+        }
       }
     },
-    warn: (code) => {
-      // Suppress warnings in production
+    warn: (code, metadata) => {
+      if (isDevelopment) {
+        console.warn('NextAuth warning:', code, metadata)
+      }
     },
-    debug: (code, metadata) => {
-      // Suppress debug logs
-    }
   },
   providers: [
     CredentialsProvider({
-      name: "credentials",
+      name: 'credentials',
       credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" }
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        console.log("🔐 NextAuth authorize called with:", { email: credentials?.email })
+        console.log('🔐 NextAuth authorize called with:', { email: credentials?.email })
         
         if (!credentials?.email || !credentials?.password) {
-          console.log("❌ Missing credentials")
+          console.log('❌ Missing credentials')
           return null
         }
 
-        // Verificação simples para desenvolvimento (fallback)
-        if (credentials.email === DEV_USER.email && credentials.password === DEV_USER.password) {
-          console.log("✅ [DEV] Authentication successful for:", DEV_USER.email)
-          return {
-            id: DEV_USER.id,
-            email: DEV_USER.email,
-            name: DEV_USER.name,
-            role: DEV_USER.role,
-          }
-        }
-
-        // Para desenvolvimento, usar usuário padrão se não conseguir conectar ao banco
-        console.log("⚠️ [DEV] Database not available, using fallback authentication")
-        if (credentials.email === "dev@hubedu.ia" && credentials.password === "dev123") {
-          console.log("✅ [DEV] Fallback authentication successful")
-          return {
-            id: DEV_USER.id,
-            email: DEV_USER.email,
-            name: DEV_USER.name,
-            role: DEV_USER.role,
-          }
-        }
-
         try {
+          console.log('🔍 Looking up user:', credentials.email)
           const user = await prisma.user.findUnique({
-            where: { email: credentials.email }
+            where: { email: credentials.email },
           })
 
-          if (!user || !user.password_hash) {
-            console.log("❌ User not found or no password hash")
+          if (!user) {
+            console.log('❌ User not found:', credentials.email)
             return null
           }
 
+          if (!user?.password_hash) {
+            console.log('❌ User has no password hash:', credentials.email)
+            return null
+          }
+
+          console.log('🔍 Checking password for user:', user.email)
           const isPasswordValid = await bcrypt.compare(
             credentials.password,
             user.password_hash
           )
 
           if (!isPasswordValid) {
-            console.log("❌ Invalid password")
+            console.log('❌ Invalid password for user:', credentials.email)
             return null
           }
 
-          console.log("✅ Authentication successful for:", user.email)
+          const userRole =
+            typeof user.role === 'string' && user.role.length > 0
+              ? user.role
+              : undefined
+
+          console.log('✅ Authentication successful for:', user.email, 'Role:', userRole)
           return {
             id: user.id,
             email: user.email,
             name: user.name,
-            role: user.role,
+            role: userRole,
           }
         } catch (error) {
-          console.error("🚨 Auth error:", error)
-          // Fallback para usuário de desenvolvimento em caso de erro de banco
-          if (credentials.email === DEV_USER.email && credentials.password === DEV_USER.password) {
-            console.log("✅ [DEV FALLBACK] Authentication successful for:", DEV_USER.email)
-            return {
-              id: DEV_USER.id,
-              email: DEV_USER.email,
-              name: DEV_USER.name,
-              role: DEV_USER.role,
-            }
-          }
-          return null
+          console.error('❌ Authentication error:', error)
+          throw new Error('Unable to sign in')
         }
-      }
-    })
+      },
+    }),
   ],
   callbacks: {
     async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id
+      try {
+        if (user) {
+          token.id = user.id
+
+          if ('role' in user && typeof user.role === 'string') {
+            ;(token as Record<string, unknown>).role = user.role
+          }
+        }
+
+        return token
+      } catch (error) {
+        console.error('NextAuth JWT callback error:', error)
+        return token
       }
-      return token
     },
     async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id as string
+      try {
+        if (token && session.user) {
+          session.user.id = token.id as string
+
+          const tokenRole = (token as Record<string, unknown>).role
+          if (typeof tokenRole === 'string') {
+            ;(session.user as Record<string, unknown>).role = tokenRole
+          }
+        }
+
+        return session
+      } catch (error) {
+        console.error('NextAuth session callback error:', error)
+        return session
       }
-      return session
+    },
+    async redirect({ url, baseUrl }) {
+      // Allows relative callback URLs
+      if (url.startsWith("/")) return `${baseUrl}${url}`
+      // Allows callback URLs on the same origin
+      else if (new URL(url).origin === baseUrl) return url
+      return baseUrl
     },
   },
 }
 
-// Export the auth function for API routes
-export const auth = () => getServerSession(authOptions);
+export const auth = () => getServerSession(authOptions)
 
-export default NextAuth(authOptions);
+export default NextAuth(authOptions)

@@ -88,8 +88,7 @@ export default function GenerateAulaPage() {
         difficulty: formData.difficulty,
         learningStyle: formData.learningStyle,
         specialNeeds: formData.specialNeeds,
-        duration: formData.duration,
-        demoMode: false // Salvar no banco de dados
+        duration: formData.duration
       }
 
       const response = await fetch('/api/generate-lesson', {

@@ -14,7 +14,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: '/admin/conversations', label: 'Conversas', icon: '💬' },
     { href: '/admin/models', label: 'Modelos', icon: '🤖' },
     { href: '/admin/prompts', label: 'Prompts', icon: '📝' },
+    { href: '/admin/system-prompts', label: 'Prompts Sistema', icon: '⚡' },
     { href: '/admin/enem', label: 'ENEM Admin', icon: '🎯' },
+    { href: '/admin/database-stats', label: 'Estatísticas DB', icon: '🗄️' },
     { href: '/admin/system-info', label: 'Sistema', icon: '⚙️' }
   ];
 

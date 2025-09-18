@@ -17,7 +17,8 @@ import {
   Zap,
   Calculator,
   Settings,
-  Brain
+  Brain,
+  Loader2
 } from 'lucide-react';
 import { EnemArea, EnemMode } from '@/types/enem';
 import { useToast } from '@/hooks/use-toast';
@@ -25,6 +26,7 @@ import { useToast } from '@/hooks/use-toast';
 interface EnemCustomizerProps {
   onBack: () => void;
   onStart: (config: CustomExamConfig) => void;
+  isCreating?: boolean;
 }
 
 interface CustomExamConfig {
@@ -40,7 +42,7 @@ interface CustomExamConfig {
   year?: number;
 }
 
-export function EnemCustomizer({ onBack, onStart }: EnemCustomizerProps) {
+export function EnemCustomizer({ onBack, onStart, isCreating = false }: EnemCustomizerProps) {
   const [selectedAreas, setSelectedAreas] = useState<EnemArea[]>(['CN', 'CH', 'LC', 'MT']);
   const [numQuestions, setNumQuestions] = useState(5);
   
@@ -162,7 +164,7 @@ export function EnemCustomizer({ onBack, onStart }: EnemCustomizerProps) {
     }
   };
 
-  const handleStartExam = () => {
+  const handleStartExam = async () => {
     // Validações mais robustas
     if (selectedAreas.length === 0) {
       toast({
@@ -210,10 +212,77 @@ export function EnemCustomizer({ onBack, onStart }: EnemCustomizerProps) {
       year: selectedYear
     };
 
-    onStart(config);
+    try {
+      // Call the parent's onStart function which will handle the actual exam generation
+      // The loading state will be controlled by the parent component via isCreating prop
+      onStart(config);
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao gerar simulado personalizado",
+        variant: "destructive"
+      });
+    }
   };
 
   const estimatedDuration = timeLimit || Math.ceil(numQuestions * 3.3);
+
+  // Show loading screen when creating exam
+  if (isCreating) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
+        <Card className="w-full max-w-md mx-4">
+          <CardContent className="pt-6">
+            <div className="text-center space-y-6">
+              <div className="flex justify-center">
+                <div className="relative">
+                  <Loader2 className="h-16 w-16 text-blue-600 animate-spin" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="h-8 w-8 bg-blue-100 rounded-full"></div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Gerando seu Simulado Personalizado
+                </h2>
+                <p className="text-gray-600">
+                  Estamos preparando {numQuestions} questões das áreas selecionadas...
+                </p>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
+                  <Target className="h-4 w-4" />
+                  <span>Selecionando questões das áreas: {selectedAreas.join(', ')}</span>
+                </div>
+                <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
+                  <Brain className="h-4 w-4" />
+                  <span>Aplicando distribuição de dificuldade</span>
+                </div>
+                <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
+                  <Settings className="h-4 w-4" />
+                  <span>Configurando tempo limite e ano</span>
+                </div>
+              </div>
+              
+              <div className="bg-blue-50 rounded-lg p-4">
+                <div className="text-sm text-blue-800">
+                  <p className="font-medium mb-1">Resumo da Configuração:</p>
+                  <ul className="space-y-1 text-left">
+                    <li>• {numQuestions} questões ({difficultyDistribution.easy}F, {difficultyDistribution.medium}M, {difficultyDistribution.hard}D)</li>
+                    <li>• Tempo estimado: {estimatedDuration} minutos</li>
+                    <li>• Áreas: {selectedAreas.map(area => areas.find(a => a.id === area)?.name).join(', ')}</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -395,11 +464,21 @@ export function EnemCustomizer({ onBack, onStart }: EnemCustomizerProps) {
             </div>
             <Button 
               onClick={handleStartExam}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+              disabled={isCreating}
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50"
               size="lg"
             >
-              <Play className="h-5 w-5 mr-2" />
-              Iniciar Simulado
+              {isCreating ? (
+                <>
+                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                  Gerando...
+                </>
+              ) : (
+                <>
+                  <Play className="h-5 w-5 mr-2" />
+                  Iniciar Simulado
+                </>
+              )}
             </Button>
           </div>
         </CardContent>

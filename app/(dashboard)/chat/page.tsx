@@ -19,7 +19,7 @@ import { Input } from "@/components/ui/input";
 import { useChatContext } from "@/components/providers/ChatContext";
 import { useQuota } from "@/components/providers/QuotaProvider";
 import { SupportModal } from "@/components/modals/SupportModal";
-import { useLoading } from "@/components/ui/Loading";
+import { useLoading } from "@/components/ui/loading";
 import { useNavigationLoading } from "@/hooks/useNavigationLoading";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -66,10 +66,13 @@ export default function ChatPage() {
   const { selectedModule, setSelectedModule, highlightActiveModule } = useChatContext();
   const { quota, maxQuota, decrementQuota, resetQuota } = useQuota();
   
-  // Clear navigation loading when page loads
+  // Clear all loading states when page loads
   useEffect(() => {
     stopNavLoading();
-  }, [stopNavLoading]);
+    // Clear any remaining loading keys from login
+    endLoading('login-redirect', 'success');
+    endLoading('login', 'success');
+  }, [stopNavLoading, endLoading]);
   
   // State
   const [inputMessage, setInputMessage] = useState("");

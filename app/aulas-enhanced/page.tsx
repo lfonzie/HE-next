@@ -112,14 +112,21 @@ export default function AulasEnhancedPage() {
           content: stage.content || ''
         }))
 
+      const requestBody = {
+        topic,
+        slideNumber,
+        previousSlides
+      };
+      
+      // Validate request body
+      if (!topic || !slideNumber) {
+        throw new Error('Topic and slide number are required');
+      }
+      
       const response = await fetch('/api/aulas/next-slide', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          topic,
-          slideNumber,
-          previousSlides
-        })
+        body: JSON.stringify(requestBody)
       })
 
       if (!response.ok) {

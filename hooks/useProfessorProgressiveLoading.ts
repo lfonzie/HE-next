@@ -181,8 +181,7 @@ export const useProfessorProgressiveLoading = () => {
         },
         body: JSON.stringify({ 
           topic: query, 
-          subject: subject,
-          demoMode: false 
+          subject: subject 
         }),
       });
 

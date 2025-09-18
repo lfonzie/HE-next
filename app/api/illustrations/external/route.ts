@@ -318,7 +318,9 @@ async function searchExternalAPIs(query: string, sources: string[], limit: numbe
   const results: any[] = [];
   const limitPerSource = Math.ceil(limit / sources.length);
 
-  const searchFunctions: Record<string, Function> = {
+  type SearchHandler = (query: string, limit: number) => Promise<any[]>;
+
+  const searchFunctions: Record<string, SearchHandler> = {
     unsplash: searchUnsplash,
     pixabay: searchPixabay,
     pexels: searchPexels,
