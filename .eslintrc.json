@@ -5,23 +5,55 @@
     "node": true
   },
   "extends": [
-    "plugin:@next/next/recommended",
-    "plugin:react/recommended"
+    "next/core-web-vitals",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:react/recommended",
+    "plugin:react-hooks/recommended",
+    "plugin:jsx-a11y/recommended"
   ],
-  "rules": {
-    "jsx-a11y/alt-text": "warn",
-    "@next/next/no-img-element": "warn",
-    "react-hooks/exhaustive-deps": "warn",
-    "react/prop-types": "off",
-    "@typescript-eslint/no-unused-vars": "warn",
-    "@typescript-eslint/no-explicit-any": "warn",
-    "no-console": "warn"
-  },
+  "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "ecmaVersion": 2020,
     "sourceType": "module",
     "ecmaFeatures": {
       "jsx": true
+    }
+  },
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx"],
+      "parserOptions": {
+        "project": "./tsconfig.json"
+      }
+    }
+  ],
+  "plugins": [
+    "@typescript-eslint",
+    "react",
+    "react-hooks",
+    "jsx-a11y"
+  ],
+  "rules": {
+    "jsx-a11y/alt-text": "warn",
+    "@next/next/no-img-element": "warn",
+    "react-hooks/exhaustive-deps": "warn",
+    "react-hooks/rules-of-hooks": "warn",
+    "react/prop-types": "off",
+    "react/react-in-jsx-scope": "off",
+    "@typescript-eslint/no-unused-vars": "warn",
+    "@typescript-eslint/no-explicit-any": "warn",
+    "no-console": "warn",
+    "prefer-const": "warn",
+    "jsx-a11y/click-events-have-key-events": "warn",
+    "jsx-a11y/no-static-element-interactions": "warn",
+    "jsx-a11y/label-has-associated-control": "warn",
+    "jsx-a11y/media-has-caption": "warn",
+    "jsx-a11y/no-noninteractive-element-interactions": "warn",
+    "jsx-a11y/no-redundant-roles": "warn"
+  },
+  "settings": {
+    "react": {
+      "version": "detect"
     }
   }
 }

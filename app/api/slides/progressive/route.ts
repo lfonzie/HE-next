@@ -97,9 +97,22 @@ async function generateProgressiveSlide(
   
   // Create context from previous slides to avoid repetition
   const previousContext = previousSlides.length > 0 
-    ? `\n\nCONTEXTO DOS SLIDES ANTERIORES (evite repetir):\n${previousSlides.map((slide, i) => 
-        `Slide ${i + 1}: "${slide.title}" - ${slide.content.substring(0, 100)}...`
-      ).join('\n')}\n\nIMPORTANTE: Crie conteúdo completamente diferente dos slides anteriores.`
+    ? `\n\nCONTEXTO DOS SLIDES ANTERIORES (evite repetir):\n${previousSlides.map((slide, i) => {
+        // Filtrar conteúdo para remover alternativas de questões
+        let filteredContent = slide.content;
+        
+        // Se for um slide de quiz, extrair apenas o título e contexto, não as alternativas
+        if (slide.type === 'question' && slide.options) {
+          // Criar um resumo do quiz sem as alternativas
+          const optionCount = slide.options.length;
+          filteredContent = `Quiz com ${optionCount} alternativa${optionCount > 1 ? 's' : ''} sobre ${slide.title.toLowerCase()}`;
+        } else {
+          // Para slides de conteúdo, usar apenas os primeiros 100 caracteres
+          filteredContent = slide.content.substring(0, 100);
+        }
+        
+        return `Slide ${i + 1}: "${slide.title}" - ${filteredContent}...`;
+      }).join('\n')}\n\nIMPORTANTE: Crie conteúdo completamente diferente dos slides anteriores.`
     : '';
   
   // Enhanced prompt with better diversity and context awareness

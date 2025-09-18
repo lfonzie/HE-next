@@ -77,9 +77,11 @@ export default function DynamicStage({
   const [startTime] = useState(Date.now())
 
   const handleStageComplete = (result: any) => {
-    setIsCompleted(true)
-    setStageResult(result)
-    onComplete(stageIndex, result)
+    if (!isCompleted) {
+      setIsCompleted(true)
+      setStageResult(result)
+      onComplete(stageIndex, result)
+    }
   }
 
   const handleNext = () => {
@@ -132,9 +134,68 @@ export default function DynamicStage({
 
     switch (activity.component) {
       case 'QuizComponent':
+        // Transform questions to the format expected by NewQuizComponent
+        const transformedQuestions = (activity.questions || []).map((q: any, index: number) => {
+          // Debug: Log original question data
+          console.log(`🔍 DEBUG Question ${index + 1}:`, {
+            originalCorrect: q.correct,
+            originalType: typeof q.correct,
+            originalOptions: q.options
+          });
+          
+          // Ensure correct answer is properly mapped from numeric index to letter
+          let correctAnswer: 'a' | 'b' | 'c' | 'd';
+          
+          if (typeof q.correct === 'number') {
+            // Map numeric index (0,1,2,3) to letter (a,b,c,d)
+            if (q.correct >= 0 && q.correct <= 3) {
+              correctAnswer = ['a', 'b', 'c', 'd'][q.correct] as 'a' | 'b' | 'c' | 'd';
+              console.log(`🔍 DEBUG: Mapped numeric ${q.correct} to letter ${correctAnswer}`);
+            } else {
+              // Invalid numeric index, default to 'a'
+              correctAnswer = 'a';
+              console.log(`🔍 DEBUG: Invalid numeric index ${q.correct}, defaulting to 'a'`);
+            }
+          } else if (typeof q.correct === 'string') {
+            // Handle string format (already a letter)
+            const normalized = q.correct.toLowerCase();
+            if (['a', 'b', 'c', 'd'].includes(normalized)) {
+              correctAnswer = normalized as 'a' | 'b' | 'c' | 'd';
+              console.log(`🔍 DEBUG: Mapped string '${q.correct}' to letter ${correctAnswer}`);
+            } else {
+              // Invalid string, default to 'a'
+              correctAnswer = 'a';
+              console.log(`🔍 DEBUG: Invalid string '${q.correct}', defaulting to 'a'`);
+            }
+          } else {
+            // No correct answer specified, default to 'a'
+            correctAnswer = 'a';
+            console.log(`🔍 DEBUG: No correct answer specified, defaulting to 'a'`);
+          }
+          
+          const transformed = {
+            question: q.q || q.question || 'Pergunta não disponível',
+            options: {
+              a: (q.options?.[0] || 'Opção A').replace(/^[A-D]\)\s*/, '').trim(),
+              b: (q.options?.[1] || 'Opção B').replace(/^[A-D]\)\s*/, '').trim(), 
+              c: (q.options?.[2] || 'Opção C').replace(/^[A-D]\)\s*/, '').trim(),
+              d: (q.options?.[3] || 'Opção D').replace(/^[A-D]\)\s*/, '').trim()
+            },
+            correct: correctAnswer,
+            explanation: q.explanation || 'Explicação não disponível'
+          };
+          
+          console.log(`🔍 DEBUG: Final transformed question ${index + 1}:`, {
+            correct: transformed.correct,
+            options: transformed.options
+          });
+          
+          return transformed;
+        })
+        
         return (
           <NewQuizComponent
-            questions={activity.questions || []}
+            questions={transformedQuestions}
             onComplete={(score, total) => handleStageComplete({ score, total, type: 'quiz' })}
             timeLimit={activity.time ? activity.time * 60 : 0}
             showExplanations={true}

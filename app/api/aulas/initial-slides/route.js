@@ -35,7 +35,7 @@ FORMATO JSON OBRIGATÓRIO:
       "title": "Abertura: Tema e Objetivos",
       "content": "Conteúdo educativo detalhado com quebras de linha usando \\n\\n para parágrafos\\n\\nExemplo de segundo parágrafo com mais informações detalhadas.\\n\\nTerceiro parágrafo com exemplos práticos e aplicações reais.",
       "type": "content",
-      "imageQuery": "query específica para busca de imagem no Unsplash",
+      "imageQuery": "eletricidade corrente introdução conceito",
       "tokenEstimate": 500
     },
     {
@@ -58,7 +58,7 @@ IMPORTANTE:
 - CADA SLIDE DEVE TER MÍNIMO 500 TOKENS DE CONTEÚDO
 - O campo "imageQuery" deve ser específico e relevante ao conteúdo do slide
 - APENAS slide 1 deve ter imageQuery (slide 2 deve ter imageQuery: null)
-- Para slide 1: use termos específicos do tema + "educational"
+- Para slide 1: use termos específicos do tema sem palavras genéricas
 - TODOS os textos devem estar em PORTUGUÊS BRASILEIRO
 - Responda APENAS com JSON válido. Não inclua formatação markdown, blocos de código ou texto adicional.`;
 

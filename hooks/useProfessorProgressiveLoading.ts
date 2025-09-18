@@ -202,7 +202,7 @@ export const useProfessorProgressiveLoading = () => {
         title: `Slide ${i + 1}`,
         content: `Conteúdo do slide ${i + 1}`,
         type: i === 0 || i === 6 || i === 13 ? 'image' : 'content',
-        imageUrl: i === 0 || i === 6 || i === 13 ? `https://picsum.photos/800/400?random=${i + 1}` : null
+        imageUrl: i === 0 || i === 6 || i === 13 ? `https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&h=400&fit=crop&auto=format` : null
       }));
 
       setState(prev => ({

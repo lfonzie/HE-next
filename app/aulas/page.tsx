@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2, Sparkles, BookOpen, Target, Users, Send, Lightbulb, TrendingUp, AlertCircle, CheckCircle, Clock, RefreshCw, Timer, BarChart3, FileText, AlertTriangle, Mic, Volume2, Accessibility } from 'lucide-react'
+import { Loader2, Sparkles, BookOpen, Target, Users, Send, Lightbulb, TrendingUp, AlertCircle, CheckCircle, Clock, RefreshCw, Timer, BarChart3, FileText, AlertTriangle, Mic, Volume2, Accessibility, Coffee, Brain, Zap, Star, Heart, Rocket } from 'lucide-react'
 import { useDynamicSuggestions } from '@/hooks/useDynamicSuggestions'
 
 // Mock components for demo (replace with actual imports)
@@ -21,6 +21,80 @@ interface LessonProgressProps {
   isGenerating: boolean
   elapsedTime: number
   className?: string
+}
+
+// Componente de entretenimento durante o loading
+const LoadingEntertainment = ({ elapsedTime }: { elapsedTime: number }) => {
+  const tips = [
+    "💡 Dica: Quanto mais específico for seu tópico, melhor será sua aula personalizada!",
+    "🎯 Nossa IA analisa o contexto educacional para criar objetivos de aprendizagem precisos",
+    "🎮 Cada aula inclui atividades interativas e sistema de gamificação",
+    "📊 O pacing é otimizado profissionalmente para máxima eficácia pedagógica",
+    "🎨 Imagens e recursos visuais são gerados automaticamente para cada tópico",
+    "🏆 Sistema de conquistas motiva o aprendizado contínuo",
+    "📚 Metodologia baseada em pesquisa científica em educação",
+    "⚡ IA processa milhares de padrões educacionais para personalizar sua experiência"
+  ]
+  
+  const facts = [
+    "🧠 O cérebro aprende melhor com intervalos de 25-30 minutos",
+    "🎯 Objetivos claros aumentam a retenção em até 40%",
+    "🎮 Gamificação pode melhorar o engajamento em até 90%",
+    "📊 Feedback imediato acelera o aprendizado significativamente",
+    "🎨 Recursos visuais melhoram a compreensão em até 65%",
+    "⚡ Aprendizagem ativa é 6x mais eficaz que passiva",
+    "🏆 Reconhecimento aumenta a motivação intrínseca",
+    "📚 Repetição espaçada é a chave para memorização duradoura"
+  ]
+
+  const currentTip = tips[Math.floor(elapsedTime / 10000) % tips.length]
+  const currentFact = facts[Math.floor(elapsedTime / 15000) % facts.length]
+
+  return (
+    <div className="space-y-6 p-6 bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl border border-blue-200">
+      <div className="text-center">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <Coffee className="h-5 w-5 text-blue-600" />
+          <span className="text-lg font-semibold text-blue-800">Enquanto aguardamos...</span>
+        </div>
+        <p className="text-sm text-blue-700">
+          Nossa IA está trabalhando intensamente para criar sua aula perfeita! 
+          <br />
+          <strong>Pode levar até 2 minutos e meio</strong> para garantir qualidade máxima.
+        </p>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="p-4 bg-white/60 rounded-lg border border-blue-200">
+          <div className="flex items-start gap-3">
+            <Lightbulb className="h-5 w-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="font-medium text-gray-900 mb-1">Dica do Dia</h4>
+              <p className="text-sm text-gray-700">{currentTip}</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="p-4 bg-white/60 rounded-lg border border-purple-200">
+          <div className="flex items-start gap-3">
+            <Brain className="h-5 w-5 text-purple-500 flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="font-medium text-gray-900 mb-1">Fato Científico</h4>
+              <p className="text-sm text-gray-700">{currentFact}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div className="flex justify-center gap-4 text-2xl">
+        <div className="animate-bounce" style={{ animationDelay: '0ms' }}>🎯</div>
+        <div className="animate-bounce" style={{ animationDelay: '200ms' }}>✨</div>
+        <div className="animate-bounce" style={{ animationDelay: '400ms' }}>🚀</div>
+        <div className="animate-bounce" style={{ animationDelay: '600ms' }}>💡</div>
+        <div className="animate-bounce" style={{ animationDelay: '800ms' }}>🎮</div>
+      </div>
+    </div>
+  )
 }
 
 const LessonProgress = ({ progress, status, isGenerating, elapsedTime, className }: LessonProgressProps) => {
@@ -178,11 +252,15 @@ interface Suggestion {
 
 const STATUS_MESSAGES = [
   { progress: 0, message: 'Analisando o tópico e contexto educacional...' },
-  { progress: 15, message: 'Identificando matéria, série e nível de dificuldade...' },
-  { progress: 35, message: 'Criando objetivos de aprendizagem personalizados...' },
-  { progress: 55, message: 'Estruturando conteúdo pedagógico...' },
-  { progress: 75, message: 'Gerando atividades interativas e avaliações...' },
-  { progress: 90, message: 'Aplicando técnicas de gamificação...' },
+  { progress: 8, message: 'Identificando matéria, série e nível de dificuldade...' },
+  { progress: 18, message: 'Criando objetivos de aprendizagem personalizados...' },
+  { progress: 28, message: 'Estruturando conteúdo pedagógico...' },
+  { progress: 38, message: 'Gerando atividades interativas e avaliações...' },
+  { progress: 48, message: 'Aplicando técnicas de gamificação...' },
+  { progress: 58, message: 'Criando imagens e recursos visuais...' },
+  { progress: 68, message: 'Desenvolvendo sistema de avaliação...' },
+  { progress: 78, message: 'Otimizando pacing e sequência didática...' },
+  { progress: 88, message: 'Aplicando metodologias pedagógicas avançadas...' },
   { progress: 95, message: 'Finalizando aula e preparando interface...' }
 ]
 
@@ -289,7 +367,7 @@ export default function AulasPage() {
     setStartTime(Date.now())
 
     const generationStartTime = Date.now()
-    const estimatedDuration = 25000 // 25 seconds for more realistic timing
+    const estimatedDuration = 150000 // 150 seconds (2 minutes and 30 seconds) for realistic timing
 
     // Enhanced progress simulation
     const progressInterval = setInterval(() => {
@@ -719,8 +797,42 @@ export default function AulasPage() {
       </Card>
       )}
 
-      {/* Main Content Grid - Oculto quando aula foi gerada */}
-      {!generatedLesson && (
+      {/* Loading State - Mostra entretenimento e progresso */}
+      {isGenerating && (
+        <div className="max-w-4xl mx-auto">
+          <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-purple-50">
+            <CardHeader className="text-center">
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center">
+                  <Loader2 className="h-8 w-8 text-white animate-spin" />
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                    Gerando sua Aula Personalizada
+                  </h1>
+                  <p className="text-lg text-gray-600">Nossa IA está trabalhando intensamente para você!</p>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Progress Bar */}
+              <LessonProgress
+                progress={generationProgress}
+                status={generationStatus}
+                isGenerating={isGenerating}
+                elapsedTime={elapsedTime}
+                className="min-h-[120px]"
+              />
+              
+              {/* Entertainment Section */}
+              <LoadingEntertainment elapsedTime={elapsedTime} />
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Main Content Grid - Oculto quando aula foi gerada E durante loading */}
+      {!generatedLesson && !isGenerating && (
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
         {/* Generation Form - Larger */}
         <div className="lg:col-span-3">
@@ -897,18 +1009,6 @@ export default function AulasPage() {
                   </>
                 )}
               </Button>
-
-              {isGenerating && (
-                <div className="mt-6">
-                  <LessonProgress
-                    progress={generationProgress}
-                    status={generationStatus}
-                    isGenerating={isGenerating}
-                    elapsedTime={elapsedTime}
-                    className="min-h-[120px]"
-                  />
-                </div>
-              )}
             </CardContent>
           </Card>
         </div>

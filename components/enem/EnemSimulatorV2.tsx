@@ -164,7 +164,7 @@ export function EnemSimulatorV2({
   const [lastActivity, setLastActivity] = useState(Date.now())
   
   // Loading state
-  const [isGeneratingExam, setIsGeneratingExam] = useState(items.length === 0)
+  const [isGeneratingExam, setIsGeneratingExam] = useState(true) // Always start with loading for better UX
   const [generationProgress, setGenerationProgress] = useState(0)
   const [generationMessage, setGenerationMessage] = useState('')
   
@@ -176,14 +176,31 @@ export function EnemSimulatorV2({
   
   const { toast } = useToast()
 
+  // Early return if no items are loaded yet
+  if (!items || items.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Carregando questões...</p>
+        </div>
+      </div>
+    );
+  }
+
   // Memoized values
-  const currentItem = useMemo(() => items[currentQuestionIndex], [items, currentQuestionIndex])
+  const currentItem = useMemo(() => {
+    if (currentQuestionIndex >= items.length) {
+      return null;
+    }
+    return items[currentQuestionIndex];
+  }, [items, currentQuestionIndex])
   const currentResponse = useMemo(() => 
     responses.get(currentItem?.item_id ?? ''), 
     [responses, currentItem?.item_id]
   )
   const progress = useMemo(
-    () => ((currentQuestionIndex + 1) / Math.max(items.length, 1)) * 100,
+    () => ((currentQuestionIndex + 1) / items.length) * 100,
     [currentQuestionIndex, items.length]
   )
   const answeredCount = responses.size
@@ -210,6 +227,16 @@ export function EnemSimulatorV2({
 
     return () => clearInterval(progressInterval)
   }, [isGeneratingExam])
+
+  /**
+   * Handle loading state when items are available
+   */
+  useEffect(() => {
+    if (items.length > 0 && isGeneratingExam) {
+      // Items are available, stop the loading animation
+      setIsGeneratingExam(false)
+    }
+  }, [items.length, isGeneratingExam])
 
   /**
    * Enhanced score calculation with detailed analytics
@@ -465,7 +492,12 @@ export function EnemSimulatorV2({
         
         saveTimeoutRef.current = setTimeout(async () => {
           try {
-            const serverResponse = await fetch('/api/enem/responses', {
+            // Use public endpoint for public sessions
+            const endpoint = sessionId.startsWith('public_session_') 
+              ? '/api/enem-public/responses' 
+              : '/api/enem/responses';
+              
+            const serverResponse = await fetch(endpoint, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({

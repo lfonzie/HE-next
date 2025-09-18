@@ -82,17 +82,11 @@ export default function NewQuizComponent({
   const confirmAnswer = () => {
     if (pendingAnswer === null) return
     
-    console.log('🔍 DEBUG: confirmAnswer chamado')
-    console.log('🔍 DEBUG: pendingAnswer:', pendingAnswer)
-    console.log('🔍 DEBUG: currentQuestion:', currentQuestion)
-    
     setSelectedAnswer(pendingAnswer)
     const newAnswers = [...answers]
     const safeCurrentQuestion = Math.min(currentQuestion, questions.length - 1)
     newAnswers[safeCurrentQuestion] = pendingAnswer
     setAnswers(newAnswers)
-    
-    console.log('🔍 DEBUG: newAnswers após confirmação:', newAnswers)
     
     setShowConfirmation(false)
     setPendingAnswer(null)
@@ -103,7 +97,6 @@ export default function NewQuizComponent({
         setCurrentQuestion(prev => prev + 1)
         setSelectedAnswer(null)
       } else {
-        console.log('🔍 DEBUG: Última pergunta respondida, chamando handleComplete')
         handleComplete()
       }
     }, 1500) // Increased delay for better UX
@@ -134,18 +127,10 @@ export default function NewQuizComponent({
   }
 
   const handleComplete = () => {
-    console.log('🔍 DEBUG: handleComplete chamado')
-    console.log('🔍 DEBUG: answers array:', answers)
-    console.log('🔍 DEBUG: questions array:', questions)
-    
     const correctAnswers = answers.filter((answer, index) => {
       const correctAnswer = questions[index].correct
-      console.log(`🔍 DEBUG Question ${index + 1}: User answer: ${answer}, Correct answer: ${correctAnswer}, Match: ${answer === correctAnswer}`)
       return answer === correctAnswer
     }).length
-    
-    console.log(`🔍 DEBUG: Quiz completed: ${correctAnswers}/${questions.length} correct answers`)
-    console.log('🔍 DEBUG: Setting score to:', correctAnswers)
     
     setScore(correctAnswers)
     setIsCompleted(true)
@@ -232,9 +217,19 @@ export default function NewQuizComponent({
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span>Progresso</span>
-              <span>{Math.round((score / questions.length) * 100)}%</span>
+              <span>{Math.round((() => {
+                const correctAnswers = answers.filter((answer, index) => {
+                  return answer === questions[index].correct
+                }).length
+                return (correctAnswers / questions.length) * 100
+              })())}%</span>
             </div>
-            <Progress value={(score / questions.length) * 100} className="h-2" />
+            <Progress value={(() => {
+              const correctAnswers = answers.filter((answer, index) => {
+                return answer === questions[index].correct
+              }).length
+              return (correctAnswers / questions.length) * 100
+            })()} className="h-2" />
           </div>
 
           {/* Question Review */}
@@ -284,7 +279,7 @@ export default function NewQuizComponent({
                                 {isCorrectAnswer && <CheckCircle className="h-4 w-4 text-green-600" />}
                                 {isUserAnswer && !isCorrect && <XCircle className="h-4 w-4 text-red-600" />}
                                 <span>
-                                  {key.toUpperCase()}. {option}
+                                  {key.toUpperCase()}) {option}
                                 </span>
                               </div>
                             )

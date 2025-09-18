@@ -110,6 +110,19 @@ async function generateExamFromLocalDB(params: {
 
 // Cache for validated questions to avoid reprocessing
 const questionValidationCache = new Map<string, { isValid: boolean; reason?: string }>();
+const validQuestionsCache = new Map<string, { questions: string[]; timestamp: number }>(); // Cache valid question directories per year
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const VALID_QUESTIONS_CACHE_DURATION = 30 * 60 * 1000; // 30 minutes for valid questions cache
+
+// Cleanup old cache entries periodically
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, value] of validQuestionsCache.entries()) {
+    if (now - value.timestamp > VALID_QUESTIONS_CACHE_DURATION) {
+      validQuestionsCache.delete(key);
+    }
+  }
+}, VALID_QUESTIONS_CACHE_DURATION);
 
 async function getQuestionsFromLocalDB(filter: {
   year?: number;
@@ -160,30 +173,66 @@ async function getQuestionsFromLocalDB(filter: {
         const questionsDir = path.join(yearPath, 'questions');
         const questionDirs = await fs.readdir(questionsDir);
 
-        for (const questionDir of questionDirs) {
-          // Skip hidden files and directories
-          if (questionDir.startsWith('.') || questionDir === 'node_modules') {
-            continue;
-          }
+        // Check cache first for valid questions
+        const cacheKey = `valid_questions_${year}`;
+        const cachedData = validQuestionsCache.get(cacheKey);
+        let validQuestionDirs: string[];
+        let skippedCount = 0;
+        
+        if (!cachedData || (Date.now() - cachedData.timestamp > VALID_QUESTIONS_CACHE_DURATION)) {
+          // Pre-filter to only process directories that actually have details.json
+          validQuestionDirs = [];
           
-          const questionPath = path.join(questionsDir, questionDir, 'details.json');
-          
-          try {
-            // Check if the question directory is actually a directory
-            const questionDirPath = path.join(questionsDir, questionDir);
-            const questionDirStats = await fs.stat(questionDirPath);
-            if (!questionDirStats.isDirectory()) {
+          for (const questionDir of questionDirs) {
+            // Skip hidden files and directories
+            if (questionDir.startsWith('.') || questionDir === 'node_modules') {
               continue;
             }
             
-            // Check if details.json exists before trying to read it
+            const questionDirPath = path.join(questionsDir, questionDir);
+            const questionPath = path.join(questionDirPath, 'details.json');
+            
             try {
-              await fs.access(questionPath);
-            } catch (accessError) {
-              // details.json doesn't exist, skip this question
-              console.log(`⚠️ Skipping question ${questionDir}: details.json not found`);
+              // Check if the question directory is actually a directory
+              const questionDirStats = await fs.stat(questionDirPath);
+              if (!questionDirStats.isDirectory()) {
+                continue;
+              }
+              
+              // Check if details.json exists
+              try {
+                await fs.access(questionPath);
+                validQuestionDirs.push(questionDir);
+              } catch (accessError) {
+                // details.json doesn't exist, count it but don't log each one
+                skippedCount++;
+              }
+            } catch (error) {
+              // Skip invalid directories
               continue;
             }
+          }
+          
+          // Cache the valid questions for this year
+          validQuestionsCache.set(cacheKey, { 
+            questions: validQuestionDirs, 
+            timestamp: Date.now() 
+          });
+          
+          // Log summary instead of individual warnings
+          if (skippedCount > 0) {
+            console.log(`⚠️ Skipped ${skippedCount} questions without details.json in year ${year}`);
+          }
+        } else {
+          // Use cached data
+          validQuestionDirs = cachedData.questions;
+        }
+
+        // Process only valid questions
+        for (const questionDir of validQuestionDirs) {
+          const questionPath = path.join(questionsDir, questionDir, 'details.json');
+          
+          try {
             
             // Check cache first to avoid reprocessing
             const cacheKey = `${year}_${questionDir}`;

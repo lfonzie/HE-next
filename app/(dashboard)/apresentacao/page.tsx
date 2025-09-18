@@ -171,7 +171,7 @@ const customStyles = `
     place-items: center;
     height: 100svh; /* viewport estável em mobile */
     padding: 0.5rem;
-    overflow-y: auto;
+    overflow-y: hidden;
   }
   
   .apresentacao-content {
@@ -181,7 +181,7 @@ const customStyles = `
     margin-right: auto;
     padding: 1rem;
     max-height: calc(100vh - 2rem);
-    overflow-y: auto;
+    overflow-y: hidden;
   }
   
   /* Remover margens externas que deslocam o centro visual */

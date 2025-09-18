@@ -28,6 +28,13 @@ import { ExamGenerationLoading } from '@/components/enem/EnemLoadingStates';
 
 type AppState = 'mode-selection' | 'customization' | 'simulation' | 'results';
 
+interface LocalRecentSession {
+  sessionId: string;
+  createdAt: number;
+  config: SimulationConfig;
+  itemsCount: number;
+}
+
 interface SimulationConfig {
   mode: EnemMode;
   areas: EnemArea[];
@@ -41,12 +48,6 @@ interface SimulationConfig {
   year?: number;
 }
 
-interface LocalRecentSession {
-  sessionId: string;
-  createdAt: number;
-  config: SimulationConfig;
-  itemsCount: number;
-}
 
 function EnemSimulatorContent() {
   const [appState, setAppState] = useState<AppState>('mode-selection');
@@ -89,6 +90,7 @@ function EnemSimulatorContent() {
   useEffect(() => {
     setRecentSessions(loadRecentSessions());
   }, [loadRecentSessions]);
+
 
   const handleModeSelect = useCallback(async (mode: EnemMode) => {
     setLoading(true);
@@ -258,6 +260,26 @@ function EnemSimulatorContent() {
     setAppState('mode-selection');
   };
 
+  const handleResumeLocal = useCallback(async (local: LocalRecentSession) => {
+    try {
+      // Attempt to fetch responses for cloud sessions; for local sessions, skip
+      setSimulationConfig(local.config);
+      setSessionId(local.sessionId);
+      // We don't persist full items to localStorage to save space; regenerate a lightweight session by calling startSimulation
+      // but to ensure resume UX is fast, we will try to call the sessions POST again with same config to get fresh items if needed.
+      setLoading(true);
+      setError('');
+      await startSimulation(local.config);
+    } catch (err: any) {
+      console.error('Error resuming session:', err);
+      setError(err.message || 'Falha ao retomar sessão.');
+      toast({ title: 'Erro', description: 'Não foi possível retomar a sessão.', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [toast]);
+
   const handleRefocus = (topics: string[]) => {
     // Create a new session focused on weak topics
     const refocusConfig: SimulationConfig = {
@@ -281,25 +303,6 @@ function EnemSimulatorContent() {
     setError('');
   };
 
-  const handleResumeLocal = useCallback(async (local: LocalRecentSession) => {
-    try {
-      // Attempt to fetch responses for cloud sessions; for local sessions, skip
-      setSimulationConfig(local.config);
-      setSessionId(local.sessionId);
-      // We don't persist full items to localStorage to save space; regenerate a lightweight session by calling startSimulation
-      // but to ensure resume UX is fast, we will try to call the sessions POST again with same config to get fresh items if needed.
-      setLoading(true);
-      setError('');
-      await startSimulation(local.config);
-    } catch (err: any) {
-      console.error('Error resuming session:', err);
-      setError(err.message || 'Falha ao retomar sessão.');
-      toast({ title: 'Erro', description: 'Não foi possível retomar a sessão.', variant: 'destructive' });
-    } finally {
-      setLoading(false);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [toast]);
 
   // Render based on current state
   if (appState === 'simulation' && sessionId && simulationConfig) {

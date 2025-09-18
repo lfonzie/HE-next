@@ -460,7 +460,7 @@ export function EnemResults({ score, sessionId, onRetake, onRefocus, items = [],
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {questionsToReview.map((item, index) => {
                 const userResponse = responses.find(r => r.item_id === item.item_id);
                 const hasExplanation = explanations[item.item_id];

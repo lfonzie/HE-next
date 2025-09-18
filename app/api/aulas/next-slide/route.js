@@ -3,6 +3,7 @@
 
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
+import { randomizeQuizQuestions } from '@/lib/quiz-randomization';
 
 const openai = new OpenAI({ 
   apiKey: process.env.OPENAI_API_KEY 
@@ -51,7 +52,20 @@ ${slideNumber}. ${slideTitle} (${slideType === 'quiz' ? 'Avaliação, 0 pontos' 
   if (previousSlides.length > 0) {
     prompt += `\n\nCONTEXTO DOS SLIDES ANTERIORES:`;
     previousSlides.forEach((slide, index) => {
-      prompt += `\n${index + 1}. ${slide.title}: ${slide.content.substring(0, 200)}...`;
+      // Filtrar conteúdo para remover alternativas de questões
+      let filteredContent = slide.content;
+      
+      // Se for um slide de quiz, extrair apenas o título e contexto, não as alternativas
+      if (slide.type === 'quiz' && slide.questions) {
+        // Criar um resumo do quiz sem as alternativas
+        const questionCount = slide.questions.length;
+        filteredContent = `Quiz com ${questionCount} questão${questionCount > 1 ? 'ões' : ''} sobre ${slide.title.toLowerCase()}`;
+      } else {
+        // Para slides de conteúdo, usar apenas os primeiros 200 caracteres
+        filteredContent = slide.content.substring(0, 200);
+      }
+      
+      prompt += `\n${index + 1}. ${slide.title}: ${filteredContent}...`;
     });
   }
 
@@ -81,7 +95,7 @@ ${slideNumber}. ${slideTitle} (${slideType === 'quiz' ? 'Avaliação, 0 pontos' 
   "title": "${slideTitle}",
   "content": "Conteúdo educativo detalhado com quebras de linha usando \\n\\n para parágrafos\\n\\nExemplo de segundo parágrafo com mais informações detalhadas.\\n\\nTerceiro parágrafo com exemplos práticos e aplicações reais.",
   "type": "content",
-  "imageQuery": ${hasImage ? '"query específica para busca de imagem no Unsplash"' : 'null'},
+  "imageQuery": ${hasImage ? '"eletricidade corrente introdução conceito"' : 'null'},
   "tokenEstimate": 500
 }`;
   }
@@ -94,6 +108,7 @@ ${slideNumber}. ${slideTitle} (${slideType === 'quiz' ? 'Avaliação, 0 pontos' 
 - Foque em explicações claras e exemplos práticos
 - CADA SLIDE DEVE TER MÍNIMO 500 TOKENS DE CONTEÚDO
 - Para quiz, NÃO inclua campo "correct" - apenas forneça as opções e explicação
+- Para imageQuery: use termos específicos do tema sem palavras genéricas como "education", "classroom", "learning"
 - TODOS os textos devem estar em PORTUGUÊS BRASILEIRO
 - Responda APENAS com JSON válido. Não inclua formatação markdown, blocos de código ou texto adicional.`;
 
@@ -135,6 +150,16 @@ export async function POST(request) {
     }
 
     const slide = await generateNextSlide(topic, slideNumber, previousSlides);
+    
+    // Randomize quiz questions if this is a quiz slide
+    if (slide.type === 'quiz' && slide.questions) {
+      try {
+        slide.questions = randomizeQuizQuestions(slide.questions);
+        console.log(`🎲 Quiz questions randomized for slide ${slideNumber}`);
+      } catch (error) {
+        console.warn(`⚠️ Failed to randomize quiz questions for slide ${slideNumber}:`, error.message);
+      }
+    }
 
     return NextResponse.json({
       success: true,

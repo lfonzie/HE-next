@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
+import { classifyComplexity, classifyComplexityLocal } from '@/lib/complexity-classifier';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -46,32 +47,6 @@ Responda apenas com "trivial", "simples" ou "complexa".`
   }
 }
 
-// Função de fallback para classificação local
-function classifyComplexityLocal(message: string): 'trivial' | 'simples' | 'complexa' {
-  const lowerMessage = message.toLowerCase();
-  
-  // Palavras-chave que indicam trivialidade
-  const trivialKeywords = [
-    'oi', 'olá', 'tudo bem', 'td bem', 'bom dia', 'boa tarde', 'boa noite',
-    'ok', 'okay', 'sim', 'não', 'nao', 'obrigado', 'obrigada'
-  ];
-  
-  // Verificar se é uma mensagem trivial (muito curta ou saudação simples)
-  if ((trivialKeywords.some(keyword => lowerMessage.includes(keyword)) && message.length < 30) || message.length < 15) {
-    return 'trivial';
-  }
-  
-  // Verificar se é uma pergunta educacional complexa
-  const hasEducationalTerms = /\b(fotossíntese|divisão celular|revolução|guerra|independência|evolução|matemática|geografia|história|ciência|biologia|química|física|literatura|português|inglês|filosofia|sociologia|economia|política)\b/i.test(message);
-  const isEducationalQuestion = /\b(como|por que|quando|onde|qual|quais|quem)\b/i.test(message);
-  
-  if (isEducationalQuestion && hasEducationalTerms && message.length > 30) {
-    return 'complexa';
-  }
-  
-  // Default para simples
-  return 'simples';
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -81,24 +56,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 });
     }
 
-    console.log(`🔍 [COMPLEXITY CLASSIFIER] Analyzing with OpenAI: "${message.substring(0, 50)}${message.length > 50 ? '...' : ''}"`);
-
-    // Verificar se a API key do OpenAI está disponível
-    if (!process.env.OPENAI_API_KEY) {
-      console.warn('⚠️ OpenAI API key not found, using local classification');
-      const classification = classifyComplexityLocal(message);
-      return NextResponse.json({ classification });
-    }
-
-    // Usar OpenAI para classificação
-    const classification = await classifyComplexityWithOpenAI(message);
+    // Usar função utilitária para classificação (com cache integrado)
+    const complexityResult = classifyComplexity(message);
     
-    console.log(`✅ [COMPLEXITY CLASSIFIER] OpenAI Result: ${classification}`);
+    console.log(`⚡ [COMPLEXITY CLASSIFIER] Classification: "${message.substring(0, 50)}${message.length > 50 ? '...' : ''}" -> ${complexityResult.classification} (${complexityResult.method}${complexityResult.cached ? ', cached' : ''})`);
     
-    return NextResponse.json({ classification });
+    return NextResponse.json({ 
+      classification: complexityResult.classification,
+      cached: complexityResult.cached,
+      method: complexityResult.method,
+      timestamp: Date.now()
+    });
 
   } catch (error: any) {
     console.error('Classifier route error:', error);
-    return NextResponse.json({ classification: 'simples' }); // Default para simples em caso de erro
+    
+    // Em caso de erro, usar classificação local como fallback
+    const fallbackClassification = classifyComplexityLocal(message);
+    
+    return NextResponse.json({ 
+      classification: fallbackClassification,
+      cached: false,
+      method: 'fallback',
+      timestamp: Date.now()
+    });
   }
 }

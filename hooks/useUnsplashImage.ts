@@ -53,8 +53,8 @@ export function useUnsplashImage(query: string, enabled: boolean = true, subject
           setImage({
             id: 'default',
             urls: {
-              regular: `https://picsum.photos/800/400?random=${Date.now()}`,
-              small: `https://picsum.photos/400/200?random=${Date.now()}`
+              regular: `https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&h=400&fit=crop&auto=format`,
+              small: `https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=400&h=200&fit=crop&auto=format`
             },
             alt_description: query,
             user: { name: 'Placeholder' }
@@ -66,8 +66,8 @@ export function useUnsplashImage(query: string, enabled: boolean = true, subject
         setImage({
           id: 'fallback',
           urls: {
-            regular: `https://picsum.photos/800/400?random=${Date.now()}`,
-            small: `https://picsum.photos/400/200?random=${Date.now()}`
+            regular: `https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&h=400&fit=crop&auto=format`,
+            small: `https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=400&h=200&fit=crop&auto=format`
           },
           alt_description: query,
           user: { name: 'Placeholder' }

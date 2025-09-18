@@ -3,6 +3,7 @@
 
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
+import { randomizeQuizQuestions } from '@/lib/quiz-randomization';
 import { log } from '@/lib/lesson-logger';
 
 const openai = new OpenAI({ 
@@ -66,41 +67,41 @@ function generateImageQuery(topic, slideNumber, slideType) {
   
   // Queries específicas e precisas por tipo de slide e número com palavras-chave relevantes
   const queries = {
-    1: `${mainKeyword} ${secondaryKeyword} introduction concept overview educational classroom`, // Abertura
-    2: `${mainKeyword} ${secondaryKeyword} fundamentals basics principles educational`, // Conceitos fundamentais
-    3: `${mainKeyword} ${secondaryKeyword} process mechanism steps educational`, // Desenvolvimento
-    4: `${mainKeyword} ${secondaryKeyword} application examples real world educational`, // Aplicações práticas
-    5: `${mainKeyword} ${secondaryKeyword} variations adaptations types educational`, // Variações
-    6: `${mainKeyword} ${secondaryKeyword} advanced connections relationships educational`, // Conexões avançadas
-    7: `${mainKeyword} ${secondaryKeyword} quiz test question educational`, // Quiz 1
-    8: `${mainKeyword} ${secondaryKeyword} deep dive analysis educational`, // Aprofundamento
-    9: `${mainKeyword} ${secondaryKeyword} practical examples demonstration educational`, // Exemplos práticos
-    10: `${mainKeyword} ${secondaryKeyword} critical analysis evaluation educational`, // Análise crítica
-    11: `${mainKeyword} ${secondaryKeyword} synthesis summary educational`, // Síntese intermediária
-    12: `${mainKeyword} ${secondaryKeyword} situational analysis quiz educational`, // Quiz 2
-    13: `${mainKeyword} ${secondaryKeyword} future applications innovation educational`, // Aplicações futuras
-    14: `${mainKeyword} ${secondaryKeyword} conclusion summary recap educational` // Encerramento
+    1: `${mainKeyword} ${secondaryKeyword} introduction concept overview`, // Abertura
+    2: `${mainKeyword} ${secondaryKeyword} fundamentals basics principles`, // Conceitos fundamentais
+    3: `${mainKeyword} ${secondaryKeyword} process mechanism steps`, // Desenvolvimento
+    4: `${mainKeyword} ${secondaryKeyword} application examples real world`, // Aplicações práticas
+    5: `${mainKeyword} ${secondaryKeyword} variations adaptations types`, // Variações
+    6: `${mainKeyword} ${secondaryKeyword} advanced connections relationships`, // Conexões avançadas
+    7: `${mainKeyword} ${secondaryKeyword} quiz test question`, // Quiz 1
+    8: `${mainKeyword} ${secondaryKeyword} deep dive analysis`, // Aprofundamento
+    9: `${mainKeyword} ${secondaryKeyword} practical examples demonstration`, // Exemplos práticos
+    10: `${mainKeyword} ${secondaryKeyword} critical analysis evaluation`, // Análise crítica
+    11: `${mainKeyword} ${secondaryKeyword} synthesis summary`, // Síntese intermediária
+    12: `${mainKeyword} ${secondaryKeyword} situational analysis quiz`, // Quiz 2
+    13: `${mainKeyword} ${secondaryKeyword} future applications innovation`, // Aplicações futuras
+    14: `${mainKeyword} ${secondaryKeyword} conclusion summary recap` // Encerramento
   };
   
   // Fallback mais específico se não encontrar
   const fallbackQueries = {
-    1: `${mainKeyword} concept educational classroom`,
-    2: `${mainKeyword} basics educational`,
-    3: `${mainKeyword} process educational`,
-    4: `${mainKeyword} examples educational`,
-    5: `${mainKeyword} types educational`,
-    6: `${mainKeyword} advanced educational`,
-    7: `${mainKeyword} quiz educational`,
-    8: `${mainKeyword} analysis educational`,
-    9: `${mainKeyword} practical educational`,
-    10: `${mainKeyword} critical educational`,
-    11: `${mainKeyword} synthesis educational`,
-    12: `${mainKeyword} situational educational`,
-    13: `${mainKeyword} future educational`,
-    14: `${mainKeyword} conclusion educational`
+    1: `${mainKeyword} concept introduction`,
+    2: `${mainKeyword} basics fundamentals`,
+    3: `${mainKeyword} process mechanism`,
+    4: `${mainKeyword} examples applications`,
+    5: `${mainKeyword} types variations`,
+    6: `${mainKeyword} advanced connections`,
+    7: `${mainKeyword} quiz test`,
+    8: `${mainKeyword} analysis deep`,
+    9: `${mainKeyword} practical demonstration`,
+    10: `${mainKeyword} critical evaluation`,
+    11: `${mainKeyword} synthesis summary`,
+    12: `${mainKeyword} situational quiz`,
+    13: `${mainKeyword} future innovation`,
+    14: `${mainKeyword} conclusion recap`
   };
   
-  return queries[slideNumber] || fallbackQueries[slideNumber] || `${mainKeyword} education learning`;
+  return queries[slideNumber] || fallbackQueries[slideNumber] || `${mainKeyword} concept`;
 }
 
 // Função para gerar URL de imagem dinâmica baseada no tema
@@ -132,35 +133,43 @@ REGRAS IMPORTANTES:
 - CADA SLIDE DEVE TER MÍNIMO 500 TOKENS DE CONTEÚDO (conteúdo extenso e detalhado)
 
 ESTRUTURA DA AULA (45-60 minutos) - EXATAMENTE 14 SLIDES:
-1. Abertura: Tema e Objetivos (Conteúdo)
-2. Conceitos Fundamentais (Conteúdo)
-3. Desenvolvimento dos Processos (Conteúdo)
-4. Aplicações Práticas (Conteúdo)
-5. Variações e Adaptações (Conteúdo)
-6. Conexões Avançadas (Conteúdo)
-7. Quiz: Conceitos Básicos (Avaliação, 0 pontos)
-8. Aprofundamento (Conteúdo)
-9. Exemplos Práticos (Conteúdo)
-10. Análise Crítica (Conteúdo)
-11. Síntese Intermediária (Conteúdo)
-12. Quiz: Análise Situacional (Avaliação, 0 pontos)
-13. Aplicações Futuras (Conteúdo)
-14. Encerramento: Síntese Final (Conteúdo)
+Crie títulos ESPECÍFICOS e únicos para cada slide baseados no tema "${topic}". 
+NÃO use títulos genéricos como "Conceitos Fundamentais" ou "Aplicações Práticas".
+Cada título deve ser específico ao conteúdo do slide e ao tema da aula.
+
+Exemplos de títulos específicos para diferentes temas:
+- Para "Como funciona a eletricidade?": "O que é Corrente Elétrica?", "Lei de Ohm na Prática", "Circuitos em Casa"
+- Para "História do Brasil": "O Descobrimento Português", "A Era Colonial", "Independência de 1822"
+
+1. Abertura: [Título específico sobre introdução ao tema] (Conteúdo)
+2. [Título específico sobre conceito principal] (Conteúdo)
+3. [Título específico sobre desenvolvimento] (Conteúdo)
+4. [Título específico sobre aplicações] (Conteúdo)
+5. [Título específico sobre variações] (Conteúdo)
+6. [Título específico sobre conexões] (Conteúdo)
+7. Quiz: [Título específico sobre conceitos básicos] (Avaliação, 0 pontos)
+8. [Título específico sobre aprofundamento] (Conteúdo)
+9. [Título específico sobre exemplos] (Conteúdo)
+10. [Título específico sobre análise crítica] (Conteúdo)
+11. [Título específico sobre síntese] (Conteúdo)
+12. Quiz: [Título específico sobre análise situacional] (Avaliação, 0 pontos)
+13. [Título específico sobre aplicações futuras] (Conteúdo)
+14. Encerramento: [Título específico sobre síntese final] (Conteúdo)
 
 FORMATO JSON OBRIGATÓRIO - EXATAMENTE 14 SLIDES:
 {
   "slides": [
     {
       "number": 1,
-      "title": "Abertura: Tema e Objetivos",
+      "title": "[Título específico sobre introdução ao tema]",
       "content": "Conteúdo educativo detalhado com quebras de linha usando \\n\\n para parágrafos\\n\\nExemplo de segundo parágrafo com mais informações detalhadas.\\n\\nTerceiro parágrafo com exemplos práticos e aplicações reais.",
       "type": "content",
-      "imageQuery": "query específica para busca de imagem no Unsplash",
+      "imageQuery": "eletricidade corrente introdução conceito",
       "tokenEstimate": 500
     },
     {
       "number": 2,
-      "title": "Conceitos Fundamentais",
+      "title": "[Título específico sobre conceito principal]",
       "content": "Conteúdo educativo detalhado sem imagem.",
       "type": "content",
       "imageQuery": null,
@@ -168,7 +177,7 @@ FORMATO JSON OBRIGATÓRIO - EXATAMENTE 14 SLIDES:
     },
     {
       "number": 3,
-      "title": "Desenvolvimento dos Processos",
+      "title": "[Título específico sobre desenvolvimento]",
       "content": "Conteúdo educativo detalhado sem imagem.",
       "type": "content",
       "imageQuery": null,
@@ -176,7 +185,7 @@ FORMATO JSON OBRIGATÓRIO - EXATAMENTE 14 SLIDES:
     },
     {
       "number": 4,
-      "title": "Aplicações Práticas",
+      "title": "[Título específico sobre aplicações]",
       "content": "Conteúdo educativo detalhado sem imagem.",
       "type": "content",
       "imageQuery": null,
@@ -184,7 +193,7 @@ FORMATO JSON OBRIGATÓRIO - EXATAMENTE 14 SLIDES:
     },
     {
       "number": 5,
-      "title": "Variações e Adaptações",
+      "title": "[Título específico sobre variações]",
       "content": "Conteúdo educativo detalhado sem imagem.",
       "type": "content",
       "imageQuery": null,
@@ -192,7 +201,7 @@ FORMATO JSON OBRIGATÓRIO - EXATAMENTE 14 SLIDES:
     },
     {
       "number": 6,
-      "title": "Conexões Avançadas",
+      "title": "[Título específico sobre conexões]",
       "content": "Conteúdo educativo detalhado sem imagem.",
       "type": "content",
       "imageQuery": null,
@@ -200,16 +209,16 @@ FORMATO JSON OBRIGATÓRIO - EXATAMENTE 14 SLIDES:
     },
     {
       "number": 7,
-      "title": "Quiz: Conceitos Básicos",
+      "title": "Quiz: [Título específico sobre conceitos básicos]",
       "content": "Conteúdo educativo detalhado com imagem.",
       "type": "quiz",
-      "imageQuery": "query específica para busca de imagem no Unsplash",
+      "imageQuery": "eletricidade quiz teste conceitos",
       "tokenEstimate": 500,
       "points": 0
     },
     {
       "number": 8,
-      "title": "Aprofundamento",
+      "title": "[Título específico sobre aprofundamento]",
       "content": "Conteúdo educativo detalhado sem imagem.",
       "type": "content",
       "imageQuery": null,
@@ -217,7 +226,7 @@ FORMATO JSON OBRIGATÓRIO - EXATAMENTE 14 SLIDES:
     },
     {
       "number": 9,
-      "title": "Exemplos Práticos",
+      "title": "[Título específico sobre exemplos]",
       "content": "Conteúdo educativo detalhado sem imagem.",
       "type": "content",
       "imageQuery": null,
@@ -225,7 +234,7 @@ FORMATO JSON OBRIGATÓRIO - EXATAMENTE 14 SLIDES:
     },
     {
       "number": 10,
-      "title": "Análise Crítica",
+      "title": "[Título específico sobre análise crítica]",
       "content": "Conteúdo educativo detalhado sem imagem.",
       "type": "content",
       "imageQuery": null,
@@ -233,7 +242,7 @@ FORMATO JSON OBRIGATÓRIO - EXATAMENTE 14 SLIDES:
     },
     {
       "number": 11,
-      "title": "Síntese Intermediária",
+      "title": "[Título específico sobre síntese]",
       "content": "Conteúdo educativo detalhado sem imagem.",
       "type": "content",
       "imageQuery": null,
@@ -241,7 +250,7 @@ FORMATO JSON OBRIGATÓRIO - EXATAMENTE 14 SLIDES:
     },
     {
       "number": 12,
-      "title": "Quiz: Análise Situacional",
+      "title": "Quiz: [Título específico sobre análise situacional]",
       "content": "Conteúdo educativo detalhado sem imagem.",
       "type": "quiz",
       "imageQuery": null,
@@ -250,7 +259,7 @@ FORMATO JSON OBRIGATÓRIO - EXATAMENTE 14 SLIDES:
     },
     {
       "number": 13,
-      "title": "Aplicações Futuras",
+      "title": "[Título específico sobre aplicações futuras]",
       "content": "Conteúdo educativo detalhado sem imagem.",
       "type": "content",
       "imageQuery": null,
@@ -258,10 +267,10 @@ FORMATO JSON OBRIGATÓRIO - EXATAMENTE 14 SLIDES:
     },
     {
       "number": 14,
-      "title": "Encerramento: Síntese Final",
+      "title": "Encerramento: [Título específico sobre síntese final]",
       "content": "Conteúdo educativo detalhado com imagem de encerramento.",
       "type": "content",
-      "imageQuery": "query específica para busca de imagem no Unsplash",
+      "imageQuery": "eletricidade conclusão síntese final",
       "tokenEstimate": 500
     }
   ]
@@ -270,7 +279,7 @@ FORMATO JSON OBRIGATÓRIO - EXATAMENTE 14 SLIDES:
 Para slides de quiz (type: "quiz"), inclua:
 {
   "number": 7,
-  "title": "Quiz: Conceitos Básicos",
+  "title": "Quiz: [Título específico sobre conceitos básicos]",
   "content": "Conteúdo do quiz",
   "type": "quiz",
   "imageQuery": null,
@@ -278,7 +287,7 @@ Para slides de quiz (type: "quiz"), inclua:
   "points": 0,
   "questions": [
     {
-      "q": "Pergunta clara e objetiva?",
+      "q": "Pergunta clara e objetiva relacionada ao tema específico?",
       "options": ["A) Alternativa A detalhada", "B) Alternativa B detalhada", "C) Alternativa C detalhada", "D) Alternativa D detalhada"],
       "explanation": "Explicação detalhada da resposta correta"
     }
@@ -294,12 +303,14 @@ IMPORTANTE:
 - CADA SLIDE DEVE TER MÍNIMO 500 TOKENS DE CONTEÚDO
 - O campo "imageQuery" deve ser específico e relevante ao conteúdo do slide
 - APENAS slides 1, 7 e 14 devem ter imageQuery (outros slides devem ter imageQuery: null)
-- Para slides 1, 7 e 14: use termos específicos do tema + "educational"
-- Evite termos genéricos como "education", "classroom", "learning"
+- Para slides 1, 7 e 14: use termos específicos do tema sem palavras genéricas
+- Evite termos genéricos como "education", "classroom", "learning", "educational"
+- Use apenas palavras-chave específicas do conteúdo (ex: "eletricidade corrente", "matemática álgebra", "história independência")
 - Para quiz: "correct" deve ser uma letra (A, B, C, D) indicando a resposta correta
 - As alternativas devem ser claramente identificadas como A), B), C), D) no conteúdo das opções
 - Use quebras de linha \\n\\n para separar parágrafos e melhorar a legibilidade
 - Para diagramas e tabelas, use a sintaxe especial: <<<criar um diagrama da fotossíntese, sem letras somente imagem>>> ou <<<criar uma tabela comparativa>>>
+- CRÍTICO: Cada slide deve ter um título ÚNICO e ESPECÍFICO ao tema "${topic}". NÃO use títulos genéricos como "Conceitos Fundamentais", "Aplicações Práticas", etc. Crie títulos que sejam específicos ao conteúdo de cada slide.
 - GERE EXATAMENTE 14 SLIDES - NÃO MAIS, NÃO MENOS
 
 Tópico: ${topic}
@@ -641,11 +652,16 @@ export async function POST(request) {
           }
         }
 
-        // 3. Se ambas falharem, usar placeholder
+        // 3. Se ambas falharem, usar Wiki Commons como fallback
+        // TODO: Preparar para integração com FreePik API
+        // - Adicionar configuração de API key do FreePik
+        // - Implementar busca de imagens educacionais específicas
+        // - Manter Wiki Commons como fallback final
         if (!imageUrl) {
-          imageUrl = `https://picsum.photos/800/400?random=${slide.number}`;
-          imageSource = 'placeholder';
-          console.log(`⚠️ Usando placeholder para slide ${slide.number}`);
+          // Usar Wiki Commons com uma imagem educacional genérica
+          imageUrl = `https://commons.wikimedia.org/wiki/Special:FilePath/Education%20-%20The%20Noun%20Project.svg?width=800&height=400`;
+          imageSource = 'wikimedia';
+          console.log(`⚠️ Usando Wiki Commons para slide ${slide.number}`);
         }
 
         return {
@@ -756,24 +772,63 @@ export async function POST(request) {
           `Desenvolver pensamento crítico sobre o tema`,
           `Conectar o aprendizado com situações do cotidiano`
         ],
-        stages: finalSlides.map((slide, index) => ({
-          etapa: slide.title || `Etapa ${index + 1}`,
-          type: slide.type === 'quiz' ? 'Avaliação' : slide.type === 'closing' ? 'Encerramento' : 'Conteúdo',
-          activity: {
-            component: slide.type === 'quiz' ? 'QuizComponent' : 'AnimationSlide',
-            content: slide.content,
-            questions: slide.type === 'quiz' ? slide.questions : undefined,
-            imageUrl: slide.imageUrl,
-            imagePrompt: slide.imageQuery
-          },
-          route: `/${slide.type}`,
-          estimatedTime: slide.timeEstimate || 5
-        })),
+        stages: finalSlides.map((slide, index) => {
+          // Randomize quiz questions if this is a quiz slide
+          let processedQuestions = slide.questions;
+          if (slide.type === 'quiz' && slide.questions) {
+            try {
+              processedQuestions = randomizeQuizQuestions(slide.questions);
+              log.debug('🎲 Quiz questions randomized', baseContext, {
+                slideNumber: slide.number,
+                questionCount: processedQuestions.length
+              });
+            } catch (error) {
+              log.warn('⚠️ Failed to randomize quiz questions', baseContext, {
+                slideNumber: slide.number,
+                error: error.message
+              });
+              // Keep original questions if randomization fails
+              processedQuestions = slide.questions;
+            }
+          }
+          
+          return {
+            etapa: slide.title || `Etapa ${index + 1}`,
+            type: slide.type === 'quiz' ? 'Avaliação' : slide.type === 'closing' ? 'Encerramento' : 'Conteúdo',
+            activity: {
+              component: slide.type === 'quiz' ? 'QuizComponent' : 'AnimationSlide',
+              content: slide.content,
+              questions: slide.type === 'quiz' ? processedQuestions : undefined,
+              imageUrl: slide.imageUrl,
+              imagePrompt: slide.imageQuery
+            },
+            route: `/${slide.type}`,
+            estimatedTime: slide.timeEstimate || 5
+          };
+        }),
         feedback: {
           pacing: metrics,
           validation: validation
         },
-        slides: finalSlides,
+        slides: finalSlides.map(slide => {
+          // Randomize quiz questions if this is a quiz slide
+          if (slide.type === 'quiz' && slide.questions) {
+            try {
+              const randomizedQuestions = randomizeQuizQuestions(slide.questions);
+              return {
+                ...slide,
+                questions: randomizedQuestions
+              };
+            } catch (error) {
+              log.warn('⚠️ Failed to randomize quiz questions in slides', baseContext, {
+                slideNumber: slide.number,
+                error: error.message
+              });
+              return slide;
+            }
+          }
+          return slide;
+        }),
         metadata: {
           subject: topic,
           grade: 'Ensino Médio',

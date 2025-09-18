@@ -140,7 +140,7 @@ export default function ProgressiveLessonComponent({
           setImageUrl(imageUrl);
         } else {
           console.log('⚠️ Nenhuma foto encontrada, usando placeholder');
-          setImageUrl(`https://picsum.photos/800/400?random=${currentSlide + 1}`);
+          setImageUrl(`https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&h=400&fit=crop&auto=format`);
         }
       } else {
         console.error('❌ Erro na resposta da API:', response.status, response.statusText);
@@ -210,8 +210,7 @@ export default function ProgressiveLessonComponent({
           content += '<h4>Opções:</h4>';
           content += '<ul>';
           slide.options.forEach((option, optIndex) => {
-            const letter = String.fromCharCode(65 + optIndex);
-            content += `<li>${letter}) ${option}</li>`;
+            content += `<li>${option}</li>`;
           });
           content += '</ul>';
           if (slide.correctAnswer) {
@@ -285,8 +284,7 @@ export default function ProgressiveLessonComponent({
           content += '<h4>Opções:</h4>';
           content += '<ul class="options">';
           slide.options.forEach((option, optIndex) => {
-            const letter = String.fromCharCode(65 + optIndex);
-            content += `<li>${letter}) ${option}</li>`;
+            content += `<li>${option}</li>`;
           });
           content += '</ul>';
           if (slide.correctAnswer) {

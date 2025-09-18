@@ -513,13 +513,13 @@ class EnemLocalDatabase {
       }
 
       if (!fs.existsSync(questionPath)) {
-        console.log(`⚠️ Questão ${index} não encontrada para o ano ${year} - pulando`)
+        // Don't log individual missing questions to reduce noise
         return null
       }
 
       const detailsPath = path.join(questionPath, 'details.json')
       if (!fs.existsSync(detailsPath)) {
-        console.log(`⚠️ Arquivo details.json não encontrado para questão ${index} do ano ${year} - pulando`)
+        // Don't log individual missing details.json to reduce noise
         return null
       }
 

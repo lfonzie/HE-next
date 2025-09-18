@@ -151,11 +151,11 @@ function getFallbackResponse(query: string, count: number) {
   const fallbackImages = Array.from({ length: count }, (_, index) => ({
     id: `fallback-${index}`,
     urls: {
-      raw: `https://picsum.photos/800/400?random=${Date.now() + index}`,
-      full: `https://picsum.photos/800/400?random=${Date.now() + index}`,
-      regular: `https://picsum.photos/800/400?random=${Date.now() + index}`,
-      small: `https://picsum.photos/400/200?random=${Date.now() + index}`,
-      thumb: `https://picsum.photos/200/100?random=${Date.now() + index}`
+      raw: `https://commons.wikimedia.org/wiki/Special:FilePath/Education%20-%20The%20Noun%20Project.svg?width=800&height=400`,
+      full: `https://commons.wikimedia.org/wiki/Special:FilePath/Education%20-%20The%20Noun%20Project.svg?width=800&height=400`,
+      regular: `https://commons.wikimedia.org/wiki/Special:FilePath/Education%20-%20The%20Noun%20Project.svg?width=800&height=400`,
+      small: `https://commons.wikimedia.org/wiki/Special:FilePath/Education%20-%20The%20Noun%20Project.svg?width=400&height=200`,
+      thumb: `https://commons.wikimedia.org/wiki/Special:FilePath/Education%20-%20The%20Noun%20Project.svg?width=200&height=100`
     },
     alt_description: query,
     description: `Fallback image for ${query}`,

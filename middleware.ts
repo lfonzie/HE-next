@@ -5,7 +5,7 @@ export async function middleware(request: NextRequest) {
   // Skip middleware for static files and API routes to improve performance
   if (request.nextUrl.pathname.startsWith('/_next/') ||
       request.nextUrl.pathname.startsWith('/api/') ||
-      request.nextUrl.pathname.match(/\.(ico|png|jpg|jpeg|gif|svg|css|js|woff|woff2|ttf|eot)$/)) {
+      request.nextUrl.pathname.match(/\.(ico|png|jpg|jpeg|gif|svg|css|js|woff|woff2|ttf|eot|webmanifest)$/)) {
     return NextResponse.next()
   }
 
@@ -66,7 +66,9 @@ export async function middleware(request: NextRequest) {
     '/test-visual',
     '/dark-mode-demo',
     '/chat-advanced',
-    '/lessons'
+    '/chat', // Added for development
+    '/lessons',
+    '/enem-public' // Added for public ENEM simulator
   ]
 
   // Check if current route is public
@@ -128,6 +130,6 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     // Only match routes that actually need middleware processing
-    '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:ico|png|jpg|jpeg|gif|svg|css|js|woff|woff2|ttf|eot)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|site.webmanifest|.*\\.(?:ico|png|jpg|jpeg|gif|svg|css|js|woff|woff2|ttf|eot|webmanifest)$).*)',
   ]
 }

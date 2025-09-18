@@ -7,6 +7,7 @@ import { google } from '@ai-sdk/google'
 import { getSystemPrompt } from '@/lib/ai-sdk-config'
 import { orchestrate } from '@/lib/orchestrator'
 import { educationalTools } from '@/lib/ai-tools'
+import { classifyComplexity, getProviderConfig } from '@/lib/complexity-classifier'
 import '@/lib/orchestrator-modules' // ensure modules are registered
 
 // Provider configurations
@@ -53,44 +54,17 @@ export async function POST(request: NextRequest) {
       messageCount: messages.length
     })
 
-    // Usar sistema de roteamento inteligente com 3 níveis
-    let detectedComplexity = 'simples'
-    let selectedProvider = 'openai'
-    let selectedModel = 'gpt-4o-mini'
-    let tier = 'IA'
+    // Usar sistema de roteamento inteligente com classificação otimizada
+    const complexityResult = classifyComplexity(lastMessage.content)
+    const detectedComplexity = complexityResult.classification
     
-    try {
-      // Chamar API de classificação de complexidade
-      const response = await fetch('http://localhost:3000/api/router/classify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: lastMessage.content })
-      })
-      
-      if (response.ok) {
-        const data = await response.json()
-        const aiClassification = data.classification?.toLowerCase()
-        
-        if (aiClassification === 'trivial') {
-          detectedComplexity = 'trivial'
-          selectedProvider = 'google'
-          selectedModel = 'gemini-2.0-flash-exp'
-          tier = 'IA_ECO'
-        } else if (aiClassification === 'simples') {
-          detectedComplexity = 'simples'
-          selectedProvider = 'openai'
-          selectedModel = 'gpt-4o-mini'
-          tier = 'IA'
-        } else if (aiClassification === 'complexa') {
-          detectedComplexity = 'complexa'
-          selectedProvider = 'openai'
-          selectedModel = 'gpt-5-chat-latest'
-          tier = 'IA_TURBO'
-        }
-      }
-    } catch (error) {
-      console.warn('Classification API error, using simple:', error)
-    }
+    console.log(`⚡ [MULTI-PROVIDER] Complexity classification: ${detectedComplexity} (${complexityResult.method}${complexityResult.cached ? ', cached' : ''})`)
+    
+    // Obter configuração do provider baseada na complexidade
+    const providerConfig = getProviderConfig(detectedComplexity)
+    const selectedProvider = providerConfig.provider
+    const selectedModel = providerConfig.model
+    const tier = providerConfig.tier
     
     console.log('🎯 [ROUTING] Result:', {
       content: lastMessage.content.substring(0, 50) + '...',
@@ -99,10 +73,10 @@ export async function POST(request: NextRequest) {
       complexity: detectedComplexity
     })
 
-    // Determinar módulo se não especificado
+    // Determinar módulo de forma otimizada
     let targetModule = module || 'atendimento'
     
-    // Se módulo for 'auto', usar orquestrador para classificação
+    // Só usar orquestrador se realmente necessário (módulo 'auto' ou não especificado)
     if (module === 'auto' || !module) {
       try {
         const orchestratorResult = await orchestrate({
@@ -116,6 +90,8 @@ export async function POST(request: NextRequest) {
         console.error('Orchestrator error:', error)
         targetModule = 'atendimento'
       }
+    } else {
+      console.log('🎯 [MULTI-PROVIDER] Using provided module:', targetModule)
     }
 
     // Obter system prompt para o módulo
@@ -134,7 +110,7 @@ export async function POST(request: NextRequest) {
     ]
 
     // Usar OpenAI diretamente com configuração simples
-    const providerConfig = { temperature: 0.7, maxTokens: 2000, timeout: 20000 }
+    const streamConfig = { temperature: 0.7, maxTokens: 2000, timeout: 20000 }
 
     console.log('🚀 [MULTI-PROVIDER] Starting stream with:', {
       provider: selectedProvider,
@@ -157,7 +133,7 @@ export async function POST(request: NextRequest) {
     const result = await streamText({
       model: modelInstance,
       messages: aiMessages,
-      temperature: providerConfig.temperature,
+      temperature: streamConfig.temperature,
       onFinish: (result) => {
         console.log('✅ [MULTI-PROVIDER] Stream finished:', {
           finishReason: result.finishReason,

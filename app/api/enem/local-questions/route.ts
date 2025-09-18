@@ -159,7 +159,28 @@ async function getQuestionsFromLocalDB(filter: QuestionFilter): Promise<EnemQues
         const questionsDir = path.join(yearPath, 'questions');
         const questionDirs = await fs.readdir(questionsDir);
 
+        // Pre-filter to only process directories that actually have details.json
+        const validQuestionDirs = [];
+        let skippedCount = 0;
+        
         for (const questionDir of questionDirs) {
+          const questionPath = path.join(questionsDir, questionDir, 'details.json');
+          
+          try {
+            await fs.access(questionPath);
+            validQuestionDirs.push(questionDir);
+          } catch (error) {
+            skippedCount++;
+          }
+        }
+        
+        // Log summary instead of individual warnings
+        if (skippedCount > 0) {
+          console.log(`⚠️ Skipped ${skippedCount} questions without details.json in year ${year}`);
+        }
+
+        // Process only valid questions
+        for (const questionDir of validQuestionDirs) {
           const questionPath = path.join(questionsDir, questionDir, 'details.json');
           
           try {
