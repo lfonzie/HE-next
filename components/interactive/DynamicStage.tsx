@@ -9,6 +9,7 @@ import ImprovedQuizComponent from './ImprovedQuizComponent'
 import DrawingPrompt from './DrawingPrompt'
 import AnimationSlide from './AnimationSlide'
 import DiscussionBoard from './DiscussionBoard'
+import LessonCompletionModal from '@/components/ui/LessonCompletionModal'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -61,6 +62,19 @@ interface DynamicStageProps {
   pointsEarned?: number
   lessonTheme?: string
   isLoading?: boolean
+  lessonData?: {
+    title: string
+    totalPoints: number
+    totalTimeSpent: number
+    stageResults: Array<{
+      stageIndex: number
+      result: any
+      timeSpent: number
+      pointsEarned: number
+    }>
+  }
+  onRestart?: () => void
+  onNewLesson?: () => void
 }
 
 export default function DynamicStage({
@@ -75,11 +89,15 @@ export default function DynamicStage({
   timeSpent = 0,
   pointsEarned = 0,
   lessonTheme = 'education',
-  isLoading = false
+  isLoading = false,
+  lessonData,
+  onRestart,
+  onNewLesson
 }: DynamicStageProps) {
   const [isCompleted, setIsCompleted] = useState(false)
   const [stageResult, setStageResult] = useState<any>(null)
   const [startTime] = useState(Date.now())
+  const [showCompletionModal, setShowCompletionModal] = useState(false)
 
   const handleStageComplete = (result: any) => {
     setIsCompleted(true)
@@ -254,11 +272,11 @@ export default function DynamicStage({
               
               {/* Show image if available */}
               {activity.imageUrl && (
-                <div className="mt-6">
+                <div className="mt-4">
                   <img 
                     src={activity.imageUrl} 
                     alt={stage.etapa}
-                    className="w-full max-w-2xl mx-auto rounded-lg shadow-md"
+                    className="w-full max-w-xl mx-auto rounded-lg shadow-md h-48 object-cover"
                   />
                 </div>
               )}
@@ -408,11 +426,11 @@ export default function DynamicStage({
               
               {/* Show image if available */}
               {activity.imageUrl && (
-                <div className="mt-6">
+                <div className="mt-4">
                   <img 
                     src={activity.imageUrl} 
                     alt={stage.etapa}
-                    className="w-full max-w-2xl mx-auto rounded-lg shadow-md"
+                    className="w-full max-w-xl mx-auto rounded-lg shadow-md h-48 object-cover"
                   />
                 </div>
               )}
@@ -601,7 +619,14 @@ export default function DynamicStage({
             </div>
             
             <Button
-              onClick={handleNext}
+              onClick={() => {
+                if (stageIndex === totalStages - 1) {
+                  // Show completion modal for last slide
+                  setShowCompletionModal(true)
+                } else {
+                  handleNext()
+                }
+              }}
               disabled={!canGoNext && !isCompleted && !['OpenQuestion', 'AnimationSlide', 'DiscussionBoard', 'UploadTask'].includes(stage.activity.component)}
             >
               {stageIndex === totalStages - 1 ? 'Finalizar' : 'Próxima'}
@@ -658,6 +683,17 @@ export default function DynamicStage({
             }
           })()}
         </motion.div>
+      )}
+
+      {/* Completion Modal */}
+      {lessonData && (
+        <LessonCompletionModal
+          isOpen={showCompletionModal}
+          onClose={() => setShowCompletionModal(false)}
+          onRestart={onRestart || (() => {})}
+          onNewLesson={onNewLesson || (() => {})}
+          lessonData={lessonData}
+        />
       )}
     </motion.div>
   )

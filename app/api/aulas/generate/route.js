@@ -4,6 +4,9 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { log } from '@/lib/lesson-logger';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 const openai = new OpenAI({ 
   apiKey: process.env.OPENAI_API_KEY 
@@ -862,6 +865,53 @@ export async function POST(request) {
     console.log(`   🎯 Qualidade: ${metrics.quality.score}%`);
     console.log(`   💰 Custo: R$ ${responseData.usage.costEstimate}`);
     
+    // Salvar no banco Neon (PostgreSQL)
+    try {
+      console.log('💾 Saving lesson to Neon database:', responseData.lesson.id);
+      
+      const savedLesson = await prisma.lessons.create({
+        data: {
+          id: responseData.lesson.id,
+          title: responseData.lesson.title,
+          subject: responseData.lesson.subject,
+          level: responseData.lesson.level,
+          objective: responseData.lesson.objectives?.join(', ') || '',
+          outline: responseData.lesson.stages?.map(stage => ({
+            etapa: stage.etapa,
+            type: stage.type,
+            route: stage.route
+          })) || [],
+          cards: responseData.lesson.stages?.map(stage => ({
+            type: stage.type,
+            title: stage.etapa,
+            content: stage.activity?.content || '',
+            prompt: stage.activity?.prompt || '',
+            questions: stage.activity?.questions || [],
+            time: stage.activity?.time || 5,
+            points: stage.activity?.points || 0,
+            imageUrl: stage.activity?.imageUrl || null
+          })) || [],
+          user_id: null // Demo lesson
+        }
+      });
+      
+      console.log('✅ Lesson saved to Neon database:', savedLesson.id);
+      
+      log.success('💾 Aula salva no banco Neon', baseContext, {
+        lessonId: savedLesson.id,
+        stagesCount: responseData.lesson.stages?.length || 0,
+        topic: responseData.lesson.title
+      });
+      
+    } catch (dbError) {
+      console.error('❌ Error saving lesson to Neon database:', dbError);
+      log.error('❌ Erro ao salvar aula no banco Neon', baseContext, {
+        error: dbError.message,
+        lessonId: responseData.lesson.id
+      });
+      // Continue even if database save fails
+    }
+
     // Salvar no Neo4j se configurado
     if (process.env.NEO4J_URI && process.env.NEO4J_USER && process.env.NEO4J_PASSWORD) {
       try {

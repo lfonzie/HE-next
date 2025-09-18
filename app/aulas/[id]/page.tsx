@@ -326,12 +326,16 @@ export default function LessonPage() {
     
     if (currentStage < totalStages - 1) {
       setCurrentStage(prev => prev + 1)
+      // Scroll to top when changing slides
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     }
   }
 
   const handlePrevious = () => {
     if (currentStage > 0) {
       setCurrentStage(prev => prev - 1)
+      // Scroll to top when changing slides
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     }
   }
 
@@ -766,6 +770,14 @@ export default function LessonPage() {
                   timeSpent={stageResults.find(sr => sr.stageIndex === currentStage)?.timeSpent || 0}
                   pointsEarned={stageResults.find(sr => sr.stageIndex === currentStage)?.pointsEarned || 0}
                   lessonTheme={lessonData?.metadata?.subject || 'education'}
+                  lessonData={lessonData ? {
+                    title: lessonData.title,
+                    totalPoints,
+                    totalTimeSpent,
+                    stageResults
+                  } : undefined}
+                  onRestart={handleRestart}
+                  onNewLesson={() => router.push('/aulas')}
                 />
               );
             })()}
