@@ -33,6 +33,11 @@ export class EnemScoringEngine {
    * Calculate comprehensive score for a session
    */
   async calculateScore(sessionId: string): Promise<ScoringResult> {
+    // Check if this is a local session (starts with 'local_')
+    if (sessionId.startsWith('local_') || sessionId.startsWith('session_')) {
+      throw new Error('Cannot calculate score for local sessions - no database data available');
+    }
+
     // Get session responses
     const responses = await prisma.enem_response.findMany({
       where: { session_id: sessionId },

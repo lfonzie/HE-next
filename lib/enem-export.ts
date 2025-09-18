@@ -34,6 +34,11 @@ export class EnemExportService {
    * Gather all data needed for export
    */
   private async gatherExportData(sessionId: string): Promise<EnemExportData> {
+    // Check if this is a local session (starts with 'local_')
+    if (sessionId.startsWith('local_') || sessionId.startsWith('session_')) {
+      throw new Error('Cannot export local sessions - no database data available');
+    }
+
     // Get session
     const session = await prisma.enem_session.findUnique({
       where: { session_id: sessionId }

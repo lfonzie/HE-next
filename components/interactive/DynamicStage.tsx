@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { CheckCircle, Clock, Star, Trophy, XCircle } from 'lucide-react'
+import MarkdownRenderer from '@/components/ui/MarkdownRenderer'
 
 interface StageActivity {
   component: string
@@ -59,6 +60,7 @@ interface DynamicStageProps {
   timeSpent?: number
   pointsEarned?: number
   lessonTheme?: string
+  isLoading?: boolean
 }
 
 export default function DynamicStage({
@@ -72,7 +74,8 @@ export default function DynamicStage({
   canGoPrevious = true,
   timeSpent = 0,
   pointsEarned = 0,
-  lessonTheme = 'education'
+  lessonTheme = 'education',
+  isLoading = false
 }: DynamicStageProps) {
   const [isCompleted, setIsCompleted] = useState(false)
   const [stageResult, setStageResult] = useState<any>(null)
@@ -130,6 +133,25 @@ export default function DynamicStage({
   }
 
   const renderActivity = () => {
+    // Show loading state if isLoading is true
+    if (isLoading) {
+      return (
+        <Card className="w-full max-w-4xl mx-auto">
+          <CardContent className="p-8 text-center">
+            <div className="space-y-4">
+              <div className="flex justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-700">Carregando conteúdo...</h3>
+              <p className="text-gray-600">
+                Preparando o slide {stageIndex + 1} para você.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+
     // Add defensive checks for stage and activity
     if (!stage) {
       console.error('[ERROR] Stage is undefined:', stage);
@@ -145,34 +167,29 @@ export default function DynamicStage({
       );
     }
 
-    if (!stage.activity) {
-      console.error('[ERROR] Stage missing activity property:', stage);
-      return (
-        <Card className="w-full max-w-2xl mx-auto">
-          <CardContent className="p-6">
-            <div className="text-center text-orange-600">
-              <h3 className="text-lg font-semibold mb-2">Erro: Atividade não encontrada</h3>
-              <p className="text-sm">Esta etapa não possui uma atividade definida.</p>
-            </div>
-          </CardContent>
-        </Card>
-      );
+    // Handle missing activity by creating a default one
+    let activity = stage.activity;
+    if (!activity) {
+      console.warn('[WARN] Stage missing activity property, creating default:', stage);
+      activity = {
+        component: 'ContentComponent',
+        content: stage.content || 'Conteúdo não disponível para esta etapa.',
+        time: 5,
+        points: 5,
+        imageUrl: stage.imageUrl || null
+      };
     }
 
-    const { activity } = stage;
-
+    // Handle missing component by defaulting to ContentComponent
     if (!activity.component) {
-      console.error('[ERROR] Activity missing component:', activity);
-      return (
-        <Card className="w-full max-w-2xl mx-auto">
-          <CardContent className="p-6">
-            <div className="text-center text-orange-600">
-              <h3 className="text-lg font-semibold mb-2">Erro: Componente não especificado</h3>
-              <p className="text-sm">A atividade não possui um componente definido.</p>
-            </div>
-          </CardContent>
-        </Card>
-      );
+      console.warn('[WARN] Activity missing component, defaulting to ContentComponent:', activity);
+      activity.component = 'ContentComponent';
+    }
+
+    // Handle missing content
+    if (!activity.content && !activity.prompt) {
+      console.warn('[WARN] Activity missing content, using stage title:', activity);
+      activity.content = stage.etapa || 'Conteúdo não disponível';
     }
 
     console.log('[DEBUG] Rendering activity:', { component: activity.component, stage: stage.etapa });
@@ -181,21 +198,15 @@ export default function DynamicStage({
       case 'QuizComponent':
         // Convert old format to new format
         const enhancedQuestions = (activity.questions || []).map((q: any) => ({
-          id: q.id || `q_${Math.random()}`,
-          question: q.q || q.question || 'Pergunta não disponível',
-          options: {
-            A: q.options?.[0] || q.a || 'Opção A',
-            B: q.options?.[1] || q.b || 'Opção B', 
-            C: q.options?.[2] || q.c || 'Opção C',
-            D: q.options?.[3] || q.d || 'Opção D'
-          },
-          correctAnswer: typeof q.correct === 'string' ? q.correct.toUpperCase() : 
-                        typeof q.correct === 'number' ? ['A', 'B', 'C', 'D'][q.correct] : 'A',
-          explanation: q.explanation || 'Explicação não disponível',
-          difficulty: q.difficulty || 'MEDIUM',
-          points: q.points || 10,
-          timeEstimate: q.timeEstimate || 30,
-          hint: q.hint
+          q: q.q || q.question || 'Pergunta não disponível',
+          options: q.options || [
+            q.a || 'Opção A',
+            q.b || 'Opção B', 
+            q.c || 'Opção C',
+            q.d || 'Opção D'
+          ],
+          correct: q.correct || 0,
+          explanation: q.explanation || 'Explicação não disponível'
         }))
 
         return (
@@ -223,6 +234,46 @@ export default function DynamicStage({
             allowUpload={true}
             showColorPicker={true}
           />
+        )
+
+      case 'ContentComponent':
+        return (
+          <Card className="w-full max-w-4xl mx-auto">
+            <CardHeader>
+              <CardTitle className="text-xl font-bold text-gray-900">
+                {stage.etapa}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="prose max-w-none">
+                <MarkdownRenderer 
+                  content={activity.content || ''} 
+                  className="text-gray-700 leading-relaxed"
+                />
+              </div>
+              
+              {/* Show image if available */}
+              {activity.imageUrl && (
+                <div className="mt-6">
+                  <img 
+                    src={activity.imageUrl} 
+                    alt={stage.etapa}
+                    className="w-full max-w-2xl mx-auto rounded-lg shadow-md"
+                  />
+                </div>
+              )}
+              
+              {/* Auto-complete after a short delay for content slides */}
+              <div className="mt-6 text-center">
+                <Button
+                  onClick={() => handleStageComplete({ type: 'content' })}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  Continuar
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         )
 
       case 'AnimationSlide':
@@ -338,14 +389,109 @@ export default function DynamicStage({
           </Card>
         )
 
+      case 'ClosingComponent':
+      case 'closing':
+        return (
+          <Card className="w-full max-w-4xl mx-auto border-green-200 bg-green-50">
+            <CardHeader>
+              <CardTitle className="text-2xl font-bold text-green-800 text-center">
+                🎉 {stage.etapa}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="prose max-w-none text-center">
+                <MarkdownRenderer 
+                  content={activity.content || 'Parabéns! Você completou esta aula com sucesso!'} 
+                  className="text-green-700 leading-relaxed"
+                />
+              </div>
+              
+              {/* Show image if available */}
+              {activity.imageUrl && (
+                <div className="mt-6">
+                  <img 
+                    src={activity.imageUrl} 
+                    alt={stage.etapa}
+                    className="w-full max-w-2xl mx-auto rounded-lg shadow-md"
+                  />
+                </div>
+              )}
+              
+              {/* Completion button */}
+              <div className="mt-6 text-center">
+                <Button
+                  onClick={() => handleStageComplete({ type: 'closing' })}
+                  className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-lg"
+                >
+                  Finalizar Aula
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )
+
       default:
         console.warn('[WARN] Unknown activity component:', activity.component);
+        console.warn('[WARN] Full activity data:', activity);
+        console.warn('[WARN] Full stage data:', stage);
+        
+        // Try to render as ContentComponent if it's a content-type slide
+        if (activity.component === 'ContentComponent' || 
+            activity.component === 'content' || 
+            activity.component === 'explanation' ||
+            !activity.component) {
+          return (
+            <Card className="w-full max-w-4xl mx-auto">
+              <CardHeader>
+                <CardTitle className="text-xl font-bold text-gray-900">
+                  {stage.etapa}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="prose max-w-none">
+                  <MarkdownRenderer 
+                    content={activity.content || ''} 
+                    className="text-gray-700 leading-relaxed"
+                  />
+                </div>
+                
+                {/* Show image if available */}
+                {activity.imageUrl && (
+                  <div className="mt-6">
+                    <img 
+                      src={activity.imageUrl} 
+                      alt={stage.etapa}
+                      className="w-full max-w-2xl mx-auto rounded-lg shadow-md"
+                    />
+                  </div>
+                )}
+                
+                {/* Auto-complete after a short delay for content slides */}
+                <div className="mt-6 text-center">
+                  <Button
+                    onClick={() => handleStageComplete({ type: 'content' })}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    Continuar
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        }
+        
         return (
           <Card className="w-full max-w-2xl mx-auto">
             <CardContent className="p-6">
               <div className="text-center text-orange-600">
                 <h3 className="text-lg font-semibold mb-2">Componente não suportado</h3>
                 <p className="text-sm mb-4">Tipo: {activity.component}</p>
+                <div className="text-xs text-gray-500 mb-4">
+                  <p>Debug info:</p>
+                  <p>Stage: {stage.etapa}</p>
+                  <p>Activity component: {activity.component}</p>
+                  <p>Activity content: {activity.content ? 'Present' : 'Missing'}</p>
+                </div>
                 {activity.content && (
                   <div className="prose max-w-none text-left">
                     <p>{activity.content}</p>

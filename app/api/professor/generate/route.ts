@@ -5,18 +5,15 @@ import { openai, selectModel, getModelConfig } from '@/lib/openai'
 
 export async function POST(request: NextRequest) {
   try {
-    // Verificar autenticação usando NextAuth
+    // Verificar autenticação usando NextAuth - OBRIGATÓRIO
     const session = await getServerSession(authOptions)
     
-    // Para desenvolvimento, permitir acesso sem sessão
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🔓 Development mode: Skipping authentication')
-    } else if (!session) {
+    if (!session) {
       console.log('❌ No valid session found')
       return NextResponse.json({ error: 'Unauthorized - Please log in' }, { status: 401 })
-    } else {
-      console.log('✅ Authenticated user:', session.user?.email)
     }
+    
+    console.log('✅ Authenticated user:', session.user?.email)
 
     const { query, subject, sessionInfo } = await request.json()
     

@@ -28,11 +28,11 @@ const getAvailableProviders = () => Object.keys(PROVIDER_MODELS)
 
 export async function POST(request: NextRequest) {
   try {
-    // Verificar autenticação (desabilitado temporariamente para desenvolvimento)
+    // Verificar autenticação - OBRIGATÓRIO
     const session = await getServerSession(authOptions)
-    // if (!session) {
-    //   return new Response('Unauthorized', { status: 401 })
-    // }
+    if (!session) {
+      return new Response('Unauthorized', { status: 401 })
+    }
 
     const { messages, module, provider, complexity } = await request.json()
 

@@ -4,11 +4,11 @@ import { unsplashService } from '@/lib/unsplash';
 
 export async function GET(request: NextRequest) {
   try {
-    // Verify authentication (temporarily disabled for development)
-    // const session = await auth();
-    // if (!session?.user) {
-    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    // }
+    // Verify authentication - OBRIGATÓRIO
+    const session = await auth();
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     const { searchParams } = new URL(request.url);
     const prompt = searchParams.get('prompt');

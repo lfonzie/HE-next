@@ -40,6 +40,10 @@ export const authOptions: NextAuthOptions = {
     error: (code, metadata) => {
       if (isDevelopment) {
         console.error('NextAuth error:', code, metadata)
+        // Log mais detalhado para debugging
+        if (code === 'JW' || code?.includes('JWT')) {
+          console.error('JWT Error details:', { code, metadata, timestamp: new Date().toISOString() })
+        }
       }
     },
     warn: (code, metadata) => {

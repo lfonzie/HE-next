@@ -2,6 +2,7 @@
 
 'use client';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -66,6 +67,7 @@ interface GeneratedLesson {
 }
 
 export default function AulasPage() {
+  const router = useRouter();
   const [topic_226, setTopic] = useState('');
   const [schoolId, setSchoolId] = useState('');
   const [mode, setMode] = useState('sync');
@@ -116,7 +118,8 @@ export default function AulasPage() {
     if (lesson) {
       // Salvar no localStorage para navegação
       localStorage.setItem(`lesson_${lesson.id}`, JSON.stringify(lesson));
-      window.location.href = `/aulas/${lesson.id}`;
+      // Usar router do Next.js para preservar a sessão de autenticação
+      router.push(`/aulas/${lesson.id}`);
     }
   };
 

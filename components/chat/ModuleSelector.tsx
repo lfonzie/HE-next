@@ -17,7 +17,7 @@ const MODULES = [
   { id: "rh", name: "RH", iconKey: "rh", color: "#8b5cf6" },
   { id: "financeiro", name: "Financeiro", iconKey: "financeiro", color: "#10b981" },
   { id: "social-media", name: "Social Media", iconKey: "social-media", color: "#ec4899" },
-  { id: "bem-estar", name: "Bem-Estar", iconKey: "bem-estar", color: "#f97316" },
+  { id: "wellbeing", name: "Bem-Estar", iconKey: "bem-estar", color: "#f97316" },
   { id: "coordenacao", name: "Coordenação", iconKey: "coordenacao", color: "#6366f1" },
   { id: "secretaria", name: "Secretaria", iconKey: "secretaria", color: "#059669" },
 ];

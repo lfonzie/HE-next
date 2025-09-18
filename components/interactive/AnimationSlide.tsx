@@ -63,6 +63,18 @@ export default function AnimationSlide({
     isFirstSlide || isLastSlide
   )
 
+  // Debug logging to help identify the issue
+  useEffect(() => {
+    console.log('[AnimationSlide] Image state:', {
+      imageQuery,
+      isFirstSlide,
+      isLastSlide,
+      imageLoading,
+      hasUnsplashImage: !!unsplashImage,
+      unsplashImageType: typeof unsplashImage
+    })
+  }, [imageQuery, isFirstSlide, isLastSlide, imageLoading, unsplashImage])
+
   // Auto-play effect
   useEffect(() => {
     if (isPlaying && animationSteps.length > 0) {
@@ -182,30 +194,34 @@ export default function AnimationSlide({
                 ) : (
                   // Use Unsplash for first/last slides (original behavior)
                   <>
-                    {imageLoading ? (
+                    {imageLoading || !unsplashImage ? (
                       <div className="w-full h-48 bg-gray-200 rounded-lg animate-pulse flex items-center justify-center">
-                        <span className="text-gray-500">Loading image...</span>
+                        <span className="text-gray-500">
+                          {imageLoading ? 'Loading image...' : 'No image available'}
+                        </span>
                       </div>
                     ) : (
-                      <EnhancedImage
-                        src={unsplashImage.urls.regular}
-                        alt={unsplashImage.alt_description || `${lessonTheme} image`}
-                        title={`Photo by ${unsplashImage.user.name}`}
-                        width={800}
-                        height={400}
-                        className="w-full h-48"
-                        priority={isFirstSlide}
-                        quality={85}
-                        placeholder="blur"
-                        showRelevanceInfo={true}
-                        theme={lessonTheme}
-                        englishTheme={lessonTheme}
-                        fallback={false}
-                      />
+                      <>
+                        <EnhancedImage
+                          src={unsplashImage.urls.regular}
+                          alt={unsplashImage.alt_description || `${lessonTheme} image`}
+                          title={`Photo by ${unsplashImage.user.name}`}
+                          width={800}
+                          height={400}
+                          className="w-full h-48"
+                          priority={isFirstSlide}
+                          quality={85}
+                          placeholder="blur"
+                          showRelevanceInfo={true}
+                          theme={lessonTheme}
+                          englishTheme={lessonTheme}
+                          fallback={false}
+                        />
+                        <div className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                          Photo by {unsplashImage.user.name}
+                        </div>
+                      </>
                     )}
-                    <div className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
-                      Photo by {unsplashImage.user.name}
-                    </div>
                   </>
                 )}
               </div>

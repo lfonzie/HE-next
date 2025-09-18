@@ -464,11 +464,11 @@ export function EnemCustomizer({ onBack, onStart, isCreating = false }: EnemCust
             </div>
             <Button 
               onClick={handleStartExam}
-              disabled={isGenerating}
+              disabled={isCreating}
               className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50"
               size="lg"
             >
-              {isGenerating ? (
+              {isCreating ? (
                 <>
                   <Loader2 className="h-5 w-5 mr-2 animate-spin" />
                   Gerando...

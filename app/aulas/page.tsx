@@ -1,13 +1,16 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2, Sparkles, BookOpen, Target, Users, Send, Lightbulb, TrendingUp, AlertCircle, CheckCircle, Clock, RefreshCw, Timer, BarChart3, FileText, AlertTriangle, Mic, Volume2, Accessibility } from 'lucide-react'
+import { Loader2, Sparkles, BookOpen, Target, Users, Send, Lightbulb, TrendingUp, AlertCircle, CheckCircle, Clock, RefreshCw, Timer, BarChart3, FileText, AlertTriangle, Mic, Volume2, Accessibility, Star, Bug } from 'lucide-react'
 import { useDynamicSuggestions } from '@/hooks/useDynamicSuggestions'
+import { SessionGuard } from '@/components/auth/SessionGuard'
+import { LessonDebugger } from '@/components/debug/LessonDebugger'
 
 // Mock components for demo (replace with actual imports)
 const toast = {
@@ -43,21 +46,41 @@ const LessonProgress = ({ progress, status, isGenerating, elapsedTime, className
   }
 
   return (
-    <div className={`space-y-4 ${className}`}>
-      <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-        <div 
-          className="bg-blue-600 h-3 rounded-full transition-all duration-300 ease-out"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          {isGenerating && <Loader2 className="h-4 w-4 animate-spin" />}
-          <span className="text-sm text-gray-600">{status}</span>
+    <div className={`min-h-[400px] flex items-center justify-center ${className}`}>
+      <div className="text-center space-y-6">
+        <div className="flex justify-center">
+          <div className="h-16 w-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center animate-pulse">
+            <BookOpen className="h-8 w-8 text-white" />
+          </div>
         </div>
-        <div className="flex items-center gap-1 text-sm text-blue-600 font-medium">
-          <Timer className="h-4 w-4" />
-          <span>{formatTime(elapsedTime)}</span>
+        
+        <div className="space-y-2">
+          <h2 className="text-2xl font-bold text-gray-900">
+            Preparando sua aula...
+          </h2>
+          <p className="text-gray-600">
+            {status}
+          </p>
+        </div>
+        
+        <div className="w-64 mx-auto space-y-2">
+          <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+            <div 
+              className="bg-blue-600 h-3 rounded-full transition-all duration-300 ease-out"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <div className="flex items-center justify-between text-sm text-gray-600">
+            <span>{progress}%</span>
+            <div className="flex items-center gap-1">
+              <Timer className="h-4 w-4" />
+              <span>{formatTime(elapsedTime)}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="flex justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
         </div>
       </div>
     </div>
@@ -147,6 +170,22 @@ interface GeneratedLesson {
   feedback: any
   demoMode?: boolean
   createdAt: string
+  metadata?: {
+    subject: string
+    grade: string
+    duration: string
+    difficulty: string
+    tags: string[]
+    status?: string
+    backgroundGenerationStarted?: boolean
+    initialSlidesLoaded?: number
+    totalSlides?: number
+    backgroundGenerationTimestamp?: string
+    backgroundGenerationCompleted?: boolean
+    backgroundGenerationCompletedTimestamp?: string
+    totalSlidesGenerated?: number
+    allSlidesLoaded?: boolean
+  }
   pacingMetrics?: {
     totalTokens: number
     totalWords: number
@@ -162,6 +201,7 @@ interface FormData {
   topic: string
   targetLevel?: string
   focusArea?: string
+  schoolId?: string
 }
 
 interface FormErrors {
@@ -190,6 +230,9 @@ const STATUS_MESSAGES = [
  * Enhanced AulasPage component with improved UX, performance, and accessibility
  */
 export default function AulasPage() {
+  // Router para navegação
+  const router = useRouter()
+  
   // State management
   const [isGenerating, setIsGenerating] = useState(false)
   const [generatedLesson, setGeneratedLesson] = useState<GeneratedLesson | null>(null)
@@ -202,6 +245,7 @@ export default function AulasPage() {
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [startTime, setStartTime] = useState<number | null>(null)
   const [elapsedTime, setElapsedTime] = useState(0)
+  const [showDebugger, setShowDebugger] = useState(false)
 
   // Usar sugestões dinâmicas do Gemini
   const { suggestions, loading: suggestionsLoading, error: suggestionsError, refreshSuggestions } = useDynamicSuggestions()
@@ -345,29 +389,40 @@ export default function AulasPage() {
 
       const lessonData = {
         ...skeleton,
+        id: skeleton.id, // Ensure the ID is preserved
         stages: updatedStages,
         slides: initialSlides,
         metadata: {
           ...skeleton.metadata,
           status: 'initial_ready',
           initialSlidesLoaded: 2,
-          totalSlides: 14
+          totalSlides: 14,
+          backgroundGenerationStarted: true,
+          backgroundGenerationTimestamp: new Date().toISOString()
         }
       }
 
+      // Log lesson data for debugging
+      console.log('📋 Lesson data created with ID:', lessonData.id)
+      console.log('🔍 Full lesson data:', lessonData)
+
       setGenerationProgress(80)
-      setGenerationStatus('Finalizando preparação...')
+      setGenerationStatus('Carregando todos os slides...')
       
+      // Step 4: Set the initial lesson data first
       setGeneratedLesson(lessonData)
+      console.log('🎯 Initial lesson set with ID:', lessonData.id)
+      
+      // Step 5: Load ALL remaining slides before showing the lesson
+      await loadRemainingSlides(topic, lessonData)
+      
+      // Verify lesson was set with proper ID
+      console.log('✅ Lesson generation completed, final lesson ID:', lessonData.id)
+      
       setGenerationProgress(100)
-      setGenerationStatus('Aula inicial pronta!')
+      setGenerationStatus('Aula completa pronta!')
       
-      toast.success('Aula inicial carregada! Os demais slides serão carregados conforme necessário.')
-      
-      // Step 4: Start background loading of remaining slides
-      setTimeout(() => {
-        loadRemainingSlides(topic, lessonData)
-      }, 1000)
+      toast.success('Aula completa carregada!')
 
     } catch (error) {
       console.error('Error generating lesson:', error)
@@ -379,24 +434,41 @@ export default function AulasPage() {
     }
   }, [formData.topic, formData.schoolId, validateForm])
 
-  // Background loading of remaining slides
+  // Background loading of remaining slides - AGUARDA TODOS OS SLIDES CARREGAREM
   const loadRemainingSlides = useCallback(async (topic: string, lessonData: any) => {
     try {
-      setGenerationStatus('Carregando slides restantes em segundo plano...')
+      setGenerationStatus('Carregando todos os slides...')
       
       // Load slides 3-14 in batches
       const slidePromises = []
       for (let i = 3; i <= 14; i++) {
+        const requestBody = { 
+          topic, 
+          slideNumber: i, 
+          schoolId: formData.schoolId 
+        };
+        
+        // Validate request body before sending
+        if (!topic || !i) {
+          console.error(`❌ Invalid request body for slide ${i}:`, requestBody);
+          continue;
+        }
+        
         slidePromises.push(
           fetch('/api/aulas/next-slide', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-              topic, 
-              slideNumber: i, 
-              schoolId: formData.schoolId 
-            })
-          }).then(res => res.json())
+            body: JSON.stringify(requestBody)
+          }).then(res => {
+            if (!res.ok) {
+              console.error(`❌ Failed to load slide ${i}:`, res.status, res.statusText);
+              return { error: `Failed to load slide ${i}` };
+            }
+            return res.json();
+          }).catch(error => {
+            console.error(`❌ Error loading slide ${i}:`, error);
+            return { error: `Error loading slide ${i}: ${error.message}` };
+          })
         )
       }
 
@@ -408,12 +480,27 @@ export default function AulasPage() {
       
       results.forEach((result, index) => {
         const slideNumber = index + 3
+        console.log(`🔍 Processing slide ${slideNumber}:`, {
+          status: result.status,
+          hasValue: result.status === 'fulfilled' && !!result.value,
+          hasSuccess: result.status === 'fulfilled' && result.value?.success,
+          hasSlide: result.status === 'fulfilled' && !!result.value?.slide
+        })
+        
         if (result.status === 'fulfilled' && result.value.success) {
           const slide = result.value.slide
+          console.log(`✅ Adding slide ${slideNumber}:`, {
+            number: slide.number,
+            title: slide.title,
+            hasContent: !!slide.content,
+            contentLength: slide.content?.length
+          })
+          
           loadedSlides.push(slide)
           
           // Update the corresponding stage
           if (updatedStages[slideNumber - 1]) {
+            console.log(`🔄 Updating stage ${slideNumber - 1} for slide ${slideNumber}`)
             updatedStages[slideNumber - 1] = {
               ...updatedStages[slideNumber - 1],
               activity: {
@@ -425,21 +512,44 @@ export default function AulasPage() {
               },
               loading: false
             }
+          } else {
+            console.error(`❌ No stage found for slide ${slideNumber} (index ${slideNumber - 1})`)
           }
+        } else {
+          console.error(`❌ Failed to process slide ${slideNumber}:`, result)
         }
       })
 
       // Update the lesson with all loaded slides
-      setGeneratedLesson(prev => ({
-        ...prev,
-        stages: updatedStages,
-        slides: loadedSlides,
-        metadata: {
-          ...prev?.metadata,
-          status: 'complete',
-          allSlidesLoaded: true
+      console.log('🔄 Updating lesson with loaded slides:', {
+        totalSlides: loadedSlides.length,
+        totalStages: updatedStages.length,
+        slidesLoaded: loadedSlides.map(s => s.number),
+        stagesUpdated: updatedStages.map((s, i) => ({ index: i, loading: s.loading }))
+      })
+      
+      setGeneratedLesson(prev => {
+        const updatedLesson = {
+          ...prev,
+          id: prev?.id, // Ensure ID is preserved
+          stages: updatedStages,
+          slides: loadedSlides,
+          metadata: {
+            ...prev?.metadata,
+            status: 'complete',
+            allSlidesLoaded: true
+          }
         }
-      }))
+        
+        console.log('✅ Final lesson state:', {
+          id: updatedLesson.id,
+          stagesCount: updatedLesson.stages?.length,
+          slidesCount: updatedLesson.slides?.length,
+          stages: updatedLesson.stages?.map((s, i) => ({ index: i, loading: s.loading, hasContent: !!s.activity?.content }))
+        })
+        
+        return updatedLesson
+      })
 
       setGenerationStatus('Todos os slides carregados!')
       toast.success('Aula completa carregada!')
@@ -471,20 +581,60 @@ export default function AulasPage() {
   }, [isGenerating, handleGenerate])
 
   const handleStartLesson = () => {
+    console.log('🔍 handleStartLesson called')
+    console.log('🔍 generatedLesson state:', generatedLesson)
+    console.log('🔍 generatedLesson type:', typeof generatedLesson)
+    console.log('🔍 generatedLesson keys:', generatedLesson ? Object.keys(generatedLesson) : 'null')
+    
     if (!generatedLesson) {
       console.error('Nenhuma aula gerada para iniciar')
       toast.error('Nenhuma aula foi gerada ainda')
       return
     }
     
-    console.log('Iniciando aula com ID:', generatedLesson.id)
-    console.log('Dados da aula:', generatedLesson)
+    console.log('🚀 Iniciando aula com ID:', generatedLesson.id)
+    console.log('📊 Dados da aula:', generatedLesson)
+    
+    // Verificar se o ID existe e é válido
+    const lessonId = (generatedLesson as any)?.id
+    console.log('🔍 Extracted lessonId:', lessonId)
+    console.log('🔍 lessonId type:', typeof lessonId)
+    
+    if (!lessonId || lessonId === '') {
+      console.error('❌ ID da aula inválido:', lessonId)
+      console.error('❌ Full generatedLesson object:', JSON.stringify(generatedLesson, null, 2))
+      toast.error('ID da aula inválido. Tente gerar uma nova aula.')
+      return
+    }
+    
+    // Salvar aula no localStorage para modo demo
+    try {
+      localStorage.setItem(`demo_lesson_${lessonId}`, JSON.stringify(generatedLesson))
+      console.log('💾 Aula salva no localStorage:', lessonId)
+    } catch (storageError) {
+      console.warn('⚠️ Erro ao salvar no localStorage:', storageError)
+    }
     
     // Aula gerada e salva no banco de dados
-    console.log('Aula gerada e salva no banco de dados:', generatedLesson.id)
+    console.log('✅ Aula gerada e salva no banco de dados:', lessonId)
     
-    // Navegar para a página da aula
-    window.location.href = `/aulas/${(generatedLesson as any)?.id || ""}`
+    try {
+      const targetUrl = `/aulas/${lessonId}`
+      console.log('🎯 Navegando para:', targetUrl)
+      
+      // Navegar para a página da aula usando router do Next.js
+      // Isso preserva a sessão de autenticação
+      router.push(targetUrl)
+      
+      // Log adicional para debug
+      setTimeout(() => {
+        console.log('📍 Verificando navegação após 1s...')
+      }, 1000)
+      
+    } catch (error) {
+      console.error('❌ Erro ao navegar para a aula:', error)
+      toast.error('Erro ao iniciar a aula. Tente novamente.')
+    }
   }
 
   const handleSaveLesson = async () => {
@@ -500,7 +650,8 @@ export default function AulasPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl" role="main">
+    <SessionGuard>
+      <div className="container mx-auto px-4 py-8 max-w-6xl" role="main">
       {/* Header quando aula foi gerada */}
       {generatedLesson && (
         <header className="text-center mb-8">
@@ -537,6 +688,14 @@ export default function AulasPage() {
               <Users className="h-4 w-4" />
               Iniciar Aula
             </Button>
+            <Button 
+              onClick={() => setShowDebugger(true)}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <Bug className="h-4 w-4" />
+              Debug
+            </Button>
           </div>
         </header>
       )}
@@ -570,99 +729,11 @@ export default function AulasPage() {
         </header>
       )}
 
-      {/* Educational Methodology Section */}
-      {!isGenerating && !generatedLesson && (
-        <Card className="mb-8 border-2 border-indigo-100 bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50">
-          <CardHeader className="text-center">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
-                <Lightbulb className="h-6 w-6 text-white" />
-              </div>
-              <CardTitle className="text-2xl font-bold text-indigo-800">
-                Metodologia Educacional Avançada
-              </CardTitle>
-            </div>
-            <CardDescription className="text-lg text-indigo-700 max-w-4xl mx-auto">
-              Nossa plataforma utiliza metodologias educacionais comprovadas cientificamente, 
-              priorizando a orientação socrática e o desenvolvimento do pensamento crítico.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-              <div className="text-center p-4 bg-white/60 rounded-xl border border-indigo-200">
-                <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Target className="h-5 w-5 text-white" />
-                </div>
-                <h3 className="font-semibold text-gray-900 mb-2">Método Socrático</h3>
-                <p className="text-sm text-gray-600">
-                  Guiamos você através de perguntas que estimulam o raciocínio, 
-                  em vez de fornecer respostas diretas.
-                </p>
-              </div>
-              <div className="text-center p-4 bg-white/60 rounded-xl border border-indigo-200">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Users className="h-5 w-5 text-white" />
-                </div>
-                <h3 className="font-semibold text-gray-900 mb-2">Tutor Personalizado</h3>
-                <p className="text-sm text-gray-600">
-                  IA disponível 24/7 que se adapta ao seu ritmo e estilo de aprendizado único.
-                </p>
-              </div>
-              <div className="text-center p-4 bg-white/60 rounded-xl border border-indigo-200">
-                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <BookOpen className="h-5 w-5 text-white" />
-                </div>
-                <h3 className="font-semibold text-gray-900 mb-2">Multidisciplinar</h3>
-                <p className="text-sm text-gray-600">
-                  Matemática, ciências, humanidades, programação e estudos sociais em uma só plataforma.
-                </p>
-              </div>
-            </div>
-            
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
-              <h4 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
-                <AlertCircle className="h-5 w-5" />
-                Como Funciona Nossa Abordagem Educacional
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-800">
-                <div className="space-y-2">
-                  <div className="flex items-start gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span><strong>Orientação Guiada:</strong> Fazemos perguntas que levam você à descoberta</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span><strong>Feedback Imediato:</strong> Correções e orientações em tempo real</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span><strong>Aprendizagem Ativa:</strong> Você é o protagonista do seu aprendizado</span>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-start gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span><strong>Adaptação Personalizada:</strong> Conteúdo que se ajusta ao seu ritmo</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span><strong>Pensamento Crítico:</strong> Desenvolvemos habilidades analíticas</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span><strong>Retenção de Conhecimento:</strong> Metodologia comprovada cientificamente</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
 
 
       {/* Enhanced Suggestions - Oculto durante carregamento E quando aula foi gerada */}
-      {!isGenerating && !generatedLesson && (
+      {!generatedLesson && (
         <Card className="border-2 border-blue-100 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 mb-8">
         <CardHeader className="text-center pb-4">
           <div className="flex items-center justify-center gap-3">
@@ -983,7 +1054,7 @@ export default function AulasPage() {
                       </span>
                       <span className="flex items-center gap-1">
                         <Target className="h-4 w-4" />
-                        {generatedLesson.stages.length} etapas
+                        {generatedLesson.stages?.length || 0} etapas
                       </span>
                     </div>
                   </div>
@@ -994,7 +1065,7 @@ export default function AulasPage() {
                       Objetivos de Aprendizagem:
                     </h4>
                     <ul className="space-y-2">
-                      {generatedLesson.objectives.map((objective: string, index: number) => (
+                      {(generatedLesson.objectives || []).map((objective: string, index: number) => (
                         <li key={index} className="flex items-start gap-2 text-sm">
                           <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" />
                           <span className="text-gray-700">{objective}</span>
@@ -1008,21 +1079,14 @@ export default function AulasPage() {
                       <BookOpen className="h-4 w-4 text-purple-600" />
                       Estrutura da Aula:
                     </h4>
-                    <div className="space-y-3">
-                      {generatedLesson.stages.map((stage: any, index: number) => (
-                        <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                          <div className="w-8 h-8 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center flex-shrink-0">
-                            <span className="text-xs font-bold text-white">{index + 1}</span>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm text-gray-900 truncate">{stage.etapa}</p>
-                            <div className="flex items-center gap-2 mt-1">
-                              <Badge variant="secondary" className="text-xs">{stage.type}</Badge>
-                              <span className="text-xs text-gray-500">{stage.estimatedTime} min</span>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
+                    <div className="text-center p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-200">
+                      <div className="flex items-center justify-center gap-2 mb-2">
+                        <Target className="h-5 w-5 text-purple-600" />
+                        <span className="font-medium text-purple-800">{generatedLesson.stages?.length || 0} etapas interativas</span>
+                      </div>
+                      <p className="text-sm text-purple-700">
+                        Aula completa com conteúdo personalizado e atividades adaptadas ao seu nível
+                      </p>
                     </div>
                   </div>
 
@@ -1064,6 +1128,19 @@ export default function AulasPage() {
       {/* Aula Gerada - Layout completo quando aula está presente */}
       {generatedLesson && (
         <div className="max-w-4xl mx-auto">
+          {/* Debug info */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="mb-4 p-4 bg-gray-100 rounded-lg text-xs">
+              <strong>Debug Info:</strong>
+              <br />ID: {generatedLesson.id}
+              <br />Stages: {generatedLesson.stages?.length || 0}
+              <br />Slides: {generatedLesson.slides?.length || 0}
+              <br />Status: {generatedLesson.metadata?.status}
+              <br />All Slides Loaded: {generatedLesson.metadata?.allSlidesLoaded ? 'Yes' : 'No'}
+              <br />Stages Loading Status: {generatedLesson.stages?.map((s, i) => `${i+1}:${s.loading ? 'L' : 'R'}`).join(', ')}
+            </div>
+          )}
+          
           <Card className="border-2 border-green-200 bg-gradient-to-br from-green-50 to-blue-50">
             <CardContent className="p-8">
               <div className="space-y-8">
@@ -1085,7 +1162,7 @@ export default function AulasPage() {
                     </span>
                     <span className="flex items-center gap-1">
                       <Target className="h-4 w-4" />
-                      {generatedLesson.stages.length} etapas
+                      {generatedLesson.stages?.length || 0} etapas
                     </span>
                   </div>
                 </div>
@@ -1097,7 +1174,7 @@ export default function AulasPage() {
                     Objetivos de Aprendizagem
                   </h3>
                   <ul className="space-y-3">
-                    {generatedLesson.objectives.map((objective: string, index: number) => (
+                    {(generatedLesson.objectives || []).map((objective: string, index: number) => (
                       <li key={index} className="flex items-start gap-3">
                         <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
                         <span className="text-gray-700">{objective}</span>
@@ -1112,21 +1189,28 @@ export default function AulasPage() {
                     <BookOpen className="h-5 w-5 text-purple-600" />
                     Estrutura da Aula
                   </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {generatedLesson.stages.map((stage: any, index: number) => (
-                      <div key={index} className="flex items-center gap-4 p-4 bg-white rounded-lg border border-gray-200">
-                        <div className="w-10 h-10 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center flex-shrink-0">
-                          <span className="text-sm font-bold text-white">{index + 1}</span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-gray-900">{stage.etapa}</p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Badge variant="secondary" className="text-xs">{stage.type}</Badge>
-                            <span className="text-xs text-gray-500">{stage.estimatedTime} min</span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                  <div className="text-center p-6 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-200">
+                    <div className="flex items-center justify-center gap-3 mb-3">
+                      <Target className="h-6 w-6 text-purple-600" />
+                      <span className="text-xl font-semibold text-purple-800">{generatedLesson.stages?.length || 0} etapas interativas</span>
+                    </div>
+                    <p className="text-purple-700 mb-4">
+                      Aula completa com conteúdo personalizado e atividades adaptadas ao seu nível
+                    </p>
+                    <div className="flex justify-center gap-4 text-sm text-purple-600">
+                      <span className="flex items-center gap-1">
+                        <BookOpen className="h-4 w-4" />
+                        Conteúdo educacional
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Target className="h-4 w-4" />
+                        Avaliações interativas
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Star className="h-4 w-4" />
+                        Gamificação
+                      </span>
+                    </div>
                   </div>
                 </div>
 
@@ -1161,233 +1245,17 @@ export default function AulasPage() {
         </div>
       )}
 
-      {/* Teacher Assistant Features Section */}
-      {!isGenerating && !generatedLesson && (
-        <Card className="mt-8 border-2 border-orange-100 bg-gradient-to-br from-orange-50 to-yellow-50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-xl">
-              <Users className="h-6 w-6 text-orange-600" />
-              Assistente para Educadores
-            </CardTitle>
-            <CardDescription>
-              Ferramentas gratuitas para professores automatizarem tarefas administrativas e focarem no ensino
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-orange-600 flex-shrink-0 mt-1" />
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Planejamento de Aulas</h4>
-                    <p className="text-sm text-gray-600">Gera planos alinhados a padrões curriculares com diferenciações</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-orange-600 flex-shrink-0 mt-1" />
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Acompanhamento de Progresso</h4>
-                    <p className="text-sm text-gray-600">Resumos em tempo real e análise de trabalhos dos alunos</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-orange-600 flex-shrink-0 mt-1" />
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Recursos Pedagógicos</h4>
-                    <p className="text-sm text-gray-600">Criação de rubricas, bilhetes de saída e agrupamentos</p>
-                  </div>
-                </div>
-              </div>
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-orange-600 flex-shrink-0 mt-1" />
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Comunicação Multilíngue</h4>
-                    <p className="text-sm text-gray-600">Redação de e-mails e newsletters de classe em múltiplos idiomas</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-orange-600 flex-shrink-0 mt-1" />
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Identificação de Lacunas</h4>
-                    <p className="text-sm text-gray-600">Detecção automática de dificuldades de aprendizado</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-orange-600 flex-shrink-0 mt-1" />
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Histórico e Documentos</h4>
-                    <p className="text-sm text-gray-600">Acesso a chats anteriores e materiais salvos</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="mt-6 p-4 bg-gradient-to-r from-orange-50 to-yellow-50 border border-orange-200 rounded-lg">
-              <h4 className="font-semibold text-orange-900 mb-2 flex items-center gap-2">
-                <Lightbulb className="h-4 w-4" />
-                Benefícios para Educadores
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-orange-800">
-                <div className="space-y-1">
-                  <div>• <strong>Produtividade:</strong> Automatiza tarefas administrativas demoradas</div>
-                  <div>• <strong>Personalização:</strong> Sugere diferenciações para grupos diversos</div>
-                  <div>• <strong>Eficiência:</strong> Curva de aprendizado mínima e uso intuitivo</div>
-                </div>
-                <div className="space-y-1">
-                  <div>• <strong>Qualidade:</strong> Ferramentas projetadas por educadores</div>
-                  <div>• <strong>Acesso:</strong> Gratuito para professores em territórios qualificados</div>
-                  <div>• <strong>Integração:</strong> Funciona com recursos existentes da escola</div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Debugger Modal */}
+      {showDebugger && generatedLesson && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <LessonDebugger 
+            lessonId={(generatedLesson as any)?.id || ""} 
+            onClose={() => setShowDebugger(false)}
+          />
+        </div>
       )}
 
-      {/* Ethical AI Guidelines Section */}
-      {!isGenerating && !generatedLesson && (
-        <Card className="mt-8 border-2 border-purple-100 bg-gradient-to-br from-purple-50 to-indigo-50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-xl">
-              <AlertCircle className="h-6 w-6 text-purple-600" />
-              IA Ética e Segura
-            </CardTitle>
-            <CardDescription>
-              Compromisso com práticas educacionais responsáveis e proteção da privacidade
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-purple-600 flex-shrink-0 mt-1" />
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Privacidade Protegida</h4>
-                    <p className="text-sm text-gray-600">Não coletamos informações pessoalmente identificáveis (PII)</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-purple-600 flex-shrink-0 mt-1" />
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Alinhamento Ético</h4>
-                    <p className="text-sm text-gray-600">Respostas filtradas para evitar conteúdo inadequado</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-purple-600 flex-shrink-0 mt-1" />
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Supervisão Humana</h4>
-                    <p className="text-sm text-gray-600">Educadores podem monitorar e orientar o uso da IA</p>
-                  </div>
-                </div>
-              </div>
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-purple-600 flex-shrink-0 mt-1" />
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Transparência</h4>
-                    <p className="text-sm text-gray-600">Explicamos como nossa IA funciona e suas limitações</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-purple-600 flex-shrink-0 mt-1" />
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Conformidade Educacional</h4>
-                    <p className="text-sm text-gray-600">Seguimos padrões e regulamentações educacionais</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-purple-600 flex-shrink-0 mt-1" />
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Uso Responsável</h4>
-                    <p className="text-sm text-gray-600">Promovemos pensamento crítico, não dependência da IA</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="mt-6 p-4 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg">
-              <h4 className="font-semibold text-purple-900 mb-2 flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4" />
-                Diretrizes de Uso Seguro
-              </h4>
-              <ul className="text-sm text-purple-800 space-y-1">
-                <li>• Não compartilhe informações pessoais como nomes ou endereços</li>
-                <li>• Use a IA como ferramenta de apoio, não como substituto do pensamento</li>
-                <li>• Sempre verifique informações importantes com fontes confiáveis</li>
-                <li>• Reporte qualquer comportamento inadequado da IA</li>
-              </ul>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Educational Benefits Section - Oculto durante carregamento E quando aula foi gerada */}
-      {!isGenerating && !generatedLesson && (
-        <Card className="mt-8 border-2 border-green-100 bg-gradient-to-br from-green-50 to-emerald-50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-xl">
-            <TrendingUp className="h-6 w-6 text-green-600" />
-            Benefícios Pedagógicos Comprovados
-          </CardTitle>
-          <CardDescription>
-            Baseado em metodologias educacionais modernas e pesquisa científica
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-1" />
-                <div>
-                  <h4 className="font-semibold text-gray-900">Aprendizagem Ativa</h4>
-                  <p className="text-sm text-gray-600">Metodologia que coloca o aluno como protagonista do seu aprendizado</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-1" />
-                <div>
-                  <h4 className="font-semibold text-gray-900">Personalização Adaptativa</h4>
-                  <p className="text-sm text-gray-600">Conteúdo que se ajusta ao ritmo e estilo de cada estudante</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-1" />
-                <div>
-                  <h4 className="font-semibold text-gray-900">Feedback Imediato</h4>
-                  <p className="text-sm text-gray-600">Correções e orientações em tempo real para otimizar o aprendizado</p>
-                </div>
-              </div>
-            </div>
-            <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-1" />
-                <div>
-                  <h4 className="font-semibold text-gray-900">Microlearning</h4>
-                  <p className="text-sm text-gray-600">Conteúdo dividido em pequenas doses para melhor retenção</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-1" />
-                <div>
-                  <h4 className="font-semibold text-gray-900">Avaliação Formativa</h4>
-                  <p className="text-sm text-gray-600">Acompanhamento contínuo do progresso e identificação de lacunas</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-1" />
-                <div>
-                  <h4 className="font-semibold text-gray-900">Conectivismo Digital</h4>
-                  <p className="text-sm text-gray-600">Integração com recursos digitais e redes de conhecimento</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-      )}
-
-    </div>
+      </div>
+    </SessionGuard>
   )
 }

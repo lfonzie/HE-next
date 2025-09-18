@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { log } from '@/lib/lesson-logger';
 import { prisma } from '@/lib/db';
+import { slideGenerationCache } from '@/lib/slide-generation-cache';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -118,16 +119,184 @@ JSON:`;
  * @param {string} content - Conteúdo retornado pela IA
  * @returns {Object} - Slide estruturado
  */
+/**
+ * Gera um slide diretamente sem cache (função interna)
+ */
+async function generateSlideDirectly(request, baseContext) {
+  const { topic, slideNumber, schoolId, customPrompt } = request;
+  
+  const systemPrompt = customPrompt || 'Gere conteúdo educacional detalhado em PT-BR.';
+  const generationPrompt = getNextSlidePrompt(topic, slideNumber, systemPrompt);
+  
+  log.info('📋 Prompt preparado para slide', baseContext, {
+    promptLength: generationPrompt.length,
+    estimatedTokens: Math.ceil(generationPrompt.length / 4)
+  });
+  
+  const openaiTimer = log.timeStart('openai-generation-slide', baseContext);
+  
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4o-mini',
+    messages: [{ role: 'system', content: generationPrompt }],
+    max_tokens: 1000,
+    temperature: 0.7,
+    stream: false
+  });
+  
+  const openaiDuration = Math.round((Date.now() - Date.now()) / 1000);
+  log.timeEnd(openaiTimer, 'openai-generation-slide', baseContext);
+  
+  log.success('✅ Slide gerado', baseContext, {
+    duration: openaiDuration,
+    usage: response.usage,
+    responseLength: response.choices[0]?.message?.content?.length || 0
+  });
+  
+  const content = response.choices[0]?.message?.content || '{}';
+  let generatedSlide = parseGeneratedSlide(content);
+  
+  // If parsing failed, try generating again with a shorter prompt
+  if (generatedSlide.number === 0 && generatedSlide.title === 'Erro de Geração') {
+    console.log('[DEBUG] First generation failed, retrying with shorter prompt');
+    
+    try {
+      const retryPrompt = getNextSlidePrompt(topic, slideNumber, 'Gere conteúdo educacional conciso em PT-BR.');
+      const retryResponse = await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [{ role: 'system', content: retryPrompt }],
+        max_tokens: 1200,
+        temperature: 0.5,
+        stream: false
+      });
+      
+      const retryContent = retryResponse.choices[0]?.message?.content || '{}';
+      const retrySlide = parseGeneratedSlide(retryContent);
+      
+      if (retrySlide.number !== 0) {
+        console.log('[DEBUG] Retry generation successful');
+        generatedSlide = retrySlide;
+      }
+    } catch (retryError) {
+      console.error('[DEBUG] Retry generation also failed:', retryError);
+    }
+  }
+  
+  // Adicionar imagem se necessário
+  let slideWithImage = { ...generatedSlide };
+  
+  if (generatedSlide.imageQuery && (slideNumber === 1 || slideNumber === 7 || slideNumber === 14)) {
+    try {
+      const classifyResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/images/classify-source`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: generatedSlide.imageQuery,
+          subject: topic,
+          slideNumber: slideNumber,
+          slideType: generatedSlide.type
+        }),
+      });
+      
+      if (classifyResponse.ok) {
+        const imageData = await classifyResponse.json();
+        if (imageData.success && imageData.imageUrl) {
+          slideWithImage.imageUrl = imageData.imageUrl;
+          slideWithImage.imageSource = imageData.source || 'unsplash';
+        }
+      }
+    } catch (error) {
+      console.warn(`⚠️ Erro ao carregar imagem para slide ${slideNumber}:`, error);
+      slideWithImage.imageUrl = `https://picsum.photos/800/400?random=${slideNumber}`;
+      slideWithImage.imageSource = 'placeholder';
+    }
+  } else {
+    slideWithImage.imageUrl = null;
+    slideWithImage.imageSource = null;
+  }
+  
+  return {
+    slide: slideWithImage,
+    usage: response.usage,
+    requestId: baseContext.requestId
+  };
+}
+
 function parseGeneratedSlide(content) {
   try {
     console.log('[DEBUG] Raw AI response:', content);
     
     // Tentar parsear como JSON primeiro
     if (content.trim().startsWith('{')) {
-      const parsed = JSON.parse(content);
-      if (parsed.number && parsed.title && parsed.content) {
-        console.log('[DEBUG] Successfully parsed JSON directly');
-        return parsed;
+      try {
+        const parsed = JSON.parse(content);
+        if (parsed.number && parsed.title && parsed.content) {
+          console.log('[DEBUG] Successfully parsed JSON directly');
+          return parsed;
+        }
+      } catch (jsonError) {
+        console.error('[DEBUG] Direct JSON parse failed:', jsonError.message);
+        
+        // Try to fix common JSON issues
+        let fixedContent = content;
+        
+        // Fix unterminated strings by finding the last complete object
+        if (jsonError.message.includes('Unterminated string')) {
+          console.log('[DEBUG] Attempting to fix unterminated string');
+          
+          // Find the last complete closing brace
+          let braceCount = 0;
+          let lastValidIndex = -1;
+          
+          for (let i = 0; i < content.length; i++) {
+            if (content[i] === '{') braceCount++;
+            if (content[i] === '}') {
+              braceCount--;
+              if (braceCount === 0) {
+                lastValidIndex = i;
+              }
+            }
+          }
+          
+          if (lastValidIndex > 0) {
+            fixedContent = content.substring(0, lastValidIndex + 1);
+            console.log('[DEBUG] Truncated content to fix unterminated string');
+            
+            try {
+              const parsed = JSON.parse(fixedContent);
+              if (parsed.number && parsed.title && parsed.content) {
+                console.log('[DEBUG] Successfully parsed fixed JSON');
+                return parsed;
+              }
+            } catch (fixError) {
+              console.error('[DEBUG] Fixed JSON still invalid:', fixError.message);
+            }
+          }
+        }
+        
+        // Try to fix incomplete JSON by adding missing closing braces
+        if (jsonError.message.includes('Expected \'}\' or \',\'')) {
+          console.log('[DEBUG] Attempting to fix incomplete JSON structure');
+          
+          // Count braces and add missing closing braces
+          let openBraces = (content.match(/\{/g) || []).length;
+          let closeBraces = (content.match(/\}/g) || []).length;
+          
+          if (openBraces > closeBraces) {
+            const missingBraces = openBraces - closeBraces;
+            fixedContent = content + '}'.repeat(missingBraces);
+            console.log(`[DEBUG] Added ${missingBraces} missing closing braces`);
+            
+            try {
+              const parsed = JSON.parse(fixedContent);
+              if (parsed.number && parsed.title && parsed.content) {
+                console.log('[DEBUG] Successfully parsed fixed JSON with added braces');
+                return parsed;
+              }
+            } catch (fixError) {
+              console.error('[DEBUG] Fixed JSON with braces still invalid:', fixError.message);
+            }
+          }
+        }
       }
     }
     
@@ -179,11 +348,35 @@ function parseGeneratedSlide(content) {
     
     console.error('[ERROR] No valid JSON found in AI response');
     console.error('[DEBUG] Full content:', content);
-    throw new Error('Formato JSON inválido');
+    
+    // Return a fallback slide instead of throwing an error
+    console.log('[DEBUG] Returning fallback slide due to parsing failure');
+    return {
+      number: 0,
+      title: 'Erro de Geração',
+      content: 'Ocorreu um erro ao gerar este slide. O conteúdo pode estar incompleto ou malformado.',
+      type: 'content',
+      imageQuery: null,
+      tokenEstimate: 500,
+      points: 0,
+      questions: []
+    };
   } catch (error) {
     console.error('Erro ao parsear slide da IA:', error);
     console.error('[DEBUG] AI response content:', content);
-    throw new Error('Erro ao processar resposta da IA');
+    
+    // Return a fallback slide instead of throwing an error
+    console.log('[DEBUG] Returning fallback slide due to parsing error');
+    return {
+      number: 0,
+      title: 'Erro de Geração',
+      content: 'Ocorreu um erro ao processar a resposta da IA. Por favor, tente novamente.',
+      type: 'content',
+      imageQuery: null,
+      tokenEstimate: 500,
+      points: 0,
+      questions: []
+    };
   }
 }
 
@@ -251,71 +444,24 @@ export async function POST(request) {
       }, { status: 400 });
     }
     
-    const systemPrompt = customPrompt || 'Gere conteúdo educacional detalhado em PT-BR.';
-    const generationPrompt = getNextSlidePrompt(topic, slideNumber, systemPrompt);
-    
-    log.info('📋 Prompt preparado para slide', baseContext, {
-      promptLength: generationPrompt.length,
-      estimatedTokens: Math.ceil(generationPrompt.length / 4)
-    });
-    
-    const openaiTimer = log.timeStart('openai-generation-slide', baseContext);
-    
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [{ role: 'system', content: generationPrompt }],
-      max_tokens: 800, // Reduzido para um único slide
-      temperature: 0.7,
-      stream: false
-    });
-    
-    const openaiDuration = Math.round((Date.now() - Date.now()) / 1000);
-    log.timeEnd(openaiTimer, 'openai-generation-slide', baseContext);
-    
-    log.success('✅ Slide gerado', baseContext, {
-      duration: openaiDuration,
-      usage: response.usage,
-      responseLength: response.choices[0]?.message?.content?.length || 0
-    });
-    
-    const content = response.choices[0]?.message?.content || '{}';
-    const generatedSlide = parseGeneratedSlide(content);
-    
-    // Adicionar imagem se necessário
-    let slideWithImage = { ...generatedSlide };
-    
-    if (generatedSlide.imageQuery && (slideNumber === 1 || slideNumber === 7 || slideNumber === 14)) {
-      try {
-        const classifyResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/images/classify-source`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            query: generatedSlide.imageQuery,
-            subject: topic,
-            slideNumber: slideNumber,
-            slideType: generatedSlide.type
-          }),
-        });
-        
-        if (classifyResponse.ok) {
-          const imageData = await classifyResponse.json();
-          if (imageData.success && imageData.imageUrl) {
-            slideWithImage.imageUrl = imageData.imageUrl;
-            slideWithImage.imageSource = imageData.source || 'unsplash';
-          }
-        }
-      } catch (error) {
-        console.warn(`⚠️ Erro ao carregar imagem para slide ${slideNumber}:`, error);
-        slideWithImage.imageUrl = `https://picsum.photos/800/400?random=${slideNumber}`;
-        slideWithImage.imageSource = 'placeholder';
+    // Usar o sistema de cache para evitar geração duplicada
+    const cacheRequest = {
+      topic,
+      slideNumber,
+      lessonId,
+      schoolId,
+      customPrompt
+    };
+
+    const result = await slideGenerationCache.getOrGenerateSlide(
+      cacheRequest,
+      async (request) => {
+        return await generateSlideDirectly(request, baseContext);
       }
-    } else {
-      slideWithImage.imageUrl = null;
-      slideWithImage.imageSource = null;
-    }
+    );
     
     // Update lesson in database with the new slide if lessonId is provided
-    if (lessonId) {
+    if (lessonId && result.slide) {
       try {
         console.log('💾 Updating lesson with new slide:', lessonId, 'slide:', slideNumber);
         
@@ -332,15 +478,15 @@ export async function POST(request) {
           const slideIndex = slideNumber - 1;
           if (slideIndex >= 0 && slideIndex < updatedCards.length) {
             updatedCards[slideIndex] = {
-              type: slideWithImage.type || 'content',
-              title: slideWithImage.title,
-              content: slideWithImage.content,
+              type: result.slide.type || 'content',
+              title: result.slide.title,
+              content: result.slide.content,
               prompt: '',
-              questions: slideWithImage.questions || [],
+              questions: result.slide.questions || [],
               time: 5,
-              points: slideWithImage.points || 0,
-              imageUrl: slideWithImage.imageUrl,
-              imageSource: slideWithImage.imageSource
+              points: result.slide.points || 0,
+              imageUrl: result.slide.imageUrl,
+              imageSource: result.slide.imageSource
             };
           }
           
@@ -356,7 +502,7 @@ export async function POST(request) {
           
           log.success('💾 Slide salvo no banco', baseContext, {
             lessonId,
-            slideNumber: slideWithImage.number
+            slideNumber: result.slide.number
           });
         }
         
@@ -375,19 +521,19 @@ export async function POST(request) {
     
     log.success('📊 Slide processado', baseContext, {
       totalDuration,
-      slideNumber: slideWithImage.number,
-      usage: response.usage
+      slideNumber: result.slide.number,
+      usage: result.usage
     });
     
     return NextResponse.json({
       success: true,
-      slide: slideWithImage,
+      slide: result.slide,
       topic,
       slideNumber,
       lessonId,
       metadata: {
         duration: totalDuration,
-        usage: response.usage
+        usage: result.usage
       }
     });
     

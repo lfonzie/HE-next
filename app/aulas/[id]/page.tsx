@@ -45,6 +45,15 @@ interface LessonData {
     duration: string
     difficulty: string
     tags: string[]
+    status?: string
+    backgroundGenerationStarted?: boolean
+    initialSlidesLoaded?: number
+    totalSlides?: number
+    backgroundGenerationTimestamp?: string
+    backgroundGenerationCompleted?: boolean
+    backgroundGenerationCompletedTimestamp?: string
+    totalSlidesGenerated?: number
+    allSlidesLoaded?: boolean
   }
 }
 
@@ -70,7 +79,8 @@ const DEFAULT_LESSON: LessonData = {
     grade: 'N/A',
     duration: 'N/A',
     difficulty: 'medium',
-    tags: []
+    tags: [],
+    status: 'loading'
   }
 }
 
@@ -88,6 +98,7 @@ export default function LessonPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [retryCount, setRetryCount] = useState(0)
+  const [loadingMessage, setLoadingMessage] = useState('Preparando sua aula personalizada...')
 
   // Progressive loading system
   const { loadingState, isLoading: progressiveLoading, progress, startLoading } = useProgressiveLoading(lessonId)
@@ -108,7 +119,7 @@ export default function LessonPage() {
           
           if (cachedLesson) {
             console.log('⚡ Carregando aula do cache:', lessonId)
-            const transformedLesson = ensureLessonStructure(cachedLesson)
+            const transformedLesson = ensureLessonStructure(cachedLesson) as LessonData
             setLessonData(transformedLesson)
             setIsLoading(false)
             return
@@ -117,7 +128,24 @@ export default function LessonPage() {
           console.warn('Cache not available:', cacheError)
         }
 
-        // 2. Carregamento rápido do banco (com autenticação)
+        // 2. Verificar localStorage primeiro (modo demo)
+        const demoLessonKey = `demo_lesson_${lessonId}`
+        const demoLesson = localStorage.getItem(demoLessonKey)
+        
+        if (demoLesson) {
+          console.log('🎮 Carregando aula do localStorage (modo demo):', lessonId)
+          try {
+            const parsedLesson = JSON.parse(demoLesson)
+            const transformedLesson = ensureLessonStructure(parsedLesson) as LessonData
+            setLessonData(transformedLesson)
+            setIsLoading(false)
+            return
+          } catch (parseError) {
+            console.error('Erro ao fazer parse da aula do localStorage:', parseError)
+          }
+        }
+        
+        // 3. Carregamento rápido do banco (com autenticação)
         try {
           console.log(`[DEBUG] Loading lesson from database: ${lessonId}`)
           const response = await fetch(`/api/lessons/fast-load`, {
@@ -150,12 +178,7 @@ export default function LessonPage() {
               console.log('Lesson is being generated, showing loading state')
               setLessonData({ 
                 ...DEFAULT_LESSON, 
-                id: lessonId,
-                title: `Gerando aula sobre ${lessonId}`,
-                metadata: {
-                  ...DEFAULT_LESSON.metadata,
-                  status: 'generating'
-                }
+                title: `Gerando aula sobre ${lessonId}`
               })
               
               // Retry after 3 seconds
@@ -176,7 +199,7 @@ export default function LessonPage() {
         } catch (dbError) {
           console.log('Fast load failed, trying regular load:', dbError)
           
-          // 3. Fallback para carregamento regular
+          // 4. Fallback para carregamento regular
           try {
             const response = await fetch(`/api/lessons/${lessonId}`)
             if (response.ok) {
@@ -205,7 +228,7 @@ export default function LessonPage() {
           }
         }
         
-        // 4. Se chegou até aqui, a aula não foi encontrada
+        // 5. Se chegou até aqui, a aula não foi encontrada
         console.log('Aula não encontrada:', lessonId)
         setError('Aula não encontrada')
         setIsLoading(false)
@@ -312,6 +335,51 @@ export default function LessonPage() {
     }
   }
 
+
+  // Wait for all slides to be ready before showing the lesson
+  useEffect(() => {
+    if (lessonData && lessonData.stages && lessonData.stages.length > 0) {
+      // Check if all slides are ready (no placeholder content)
+      const allSlidesReady = lessonData.stages.every(stage => 
+        stage.activity?.content && 
+        !stage.activity.content.includes('Carregando conteúdo do slide') &&
+        !stage.activity.content.includes('Conteúdo sendo carregado') &&
+        !stage.activity.content.includes('Preparando conteúdo educacional') &&
+        stage.activity.content.length > 50 // Ensure content is substantial
+      )
+      
+      if (allSlidesReady) {
+        console.log('[DEBUG] All slides are ready, showing lesson')
+        setIsLoading(false)
+      } else {
+        console.log('[DEBUG] Slides not ready yet, waiting...')
+        // Wait for slides to be ready
+        const checkInterval = setInterval(() => {
+          const currentAllReady = lessonData.stages.every(stage => 
+            stage.activity?.content && 
+            !stage.activity.content.includes('Carregando conteúdo do slide') &&
+            !stage.activity.content.includes('Conteúdo sendo carregado') &&
+            !stage.activity.content.includes('Preparando conteúdo educacional') &&
+            stage.activity.content.length > 50
+          )
+          
+          if (currentAllReady) {
+            console.log('[DEBUG] All slides ready, showing lesson')
+            setIsLoading(false)
+            clearInterval(checkInterval)
+          }
+        }, 1000) // Check every 1 second
+        
+        // Cleanup interval after 60 seconds
+        setTimeout(() => {
+          clearInterval(checkInterval)
+          setIsLoading(false)
+        }, 60000)
+      }
+    }
+  }, [lessonData])
+
+
   const handleRestart = () => {
     setCurrentStage(0)
     setStageResults([])
@@ -341,67 +409,27 @@ export default function LessonPage() {
 
   if (isLoading || progressiveLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
-        <Card className="w-full max-w-md mx-4">
-          <CardContent className="pt-6">
-            <div className="text-center space-y-6">
-              <div className="flex justify-center">
-                <div className="relative">
-                  <Loader2 className="h-16 w-16 text-blue-600 animate-spin" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="h-8 w-8 bg-blue-100 rounded-full"></div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <h2 className="text-2xl font-bold text-gray-900">
-                  Carregando Aula Progressivamente
-                </h2>
-                <p className="text-gray-600">
-                  Preparando conteúdo educacional otimizado...
-                </p>
-              </div>
-              
-              {/* Progress bar */}
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm text-gray-600">
-                  <span>Progresso</span>
-                  <span>{progress}%</span>
-                </div>
-                <Progress value={progress} className="w-full" />
-              </div>
-              
-              {/* Loading steps */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
-                  <BookOpen className="h-4 w-4" />
-                  <span>Carregando estrutura da aula</span>
-                </div>
-                <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
-                  <Target className="h-4 w-4" />
-                  <span>Preparando primeiros slides</span>
-                </div>
-                <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
-                  <Clock className="h-4 w-4" />
-                  <span>Otimizando carregamento em background</span>
-                </div>
-              </div>
-              
-              {/* Estimated time */}
-              <div className="bg-blue-50 rounded-lg p-4">
-                <div className="text-sm text-blue-800">
-                  <p className="font-medium mb-1">Carregamento Inteligente:</p>
-                  <ul className="space-y-1 text-left">
-                    <li>• Primeiros slides: Instantâneo</li>
-                    <li>• Slides restantes: Carregamento em background</li>
-                    <li>• Tempo total estimado: ~30 segundos</li>
-                  </ul>
-                </div>
-              </div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
+        <div className="text-center space-y-6">
+          <div className="flex justify-center">
+            <div className="h-16 w-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center animate-pulse">
+              <BookOpen className="h-8 w-8 text-white" />
             </div>
-          </CardContent>
-        </Card>
+          </div>
+          
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold text-gray-900">
+              Preparando sua aula...
+            </h2>
+            <p className="text-gray-600">
+              Aguarde enquanto carregamos todo o conteúdo
+            </p>
+          </div>
+          
+          <div className="flex justify-center">
+            <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+          </div>
+        </div>
       </div>
     )
   }
@@ -476,13 +504,13 @@ export default function LessonPage() {
   }
 
   // Use lesson stages from database with validation
-  const totalStages = lessonData.stages?.length || 0
-  const stagesToUse = lessonData.stages || []
+  const totalStages = lessonData?.stages?.length || 0
+  const stagesToUse = lessonData?.stages || []
 
   // Add debugging for stage data
   console.log('[DEBUG] Lesson data structure:', {
-    hasStages: !!lessonData.stages,
-    stagesLength: lessonData.stages?.length,
+    hasStages: !!lessonData?.stages,
+    stagesLength: lessonData?.stages?.length,
     currentStage,
     totalStages
   });
@@ -592,24 +620,24 @@ export default function LessonPage() {
           </Button>
           <Badge variant="outline" className="flex items-center gap-1">
             <BookOpen className="h-3 w-3" />
-            {lessonData.metadata?.subject || 'Matéria'}
+            {lessonData?.metadata?.subject || 'Matéria'}
           </Badge>
           <Badge variant="outline">
-            {lessonData.metadata?.grade || 'N/A'}º ano
+            {lessonData?.metadata?.grade || 'N/A'}º ano
           </Badge>
-          <Badge className={getDifficultyColor(lessonData.metadata?.difficulty || 'medium')}>
-            {lessonData.metadata?.difficulty || 'medium'}
+          <Badge className={getDifficultyColor(lessonData?.metadata?.difficulty || 'medium')}>
+            {lessonData?.metadata?.difficulty || 'medium'}
           </Badge>
         </div>
 
-        <h1 className="text-3xl font-bold mb-2">{lessonData.title}</h1>
-        <p className="text-gray-600 mb-4">{lessonData.introduction}</p>
+        <h1 className="text-3xl font-bold mb-2">{lessonData?.title || 'Carregando...'}</h1>
+        <p className="text-gray-600 mb-4">{lessonData?.introduction || 'Preparando conteúdo...'}</p>
 
         {/* Lesson Stats */}
         <div className="flex items-center gap-6 mb-6">
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-blue-600" />
-            <span className="text-sm">{lessonData.metadata?.duration || 'N/A'}min</span>
+            <span className="text-sm">{lessonData?.metadata?.duration || 'N/A'}min</span>
           </div>
           <div className="flex items-center gap-2">
             <Star className="h-4 w-4 text-yellow-600" />
@@ -737,7 +765,7 @@ export default function LessonPage() {
                   canGoPrevious={currentStage > 0}
                   timeSpent={stageResults.find(sr => sr.stageIndex === currentStage)?.timeSpent || 0}
                   pointsEarned={stageResults.find(sr => sr.stageIndex === currentStage)?.pointsEarned || 0}
-                  lessonTheme={lessonData.metadata?.subject || 'education'}
+                  lessonTheme={lessonData?.metadata?.subject || 'education'}
                 />
               );
             })()}
@@ -746,27 +774,29 @@ export default function LessonPage() {
       </div>
 
       {/* Objectives */}
-      <Card className="mt-8">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Target className="h-5 w-5" />
-            Objetivos de Aprendizagem
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-2">
-            {lessonData.objectives.map((objective, index) => (
-              <li key={index} className="flex items-start gap-2">
-                <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                <span className="text-sm">{objective}</span>
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
+      {lessonData?.objectives && lessonData.objectives.length > 0 && (
+        <Card className="mt-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="h-5 w-5" />
+              Objetivos de Aprendizagem
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-2">
+              {lessonData.objectives.map((objective, index) => (
+                <li key={index} className="flex items-start gap-2">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                  <span className="text-sm">{objective}</span>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Summary and Next Steps */}
-      {(lessonData.summary || lessonData.nextSteps) && (
+      {lessonData && (lessonData.summary || lessonData.nextSteps) && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
           {lessonData.summary && (
             <Card>
