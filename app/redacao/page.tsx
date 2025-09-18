@@ -17,6 +17,8 @@ interface EnemTheme {
   year: number
   theme: string
   description: string
+  isOfficial?: boolean
+  isAIGenerated?: boolean
 }
 
 interface RedacaoSubmission {
@@ -38,12 +40,15 @@ export default function RedacaoPage() {
   const [wordCount, setWordCount] = useState(0)
   const [uploadedFileName, setUploadedFileName] = useState<string>('')
   const [uploadedFileSize, setUploadedFileSize] = useState<number>(0)
+  const [includeAIThemes, setIncludeAIThemes] = useState(false)
+  const [isLoadingAIThemes, setIsLoadingAIThemes] = useState(false)
 
   // Carregar temas do ENEM
   useEffect(() => {
     const loadThemes = async () => {
       try {
-        const response = await fetch('/api/redacao/temas')
+        const url = includeAIThemes ? '/api/redacao/temas?includeAI=true' : '/api/redacao/temas'
+        const response = await fetch(url)
         if (response.ok) {
           const data = await response.json()
           setThemes(data.themes || [])
@@ -51,22 +56,74 @@ export default function RedacaoPage() {
           // Fallback para temas estáticos se a API falhar
           setThemes([
             {
+              id: '2024-1',
+              year: 2024,
+              theme: 'Inclusão digital como direito de todos',
+              description: 'Tema da redação ENEM 2024',
+              isOfficial: true
+            },
+            {
               id: '2023-1',
               year: 2023,
-              theme: 'Desafios para o combate à invisibilidade e ao registro civil de pessoas em situação de rua no Brasil',
-              description: 'Tema da redação ENEM 2023'
+              theme: 'Desafios para o enfrentamento da invisibilidade do trabalho de cuidado realizado pela mulher no Brasil',
+              description: 'Tema da redação ENEM 2023',
+              isOfficial: true
             },
             {
               id: '2022-1',
               year: 2022,
               theme: 'Desafios para a valorização de comunidades e povos tradicionais no Brasil',
-              description: 'Tema da redação ENEM 2022'
+              description: 'Tema da redação ENEM 2022',
+              isOfficial: true
             },
             {
               id: '2021-1',
               year: 2021,
               theme: 'Invisibilidade e registro civil: garantia de acesso à cidadania no Brasil',
-              description: 'Tema da redação ENEM 2021'
+              description: 'Tema da redação ENEM 2021',
+              isOfficial: true
+            },
+            {
+              id: '2020-1',
+              year: 2020,
+              theme: 'O estigma associado às doenças mentais na sociedade brasileira',
+              description: 'Tema da redação ENEM 2020',
+              isOfficial: true
+            },
+            {
+              id: '2019-1',
+              year: 2019,
+              theme: 'Democratização do acesso ao cinema no Brasil',
+              description: 'Tema da redação ENEM 2019',
+              isOfficial: true
+            },
+            {
+              id: '2018-1',
+              year: 2018,
+              theme: 'Manipulação do comportamento do usuário pelo controle de dados na internet',
+              description: 'Tema da redação ENEM 2018',
+              isOfficial: true
+            },
+            {
+              id: '2017-1',
+              year: 2017,
+              theme: 'Desafios para a formação educacional de surdos no Brasil',
+              description: 'Tema da redação ENEM 2017',
+              isOfficial: true
+            },
+            {
+              id: '2016-1',
+              year: 2016,
+              theme: 'Caminhos para combater a intolerância religiosa no Brasil',
+              description: 'Tema da redação ENEM 2016',
+              isOfficial: true
+            },
+            {
+              id: '2015-1',
+              year: 2015,
+              theme: 'A persistência da violência contra a mulher na sociedade brasileira',
+              description: 'Tema da redação ENEM 2015',
+              isOfficial: true
             }
           ])
         }
@@ -79,7 +136,7 @@ export default function RedacaoPage() {
     }
 
     loadThemes()
-  }, [addNotification])
+  }, [addNotification, includeAIThemes])
 
   // Contar palavras em tempo real
   useEffect(() => {
@@ -207,7 +264,7 @@ export default function RedacaoPage() {
                 Tema da Redação
               </CardTitle>
               <CardDescription>
-                Escolha um tema oficial do ENEM para praticar
+                Escolha um tema oficial do ENEM ou gerado por IA para praticar
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -224,7 +281,19 @@ export default function RedacaoPage() {
                     {themes.map((theme) => (
                       <SelectItem key={theme.id} value={theme.id}>
                         <div className="flex flex-col">
-                          <span className="font-medium">{theme.year}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{theme.year}</span>
+                            {theme.isAIGenerated && (
+                              <Badge variant="secondary" className="text-xs">
+                                🤖 IA
+                              </Badge>
+                            )}
+                            {theme.isOfficial && (
+                              <Badge variant="default" className="text-xs">
+                                ✓ Oficial
+                              </Badge>
+                            )}
+                          </div>
                           <span className="text-sm text-gray-500 truncate max-w-xs">
                             {theme.theme}
                           </span>
@@ -243,8 +312,79 @@ export default function RedacaoPage() {
                   <p className="text-sm text-blue-800 dark:text-blue-200">
                     {themes.find(t => t.id === selectedTheme)?.theme}
                   </p>
+                  {themes.find(t => t.id === selectedTheme)?.isAIGenerated && (
+                    <Badge variant="secondary" className="mt-2">
+                      🤖 Gerado por IA
+                    </Badge>
+                  )}
                 </div>
               )}
+
+              {/* Botão para carregar temas de IA */}
+              <div className="mt-4 pt-4 border-t">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={async () => {
+                    if (includeAIThemes) {
+                      setIncludeAIThemes(false)
+                    } else {
+                      setIsLoadingAIThemes(true)
+                      try {
+                        const response = await fetch('/api/redacao/temas/ai', {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                          },
+                          body: JSON.stringify({ count: 5 })
+                        })
+                        
+                        if (response.ok) {
+                          const data = await response.json()
+                          const currentOfficialThemes = themes.filter(t => t.isOfficial)
+                          setThemes([...currentOfficialThemes, ...data.themes])
+                          setIncludeAIThemes(true)
+                          addNotification({
+                            type: 'success',
+                            title: 'Temas Gerados!',
+                            message: `${data.themes.length} novos temas foram gerados por IA`
+                          })
+                        } else {
+                          throw new Error('Falha ao gerar temas')
+                        }
+                      } catch (error) {
+                        console.error('Erro ao gerar temas:', error)
+                        addNotification({
+                          type: 'error',
+                          title: 'Erro',
+                          message: 'Falha ao gerar temas com IA'
+                        })
+                      } finally {
+                        setIsLoadingAIThemes(false)
+                      }
+                    }
+                  }}
+                  disabled={isLoadingAIThemes}
+                  className="w-full"
+                >
+                  {isLoadingAIThemes ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Gerando temas...
+                    </>
+                  ) : (
+                    <>
+                      🤖 {includeAIThemes ? 'Ocultar' : 'Gerar'} Temas com IA
+                    </>
+                  )}
+                </Button>
+                <p className="text-xs text-gray-500 mt-2 text-center">
+                  {includeAIThemes 
+                    ? 'Temas de IA incluídos na lista' 
+                    : 'Clique para gerar novos temas com IA'
+                  }
+                </p>
+              </div>
             </CardContent>
           </Card>
 

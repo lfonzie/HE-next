@@ -24,15 +24,17 @@ export const authOptions: NextAuthOptions = {
     error: '/error',
   },
   debug: true, // Always enable debug for troubleshooting
-  useSecureCookies: false, // Disable secure cookies in development
+  useSecureCookies: process.env.NODE_ENV === 'production', // Only use secure cookies in production
   cookies: {
     sessionToken: {
-      name: `next-auth.session-token`,
+      name: process.env.NODE_ENV === 'production' 
+        ? '__Secure-next-auth.session-token' 
+        : 'next-auth.session-token',
       options: {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        secure: false, // Allow HTTP in development
+        secure: process.env.NODE_ENV === 'production', // Secure only in production
       },
     },
   },
@@ -132,6 +134,13 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       try {
+        console.log('🔍 NextAuth session callback:', { 
+          hasToken: !!token, 
+          hasSession: !!session, 
+          tokenId: token?.id,
+          sessionUser: session?.user?.email 
+        })
+        
         if (token && session.user) {
           session.user.id = token.id as string
 
@@ -139,11 +148,13 @@ export const authOptions: NextAuthOptions = {
           if (typeof tokenRole === 'string') {
             ;(session.user as Record<string, unknown>).role = tokenRole
           }
+          
+          console.log('✅ NextAuth session created for user:', session.user.email, 'Role:', tokenRole)
         }
 
         return session
       } catch (error) {
-        console.error('NextAuth session callback error:', error)
+        console.error('❌ NextAuth session callback error:', error)
         return session
       }
     },

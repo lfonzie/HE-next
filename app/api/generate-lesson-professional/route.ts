@@ -2,6 +2,9 @@
 // API endpoint para geração de aulas com pacing profissional
 
 import { NextRequest, NextResponse } from 'next/server'
+
+// Force dynamic rendering to prevent prerendering issues
+export const dynamic = 'force-dynamic'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'

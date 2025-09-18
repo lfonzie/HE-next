@@ -1,0 +1,157 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { getToken } from 'next-auth/jwt'
+
+export async function middleware(request: NextRequest) {
+  // Skip middleware for static files and API routes to improve performance
+  if (request.nextUrl.pathname.startsWith('/_next/') ||
+      request.nextUrl.pathname.startsWith('/api/') ||
+      request.nextUrl.pathname.match(/\.(ico|png|jpg|jpeg|gif|svg|css|js|woff|woff2|ttf|eot|webmanifest)$/)) {
+    return NextResponse.next()
+  }
+
+  // Handle missing development files in Next.js 15 App Router
+  if (process.env.NODE_ENV === 'development') {
+    if (request.nextUrl.pathname.includes('react-refresh.js')) {
+      return new NextResponse('// React Refresh placeholder for Next.js 15 App Router', {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/javascript',
+          'Cache-Control': 'no-cache'
+        }
+      })
+    }
+    
+    if (request.nextUrl.pathname.includes('_app.js') || 
+        request.nextUrl.pathname.includes('_error.js')) {
+      return new NextResponse('// App/Error placeholder for Next.js 15 App Router', {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/javascript',
+          'Cache-Control': 'no-cache'
+        }
+      })
+    }
+  }
+
+  // Only get token for protected routes
+  const token = await getToken({ 
+    req: request,
+    secret: process.env.NEXTAUTH_SECRET,
+    cookieName: process.env.NODE_ENV === 'production' 
+      ? '__Secure-next-auth.session-token' 
+      : 'next-auth.session-token'
+  })
+  
+  // Allow access to auth pages
+  if (request.nextUrl.pathname.startsWith('/login') || 
+      request.nextUrl.pathname.startsWith('/register')) {
+    return NextResponse.next()
+  }
+  
+  // Define public routes that don't require authentication
+  const publicRoutes = [
+    '/',
+    '/contato',
+    '/apresentacao',
+    '/about',
+    '/faq',
+    '/privacidade',
+    '/termos',
+    '/suporte',
+    '/demo',
+    '/demo-register',
+    '/demo-simple',
+    '/api-demo',
+    '/unsplash-demo',
+    '/math-demo',
+    '/math-test',
+    '/test-auth',
+    '/test-hubedu-interactive',
+    '/test-math',
+    '/test-progressive',
+    '/test-visual',
+    '/dark-mode-demo',
+    '/chat-advanced',
+    '/chat', // Added for development
+    '/lessons',
+    '/enem-public', // Added for public ENEM simulator
+    '/debug-auth' // Added for debugging authentication issues
+  ]
+
+  // Check if current route is public
+  const isPublicRoute = publicRoutes.some(route => 
+    request.nextUrl.pathname === route || 
+    request.nextUrl.pathname.startsWith(route + '/')
+  )
+
+  // Allow Next.js static files and assets (already handled above)
+
+  // Require authentication for all protected routes
+  if (!isPublicRoute && !request.nextUrl.pathname.startsWith('/api/')) {
+    if (!token) {
+      console.log('🔒 Middleware: No token found for protected route:', request.nextUrl.pathname)
+      console.log('🔍 Middleware: Available cookies:', request.cookies.getAll().map(c => c.name))
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
+    
+    // Validate token has required fields
+    if (!token.id || !token.email) {
+      console.log('❌ Middleware: Invalid token structure:', { 
+        hasId: !!token.id, 
+        hasEmail: !!token.email,
+        tokenKeys: Object.keys(token)
+      })
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
+    
+    // Log successful authentication for debugging
+    console.log('✅ Middleware: Token found for route:', request.nextUrl.pathname, 'User:', token.email)
+  }
+  
+  // Allow API routes for development
+  if (request.nextUrl.pathname.startsWith('/api/chat') ||
+      request.nextUrl.pathname.startsWith('/api/enem') ||
+      request.nextUrl.pathname.startsWith('/api/professor') ||
+      request.nextUrl.pathname.startsWith('/api/support') ||
+      request.nextUrl.pathname.startsWith('/api/admin')) {
+    return NextResponse.next()
+  }
+  
+  // Require authentication for admin routes
+  if (request.nextUrl.pathname.startsWith('/admin-dashboard') ||
+      request.nextUrl.pathname.startsWith('/admin-system-prompts') ||
+      request.nextUrl.pathname.startsWith('/admin-escola') ||
+      request.nextUrl.pathname.startsWith('/admin')) {
+    if (!token) {
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
+    
+    // Check if user has admin privileges
+    if (token.role !== 'ADMIN' && token.role !== 'SUPER_ADMIN') {
+      return NextResponse.redirect(new URL('/dashboard', request.url))
+    }
+  }
+
+  // Admin API routes authentication
+  if (request.nextUrl.pathname.startsWith('/api/admin')) {
+    const authHeader = request.headers.get('authorization');
+    const adminToken = process.env.ADMIN_TOKEN;
+    
+    if (!adminToken) {
+      return NextResponse.json({ error: 'Admin token not configured' }, { status: 500 });
+    }
+    
+    if (!authHeader || authHeader !== `Bearer ${adminToken}`) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+  }
+  
+  return NextResponse.next()
+}
+
+export const config = {
+  matcher: [
+    // Only match routes that actually need middleware processing
+    '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|site.webmanifest|.*\\.(?:ico|png|jpg|jpeg|gif|svg|css|js|woff|woff2|ttf|eot|webmanifest)$).*)',
+  ]
+}

@@ -92,3 +92,4 @@ export const ChatMessageRefactored = memo<ChatMessageRefactoredProps>(({
 ChatMessageRefactored.displayName = 'ChatMessageRefactored'
 
 
+

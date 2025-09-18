@@ -10,23 +10,47 @@ import {
   ChevronLeft,
   Check,
   Users,
+  Clock,
+  DollarSign,
+  Star,
+  ArrowRight,
+  Play,
+  CheckCircle,
+  MessageSquare,
+  Bot,
+  Zap,
+  Rocket,
+  Shield,
+  Heart,
+  Phone,
+  Mail,
+  MapPin,
+  Target,
   TrendingUp,
   BookOpen,
-  Cpu,
-  Building,
-  BarChart,
-  Zap,
-  Shield,
+  Lightbulb,
+  LogIn,
+  ChevronDown,
+  Brain,
+  Award,
+  Globe,
+  BookOpenIcon,
+  GraduationCap,
+  Trophy,
+  Users2,
+  BarChart3,
+  Settings,
+  Calendar,
+  FileText,
+  MessageCircle,
+  Search,
+  Filter,
+  Download,
+  Share2,
   Maximize,
   Minimize,
-  Star,
-  Brain,
-  Clock,
 } from "lucide-react";
 import { ASSETS } from "@/constants/assets";
-import { stats as sharedStats, comparisonCards, modules, depoimentos, demoScenarios } from "@/content/home";
-import Chat from "./chat/page";
-import { QuotaProvider } from "@/components/providers/QuotaProvider";
 
 // Estilos CSS customizados
 const customStyles = `
@@ -305,235 +329,542 @@ const customStyles = `
 `;
 
 
+// Constants and data configuration from home page
+const BRAND = {
+  name: "HubEdu.ia",
+  tagline: "A Educação do Futuro",
+  description: "Plataforma educacional completa com aulas geradas por IA, simulador ENEM, correção automática de redações e sistema de chat inteligente - tudo alinhado com BNCC e LGPD."
+};
+
+const HERO_MODULES = [
+  {
+    title: "Aulas Interativas",
+    description: "Slides dinâmicos baseados na BNCC com imagens, quizzes e gamificação.",
+    icon: "🎮",
+    features: ["100% baseado na BNCC", "14 slides estruturados", "Atividades dinâmicas", "Quizzes interativos", "Gamificação completa"],
+    cta: "Explorar Aula"
+  },
+  {
+    title: "Simulador ENEM",
+    description: "Mais de 3000 questões oficiais + infinitas geradas por IA alinhadas com BNCC.",
+    icon: "📚",
+    features: ["3000+ questões oficiais", "Questões infinitas por IA", "Modos personalizados", "Análise detalhada", "Alinhado com BNCC"],
+    cta: "Fazer Simulado"
+  },
+  {
+    title: "Redação ENEM",
+    description: "Correção automática com temas oficiais e tendências atuais baseadas na BNCC.",
+    icon: "✍️",
+    features: ["Correção automática", "Temas oficiais ENEM", "Tendências 2025", "Feedback detalhado", "Critérios BNCC"],
+    cta: "Testar Redação"
+  },
+  {
+    title: "Chat Inteligente",
+    description: "Sistema completo de IA com 10 módulos customizados e compliance LGPD.",
+    icon: "💬",
+    features: ["Professor IA", "Suporte T.I.", "Atendimento Pais", "Bem-estar", "Social Media", "Coordenação", "Secretaria", "RH", "Financeiro", "Gestão", "Conversas temporárias LGPD"],
+    cta: "Explorar Módulos"
+  }
+];
+
+const CHAT_MODULES = [
+  { 
+    name: "Professor IA", 
+    description: "Tire dúvidas pedagógicas instantaneamente", 
+    icon: "👩‍🏫",
+    features: ["Dúvidas sobre BNCC", "Sugestões de atividades", "Planejamento de aulas", "Avaliação de alunos", "Metodologias ativas"],
+    benefits: "Suporte pedagógico 24/7 para professores"
+  },
+  { 
+    name: "Suporte T.I.", 
+    description: "Suporte técnico para funcionários", 
+    icon: "💻",
+    features: ["Problemas de sistema", "Configuração de equipamentos", "Treinamento digital", "Manutenção preventiva", "Soluções rápidas"],
+    benefits: "Resolução técnica imediata para toda equipe"
+  },
+  { 
+    name: "Atendimento", 
+    description: "Atendimento personalizado para pais e visitantes", 
+    icon: "👨‍👩‍👧‍👦",
+    features: ["Informações escolares", "Agendamento de reuniões", "Dúvidas sobre matrícula", "Comunicação com professores", "Eventos da escola"],
+    benefits: "Atendimento humanizado e eficiente"
+  },
+  { 
+    name: "Bem-estar", 
+    description: "Suporte emocional para toda comunidade", 
+    icon: "💚",
+    features: ["Suporte psicológico", "Mediação de conflitos", "Orientação familiar", "Prevenção ao bullying", "Cuidados emocionais"],
+    benefits: "Ambiente escolar saudável e acolhedor"
+  },
+  { 
+    name: "Social Media", 
+    description: "Gestão de redes sociais da escola", 
+    icon: "📱",
+    features: ["Posts automáticos", "Gestão de conteúdo", "Interação com comunidade", "Relatórios de engajamento", "Cronograma de publicações"],
+    benefits: "Presença digital profissional e engajante"
+  },
+  { 
+    name: "Coordenação", 
+    description: "Ferramentas para coordenação pedagógica", 
+    icon: "👨‍💼",
+    features: ["Planejamento curricular", "Acompanhamento pedagógico", "Reuniões de equipe", "Formação continuada", "Gestão de projetos"],
+    benefits: "Coordenação pedagógica eficiente e organizada"
+  },
+  { 
+    name: "Secretaria", 
+    description: "Automação de processos administrativos", 
+    icon: "📋",
+    features: ["Documentação digital", "Controle de frequência", "Emissão de certificados", "Arquivo de documentos", "Processos burocráticos"],
+    benefits: "Administração escolar moderna e eficiente"
+  },
+  { 
+    name: "RH", 
+    description: "Gestão de recursos humanos", 
+    icon: "👥",
+    features: ["Controle de ponto", "Avaliação de desempenho", "Treinamentos", "Folha de pagamento", "Benefícios funcionais"],
+    benefits: "Gestão completa de recursos humanos"
+  },
+  { 
+    name: "Financeiro", 
+    description: "Controle financeiro e pagamentos", 
+    icon: "💰",
+    features: ["Controle de mensalidades", "Relatórios financeiros", "Gestão de inadimplência", "Orçamento escolar", "Contas a pagar"],
+    benefits: "Controle financeiro transparente e eficaz"
+  },
+  { 
+    name: "Gestão", 
+    description: "Relatórios e analytics educacionais", 
+    icon: "📊",
+    features: ["Dashboard executivo", "Métricas de aprendizado", "Relatórios de performance", "Análise de dados", "Tomada de decisões"],
+    benefits: "Gestão baseada em dados e insights"
+  }
+];
+
+const LESSONS_FEATURES = [
+  {
+    title: "Baseadas na BNCC",
+    description: "Todas as aulas seguem rigorosamente a Base Nacional Comum Curricular brasileira.",
+    icon: "📚"
+  },
+  {
+    title: "Interatividade Total",
+    description: "Quizzes com feedback instantâneo, atividades colaborativas e gamificação.",
+    icon: "🎮"
+  },
+  {
+    title: "Duração Otimizada",
+    description: "Aulas de 30-40 minutos (assíncronas) perfeitamente cronometradas. Assíncronas = alunos podem assistir no seu próprio ritmo.",
+    icon: "⏱️"
+  },
+  {
+    title: "Qualquer Tema",
+    description: "Educação, negócios, tecnologia, saúde, arte - qualquer assunto, qualquer nível.",
+    icon: "🌍"
+  }
+];
+
+const ENEM_FEATURES = [
+  {
+    title: "Banco de Questões Gigante",
+    description: "Mais de 3000 questões oficiais (2009-2024) + infinitas geradas por IA para prática ilimitada.",
+    icon: "📚",
+    stats: "3000+ Questões Oficiais"
+  },
+  {
+    title: "Modos de Estudo Inteligentes",
+    description: "Modo rápido para revisão, personalizado por dificuldade e oficial completo com cronômetro.",
+    icon: "⚡",
+    stats: "3 Modos Disponíveis"
+  },
+  {
+    title: "Correção Automática de Redação",
+    description: "IA especializada corrige sua redação seguindo critérios oficiais do ENEM com feedback detalhado.",
+    icon: "✍️",
+    stats: "Correção Instantânea"
+  },
+  {
+    title: "Temas e Tendências 2025",
+    description: "Acesso a todos os temas oficiais de redação + análise de tendências para o próximo ENEM.",
+    icon: "🎯",
+    stats: "Tendências Atualizadas"
+  }
+];
+
+const SCHOOL_FEATURES = [
+  {
+    title: "Personalização de Conteúdo",
+    description: "Adaptação completa do conteúdo educacional para o currículo e metodologia da sua escola.",
+    icon: "📚",
+    stats: "Conteúdo Customizado"
+  },
+  {
+    title: "Ferramentas de IA para Todos",
+    description: "Professores, coordenadores, gestores, alunos e pais têm acesso a ferramentas específicas de IA.",
+    icon: "🤖",
+    stats: "5 Perfis de Usuário"
+  },
+  {
+    title: "Conteúdo Personalizado",
+    description: "Aulas adaptadas para diferentes níveis e necessidades específicas de cada turma.",
+    icon: "🎯",
+    stats: "Adaptação Inteligente"
+  }
+];
+
+const TESTIMONIALS = [
+  {
+    name: "Maria Santos",
+    role: "Professora, Escola Nova Era",
+    content: "As aulas de 45 minutos são incríveis! Os alunos adoram os quizzes e rankings. A correção automática de redação economiza horas de trabalho.",
+    rating: 5
+  },
+  {
+    name: "Carlos Mendes",
+    role: "Coordenador, Instituto Esperança", 
+    content: "O simulador ENEM com +3000 questões aumentou o desempenho dos alunos em 45%. Os pais adoram o chat omni-channel.",
+    rating: 5
+  },
+  {
+    name: "Ana Silva",
+    role: "Diretora, Colégio Crescer",
+    content: "A gestão escolar ficou mais fácil com as ferramentas de IA. Chat inteligente para toda comunidade escolar é revolucionário.",
+    rating: 5
+  }
+];
+
+const COMPETITORS = [
+  {
+    name: "ChatGPT",
+    price: "US$ 20/mês por usuário (~R$ 106/mês)",
+    restrictions: [
+      "Conteúdo não adaptado para idade escolar",
+      "Sem conteúdo específico para escolas", 
+      "Não baseado na BNCC",
+      "Sem compliance LGPD"
+    ],
+    icon: "🤖"
+  },
+  {
+    name: "Grok", 
+    price: "US$ 30/mês por usuário (~R$ 159/mês)",
+    restrictions: [
+      "Conteúdo não adaptado para idade escolar",
+      "Sem simulador ENEM",
+      "Não baseado na BNCC", 
+      "Sem compliance LGPD"
+    ],
+    icon: "⚡"
+  },
+  {
+    name: "Gemini",
+    price: "US$ 20/mês por usuário (~R$ 106/mês)",
+    restrictions: [
+      "Conteúdo não adaptado para idade escolar",
+      "Sem conteúdo específico para escolas",
+      "Não baseado na BNCC",
+      "Sem compliance LGPD"
+    ],
+    icon: "💎"
+  }
+];
+
+const ADVANTAGES = [
+  "✅ Disponível para todas as idades (incluindo menores)",
+  "✅ Conteúdo específico para escolas brasileiras", 
+  "✅ 100% baseado na BNCC (Base Nacional Comum Curricular)",
+  "✅ Compliance total com LGPD (Lei Geral de Proteção de Dados)",
+  "✅ Conversas temporárias (apagadas automaticamente) para máxima privacidade",
+  "✅ Infraestrutura global de ponta garantindo máxima performance",
+  "✅ Simulador ENEM com +3000 questões oficiais",
+  "✅ Suporte nacional especializado",
+  "✅ Plataforma pioneira desenvolvida para educação brasileira"
+];
+
 export default function Apresentacao() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  // Dados dos slides - cópia exata da apresentação original
+  // Dados dos slides - cópia fiel da página home
   const slides = useMemo(() => [
     {
       id: 1,
       title: "HubEdu.ia",
-      subtitle: "IA educacional completa para escolas brasileiras",
+      subtitle: "A Educação do Futuro",
       content: (
         <div className="text-center slide-1-content">
           <div className="flex justify-center mb-3 mt-8 slide-in-up">
             <Image
-      src={ASSETS.LOGO_ICON}
-      alt={"Image"}
-      width={500}
-      height={300}
-      className={""}
-      loading={"lazy"}
-    />
+              src={ASSETS.LOGO_ICON}
+              alt="HubEdu.ia Logo"
+              width={500}
+              height={300}
+              className=""
+              loading="lazy"
+            />
           </div>
           
           <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 via-yellow-600 to-orange-500 mb-2 leading-tight slide-in-up animate-delay-100">
-            HubEdu.ia
+            {BRAND.name}
           </h1>
           
           <h2 className="text-base md:text-lg lg:text-xl xl:text-2xl 2xl:text-3xl font-bold text-black mb-3 leading-tight slide-in-up animate-delay-200">
-            IA educacional completa para escolas brasileiras
+            {BRAND.tagline}
           </h2>
 
           <p className="text-sm md:text-base lg:text-lg xl:text-xl text-gray-700 mb-3 leading-relaxed font-medium slide-in-up animate-delay-300">
-            Professor digital • Automações administrativas • Atendimento inteligente
+            {BRAND.description}
           </p>
           
-          <p className="text-xs md:text-sm lg:text-base xl:text-lg text-gray-600 mb-4 md:mb-6 lg:mb-8 max-w-3xl mx-auto leading-relaxed slide-in-up animate-delay-400">
-            Alinhado à <strong className="text-yellow-600">BNCC</strong>, com <strong className="text-green-600">conversas efêmeras</strong> (LGPD) e suporte em <strong className="text-yellow-600">português do Brasil</strong>.
-          </p>
-          <div className="bg-gradient-to-r from-yellow-500 via-yellow-600 to-orange-500 text-white p-3 md:p-4 lg:p-6 rounded-2xl mb-3 md:mb-4 lg:mb-6 max-w-3xl mx-auto shadow-2xl slide-in-up animate-delay-500">
-            <h3 className="text-base md:text-lg lg:text-xl font-bold mb-2 text-center">Resultado comprovado</h3>
-            <p className="text-xs md:text-sm lg:text-base text-center">Até <strong>70% de economia</strong> em custos, <strong>15h/semana</strong> economizadas e uma <strong>comunicação clara</strong> em todos os canais da escola.</p>
+          <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-center py-2 font-bold text-sm mb-4 slide-in-up animate-delay-400">
+            🚀 EM BREVE - Primeira plataforma de IA com BNCC + LGPD para escolas brasileiras
           </div>
-          <div className="flex justify-center bounce-in animate-delay-500">
-            <Button className="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold px-3 md:px-4 lg:px-8 py-2 md:py-3 lg:py-4 text-xs md:text-sm lg:text-lg rounded-xl shadow-lg hover:shadow-xl transition-all w-full md:w-auto max-w-sm">
-              👉 Agendar Demonstração Gratuita
-            </Button>
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8 slide-in-up animate-delay-500">
+            <button 
+              className="px-8 py-4 bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black font-black text-lg shadow-2xl rounded-2xl flex items-center justify-center gap-3 cursor-not-allowed transition-all duration-300"
+              disabled
+            >
+              <Play className="w-5 h-5" />
+              Em Breve
+            </button>
+            <button 
+              className="px-8 py-4 border-2 border-yellow-400 hover:bg-yellow-400 hover:text-black text-yellow-600 font-bold text-lg rounded-2xl flex items-center justify-center gap-3 cursor-not-allowed transition-all duration-300"
+              disabled
+            >
+              <Phone className="w-5 h-5" />
+              Ver Demonstração
+              <ArrowRight className="w-5 h-5" />
+            </button>
           </div>
         </div>
       ),
-      background: "bg-gradient-to-br from-yellow-50 via-white to-yellow-50/30"
+      background: "bg-gradient-to-br from-yellow-50 via-white to-yellow-100"
     },
 
-  {
-    id: 2,
-    title: "Como Funciona",
-    subtitle: "Módulos e principais recursos",
-    content: (
-      <div className="two-by-two-grid">
-        <Card className="hover-lift">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-sm md:text-base"><BookOpen className="w-4 h-4 md:w-5 md:h-5 text-yellow-600" /> Professor IA 24h</CardTitle>
-          </CardHeader>
-          <CardContent className="text-gray-600 text-xs md:text-sm">
-            Tutor seguro por faixa etária (Infantil, Fundamental I/II, Médio), alinhado à BNCC, com reforço, resolução de dúvidas, resumos, gráficos e imagens. Economia típica vs. aulas particulares: até R$ 3.000/mês.
-          </CardContent>
-        </Card>
-        <Card className="hover-lift">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-sm md:text-base"><Cpu className="w-4 h-4 md:w-5 md:h-5 text-yellow-600" /> Automação Administrativa</CardTitle>
-          </CardHeader>
-          <CardContent className="text-gray-600 text-xs md:text-sm">
-            TI, Secretaria, RH e Financeiro mais ágeis: redução de chamados (até 80% em TI), aceleração de rotinas (+60% em eficiência) e padronização de processos.
-          </CardContent>
-        </Card>
-        <Card className="hover-lift">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-sm md:text-base"><Shield className="w-4 h-4 md:w-5 md:h-5 text-yellow-600" /> LGPD + BNCC</CardTitle>
-          </CardHeader>
-          <CardContent className="text-gray-600 text-xs md:text-sm">
-            Conversas efêmeras (LGPD) por padrão, filtros por idade e governança pedagógica alinhada à BNCC.
-          </CardContent>
-        </Card>
-        <Card className="hover-lift">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-sm md:text-base"><TrendingUp className="w-4 h-4 md:w-5 md:h-5 text-yellow-600" /> Resultados</CardTitle>
-          </CardHeader>
-          <CardContent className="text-gray-600 text-xs md:text-sm">
-            Até 70% de economia em custos, 15h/semana economizadas e comunicação clara em todos os canais.
-          </CardContent>
-        </Card>
-      </div>
-    ),
-    background: "bg-gradient-to-br from-yellow-50 via-white to-yellow-50/30"
-  },
-
-    // Slide 3: Módulos Principais
     {
-      id: 3,
-      title: "Módulos Principais",
-      subtitle: "Soluções completas para sua escola",
+      id: 2,
+      title: "4 Módulos Principais",
+      subtitle: "Veja Como Funciona",
       content: (
         <div className="text-center shift-up-small">
           <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-8 slide-in-up">
-            Módulos Principais
+            🎮 Veja Como Funciona
           </h1>
           
-          <div className="adaptive-grid max-w-6xl mx-auto">
-            {modules.slice(0, 6).map((module, index) => (
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {HERO_MODULES.map((module, index) => (
               <Card key={index} className="hover-lift slide-in-up animate-delay-100" style={{ animationDelay: `${index * 0.1}s` }}>
                 <CardHeader className="pb-3">
-                  <div className="flex items-center justify-center mb-2">
-                    <span className="text-2xl md:text-3xl">{module.icon}</span>
-                    {module.badge && (
-                      <span className="ml-2 px-2 py-1 text-xs font-bold bg-yellow-500 text-gray-900 rounded-full">
-                        {module.badge}
-                      </span>
+                  <div className="text-center mb-4">
+                    <div className="text-4xl mb-4">{module.icon}</div>
+                    <h3 className="text-lg font-bold text-yellow-600 mb-3">{module.title}</h3>
+                    <p className="text-gray-600 text-sm leading-relaxed">{module.description}</p>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="space-y-1 mb-4">
+                    {module.features.slice(0, 3).map((feature, idx) => (
+                      <div key={idx} className="flex items-center gap-2 text-xs text-gray-600">
+                        <div className="w-1 h-1 bg-yellow-500 rounded-full"></div>
+                        <span>{feature}</span>
+                      </div>
+                    ))}
+                    {module.features.length > 3 && (
+                      <div className="text-xs text-gray-500 text-center">+{module.features.length - 3} mais</div>
                     )}
                   </div>
-                  <CardTitle className="text-base md:text-lg font-bold text-gray-800">
-                    {module.title}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <p className="text-sm md:text-base text-gray-600 mb-3">
-                    {module.desc}
-                  </p>
-                  <div className="space-y-1">
-                    {module.benefits.slice(0, 2).map((benefit, idx) => (
-                      <div key={idx} className="flex items-center text-xs md:text-sm text-gray-500">
-                        <Check className="w-3 h-3 text-green-500 mr-2 flex-shrink-0" />
-                        {benefit}
-                      </div>
-                    ))}
-                  </div>
+                  
+                  <button 
+                    className="w-full px-3 py-2 bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black font-bold rounded-xl transition-all duration-300 cursor-not-allowed text-sm"
+                    disabled
+                  >
+                    {module.cta}
+                  </button>
                 </CardContent>
               </Card>
             ))}
           </div>
         </div>
       ),
-      background: "bg-gradient-to-br from-green-50 via-white to-green-50/30"
+      background: "bg-gradient-to-br from-yellow-50 via-white to-yellow-100"
     },
 
-    // Slide 4: Comparação de Preços
+    {
+      id: 3,
+      title: "Inovação em Educação",
+      subtitle: "Tecnologia de ponta combinada com pedagogia brasileira",
+      content: (
+        <div className="text-center shift-up-small">
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-8 slide-in-up">
+            🚀 Inovação em Educação
+          </h1>
+          
+          <div className="grid md:grid-cols-3 gap-8 mb-16">
+            <Card className="hover-lift slide-in-up animate-delay-100">
+              <CardContent className="p-8">
+                <div className="text-center">
+                  <div className="text-6xl mb-4">🧠</div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-3">IA Generativa Avançada</h3>
+                  <p className="text-gray-600 text-sm leading-relaxed">Algoritmos de última geração que criam conteúdo educacional personalizado em tempo real, adaptando-se ao perfil de cada aluno.</p>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="hover-lift slide-in-up animate-delay-200">
+              <CardContent className="p-8">
+                <div className="text-center">
+                  <div className="text-6xl mb-4">🤖</div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-3">Correção Automática</h3>
+                  <p className="text-gray-600 text-sm leading-relaxed">IA avançada corrige redações, simulados e atividades instantaneamente, seguindo critérios oficiais do ENEM e BNCC.</p>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="hover-lift slide-in-up animate-delay-300">
+              <CardContent className="p-8">
+                <div className="text-center">
+                  <div className="text-6xl mb-4">📚</div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-3">Aulas Estruturadas</h3>
+                  <p className="text-gray-600 text-sm leading-relaxed">Slides organizados com introdução, desenvolvimento e conclusão, incluindo atividades práticas e quizzes interativos.</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          
+          <div className="bg-gradient-to-r from-purple-500 to-pink-600 text-white p-8 rounded-3xl shadow-2xl slide-in-up animate-delay-400">
+            <h3 className="text-3xl font-black mb-6 text-center">🌟 Por que HubEdu.ia é Revolucionário?</h3>
+            <div className="grid md:grid-cols-2 gap-8">
+              <div className="bg-white/10 p-6 rounded-2xl">
+                <h4 className="text-xl font-bold mb-4 text-purple-300">🔬 Tecnologia de Ponta:</h4>
+                <ul className="space-y-3 text-sm">
+                  <li className="flex items-start gap-2">
+                    <span className="text-purple-400 mt-1">•</span>
+                    <span><strong>IA Multimodal:</strong> Processa texto, imagem e áudio simultaneamente</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-purple-400 mt-1">•</span>
+                    <span><strong>IA Avançada:</strong> Tecnologia OpenAI (ChatGPT) e Google (Gemini)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-purple-400 mt-1">•</span>
+                    <span><strong>Conteúdo Estruturado:</strong> Aulas organizadas com introdução, desenvolvimento e conclusão</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-purple-400 mt-1">•</span>
+                    <span><strong>Cloud Native:</strong> Arquitetura escalável e resiliente</span>
+                  </li>
+                </ul>
+              </div>
+              <div className="bg-white/10 p-6 rounded-2xl">
+                <h4 className="text-xl font-bold mb-4 text-pink-300">🎓 Pedagogia Brasileira:</h4>
+                <ul className="space-y-3 text-sm">
+                  <li className="flex items-start gap-2">
+                    <span className="text-pink-400 mt-1">•</span>
+                    <span><strong>BNCC Integrada:</strong> Cada conteúdo alinhado com competências</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-pink-400 mt-1">•</span>
+                    <span><strong>Metodologias Ativas:</strong> Aprendizado interativo com quizzes e atividades práticas</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-pink-400 mt-1">•</span>
+                    <span><strong>Gamificação:</strong> Elementos de jogos para engajamento</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-pink-400 mt-1">•</span>
+                    <span><strong>Inclusão Digital:</strong> Acessível para todos os perfis</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      ),
+      background: "bg-gradient-to-r from-purple-50 to-pink-50"
+    },
+
     {
       id: 4,
-      title: "Comparação de Preços",
-      subtitle: "Veja como o HubEdu.ia se compara",
+      title: "Preparação Completa para o ENEM",
+      subtitle: "A plataforma mais completa para estudantes brasileiros",
       content: (
         <div className="text-center shift-up-small">
           <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-8 slide-in-up">
-            Comparação de Preços
+            🎓 Preparação Completa para o ENEM
           </h1>
           
-          <div className="adaptive-grid max-w-5xl mx-auto">
-            {comparisonCards.map((card, index) => (
-              <Card 
-                key={index} 
-                className={`hover-lift slide-in-up animate-delay-100 ${
-                  card.variant === 'highlight' ? 'ring-2 ring-yellow-500 shadow-xl' : ''
-                }`}
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <CardHeader className="pb-3">
-                  <CardTitle className={`text-lg md:text-xl font-bold ${
-                    card.variant === 'highlight' ? 'text-yellow-600' : 'text-gray-800'
-                  }`}>
-                    {card.title}
-                  </CardTitle>
-                  <div className="text-2xl md:text-3xl font-black text-gray-800">
-                    {card.priceLabel}
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    {card.priceNote}
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="space-y-2">
-                    {card.bullets.map((bullet, idx) => (
-                      <div key={idx} className="flex items-start text-sm text-gray-600">
-                        <Check className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                        {bullet}
-                      </div>
-                    ))}
-                  </div>
-                  {card.variant === 'highlight' && (
-                    <div className="mt-4">
-                      <Button className="w-full bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold">
-                        Escolher HubEdu.ia
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      ),
-      background: "bg-gradient-to-br from-purple-50 via-white to-purple-50/30"
-    },
-
-    // Slide 5: Depoimentos
-    {
-      id: 5,
-      title: "Depoimentos",
-      subtitle: "O que nossos clientes dizem",
-      content: (
-        <div className="text-center shift-up-small">
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-8 slide-in-up">
-            Depoimentos
-          </h1>
-          
-          <div className="adaptive-grid max-w-5xl mx-auto">
-            {depoimentos.map((depoimento, index) => (
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+            {ENEM_FEATURES.map((feature, index) => (
               <Card key={index} className="hover-lift slide-in-up animate-delay-100" style={{ animationDelay: `${index * 0.1}s` }}>
                 <CardContent className="p-6">
-                  <div className="flex justify-center mb-4">
-                    {[...Array(depoimento.rating)].map((_, i) => (
-                      <Star key={i} className="w-5 h-5 text-yellow-500 fill-current" />
-                    ))}
+                  <div className="text-center">
+                    <div className="text-4xl mb-4">{feature.icon}</div>
+                    <h3 className="text-lg font-bold text-yellow-600 mb-3">{feature.title}</h3>
+                    <p className="text-gray-600 text-sm leading-relaxed">{feature.description}</p>
+                    {feature.stats && (
+                      <div className="mt-4">
+                        <div className="text-sm font-bold text-black bg-yellow-400 px-3 py-1 rounded-full inline-block">
+                          {feature.stats}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <p className="text-sm md:text-base text-gray-700 mb-4 italic">
-                    &ldquo;{depoimento.content}&rdquo;
-                  </p>
-                  <div className="border-t pt-4">
-                    <div className="font-bold text-gray-800">{depoimento.name}</div>
-                    <div className="text-sm text-gray-600">{depoimento.role}</div>
-                    <div className="text-xs text-gray-500">{depoimento.school}</div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          
+          <div className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black p-8 rounded-3xl shadow-2xl slide-in-up animate-delay-500">
+            <h3 className="text-3xl font-black mb-4">🏆 Por que Escolher Nosso Simulador?</h3>
+            <div className="grid md:grid-cols-3 gap-6">
+              <div className="text-center">
+                <div className="text-4xl mb-3">📈</div>
+                <h4 className="font-bold text-lg mb-2">Resultados Comprovados</h4>
+                <p className="text-sm">Estudantes aumentam 45% no desempenho</p>
+              </div>
+              <div className="text-center">
+                <div className="text-4xl mb-3">🎯</div>
+                <h4 className="font-bold text-lg mb-2">Foco no ENEM</h4>
+                <p className="text-sm">Desenvolvido especificamente para o exame brasileiro</p>
+              </div>
+              <div className="text-center">
+                <div className="text-4xl mb-3">⚡</div>
+                <h4 className="font-bold text-lg mb-2">Tecnologia Avançada</h4>
+                <p className="text-sm">IA que gera questões infinitas e personalizadas</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      ),
+      background: "bg-white"
+    },
+
+    {
+      id: 5,
+      title: "Soluções para Escolas Brasileiras",
+      subtitle: "Plataforma completa desenvolvida especificamente para instituições de ensino",
+      content: (
+        <div className="text-center shift-up-small">
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-8 slide-in-up">
+            🏫 Soluções para Escolas Brasileiras
+          </h1>
+          
+          <div className="grid md:grid-cols-3 gap-8 mb-16">
+            {SCHOOL_FEATURES.map((feature, index) => (
+              <Card key={index} className="hover-lift slide-in-up animate-delay-100" style={{ animationDelay: `${index * 0.1}s` }}>
+                <CardContent className="p-8">
+                  <div className="text-center">
+                    <div className="text-4xl mb-4">{feature.icon}</div>
+                    <h3 className="text-lg font-bold text-yellow-600 mb-3">{feature.title}</h3>
+                    <p className="text-gray-600 text-sm leading-relaxed">{feature.description}</p>
+                    {feature.stats && (
+                      <div className="mt-4">
+                        <div className="text-sm font-bold text-black bg-yellow-400 px-3 py-1 rounded-full inline-block">
+                          {feature.stats}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -541,515 +872,396 @@ export default function Apresentacao() {
           </div>
         </div>
       ),
-      background: "bg-gradient-to-br from-orange-50 via-white to-orange-50/30"
+      background: "bg-gradient-to-b from-gray-900 to-black text-white"
     },
 
-    // Slide 6: Demo Interativo
     {
       id: 6,
-      title: "Demo Interativo",
-      subtitle: "Veja o HubEdu.ia em ação",
+      title: "Compliance Total com LGPD",
+      subtitle: "Totalmente compatível com a Lei Geral de Proteção de Dados",
       content: (
         <div className="text-center shift-up-small">
           <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-8 slide-in-up">
-            Demo Interativo
+            🛡️ Compliance Total com LGPD
           </h1>
           
-          <div className="max-w-4xl mx-auto">
-            <div className="bg-white rounded-2xl shadow-2xl p-6 md:p-8 slide-in-up animate-delay-100">
-              <div className="text-left">
-                <div className="flex items-center mb-4">
-                  <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
-                  <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
-                  <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-                  <span className="text-sm text-gray-500 ml-2">HubEdu.ia Demo</span>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+            <Card className="hover-lift slide-in-up animate-delay-100">
+              <CardContent className="p-8">
+                <div className="text-center">
+                  <div className="text-6xl mb-4">🗑️</div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-3">Conversas Temporárias</h3>
+                  <p className="text-gray-600 text-sm leading-relaxed">Conversas são descartadas automaticamente após cada sessão. Informações pessoais não ficam registradas no sistema.</p>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="hover-lift slide-in-up animate-delay-200">
+              <CardContent className="p-8">
+                <div className="text-center">
+                  <div className="text-6xl mb-4">🌐</div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-3">Infraestrutura Global</h3>
+                  <p className="text-gray-600 text-sm leading-relaxed">Infraestrutura de ponta com tecnologia de nuvem global, garantindo máxima performance e disponibilidade.</p>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="hover-lift slide-in-up animate-delay-300">
+              <CardContent className="p-8">
+                <div className="text-center">
+                  <div className="text-6xl mb-4">🔒</div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-3">Criptografia Total</h3>
+                  <p className="text-gray-600 text-sm leading-relaxed">Dados protegidos com criptografia de ponta a ponta. Acesso restrito e auditado.</p>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="hover-lift slide-in-up animate-delay-400">
+              <CardContent className="p-8">
+                <div className="text-center">
+                  <div className="text-6xl mb-4">👶</div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-3">Todas as Idades</h3>
+                  <p className="text-gray-600 text-sm leading-relaxed">Plataforma pioneira desenvolvida especificamente para o contexto educacional brasileiro, com foco em segurança e adequação pedagógica.</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          
+          <div className="bg-gradient-to-r from-green-500 to-blue-600 text-white p-8 rounded-3xl shadow-2xl slide-in-up animate-delay-500">
+            <h3 className="text-3xl font-black mb-6 text-center">🚫 Por que ChatGPT, Grok e Gemini Não Atendem Escolas?</h3>
+            <div className="grid md:grid-cols-2 gap-8">
+              <div className="bg-white/10 p-6 rounded-2xl">
+                <h4 className="text-xl font-bold mb-4 text-red-300">❌ Problemas das Outras Plataformas:</h4>
+                <ul className="space-y-3 text-sm">
+                  <li className="flex items-start gap-2">
+                    <span className="text-red-400 mt-1">•</span>
+                    <span><strong>Conteúdo não adaptado:</strong> Não há conteúdo específico para idade escolar</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-red-400 mt-1">•</span>
+                    <span><strong>Infraestrutura limitada:</strong> Recursos insuficientes para suportar múltiplos usuários simultâneos</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-red-400 mt-1">•</span>
+                    <span><strong>Armazenamento permanente:</strong> Conversas ficam salvas indefinidamente</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-red-400 mt-1">•</span>
+                    <span><strong>Sem compliance LGPD:</strong> Não atendem regulamentações brasileiras</span>
+                  </li>
+                </ul>
+              </div>
+              <div className="bg-white/10 p-6 rounded-2xl">
+                <h4 className="text-xl font-bold mb-4 text-green-300">✅ Soluções HubEdu.ia:</h4>
+                <ul className="space-y-3 text-sm">
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-400 mt-1">•</span>
+                    <span><strong>Todas as idades:</strong> Crianças, adolescentes e adultos incluídos</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-400 mt-1">•</span>
+                    <span><strong>Infraestrutura global:</strong> Tecnologia de nuvem de ponta para máxima performance</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-400 mt-1">•</span>
+                    <span><strong>Conversas temporárias:</strong> Conversas são descartadas automaticamente após cada sessão</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-400 mt-1">•</span>
+                    <span><strong>Compliance LGPD:</strong> Atendimento total às regulamentações</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      ),
+      background: "bg-gradient-to-r from-green-50 to-blue-50"
+    },
+
+    {
+      id: 7,
+      title: "100% Baseado na BNCC",
+      subtitle: "Todas as aulas e conteúdos seguem rigorosamente a Base Nacional Comum Curricular brasileira",
+      content: (
+        <div className="text-center shift-up-small">
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-8 slide-in-up">
+            📚 100% Baseado na BNCC
+          </h1>
+          
+          <div className="grid md:grid-cols-3 gap-8 mb-16">
+            <Card className="hover-lift slide-in-up animate-delay-100">
+              <CardContent className="p-8">
+                <div className="text-center">
+                  <div className="text-6xl mb-4">🎯</div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-3">Competências BNCC</h3>
+                  <p className="text-gray-600 text-sm leading-relaxed">Desenvolvimento das 10 competências gerais da BNCC em todas as atividades e aulas.</p>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="hover-lift slide-in-up animate-delay-200">
+              <CardContent className="p-8">
+                <div className="text-center">
+                  <div className="text-6xl mb-4">📋</div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-3">Objetivos de Aprendizagem</h3>
+                  <p className="text-gray-600 text-sm leading-relaxed">Cada aula alinhada com objetivos específicos da BNCC para cada ano e componente curricular.</p>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="hover-lift slide-in-up animate-delay-300">
+              <CardContent className="p-8">
+                <div className="text-center">
+                  <div className="text-6xl mb-4">🔄</div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-3">Atualizações Automáticas</h3>
+                  <p className="text-gray-600 text-sm leading-relaxed">Conteúdo sempre atualizado conforme mudanças na BNCC e diretrizes do MEC.</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          
+          <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-8 rounded-3xl shadow-2xl slide-in-up animate-delay-400">
+            <h3 className="text-3xl font-black mb-6 text-center">🎓 Por que a BNCC é Fundamental?</h3>
+            <div className="grid md:grid-cols-2 gap-8">
+              <div className="bg-white/10 p-6 rounded-2xl">
+                <h4 className="text-xl font-bold mb-4 text-blue-300">📖 Base Nacional Comum Curricular:</h4>
+                <ul className="space-y-3 text-sm">
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-400 mt-1">•</span>
+                    <span><strong>Padronização:</strong> Conteúdo unificado em todo território nacional</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-400 mt-1">•</span>
+                    <span><strong>Competências:</strong> Desenvolvimento de habilidades do século XXI</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-400 mt-1">•</span>
+                    <span><strong>Flexibilidade:</strong> Adaptação às realidades locais</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-400 mt-1">•</span>
+                    <span><strong>Qualidade:</strong> Garantia de educação de qualidade</span>
+                  </li>
+                </ul>
+              </div>
+              <div className="bg-white/10 p-6 rounded-2xl">
+                <h4 className="text-xl font-bold mb-4 text-purple-300">🚀 HubEdu.ia + BNCC:</h4>
+                <ul className="space-y-3 text-sm">
+                  <li className="flex items-start gap-2">
+                    <span className="text-purple-400 mt-1">•</span>
+                    <span><strong>IA Alinhada:</strong> Inteligência artificial configurada especificamente para gerar conteúdo baseado na BNCC</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-purple-400 mt-1">•</span>
+                    <span><strong>Conteúdo Personalizado:</strong> Aulas geradas seguindo rigorosamente a BNCC</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-purple-400 mt-1">•</span>
+                    <span><strong>Avaliação BNCC:</strong> Questões e atividades alinhadas com objetivos</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-purple-400 mt-1">•</span>
+                    <span><strong>Relatórios BNCC:</strong> Acompanhamento do desenvolvimento das competências</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      ),
+      background: "bg-gradient-to-r from-blue-50 to-purple-50"
+    },
+
+    {
+      id: 8,
+      title: "O que dizem sobre nós",
+      subtitle: "Depoimentos de nossos clientes",
+      content: (
+        <div className="text-center shift-up-small">
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-8 slide-in-up">
+            💬 O que dizem sobre nós
+          </h1>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            {TESTIMONIALS.map((testimonial, index) => (
+              <Card key={index} className="hover-lift slide-in-up animate-delay-100" style={{ animationDelay: `${index * 0.1}s` }}>
+                <CardContent className="p-8">
+                  <div className="flex justify-center mb-4">
+                    {[...Array(testimonial.rating)].map((_, i) => (
+                      <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
+                    ))}
+                  </div>
+                  <blockquote className="text-lg mb-6 leading-relaxed">&ldquo;{testimonial.content}&rdquo;</blockquote>
+                  <footer>
+                    <div className="font-bold">{testimonial.name}</div>
+                    <div className="text-gray-300">{testimonial.role}</div>
+                  </footer>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      ),
+      background: "bg-gradient-to-b from-gray-900 to-black text-white"
+    },
+
+    {
+      id: 9,
+      title: "Por que Escolher HubEdu.ia?",
+      subtitle: "Comparativo com as principais plataformas de IA",
+      content: (
+        <div className="text-center shift-up-small">
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-8 slide-in-up">
+            💰 Por que Escolher HubEdu.ia?
+          </h1>
+          
+          <div className="grid md:grid-cols-3 gap-8 mb-12">
+            {COMPETITORS.map((competitor, index) => (
+              <Card key={index} className="hover-lift slide-in-up animate-delay-100" style={{ animationDelay: `${index * 0.1}s` }}>
+                <CardContent className="p-6">
+                  <div className="text-center mb-6">
+                    <div className="text-4xl mb-3">{competitor.icon}</div>
+                    <h3 className="text-2xl font-bold mb-2 text-gray-800">{competitor.name}</h3>
+                    <div className="text-3xl font-black mb-4 text-red-500">
+                      {competitor.price}
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <h4 className="font-bold mb-3 text-gray-700">❌ Limitações:</h4>
+                    {competitor.restrictions.map((item, idx) => (
+                      <div key={idx} className="flex items-start gap-2 text-sm text-gray-600">
+                        <span className="mt-1 text-red-500">•</span>
+                        <span>{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+            
+            <Card className="hover-lift slide-in-up animate-delay-400 ring-2 ring-yellow-500 shadow-xl">
+              <CardContent className="p-6">
+                <div className="text-center mb-6">
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                    <span className="bg-yellow-500 text-black px-4 py-2 rounded-full text-sm font-bold">
+                      🏆 MELHOR ESCOLHA
+                    </span>
+                  </div>
+                  <div className="text-4xl mb-3 mt-4">🎓</div>
+                  <h3 className="text-2xl font-bold mb-2 text-black">HubEdu.ia</h3>
+                  <div className="text-3xl font-black mb-4 text-black">
+                    Preço Especial
+                  </div>
                 </div>
                 
-                <div className="space-y-4">
-                  {demoScenarios.map((scenario, index) => (
-                    <div key={index} className="slide-in-up animate-delay-200" style={{ animationDelay: `${index * 0.2}s` }}>
-                      <div className="bg-gray-100 rounded-lg p-4 mb-2">
-                        <div className="text-sm font-medium text-gray-600 mb-1">{scenario.title}</div>
-                        <div className="text-sm text-gray-800">&ldquo;{scenario.student}&rdquo;</div>
-                      </div>
-                      <div className="bg-yellow-50 border-l-4 border-yellow-500 rounded-lg p-4">
-                        <div className="text-sm text-gray-800">{scenario.ai}</div>
-                      </div>
+                <div className="space-y-3">
+                  <h4 className="font-bold mb-3 text-black">✅ Vantagens:</h4>
+                  {ADVANTAGES.slice(0, 5).map((item, idx) => (
+                    <div key={idx} className="flex items-start gap-2 text-sm text-black">
+                      <span className="mt-1 text-green-600">•</span>
+                      <span>{item}</span>
                     </div>
                   ))}
                 </div>
+              </CardContent>
+            </Card>
+          </div>
+          
+          <div className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black p-8 rounded-3xl shadow-2xl slide-in-up animate-delay-500">
+            <h3 className="text-3xl font-black mb-4">🎯 Por que HubEdu.ia é Superior?</h3>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="text-left">
+                <h4 className="font-bold text-lg mb-3">🚫 Problemas das Outras Plataformas:</h4>
+                <ul className="space-y-2 text-sm">
+                  <li>• <strong>Conteúdo não adaptado:</strong> Não há conteúdo específico para idade escolar</li>
+                  <li>• <strong>Preço alto:</strong> US$ 20-30/mês por usuário (~R$ 106-159/mês)</li>
+                  <li>• <strong>Sem BNCC:</strong> Não baseado na Base Nacional Comum Curricular</li>
+                  <li>• <strong>Sem LGPD:</strong> Conversas salvas permanentemente, sem proteção adequada de dados</li>
+                  <li>• <strong>Sem simulador ENEM:</strong> Não atendem necessidades específicas brasileiras</li>
+                  <li>• <strong>Sem conteúdo educacional:</strong> Não desenvolvido para escolas brasileiras</li>
+                </ul>
               </div>
-            </div>
-            
-            <div className="mt-8 slide-in-up animate-delay-500">
-              <Button className="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold px-8 py-4 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all">
-                🚀 Testar Demo Agora
-              </Button>
-            </div>
-          </div>
-        </div>
-      ),
-      background: "bg-gradient-to-br from-yellow-50 via-white to-yellow-50/30"
-    },
-
-    // Slide 7: Benefícios Detalhados
-    {
-      id: 7,
-      title: "Benefícios Detalhados",
-      subtitle: "Como o HubEdu.ia transforma sua escola",
-      content: (
-        <div className="text-center shift-up-small">
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-8 slide-in-up">
-            Benefícios Detalhados
-          </h1>
-          
-          <div className="adaptive-grid max-w-6xl mx-auto">
-            <Card className="hover-lift slide-in-up animate-delay-100">
-              <CardContent className="p-6">
-                <div className="text-center mb-4">
-                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <TrendingUp className="w-8 h-8 text-green-600" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-800 mb-2">Economia de Custos</h3>
-                </div>
-                <ul className="text-left space-y-2 text-gray-600">
-                  <li className="flex items-center"><Check className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />Redução de 70% em custos operacionais</li>
-                  <li className="flex items-center"><Check className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />Menos contratações de pessoal</li>
-                  <li className="flex items-center"><Check className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />Otimização de processos</li>
+              <div className="text-left">
+                <h4 className="font-bold text-lg mb-3">✅ Soluções HubEdu.ia:</h4>
+                <ul className="space-y-2 text-sm">
+                  <li>• <strong>Todas as idades:</strong> Crianças, adolescentes e adultos incluídos</li>
+                  <li>• <strong>Preço especial:</strong> Valor competitivo para escolas brasileiras</li>
+                  <li>• <strong>100% BNCC:</strong> Conteúdo rigorosamente alinhado com currículo nacional</li>
+                  <li>• <strong>Total LGPD:</strong> Conversas temporárias (apagadas automaticamente), infraestrutura global, criptografia total</li>
+                  <li>• <strong>Simulador ENEM:</strong> +3000 questões oficiais brasileiras</li>
+                  <li>• <strong>Educação brasileira:</strong> Desenvolvido especificamente para escolas do Brasil</li>
                 </ul>
-              </CardContent>
-            </Card>
-
-            <Card className="hover-lift slide-in-up animate-delay-200">
-              <CardContent className="p-6">
-                <div className="text-center mb-4">
-                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Clock className="w-8 h-8 text-blue-600" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-800 mb-2">Economia de Tempo</h3>
-                </div>
-                <ul className="text-left space-y-2 text-gray-600">
-                  <li className="flex items-center"><Check className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />+300h economizadas por mês</li>
-                  <li className="flex items-center"><Check className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />15h+ semanais para professores</li>
-                  <li className="flex items-center"><Check className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />Processos automatizados</li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card className="hover-lift slide-in-up animate-delay-300">
-              <CardContent className="p-6">
-                <div className="text-center mb-4">
-                  <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Users className="w-8 h-8 text-purple-600" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-800 mb-2">Satisfação</h3>
-                </div>
-                <ul className="text-left space-y-2 text-gray-600">
-                  <li className="flex items-center"><Check className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />95% de satisfação dos usuários</li>
-                  <li className="flex items-center"><Check className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />Melhor experiência educacional</li>
-                  <li className="flex items-center"><Check className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />Comunicação mais eficiente</li>
-                </ul>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      ),
-      background: "bg-gradient-to-br from-indigo-50 via-white to-indigo-50/30"
-    },
-
-    // Slide 8: Tecnologia e Segurança
-    {
-      id: 8,
-      title: "Tecnologia e Segurança",
-      subtitle: "Powered by GPT-5 e LGPD compliant",
-      content: (
-        <div className="text-center shift-up-small">
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-8 slide-in-up">
-            Tecnologia e Segurança
-          </h1>
-          
-          <div className="max-w-4xl mx-auto">
-            <div className="grid md:grid-cols-2 gap-8 mb-8">
-              <Card className="hover-lift slide-in-up animate-delay-100">
-                <CardContent className="p-6">
-                  <div className="text-center mb-4">
-                    <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Brain className="w-8 h-8 text-yellow-600" />
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-800 mb-2">GPT-5 da OpenAI</h3>
-                  </div>
-                  <p className="text-gray-600 text-center">
-                    Tecnologia de ponta em inteligência artificial, garantindo respostas precisas e contextualizadas para o ambiente educacional brasileiro.
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="hover-lift slide-in-up animate-delay-200">
-                <CardContent className="p-6">
-                  <div className="text-center mb-4">
-                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Shield className="w-8 h-8 text-green-600" />
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-800 mb-2">LGPD Compliant</h3>
-                  </div>
-                  <p className="text-gray-600 text-center">
-                    Conversas efêmeras, dados seguros e conformidade total com a Lei Geral de Proteção de Dados brasileira.
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white p-6 rounded-2xl slide-in-up animate-delay-300">
-              <h3 className="text-xl font-bold mb-4 text-center">Características Técnicas</h3>
-              <div className="grid md:grid-cols-3 gap-4 text-sm">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-yellow-400">100%</div>
-                  <div className="text-gray-300">Brasileiro</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-yellow-400">24/7</div>
-                  <div className="text-gray-300">Disponível</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-yellow-400">BNCC</div>
-                  <div className="text-gray-300">Alinhado</div>
-                </div>
               </div>
             </div>
           </div>
         </div>
       ),
-      background: "bg-gradient-to-br from-gray-50 via-white to-gray-50/30"
+      background: "bg-gradient-to-br from-yellow-50 via-white to-yellow-100"
     },
 
-    // Slide 9: Implementação
-    {
-      id: 9,
-      title: "Implementação",
-      subtitle: "Setup rápido e treinamento completo",
-      content: (
-        <div className="text-center shift-up-small">
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-8 slide-in-up">
-            Implementação
-          </h1>
-          
-          <div className="max-w-5xl mx-auto">
-            <div className="adaptive-grid mb-8">
-              <Card className="hover-lift slide-in-up animate-delay-100">
-                <CardContent className="p-6 text-center">
-                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl">🚀</span>
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-800 mb-2">Setup em 24h</h3>
-                  <p className="text-gray-600">
-                    Configuração completa da plataforma em menos de 24 horas, incluindo integração com sistemas existentes.
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="hover-lift slide-in-up animate-delay-200">
-                <CardContent className="p-6 text-center">
-                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl">🎓</span>
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-800 mb-2">Treinamento Completo</h3>
-                  <p className="text-gray-600">
-                    Capacitação de toda a equipe com suporte técnico e materiais didáticos personalizados.
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="hover-lift slide-in-up animate-delay-300">
-                <CardContent className="p-6 text-center">
-                  <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl">🤝</span>
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-800 mb-2">Suporte Contínuo</h3>
-                  <p className="text-gray-600">
-                    Acompanhamento permanente com especialistas brasileiros e atualizações regulares da plataforma.
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="bg-gradient-to-r from-yellow-500 via-yellow-600 to-orange-500 text-white p-6 rounded-2xl slide-in-up animate-delay-400">
-              <h3 className="text-xl font-bold mb-4 text-center">Garantia de Resultado</h3>
-              <p className="text-center text-lg">
-                Se não houver melhoria significativa nos primeiros 30 dias, devolvemos 100% do investimento.
-              </p>
-            </div>
-          </div>
-        </div>
-      ),
-      background: "bg-gradient-to-br from-teal-50 via-white to-teal-50/30"
-    },
-
-    // Slide 10: Casos de Uso Específicos
     {
       id: 10,
-      title: "Casos de Uso",
-      subtitle: "Como diferentes escolas usam o HubEdu.ia",
+      title: "A Educação do Futuro Chega Em Breve",
+      subtitle: "Prepare sua escola para uma nova era",
       content: (
         <div className="text-center shift-up-small">
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-8 slide-in-up">
-            Casos de Uso Específicos
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-8 slide-in-up">
+            A Educação do Futuro Chega Em Breve
           </h1>
           
-          <div className="adaptive-grid max-w-6xl mx-auto">
-            <Card className="hover-lift slide-in-up animate-delay-100">
-              <CardHeader>
-                <CardTitle className="text-lg font-bold text-gray-800">Escola Pequena (150 alunos)</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center text-sm text-gray-600">
-                    <Check className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
-                    Professor IA para dúvidas dos alunos
-                  </div>
-                  <div className="flex items-center text-sm text-gray-600">
-                    <Check className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
-                    Automação da secretaria
-                  </div>
-                  <div className="flex items-center text-sm text-gray-600">
-                    <Check className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
-                    Atendimento via WhatsApp
-                  </div>
-                </div>
-                <div className="mt-4 p-3 bg-green-50 rounded-lg">
-                  <div className="text-sm font-bold text-green-800">Resultado:</div>
-                  <div className="text-sm text-green-700">60% menos tempo em tarefas administrativas</div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="hover-lift slide-in-up animate-delay-200">
-              <CardHeader>
-                <CardTitle className="text-lg font-bold text-gray-800">Escola Média (500 alunos)</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center text-sm text-gray-600">
-                    <Check className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
-                    Todos os módulos ativos
-                  </div>
-                  <div className="flex items-center text-sm text-gray-600">
-                    <Check className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
-                    Integração com ERP existente
-                  </div>
-                  <div className="flex items-center text-sm text-gray-600">
-                    <Check className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
-                    Relatórios personalizados
-                  </div>
-                </div>
-                <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                  <div className="text-sm font-bold text-blue-800">Resultado:</div>
-                  <div className="text-sm text-blue-700">75% redução em custos operacionais</div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="hover-lift slide-in-up animate-delay-300">
-              <CardHeader>
-                <CardTitle className="text-lg font-bold text-gray-800">Rede de Escolas</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center text-sm text-gray-600">
-                    <Check className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
-                    Gestão centralizada
-                  </div>
-                  <div className="flex items-center text-sm text-gray-600">
-                    <Check className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
-                    Desconto progressivo
-                  </div>
-                  <div className="flex items-center text-sm text-gray-600">
-                    <Check className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
-                    Suporte dedicado
-                  </div>
-                </div>
-                <div className="mt-4 p-3 bg-purple-50 rounded-lg">
-                  <div className="text-sm font-bold text-purple-800">Resultado:</div>
-                  <div className="text-sm text-purple-700">Padronização e economia de escala</div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      ),
-      background: "bg-gradient-to-br from-pink-50 via-white to-pink-50/30"
-    },
-
-    // Slide 11: FAQ
-    {
-      id: 11,
-      title: "Perguntas Frequentes",
-      subtitle: "Tire suas dúvidas",
-      content: (
-        <div className="text-center shift-up-small">
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-8 slide-in-up">
-            Perguntas Frequentes
-          </h1>
+          <p className="text-xl mb-8 text-gray-300 max-w-3xl mx-auto leading-relaxed slide-in-up animate-delay-100">
+            Prepare sua escola para uma nova era. BNCC + LGPD + IA = Educação brasileira do futuro.
+          </p>
           
-          <div className="max-w-4xl mx-auto space-y-4">
-            <Card className="hover-lift slide-in-up animate-delay-100">
-              <CardContent className="p-6">
-                <h3 className="text-lg font-bold text-gray-800 mb-2">🤔 Como funciona o Professor IA?</h3>
-                <p className="text-gray-600 text-left">
-                  O Professor IA responde dúvidas dos alunos 24/7, adaptando o conteúdo por faixa etária e alinhando com a BNCC. 
-                  As conversas são efêmeras (LGPD) e seguras para uso educacional.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="hover-lift slide-in-up animate-delay-200">
-              <CardContent className="p-6">
-                <h3 className="text-lg font-bold text-gray-800 mb-2">💰 Qual o investimento necessário?</h3>
-                <p className="text-gray-600 text-left">
-                  Para escolas até 150 alunos: R$ 2.000/mês fixo. Para escolas maiores: desconto progressivo sob consulta. 
-                  Sem taxa de setup e com garantia de resultado em 30 dias.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="hover-lift slide-in-up animate-delay-300">
-              <CardContent className="p-6">
-                <h3 className="text-lg font-bold text-gray-800 mb-2">⏱️ Quanto tempo para implementar?</h3>
-                <p className="text-gray-600 text-left">
-                  Setup completo em 24 horas, incluindo integração com sistemas existentes. 
-                  Treinamento da equipe em 1 semana, com suporte contínuo durante todo o processo.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="hover-lift slide-in-up animate-delay-400">
-              <CardContent className="p-6">
-                <h3 className="text-lg font-bold text-gray-800 mb-2">🔒 Os dados ficam seguros?</h3>
-                <p className="text-gray-600 text-left">
-                  Sim! Conversas efêmeras (não são armazenadas), conformidade total com LGPD, 
-                  servidores brasileiros e auditoria de segurança regular.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      ),
-      background: "bg-gradient-to-br from-cyan-50 via-white to-cyan-50/30"
-    },
-
-    // Slide 12: Próximos Passos
-    {
-      id: 12,
-      title: "Próximos Passos",
-      subtitle: "Como começar hoje",
-      content: (
-        <div className="text-center shift-up-small">
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-8 slide-in-up">
-            Próximos Passos
-          </h1>
-          
-          <div className="max-w-4xl mx-auto">
-            <div className="adaptive-grid mb-8">
-              <Card className="hover-lift slide-in-up animate-delay-100">
-                <CardContent className="p-6 text-center">
-                  <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl">1️⃣</span>
+          <div className="bg-gradient-to-r from-gray-800 to-gray-900 p-8 rounded-2xl mb-12 border border-gray-700 slide-in-up animate-delay-200">
+            <h3 className="text-2xl font-bold mb-6 text-yellow-400">🎯 4 Módulos Principais:</h3>
+            <div className="grid md:grid-cols-2 gap-6 mb-6">
+              {[
+                { title: "Aulas Interativas", desc: "30-40 min (assíncronas) geradas por IA - alunos assistem no seu próprio ritmo", icon: "🎮", color: "from-blue-500 to-blue-600" },
+                { title: "Simulador ENEM", desc: "+3000 questões oficiais + infinitas por IA", icon: "📚", color: "from-green-500 to-green-600" },
+                { title: "Redação ENEM", desc: "Correção automática com temas oficiais", icon: "✍️", color: "from-purple-500 to-purple-600" },
+                { title: "Chat Inteligente", desc: "10 módulos customizados para toda escola", icon: "💬", color: "from-yellow-500 to-yellow-600" }
+              ].map((feature, index) => (
+                <div key={index} className="flex items-center gap-4 p-4 bg-gray-700/50 rounded-xl border border-gray-600">
+                  <div className={`text-3xl p-3 rounded-xl bg-gradient-to-r ${feature.color} text-white shadow-lg`}>
+                    {feature.icon}
                   </div>
-                  <h3 className="text-xl font-bold text-gray-800 mb-2">Agende uma Demo</h3>
-                  <p className="text-gray-600">
-                    Teste grátis por 7 dias sem compromisso. Veja como o HubEdu.ia funciona na prática.
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="hover-lift slide-in-up animate-delay-200">
-                <CardContent className="p-6 text-center">
-                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl">2️⃣</span>
+                  <div>
+                    <div className="text-gray-300 font-bold text-lg">{feature.title}</div>
+                    <div className="text-gray-400 text-sm">{feature.desc}</div>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-800 mb-2">Análise Personalizada</h3>
-                  <p className="text-gray-600">
-                    Nossa equipe analisa suas necessidades específicas e cria um plano customizado.
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="hover-lift slide-in-up animate-delay-300">
-                <CardContent className="p-6 text-center">
-                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl">3️⃣</span>
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-800 mb-2">Implementação</h3>
-                  <p className="text-gray-600">
-                    Setup em 24h, treinamento completo e suporte contínuo para sua equipe.
-                  </p>
-                </CardContent>
-              </Card>
+                </div>
+              ))}
             </div>
-
-            <div className="bg-gradient-to-r from-yellow-500 via-yellow-600 to-orange-500 text-white p-6 rounded-2xl slide-in-up animate-delay-400">
-              <h3 className="text-xl font-bold mb-4 text-center">Comece Hoje Mesmo</h3>
-              <div className="flex flex-col md:flex-row gap-4 justify-center items-center">
-                <Button className="bg-white text-yellow-600 hover:bg-gray-100 font-bold px-8 py-4 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all">
-                  🚀 Teste Grátis - Demo IA
-                </Button>
-                <Button className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-yellow-600 font-bold px-8 py-4 text-lg rounded-xl transition-all">
-                  📞 Fale com um Especialista
-                </Button>
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-3 p-3 bg-gray-700/50 rounded-xl">
+                <CheckCircle className="w-6 h-6 text-yellow-400 flex-shrink-0" />
+                <span className="text-gray-300 font-medium">Suporte nacional e configuração rápida</span>
               </div>
             </div>
           </div>
-        </div>
-      ),
-      background: "bg-gradient-to-br from-emerald-50 via-white to-emerald-50/30"
-    },
-
-    // Slide 13: Call to Action Final
-    {
-      id: 13,
-      title: "Comece Hoje",
-      subtitle: "Transforme sua escola com IA",
-      content: (
-        <div className="text-center slide-1-content">
-          <div className="flex justify-center mb-6 mt-8 slide-in-up">
-            <Image
-      src={ASSETS.LOGO_ICON}
-      alt={"Image"}
-      width={500}
-      height={300}
-      className={""}
-      loading={"lazy"}
-    />
-          </div>
           
-          <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 via-yellow-600 to-orange-500 mb-4 leading-tight slide-in-up animate-delay-100">
-            Comece Hoje
-          </h1>
-          
-          <h2 className="text-lg md:text-xl lg:text-2xl xl:text-3xl font-bold text-black mb-6 leading-tight slide-in-up animate-delay-200">
-            Transforme sua escola com IA
-          </h2>
-
-          <div className="bg-gradient-to-r from-yellow-500 via-yellow-600 to-orange-500 text-white p-6 md:p-8 lg:p-10 rounded-3xl mb-8 max-w-4xl mx-auto shadow-2xl slide-in-up animate-delay-300">
-            <h3 className="text-xl md:text-2xl lg:text-3xl font-bold mb-4 text-center">Pronto para revolucionar sua escola?</h3>
-            <p className="text-base md:text-lg lg:text-xl text-center mb-6">
-              <strong>Setup em 24h</strong> • <strong>Treinamento completo</strong> • <strong>Suporte brasileiro</strong>
-            </p>
-            <div className="flex flex-col md:flex-row gap-4 justify-center items-center">
-              <Button className="bg-white text-yellow-600 hover:bg-gray-100 font-bold px-8 py-4 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all">
-                🚀 Teste Grátis - Demo IA
-              </Button>
-              <Button className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-yellow-600 font-bold px-8 py-4 text-lg rounded-xl transition-all">
-                📞 Fale com um Especialista
-              </Button>
-            </div>
-          </div>
-          
-          <div className="text-sm md:text-base text-gray-600 max-w-2xl mx-auto slide-in-up animate-delay-400">
-            <p>✅ <strong>Sem compromisso</strong> • ✅ <strong>Sem cartão de crédito</strong> • ✅ <strong>Resultados em 24h</strong></p>
+          <div className="flex flex-col sm:flex-row gap-6 justify-center slide-in-up animate-delay-300">
+            <button 
+              className="px-8 py-4 bg-gray-400 text-white font-bold text-lg rounded-xl shadow-lg flex items-center justify-center gap-2 cursor-not-allowed"
+              disabled
+            >
+              <Play className="w-5 h-5" />
+              Em Breve
+            </button>
+            <button 
+              className="px-8 py-4 border-2 border-gray-400 text-gray-400 font-semibold rounded-xl flex items-center justify-center gap-2 cursor-not-allowed"
+              disabled
+            >
+              <MessageSquare className="w-5 h-5" />
+              Agendar Demonstração
+            </button>
           </div>
         </div>
       ),
-      background: "bg-gradient-to-br from-yellow-50 via-white to-yellow-50/30"
+      background: "bg-gradient-to-b from-neutral-950 to-neutral-900 text-white"
     }
   ], []);
 
@@ -1153,78 +1365,6 @@ export default function Apresentacao() {
           ))}
         </div>
           
-        {/* Controles de navegação */}
-        <div className="fixed top-1 md:top-2 left-1/2 transform -translate-x-1/2 z-50">
-          <div className="flex items-center space-x-0.5 md:space-x-1 bg-white rounded-full px-1.5 md:px-2 py-0.5 md:py-1 shadow-lg border border-gray-200">
-            {/* Botão anterior */}
-            <Button
-              onClick={prevSlide}
-              disabled={currentSlide === 0 || isTransitioning}
-              variant="outline"
-              size="sm"
-              className="rounded-full w-5 h-5 md:w-6 md:h-6 p-0 bg-transparent hover:bg-gray-100 border-gray-300 hover:border-gray-400"
-            >
-              <ChevronLeft className="w-2.5 h-2.5 md:w-3 md:h-3" />
-            </Button>
-
-            {/* Indicadores de slide */}
-            <div className="flex space-x-0.5 md:space-x-1">
-              {slides.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => goToSlide(index)}
-                  disabled={isTransitioning}
-                  className={`w-2 h-2 md:w-2.5 md:h-2.5 rounded-full transition-all duration-300 ${
-                    index === currentSlide 
-                      ? 'bg-yellow-500 scale-150 ring-2 ring-yellow-400 ring-offset-1 ring-white' 
-                      : 'bg-gray-300 hover:bg-gray-400'
-                  }`}
-                />
-              ))}
-            </div>
-
-            {/* Botão próximo */}
-            <Button
-              onClick={nextSlide}
-              disabled={currentSlide === slides.length - 1 || isTransitioning}
-              variant="outline"
-              size="sm"
-              className="rounded-full w-5 h-5 md:w-6 md:h-6 p-0 bg-transparent hover:bg-gray-100 border-gray-300 hover:border-gray-400"
-            >
-              <ChevronRight className="w-2.5 h-2.5 md:w-3 md:h-3" />
-            </Button>
-
-            {/* Botão tela cheia */}
-            <Button
-              onClick={toggleFullscreen}
-              variant="outline"
-              size="sm"
-              className="rounded-full w-5 h-5 md:w-6 md:h-6 p-0 bg-transparent hover:bg-gray-100 border-gray-300 hover:border-gray-400"
-              title="Tela cheia (F)"
-            >
-              {isFullscreen ? <Minimize className="w-2.5 h-2.5 md:w-3 md:h-3" /> : <Maximize className="w-2.5 h-2.5 md:w-3 md:h-3" />}
-            </Button>
-          </div>
-        </div>
-
-        {/* Logotipo - lado esquerdo */}
-        <div className="fixed top-4 md:top-8 left-2 md:left-8 z-50">
-          <div className="bg-white rounded-full p-1.5 md:p-2 shadow-lg border border-gray-200">
-            <div className="flex items-center space-x-1 md:space-x-2">
-              <Image
-        src={ASSETS.LOGO_ICON}
-        alt={"Image"}
-        width={500}
-        height={300}
-        className={""}
-        loading={"lazy"}
-      />
-              <span className="text-xs md:text-sm font-bold text-gray-800">
-                HubEdu.ia
-              </span>
-            </div>
-          </div>
-        </div>
         
         {/* Contador de slides - lado direito */}
         <div className="fixed top-4 md:top-8 right-2 md:right-8 z-50">
