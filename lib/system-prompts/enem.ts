@@ -80,7 +80,7 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
     },
     {
       "type": "explanation",
-      "content": "SLIDE 8 - EXPLICAÇÃO: Síntese e estratégias para o exame"
+      "content": "SLIDE 14 - EXPLICAÇÃO: Síntese e estratégias para o exame"
     },
     {
       "type": "example",

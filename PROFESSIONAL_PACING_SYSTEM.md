@@ -13,16 +13,21 @@ Este sistema implementa um template profissional para geração de aulas com pac
 - **Tempo assíncrono**: 30-35 minutos
 - **Regra de conversão**: 0,75 palavra por token em português brasileiro
 
-### Estrutura de 9 Slides
+### Estrutura de 14 Slides
 1. **Abertura (4 min)**: Ativação de conhecimentos prévios + objetivo
 2. **Conceito Principal (5 min)**: Visão geral e fundamentos
 3. **Desenvolvimento (5 min)**: Detalhamento e mecanismos
-4. **Quiz 1 (4 min)**: Múltipla escolha com feedback rico
-5. **Aplicação (5 min)**: Casos práticos e exemplos reais
-6. **Aprofundamento (5 min)**: Fatores limitantes e variações
-7. **Conexões (5 min)**: Adaptações e contexto amplo
-8. **Quiz 2 (4 min)**: Questão situacional com análise
-9. **Encerramento (3 min)**: Síntese + erro comum + desafio aplicado
+4. **Aplicação (5 min)**: Casos práticos e exemplos reais
+5. **Variações (5 min)**: Fatores limitantes e casos especiais
+6. **Conexões (5 min)**: Adaptações e contexto amplo
+7. **Quiz 1 (4 min)**: Múltipla escolha com feedback rico
+8. **Aprofundamento (5 min)**: Conceitos avançados
+9. **Exemplos (5 min)**: Casos práticos detalhados
+10. **Análise Crítica (5 min)**: Diferentes perspectivas
+11. **Síntese (5 min)**: Consolidação de conceitos
+12. **Quiz 2 (4 min)**: Questão situacional com análise
+13. **Aplicações Futuras (5 min)**: Contexto amplo
+14. **Encerramento (3 min)**: Síntese + erro comum + desafio aplicado
 
 ## 🚀 Como Usar
 

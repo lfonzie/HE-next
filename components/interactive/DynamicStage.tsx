@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { CheckCircle, Clock, Star, Trophy, XCircle } from 'lucide-react'
+import { randomizeQuizQuestions } from '@/lib/quiz-randomization'
 
 interface StageActivity {
   component: string
@@ -134,43 +135,31 @@ export default function DynamicStage({
 
     switch (activity.component) {
       case 'QuizComponent':
-        // Transform questions to the format expected by NewQuizComponent
-        const transformedQuestions = (activity.questions || []).map((q: any, index: number) => {
-          // Debug: Log original question data
-          console.log(`🔍 DEBUG Question ${index + 1}:`, {
-            originalCorrect: q.correct,
-            originalType: typeof q.correct,
-            originalOptions: q.options
+        // First randomize the quiz questions to shuffle the options
+        const originalQuestions = activity.questions || []
+        const randomizedQuestions = randomizeQuizQuestions(originalQuestions)
+        
+        // Transform randomized questions to the format expected by NewQuizComponent
+        const transformedQuestions = randomizedQuestions.map((q: any, index: number) => {
+          // Debug: Log randomized question data
+          console.log(`🔍 DEBUG Randomized Question ${index + 1}:`, {
+            randomizedCorrect: q.correct,
+            randomizedType: typeof q.correct,
+            randomizedOptions: q.options,
+            originalCorrect: q.originalCorrect
           });
           
-          // Ensure correct answer is properly mapped from numeric index to letter
+          // Since questions are already randomized, q.correct is now a numeric index (0,1,2,3)
+          // Map numeric index to letter (a,b,c,d)
           let correctAnswer: 'a' | 'b' | 'c' | 'd';
           
-          if (typeof q.correct === 'number') {
-            // Map numeric index (0,1,2,3) to letter (a,b,c,d)
-            if (q.correct >= 0 && q.correct <= 3) {
-              correctAnswer = ['a', 'b', 'c', 'd'][q.correct] as 'a' | 'b' | 'c' | 'd';
-              console.log(`🔍 DEBUG: Mapped numeric ${q.correct} to letter ${correctAnswer}`);
-            } else {
-              // Invalid numeric index, default to 'a'
-              correctAnswer = 'a';
-              console.log(`🔍 DEBUG: Invalid numeric index ${q.correct}, defaulting to 'a'`);
-            }
-          } else if (typeof q.correct === 'string') {
-            // Handle string format (already a letter)
-            const normalized = q.correct.toLowerCase();
-            if (['a', 'b', 'c', 'd'].includes(normalized)) {
-              correctAnswer = normalized as 'a' | 'b' | 'c' | 'd';
-              console.log(`🔍 DEBUG: Mapped string '${q.correct}' to letter ${correctAnswer}`);
-            } else {
-              // Invalid string, default to 'a'
-              correctAnswer = 'a';
-              console.log(`🔍 DEBUG: Invalid string '${q.correct}', defaulting to 'a'`);
-            }
+          if (typeof q.correct === 'number' && q.correct >= 0 && q.correct <= 3) {
+            correctAnswer = ['a', 'b', 'c', 'd'][q.correct] as 'a' | 'b' | 'c' | 'd';
+            console.log(`🔍 DEBUG: Mapped randomized numeric ${q.correct} to letter ${correctAnswer}`);
           } else {
-            // No correct answer specified, default to 'a'
+            // Fallback to 'a' if invalid
             correctAnswer = 'a';
-            console.log(`🔍 DEBUG: No correct answer specified, defaulting to 'a'`);
+            console.log(`🔍 DEBUG: Invalid randomized index ${q.correct}, defaulting to 'a'`);
           }
           
           const transformed = {

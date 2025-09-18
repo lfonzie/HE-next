@@ -102,7 +102,7 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
     },
     {
       "type": "explanation",
-      "content": "SLIDE 8 - EXPLICAÇÃO: Síntese e consolidação"
+      "content": "SLIDE 14 - EXPLICAÇÃO: Síntese e consolidação"
     },
     {
       "type": "example",
@@ -220,7 +220,7 @@ DIVERSIFICAÇÃO DE CONTEÚDO:
 - Slide 5: Comece demonstrando aplicações práticas
 - Slide 6: Comece com estratégias avançadas ou técnicas especializadas
 - Slide 7: Comece conectando com outras disciplinas
-- Slide 8: Comece identificando desafios ou armadilhas conceituais
+- Slide 14: Comece identificando desafios ou armadilhas conceituais
 
 Explique o conceito de forma detalhada, incluindo:
 1. Definição clara

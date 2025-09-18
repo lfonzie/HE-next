@@ -6,7 +6,7 @@
 - **Arquivo**: `lib/system-prompts/hubedu-interactive.ts`
 - **Funcionalidade**: Sistema de prompts específicos para cada slide seguindo o padrão HubEdu
 - **Características**:
-  - Prompts específicos para cada um dos 8 slides
+  - Prompts específicos para cada um dos 14 slides
   - Contextos definidos para cada tipo de slide
   - Geração automática de image prompts baseada no tema
   - Suporte a diferentes categorias (matemática, ciência, história, linguagem)
@@ -38,9 +38,9 @@
 ### 5. **Página de Teste**
 - **Arquivo**: `app/test-hubedu-interactive/page.tsx`
 - **Funcionalidade**: Demonstração completa do sistema
-- **Inclui**: Exemplo completo de fotossíntese com todos os 8 slides
+- **Inclui**: Exemplo completo de fotossíntese com todos os 14 slides
 
-## 🎯 Estrutura da Aula (8 slides)
+## 🎯 Estrutura da Aula (14 slides)
 
 ```
 1. Slide 1 → Explicação inicial (introdução ao tema)
@@ -61,7 +61,7 @@
 4. **Carregamento progressivo**: 
    - Quando usuário avança para slide 2 → slide 3 é gerado
    - Quando usuário avança para slide 3 → slide 4 é gerado
-   - E assim por diante até completar os 8 slides
+   - E assim por diante até completar os 14 slides
 
 ## 🧠 Formato JSON Padronizado
 
@@ -86,7 +86,7 @@
 
 ## 🚀 Exemplo Completo: Fotossíntese
 
-O sistema inclui um exemplo completo de aula sobre fotossíntese com todos os 8 slides:
+O sistema inclui um exemplo completo de aula sobre fotossíntese com todos os 14 slides:
 
 1. **Slide 1**: "What is Photosynthesis?" - Introdução ao conceito
 2. **Slide 2**: "The Photosynthesis Equation" - Equação química

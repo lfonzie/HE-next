@@ -1112,6 +1112,27 @@ model enem_redacao {
   @@index([estimated_score], map: "idx_enem_redacao_score")
 }
 
+model redacaoSession {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String   @db.Uuid
+  theme       String
+  themeYear   Int
+  content     String
+  wordCount   Int
+  scores      Json     @default("{}")
+  totalScore  Int      @default(0)
+  feedback    String
+  suggestions Json     @default("[]")
+  highlights  Json     @default("{}")
+  status      String   @default("PENDING")
+  createdAt   DateTime @default(now()) @db.Timestamp(6)
+  updatedAt   DateTime @default(now()) @db.Timestamp(6)
+
+  @@index([userId], map: "idx_redacao_session_user")
+  @@index([totalScore], map: "idx_redacao_session_score")
+  @@index([createdAt], map: "idx_redacao_session_created")
+}
+
 enum achievement_category {
   engagement
   learning

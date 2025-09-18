@@ -1,5 +1,5 @@
 // Utilitários para construir slides seguindo o padrão do HubEdu antigo
-// Estrutura fixa de 8 slides com perguntas nas posições 4 e 7
+// Estrutura fixa de 14 slides com perguntas nas posições 7 e 12
 
 export interface Slide {
   id?: string;
@@ -43,7 +43,7 @@ export function dedupeSlides(slides: Slide[]): Slide[] {
 }
 
 /**
- * Força o padrão de 8 slides com perguntas nas posições 4 e 7
+ * Força o padrão de 14 slides com perguntas nas posições 7 e 12
  * Seguindo a lógica do HubEdu antigo
  */
 export function forcarPadrao34e8(slides: Slide[]): Slide[] {
@@ -101,13 +101,13 @@ export function forcarPadrao34e8(slides: Slide[]): Slide[] {
 
 /**
  * Garante que perguntas apareçam exatamente nos slides 4 e 7
- * Slide 8 é sempre resumo/conclusão
+ * Slide 14 é sempre resumo/conclusão
  */
 export function enforceQuestionPositions(slides: Slide[]): Slide[] {
   return slides.map((slide, idx) => {
     const n = idx + 1; // 1-based
-    const isQuestionSlot = n === 4 || n === 7; // Slide 4 e 7 são perguntas
-    const isLastSlide = n === 8; // Slide 8 é resumo/conclusão
+    const isQuestionSlot = n === 7 || n === 12; // Slide 7 e 12 são perguntas
+    const isLastSlide = n === 14; // Slide 14 é resumo/conclusão
     
     if (isQuestionSlot) {
       return { 
@@ -175,9 +175,9 @@ export function enforceQuestionPositions(slides: Slide[]): Slide[] {
 }
 
 /**
- * Cria uma estrutura padrão de 8 slides se não existir
+ * Cria uma estrutura padrão de 14 slides se não existir
  */
-export function createDefault8SlidesStructure(): Slide[] {
+export function createDefault14SlidesStructure(): Slide[] {
   return [
     { 
       id: 'slide-1', 
@@ -257,20 +257,20 @@ export function createDefault8SlidesStructure(): Slide[] {
 }
 
 /**
- * Processa uma lista de slides para seguir o padrão de 8 slides do HubEdu
+ * Processa uma lista de slides para seguir o padrão de 14 slides do HubEdu
  */
 export function processSlidesForHubEduPattern(slides: Slide[]): Slide[] {
   // Se não há slides, criar estrutura padrão
   if (!slides || slides.length === 0) {
-    return createDefault8SlidesStructure();
+    return createDefault14SlidesStructure();
   }
   
   // Remover duplicatas
   const deduplicated = dedupeSlides(slides);
   
-  // Garantir que temos pelo menos 8 slides
+  // Garantir que temos pelo menos 14 slides
   let processedSlides = [...deduplicated];
-  while (processedSlides.length < 8) {
+  while (processedSlides.length < 14) {
     processedSlides.push({
       id: `slide-${processedSlides.length + 1}`,
       type: 'explanation',
@@ -286,8 +286,8 @@ export function processSlidesForHubEduPattern(slides: Slide[]): Slide[] {
     });
   }
   
-  // Limitar a 8 slides
-  processedSlides = processedSlides.slice(0, 8);
+  // Limitar a 14 slides
+  processedSlides = processedSlides.slice(0, 14);
   
   // Garantir que todos os slides tenham estrutura de 2 cards
   processedSlides = processedSlides.map((slide, index) => {
