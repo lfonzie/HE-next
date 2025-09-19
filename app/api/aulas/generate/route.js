@@ -4,7 +4,11 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { randomizeQuizQuestions } from '@/lib/quiz-randomization';
+import { ensureQuizFormat } from '@/lib/quiz-validation';
 import { log } from '@/lib/lesson-logger';
+import { logTokens } from '@/lib/token-logger';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 const openai = new OpenAI({ 
   apiKey: process.env.OPENAI_API_KEY 
@@ -129,7 +133,7 @@ REGRAS IMPORTANTES:
 - Use linguagem clara e didática em português brasileiro
 - NÃO use frases como "imagine uma tabela", "crie um gráfico" ou "desenhe um diagrama"
 - Use \\n\\n para quebras de linha entre parágrafos no conteúdo dos slides
-- Para quiz, NÃO inclua campo "correct" - apenas forneça as opções e explicação
+- Para quiz, INCLUA o campo "correct" como índice 0, 1, 2 ou 3 indicando a alternativa correta; "options" deve conter exatamente 4 strings
 - CADA SLIDE DEVE TER MÍNIMO 500 TOKENS DE CONTEÚDO (conteúdo extenso e detalhado)
 
 ESTRUTURA DA AULA (45-60 minutos) - EXATAMENTE 14 SLIDES:
@@ -289,6 +293,7 @@ Para slides de quiz (type: "quiz"), inclua:
     {
       "q": "Pergunta clara e objetiva relacionada ao tema específico?",
       "options": ["A) Alternativa A detalhada", "B) Alternativa B detalhada", "C) Alternativa C detalhada", "D) Alternativa D detalhada"],
+      "correct": 0,
       "explanation": "Explicação detalhada da resposta correta"
     }
   ]
@@ -306,7 +311,7 @@ IMPORTANTE:
 - Para slides 1, 7 e 14: use termos específicos do tema sem palavras genéricas
 - Evite termos genéricos como "education", "classroom", "learning", "educational"
 - Use apenas palavras-chave específicas do conteúdo (ex: "eletricidade corrente", "matemática álgebra", "história independência")
-- Para quiz: "correct" deve ser uma letra (A, B, C, D) indicando a resposta correta
+- Para quiz: "correct" deve ser um número de 0 a 3 indicando a resposta correta (0=A, 1=B, 2=C, 3=D)
 - As alternativas devem ser claramente identificadas como A), B), C), D) no conteúdo das opções
 - Use quebras de linha \\n\\n para separar parágrafos e melhorar a legibilidade
 - Para diagramas e tabelas, use a sintaxe especial: <<<criar um diagrama da fotossíntese, sem letras somente imagem>>> ou <<<criar uma tabela comparativa>>>
@@ -427,6 +432,7 @@ export async function POST(request) {
   
   try {
     const { topic, schoolId, mode = 'sync', customPrompt } = await request.json();
+    const session = await getServerSession(authOptions).catch(() => null);
     
     // Contexto base para todos os logs desta requisição
     const baseContext = {
@@ -502,6 +508,25 @@ export async function POST(request) {
       finishReason: response.choices[0]?.finish_reason,
       responseLength: response.choices[0]?.message?.content?.length || 0
     });
+
+    // Persist token usage (per module: Aulas)
+    try {
+      const totalTokens = (response.usage?.total_tokens) || ((response.usage?.prompt_tokens || 0) + (response.usage?.completion_tokens || 0)) || 0;
+      const userId = session?.user?.id;
+      if (userId && totalTokens > 0) {
+        logTokens({
+          userId,
+          moduleGroup: 'Aulas',
+          model: 'gpt-4o-mini',
+          totalTokens,
+          subject: topic,
+          grade: undefined,
+          messages: { requestId, mode }
+        });
+      }
+    } catch (e) {
+      console.warn('⚠️ [AULAS] Failed to log tokens:', e);
+    }
     // Timer para parsing do conteúdo
     const parsingTimer = log.timeStart('parsing-conteudo', baseContext);
     
@@ -557,58 +582,64 @@ export async function POST(request) {
       if (slide.number === 1 || slide.number === 7 || slide.number === 14) {
         const imageQuery = slide.imageQuery || generateImageQuery(topic, slide.number, slide.type);
         
-        // Tentar múltiplas fontes de imagem
+        // Tentar múltiplas fontes de imagem com prioridade Wikimedia
         let imageUrl = null;
         let imageSource = 'fallback';
-        
-        // 1. Usar nova API de classificação de imagens com múltiplas fontes
-        try {
-          const classifyResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/images/classify-source`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              query: imageQuery,
-              subject: topic,
-              grade: '5',
-              count: 1
-            }),
-          });
 
-          if (classifyResponse.ok) {
-            const classifyData = await classifyResponse.json();
-            if (classifyData.success && classifyData.images && classifyData.images.length > 0) {
-              const bestImage = classifyData.images[0];
-              imageUrl = bestImage.url;
-              imageSource = bestImage.source.source;
-              console.log(`✅ Imagem classificada para slide ${slide.number}:`, {
-                source: bestImage.source.name,
-                relevance: bestImage.relevanceScore,
-                themeMatch: bestImage.themeMatch,
-                educationalSuitability: bestImage.educationalSuitability
-              });
+        // 1. Wikimedia Commons (prioritário)
+        try {
+          const wikiResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/wikimedia/search`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query: imageQuery, subject: topic, count: 1 })
+          });
+          if (wikiResponse.ok) {
+            const wikiData = await wikiResponse.json();
+            if (wikiData.success && wikiData.photos && wikiData.photos.length > 0) {
+              imageUrl = wikiData.photos[0].urls?.regular || wikiData.photos[0].url;
+              imageSource = 'wikimedia';
+              console.log(`✅ Imagem Wikimedia para slide ${slide.number}:`, imageUrl);
             }
           }
         } catch (error) {
-          console.warn(`⚠️ Erro ao classificar imagem para slide ${slide.number}:`, error);
+          console.warn(`⚠️ Erro ao buscar imagem Wikimedia para slide ${slide.number}:`, error);
         }
 
-        // 2. Se Wikimedia falhar, tentar Pixabay
+        // 2. Classificador multi-fonte (secundário)
+        if (!imageUrl) {
+          try {
+            const classifyResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/images/classify-source`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ query: imageQuery, subject: topic, grade: '5', count: 1 }),
+            });
+
+            if (classifyResponse.ok) {
+              const classifyData = await classifyResponse.json();
+              if (classifyData.success && classifyData.images && classifyData.images.length > 0) {
+                const bestImage = classifyData.images[0];
+                imageUrl = bestImage.url;
+                imageSource = bestImage.source?.source || bestImage.source || 'mixed';
+                console.log(`✅ Imagem classificada para slide ${slide.number}:`, {
+                  source: bestImage.source?.name || imageSource,
+                  relevance: bestImage.relevanceScore,
+                  themeMatch: bestImage.themeMatch,
+                  educationalSuitability: bestImage.educationalSuitability
+                });
+              }
+            }
+          } catch (error) {
+            console.warn(`⚠️ Erro ao classificar imagem para slide ${slide.number}:`, error);
+          }
+        }
+
+        // 3. Pixabay (terciário)
         if (!imageUrl) {
           try {
             const pixabayResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/pixabay`, {
               method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                action: 'search',
-                query: imageQuery,
-                perPage: 1,
-                category: 'education',
-                type: 'images'
-              }),
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'search', query: imageQuery, perPage: 1, category: 'education', type: 'images' }),
             });
 
             if (pixabayResponse.ok) {
@@ -624,19 +655,13 @@ export async function POST(request) {
           }
         }
 
-        // 3. Se Pixabay falhar, tentar Unsplash
+        // 4. Unsplash (quaternário)
         if (!imageUrl) {
           try {
             const unsplashResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/unsplash/translate-search`, {
               method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                query: imageQuery,
-                subject: topic,
-                count: 1
-              }),
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ query: imageQuery, subject: topic, count: 1 }),
             });
 
             if (unsplashResponse.ok) {
@@ -652,16 +677,11 @@ export async function POST(request) {
           }
         }
 
-        // 3. Se ambas falharem, usar Wiki Commons como fallback
-        // TODO: Preparar para integração com FreePik API
-        // - Adicionar configuração de API key do FreePik
-        // - Implementar busca de imagens educacionais específicas
-        // - Manter Wiki Commons como fallback final
+        // 5. Fallback final para Wikimedia placeholder
         if (!imageUrl) {
-          // Usar Wiki Commons com uma imagem educacional genérica
           imageUrl = `https://commons.wikimedia.org/wiki/Special:FilePath/Education%20-%20The%20Noun%20Project.svg?width=800&height=400`;
           imageSource = 'wikimedia';
-          console.log(`⚠️ Usando Wiki Commons para slide ${slide.number}`);
+          console.log(`⚠️ Usando Wiki Commons placeholder para slide ${slide.number}`);
         }
 
         return {
@@ -777,7 +797,9 @@ export async function POST(request) {
           let processedQuestions = slide.questions;
           if (slide.type === 'quiz' && slide.questions) {
             try {
-              processedQuestions = randomizeQuizQuestions(slide.questions);
+              // First normalize to strict format (q, options[4], correct index/letter, explanation)
+              const normalized = ensureQuizFormat(slide.questions);
+              processedQuestions = randomizeQuizQuestions(normalized);
               log.debug('🎲 Quiz questions randomized', baseContext, {
                 slideNumber: slide.number,
                 questionCount: processedQuestions.length
@@ -814,7 +836,8 @@ export async function POST(request) {
           // Randomize quiz questions if this is a quiz slide
           if (slide.type === 'quiz' && slide.questions) {
             try {
-              const randomizedQuestions = randomizeQuizQuestions(slide.questions);
+              const normalized = ensureQuizFormat(slide.questions);
+              const randomizedQuestions = randomizeQuizQuestions(normalized);
               return {
                 ...slide,
                 questions: randomizedQuestions
@@ -927,3 +950,5 @@ export async function POST(request) {
     }, { status: statusCode });
   }
 }
+
+export const runtime = 'nodejs'

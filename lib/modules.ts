@@ -85,6 +85,7 @@ export const MODULE_MAPPING: Record<string, ModuleId> = {
   "professor": "PROFESSOR",
   "aula-expandida": "AULA_EXPANDIDA",
   "enem-interactive": "ENEM_INTERACTIVE",
+  "enem-interativo": "ENEM_INTERACTIVE",
   "ti": "TI",
   "rh": "RH",
   "financeiro": "FINANCEIRO",

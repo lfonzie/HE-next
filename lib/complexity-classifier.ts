@@ -8,10 +8,12 @@ const classificationCache = new Map<string, { classification: ComplexityLevel, t
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
 const MAX_CACHE_SIZE = 1000;
 
-// Função para obter cache key baseada na mensagem
-function getCacheKey(message: string): string {
+// Função para obter cache key baseada na mensagem e módulo
+function getCacheKey(message: string, module?: string): string {
   // Normalizar mensagem para cache (remover espaços extras, converter para lowercase)
-  return message.toLowerCase().trim().replace(/\s+/g, ' ');
+  const normalizedMessage = message.toLowerCase().trim().replace(/\s+/g, ' ');
+  const normalizedModule = (module || 'global').toLowerCase().trim();
+  return `${normalizedModule}|${normalizedMessage}`;
 }
 
 // Função para limpar cache expirado
@@ -36,7 +38,7 @@ function manageCacheSize(): void {
 }
 
 // Função de classificação local (melhorada)
-export function classifyComplexityLocal(message: string): ComplexityLevel {
+export function classifyComplexityLocal(message: string, module?: string): ComplexityLevel {
   const lowerMessage = message.toLowerCase();
   
   // Palavras-chave que indicam trivialidade
@@ -45,9 +47,19 @@ export function classifyComplexityLocal(message: string): ComplexityLevel {
     'ok', 'okay', 'sim', 'não', 'nao', 'obrigado', 'obrigada', 'valeu', 'vlw',
     'tchau', 'até logo', 'até mais', 'bye', 'obrigado', 'obrigada'
   ];
+
+  // Detecção de bem-estar/saúde mental e suporte emocional
+  const wellbeingRegex = /\b(me sinto|estou|sinto|preciso de ajuda|quero ajuda|apoio|preciso falar)\b[\s\S]*\b(triste|ansioso|ansiosa|deprimido|deprimida|angustiado|angustiada|sobrecarregado|sobrecarregada|com medo|em p[aâ]nico|sem esperança|desmotivado|desmotivada|cansado|cansada)\b|ansiedade|depress[aã]o|crise de p[aâ]nico|sa[úu]de mental|psic[oó]logo|psic[oó]loga|terapia|apoio emocional/i;
+  const isWellbeingConcern = wellbeingRegex.test(lowerMessage);
+  const isWellbeingModule = module === 'bem-estar' || module === 'atendimento';
+
+  // Sinalizar mensagens de bem-estar como complexas para assegurar tratamento adequado
+  if (isWellbeingConcern || (isWellbeingModule && /\b(me sinto|estou|sinto)\b/.test(lowerMessage))) {
+    return 'complexa';
+  }
   
   // Verificar se é uma mensagem trivial (muito curta ou saudação simples)
-  if ((trivialKeywords.some(keyword => lowerMessage.includes(keyword)) && message.length < 30) || message.length < 15) {
+  if (!isWellbeingConcern && ((trivialKeywords.some(keyword => lowerMessage.includes(keyword)) && message.length < 30) || message.length < 15)) {
     return 'trivial';
   }
   
@@ -66,7 +78,7 @@ export function classifyComplexityLocal(message: string): ComplexityLevel {
 }
 
 // Função principal para classificar complexidade com cache
-export function classifyComplexity(message: string): {
+export function classifyComplexity(message: string, module?: string): {
   classification: ComplexityLevel;
   cached: boolean;
   method: 'local' | 'cache';
@@ -76,7 +88,7 @@ export function classifyComplexity(message: string): {
   manageCacheSize();
 
   // Verificar cache primeiro
-  const cacheKey = getCacheKey(message);
+  const cacheKey = getCacheKey(message, module);
   const cached = classificationCache.get(cacheKey);
   
   if (cached && (Date.now() - cached.timestamp) < CACHE_TTL) {
@@ -88,7 +100,7 @@ export function classifyComplexity(message: string): {
   }
 
   // Classificação local
-  const classification = classifyComplexityLocal(message);
+  const classification = classifyComplexityLocal(message, module);
   
   // Salvar no cache
   classificationCache.set(cacheKey, {

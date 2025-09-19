@@ -9,6 +9,7 @@ import { orchestrate } from '@/lib/orchestrator'
 import { educationalTools } from '@/lib/ai-tools'
 import { classifyComplexity, getProviderConfig } from '@/lib/complexity-classifier'
 import '@/lib/orchestrator-modules' // ensure modules are registered
+import { logTokens, extractTotalTokens } from '@/lib/token-logger'
 
 // Provider configurations
 const PROVIDER_MODELS = {
@@ -55,7 +56,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Usar sistema de roteamento inteligente com classificação otimizada
-    const complexityResult = classifyComplexity(lastMessage.content)
+    const complexityResult = classifyComplexity(lastMessage.content, module)
     const detectedComplexity = complexityResult.classification
     
     console.log(`⚡ [MULTI-PROVIDER] Complexity classification: ${detectedComplexity} (${complexityResult.method}${complexityResult.cached ? ', cached' : ''})`)
@@ -145,6 +146,22 @@ export async function POST(request: NextRequest) {
           module: targetModule,
           toolCalls: result.toolCalls?.length || 0
         })
+        try {
+          if (session?.user?.id) {
+            const total = extractTotalTokens((result as any).usage)
+            logTokens({
+              userId: session.user.id,
+              moduleGroup: 'Chat',
+              model: selectedModel,
+              totalTokens: total,
+              subject: undefined,
+              grade: undefined,
+              messages: { module: targetModule, messageCount: aiMessages.length }
+            })
+          }
+        } catch (e) {
+          console.warn('⚠️ [MULTI-PROVIDER] Failed to log tokens:', e)
+        }
       }
     })
 

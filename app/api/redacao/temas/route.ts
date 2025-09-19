@@ -14,6 +14,17 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 })
 
+// Função para limpar resposta da IA removendo markdown code blocks
+function cleanAIResponse(response: string): string {
+  // Remove markdown code blocks se existirem
+  const cleaned = response
+    .replace(/^```json\s*/i, '')  // Remove início do bloco
+    .replace(/\s*```$/i, '')       // Remove fim do bloco
+    .trim()
+  
+  return cleaned
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -275,7 +286,8 @@ Responda apenas com um JSON array contendo objetos com as propriedades: id, year
       throw new Error('Resposta vazia da IA')
     }
 
-    const aiThemes = JSON.parse(response)
+    const cleanedResponse = cleanAIResponse(response)
+    const aiThemes = JSON.parse(cleanedResponse)
     
     // Validar e formatar os temas gerados
     return aiThemes.map((theme: any, index: number) => ({

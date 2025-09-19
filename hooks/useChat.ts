@@ -306,6 +306,17 @@ export function useChat(onStreamingStart?: () => void) {
       finalTier = tier
       finalModule = convertApiModuleToSystem(module)
 
+      // Atualizar o módulo ativo no sidebar para refletir o módulo detectado
+      // Chamamos uma única vez por resposta, antes do loop de streaming, para evitar múltiplas trocas
+      try {
+        if (finalModule) {
+          autoSwitchModule(finalModule)
+        }
+      } catch (e) {
+        // Em caso de falha, apenas segue sem quebrar o fluxo de streaming
+        console.warn('[Chat] Falha ao alternar módulo automaticamente:', e)
+      }
+
       while (true) {
         const { done, value } = await reader.read()
         if (done) {

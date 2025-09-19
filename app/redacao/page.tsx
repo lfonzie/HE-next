@@ -351,6 +351,9 @@ export default function RedacaoPage() {
                   size="sm"
                   onClick={async () => {
                     if (includeAIThemes) {
+                      // Remover apenas os temas de IA, mantendo os oficiais
+                      const officialThemes = themes.filter(t => t.isOfficial)
+                      setThemes(prepareThemes(officialThemes))
                       setIncludeAIThemes(false)
                     } else {
                       setIsLoadingAIThemes(true)
@@ -366,7 +369,9 @@ export default function RedacaoPage() {
                         if (response.ok) {
                           const data = await response.json()
                           const currentOfficialThemes = themes.filter(t => t.isOfficial)
-                          setThemes(prepareThemes([...data.themes, ...currentOfficialThemes]))
+                          // Garantir que os temas de IA venham primeiro na ordenação
+                          const allThemes = [...data.themes, ...currentOfficialThemes]
+                          setThemes(prepareThemes(allThemes))
                           setIncludeAIThemes(true)
                           addNotification({
                             type: 'success',

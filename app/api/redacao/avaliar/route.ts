@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 // import { prisma } from '@/lib/prisma' // Temporariamente desabilitado devido a problemas de conexão
 import { OpenAI } from 'openai'
+import { logTokens } from '@/lib/token-logger'
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -81,8 +82,20 @@ export async function POST(request: NextRequest) {
     const sessionId = `redacao_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
     console.log('Sessão de redação criada:', sessionId)
 
-    // Log da avaliação (quota não implementada no schema atual)
-    console.log(`Redação avaliada para usuário ${session.user.id}`)
+    // Persistir uso de tokens (aproximação baseada no tamanho do conteúdo)
+    try {
+      const estimatedTokens = Math.ceil((content?.length || 0) / 4)
+      await logTokens({
+        userId: session.user.id,
+        moduleGroup: 'Redacao',
+        model: 'gpt-4o-mini',
+        totalTokens: estimatedTokens,
+        subject: selectedTheme.theme,
+        messages: { wordCount, uploadedFileName, uploadedFileSize }
+      })
+    } catch (e) {
+      console.warn('⚠️ [REDACAO] Failed to log tokens:', e)
+    }
 
     // Log da atividade (modelo activityLog não implementado no schema atual)
     console.log(`Atividade registrada: redacao_submitted para usuário ${session.user.id}`)

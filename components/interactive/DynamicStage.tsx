@@ -10,7 +10,6 @@ import DiscussionBoard from './DiscussionBoard'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
 import { CheckCircle, Clock, Star, Trophy, XCircle } from 'lucide-react'
 import { randomizeQuizQuestions } from '@/lib/quiz-randomization'
 
@@ -141,51 +140,56 @@ export default function DynamicStage({
         
         // Transform randomized questions to the format expected by NewQuizComponent
         const transformedQuestions = randomizedQuestions.map((q: any, index: number) => {
-          // Debug: Log randomized question data
           console.log(`🔍 DEBUG Randomized Question ${index + 1}:`, {
             randomizedCorrect: q.correct,
             randomizedType: typeof q.correct,
             randomizedOptions: q.options,
             originalCorrect: q.originalCorrect
           });
-          
-          // Since questions are already randomized, q.correct is now a numeric index (0,1,2,3)
-          // Map numeric index to letter (a,b,c,d)
-          let correctAnswer: 'a' | 'b' | 'c' | 'd';
-          
-          if (typeof q.correct === 'number' && q.correct >= 0 && q.correct <= 3) {
-            correctAnswer = ['a', 'b', 'c', 'd'][q.correct] as 'a' | 'b' | 'c' | 'd';
-            console.log(`🔍 DEBUG: Mapped randomized numeric ${q.correct} to letter ${correctAnswer}`);
-          } else {
-            // Fallback to 'a' if invalid
-            correctAnswer = 'a';
-            console.log(`🔍 DEBUG: Invalid randomized index ${q.correct}, defaulting to 'a'`);
+
+          // Normalize options by stripping any leading letters like "A) "
+          const cleanOption = (text: string | undefined, fallback: string) => {
+            const raw = (text || fallback)
+            return raw.replace(/^[A-D]\)\s*/, '').trim()
           }
-          
+
+          // Determine correct answer letter from q.correct which should be an index after randomize
+          let correctAnswer: 'a' | 'b' | 'c' | 'd' = 'a'
+          if (typeof q.correct === 'number' && q.correct >= 0 && q.correct <= 3) {
+            correctAnswer = ['a', 'b', 'c', 'd'][q.correct] as 'a' | 'b' | 'c' | 'd'
+          } else if (typeof q.correct === 'string') {
+            const normalized = q.correct.toLowerCase()
+            if (['a', 'b', 'c', 'd'].includes(normalized)) {
+              correctAnswer = normalized as 'a' | 'b' | 'c' | 'd'
+            } else if (/^[0-3]$/.test(normalized)) {
+              correctAnswer = ['a', 'b', 'c', 'd'][parseInt(normalized, 10)] as 'a' | 'b' | 'c' | 'd'
+            }
+          }
+
           const transformed = {
             question: q.q || q.question || 'Pergunta não disponível',
             options: {
-              a: (q.options?.[0] || 'Opção A').replace(/^[A-D]\)\s*/, '').trim(),
-              b: (q.options?.[1] || 'Opção B').replace(/^[A-D]\)\s*/, '').trim(), 
-              c: (q.options?.[2] || 'Opção C').replace(/^[A-D]\)\s*/, '').trim(),
-              d: (q.options?.[3] || 'Opção D').replace(/^[A-D]\)\s*/, '').trim()
+              a: cleanOption(q.options?.[0], 'Opção A'),
+              b: cleanOption(q.options?.[1], 'Opção B'),
+              c: cleanOption(q.options?.[2], 'Opção C'),
+              d: cleanOption(q.options?.[3], 'Opção D')
             },
             correct: correctAnswer,
-            explanation: q.explanation || 'Explicação não disponível'
-          };
-          
+            explanation: (q.explanation || '').trim() || 'Explicação não disponível'
+          }
+
           console.log(`🔍 DEBUG: Final transformed question ${index + 1}:`, {
             correct: transformed.correct,
             options: transformed.options
-          });
-          
-          return transformed;
+          })
+
+          return transformed
         })
         
         return (
           <NewQuizComponent
             questions={transformedQuestions}
-            onComplete={(score, total) => handleStageComplete({ score, total, type: 'quiz' })}
+            onComplete={(score, total) => handleStageComplete({ score, total, total: total, type: 'quiz' })}
             timeLimit={activity.time ? activity.time * 60 : 0}
             showExplanations={true}
             allowRetry={true}
@@ -330,7 +334,7 @@ export default function DynamicStage({
     }
   }
 
-  const progress = ((stageIndex + 1) / totalStages) * 100
+  // Progress bar removed from stage header
 
   return (
     <motion.div
@@ -383,14 +387,7 @@ export default function DynamicStage({
             </div>
           </div>
           
-          {/* Progress Bar */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Progresso da Aula</span>
-              <span>{Math.round(progress)}%</span>
-            </div>
-            <Progress value={progress} className="h-2" />
-          </div>
+          {/* Progress removed as requested */}
         </CardHeader>
       </Card>
 

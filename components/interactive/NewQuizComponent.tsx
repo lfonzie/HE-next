@@ -128,7 +128,7 @@ export default function NewQuizComponent({
 
   const handleComplete = () => {
     const correctAnswers = answers.filter((answer, index) => {
-      const correctAnswer = questions[index].correct
+      const correctAnswer = (questions[index].correct || 'a').toLowerCase() as 'a' | 'b' | 'c' | 'd'
       return answer === correctAnswer
     }).length
     

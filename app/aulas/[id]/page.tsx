@@ -4,10 +4,8 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
 import DynamicStage from '@/components/interactive/DynamicStage'
-import { ArrowLeft, BookOpen, Clock, Star, Trophy, Target, Loader2, Keyboard } from 'lucide-react'
+import { ArrowLeft, BookOpen, Trophy, Loader2, Keyboard, Star, Target } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
 import { useProgressiveLoading } from '@/lib/progressive-lesson-loader'
@@ -397,14 +395,7 @@ export default function LessonPage() {
     toast.success('Aula reiniciada!')
   }
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'easy': return 'bg-green-100 text-green-800'
-      case 'medium': return 'bg-yellow-100 text-yellow-800'
-      case 'hard': return 'bg-red-100 text-red-800'
-      default: return 'bg-gray-100 text-gray-800'
-    }
-  }
+  // Difficulty badges removed from header UI
 
   const getStageStatus = (stageIndex: number) => {
     const result = stageResults.find(sr => sr.stageIndex === stageIndex)
@@ -610,11 +601,11 @@ export default function LessonPage() {
     );
   }
 
-  const stageProgress = ((currentStage + 1) / totalStages) * 100
+  // Stage progress UI removed
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
-      {/* Header */}
+      {/* Header (simplified) */}
       <div className="mb-8">
         <div className="flex items-center gap-4 mb-4">
           <Button
@@ -625,44 +616,6 @@ export default function LessonPage() {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Voltar
           </Button>
-          <Badge variant="outline" className="flex items-center gap-1">
-            <BookOpen className="h-3 w-3" />
-            {lessonData?.metadata?.subject || 'Matéria'}
-          </Badge>
-          <Badge variant="outline">
-            {lessonData?.metadata?.grade || 'N/A'}º ano
-          </Badge>
-          <Badge className={getDifficultyColor(lessonData?.metadata?.difficulty || 'medium')}>
-            {lessonData?.metadata?.difficulty || 'medium'}
-          </Badge>
-        </div>
-
-        <h1 className="text-3xl font-bold mb-2">{lessonData?.title || 'Carregando...'}</h1>
-        <p className="text-gray-600 mb-4">{lessonData?.introduction || 'Preparando conteúdo...'}</p>
-
-        {/* Lesson Stats */}
-        <div className="flex items-center gap-6 mb-6">
-          <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-blue-600" />
-            <span className="text-sm">{lessonData?.metadata?.duration || 'N/A'}min</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Star className="h-4 w-4 text-yellow-600" />
-            <span className="text-sm">{totalPoints} pontos</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Target className="h-4 w-4 text-green-600" />
-            <span className="text-sm">{stageResults.length}/{totalStages} etapas</span>
-          </div>
-        </div>
-
-        {/* Progress Bar */}
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span>Progresso da Aula</span>
-            <span>{Math.round(stageProgress)}%</span>
-          </div>
-          <Progress value={stageProgress} className="h-3" />
         </div>
 
         {/* Keyboard Navigation Help */}

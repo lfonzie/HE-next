@@ -4,6 +4,10 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { randomizeQuizQuestions } from '@/lib/quiz-randomization';
+import { ensureQuizFormat } from '@/lib/quiz-validation';
+import { logTokens } from '@/lib/token-logger';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 const openai = new OpenAI({ 
   apiKey: process.env.OPENAI_API_KEY 
@@ -83,6 +87,7 @@ ${slideNumber}. ${slideTitle} (${slideType === 'quiz' ? 'Avaliação, 0 pontos' 
     {
       "q": "Pergunta clara e objetiva?",
       "options": ["A) Alternativa A detalhada", "B) Alternativa B detalhada", "C) Alternativa C detalhada", "D) Alternativa D detalhada"],
+      "correct": 0,
       "explanation": "Explicação detalhada da resposta correta"
     }
   ]
@@ -107,7 +112,7 @@ ${slideNumber}. ${slideTitle} (${slideType === 'quiz' ? 'Avaliação, 0 pontos' 
 - Use linguagem direta e objetiva
 - Foque em explicações claras e exemplos práticos
 - CADA SLIDE DEVE TER MÍNIMO 500 TOKENS DE CONTEÚDO
-- Para quiz, NÃO inclua campo "correct" - apenas forneça as opções e explicação
+- Para quiz, INCLUA o campo "correct" como índice 0, 1, 2 ou 3 indicando a alternativa correta; "options" deve conter exatamente 4 strings
 - Para imageQuery: use termos específicos do tema sem palavras genéricas como "education", "classroom", "learning"
 - TODOS os textos devem estar em PORTUGUÊS BRASILEIRO
 - Responda APENAS com JSON válido. Não inclua formatação markdown, blocos de código ou texto adicional.`;
@@ -136,6 +141,7 @@ ${slideNumber}. ${slideTitle} (${slideType === 'quiz' ? 'Avaliação, 0 pontos' 
 export async function POST(request) {
   try {
     const { topic, slideNumber, previousSlides = [] } = await request.json();
+    const session = await getServerSession(authOptions).catch(() => null);
 
     if (!topic || !slideNumber) {
       return NextResponse.json({ 
@@ -151,14 +157,34 @@ export async function POST(request) {
 
     const slide = await generateNextSlide(topic, slideNumber, previousSlides);
     
-    // Randomize quiz questions if this is a quiz slide
+    // Normalize and randomize quiz questions if this is a quiz slide
     if (slide.type === 'quiz' && slide.questions) {
       try {
-        slide.questions = randomizeQuizQuestions(slide.questions);
+        const normalized = ensureQuizFormat(slide.questions);
+        slide.questions = randomizeQuizQuestions(normalized);
         console.log(`🎲 Quiz questions randomized for slide ${slideNumber}`);
       } catch (error) {
         console.warn(`⚠️ Failed to randomize quiz questions for slide ${slideNumber}:`, error.message);
       }
+    }
+
+    try {
+      // Estimate tokens by content length when using this endpoint
+      const content = typeof slide?.content === 'string' ? slide.content : JSON.stringify(slide || {});
+      const estimatedTokens = Math.ceil((content?.length || 0) / 4);
+      const userId = session?.user?.id;
+      if (userId && estimatedTokens > 0) {
+        logTokens({
+          userId,
+          moduleGroup: 'Aulas',
+          model: 'gpt-4o-mini',
+          totalTokens: estimatedTokens,
+          subject: topic,
+          messages: { slideNumber }
+        });
+      }
+    } catch (e) {
+      console.warn('⚠️ [AULAS/NEXT-SLIDE] Failed to log tokens:', e);
     }
 
     return NextResponse.json({

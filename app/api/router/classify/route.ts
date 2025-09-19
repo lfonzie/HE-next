@@ -50,14 +50,14 @@ Responda apenas com "trivial", "simples" ou "complexa".`
 
 export async function POST(request: NextRequest) {
   try {
-    const { message } = await request.json();
+    const { message, module } = await request.json();
     
     if (!message) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 });
     }
 
     // Usar função utilitária para classificação (com cache integrado)
-    const complexityResult = classifyComplexity(message);
+    const complexityResult = classifyComplexity(message, module);
     
     console.log(`⚡ [COMPLEXITY CLASSIFIER] Classification: "${message.substring(0, 50)}${message.length > 50 ? '...' : ''}" -> ${complexityResult.classification} (${complexityResult.method}${complexityResult.cached ? ', cached' : ''})`);
     
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
     console.error('Classifier route error:', error);
     
     // Em caso de erro, usar classificação local como fallback
-    const fallbackClassification = classifyComplexityLocal(message);
+    const fallbackClassification = classifyComplexityLocal(message, module);
     
     return NextResponse.json({ 
       classification: fallbackClassification,

@@ -109,7 +109,6 @@ export default function ProgressiveLessonComponent({
     try {
       const query = slide.imagePrompt || skeleton?.theme || '';
       
-      // Se não temos uma query válida, não buscar imagem
       if (!query.trim()) {
         console.log('⚠️ Query vazia, não buscando imagem');
         return;
@@ -117,38 +116,53 @@ export default function ProgressiveLessonComponent({
       
       console.log('🖼️ Carregando imagem para slide:', currentSlide + 1, 'Prompt:', query);
       
-      const response = await fetch('/api/unsplash/translate-search', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          query: query,
-          subject: skeleton?.subject || '',
-          count: 1
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('📸 Resposta da API Unsplash com tradução:', data);
-        
-        if (data.photos && data.photos.length > 0) {
-          const imageUrl = data.photos[0].urls.regular;
-          console.log('✅ Imagem carregada com tradução:', imageUrl);
-          console.log('🎯 Tema traduzido:', data.englishTheme);
-          setImageUrl(imageUrl);
-        } else {
-          console.log('⚠️ Nenhuma foto encontrada, usando placeholder');
-          setImageUrl(`https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&h=400&fit=crop&auto=format`);
+      // 1) Wikimedia Commons first
+      let selectedUrl: string | null = null;
+      try {
+        const wikiRes = await fetch('/api/wikimedia/search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query, subject: skeleton?.subject || '', count: 1 })
+        });
+        if (wikiRes.ok) {
+          const wikiData = await wikiRes.json();
+          if (wikiData.success && wikiData.photos && wikiData.photos.length > 0) {
+            selectedUrl = wikiData.photos[0].urls?.regular || wikiData.photos[0].url;
+          }
         }
-      } else {
-        console.error('❌ Erro na resposta da API:', response.status, response.statusText);
-        setImageUrl(`https://picsum.photos/800/400?random=${currentSlide + 1}`);
+      } catch (e) {
+        console.warn('Wikimedia fetch failed, will fallback:', e);
       }
+
+      // 2) Fallback to Unsplash translate-search
+      if (!selectedUrl) {
+        const response = await fetch('/api/unsplash/translate-search', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            query: query,
+            subject: skeleton?.subject || '',
+            count: 1
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.photos && data.photos.length > 0) {
+            selectedUrl = data.photos[0].urls.regular;
+          }
+        }
+      }
+
+      // 3) Final fallback
+      setImageUrl(
+        selectedUrl || `https://commons.wikimedia.org/wiki/Special:FilePath/Education%20-%20The%20Noun%20Project.svg?width=800&height=400`
+      );
     } catch (error) {
       console.error('❌ Erro ao carregar imagem:', error);
-      setImageUrl(`https://picsum.photos/800/400?random=${currentSlide + 1}`);
+      setImageUrl(`https://commons.wikimedia.org/wiki/Special:FilePath/Education%20-%20The%20Noun%20Project.svg?width=800&height=400`);
     }
   };
 

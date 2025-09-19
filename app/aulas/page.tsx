@@ -552,7 +552,7 @@ export default function AulasPage() {
               <h1 className="text-3xl font-bold bg-gradient-to-r from-yellow-600 to-yellow-700 bg-clip-text text-transparent">
                 Aula Gerada com Sucesso!
               </h1>
-              <p className="text-lg text-gray-600">{(generatedLesson as any)?.title || "Título da Aula"}</p>
+              {/* Título removido */}
             </div>
           </div>
           <div className="flex justify-center gap-4">
@@ -800,28 +800,7 @@ export default function AulasPage() {
           <Card className="border-2 border-yellow-200 bg-gradient-to-br from-yellow-50 to-yellow-100">
             <CardContent className="p-8">
               <div className="space-y-8">
-                {/* Informações principais da aula */}
-                <div className="text-center">
-                  <div className="w-20 h-20 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <CheckCircle className="h-10 w-10 text-white" />
-                  </div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">{(generatedLesson as any)?.title || "Título da Aula"}</h2>
-                  <div className="flex flex-wrap justify-center gap-2 mb-4">
-                    <Badge className="bg-yellow-100 text-yellow-800">{(generatedLesson as any)?.subject || "Matéria"}</Badge>
-                    <Badge className="bg-yellow-100 text-yellow-800">{(generatedLesson as any)?.level || "Nível"}</Badge>
-                    <Badge className="bg-yellow-100 text-yellow-800">{(generatedLesson as any)?.difficulty || "Médio"}</Badge>
-                  </div>
-                  <div className="flex justify-center gap-6 text-sm text-gray-600">
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      {(generatedLesson as any)?.estimatedDuration || ""} min
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Target className="h-4 w-4" />
-                      {generatedLesson.stages.length} etapas
-                    </span>
-                  </div>
-                </div>
+                {/* Informações principais da aula removidas (título, badges e estatísticas) */}
 
                 {/* Objetivos de Aprendizagem */}
                 <div>

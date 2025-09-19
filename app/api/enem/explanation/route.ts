@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
+import { logTokens } from '@/lib/token-logger';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 // Inicializar cliente OpenAI
 const openai = new OpenAI({
@@ -74,6 +77,27 @@ Formato da resposta:
     });
 
     const explanation = completion.choices[0]?.message?.content || generateFallbackExplanation(area, correct_answer, user_answer);
+
+    // Persist token usage for ENEM explanations
+    try {
+      const session = await getServerSession(authOptions).catch(() => null);
+      const totalTokens = (completion as any)?.usage?.total_tokens
+        || (((completion as any)?.usage?.prompt_tokens || 0) + ((completion as any)?.usage?.completion_tokens || 0))
+        || Math.ceil((explanation?.length || 0) / 4);
+      const userId = session?.user?.id;
+      if (userId && totalTokens > 0) {
+        await logTokens({
+          userId,
+          moduleGroup: 'ENEM',
+          model: 'gpt-4o-mini',
+          totalTokens,
+          subject: area,
+          messages: { item_id, session_id }
+        })
+      }
+    } catch (e) {
+      console.warn('⚠️ [ENEM/EXPLANATION] Failed to log tokens:', e)
+    }
 
     return NextResponse.json({
       explanation,
