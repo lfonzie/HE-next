@@ -619,6 +619,7 @@ export default function EnhancedLessonModule({
         onAnswer={handleAnswer}
         userAnswer={lessonState.userAnswers[lessonState.currentStep] as number | undefined}
         showHelp={lessonState.showHelp[lessonState.currentStep]}
+        imageUrl={currentStep?.imageUrl}
       />
 
       {/* Navegação */}

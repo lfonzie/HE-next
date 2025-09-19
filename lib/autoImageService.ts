@@ -106,9 +106,12 @@ export class AutoImageService {
     // Ordenar por score e retornar a melhor
     scoredImages.sort((a, b) => b.score - a.score);
     
-    console.log('📊 Scores das imagens:', scoredImages.map(item => 
-      `${item.image.id}: ${item.score.toFixed(1)}`
-    ));
+    // Only log scores in development and for debugging
+    if (process.env.NODE_ENV === 'development' && process.env.DEBUG_UNSPLASH_SCORES === 'true') {
+      console.log('📊 Scores das imagens:', scoredImages.map(item => 
+        `${item.image.id}: ${item.score.toFixed(1)}`
+      ));
+    }
     
     return scoredImages[0].image;
   }

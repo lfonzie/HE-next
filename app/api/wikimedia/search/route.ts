@@ -19,8 +19,12 @@ export async function POST(request: NextRequest) {
     const englishQuery = await translateToEnglish(query, subject);
     console.log('🌍 Query traduzida:', englishQuery);
 
+    // Melhorar a query com termos educacionais e científicos
+    const enhancedQuery = enhanceQueryForWikimedia(englishQuery, subject);
+    console.log('🔍 Query melhorada para Wikimedia:', enhancedQuery);
+
     // Buscar no Wikimedia Commons
-    const searchUrl = `https://commons.wikimedia.org/w/api.php?action=query&format=json&list=search&srsearch=${encodeURIComponent(englishQuery)}&srnamespace=6&srlimit=${count}&srprop=size&origin=*`;
+    const searchUrl = `https://commons.wikimedia.org/w/api.php?action=query&format=json&list=search&srsearch=${encodeURIComponent(enhancedQuery)}&srnamespace=6&srlimit=${count}&srprop=size&origin=*`;
     
     const response = await fetch(searchUrl);
     if (!response.ok) {
@@ -29,8 +33,8 @@ export async function POST(request: NextRequest) {
 
     const data = await response.json();
     
-    // Check for batchcomplete response (empty search result)
-    if (data.batchcomplete === '' || !data.query || !data.query.search || data.query.search.length === 0) {
+    // Check for empty search result
+    if (!data.query || !data.query.search || data.query.search.length === 0) {
       console.log('⚠️ Nenhuma imagem encontrada no Wikimedia Commons:', data);
       return NextResponse.json({
         success: false,
@@ -106,13 +110,26 @@ async function translateToEnglish(query: string, subject?: string): Promise<stri
       return query;
     }
 
-    // Usar API de tradução simples (pode ser melhorada)
-    const translationResponse = await fetch('https://api.mymemory.translated.net/get', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    // Usar a API de detecção de tema que já está funcionando
+    try {
+      const themeDetectionResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/theme-detection`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query, subject }),
+      });
+
+      if (themeDetectionResponse.ok) {
+        const themeData = await themeDetectionResponse.json();
+        if (themeData.englishTheme) {
+          console.log('🎯 Tema detectado para tradução:', themeData);
+          return themeData.englishTheme;
+        }
+      }
+    } catch (error) {
+      console.warn('⚠️ Erro na detecção de tema para tradução:', error);
+    }
 
     // Fallback: tradução manual básica
     const translations: Record<string, string> = {
@@ -147,6 +164,26 @@ async function translateToEnglish(query: string, subject?: string): Promise<stri
       'vacúolos': 'vacuoles',
       'parede celular': 'cell wall',
       'flagelos': 'flagella',
+      'cérebro': 'brain',
+      'neurônios': 'neurons',
+      'sistema nervoso': 'nervous system',
+      'medula espinhal': 'spinal cord',
+      'córtex cerebral': 'cerebral cortex',
+      'hipocampo': 'hippocampus',
+      'cerebelo': 'cerebellum',
+      'tronco cerebral': 'brainstem',
+      'sinapses': 'synapses',
+      'neurotransmissores': 'neurotransmitters',
+      'dendritos': 'dendrites',
+      'axônios': 'axons',
+      'mielina': 'myelin',
+      'impulso nervoso': 'nerve impulse',
+      'reflexos': 'reflexes',
+      'memória': 'memory',
+      'aprendizado': 'learning',
+      'cognição': 'cognition',
+      'percepção': 'perception',
+      'consciência': 'consciousness',
       'cílios': 'cilia',
       'microscópio': 'microscope',
       'laboratório': 'laboratory',
@@ -421,4 +458,50 @@ async function translateToEnglish(query: string, subject?: string): Promise<stri
     console.warn('⚠️ Erro na tradução, usando query original:', error);
     return query;
   }
+}
+
+// Função para melhorar a query para busca no Wikimedia Commons
+function enhanceQueryForWikimedia(query: string, subject?: string): string {
+  // Adicionar termos educacionais e científicos comuns
+  const educationalTerms = [
+    'education',
+    'learning',
+    'teaching',
+    'science',
+    'academic',
+    'study',
+    'research',
+    'knowledge'
+  ];
+
+  // Adicionar termos específicos por disciplina
+  const subjectTerms: Record<string, string[]> = {
+    'ciencias': ['biology', 'chemistry', 'physics', 'natural science'],
+    'matematica': ['mathematics', 'math', 'algebra', 'geometry', 'calculus'],
+    'historia': ['history', 'historical', 'ancient', 'medieval', 'modern'],
+    'geografia': ['geography', 'earth', 'world', 'map', 'continent'],
+    'portugues': ['language', 'literature', 'writing', 'grammar'],
+    'ingles': ['english', 'language', 'communication'],
+    'fisica': ['physics', 'mechanics', 'thermodynamics', 'optics'],
+    'quimica': ['chemistry', 'molecular', 'atomic', 'reaction'],
+    'biologia': ['biology', 'life', 'organism', 'evolution', 'genetics'],
+    'anatomia': ['anatomy', 'human body', 'organs', 'tissues'],
+    'neurologia': ['neurology', 'brain', 'nervous system', 'neuroscience'],
+    'psicologia': ['psychology', 'mind', 'behavior', 'cognitive']
+  };
+
+  // Construir query melhorada
+  let enhancedQuery = query;
+  
+  // Adicionar termos educacionais
+  enhancedQuery += ' ' + educationalTerms.slice(0, 3).join(' ');
+  
+  // Adicionar termos específicos da disciplina
+  if (subject && subjectTerms[subject.toLowerCase()]) {
+    enhancedQuery += ' ' + subjectTerms[subject.toLowerCase()].slice(0, 2).join(' ');
+  }
+
+  // Limitar o tamanho da query para evitar problemas na API
+  const words = enhancedQuery.split(' ').slice(0, 8);
+  return words.join(' ');
 }

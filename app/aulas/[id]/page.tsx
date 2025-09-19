@@ -605,29 +605,11 @@ export default function LessonPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
-      {/* Header (simplified) */}
+      {/* Header (simplified) - apenas título */}
       <div className="mb-8">
-        <div className="flex items-center gap-4 mb-4">
-          <Button
-            onClick={() => router.push('/aulas')}
-            variant="outline"
-            size="sm"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar
-          </Button>
-        </div>
-
-        {/* Keyboard Navigation Help */}
-        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <div className="flex items-center gap-2 text-sm text-blue-700">
-            <Keyboard className="h-4 w-4" />
-            <span className="font-medium">Navegação por teclado:</span>
-            <span>← → para navegar entre slides</span>
-            <span>•</span>
-            <span>Esc para voltar</span>
-          </div>
-        </div>
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">
+          {lessonData?.title || 'Aula'}
+        </h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -813,6 +795,32 @@ export default function LessonPage() {
           )}
         </div>
       )}
+
+      {/* Footer com navegação por teclado e botão voltar - movido para baixo */}
+      <div className="mt-8 pt-6 border-t border-gray-200">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          {/* Botão Voltar */}
+          <Button
+            onClick={() => router.push('/aulas')}
+            variant="outline"
+            size="sm"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Voltar para Aulas
+          </Button>
+
+          {/* Keyboard Navigation Help */}
+          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center gap-2 text-sm text-blue-700">
+              <Keyboard className="h-4 w-4" />
+              <span className="font-medium">Navegação por teclado:</span>
+              <span>← → para navegar entre slides</span>
+              <span>•</span>
+              <span>Esc para voltar</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

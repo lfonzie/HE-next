@@ -7,6 +7,7 @@ import { google } from '@ai-sdk/google'
 import { getSystemPrompt } from '@/lib/ai-sdk-config'
 import { orchestrate } from '@/lib/orchestrator'
 import { educationalTools } from '@/lib/ai-tools'
+import { classifyComplexity, getProviderConfig } from '@/lib/complexity-classifier'
 import '@/lib/orchestrator-modules' // ensure modules are registered
 
 export async function POST(request: NextRequest) {
@@ -73,28 +74,29 @@ export async function POST(request: NextRequest) {
       }))
     ]
 
-    // Detectar se é uma conversa simples (priorizar Google AI)
-    const lastMessageContent = lastMessage.content
-    const isSimpleChat = lastMessageContent.length < 100 && 
-                        !lastMessageContent.includes('matemática') && 
-                        !lastMessageContent.includes('física') && 
-                        !lastMessageContent.includes('química')
+    // Classificar complexidade da mensagem
+    const complexityResult = classifyComplexity(lastMessageContent, targetModule)
+    const complexityLevel = complexityResult.classification
     
-    // Usar Google AI para conversas simples, OpenAI para outras
-    const useGoogleAI = isSimpleChat && process.env.GOOGLE_GENERATIVE_AI_API_KEY
+    // Obter configuração de provider baseada na complexidade
+    const providerConfig = getProviderConfig(complexityLevel)
+    
+    // Usar Google AI para mensagens triviais, OpenAI para outras
+    const useGoogleAI = providerConfig.provider === 'google' && process.env.GOOGLE_GENERATIVE_AI_API_KEY
     
     console.log('🚀 [AI SDK] Starting stream with:', {
-      model: useGoogleAI ? 'gemini-2.0-flash-exp' : 'gpt-4o-mini',
-      provider: useGoogleAI ? 'google' : 'openai',
+      model: providerConfig.model,
+      provider: providerConfig.provider,
+      tier: providerConfig.tier,
+      complexity: complexityLevel,
       module: targetModule,
       messageCount: aiMessages.length,
-      isSimpleChat,
       useGoogleAI
     })
 
-    // Usar streamText do AI SDK com OpenAI
+    // Usar streamText do AI SDK com provider baseado na complexidade
     const result = await streamText({
-      model: openai('gpt-4o-mini'),
+      model: useGoogleAI ? google(providerConfig.model) : openai(providerConfig.model),
       messages: aiMessages,
       temperature: 0.7,
       // tools: educationalTools, // Temporariamente desabilitado para build
@@ -102,7 +104,10 @@ export async function POST(request: NextRequest) {
         console.log('✅ [AI SDK] Stream finished:', {
           finishReason: result.finishReason,
           usage: result.usage,
-          provider: useGoogleAI ? 'google' : 'openai',
+          provider: providerConfig.provider,
+          model: providerConfig.model,
+          tier: providerConfig.tier,
+          complexity: complexityLevel,
           module: targetModule,
           toolCalls: result.toolCalls?.length || 0
         })

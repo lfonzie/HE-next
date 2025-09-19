@@ -63,14 +63,14 @@ Retorne APENAS um JSON válido com este formato exato:
         "c": "Terceira alternativa",
         "d": "Quarta alternativa"
       },
-      "correct": "a",
+      "correct": 0,
       "explanation": "Explicação detalhada de por que a resposta está correta e por que as outras estão erradas"
     }
   ]
 }
 
 IMPORTANTE:
-- Use apenas "a", "b", "c", "d" para a resposta correta
+- Use apenas números 0, 1, 2, 3 para a resposta correta (0=A, 1=B, 2=C, 3=D)
 - Cada questão deve ser única e desafiadora
 - As alternativas devem ser plausíveis e bem elaboradas
 - A explicação deve ser educativa e detalhada

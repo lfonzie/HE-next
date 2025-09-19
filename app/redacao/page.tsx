@@ -7,10 +7,12 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, FileText, Send, Clock, Target, Sparkles } from 'lucide-react'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Loader2, FileText, Send, Clock, Target, Sparkles, X } from 'lucide-react'
 import { useNotifications } from '@/components/providers/NotificationProvider'
 import { useRouter } from 'next/navigation'
 import { FileUpload } from '@/components/redacao/FileUpload'
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 
 interface EnemTheme {
   id: string
@@ -19,6 +21,8 @@ interface EnemTheme {
   description: string
   isOfficial?: boolean
   isAIGenerated?: boolean
+  isSessionGenerated?: boolean
+  createdAt?: string
 }
 
 interface RedacaoSubmission {
@@ -27,7 +31,7 @@ interface RedacaoSubmission {
   wordCount: number
 }
 
-export default function RedacaoPage() {
+function RedacaoPageContent() {
   const { user, isLoading: authLoading } = useAuth()
   const { addNotification } = useNotifications()
   const router = useRouter()
@@ -42,17 +46,23 @@ export default function RedacaoPage() {
   const [uploadedFileSize, setUploadedFileSize] = useState<number>(0)
   const [includeAIThemes, setIncludeAIThemes] = useState(false)
   const [isLoadingAIThemes, setIsLoadingAIThemes] = useState(false)
+  const [generatedThemes, setGeneratedThemes] = useState<EnemTheme[]>([])
+  const [showGeneratedModal, setShowGeneratedModal] = useState(false)
 
   const prepareThemes = useCallback((list: EnemTheme[]) => {
     return [...list]
       .map((theme) => {
         const isAITheme = theme.isAIGenerated || theme.year >= 2025 || theme.id?.startsWith('ai-')
         if (isAITheme) {
-          return { ...theme, isAIGenerated: true, year: 2025 }
+          return { ...theme, isAIGenerated: true }
         }
         return { ...theme, isAIGenerated: false }
       })
       .sort((a, b) => {
+        // Priorizar temas gerados para a sessão atual
+        if (a.isSessionGenerated && !b.isSessionGenerated) return -1
+        if (!a.isSessionGenerated && b.isSessionGenerated) return 1
+        // Depois temas de IA em geral
         if (a.isAIGenerated && !b.isAIGenerated) return -1
         if (!a.isAIGenerated && b.isAIGenerated) return 1
         return b.year - a.year
@@ -63,85 +73,14 @@ export default function RedacaoPage() {
   useEffect(() => {
     const loadThemes = async () => {
       try {
-        const url = includeAIThemes ? '/api/redacao/temas?includeAI=true' : '/api/redacao/temas'
-        const response = await fetch(url)
+        const response = await fetch('/api/redacao/temas')
         if (response.ok) {
           const data = await response.json()
-          setThemes(prepareThemes(data.themes || []))
+          const preparedThemes = prepareThemes(data.themes || [])
+          setThemes(preparedThemes)
         } else {
-          // Fallback para temas estáticos se a API falhar
-          setThemes(prepareThemes([
-            {
-              id: '2024-1',
-              year: 2024,
-              theme: 'Inclusão digital como direito de todos',
-              description: 'Tema da redação ENEM 2024',
-              isOfficial: true
-            },
-            {
-              id: '2023-1',
-              year: 2023,
-              theme: 'Desafios para o enfrentamento da invisibilidade do trabalho de cuidado realizado pela mulher no Brasil',
-              description: 'Tema da redação ENEM 2023',
-              isOfficial: true
-            },
-            {
-              id: '2022-1',
-              year: 2022,
-              theme: 'Desafios para a valorização de comunidades e povos tradicionais no Brasil',
-              description: 'Tema da redação ENEM 2022',
-              isOfficial: true
-            },
-            {
-              id: '2021-1',
-              year: 2021,
-              theme: 'Invisibilidade e registro civil: garantia de acesso à cidadania no Brasil',
-              description: 'Tema da redação ENEM 2021',
-              isOfficial: true
-            },
-            {
-              id: '2020-1',
-              year: 2020,
-              theme: 'O estigma associado às doenças mentais na sociedade brasileira',
-              description: 'Tema da redação ENEM 2020',
-              isOfficial: true
-            },
-            {
-              id: '2019-1',
-              year: 2019,
-              theme: 'Democratização do acesso ao cinema no Brasil',
-              description: 'Tema da redação ENEM 2019',
-              isOfficial: true
-            },
-            {
-              id: '2018-1',
-              year: 2018,
-              theme: 'Manipulação do comportamento do usuário pelo controle de dados na internet',
-              description: 'Tema da redação ENEM 2018',
-              isOfficial: true
-            },
-            {
-              id: '2017-1',
-              year: 2017,
-              theme: 'Desafios para a formação educacional de surdos no Brasil',
-              description: 'Tema da redação ENEM 2017',
-              isOfficial: true
-            },
-            {
-              id: '2016-1',
-              year: 2016,
-              theme: 'Caminhos para combater a intolerância religiosa no Brasil',
-              description: 'Tema da redação ENEM 2016',
-              isOfficial: true
-            },
-            {
-              id: '2015-1',
-              year: 2015,
-              theme: 'A persistência da violência contra a mulher na sociedade brasileira',
-              description: 'Tema da redação ENEM 2015',
-              isOfficial: true
-            }
-          ]))
+          console.error('Erro ao carregar temas:', response.statusText)
+          addNotification({ type: 'error', title: 'Erro', message: 'Falha ao carregar temas de redação' })
         }
       } catch (error) {
         console.error('Erro ao carregar temas:', error)
@@ -152,13 +91,14 @@ export default function RedacaoPage() {
     }
 
     loadThemes()
-  }, [addNotification, includeAIThemes, prepareThemes])
+  }, [addNotification, prepareThemes])
 
   // Contar palavras em tempo real
   useEffect(() => {
     const words = content.trim().split(/\s+/).filter(word => word.length > 0)
     setWordCount(words.length)
   }, [content])
+
 
   // Função para lidar com texto extraído de arquivo
   const handleTextExtracted = (text: string, extractedWordCount: number) => {
@@ -196,6 +136,8 @@ export default function RedacaoPage() {
     setIsSubmitting(true)
     addNotification({ type: 'info', title: 'Processando', message: 'Enviando redação para avaliação...' })
 
+    const selectedThemeData = themes.find(t => t.id === selectedTheme)
+
     try {
       const response = await fetch('/api/redacao/avaliar', {
         method: 'POST',
@@ -204,6 +146,7 @@ export default function RedacaoPage() {
         },
         body: JSON.stringify({
           theme: selectedTheme,
+          themeText: selectedThemeData?.theme,
           content: content.trim(),
           wordCount,
           uploadedFileName: uploadedFileName || undefined,
@@ -308,13 +251,18 @@ export default function RedacaoPage() {
                           <div className="flex items-center gap-2">
                             <span className="font-medium">{theme.year}</span>
                             {theme.isAIGenerated && (
-                              <Badge variant="secondary" className="text-xs">
+                              <Badge variant="secondary" className="text-xs bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
                                 🤖 IA
                               </Badge>
                             )}
                             {theme.isOfficial && (
                               <Badge variant="default" className="text-xs">
                                 ✓ Oficial
+                              </Badge>
+                            )}
+                            {selectedTheme === theme.id && (
+                              <Badge variant="outline" className="text-xs bg-green-50 text-green-700 dark:bg-green-900 dark:text-green-200">
+                                ✓ Selecionado
                               </Badge>
                             )}
                           </div>
@@ -334,7 +282,7 @@ export default function RedacaoPage() {
                     Tema Selecionado:
                   </h4>
                   <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                    {themes.find(t => t.id === selectedTheme)?.theme}
+                    {themes.find(t => t.id === selectedTheme)?.theme || 'Tema não encontrado'}
                   </p>
                   {themes.find(t => t.id === selectedTheme)?.isAIGenerated && (
                     <Badge variant="secondary" className="mt-2">
@@ -350,12 +298,8 @@ export default function RedacaoPage() {
                   variant="outline"
                   size="sm"
                   onClick={async () => {
-                    if (includeAIThemes) {
-                      // Remover apenas os temas de IA, mantendo os oficiais
-                      const officialThemes = themes.filter(t => t.isOfficial)
-                      setThemes(prepareThemes(officialThemes))
-                      setIncludeAIThemes(false)
-                    } else {
+                    // Sempre gerar novos temas - não ocultar os existentes
+                    if (!includeAIThemes) {
                       setIsLoadingAIThemes(true)
                       try {
                         const response = await fetch('/api/redacao/temas/ai', {
@@ -363,16 +307,27 @@ export default function RedacaoPage() {
                           headers: {
                             'Content-Type': 'application/json',
                           },
-                          body: JSON.stringify({ count: 5 })
+                          body: JSON.stringify({ count: 3 })
                         })
                         
                         if (response.ok) {
                           const data = await response.json()
-                          const currentOfficialThemes = themes.filter(t => t.isOfficial)
-                          // Garantir que os temas de IA venham primeiro na ordenação
-                          const allThemes = [...data.themes, ...currentOfficialThemes]
-                          setThemes(prepareThemes(allThemes))
+                          // Adicionar novos temas à lista existente
+                          const sessionAIGeneratedThemes = data.themes.map((theme: any) => ({
+                            ...theme,
+                            isSessionGenerated: true // Marcar como gerado para esta sessão
+                          }))
+                          const allThemes = [...sessionAIGeneratedThemes, ...themes]
+                          const preparedThemes = prepareThemes(allThemes)
+                          setThemes(preparedThemes)
                           setIncludeAIThemes(true)
+                          
+                          // Salvar temas gerados para mostrar no modal
+                          setGeneratedThemes(data.themes)
+                          setShowGeneratedModal(true)
+                          
+                          // Manter seleção atual - não limpar
+                          
                           addNotification({
                             type: 'success',
                             title: 'Temas Gerados!',
@@ -403,15 +358,12 @@ export default function RedacaoPage() {
                     </>
                   ) : (
                     <>
-                      🤖 {includeAIThemes ? 'Ocultar' : 'Gerar'} Temas com IA
+                      🤖 Gerar Novos Temas com IA
                     </>
                   )}
                 </Button>
                 <p className="text-xs text-gray-500 mt-2 text-center">
-                  {includeAIThemes 
-                    ? 'Temas de IA incluídos na lista' 
-                    : 'Clique para gerar novos temas com IA'
-                  }
+                  Clique para gerar novos temas com IA
                 </p>
               </div>
             </CardContent>
@@ -681,7 +633,88 @@ export default function RedacaoPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Modal de Temas Gerados */}
+        <Dialog open={showGeneratedModal} onOpenChange={setShowGeneratedModal}>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center">
+                <Sparkles className="h-5 w-5 mr-2 text-purple-600" />
+                Temas Gerados por IA
+              </DialogTitle>
+              <DialogDescription>
+                {generatedThemes.length} novos temas foram gerados especialmente para você
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4 mt-4">
+              {generatedThemes.map((theme, index) => (
+                <Card key={theme.id} className="border-l-4 border-l-purple-500">
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Badge variant="secondary" className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                            🤖 IA
+                          </Badge>
+                          <Badge variant="outline">
+                            {theme.year}
+                          </Badge>
+                        </div>
+                        <h4 className="font-semibold text-lg mb-2 text-gray-900 dark:text-gray-100">
+                          {theme.theme}
+                        </h4>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {theme.description}
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedTheme(theme.id)
+                          setShowGeneratedModal(false)
+                          addNotification({
+                            type: 'success',
+                            title: 'Tema Selecionado!',
+                            message: `Tema "${theme.theme}" foi selecionado com sucesso`
+                          })
+                        }}
+                        className="ml-4"
+                      >
+                        Selecionar
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            
+            <div className="flex justify-end gap-2 mt-6 pt-4 border-t">
+              <Button
+                variant="outline"
+                onClick={() => setShowGeneratedModal(false)}
+              >
+                Fechar
+              </Button>
+              <Button
+                onClick={() => setShowGeneratedModal(false)}
+                className="bg-purple-600 hover:bg-purple-700"
+              >
+                Continuar
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
+  )
+}
+
+export default function RedacaoPage() {
+  return (
+    <ProtectedRoute>
+      <RedacaoPageContent />
+    </ProtectedRoute>
   )
 }

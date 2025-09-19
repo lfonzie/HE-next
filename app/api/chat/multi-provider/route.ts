@@ -7,6 +7,7 @@ import { z } from 'zod'
 import { routeAIModel } from '@/lib/ai-model-router'
 import { orchestrate } from '@/lib/orchestrator'
 import { getModelTier } from '@/lib/ai-config'
+import { classifyComplexity, getProviderConfig } from '@/lib/complexity-classifier'
 
 // Schema para validação de entrada - suporta ambos os formatos
 const RequestSchema = z.object({
@@ -130,35 +131,37 @@ export async function POST(request: NextRequest) {
 
         // 2. Classificação de complexidade
         console.log('⚡ [COMPLEXITY] Classifying complexity...');
-        const complexityLevel = 'simple'; // Temporário para debug
-        console.log(`⚡ [COMPLEXITY] Result: ${complexityLevel} (source: local)`);
+        const complexityResult = classifyComplexity(finalMessage, targetModule);
+        const complexityLevel = complexityResult.classification;
+        console.log(`⚡ [COMPLEXITY] Result: ${complexityLevel} (source: ${complexityResult.method}, cached: ${complexityResult.cached})`);
 
     // 3. Seleção de provider e modelo baseada na complexidade
     let finalProvider = provider;
     let finalModel = 'gpt-4o-mini';
     let providerSource = 'default';
+    let tier = 'IA';
     
     if (provider === 'auto') {
-      // Aplicar política baseada no módulo
-      const policy = MODULE_PROVIDER_POLICIES[targetModule as keyof typeof MODULE_PROVIDER_POLICIES] || MODULE_PROVIDER_POLICIES.atendimento;
+      // Usar configuração baseada na complexidade
+      const providerConfig = getProviderConfig(complexityLevel);
+      finalProvider = providerConfig.provider;
+      finalModel = providerConfig.model;
+      tier = providerConfig.tier;
+      providerSource = 'complexity_based';
       
-      finalProvider = policy.preferred;
-      finalModel = complexity === 'complex' ? policy.complexModel : policy.model;
-      providerSource = 'module_policy';
-      
-      console.log(`🎯 [PROVIDER] Auto-selected: ${finalProvider}:${finalModel} (policy for ${targetModule}, complexity: ${complexity})`);
+      console.log(`🎯 [PROVIDER] Auto-selected: ${finalProvider}:${finalModel} (complexity: ${complexityLevel}, tier: ${tier})`);
     } else {
-      // Aplicar política baseada no módulo para provider específico
-      const policy = MODULE_PROVIDER_POLICIES[targetModule as keyof typeof MODULE_PROVIDER_POLICIES] || MODULE_PROVIDER_POLICIES.atendimento;
-      
+      // Se provider específico foi solicitado, ainda aplicar lógica de complexidade para modelo
+      const providerConfig = getProviderConfig(complexityLevel);
       finalProvider = provider;
-      finalModel = complexity === 'complex' ? policy.complexModel : policy.model;
+      finalModel = providerConfig.model;
+      tier = providerConfig.tier;
       providerSource = 'client_specified';
       
-      console.log(`🎯 [PROVIDER] Client specified: ${finalProvider}:${finalModel} (policy for ${targetModule}, complexity: ${complexity})`);
+      console.log(`🎯 [PROVIDER] Client specified: ${finalProvider}:${finalModel} (complexity: ${complexityLevel}, tier: ${tier})`);
     }
 
-    // 4. Configuração do modelo - usar OpenAI por padrão para desenvolvimento
+    // 4. Configuração do modelo baseada na complexidade
     let modelInstance;
     try {
       switch (finalProvider) {
@@ -173,11 +176,11 @@ export async function POST(request: NextRequest) {
           break;
         case 'google':
           // Verificar se a chave da API está disponível
-          if (!process.env.GOOGLE_API_KEY) {
+          if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
             console.warn('⚠️ [MODEL] Google API key not found, falling back to OpenAI');
             modelInstance = openai('gpt-4o-mini');
           } else {
-            modelInstance = google(finalModel === 'gpt-4o' ? 'gemini-1.5-pro' : 'gemini-1.5-flash');
+            modelInstance = google(finalModel);
           }
           break;
         case 'openai':
@@ -195,9 +198,9 @@ export async function POST(request: NextRequest) {
                   'X-Provider': 'mock',
                   'X-Model': 'mock-model',
                   'X-Module': targetModule,
-                  'X-Complexity': complexity,
-                  'X-Tier': 'IA_ECO',
-                  'X-Routing-Reasoning': `Mock response for development - Module: ${targetModule}, Provider: ${finalProvider} (${providerSource}), Complexity: ${complexity}`
+                  'X-Complexity': complexityLevel,
+                  'X-Tier': tier,
+                  'X-Routing-Reasoning': `Mock response for development - Module: ${targetModule}, Provider: ${finalProvider} (${providerSource}), Complexity: ${complexityLevel}`
                 }
               }
             );
@@ -219,23 +222,22 @@ export async function POST(request: NextRequest) {
             'X-Provider': 'error',
             'X-Model': 'error-model',
             'X-Module': targetModule,
-            'X-Complexity': complexity,
-            'X-Tier': 'IA_ECO',
+            'X-Complexity': complexityLevel,
+            'X-Tier': tier,
             'X-Routing-Reasoning': `Error response due to model configuration error - Module: ${targetModule}, Provider: ${finalProvider}, Error: ${modelError.message}`
           }
         }
       );
     }
 
-    // 5. Calcular tier baseado no modelo selecionado
-    const tier = getModelTier(finalModel);
+    // 5. Tier já foi calculado baseado na complexidade
     
     // 6. Preparar contexto final
     const finalContext = {
       module: targetModule,
       provider: finalProvider,
       model: finalModel,
-      complexity,
+      complexity: complexityLevel,
       tier,
       messageCount,
       conversationId,
@@ -247,7 +249,7 @@ export async function POST(request: NextRequest) {
     };
 
     // Telemetria compacta
-    console.log(`[MULTI] msg=${finalMessage.substring(0, 20)}... module=${targetModule} src=${moduleSource} conf=${classificationConfidence.toFixed(2)} provider=${finalProvider}:${finalModel} msgCount=${messageCount} complexity=${complexity} tier=${tier}`);
+    console.log(`[MULTI] msg=${finalMessage.substring(0, 20)}... module=${targetModule} src=${moduleSource} conf=${classificationConfidence.toFixed(2)} provider=${finalProvider}:${finalModel} msgCount=${messageCount} complexity=${complexityLevel} tier=${tier}`);
 
     // 7. Streaming da resposta
     console.log(`🚀 [STREAM] Starting with context:`, finalContext);

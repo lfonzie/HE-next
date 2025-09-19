@@ -14,6 +14,7 @@ interface UnsplashSlideCardProps {
   onAnswer: (stepIndex: number, selectedOption: number, isCorrect: boolean) => void;
   userAnswer?: number;
   showHelp?: boolean;
+  imageUrl?: string; // Add imageUrl prop for dynamic images from API
 }
 
 export default function UnsplashSlideCard({
@@ -21,13 +22,14 @@ export default function UnsplashSlideCard({
   stepIndex,
   onAnswer,
   userAnswer,
-  showHelp
+  showHelp,
+  imageUrl
 }: UnsplashSlideCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
 
-  // Determinar se deve buscar imagem do Unsplash (slides 1 e 9)
-  const shouldFetchImage = stepIndex === 0 || stepIndex === 8; // slide 1 (índice 0) ou slide 9 (índice 8)
+  // Determinar se deve buscar imagem do Unsplash (slides 1 e 9) apenas se não há imageUrl da API
+  const shouldFetchImage = !imageUrl && (stepIndex === 0 || stepIndex === 8); // slide 1 (índice 0) ou slide 9 (índice 8)
   
   // Gerar query baseada no conteúdo do slide
   const getImageQuery = () => {
@@ -45,7 +47,7 @@ export default function UnsplashSlideCard({
     return '';
   };
 
-  const { imageUrl, isLoading: imageLoading, error: imageError, refetch } = useUnsplashImage(
+  const { imageUrl: unsplashImageUrl, isLoading: imageLoading, error: unsplashError, refetch } = useUnsplashImage(
     getImageQuery(),
     shouldFetchImage,
     slide.subject // Passar o subject para tradução
@@ -113,8 +115,8 @@ export default function UnsplashSlideCard({
             <CardContent className="space-y-4">
               <div className="text-gray-600 whitespace-pre-line">{slide.card2.content}</div>
               
-              {/* Imagem do Unsplash para slides 1 e 9 */}
-              {shouldFetchImage && (
+              {/* Imagem para slides 1 e 9 - priorizar imageUrl da API */}
+              {(imageUrl || shouldFetchImage) && (
                 <div className="relative">
                   {imageLoading && (
                     <div className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-lg min-h-[200px]">
@@ -125,7 +127,8 @@ export default function UnsplashSlideCard({
                     </div>
                   )}
                   
-                  {imageUrl && !imageError && !unsplashError && (
+                  {/* Usar imageUrl da API se disponível, senão usar imagem do Unsplash */}
+                  {(imageUrl || (unsplashImageUrl && !imageError && !unsplashError)) && (
                     <div className="relative">
                       {!imageLoaded && (
                         <div className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-lg">
@@ -133,7 +136,7 @@ export default function UnsplashSlideCard({
                         </div>
                       )}
                       <Image
-                        src={imageUrl}
+                        src={imageUrl || unsplashImageUrl}
                         alt={slide.card2.title || 'Imagem educacional'}
                         width={1350}
                         height={1080}

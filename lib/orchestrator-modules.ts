@@ -56,8 +56,9 @@ registerModule({
     // Fallback simples apenas em caso de erro
     return { intent: 'lesson_request', module: 'aula_interativa', confidence: 0.3, slots: {} }
   },
-  async execute({ slots }): Promise<OrchestratorResponse> {
-    const tema = slots.tema || 'assunto'
+  async execute({ slots, context }): Promise<OrchestratorResponse> {
+    const message = context?.text || ''
+    const tema = slots.tema || extractThemeFromMessage(message) || 'assunto'
     const disciplina = slots.disciplina || 'geral'
     return {
       text: `📚 **Aula Interativa Ativada**\n\nPreparei uma aula interativa sobre ${tema} (${disciplina}). Podemos começar pelos fundamentos e depois avançar.\n\n**Estrutura da aula:**\n• Slide 1: Introdução\n• Slide 2: Conceitos fundamentais\n• Slide 3: Desenvolvimento\n• Slide 4: Pergunta interativa\n• Slide 5: Aplicações práticas\n• Slide 6: Exemplos\n• Slide 7: Pergunta interativa\n• Slide 8: Resumo\n\nDigite "começar aula" para iniciar!`,
@@ -112,7 +113,7 @@ registerModule({
   },
   async execute({ slots, context }): Promise<OrchestratorResponse> {
     const message = context?.text || ''
-    const tema = slots.tema || message || 'assunto'
+    const tema = slots.tema || extractThemeFromMessage(message) || 'assunto'
     const disciplina = slots.disciplina || 'geral'
     
     return {
@@ -814,6 +815,35 @@ function getSubjectName(message: string): string {
   if (lowerMessage.includes('gramática') || lowerMessage.includes('gramatica')) return 'gramática'
   
   return 'essa matéria'
+}
+
+function extractThemeFromMessage(message: string): string {
+  if (!message || message.trim().length === 0) return '';
+  
+  const lowerMessage = message.toLowerCase().trim();
+  
+  // Remover palavras comuns que não são temas
+  const commonWords = [
+    'aula', 'sobre', 'explicar', 'explica', 'como', 'funciona', 'o que é', 'definição', 'conceito',
+    'quero', 'preciso', 'gostaria', 'me ajude', 'ajuda', 'ajude', 'dúvida', 'duvida', 'questão', 'questao',
+    'exercício', 'exercicio', 'problema', 'resolver', 'entender', 'aprender', 'estudar',
+    'uma', 'um', 'de', 'da', 'do', 'das', 'dos', 'com', 'para', 'por', 'em', 'na', 'no', 'nas', 'nos',
+    'detalhadamente', 'detalhada', 'detalhado'
+  ];
+  
+  // Extrair palavras-chave principais (mantendo acentos)
+  const words = lowerMessage
+    .replace(/[?!.,;:]/g, '') // Remove apenas pontuação, mantém acentos
+    .split(' ')
+    .filter(word => word.length > 2 && !commonWords.includes(word));
+  
+  // Se há palavras específicas, usar as primeiras 2-3 como tema
+  if (words.length > 0) {
+    return words.slice(0, 3).join(' ');
+  }
+  
+  // Se não há palavras específicas, usar parte da mensagem original
+  return message.trim().substring(0, 50);
 }
 
 // professor module

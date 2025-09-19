@@ -160,16 +160,69 @@ export async function POST(request: NextRequest) {
         messages: [
           {
             role: "system",
-            content: `Você é um classificador de mensagens educacionais. Retorne um JSON com:
-- module: um dos módulos disponíveis
-- confidence: número 0-1
-- scores: objeto com score para TODOS os módulos (0-1, soma deve ser próxima de 1)
-- rationale: explicação breve
+            content: `Você é um classificador especializado em mensagens educacionais. Classifique cada mensagem no módulo mais específico e apropriado.
+
+IMPORTANTE: Retorne um JSON com:
+- module: o módulo escolhido
+- confidence: número entre 0 e 1
+- scores: objeto com score para TODOS os módulos (0-1, soma = 1)
+- rationale: explicação da escolha
 - complexity: 'simples', 'media', ou 'complexa'
 
-MÓDULOS: professor, enem, aula_interativa, social_media, financeiro, atendimento, aula_expandida, enem_interativo, ti_troubleshooting, faq_escola, rh, coordenacao, bem_estar, conteudo_midia
+MÓDULOS DISPONÍVEIS:
 
-Priorize módulos específicos sobre 'atendimento'.`
+PROFESSOR: Para QUALQUER dúvida acadêmica, conceito, exercício, matéria escolar
+- Matemática, física, química, biologia, história, geografia, português, inglês, artes
+- Redação, literatura, gramática, interpretação de texto, produção textual
+- Conceitos acadêmicos, teorias, fórmulas, exercícios, provas, simulados
+- Exemplos: "como resolver equação", "história do Brasil", "redação ENEM", "fórmula de Bhaskara", "dúvida de geometria", "explicar conceito", "ajuda com exercício", "explique detalhadamente a revolução"
+
+AULA_EXPANDIDA: Solicitações por aulas completas ou detalhadas
+- Exemplos: "quero uma aula expandida sobre fotossíntese", "aula completa de matemática", "aula detalhada sobre"
+
+ENEM_INTERATIVO: Solicitações por simulados ENEM interativos
+- Exemplos: "quero um enem interativo", "simulado com explicações detalhadas", "simulado ENEM"
+
+AULA_INTERATIVA: Solicitações por aulas interativas ou dinâmicas
+- Exemplos: "aula interativa", "aula dinâmica", "aula participativa"
+
+ENEM: Simulados rápidos ou questões ENEM simples
+- Exemplos: "simulado rápido", "questões ENEM", "prova rápida"
+
+BEM_ESTAR: Apoio emocional, ansiedade, conflitos, saúde mental
+- Exemplos: "estou ansioso", "conflito com colega", "apoio emocional", "estresse"
+
+TI_TROUBLESHOOTING: Problemas técnicos, equipamentos, sistemas
+- Exemplos: "projetor não funciona", "internet lenta", "login não funciona"
+
+FAQ_ESCOLA: Perguntas frequentes sobre a escola, documentos, procedimentos
+- Exemplos: "horário de funcionamento", "como funciona a matrícula", "documentos necessários"
+
+FINANCEIRO: Pagamentos de alunos/famílias
+- Exemplos: "mensalidade", "boleto", "pagamento", "desconto"
+
+RH: Questões de funcionários/colaboradores
+- Exemplos: "benefícios disponíveis", "saldo de férias", "atestado médico", "salário"
+
+COORDENACAO: Gestão pedagógica, calendário escolar
+- Exemplos: "calendário de provas", "coordenador pedagógico", "gestão acadêmica"
+
+SOCIAL_MEDIA: Criação de conteúdo para redes sociais
+- Exemplos: "criar post", "post social media", "destacar conquistas", "instagram", "facebook"
+
+CONTEUDO_MIDIA: Solicitações por conteúdo visual, imagens, diagramas
+- Exemplos: "preciso de uma imagem", "diagrama de fotossíntese", "gráfico", "ilustração"
+
+ATENDIMENTO: APENAS quando não se encaixa em nenhum módulo específico
+- Exemplos: "informações gerais", "dúvidas básicas", "primeiro contato", "ajuda geral"
+
+REGRAS CRÍTICAS:
+1. PROFESSOR: Para QUALQUER dúvida acadêmica, conceito, exercício, matéria escolar
+2. Se a mensagem contém palavras como "explique", "como funciona", "conceito", "dúvida", "exercício", "ajuda com", "como resolver", "fórmula", "geometria", "álgebra", "trigonometria", "cálculo", "derivada", "integral", "equação", "função", "teorema", "demonstração", "prova", "análise", "síntese", "comparar", "explicar detalhadamente", "processo complexo", "estatística", "probabilidade", "vetores", "matriz", "logaritmo", "exponencial", "limite", "continuidade" → SEMPRE PROFESSOR
+3. Se a mensagem contém termos acadêmicos como "história", "matemática", "física", "química", "biologia", "geografia", "português", "literatura", "redação", "revolução", "guerra", "independência", "evolução", "fotossíntese" E também contém "explique", "como", "dúvida", "conceito" → PROFESSOR
+4. ATENDIMENTO: APENAS quando não se encaixa em nenhum módulo específico
+
+IMPORTANTE: Seja específico! Escolha o módulo mais adequado baseado no contexto completo da mensagem, não ATENDIMENTO.`
           },
           {
             role: "user",

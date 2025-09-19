@@ -4,14 +4,15 @@ import { getToken } from 'next-auth/jwt'
 export async function middleware(request: NextRequest) {
   const isDevelopment = process.env.NODE_ENV === 'development'
   
-  if (isDevelopment) {
-    console.log('🔍 Middleware - Processing:', request.nextUrl.pathname)
-  }
-  
-  // Skip middleware for static files and API routes
+  // Skip middleware for static files and API routes (no logging for these)
   if (request.nextUrl.pathname.startsWith('/_next/') ||
       request.nextUrl.pathname.startsWith('/api/') ||
-      request.nextUrl.pathname.match(/\.(ico|png|jpg|jpeg|gif|svg|css|js|woff|woff2|ttf|eot|webmanifest)$/)) {
+      request.nextUrl.pathname.match(/\.(ico|png|jpg|jpeg|gif|svg|css|js|woff|woff2|ttf|eot|webmanifest)$/) ||
+      request.nextUrl.pathname.includes('favicon') ||
+      request.nextUrl.pathname.includes('manifest') ||
+      request.nextUrl.pathname.includes('apple-touch-icon') ||
+      request.nextUrl.pathname.includes('android-chrome') ||
+      request.nextUrl.pathname.includes('.well-known')) {
     return NextResponse.next()
   }
 
@@ -60,19 +61,13 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith(route + '/')
   )
 
-  if (isDevelopment) {
-    console.log('🔍 Route analysis:', {
-      path: request.nextUrl.pathname,
-      isPublic: isPublicRoute,
-      cookies: request.cookies.getAll().map(c => c.name)
-    })
+  // Only log important routes and only when DEBUG_MIDDLEWARE is enabled
+  if (isDevelopment && process.env.DEBUG_MIDDLEWARE === 'true') {
+    console.log('🔍 Middleware - Processing:', request.nextUrl.pathname)
   }
 
   // For debugging, let's be more permissive
   if (isPublicRoute) {
-    if (isDevelopment) {
-      console.log('✅ Public route, allowing access')
-    }
     return NextResponse.next()
   }
 
@@ -92,28 +87,24 @@ export async function middleware(request: NextRequest) {
         cookieName: cookieName
       })
       if (token) {
-        if (isDevelopment) {
-          console.log('✅ Token found with cookie:', cookieName)
-        }
         break
       }
     } catch (error) {
-      if (isDevelopment) {
-        console.log('❌ Error getting token with cookie:', cookieName, error)
+      // Silent error handling - only log in case of critical issues
+      if (isDevelopment && error instanceof Error && error.message.includes('JWT')) {
+        console.error('❌ JWT Error:', error.message)
       }
     }
   }
 
   if (!token) {
-    if (isDevelopment) {
-      console.log('🔒 No valid token found, redirecting to login')
+    // Only log redirects when DEBUG_MIDDLEWARE is enabled
+    if (isDevelopment && process.env.DEBUG_MIDDLEWARE === 'true') {
+      console.log('🔒 No valid token found, redirecting to login for:', request.nextUrl.pathname)
     }
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  if (isDevelopment) {
-    console.log('✅ Token validated, allowing access to:', request.nextUrl.pathname)
-  }
   return NextResponse.next()
 }
 

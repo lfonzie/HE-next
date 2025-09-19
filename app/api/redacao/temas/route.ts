@@ -8,6 +8,8 @@ interface EnemTheme {
   description: string
   isOfficial?: boolean
   isAIGenerated?: boolean
+  isSessionGenerated?: boolean
+  createdAt?: string
 }
 
 const openai = new OpenAI({
@@ -15,20 +17,11 @@ const openai = new OpenAI({
 })
 
 // Função para limpar resposta da IA removendo markdown code blocks
-function cleanAIResponse(response: string): string {
-  // Remove markdown code blocks se existirem
-  const cleaned = response
-    .replace(/^```json\s*/i, '')  // Remove início do bloco
-    .replace(/\s*```$/i, '')       // Remove fim do bloco
-    .trim()
-  
-  return cleaned
-}
+// Função removida - não é mais necessária
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const includeAI = searchParams.get('includeAI') === 'true'
+    // Parâmetro includeAI removido - temas de IA são gerados apenas via /api/redacao/temas/ai
     
     // Temas oficiais do ENEM - Lista completa desde 1998
     const officialThemes: EnemTheme[] = [
@@ -225,16 +218,11 @@ export async function GET(request: NextRequest) {
 
     let allThemes = [...officialThemes]
 
-    // Gerar temas com IA se solicitado
-    if (includeAI && process.env.OPENAI_API_KEY) {
-      try {
-        const aiThemes = await generateAIThemes()
-        allThemes = [...aiThemes, ...officialThemes]
-      } catch (error) {
-        console.error('Erro ao gerar temas com IA:', error)
-        // Continuar apenas com temas oficiais se IA falhar
-      }
-    }
+    // Não carregar temas salvos do servidor - apenas temas oficiais
+    // Os temas de IA serão adicionados apenas quando gerados para a sessão atual
+
+    // Não gerar temas com IA na API principal - apenas temas oficiais
+    // Temas de IA são gerados apenas via /api/redacao/temas/ai
 
     return NextResponse.json({
       success: true,
@@ -254,68 +242,4 @@ export async function GET(request: NextRequest) {
   }
 }
 
-async function generateAIThemes(): Promise<EnemTheme[]> {
-  try {
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: `Você é um especialista em temas de redação do ENEM. Gere 5 temas de redação inéditos e relevantes para o Brasil contemporâneo, seguindo o padrão dos temas oficiais do ENEM.
-
-Cada tema deve:
-- Ser relevante para a sociedade brasileira atual
-- Permitir argumentação e proposta de intervenção
-- Seguir o formato: "Desafios para [tópico] no Brasil" ou similar
-- Ser adequado para estudantes do ensino médio
-- Não repetir temas já utilizados oficialmente
-
-Responda apenas com um JSON array contendo objetos com as propriedades: id, year, theme, description, isAIGenerated.`
-        },
-        {
-          role: "user",
-          content: "Gere 5 temas de redação para o ENEM seguindo os critérios mencionados."
-        }
-      ],
-      temperature: 0.8,
-      max_tokens: 1000
-    })
-
-    const response = completion.choices[0]?.message?.content
-    if (!response) {
-      throw new Error('Resposta vazia da IA')
-    }
-
-    const cleanedResponse = cleanAIResponse(response)
-    const aiThemes = JSON.parse(cleanedResponse)
-    
-    // Validar e formatar os temas gerados
-    return aiThemes.map((theme: any, index: number) => ({
-      id: `ai-${Date.now()}-${index}`,
-      year: 2025,
-      theme: theme.theme || theme.title || 'Tema gerado por IA',
-      description: theme.description || 'Tema gerado por IA para prática',
-      isAIGenerated: true
-    }))
-
-  } catch (error) {
-    console.error('Erro ao gerar temas com IA:', error)
-    // Retornar temas de fallback se IA falhar
-    return [
-      {
-        id: `ai-fallback-${Date.now()}`,
-        year: 2025,
-        theme: 'Desafios para a sustentabilidade ambiental nas cidades brasileiras',
-        description: 'Tema gerado por IA para prática',
-        isAIGenerated: true
-      },
-      {
-        id: `ai-fallback-${Date.now()}-2`,
-        year: 2025,
-        theme: 'Impactos da inteligência artificial na educação brasileira',
-        description: 'Tema gerado por IA para prática',
-        isAIGenerated: true
-      }
-    ]
-  }
-}
+// Função removida - temas de IA são gerados apenas via /api/redacao/temas/ai

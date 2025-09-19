@@ -44,6 +44,8 @@ types/
 - **Validação**: Verificação de limite de palavras (100-1000)
 - **Feedback Visual**: Indicadores de status da redação
 - **Upload de Arquivos**: Suporte a PDF, DOC, DOCX, TXT, MD e fotos
+- **Modal de Temas IA**: Popup mostrando temas gerados com opção de seleção direta
+- **Sem Fallback**: Apenas temas da API, sem temas estáticos de backup
 - **Dicas**: Guia das 5 competências do ENEM baseado na apostila oficial
 
 ### 2. Conteúdo Educacional Integrado

@@ -10,7 +10,7 @@ datasource db {
 
 model User {
   id                String    @id(map: "users_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email             String    @unique(map: "users_email_unique") @db.VarChar(255)
+  email             String    @unique @db.VarChar(255)
   password_hash     String?
   name              String?   @db.VarChar(255)
   role              role      @default(STUDENT)
@@ -23,21 +23,15 @@ model User {
   profile           Json?
   resetToken        String?   @db.VarChar(255)
   resetTokenExpiry  DateTime? @db.Timestamp(6)
-
-  @@index([email], map: "idx_users_email")
-  @@index([google_id], map: "idx_users_google_id")
-  @@index([school_id], map: "idx_users_school_id")
 }
 
 model DemoUser {
   id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name         String   @db.VarChar(255)
-  email        String   @unique @db.VarChar(255)
+  email        String   @db.VarChar(255)
   phone        String   @db.VarChar(20)
   registeredAt DateTime @default(now()) @db.Timestamp(6)
   expiresAt    DateTime @db.Timestamp(6)
-
-  @@index([email], map: "idx_demo_users_email")
 }
 
 model achievements {
@@ -59,7 +53,7 @@ model ai_requests {
   user_id           String?
   session_id        String
   provider          String
-  model             String   @unique(map: "idx_ai_model")
+  model             String
   prompt_tokens     Int
   completion_tokens Int
   total_tokens      Int
@@ -70,10 +64,6 @@ model ai_requests {
   cache_hit         Boolean  @default(false)
   metadata          Json?
   created_at        DateTime @default(now()) @db.Timestamptz(6)
-
-  @@unique([tenant_id, occurred_at], map: "idx_ai_tenant_time")
-  @@index([occurred_at], map: "idx_ai_requests_occurred_at")
-  @@index([tenant_id], map: "idx_ai_requests_tenant_id")
 }
 
 model analytics {
@@ -88,18 +78,16 @@ model analytics {
   model               String?  @default("gpt-4o-mini") @db.VarChar(50)
   satisfaction_rating Int?
   date                DateTime @default(now()) @db.Timestamp(6)
-  schools             schools  @relation(fields: [school_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "analytics_school_id_schools_id_fk")
 }
 
 model artifact_comments {
-  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  artifact_id       String    @db.Uuid
-  user_id           String    @db.Uuid
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  artifact_id       String   @db.Uuid
+  user_id           String   @db.Uuid
   content           String
-  parent_comment_id String?   @db.Uuid
-  created_at        DateTime  @default(now()) @db.Timestamp(6)
-  updated_at        DateTime  @default(now()) @db.Timestamp(6)
-  artifacts         artifacts @relation(fields: [artifact_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "artifact_comments_artifact_id_artifacts_id_fk")
+  parent_comment_id String?  @db.Uuid
+  created_at        DateTime @default(now()) @db.Timestamp(6)
+  updated_at        DateTime @default(now()) @db.Timestamp(6)
 }
 
 model artifact_permissions {
@@ -110,59 +98,50 @@ model artifact_permissions {
   granted_by       String           @db.Uuid
   granted_at       DateTime         @default(now()) @db.Timestamp(6)
   expires_at       DateTime?        @db.Timestamp(6)
-  artifacts        artifacts        @relation(fields: [artifact_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "artifact_permissions_artifact_id_artifacts_id_fk")
 }
 
 model artifact_versions {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  artifact_id String    @db.Uuid
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  artifact_id String   @db.Uuid
   version     Int
   content     String
   changes     String?
-  created_by  String    @db.Uuid
-  created_at  DateTime  @default(now()) @db.Timestamp(6)
-  artifacts   artifacts @relation(fields: [artifact_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "artifact_versions_artifact_id_artifacts_id_fk")
+  created_by  String   @db.Uuid
+  created_at  DateTime @default(now()) @db.Timestamp(6)
 }
 
 model artifacts {
-  id                   String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  title                String                 @db.VarChar(255)
-  description          String?
-  content              String
-  type                 artifact_type
-  status               String                 @default("DRAFT")
-  tags                 Json?
-  metadata             Json?
-  template_variables   Json?
-  author_id            String                 @db.Uuid
-  school_id            String?                @db.Uuid
-  version              Int                    @default(1)
-  is_template          Boolean                @default(false)
-  parent_template_id   String?                @db.Uuid
-  created_at           DateTime               @default(now()) @db.Timestamp(6)
-  updated_at           DateTime               @default(now()) @db.Timestamp(6)
-  published_at         DateTime?              @db.Timestamp(6)
-  archived_at          DateTime?              @db.Timestamp(6)
-  artifact_comments    artifact_comments[]
-  artifact_permissions artifact_permissions[]
-  artifact_versions    artifact_versions[]
-  schools              schools?               @relation(fields: [school_id], references: [id], onUpdate: NoAction, map: "artifacts_school_id_schools_id_fk")
+  id                 String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title              String        @db.VarChar(255)
+  description        String?
+  content            String
+  type               artifact_type
+  status             String        @default("DRAFT")
+  tags               Json?
+  metadata           Json?
+  template_variables Json?
+  author_id          String        @db.Uuid
+  school_id          String?       @db.Uuid
+  version            Int           @default(1)
+  is_template        Boolean       @default(false)
+  parent_template_id String?       @db.Uuid
+  created_at         DateTime      @default(now()) @db.Timestamp(6)
+  updated_at         DateTime      @default(now()) @db.Timestamp(6)
+  published_at       DateTime?     @db.Timestamp(6)
+  archived_at        DateTime?     @db.Timestamp(6)
 }
 
 model conversations {
-  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id       String          @db.Uuid
-  module        String          @db.VarChar(50)
-  subject       String?         @db.VarChar(100)
-  grade         String?         @db.VarChar(50)
-  messages      Json
-  token_count   Int             @default(0)
-  model         String?         @default("gpt-4o-mini") @db.VarChar(50)
-  created_at    DateTime        @default(now()) @db.Timestamp(6)
-  updated_at    DateTime        @default(now()) @db.Timestamp(6)
-  message_votes message_votes[]
-
-  @@unique([user_id, created_at], map: "idx_conversations_user_created")
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id     String   @db.Uuid
+  module      String   @db.VarChar(50)
+  subject     String?  @db.VarChar(100)
+  grade       String?  @db.VarChar(50)
+  messages    Json
+  token_count Int      @default(0)
+  model       String?  @default("gpt-4o-mini") @db.VarChar(50)
+  created_at  DateTime @default(now()) @db.Timestamp(6)
+  updated_at  DateTime @default(now()) @db.Timestamp(6)
 }
 
 model cost_log {
@@ -177,20 +156,17 @@ model cost_log {
   cost_usd          Decimal  @default(0) @db.Decimal(10, 6)
   cost_brl          Decimal  @default(0) @db.Decimal(10, 6)
   created_at        DateTime @default(now()) @db.Timestamp(6)
-  lessons           lessons? @relation(fields: [lesson_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "cost_log_lesson_id_lessons_id_fk")
 }
 
 model demo_registrations {
   id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name          String   @db.VarChar(255)
-  email         String   @unique(map: "unique_demo_email") @db.VarChar(255)
-  phone         String   @unique(map: "unique_demo_phone") @db.VarChar(15)
+  email         String   @db.VarChar(255)
+  phone         String   @db.VarChar(15)
   registered_at DateTime @default(now()) @db.Timestamp(6)
   expires_at    DateTime @db.Timestamp(6)
   created_at    DateTime @default(now()) @db.Timestamp(6)
   updated_at    DateTime @default(now()) @db.Timestamp(6)
-
-  @@index([expires_at], map: "idx_demo_expires_at")
 }
 
 model errors {
@@ -205,12 +181,6 @@ model errors {
   stack_hash  String
   metadata    Json?
   created_at  DateTime         @default(now()) @db.Timestamptz(6)
-
-  @@unique([level, occurred_at], map: "idx_errors_level_time")
-  @@unique([service, occurred_at], map: "idx_errors_service_time")
-  @@index([occurred_at], map: "idx_errors_occurred_at")
-  @@index([stack_hash], map: "idx_errors_stack_hash")
-  @@index([tenant_id], map: "idx_errors_tenant_id")
 }
 
 model essay_overall_scores {
@@ -224,8 +194,6 @@ model essay_overall_scores {
   comp5      Int?
   issues     Json?
   created_at DateTime @default(now()) @db.Timestamp(6)
-
-  @@index([session_id], map: "idx_essay_overall_scores_session")
 }
 
 model essay_paragraphs {
@@ -235,8 +203,6 @@ model essay_paragraphs {
   content    String
   created_at DateTime @default(now()) @db.Timestamp(6)
   updated_at DateTime @default(now()) @db.Timestamp(6)
-
-  @@index([session_id], map: "idx_essay_paragraphs_session")
 }
 
 model essay_sessions {
@@ -248,8 +214,6 @@ model essay_sessions {
   created_at   DateTime  @default(now()) @db.Timestamp(6)
   updated_at   DateTime  @default(now()) @db.Timestamp(6)
   expires_at   DateTime? @db.Timestamp(6)
-
-  @@index([user_id, created_at], map: "idx_essay_sessions_user_created")
 }
 
 model events {
@@ -266,12 +230,6 @@ model events {
   status_code Int?
   metadata    Json?
   created_at  DateTime     @default(now()) @db.Timestamptz(6)
-
-  @@unique([tenant_id, occurred_at], map: "idx_events_tenant_occurred")
-  @@index([action], map: "idx_events_action")
-  @@index([occurred_at], map: "idx_events_occurred_at")
-  @@index([tenant_id], map: "idx_events_tenant_id")
-  @@index([user_id], map: "idx_events_user_id")
 }
 
 model feature_flags {
@@ -306,19 +264,16 @@ model learning_paths {
   is_active         Boolean  @default(true)
   created_at        DateTime @default(now()) @db.Timestamp(6)
   updated_at        DateTime @default(now()) @db.Timestamp(6)
-
-  @@unique([user_id, subject], map: "unique_user_subject_path")
 }
 
 model lesson_meta {
   id         String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  lesson_id  String        @unique(map: "lesson_meta_lesson_id_unique") @db.VarChar(50)
+  lesson_id  String        @db.VarChar(50)
   state      publish_state @default(DRAFT)
   version    Int           @default(1)
   changelog  String?
   updated_by String        @db.Uuid
   updated_at DateTime      @default(now()) @db.Timestamp(6)
-  lessons    lessons       @relation(fields: [lesson_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "lesson_meta_lesson_id_lessons_id_fk")
 }
 
 model lesson_progress {
@@ -330,52 +285,41 @@ model lesson_progress {
   progress   Json?
   created_at DateTime @default(now()) @db.Timestamp(6)
   updated_at DateTime @default(now()) @db.Timestamp(6)
-
-  @@unique([user_id, lesson_id, card_id], map: "unique_user_lesson_card")
 }
 
 model lessons {
-  id            String          @id @db.VarChar(50)
-  title         String          @db.VarChar(255)
-  subject       String          @db.VarChar(100)
-  level         String?         @db.VarChar(50)
+  id            String   @id @db.VarChar(50)
+  title         String   @db.VarChar(255)
+  subject       String   @db.VarChar(100)
+  level         String?  @db.VarChar(50)
   objective     String
   outline       Json
   cards         Json
   html_snapshot String?
-  user_id       String?         @db.Uuid
-  created_at    DateTime        @default(now()) @db.Timestamp(6)
-  updated_at    DateTime        @default(now()) @db.Timestamp(6)
-  cost_log      cost_log[]
-  lesson_meta   lesson_meta?
-  quiz_attempts quiz_attempts[]
-  quiz_items    quiz_items[]
+  user_id       String?  @db.Uuid
+  created_at    DateTime @default(now()) @db.Timestamp(6)
+  updated_at    DateTime @default(now()) @db.Timestamp(6)
 }
 
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model mastery {
   user_id    String   @db.Uuid
   tag        String   @db.VarChar(100)
   score      Decimal  @default(0.0) @db.Decimal(3, 2)
   updated_at DateTime @default(now()) @db.Timestamp(6)
 
-  @@unique([user_id, tag], map: "pk_mastery")
+  @@ignore
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model message_votes {
-  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  conversation_id String        @db.Uuid
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  conversation_id String   @db.Uuid
   message_index   Int
-  user_id         String        @db.Uuid
+  user_id         String   @db.Uuid
   is_upvoted      Boolean
-  created_at      DateTime      @default(now()) @db.Timestamp(6)
-  updated_at      DateTime      @default(now()) @db.Timestamp(6)
-  conversations   conversations @relation(fields: [conversation_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "message_votes_conversation_id_conversations_id_fk")
-
-  @@unique([conversation_id, message_index, user_id], map: "uq_message_vote")
-  @@index([conversation_id], map: "idx_message_votes_conversation_id")
-  @@index([created_at], map: "idx_message_votes_created_at")
-  @@index([user_id], map: "idx_message_votes_user_id")
+  created_at      DateTime @default(now()) @db.Timestamp(6)
+  updated_at      DateTime @default(now()) @db.Timestamp(6)
 }
 
 model models {
@@ -413,13 +357,6 @@ model neon_consumption_daily {
   value      Float
   created_at DateTime @default(now()) @db.Timestamptz(6)
   updated_at DateTime @default(now()) @db.Timestamptz(6)
-
-  @@unique([date, scope, org_id, project_id, metric, agg], map: "idx_neon_consumption_daily_unique")
-  @@index([date], map: "idx_neon_consumption_daily_date")
-  @@index([metric], map: "idx_neon_consumption_daily_metric")
-  @@index([org_id], map: "idx_neon_consumption_daily_org_id")
-  @@index([project_id], map: "idx_neon_consumption_daily_project_id")
-  @@index([scope], map: "idx_neon_consumption_daily_scope")
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -439,14 +376,6 @@ model neon_consumption_raw {
   synthetic_storage_size_bytes BigInt?
   metadata                     Json?    @default("{}")
   created_at                   DateTime @default(now()) @db.Timestamptz(6)
-
-  @@unique([scope, org_id, project_id, window_start, window_end], map: "idx_neon_consumption_raw_unique")
-  @@index([collected_at], map: "idx_neon_consumption_raw_collected_at")
-  @@index([org_id], map: "idx_neon_consumption_raw_org_id")
-  @@index([project_id], map: "idx_neon_consumption_raw_project_id")
-  @@index([scope], map: "idx_neon_consumption_raw_scope")
-  @@index([window_end], map: "idx_neon_consumption_raw_window_end")
-  @@index([window_start], map: "idx_neon_consumption_raw_window_start")
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -463,9 +392,6 @@ model neon_consumption_sync_log {
   error_details     Json?     @default("{}")
   duration_ms       Int?
   created_at        DateTime  @default(now()) @db.Timestamptz(6)
-
-  @@index([started_at], map: "idx_neon_consumption_sync_log_started_at")
-  @@index([status], map: "idx_neon_consumption_sync_log_status")
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -480,12 +406,6 @@ model openai_models_latency_daily {
   source         String
   synced_at      DateTime @default(now()) @db.Timestamptz(6)
   created_at     DateTime @default(now()) @db.Timestamptz(6)
-
-  @@unique([date, tenant_id, model], map: "idx_openai_models_latency_daily_unique")
-  @@index([date], map: "idx_openai_models_latency_daily_date")
-  @@index([model], map: "idx_openai_models_latency_daily_model")
-  @@index([synced_at], map: "idx_openai_models_latency_daily_synced_at")
-  @@index([tenant_id], map: "idx_openai_models_latency_daily_tenant_id")
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -503,14 +423,6 @@ model openai_usage_daily {
   source            String
   synced_at         DateTime @default(now()) @db.Timestamptz(6)
   created_at        DateTime @default(now()) @db.Timestamptz(6)
-
-  @@unique([date, tenant_id, model, source], map: "idx_openai_usage_daily_unique")
-  @@unique([tenant_id, date, model], map: "uq_openai_daily_tenant_date_model")
-  @@index([date], map: "idx_openai_usage_daily_date")
-  @@index([model], map: "idx_openai_usage_daily_model")
-  @@index([source], map: "idx_openai_usage_daily_source")
-  @@index([synced_at], map: "idx_openai_usage_daily_synced_at")
-  @@index([tenant_id], map: "idx_openai_usage_daily_tenant_id")
 }
 
 model paragraph_feedback {
@@ -527,41 +439,33 @@ model paragraph_feedback {
   summary_note String?
   ai_model     String?  @db.VarChar(50)
   created_at   DateTime @default(now()) @db.Timestamp(6)
-
-  @@index([session_id], map: "idx_paragraph_feedback_session")
 }
 
 model quiz_attempts {
-  id         String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id    String     @db.Uuid
-  lesson_id  String     @db.VarChar(50)
-  item_id    String     @db.VarChar(50)
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String   @db.Uuid
+  lesson_id  String   @db.VarChar(50)
+  item_id    String   @db.VarChar(50)
   choice     Int
   correct    Boolean
   confidence Int?
   ms_taken   Int?
   tags       Json?
-  created_at DateTime   @default(now()) @db.Timestamp(6)
-  quiz_items quiz_items @relation(fields: [item_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "quiz_attempts_item_id_quiz_items_id_fk")
-  lessons    lessons    @relation(fields: [lesson_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "quiz_attempts_lesson_id_lessons_id_fk")
-
-  @@unique([user_id, lesson_id], map: "idx_quiz_attempts_user_lesson")
+  created_at DateTime @default(now()) @db.Timestamp(6)
 }
 
 model quiz_items {
-  id            String          @id @db.VarChar(50)
+  id            String   @id @db.VarChar(50)
   stem          String
   choices       Json
   correct_index Int
   rationale     String?
   tags          Json?
-  difficulty    String?         @default("medium") @db.VarChar(20)
-  lesson_id     String?         @db.VarChar(50)
-  user_id       String?         @db.Uuid
-  created_at    DateTime        @default(now()) @db.Timestamp(6)
-  updated_at    DateTime        @default(now()) @db.Timestamp(6)
-  quiz_attempts quiz_attempts[]
-  lessons       lessons?        @relation(fields: [lesson_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "quiz_items_lesson_id_lessons_id_fk")
+  difficulty    String?  @default("medium") @db.VarChar(20)
+  lesson_id     String?  @db.VarChar(50)
+  user_id       String?  @db.Uuid
+  created_at    DateTime @default(now()) @db.Timestamp(6)
+  updated_at    DateTime @default(now()) @db.Timestamp(6)
 }
 
 model quotas {
@@ -572,565 +476,6 @@ model quotas {
   token_used  Int       @default(0)
   created_at  DateTime  @default(now()) @db.Timestamp(6)
   updated_at  DateTime? @default(now()) @db.Timestamp(6)
-
-  @@unique([month, user_id], map: "idx_quotas_month_user")
-  @@unique([user_id, month], map: "uq_quotas_user_month")
-}
-
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-model render_metrics_daily {
-  id         String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  date       DateTime  @db.Date
-  service_id String
-  metric     String
-  agg        String
-  value      Float
-  created_at DateTime? @default(now()) @db.Timestamptz(6)
-  updated_at DateTime? @default(now()) @db.Timestamptz(6)
-
-  @@unique([date, service_id, metric, agg], map: "idx_render_metrics_daily_unique")
-  @@index([agg], map: "idx_render_metrics_daily_agg")
-  @@index([date], map: "idx_render_metrics_daily_date")
-  @@index([metric], map: "idx_render_metrics_daily_metric")
-  @@index([service_id], map: "idx_render_metrics_daily_service_id")
-}
-
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-model render_metrics_raw {
-  id           String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  collected_at DateTime  @default(now()) @db.Timestamptz(6)
-  window_start DateTime  @db.Timestamptz(6)
-  window_end   DateTime  @db.Timestamptz(6)
-  service_id   String
-  metric       String
-  labels       Json?     @default("{}")
-  value        Float
-  units        String?
-  created_at   DateTime? @default(now()) @db.Timestamptz(6)
-
-  @@unique([service_id, metric, window_start, window_end, labels], map: "idx_render_metrics_raw_unique")
-  @@index([collected_at], map: "idx_render_metrics_raw_collected_at")
-  @@index([metric], map: "idx_render_metrics_raw_metric")
-  @@index([service_id], map: "idx_render_metrics_raw_service_id")
-  @@index([window_end], map: "idx_render_metrics_raw_window_end")
-  @@index([window_start], map: "idx_render_metrics_raw_window_start")
-}
-
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-model render_metrics_sync_log {
-  id                 String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  started_at         DateTime  @default(now()) @db.Timestamptz(6)
-  completed_at       DateTime? @db.Timestamptz(6)
-  status             String
-  window_start       DateTime  @db.Timestamptz(6)
-  window_end         DateTime  @db.Timestamptz(6)
-  services_processed Int?      @default(0)
-  metrics_collected  Int?      @default(0)
-  errors_count       Int?      @default(0)
-  error_details      Json?     @default("{}")
-  duration_ms        Int?
-  created_at         DateTime? @default(now()) @db.Timestamptz(6)
-
-  @@index([started_at], map: "idx_render_metrics_sync_log_started_at")
-  @@index([status], map: "idx_render_metrics_sync_log_status")
-}
-
-model school_forms {
-  id                                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  school_name                          String    @db.VarChar(100)
-  address                              String    @db.VarChar(200)
-  city                                 String    @db.VarChar(100)
-  state                                String    @db.VarChar(50)
-  cep                                  String    @db.VarChar(10)
-  phone                                String    @db.VarChar(15)
-  website                              String?   @db.VarChar(255)
-  student_count                        Int
-  teacher_count                        Int
-  education_levels                     Json
-  school_type                          String    @db.VarChar(20)
-  mission_vision                       String?
-  general_particularities              String?
-  infrastructure                       Json
-  current_challenges                   Json
-  secretariat_responsible_name         String    @db.VarChar(100)
-  secretariat_responsible_email        String    @db.VarChar(255)
-  secretariat_main_processes           Json
-  secretariat_specific_particularities String?
-  secretariat_desired_automations      Json
-  secretariat_weekly_attendance_volume Int?
-  secretariat_pain_points              Json
-  financial_responsible_name           String    @db.VarChar(100)
-  financial_responsible_email          String    @db.VarChar(255)
-  financial_main_processes             Json
-  financial_specific_particularities   String?
-  financial_current_tools              String?   @db.VarChar(200)
-  financial_cost_reduction_goals       String    @db.VarChar(50)
-  financial_cost_reduction_details     String?
-  financial_challenges                 Json
-  pedagogical_responsible_name         String    @db.VarChar(100)
-  pedagogical_responsible_email        String    @db.VarChar(255)
-  pedagogical_main_processes           Json
-  pedagogical_specific_particularities String?
-  pedagogical_ai_support_needs         Json
-  pedagogical_predominant_age_group    String    @db.VarChar(30)
-  pedagogical_age_group_details        String?
-  pedagogical_challenges               Json
-  hr_responsible_name                  String    @db.VarChar(100)
-  hr_responsible_email                 String    @db.VarChar(255)
-  hr_main_processes                    Json
-  hr_specific_particularities          String?
-  hr_employee_count                    Int
-  hr_wellbeing_initiatives             Json
-  hr_wellbeing_details                 String?
-  hr_challenges                        Json
-  lgpd_compliance                      Boolean
-  preferred_contact_method             String    @db.VarChar(20)
-  urgency_level                        String    @db.VarChar(20)
-  expected_implementation              String    @db.VarChar(20)
-  final_comments                       String?
-  submitted_at                         DateTime  @default(now()) @db.Timestamp(6)
-  status                               String    @default("PENDING") @db.VarChar(20)
-  processed_at                         DateTime? @db.Timestamp(6)
-  report_content                       String?
-  created_at                           DateTime  @default(now()) @db.Timestamp(6)
-  updated_at                           DateTime  @default(now()) @db.Timestamp(6)
-}
-
-model school_prompts {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  school_id  String   @db.Uuid
-  module     String   @db.VarChar(50)
-  prompt     String
-  is_active  Boolean  @default(true)
-  created_at DateTime @default(now()) @db.Timestamp(6)
-  updated_at DateTime @default(now()) @db.Timestamp(6)
-  schools    schools  @relation(fields: [school_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "school_prompts_school_id_schools_id_fk")
-}
-
-model schools {
-  id                         String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  domain                     String            @unique(map: "schools_domain_unique") @db.VarChar(255)
-  name                       String            @db.VarChar(255)
-  logo_url                   String?           @db.VarChar(500)
-  policies                   Json?
-  plan                       plan              @default(PROFESSOR)
-  primary_color              String?           @default("#3b82f6") @db.VarChar(7)
-  secondary_color            String?           @default("#6366f1") @db.VarChar(7)
-  support_email              String?           @db.VarChar(255)
-  general_prompt             String?
-  general_system_message     String?
-  general_message_updated_by String?           @db.Uuid
-  general_message_updated_at DateTime?         @db.Timestamp(6)
-  city                       String?           @db.VarChar(100)
-  state                      String?           @db.VarChar(100)
-  created_at                 DateTime          @default(now()) @db.Timestamp(6)
-  updated_at                 DateTime          @default(now()) @db.Timestamp(6)
-  analytics                  analytics[]
-  artifacts                  artifacts[]
-  school_prompts             school_prompts[]
-  support_tickets            support_tickets[]
-}
-
-model sensory_profiles {
-  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id             String   @unique(map: "unique_user_sensory_profile") @db.Uuid
-  reduce_motion       Boolean  @default(false)
-  low_stimulus_theme  Boolean  @default(false)
-  high_contrast_text  Boolean  @default(false)
-  audio_on_by_default Boolean  @default(false)
-  captions            Boolean  @default(true)
-  larger_targets      Boolean  @default(false)
-  simplified_layout   Boolean  @default(false)
-  pictograms_enabled  Boolean  @default(false)
-  created_at          DateTime @default(now()) @db.Timestamp(6)
-  updated_at          DateTime @default(now()) @db.Timestamp(6)
-}
-
-model support_tickets {
-  id                    String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id               String          @db.Uuid
-  school_id             String?         @db.Uuid
-  subject               String          @db.VarChar(200)
-  description           String
-  priority              ticket_priority @default(MEDIA)
-  status                ticket_status   @default(ABERTO)
-  conversation_snapshot Json?
-  created_at            DateTime        @default(now()) @db.Timestamp(6)
-  updated_at            DateTime        @default(now()) @db.Timestamp(6)
-  schools               schools?        @relation(fields: [school_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "support_tickets_school_id_schools_id_fk")
-
-  @@index([school_id], map: "idx_support_tickets_school")
-  @@index([status], map: "idx_support_tickets_status")
-  @@index([user_id], map: "idx_support_tickets_user")
-}
-
-model system_messages {
-  id                    String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  module                String   @unique(map: "system_messages_module_unique") @db.VarChar(50)
-  system_prompt         String
-  description           String?
-  is_active             Boolean  @default(true)
-  temperature           Int?     @default(7)
-  max_tokens            Int?     @default(1000)
-  max_completion_tokens Int?     @default(800)
-  tone                  String?  @db.VarChar(100)
-  created_at            DateTime @default(now()) @db.Timestamp(6)
-  updated_at            DateTime @default(now()) @db.Timestamp(6)
-}
-
-model system_prompt_audit {
-  id         String        @id @default(dbgenerated("gen_random_uuid()")) @db.VarChar(100)
-  key        String        @db.VarChar(255)
-  scope      prompt_scope
-  action     prompt_action
-  version    Int
-  diff       Json?
-  actor_id   String        @db.VarChar(100)
-  created_at DateTime      @default(now()) @db.Timestamp(6)
-}
-
-model system_prompt_history {
-  id          String        @id @default(dbgenerated("gen_random_uuid()")) @db.VarChar(100)
-  prompt_id   String        @db.VarChar(100)
-  key         String        @db.VarChar(255)
-  scope       prompt_scope
-  model       String        @db.VarChar(100)
-  status      prompt_status
-  version     Int
-  json        Json
-  description String?
-  changed_by  String        @db.VarChar(100)
-  changed_at  DateTime      @default(now()) @db.Timestamp(6)
-}
-
-model system_prompts {
-  id          String        @id @default(dbgenerated("gen_random_uuid()")) @db.VarChar(100)
-  key         String        @db.VarChar(255)
-  scope       prompt_scope  @default(production)
-  model       String        @default("gpt-4o-mini") @db.VarChar(100)
-  status      prompt_status @default(draft)
-  version     Int           @default(1)
-  json        Json
-  description String?
-  created_by  String        @db.VarChar(100)
-  created_at  DateTime      @default(now()) @db.Timestamp(6)
-  updated_at  DateTime      @default(now()) @db.Timestamp(6)
-}
-
-/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
-model tenant_quotas {
-  tenant_id      String
-  period_start   DateTime @db.Timestamptz(6)
-  period_end     DateTime @db.Timestamptz(6)
-  requests_used  Int      @default(0)
-  requests_quota Int
-  tokens_used    Int      @default(0)
-  tokens_quota   Int
-  cost_brl       String?  @default("0")
-  cost_quota     String
-  created_at     DateTime @default(now()) @db.Timestamp(6)
-  updated_at     DateTime @default(now()) @db.Timestamp(6)
-
-  @@ignore
-}
-
-/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
-model uptime_checks {
-  ts         DateTime      @default(now()) @db.Timestamptz(6)
-  service    service
-  region     String?
-  status     uptime_status
-  latency_ms Int
-  metadata   Json?
-  created_at DateTime      @default(now()) @db.Timestamp(6)
-
-  @@ignore
-}
-
-model ti_troubleshooting_sessions {
-  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id          String   @db.Uuid
-  playbook_id      String   @db.VarChar(50)
-  question         String
-  steps_completed  Int      @default(0)
-  total_steps      Int
-  resolution_found Boolean  @default(false)
-  duration_seconds Int?
-  created_at       DateTime @default(now()) @db.Timestamp(6)
-  updated_at       DateTime @default(now()) @db.Timestamp(6)
-
-  @@index([user_id], map: "idx_ti_sessions_user")
-  @@index([playbook_id], map: "idx_ti_sessions_playbook")
-}
-
-model user_achievements {
-  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id        String   @db.Uuid
-  achievement_id String   @db.VarChar(50)
-  unlocked_at    DateTime @default(now()) @db.Timestamp(6)
-  session_id     String?  @db.VarChar(100)
-  metadata       Json?
-
-  @@unique([user_id, achievement_id], map: "unique_user_achievement")
-}
-
-model user_profiles {
-  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id          String   @unique(map: "unique_user_profile") @db.Uuid
-  badges           Json     @default("[]")
-  streak           Int      @default(0)
-  points           Int      @default(0)
-  total_study_time Int      @default(0)
-  avatar           String?  @db.VarChar(255)
-  preferences      Json     @default("{}")
-  created_at       DateTime @default(now()) @db.Timestamp(6)
-  updated_at       DateTime @default(now()) @db.Timestamp(6)
-}
-
-model user_session_stats {
-  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id           String    @db.Uuid
-  session_id        String    @db.VarChar(100)
-  queries_completed Int       @default(0)
-  modules_explored  Int       @default(0)
-  session_duration  Int       @default(0)
-  quizzes_completed Int       @default(0)
-  last_activity     DateTime  @default(now()) @db.Timestamp(6)
-  session_start     DateTime  @default(now()) @db.Timestamp(6)
-  session_end       DateTime? @db.Timestamp(6)
-  metadata          Json?
-
-  @@unique([user_id, session_id], map: "unique_user_session")
-}
-
-model user_sessions {
-  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id          String    @db.Uuid
-  session_start    DateTime? @default(now()) @db.Timestamp(6)
-  session_end      DateTime? @db.Timestamp(6)
-  session_duration Int?
-  question_count   Int?      @default(0)
-  is_active        Boolean?  @default(true)
-  last_activity    DateTime? @default(now()) @db.Timestamp(6)
-  ip_address       String?   @db.VarChar(45)
-  user_agent       String?
-  created_at       DateTime? @default(now()) @db.Timestamp(6)
-}
-
-model webhook_calls {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  occurred_at DateTime @default(now()) @db.Timestamptz(6)
-  provider    String
-  event_type  String
-  success     Boolean
-  latency_ms  Int
-  status_code Int
-  retries     Int      @default(0)
-  metadata    Json?
-  created_at  DateTime @default(now()) @db.Timestamp(6)
-}
-
-model enemQuestion {
-  id                 String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  area               String           @db.VarChar(50)
-  disciplina         String           @db.VarChar(100)
-  stem               String
-  a                  String
-  b                  String
-  c                  String
-  d                  String
-  e                  String
-  correct            String           @db.VarChar(1)
-  source             String           @default("Manual") @db.VarChar(50)
-  created_at         DateTime         @default(now()) @db.Timestamp(6)
-  updated_at         DateTime         @default(now()) @db.Timestamp(6)
-  difficulty         difficulty_level @default(MEDIUM)
-  image_alt          String?          @db.VarChar(255)
-  image_url          String?          @db.VarChar(500)
-  rationale          String?
-  skill_tag          String[]         @default([])
-  source_attribution String?          @db.VarChar(255)
-  year               Int              @default(2023) @db.SmallInt
-
-  @@index([area], map: "idx_enem_questions_area")
-  @@index([disciplina], map: "idx_enem_questions_disciplina")
-  @@index([year], map: "idx_enem_questions_year")
-  @@index([difficulty], map: "idx_enem_questions_difficulty")
-  @@index([skill_tag], map: "idx_enem_questions_skill_tag")
-}
-
-model enemSession {
-  id           String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId       String?         @db.Uuid
-  area         String          @db.VarChar(50)
-  numQuestions Int
-  durationMs   Int
-  startedAt    DateTime        @db.Timestamp(6)
-  finishedAt   DateTime?       @db.Timestamp(6)
-  questions    Json
-  answers      Json
-  score        Int?
-  created_at   DateTime        @default(now()) @db.Timestamp(6)
-  updated_at   DateTime        @default(now()) @db.Timestamp(6)
-  config_json  Json?
-  mode         simulation_mode @default(MIXED)
-  stats_json   Json?
-
-  @@index([userId], map: "idx_enem_sessions_user")
-  @@index([area], map: "idx_enem_sessions_area")
-  @@index([mode], map: "idx_enem_sessions_mode")
-}
-
-model enemExam {
-  id              String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id         String?         @db.Uuid
-  area            String          @db.VarChar(50)
-  mode            simulation_mode @default(MIXED)
-  total_questions Int
-  duration_sec    Int
-  config_json     Json?
-  stats_json      Json?
-  created_at      DateTime        @default(now()) @db.Timestamp(6)
-  updated_at      DateTime        @default(now()) @db.Timestamp(6)
-  exam_items      enemExamItem[]
-
-  @@index([user_id], map: "idx_enem_exams_user")
-  @@index([area], map: "idx_enem_exams_area")
-  @@index([mode], map: "idx_enem_exams_mode")
-}
-
-model enemExamItem {
-  id           String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  exam_id      String          @db.Uuid
-  index        Int
-  source       question_source @default(DATABASE)
-  question_id  String?         @db.Uuid
-  payload_json Json?
-  image_url    String?         @db.VarChar(500)
-  answer_user  String?         @db.VarChar(1)
-  created_at   DateTime        @default(now()) @db.Timestamp(6)
-  updated_at   DateTime        @default(now()) @db.Timestamp(6)
-  exam         enemExam        @relation(fields: [exam_id], references: [id], onDelete: Cascade)
-
-  @@index([exam_id], map: "idx_enem_exam_items_exam")
-  @@index([source], map: "idx_enem_exam_items_source")
-}
-
-model enem_item {
-  item_id              String           @id @db.VarChar(50)
-  year                 Int              @db.SmallInt
-  area                 String           @db.VarChar(10)
-  text                 String
-  alternatives         Json
-  correct_answer       String           @db.VarChar(1)
-  topic                String           @db.VarChar(255)
-  estimated_difficulty difficulty_level @default(MEDIUM)
-  asset_refs           String[]         @default([])
-  content_hash         String           @unique @db.VarChar(64)
-  dataset_version      String           @db.VarChar(20)
-  metadata             Json             @default("{}")
-  created_at           DateTime         @default(now()) @db.Timestamp(6)
-  updated_at           DateTime         @default(now()) @db.Timestamp(6)
-
-  @@index([area, year], map: "idx_enem_item_area_year")
-  @@index([content_hash], map: "idx_enem_item_content_hash")
-  @@index([estimated_difficulty], map: "idx_enem_item_difficulty")
-  @@index([topic], map: "idx_enem_item_topic")
-}
-
-model enem_exam_template {
-  template_id String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name        String   @db.VarChar(255)
-  items       String[] @default([])
-  metadata    Json     @default("{}")
-  created_at  DateTime @default(now()) @db.Timestamp(6)
-  updated_at  DateTime @default(now()) @db.Timestamp(6)
-
-  @@index([name], map: "idx_enem_template_name")
-}
-
-model enem_session {
-  session_id String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id    String              @db.Uuid
-  mode       enem_mode           @default(CUSTOM)
-  area       String[]            @default([])
-  config     Json                @default("{}")
-  start_time DateTime            @default(now()) @db.Timestamp(6)
-  end_time   DateTime?           @db.Timestamp(6)
-  status     enem_session_status @default(ACTIVE)
-  created_at DateTime            @default(now()) @db.Timestamp(6)
-  updated_at DateTime            @default(now()) @db.Timestamp(6)
-  responses  enem_response[]
-  score      enem_score?
-
-  @@index([user_id], map: "idx_enem_session_user")
-  @@index([mode], map: "idx_enem_session_mode")
-  @@index([status], map: "idx_enem_session_status")
-  @@index([start_time], map: "idx_enem_session_start_time")
-}
-
-model enem_response {
-  response_id     String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  session_id      String       @db.Uuid
-  item_id         String       @db.VarChar(50)
-  selected_answer String       @db.VarChar(1)
-  time_spent      Int          @default(0)
-  is_correct      Boolean      @default(false)
-  timestamp       DateTime     @default(now()) @db.Timestamp(6)
-  session         enem_session @relation(fields: [session_id], references: [session_id], onDelete: Cascade)
-
-  @@index([session_id], map: "idx_enem_response_session")
-  @@index([item_id], map: "idx_enem_response_item")
-  @@index([is_correct], map: "idx_enem_response_correct")
-}
-
-model enem_score {
-  score_id      String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  session_id    String       @unique @db.Uuid
-  area_scores   Json         @default("{}")
-  total_score   Float        @default(0)
-  tri_estimated Json         @default("{}")
-  stats         Json         @default("{}")
-  created_at    DateTime     @default(now()) @db.Timestamp(6)
-  session       enem_session @relation(fields: [session_id], references: [session_id], onDelete: Cascade)
-
-  @@index([total_score], map: "idx_enem_score_total")
-}
-
-model enem_redacao {
-  redacao_id      String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  session_id      String   @db.Uuid
-  prompt          String
-  submission      String
-  rubrics         Json     @default("{}")
-  estimated_score Float    @default(0)
-  ai_feedback     String?
-  created_at      DateTime @default(now()) @db.Timestamp(6)
-  updated_at      DateTime @default(now()) @db.Timestamp(6)
-
-  @@index([session_id], map: "idx_enem_redacao_session")
-  @@index([estimated_score], map: "idx_enem_redacao_score")
-}
-
-model redacaoSession {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId      String   @db.Uuid
-  theme       String
-  themeYear   Int
-  content     String
-  wordCount   Int
-  scores      Json     @default("{}")
-  totalScore  Int      @default(0)
-  feedback    String
-  suggestions Json     @default("[]")
-  highlights  Json     @default("{}")
-  status      String   @default("PENDING")
-  createdAt   DateTime @default(now()) @db.Timestamp(6)
-  updatedAt   DateTime @default(now()) @db.Timestamp(6)
-
-  @@index([userId], map: "idx_redacao_session_user")
-  @@index([totalScore], map: "idx_redacao_session_score")
-  @@index([createdAt], map: "idx_redacao_session_created")
 }
 
 enum achievement_category {

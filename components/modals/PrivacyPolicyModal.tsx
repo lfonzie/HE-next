@@ -195,18 +195,163 @@ const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({ isOpen, onClose
           </div>
           
           <div>
-            <h3 className="text-xl font-semibold mb-4 text-gray-900">9. Contato</h3>
+            <h3 className="text-xl font-semibold mb-4 text-gray-900">9. Transferência Internacional de Dados</h3>
+            <div className="space-y-4">
+              <p className="text-gray-700 leading-relaxed">
+                O HubEdu.ia prioriza a manutenção de dados no Brasil, mas em casos específicos pode ser necessário 
+                transferir dados para outros países:
+              </p>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="bg-green-50 p-4 rounded-xl">
+                  <h4 className="font-semibold text-green-800 mb-2">🇧🇷 Dados no Brasil:</h4>
+                  <ul className="text-green-700 leading-relaxed space-y-1 text-sm">
+                    <li>• Servidores principais no Brasil</li>
+                    <li>• Backup local prioritário</li>
+                    <li>• Processamento de dados educacionais</li>
+                    <li>• Conformidade com LGPD</li>
+                  </ul>
+                </div>
+                <div className="bg-blue-50 p-4 rounded-xl">
+                  <h4 className="font-semibold text-blue-800 mb-2">🌍 Transferências Autorizadas:</h4>
+                  <ul className="text-blue-700 leading-relaxed space-y-1 text-sm">
+                    <li>• Países com adequação de proteção</li>
+                    <li>• Cláusulas contratuais padrão</li>
+                    <li>• Consentimento explícito</li>
+                    <li>• Necessidade técnica específica</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-xl font-semibold mb-4 text-gray-900">10. Menores de Idade</h3>
+            <div className="space-y-4">
+              <div className="bg-yellow-50 p-4 rounded-xl">
+                <h4 className="font-semibold text-yellow-800 mb-2">👶 Proteção Especial:</h4>
+                <ul className="text-yellow-700 leading-relaxed space-y-1 text-sm">
+                  <li>• Consentimento dos pais/responsáveis obrigatório</li>
+                  <li>• Dados coletados apenas para fins educacionais</li>
+                  <li>• Não compartilhamento com terceiros</li>
+                  <li>• Controle parental disponível</li>
+                </ul>
+              </div>
+              <div className="bg-purple-50 p-4 rounded-xl">
+                <h4 className="font-semibold text-purple-800 mb-2">📚 Uso Educacional:</h4>
+                <ul className="text-purple-700 leading-relaxed space-y-1 text-sm">
+                  <li>• Acesso supervisionado por professores</li>
+                  <li>• Conteúdo adequado à idade</li>
+                  <li>• Relatórios para pais/responsáveis</li>
+                  <li>• Configurações de privacidade restritivas</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-xl font-semibold mb-4 text-gray-900">11. Incidentes de Segurança</h3>
+            <div className="space-y-4">
+              <p className="text-gray-700 leading-relaxed">
+                Em caso de incidentes de segurança que possam afetar dados pessoais:
+              </p>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="bg-red-50 p-4 rounded-xl">
+                  <h4 className="font-semibold text-red-800 mb-2">🚨 Procedimentos:</h4>
+                  <ul className="text-red-700 leading-relaxed space-y-1 text-sm">
+                    <li>• Notificação em até 72 horas</li>
+                    <li>• Comunicação aos usuários afetados</li>
+                    <li>• Relatório à ANPD quando necessário</li>
+                    <li>• Medidas corretivas imediatas</li>
+                  </ul>
+                </div>
+                <div className="bg-green-50 p-4 rounded-xl">
+                  <h4 className="font-semibold text-green-800 mb-2">🛡️ Prevenção:</h4>
+                  <ul className="text-green-700 leading-relaxed space-y-1 text-sm">
+                    <li>• Monitoramento 24/7</li>
+                    <li>• Testes de penetração regulares</li>
+                    <li>• Treinamento da equipe</li>
+                    <li>• Atualizações de segurança</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-xl font-semibold mb-4 text-gray-900">12. Base Legal para Tratamento</h3>
+            <div className="space-y-4">
+              <p className="text-gray-700 leading-relaxed mb-3">
+                Tratamos dados pessoais com base nas seguintes bases legais:
+              </p>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="bg-blue-50 p-4 rounded-xl">
+                  <h4 className="font-semibold text-blue-800 mb-2">📋 Bases Principais:</h4>
+                  <ul className="text-blue-700 leading-relaxed space-y-1 text-sm">
+                    <li>• <strong>Consentimento:</strong> Para marketing e comunicações</li>
+                    <li>• <strong>Execução de contrato:</strong> Para prestação de serviços</li>
+                    <li>• <strong>Interesse legítimo:</strong> Para melhorias da plataforma</li>
+                    <li>• <strong>Obrigação legal:</strong> Para cumprimento de leis</li>
+                  </ul>
+                </div>
+                <div className="bg-green-50 p-4 rounded-xl">
+                  <h4 className="font-semibold text-green-800 mb-2">🎓 Bases Educacionais:</h4>
+                  <ul className="text-green-700 leading-relaxed space-y-1 text-sm">
+                    <li>• <strong>Interesse público:</strong> Para educação</li>
+                    <li>• <strong>Proteção da vida:</strong> Para segurança escolar</li>
+                    <li>• <strong>Saúde pública:</strong> Para bem-estar dos alunos</li>
+                    <li>• <strong>Consentimento:</strong> Para dados sensíveis</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-xl font-semibold mb-4 text-gray-900">13. Tecnologias de Terceiros</h3>
+            <div className="space-y-4">
+              <p className="text-gray-700 leading-relaxed mb-3">
+                Utilizamos serviços de terceiros que podem processar dados pessoais:
+              </p>
+              <div className="grid md:grid-cols-3 gap-4">
+                <div className="bg-yellow-50 p-3 rounded-lg">
+                  <h4 className="font-semibold text-yellow-800 mb-1">☁️ Hospedagem</h4>
+                  <p className="text-yellow-700 text-xs">Servidores brasileiros com certificação LGPD</p>
+                </div>
+                <div className="bg-blue-50 p-3 rounded-lg">
+                  <h4 className="font-semibold text-blue-800 mb-1">📊 Analytics</h4>
+                  <p className="text-blue-700 text-xs">Google Analytics com anonimização</p>
+                </div>
+                <div className="bg-green-50 p-3 rounded-lg">
+                  <h4 className="font-semibold text-green-800 mb-1">📧 Email</h4>
+                  <p className="text-green-700 text-xs">Serviços de email com criptografia</p>
+                </div>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-xl">
+                <h4 className="font-semibold text-gray-800 mb-2">🔒 Garantias:</h4>
+                <ul className="text-gray-700 leading-relaxed space-y-1 text-sm">
+                  <li>• Contratos de proteção de dados com todos os fornecedores</li>
+                  <li>• Auditorias regulares de conformidade</li>
+                  <li>• Cláusulas de proteção de dados</li>
+                  <li>• Monitoramento de acesso aos dados</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-xl font-semibold mb-4 text-gray-900">14. Contato</h3>
             <div className="bg-yellow-50 p-4 rounded-xl">
               <p className="text-gray-800 mb-2"><strong>Para questões sobre privacidade:</strong></p>
               <p className="text-gray-700"><strong>Email:</strong> privacidade@hubedu.ia.br</p>
               <p className="text-gray-700"><strong>DPO:</strong> dpo@hubedu.ia.br</p>
               <p className="text-gray-700"><strong>Telefone:</strong> (11) 9999-9999</p>
+              <p className="text-gray-700"><strong>Endereço:</strong> São Paulo, SP - Brasil</p>
             </div>
           </div>
           
           <div className="pt-6 border-t border-gray-200">
             <p className="text-sm text-gray-600">
-              Última atualização: Setembro de 2025
+              Última atualização: Janeiro de 2025
             </p>
           </div>
         </div>

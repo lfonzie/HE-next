@@ -49,7 +49,10 @@ export default function NewQuizComponent({
   
   // Helper function to normalize correct answer format
   const normalizeCorrectAnswer = (correct: 'a' | 'b' | 'c' | 'd'): 'a' | 'b' | 'c' | 'd' => {
-    return (correct || 'a').toLowerCase() as 'a' | 'b' | 'c' | 'd'
+    // The correct answer is already in the correct format from DynamicStage transformation
+    // No need to apply toLowerCase() as it's already lowercase
+    console.log(`🔍 DEBUG normalizeCorrectAnswer: input="${correct}", type=${typeof correct}`)
+    return (correct || 'a') as 'a' | 'b' | 'c' | 'd'
   }
   
   // Helper function to compute result from single source of truth
@@ -181,13 +184,23 @@ export default function NewQuizComponent({
     
     questions.forEach((question, index) => {
       const questionId = `q${index}`
-      correctMap[questionId] = normalizeCorrectAnswer(question.correct)
+      const correctAnswer = normalizeCorrectAnswer(question.correct)
+      correctMap[questionId] = correctAnswer
+      
+      console.log(`🔍 DEBUG Question ${index + 1}:`, {
+        questionId,
+        userAnswer: frozenUserAnswers[questionId],
+        correctAnswer: question.correct,
+        normalizedCorrect: correctAnswer,
+        isCorrect: frozenUserAnswers[questionId] === correctAnswer
+      })
     })
     
     // Compute result from single source of truth
     const computedResult = computeResult(frozenUserAnswers, correctMap)
     
     console.log('🔍 DEBUG: Computed result:', computedResult)
+    console.log('🔍 DEBUG: Final score:', computedResult.correctCount, '/', computedResult.totalQuestions)
     
     // Set result (single source of truth)
     setResult(computedResult)

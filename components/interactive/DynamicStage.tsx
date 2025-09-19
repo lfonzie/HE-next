@@ -155,15 +155,15 @@ export default function DynamicStage({
 
           // Determine correct answer letter from q.correct which should be an index after randomize
           let correctAnswer: 'a' | 'b' | 'c' | 'd' = 'a'
+          
+          // After randomization, q.correct should always be a number (0-3)
           if (typeof q.correct === 'number' && q.correct >= 0 && q.correct <= 3) {
             correctAnswer = ['a', 'b', 'c', 'd'][q.correct] as 'a' | 'b' | 'c' | 'd'
-          } else if (typeof q.correct === 'string') {
-            const normalized = q.correct.toLowerCase()
-            if (['a', 'b', 'c', 'd'].includes(normalized)) {
-              correctAnswer = normalized as 'a' | 'b' | 'c' | 'd'
-            } else if (/^[0-3]$/.test(normalized)) {
-              correctAnswer = ['a', 'b', 'c', 'd'][parseInt(normalized, 10)] as 'a' | 'b' | 'c' | 'd'
-            }
+            console.log(`🔍 DEBUG: Question ${index + 1} - Correct index: ${q.correct}, Correct letter: ${correctAnswer}`)
+          } else {
+            // Fallback for edge cases - log warning and default to 'a'
+            console.warn(`⚠️ Invalid correct answer after randomization: "${q.correct}" (type: ${typeof q.correct}). Defaulting to 'a'.`)
+            correctAnswer = 'a'
           }
 
           const transformed = {

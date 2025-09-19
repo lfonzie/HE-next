@@ -134,29 +134,54 @@ export default function ProgressiveLessonComponent({
         console.warn('Wikimedia fetch failed, will fallback:', e);
       }
 
-      // 2) Fallback to Unsplash translate-search
+      // 2) Wikimedia Commons com query expandida
       if (!selectedUrl) {
-        const response = await fetch('/api/unsplash/translate-search', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ 
-            query: query,
-            subject: skeleton?.subject || '',
-            count: 1
-          }),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          if (data.photos && data.photos.length > 0) {
-            selectedUrl = data.photos[0].urls.regular;
+        try {
+          // Expandir a query para melhor cobertura
+          const expandedQuery = `${query} education learning teaching science academic`;
+          const wikiRes2 = await fetch('/api/wikimedia/search', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query: expandedQuery, subject: skeleton?.subject || '', count: 1 })
+          });
+          if (wikiRes2.ok) {
+            const wikiData2 = await wikiRes2.json();
+            if (wikiData2.success && wikiData2.photos && wikiData2.photos.length > 0) {
+              selectedUrl = wikiData2.photos[0].urls?.regular || wikiData2.photos[0].url;
+            }
           }
+        } catch (e) {
+          console.warn('Wikimedia expanded fetch failed:', e);
         }
       }
 
-      // 3) Final fallback
+      // 3) Unsplash como fallback
+      if (!selectedUrl) {
+        try {
+          const response = await fetch('/api/unsplash/translate-search', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+              query: query,
+              subject: skeleton?.subject || '',
+              count: 1
+            }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            if (data.photos && data.photos.length > 0) {
+              selectedUrl = data.photos[0].urls.regular;
+            }
+          }
+        } catch (e) {
+          console.warn('Unsplash fetch failed:', e);
+        }
+      }
+
+      // 4) Final fallback
       setImageUrl(
         selectedUrl || `https://commons.wikimedia.org/wiki/Special:FilePath/Education%20-%20The%20Noun%20Project.svg?width=800&height=400`
       );
@@ -768,19 +793,6 @@ export default function ProgressiveLessonComponent({
         </Card>
       )}
 
-      {/* Keyboard Navigation Help */}
-      <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-        <div className="flex items-center gap-2 text-sm text-blue-700">
-          <Keyboard className="h-4 w-4" />
-          <span className="font-medium">Navegação por teclado:</span>
-          <span>← → para navegar</span>
-          <span>•</span>
-          <span>Enter para confirmar</span>
-          <span>•</span>
-          <span>Esc para voltar</span>
-        </div>
-      </div>
-
       {/* Navigation */}
       <div className="flex items-center justify-between">
         <Button
@@ -856,6 +868,21 @@ export default function ProgressiveLessonComponent({
             <ArrowRight className="w-4 h-4" />
           </Button>
         )}
+      </div>
+
+      {/* Keyboard Navigation Help - movido para baixo */}
+      <div className="mt-6 pt-4 border-t border-gray-200">
+        <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-center gap-2 text-sm text-blue-700">
+            <Keyboard className="h-4 w-4" />
+            <span className="font-medium">Navegação por teclado:</span>
+            <span>← → para navegar</span>
+            <span>•</span>
+            <span>Enter para confirmar</span>
+            <span>•</span>
+            <span>Esc para voltar</span>
+          </div>
+        </div>
       </div>
     </div>
   );

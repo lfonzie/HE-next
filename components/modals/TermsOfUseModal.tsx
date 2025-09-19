@@ -301,18 +301,173 @@ const TermsOfUseModal: React.FC<TermsOfUseModalProps> = ({ isOpen, onClose }) =>
           </div>
           
           <div>
-            <h3 className="text-xl font-semibold mb-4 text-gray-900">12. Contato</h3>
+            <h3 className="text-xl font-semibold mb-4 text-gray-900">12. Serviços de IA e Algoritmos</h3>
+            <div className="space-y-4">
+              <p className="text-gray-700 leading-relaxed">
+                O HubEdu.ia utiliza inteligência artificial para fornecer serviços educacionais:
+              </p>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="bg-blue-50 p-4 rounded-xl">
+                  <h4 className="font-semibold text-blue-800 mb-2">🤖 Funcionalidades de IA:</h4>
+                  <ul className="text-blue-700 leading-relaxed space-y-1 text-sm">
+                    <li>• Geração automática de aulas</li>
+                    <li>• Correção de redações</li>
+                    <li>• Chat inteligente educacional</li>
+                    <li>• Recomendações personalizadas</li>
+                    <li>• Análise de progresso</li>
+                  </ul>
+                </div>
+                <div className="bg-green-50 p-4 rounded-xl">
+                  <h4 className="font-semibold text-green-800 mb-2">⚖️ Limitações e Responsabilidades:</h4>
+                  <ul className="text-green-700 leading-relaxed space-y-1 text-sm">
+                    <li>• IA como ferramenta de apoio</li>
+                    <li>• Supervisão humana necessária</li>
+                    <li>• Não substitui avaliação docente</li>
+                    <li>• Resultados podem variar</li>
+                    <li>• Melhorias contínuas</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-xl font-semibold mb-4 text-gray-900">13. Conteúdo Gerado por IA</h3>
+            <div className="space-y-4">
+              <div className="bg-yellow-50 p-4 rounded-xl">
+                <h4 className="font-semibold text-yellow-800 mb-2">📝 Política de Conteúdo:</h4>
+                <ul className="text-yellow-700 leading-relaxed space-y-1 text-sm">
+                  <li>• Conteúdo gerado é para uso educacional</li>
+                  <li>• Professores devem revisar antes de usar</li>
+                  <li>• Adaptação às necessidades locais</li>
+                  <li>• Conformidade com BNCC</li>
+                  <li>• Respeito aos direitos autorais</li>
+                </ul>
+              </div>
+              <div className="bg-red-50 p-4 rounded-xl">
+                <h4 className="font-semibold text-red-800 mb-2">⚠️ Limitações:</h4>
+                <ul className="text-red-700 leading-relaxed space-y-1 text-sm">
+                  <li>• Não garantimos precisão absoluta</li>
+                  <li>• Conteúdo pode conter imprecisões</li>
+                  <li>• Necessária validação pedagógica</li>
+                  <li>• Responsabilidade do usuário</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-xl font-semibold mb-4 text-gray-900">14. Planos e Pagamentos</h3>
+            <div className="space-y-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="bg-green-50 p-4 rounded-xl">
+                  <h4 className="font-semibold text-green-800 mb-2">💳 Modalidades de Pagamento:</h4>
+                  <ul className="text-green-700 leading-relaxed space-y-1 text-sm">
+                    <li>• Cartão de crédito/débito</li>
+                    <li>• PIX</li>
+                    <li>• Boleto bancário</li>
+                    <li>• Transferência bancária</li>
+                    <li>• Parcelamento disponível</li>
+                  </ul>
+                </div>
+                <div className="bg-blue-50 p-4 rounded-xl">
+                  <h4 className="font-semibold text-blue-800 mb-2">📅 Ciclos de Cobrança:</h4>
+                  <ul className="text-blue-700 leading-relaxed space-y-1 text-sm">
+                    <li>• Mensal</li>
+                    <li>• Trimestral</li>
+                    <li>• Semestral</li>
+                    <li>• Anual (com desconto)</li>
+                    <li>• Personalizado para escolas</li>
+                  </ul>
+                </div>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-xl">
+                <h4 className="font-semibold text-gray-800 mb-2">💰 Política de Reembolso:</h4>
+                <ul className="text-gray-700 leading-relaxed space-y-1 text-sm">
+                  <li>• Reembolso em até 7 dias após contratação</li>
+                  <li>• Cancelamento a qualquer momento</li>
+                  <li>• Não reembolso por uso parcial</li>
+                  <li>• Processamento em até 30 dias</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-xl font-semibold mb-4 text-gray-900">15. Suporte e Atendimento</h3>
+            <div className="space-y-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="bg-yellow-50 p-4 rounded-xl">
+                  <h4 className="font-semibold text-yellow-800 mb-2">🕒 Horários de Atendimento:</h4>
+                  <ul className="text-yellow-700 leading-relaxed space-y-1 text-sm">
+                    <li>• Segunda a sexta: 8h às 18h</li>
+                    <li>• Sábado: 8h às 12h</li>
+                    <li>• Feriados: conforme calendário</li>
+                    <li>• Suporte emergencial 24h</li>
+                  </ul>
+                </div>
+                <div className="bg-blue-50 p-4 rounded-xl">
+                  <h4 className="font-semibold text-blue-800 mb-2">📞 Canais de Suporte:</h4>
+                  <ul className="text-blue-700 leading-relaxed space-y-1 text-sm">
+                    <li>• Chat online na plataforma</li>
+                    <li>• Email: suporte@hubedu.ia.br</li>
+                    <li>• Telefone: (11) 9999-9999</li>
+                    <li>• WhatsApp Business</li>
+                    <li>• Central de ajuda online</li>
+                  </ul>
+                </div>
+              </div>
+              <div className="bg-green-50 p-4 rounded-xl">
+                <h4 className="font-semibold text-green-800 mb-2">🎯 Tipos de Suporte:</h4>
+                <ul className="text-green-700 leading-relaxed space-y-1 text-sm">
+                  <li>• <strong>Técnico:</strong> Problemas de acesso e funcionamento</li>
+                  <li>• <strong>Pedagógico:</strong> Dúvidas sobre uso educacional</li>
+                  <li>• <strong>Administrativo:</strong> Questões de conta e pagamento</li>
+                  <li>• <strong>Treinamento:</strong> Capacitação de usuários</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-xl font-semibold mb-4 text-gray-900">16. Disposições Finais</h3>
+            <div className="space-y-4">
+              <div className="bg-gray-50 p-4 rounded-xl">
+                <h4 className="font-semibold text-gray-800 mb-2">📋 Cláusulas Importantes:</h4>
+                <ul className="text-gray-700 leading-relaxed space-y-1 text-sm">
+                  <li>• <strong>Integralidade:</strong> Estes termos constituem o acordo completo</li>
+                  <li>• <strong>Divisibilidade:</strong> Cláusulas são independentes</li>
+                  <li>• <strong>Renúncia:</strong> Não renunciamos direitos por tolerância</li>
+                  <li>• <strong>Cessão:</strong> Usuário não pode ceder direitos sem autorização</li>
+                  <li>• <strong>Idioma:</strong> Versão em português prevalece</li>
+                </ul>
+              </div>
+              <div className="bg-blue-50 p-4 rounded-xl">
+                <h4 className="font-semibold text-blue-800 mb-2">⚖️ Resolução de Conflitos:</h4>
+                <ul className="text-blue-700 leading-relaxed space-y-1 text-sm">
+                  <li>• <strong>Primeira instância:</strong> Mediação extrajudicial</li>
+                  <li>• <strong>Segunda instância:</strong> Arbitragem</li>
+                  <li>• <strong>Última instância:</strong> Poder Judiciário</li>
+                  <li>• <strong>Foro:</strong> Comarca de São Paulo/SP</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-xl font-semibold mb-4 text-gray-900">17. Contato</h3>
             <div className="bg-yellow-50 p-4 rounded-xl">
               <p className="text-gray-800 mb-2"><strong>Para questões sobre estes termos:</strong></p>
               <p className="text-gray-700"><strong>Email:</strong> legal@hubedu.ia.br</p>
               <p className="text-gray-700"><strong>Suporte:</strong> suporte@hubedu.ia.br</p>
               <p className="text-gray-700"><strong>Telefone:</strong> (11) 9999-9999</p>
+              <p className="text-gray-700"><strong>Endereço:</strong> São Paulo, SP - Brasil</p>
             </div>
           </div>
           
           <div className="pt-6 border-t border-gray-200">
             <p className="text-sm text-gray-600">
-              Última atualização: Setembro de 2025
+              Última atualização: Janeiro de 2025
             </p>
           </div>
         </div>

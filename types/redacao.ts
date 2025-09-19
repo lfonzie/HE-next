@@ -5,6 +5,10 @@ export interface EnemTheme {
   year: number
   theme: string
   description: string
+  isAIGenerated?: boolean
+  isOfficial?: boolean
+  isSessionGenerated?: boolean
+  createdAt?: string
 }
 
 export interface CompetenciaScore {

@@ -41,7 +41,7 @@ export function AuthGuard({
       <div className="flex items-center justify-center min-h-screen">
         <div className="flex items-center space-x-3">
           <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
-          <span className="text-gray-600">Checking authentication...</span>
+          <span className="text-gray-600" suppressHydrationWarning>Verificando autenticação...</span>
         </div>
       </div>
     )

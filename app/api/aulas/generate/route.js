@@ -108,13 +108,41 @@ function generateImageQuery(topic, slideNumber, slideType) {
   return queries[slideNumber] || fallbackQueries[slideNumber] || `${mainKeyword} concept`;
 }
 
+function expandImageQuery(originalQuery, topic) {
+  // Expandir a query original com termos relacionados para melhor cobertura no Wikimedia Commons
+  const cleanTopic = topic.toLowerCase()
+    .replace(/[?¿!¡.,;:]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  
+  const topicKeywords = cleanTopic.split(' ').filter(word => 
+    word.length > 2 && 
+    !['sobre', 'para', 'como', 'quando', 'onde', 'porque', 'que', 'uma', 'um', 'de', 'da', 'do', 'das', 'dos'].includes(word)
+  );
+  
+  const mainKeyword = topicKeywords[0] || cleanTopic;
+  
+  // Adicionar termos educacionais e científicos comuns no Wikimedia Commons
+  const educationalTerms = [
+    'education', 'educational', 'learning', 'teaching', 'school', 'student',
+    'science', 'scientific', 'research', 'study', 'academic', 'university',
+    'knowledge', 'information', 'concept', 'theory', 'practice', 'example'
+  ];
+  
+  // Combinar query original com termos educacionais
+  const expandedTerms = [...originalQuery.split(' '), ...educationalTerms.slice(0, 3)];
+  const uniqueTerms = [...new Set(expandedTerms)];
+  
+  return uniqueTerms.join(' ');
+}
+
 // Função para gerar URL de imagem dinâmica baseada no tema
 function generateDynamicImageUrl(topic, slideNumber, slideType) {
   const imageQuery = generateImageQuery(topic, slideNumber, slideType);
   
-  // Usar API Unsplash oficial através do endpoint interno
+  // Usar Wikimedia Commons como fonte principal
   // Retorna um placeholder que será substituído pela API
-  return `PLACEHOLDER_UNSPLASH_${encodeURIComponent(imageQuery)}`;
+  return `PLACEHOLDER_WIKIMEDIA_${encodeURIComponent(imageQuery)}`;
 }
 
 /**
@@ -326,6 +354,62 @@ Responda apenas com o JSON válido:`;
 }
 
 /**
+ * Valida e corrige formato de quiz se necessário
+ * @param {Object} slide - Slide de quiz
+ * @returns {Object} - Slide corrigido
+ */
+function validateAndFixQuizSlide(slide) {
+  if (slide.type !== 'quiz' || !slide.questions) {
+    return slide;
+  }
+  
+  const correctedQuestions = slide.questions.map(question => {
+    const corrected = { ...question };
+    
+    // Validar e corrigir campo "correct"
+    if (typeof corrected.correct === 'string') {
+      const normalized = corrected.correct.toLowerCase();
+      if (['a', 'b', 'c', 'd'].includes(normalized)) {
+        corrected.correct = ['a', 'b', 'c', 'd'].indexOf(normalized);
+        console.log(`🔧 Corrigido campo "correct" de "${question.correct}" para ${corrected.correct}`);
+      } else if (/^[0-3]$/.test(normalized)) {
+        corrected.correct = parseInt(normalized, 10);
+        console.log(`🔧 Corrigido campo "correct" de "${question.correct}" para ${corrected.correct}`);
+      } else {
+        console.warn(`⚠️ Campo "correct" inválido: "${question.correct}", usando padrão 0`);
+        corrected.correct = 0;
+      }
+    } else if (typeof corrected.correct === 'number') {
+      if (corrected.correct < 0 || corrected.correct > 3) {
+        console.warn(`⚠️ Campo "correct" fora do range: ${corrected.correct}, usando padrão 0`);
+        corrected.correct = 0;
+      }
+    } else {
+      console.warn(`⚠️ Campo "correct" tipo inválido: ${typeof corrected.correct}, usando padrão 0`);
+      corrected.correct = 0;
+    }
+    
+    // Validar opções
+    if (!corrected.options || !Array.isArray(corrected.options) || corrected.options.length !== 4) {
+      console.warn(`⚠️ Campo "options" inválido na questão: "${corrected.q}", usando opções padrão`);
+      corrected.options = [
+        "A) Opção A",
+        "B) Opção B", 
+        "C) Opção C",
+        "D) Opção D"
+      ];
+    }
+    
+    return corrected;
+  });
+  
+  return {
+    ...slide,
+    questions: correctedQuestions
+  };
+}
+
+/**
  * Parseia conteúdo gerado pela IA em slides estruturados
  * @param {string} content - Conteúdo retornado pela IA
  * @returns {Object} - Objeto com slides estruturados
@@ -336,6 +420,8 @@ function parseGeneratedContent(content) {
     if (content.trim().startsWith('{')) {
       const parsed = JSON.parse(content);
       if (parsed.slides && Array.isArray(parsed.slides)) {
+        // Validar e corrigir slides de quiz
+        parsed.slides = parsed.slides.map(slide => validateAndFixQuizSlide(slide));
         return parsed;
       }
     }
@@ -345,6 +431,8 @@ function parseGeneratedContent(content) {
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0]);
       if (parsed.slides && Array.isArray(parsed.slides)) {
+        // Validar e corrigir slides de quiz
+        parsed.slides = parsed.slides.map(slide => validateAndFixQuizSlide(slide));
         return parsed;
       }
     }
@@ -655,7 +743,30 @@ export async function POST(request) {
           }
         }
 
-        // 4. Unsplash (quaternário)
+        // 4. Wikimedia Commons com query expandida (terciário)
+        if (!imageUrl) {
+          try {
+            // Tentar com query expandida para melhor cobertura
+            const expandedQuery = expandImageQuery(imageQuery, topic);
+            const wikiResponse2 = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/wikimedia/search`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ query: expandedQuery, subject: topic, count: 1 })
+            });
+            if (wikiResponse2.ok) {
+              const wikiData2 = await wikiResponse2.json();
+              if (wikiData2.success && wikiData2.photos && wikiData2.photos.length > 0) {
+                imageUrl = wikiData2.photos[0].urls?.regular || wikiData2.photos[0].url;
+                imageSource = 'wikimedia';
+                console.log(`✅ Imagem Wikimedia (query expandida) para slide ${slide.number}:`, imageUrl);
+              }
+            }
+          } catch (error) {
+            console.warn(`⚠️ Erro ao buscar imagem Wikimedia expandida para slide ${slide.number}:`, error);
+          }
+        }
+
+        // 5. Unsplash (quaternário)
         if (!imageUrl) {
           try {
             const unsplashResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/unsplash/translate-search`, {
@@ -677,7 +788,7 @@ export async function POST(request) {
           }
         }
 
-        // 5. Fallback final para Wikimedia placeholder
+        // 6. Fallback final para Wikimedia placeholder
         if (!imageUrl) {
           imageUrl = `https://commons.wikimedia.org/wiki/Special:FilePath/Education%20-%20The%20Noun%20Project.svg?width=800&height=400`;
           imageSource = 'wikimedia';

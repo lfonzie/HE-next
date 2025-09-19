@@ -6,13 +6,11 @@ const DYNAMIC_CACHE_NAME = 'hubedu-dynamic-v1.0.0';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
-  '/offline.html',
   '/android-chrome-192x192.png',
   '/android-chrome-512x512.png',
   '/apple-touch-icon.png',
   '/favicon-32x32.png',
-  '/favicon-16x16.png',
-  '/assets/Logo_HubEdu.ia.svg'
+  '/favicon-16x16.png'
 ];
 
 // APIs que devem ser cacheadas
@@ -31,7 +29,14 @@ self.addEventListener('install', (event) => {
     caches.open(STATIC_CACHE_NAME)
       .then((cache) => {
         console.log('Service Worker: Cacheando recursos estáticos');
-        return cache.addAll(STATIC_ASSETS);
+        return Promise.allSettled(
+          STATIC_ASSETS.map(asset => 
+            cache.add(asset).catch(err => {
+              console.warn(`Service Worker: Failed to cache ${asset}:`, err);
+              return null;
+            })
+          )
+        );
       })
       .then(() => {
         console.log('Service Worker: Instalação concluída');
@@ -69,33 +74,39 @@ self.addEventListener('activate', (event) => {
 // Interceptação de requisições
 self.addEventListener('fetch', (event) => {
   const { request } = event;
-  const url = new URL(request.url);
+  
+  try {
+    const url = new URL(request.url);
 
-  // Ignora requisições não-HTTP
-  if (!request.url.startsWith('http')) {
-    return;
-  }
+    // Ignora requisições não-HTTP
+    if (!request.url.startsWith('http')) {
+      return;
+    }
 
-  // Estratégia para diferentes tipos de recursos
-  if (request.method === 'GET') {
-    // Recursos estáticos - Cache First
-    if (STATIC_ASSETS.includes(url.pathname) || 
-        url.pathname.startsWith('/_next/static/') ||
-        url.pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2)$/)) {
-      event.respondWith(cacheFirst(request));
+    // Estratégia para diferentes tipos de recursos
+    if (request.method === 'GET') {
+      // Recursos estáticos - Cache First
+      if (STATIC_ASSETS.includes(url.pathname) || 
+          url.pathname.startsWith('/_next/static/') ||
+          url.pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2)$/)) {
+        event.respondWith(cacheFirst(request));
+      }
+      // APIs - Network First com fallback
+      else if (API_CACHE_PATTERNS.some(pattern => pattern.test(url.pathname))) {
+        event.respondWith(networkFirst(request));
+      }
+      // Páginas HTML - Stale While Revalidate
+      else if (request.headers.get('accept')?.includes('text/html')) {
+        event.respondWith(staleWhileRevalidate(request));
+      }
+      // Outros recursos - Network First
+      else {
+        event.respondWith(networkFirst(request));
+      }
     }
-    // APIs - Network First com fallback
-    else if (API_CACHE_PATTERNS.some(pattern => pattern.test(url.pathname))) {
-      event.respondWith(networkFirst(request));
-    }
-    // Páginas HTML - Stale While Revalidate
-    else if (request.headers.get('accept')?.includes('text/html')) {
-      event.respondWith(staleWhileRevalidate(request));
-    }
-    // Outros recursos - Network First
-    else {
-      event.respondWith(networkFirst(request));
-    }
+  } catch (error) {
+    console.error('Service Worker: Erro no fetch event:', error);
+    // Let the browser handle the request normally
   }
 });
 
@@ -115,7 +126,11 @@ async function cacheFirst(request) {
     return networkResponse;
   } catch (error) {
     console.error('Cache First: Erro', error);
-    return new Response('Recurso não disponível offline', { status: 503 });
+    // Return a more graceful fallback instead of throwing
+    return new Response('Recurso não disponível offline', { 
+      status: 503,
+      statusText: 'Service Unavailable'
+    });
   }
 }
 

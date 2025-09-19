@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, Sparkles, BookOpen, Target, Users, Send, Lightbulb, TrendingUp, AlertCircle, CheckCircle, Clock, RefreshCw, Timer, BarChart3, FileText, AlertTriangle, Mic, Volume2, Accessibility, Coffee, Brain, Zap, Star, Heart, Rocket } from 'lucide-react'
 import { useDynamicSuggestions } from '@/hooks/useDynamicSuggestions'
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 
 // Mock components for demo (replace with actual imports)
 const toast = {
@@ -267,7 +268,7 @@ const STATUS_MESSAGES = [
 /**
  * Enhanced AulasPage component with improved UX, performance, and accessibility
  */
-export default function AulasPage() {
+function AulasPageContent() {
   // State management
   const [isGenerating, setIsGenerating] = useState(false)
   const [generatedLesson, setGeneratedLesson] = useState<GeneratedLesson | null>(null)
@@ -877,5 +878,13 @@ export default function AulasPage() {
 
 
     </div>
+  )
+}
+
+export default function AulasPage() {
+  return (
+    <ProtectedRoute>
+      <AulasPageContent />
+    </ProtectedRoute>
   )
 }

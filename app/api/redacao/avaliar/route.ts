@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-// import { prisma } from '@/lib/prisma' // Temporariamente desabilitado devido a problemas de conexão
+import { prisma } from '@/lib/prisma'
 import { OpenAI } from 'openai'
 import { logTokens } from '@/lib/token-logger'
 
@@ -11,6 +11,7 @@ const openai = new OpenAI({
 
 interface RedacaoSubmission {
   theme: string
+  themeText?: string // Texto completo do tema para temas de IA
   content: string
   wordCount: number
   uploadedFileName?: string
@@ -46,7 +47,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body: RedacaoSubmission = await request.json()
-    const { theme, content, wordCount, uploadedFileName, uploadedFileSize } = body
+    const { theme, themeText, content, wordCount, uploadedFileName, uploadedFileSize } = body
 
     // Validações básicas
     if (!theme || !content) {
@@ -70,17 +71,40 @@ export async function POST(request: NextRequest) {
     }
 
     // Obter tema selecionado
-    const selectedTheme = await getThemeById(theme)
-    if (!selectedTheme) {
-      return NextResponse.json({ error: 'Tema não encontrado' }, { status: 404 })
+    let finalThemeText = themeText
+    if (!finalThemeText) {
+      const selectedTheme = await getThemeById(theme)
+      if (!selectedTheme) {
+        return NextResponse.json({ error: 'Tema não encontrado' }, { status: 404 })
+      }
+      finalThemeText = selectedTheme.theme
     }
 
     // Avaliar redação com IA
-    const evaluation = await evaluateRedacao(content, selectedTheme.theme)
+    const evaluation = await evaluateRedacao(content, finalThemeText)
 
-    // Gerar ID da sessão (sem banco de dados por enquanto)
+    // Gerar ID da sessão e salvar no banco de dados
     const sessionId = `redacao_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
     console.log('Sessão de redação criada:', sessionId)
+
+    // Salvar resultado no banco de dados
+    const selectedTheme = await getThemeById(theme)
+    await prisma.redacaoSession.create({
+      data: {
+        id: sessionId,
+        userId: session.user.id,
+        theme: finalThemeText,
+        themeYear: selectedTheme?.year || 2024,
+        content: content,
+        wordCount: wordCount,
+        scores: evaluation.scores,
+        totalScore: evaluation.totalScore,
+        feedback: evaluation.feedback,
+        suggestions: evaluation.suggestions,
+        highlights: evaluation.highlights || {},
+        status: 'COMPLETED'
+      }
+    })
 
     // Persistir uso de tokens (aproximação baseada no tamanho do conteúdo)
     try {
@@ -90,7 +114,7 @@ export async function POST(request: NextRequest) {
         moduleGroup: 'Redacao',
         model: 'gpt-4o-mini',
         totalTokens: estimatedTokens,
-        subject: selectedTheme.theme,
+        subject: finalThemeText,
         messages: { wordCount, uploadedFileName, uploadedFileSize }
       })
     } catch (e) {
@@ -121,6 +145,17 @@ export async function POST(request: NextRequest) {
 }
 
 async function getThemeById(themeId: string) {
+  // Se for um tema de IA, extrair o tema da string
+  if (themeId.startsWith('ai-')) {
+    // Para temas de IA, vamos usar o ID como tema por enquanto
+    // Em uma implementação completa, isso seria buscado no banco de dados
+    return {
+      id: themeId,
+      year: 2025,
+      theme: `Tema gerado por IA (${themeId})`
+    }
+  }
+
   // Buscar tema no banco ou retornar tema padrão
   const themes = [
     {
@@ -236,28 +271,6 @@ Responda APENAS com um JSON válido no seguinte formato:
 
   } catch (error) {
     console.error('Erro na avaliação com IA:', error)
-    
-    // Fallback: avaliação básica
-    return {
-      scores: {
-        comp1: 120,
-        comp2: 120,
-        comp3: 120,
-        comp4: 120,
-        comp5: 120
-      },
-      totalScore: 600,
-      feedback: 'Avaliação temporariamente indisponível. Sua redação foi salva e será avaliada em breve.',
-      suggestions: [
-        'Revise a gramática e ortografia',
-        'Desenvolva melhor os argumentos',
-        'Melhore a proposta de intervenção'
-      ],
-      highlights: {
-        grammar: [],
-        structure: [],
-        content: []
-      }
-    }
+    throw error // Re-throw para ser tratado pelo handler principal
   }
 }
