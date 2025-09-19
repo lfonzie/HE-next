@@ -1473,7 +1473,6 @@ enum enem_mode {
   QUICK
   CUSTOM
   OFFICIAL
-  ADAPTIVE
 }
 
 enum enem_session_status {

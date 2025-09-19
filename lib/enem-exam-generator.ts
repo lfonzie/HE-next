@@ -164,9 +164,6 @@ export class EnemExamGenerator {
         case 'OFFICIAL':
           result = await this.generateOfficialExam(config);
           break;
-        case 'ADAPTIVE':
-          result = await this.generateAdaptiveExam(config);
-          break;
         default:
           throw new Error(`Unsupported exam mode: ${config.mode}`);
       }
@@ -282,29 +279,6 @@ export class EnemExamGenerator {
     }
   }
 
-  /**
-   * Adaptive Mode: Three sequential blocks (easy → medium → hard)
-   */
-  private async generateAdaptiveExam(config: ExamConfig): Promise<ExamGenerationResult> {
-    const blockSize = Math.floor(config.numQuestions / 3);
-    const remainingQuestions = config.numQuestions - (blockSize * 3);
-    
-    const easyItems = await this.selectItemsByDifficulty(config.areas, 'EASY', blockSize + (remainingQuestions > 0 ? 1 : 0));
-    const mediumItems = await this.selectItemsByDifficulty(config.areas, 'MEDIUM', blockSize + (remainingQuestions > 1 ? 1 : 0));
-    const hardItems = await this.selectItemsByDifficulty(config.areas, 'HARD', blockSize);
-
-    const items = [...easyItems, ...mediumItems, ...hardItems];
-    
-    return {
-      items,
-      config,
-      metadata: {
-        estimatedDuration: config.timeLimit || this.estimateDuration(config.numQuestions),
-        difficultyBreakdown: this.calculateDifficultyBreakdown(items),
-        areaBreakdown: this.calculateAreaBreakdown(items)
-      }
-    };
-  }
 
   /**
    * Select items based on difficulty distribution

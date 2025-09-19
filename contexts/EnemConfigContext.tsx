@@ -60,7 +60,7 @@ interface EnemConfigContextType {
   loadPreferences: () => Promise<void>
   
   // Presets
-  applyPreset: (preset: 'quick' | 'custom' | 'official' | 'adaptive') => void
+  applyPreset: (preset: 'quick' | 'custom' | 'official') => void
   getPresetConfig: (preset: string) => EnemConfig
   
   // Validation
@@ -134,13 +134,6 @@ const presetConfigs: Record<string, EnemConfig> = {
       hard: 0.25
     }
   },
-  adaptive: {
-    ...defaultConfig,
-    mode: 'ADAPTIVE',
-    numQuestions: 45,
-    timeLimit: 270,
-    areas: ['CN', 'CH', 'LC', 'MT']
-  }
 }
 
 // Context
@@ -193,7 +186,7 @@ export function EnemConfigProvider({ children }: { children: React.ReactNode }) 
     }
   }, [])
 
-  const applyPreset = useCallback((preset: 'quick' | 'custom' | 'official' | 'adaptive') => {
+  const applyPreset = useCallback((preset: 'quick' | 'custom' | 'official') => {
     const presetConfig = presetConfigs[preset]
     if (presetConfig) {
       setConfig(presetConfig)

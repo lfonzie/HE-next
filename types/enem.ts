@@ -74,7 +74,7 @@ export interface EnemExamTemplate {
 export interface EnemSession {
   session_id: string;
   user_id: string;
-  mode: 'QUICK' | 'CUSTOM' | 'OFFICIAL' | 'ADAPTIVE';
+  mode: 'QUICK' | 'CUSTOM' | 'OFFICIAL';
   area: string[];
   config: {
     num_questions: number;
@@ -170,7 +170,7 @@ export interface EnemBatchResponse {
 }
 
 export interface EnemSessionRequest {
-  mode: 'QUICK' | 'CUSTOM' | 'OFFICIAL' | 'ADAPTIVE';
+  mode: 'QUICK' | 'CUSTOM' | 'OFFICIAL';
   area: string[];
   config: {
     num_questions: number;
@@ -201,7 +201,7 @@ export interface EnemSessionResponse {
 // Utility Types
 export type EnemArea = 'CN' | 'CH' | 'LC' | 'MT';
 export type EnemDifficulty = 'EASY' | 'MEDIUM' | 'HARD';
-export type EnemMode = 'QUICK' | 'CUSTOM' | 'OFFICIAL' | 'ADAPTIVE';
+export type EnemMode = 'QUICK' | 'CUSTOM' | 'OFFICIAL';
 export type EnemAnswer = 'A' | 'B' | 'C' | 'D' | 'E';
 
 // Export/Import Types

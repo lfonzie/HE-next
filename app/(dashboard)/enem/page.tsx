@@ -122,14 +122,6 @@ function EnemSimulatorContent() {
             year: 2023
           };
           break;
-        case 'ADAPTIVE':
-          config = {
-            mode: 'ADAPTIVE',
-            areas: ['CN', 'CH', 'LC', 'MT'],
-            numQuestions: 30,
-            timeLimit: 90
-          };
-          break;
         default:
           throw new Error('Invalid mode');
       }

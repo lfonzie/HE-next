@@ -8,7 +8,6 @@ import {
   Clock, 
   Settings, 
   BookOpen, 
-  Brain,
   CheckCircle,
   ArrowRight,
   Info
@@ -54,16 +53,6 @@ export function EnemModeSelector({ onModeSelect, onCustomize }: EnemModeSelector
       gradient: 'from-purple-500 to-purple-600',
       recommended: false
     },
-    {
-      id: 'ADAPTIVE' as EnemMode,
-      title: 'Modo Adaptativo',
-      icon: <Brain className="h-6 w-6" />,
-      description: 'Dificuldade ajustada ao seu desempenho',
-      features: ['IA adaptativa', '3 blocos sequenciais', 'Aprendizado personalizado'],
-      color: 'bg-orange-500',
-      gradient: 'from-orange-500 to-orange-600',
-      recommended: false
-    }
   ];
 
   const handleModeClick = (mode: EnemMode) => {
@@ -84,7 +73,7 @@ export function EnemModeSelector({ onModeSelect, onCustomize }: EnemModeSelector
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {modes.map((mode) => (
           <Card 
             key={mode.id}
