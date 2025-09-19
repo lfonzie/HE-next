@@ -10,7 +10,7 @@ import DiscussionBoard from './DiscussionBoard'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { CheckCircle, Clock, Star, Trophy, XCircle } from 'lucide-react'
+import { CheckCircle, Clock, Star, Trophy, XCircle, ArrowLeft, ArrowRight } from 'lucide-react'
 
 interface StageActivity {
   component: string
@@ -56,6 +56,14 @@ interface DynamicStageProps {
   timeSpent?: number
   pointsEarned?: number
   lessonTheme?: string
+  lessonData?: {
+    title: string
+    totalPoints: number
+    totalTimeSpent: number
+    stageResults: any[]
+  }
+  onRestart?: () => void
+  onNewLesson?: () => void
 }
 
 export default function DynamicStage({
@@ -69,7 +77,10 @@ export default function DynamicStage({
   canGoPrevious = true,
   timeSpent = 0,
   pointsEarned = 0,
-  lessonTheme = 'education'
+  lessonTheme = 'education',
+  lessonData,
+  onRestart,
+  onNewLesson
 }: DynamicStageProps) {
   const [isCompleted, setIsCompleted] = useState(false)
   const [stageResult, setStageResult] = useState<any>(null)
@@ -223,7 +234,7 @@ export default function DynamicStage({
         }
         
         return (
-          <NewQuizComponent
+          <QuizComponent
             questions={processedQuizQuestions}
             onComplete={(score, total) => handleStageComplete({ score, total, total: total, type: 'quiz' })}
             timeLimit={activity.time ? activity.time * 60 : 0}
@@ -246,7 +257,7 @@ export default function DynamicStage({
       case 'AnimationSlide':
         return (
           <AnimationSlide
-            title={stage.etapa}
+            title="" // Remove duplicate title - already shown in DynamicStage header
             content={activity.content || ''}
             media={activity.media || []}
             animationSteps={activity.animationSteps || []}
@@ -503,6 +514,56 @@ export default function DynamicStage({
           })()}
         </motion.div>
       )}
+
+      {/* Navigation Buttons */}
+      <div className="flex items-center justify-between mt-6">
+        <Button
+          onClick={onPrevious}
+          disabled={!canGoPrevious}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Anterior
+        </Button>
+
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-gray-600">
+            {stageIndex + 1} de {totalStages}
+          </span>
+          
+          {onRestart && (
+            <Button
+              onClick={onRestart}
+              variant="outline"
+              size="sm"
+              className="text-xs"
+            >
+              Reiniciar
+            </Button>
+          )}
+          
+          {onNewLesson && (
+            <Button
+              onClick={onNewLesson}
+              variant="outline"
+              size="sm"
+              className="text-xs"
+            >
+              Nova Aula
+            </Button>
+          )}
+        </div>
+
+        <Button
+          onClick={onNext}
+          disabled={!canGoNext}
+          className="flex items-center gap-2"
+        >
+          Próxima
+          <ArrowRight className="h-4 w-4" />
+        </Button>
+      </div>
     </motion.div>
   )
 }

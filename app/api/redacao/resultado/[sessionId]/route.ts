@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { sessionId: string } }
+  { params }: { params: Promise<{ sessionId: string }> }
 ) {
   try {
     // Verificar autenticação
@@ -14,17 +14,17 @@ export async function GET(
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
-    const { sessionId } = params
+    const { sessionId } = await params
 
     // Buscar resultado da redação
-    const session = await prisma.essay_sessions.findFirst({
+    const essaySession = await prisma.essay_sessions.findFirst({
       where: {
         id: sessionId,
         user_id: session.user.id
       }
     })
 
-    if (!session) {
+    if (!essaySession) {
       return NextResponse.json({ error: 'Resultado não encontrado' }, { status: 404 })
     }
 
@@ -51,8 +51,8 @@ export async function GET(
     return NextResponse.json({
       success: true,
       result: {
-        id: session.id,
-        theme: session.topic_prompt,
+        id: essaySession.id,
+        theme: essaySession.topic_prompt,
         themeYear: issues.themeYear || 2024,
         content: content,
         wordCount: issues.wordCount || 0,
@@ -67,8 +67,8 @@ export async function GET(
         feedback: issues.feedback || '',
         suggestions: issues.suggestions || [],
         highlights: issues.highlights || {},
-        createdAt: session.created_at.toISOString(),
-        status: session.status
+        createdAt: essaySession.created_at.toISOString(),
+        status: essaySession.status
       }
     })
 

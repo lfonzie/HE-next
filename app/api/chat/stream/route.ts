@@ -7,6 +7,7 @@ import { streamText } from 'ai'
 import { getModelTier } from '@/lib/ai-config'
 import { routeAIModel } from '@/lib/ai-model-router'
 import { orchestrate } from '@/lib/orchestrator'
+import { logUsageFromCallback } from '@/lib/token-logger'
 import '@/lib/orchestrator-modules' // ensure modules are registered
 
 export async function POST(request: NextRequest) {
@@ -159,13 +160,35 @@ Contexto atual: Módulo: ${orchestratorResult.trace?.module || 'auto'}`
         model: model,
         messages: messages,
         temperature: 0.7,
-        onFinish: (result) => {
+        onFinish: async (result) => {
           console.log('✅ [CHAT-STREAM] Stream finished:', {
             finishReason: result.finishReason,
             usage: result.usage,
             provider: useGoogleAI ? 'google' : 'openai',
             module: orchestratorResult.trace?.module || 'auto'
           })
+
+          // Track usage
+          try {
+            await logUsageFromCallback(
+              session.user.id,
+              'Chat' as const,
+              result,
+              useGoogleAI ? 'gemini-2.0-flash-exp' : 'gpt-4o-mini',
+              useGoogleAI ? 'google' : 'openai',
+              undefined, // Response time will be calculated by the logger
+              {
+                subject: orchestratorResult.trace?.module || 'auto',
+                messages: { 
+                  module: orchestratorResult.trace?.module || 'auto',
+                  complexity: routingResult.complexity,
+                  intent: orchestratorResult.trace?.intent
+                }
+              }
+            )
+          } catch (error) {
+            console.warn('⚠️ [CHAT-STREAM] Failed to log usage:', error)
+          }
         }
       })
 

@@ -8,6 +8,7 @@ import { getSystemPrompt } from '@/lib/ai-sdk-config'
 import { orchestrate } from '@/lib/orchestrator'
 import { educationalTools } from '@/lib/ai-tools'
 import { classifyComplexity, getProviderConfig } from '@/lib/complexity-classifier'
+import { logUsageFromCallback } from '@/lib/token-logger'
 import '@/lib/orchestrator-modules' // ensure modules are registered
 
 export async function POST(request: NextRequest) {
@@ -100,7 +101,7 @@ export async function POST(request: NextRequest) {
       messages: aiMessages,
       temperature: 0.7,
       // tools: educationalTools, // Temporariamente desabilitado para build
-      onFinish: (result) => {
+      onFinish: async (result) => {
         console.log('✅ [AI SDK] Stream finished:', {
           finishReason: result.finishReason,
           usage: result.usage,
@@ -111,6 +112,24 @@ export async function POST(request: NextRequest) {
           module: targetModule,
           toolCalls: result.toolCalls?.length || 0
         })
+
+        // Track usage
+        try {
+          await logUsageFromCallback(
+            session.user.id,
+            'Chat' as const,
+            result,
+            providerConfig.model,
+            providerConfig.provider,
+            undefined, // Response time will be calculated by the logger
+            {
+              subject: targetModule,
+              messages: { module: targetModule, complexity: complexityLevel }
+            }
+          )
+        } catch (error) {
+          console.warn('⚠️ [AI SDK] Failed to log usage:', error)
+        }
       }
     })
 

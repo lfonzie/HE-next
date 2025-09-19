@@ -67,7 +67,10 @@ function generateImageQuery(topic, slideNumber, slideType) {
     'redação': 'writing', 'filosofia': 'philosophy', 'sociologia': 'sociology',
     'arte': 'art', 'música': 'music', 'educação': 'education',
     'aprendizado': 'learning', 'ensino': 'teaching', 'estudo': 'study',
-    'como': 'how', 'funciona': 'works', 'o que é': 'what is', 'definição': 'definition'
+    'como': 'how', 'funciona': 'works', 'o que é': 'what is', 'definição': 'definition',
+    'introdução': 'introduction', 'conceito': 'concept', 'fundamentos': 'fundamentals',
+    'básico': 'basic', 'princípios': 'principles', 'teoria': 'theory',
+    'prática': 'practice', 'aplicação': 'application', 'exemplo': 'example'
   };
   
   // Limpar e traduzir o tópico
@@ -80,20 +83,58 @@ function generateImageQuery(topic, slideNumber, slideType) {
     .map(word => translations[word] || word)
     .join(' ');
   
-  // Extrair apenas a primeira palavra-chave principal
-  const mainKeyword = englishTopic.split(' ').filter(word => 
-    word.length > 2 && 
-    !['about', 'for', 'how', 'when', 'where', 'why', 'what', 'a', 'an', 'the', 'of', 'in', 'on', 'at', 'to', 'from'].includes(word)
-  )[0] || englishTopic.split(' ')[0];
+  // Gerar query baseada no tipo de slide
+  let query = '';
   
-  console.log(`🔍 Query de imagem gerada para slide ${slideNumber}: ${mainKeyword}`);
+  if (slideNumber === 1) {
+    // Slide de abertura - usar termos mais gerais e conceituais
+    const mainKeyword = englishTopic.split(' ').filter(word => 
+      word.length > 2 && 
+      !['about', 'for', 'how', 'when', 'where', 'why', 'what', 'a', 'an', 'the', 'of', 'in', 'on', 'at', 'to', 'from'].includes(word)
+    )[0] || englishTopic.split(' ')[0];
+    
+    query = `${mainKeyword} concept introduction`;
+  } else if (slideNumber === 8) {
+    // Slide de aprofundamento - usar termos mais específicos e técnicos
+    const mainKeyword = englishTopic.split(' ').filter(word => 
+      word.length > 2 && 
+      !['about', 'for', 'how', 'when', 'where', 'why', 'what', 'a', 'an', 'the', 'of', 'in', 'on', 'at', 'to', 'from'].includes(word)
+    )[0] || englishTopic.split(' ')[0];
+    
+    query = `${mainKeyword} diagram illustration`;
+  } else if (slideNumber === 14) {
+    // Slide de encerramento - usar termos de síntese
+    const mainKeyword = englishTopic.split(' ').filter(word => 
+      word.length > 2 && 
+      !['about', 'for', 'how', 'when', 'where', 'why', 'what', 'a', 'an', 'the', 'of', 'in', 'on', 'at', 'to', 'from'].includes(word)
+    )[0] || englishTopic.split(' ')[0];
+    
+    query = `${mainKeyword} summary conclusion`;
+  } else {
+    // Outros slides
+    const mainKeyword = englishTopic.split(' ').filter(word => 
+      word.length > 2 && 
+      !['about', 'for', 'how', 'when', 'where', 'why', 'what', 'a', 'an', 'the', 'of', 'in', 'on', 'at', 'to', 'from'].includes(word)
+    )[0] || englishTopic.split(' ')[0];
+    
+    query = mainKeyword;
+  }
   
-  return mainKeyword;
+  console.log(`🔍 Query de imagem gerada para slide ${slideNumber}: ${query}`);
+  
+  return query;
 }
 
 function expandImageQuery(originalQuery, topic) {
-  // Retornar apenas a query original, sem expandir com termos educacionais
-  return originalQuery;
+  // Para fallback, tentar apenas com termos mais simples
+  // Se a query original já tem múltiplas palavras, usar apenas a primeira palavra-chave
+  const words = originalQuery.split(' ');
+  if (words.length > 2) {
+    return words[0]; // Usar apenas a primeira palavra
+  }
+  
+  // Se a query é muito simples, adicionar apenas um termo educacional
+  return `${originalQuery} education`;
 }
 
 // Função para gerar URL de imagem dinâmica baseada no tema
@@ -617,36 +658,39 @@ export async function POST(request) {
       slidesCount: generatedContent.slides?.length || 0
     });
     
-    // Adicionar queries de imagem otimizadas e URLs dinâmicas APENAS para slides 1, 7 e 14
+    // Adicionar queries de imagem otimizadas e URLs dinâmicas APENAS para slides 1, 8 e 14
     const slidesWithImageQueries = await Promise.all(generatedContent.slides.map(async (slide, index) => {
-      // Apenas slides 1, 7 e 14 devem ter imagens
-      if (slide.number === 1 || slide.number === 7 || slide.number === 14) {
+      // Apenas slides 1, 8 e 14 devem ter imagens (slide 7 é quiz, não tem imagem)
+      if (slide.number === 1 || slide.number === 8 || slide.number === 14) {
         const imageQuery = slide.imageQuery || generateImageQuery(topic, slide.number, slide.type);
         
         // Usar apenas Wikimedia Commons para busca de imagens
         let imageUrl = null;
         let imageSource = 'fallback';
 
-        // 1. Wikimedia Commons (prioritário)
+        // 1. Wikimedia Commons (prioritário) - buscar as 3 melhores imagens
         try {
           const wikiResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/wikimedia/search`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query: imageQuery, subject: topic, count: 1 })
+            body: JSON.stringify({ query: imageQuery, subject: topic, count: 3 })
           });
           if (wikiResponse.ok) {
             const wikiData = await wikiResponse.json();
             if (wikiData.success && wikiData.photos && wikiData.photos.length > 0) {
-              imageUrl = wikiData.photos[0].urls?.regular || wikiData.photos[0].url;
+              // Selecionar a melhor imagem das 3 (primeira é geralmente a melhor classificada)
+              const bestImage = wikiData.photos[0];
+              imageUrl = bestImage.urls?.regular || bestImage.url;
               imageSource = 'wikimedia';
-              console.log(`✅ Imagem Wikimedia Commons para slide ${slide.number}:`, imageUrl);
+              console.log(`✅ Melhor imagem Wikimedia Commons para slide ${slide.number} (de ${wikiData.photos.length} opções):`, imageUrl);
+              console.log(`📊 Opções disponíveis:`, wikiData.photos.map((img, idx) => `${idx + 1}. ${img.title}`).join(', '));
             }
           }
         } catch (error) {
           console.warn(`⚠️ Erro ao buscar imagem Wikimedia Commons para slide ${slide.number}:`, error);
         }
 
-        // 2. Wikimedia Commons com query expandida (secundário)
+        // 2. Wikimedia Commons com query expandida (secundário) - buscar as 3 melhores imagens
         if (!imageUrl) {
           try {
             // Tentar com query expandida para melhor cobertura
@@ -654,14 +698,17 @@ export async function POST(request) {
             const wikiResponse2 = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/wikimedia/search`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ query: expandedQuery, subject: topic, count: 1 })
+              body: JSON.stringify({ query: expandedQuery, subject: topic, count: 3 })
             });
             if (wikiResponse2.ok) {
               const wikiData2 = await wikiResponse2.json();
               if (wikiData2.success && wikiData2.photos && wikiData2.photos.length > 0) {
-                imageUrl = wikiData2.photos[0].urls?.regular || wikiData2.photos[0].url;
+                // Selecionar a melhor imagem das 3 (primeira é geralmente a melhor classificada)
+                const bestImage = wikiData2.photos[0];
+                imageUrl = bestImage.urls?.regular || bestImage.url;
                 imageSource = 'wikimedia';
-                console.log(`✅ Imagem Wikimedia Commons (query expandida) para slide ${slide.number}:`, imageUrl);
+                console.log(`✅ Melhor imagem Wikimedia Commons (query expandida) para slide ${slide.number} (de ${wikiData2.photos.length} opções):`, imageUrl);
+                console.log(`📊 Opções expandidas disponíveis:`, wikiData2.photos.map((img, idx) => `${idx + 1}. ${img.title}`).join(', '));
               }
             }
           } catch (error) {
@@ -684,7 +731,7 @@ export async function POST(request) {
           subject: topic // Para contexto educacional
         };
       } else {
-        // Slides intermediários não devem ter imagens (exceto 1, 7 e 14)
+        // Slides intermediários não devem ter imagens (exceto 1, 8 e 14)
         return {
           ...slide,
           imageQuery: null,

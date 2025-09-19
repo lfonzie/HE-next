@@ -46,6 +46,7 @@ function RedacaoPageContent() {
   const [availableThemes, setAvailableThemes] = useState<EnemTheme[]>([])
   const [officialThemes, setOfficialThemes] = useState<EnemTheme[]>([])
   const [aiThemes, setAiThemes] = useState<EnemTheme[]>([])
+  const [randomAiThemes, setRandomAiThemes] = useState<EnemTheme[]>([])
   const [showGeneratedModal, setShowGeneratedModal] = useState(false)
   const [generatedThemes, setGeneratedThemes] = useState<EnemTheme[]>([])
 
@@ -107,10 +108,39 @@ function RedacaoPageContent() {
     // Aguardar um pouco antes de carregar para evitar conflitos
     const timer = setTimeout(loadThemes, 1000)
     return () => clearTimeout(timer)
-  }, [addNotification])
+  }, []) // Removida dependência addNotification para evitar loop infinito
 
+  // Função para carregar 5 temas aleatórios de IA
+  const loadRandomAiThemes = async () => {
+    try {
+      console.log('Carregando 5 temas aleatórios de IA...')
+      const response = await fetch(`/api/redacao/temas/random?t=${Date.now()}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        console.log('Temas aleatórios carregados:', data.themes?.length || 0)
+        setRandomAiThemes(data.themes || [])
+      } else {
+        console.error('Erro ao carregar temas aleatórios:', response.statusText)
+        setRandomAiThemes([])
+      }
+    } catch (error) {
+      console.error('Erro ao carregar temas aleatórios:', error)
+      setRandomAiThemes([])
+    }
+  }
 
-
+  // Carregar temas aleatórios quando a página carrega
+  useEffect(() => {
+    loadRandomAiThemes()
+  }, [])
 
   // Função para lidar com texto extraído de arquivo
   const handleTextExtracted = (text: string, extractedWordCount: number) => {
@@ -245,23 +275,23 @@ function RedacaoPageContent() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {!currentTheme && officialThemes.length === 0 && aiThemes.length === 0 ? (
+              {!currentTheme && officialThemes.length === 0 && randomAiThemes.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   <p>Nenhum tema disponível</p>
-                  <p className="text-sm">Clique em "Gerar Tema com IA" para carregar temas</p>
+                  <p className="text-sm">Carregando temas...</p>
                 </div>
               ) : null}
 
-              {!currentTheme && (officialThemes.length > 0 || aiThemes.length > 0) ? (
-                <div className="space-y-6">
-                  {/* Temas Oficiais */}
+              {!currentTheme && (officialThemes.length > 0 || randomAiThemes.length > 0) ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Temas Oficiais - Todos */}
                   {officialThemes.length > 0 && (
                     <div className="space-y-3">
                       <h4 className="font-medium text-gray-900 dark:text-gray-100 flex items-center gap-2">
                         <Badge variant="outline" className="text-xs">
                           📚 ENEM
                         </Badge>
-                        Temas Oficiais ({officialThemes.length})
+                        Temas Oficiais (Todos)
                       </h4>
                       <Select onValueChange={(value) => {
                         const theme = officialThemes.find(t => t.id === value)
@@ -284,30 +314,28 @@ function RedacaoPageContent() {
                     </div>
                   )}
 
-                  {/* Temas de IA */}
-                  {aiThemes.length > 0 && (
+                  {/* Temas de IA - 5 Exemplos Aleatórios */}
+                  {randomAiThemes.length > 0 && (
                     <div className="space-y-3">
                       <h4 className="font-medium text-gray-900 dark:text-gray-100 flex items-center gap-2">
                         <Badge variant="secondary" className="text-xs">
                           🤖 IA
                         </Badge>
-                        Temas Gerados por IA ({aiThemes.length})
+                        Exemplos Aleatórios ({randomAiThemes.length})
                       </h4>
                       <Select onValueChange={(value) => {
-                        const theme = aiThemes.find(t => t.id === value)
+                        const theme = randomAiThemes.find(t => t.id === value)
                         if (theme) setCurrentTheme(theme)
                       }}>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione um tema gerado por IA" />
                         </SelectTrigger>
                         <SelectContent>
-                          {aiThemes.map((theme) => (
+                          {randomAiThemes.map((theme) => (
                             <SelectItem key={theme.id} value={theme.id}>
                               <div className="flex flex-col items-start">
                                 <span className="font-medium">{theme.theme}</span>
-                                <span className="text-xs text-gray-500">
-                                  {theme.createdAt ? new Date(theme.createdAt).toLocaleDateString('pt-BR') : 'IA'}
-                                </span>
+                                <span className="text-xs text-gray-500">Gerado por IA</span>
                               </div>
                             </SelectItem>
                           ))}

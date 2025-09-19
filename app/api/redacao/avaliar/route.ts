@@ -84,8 +84,7 @@ export async function POST(request: NextRequest) {
     const evaluation = await evaluateRedacao(content, finalThemeText)
 
     // Gerar ID da sessão e salvar no banco de dados
-    const sessionId = `redacao_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-    console.log('Sessão de redação criada:', sessionId)
+    const sessionId = crypto.randomUUID()
 
     // Salvar resultado no banco de dados
     const selectedTheme = await getThemeById(theme)
@@ -146,7 +145,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Log da atividade (modelo activityLog não implementado no schema atual)
-    console.log(`Atividade registrada: redacao_submitted para usuário ${session.user.id}`)
 
     return NextResponse.json({
       success: true,
