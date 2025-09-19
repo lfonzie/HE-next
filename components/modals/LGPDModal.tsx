@@ -83,7 +83,7 @@ const LGPDModal: React.FC<LGPDModalProps> = ({ isOpen, onClose }) => {
           
           <div className="pt-6 border-t border-gray-200">
             <p className="text-sm text-gray-600">
-              Última atualização: Janeiro de 2025
+              Última atualização: Setembro de 2025
             </p>
           </div>
         </div>

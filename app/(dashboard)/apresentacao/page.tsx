@@ -972,53 +972,6 @@ const HubEduLanding = () => {
           </div>
         </div>
         
-        <div className="bg-gradient-to-r from-green-500 to-blue-600 text-white p-8 rounded-3xl shadow-2xl">
-          <h3 className="text-3xl font-black mb-6 text-center">🚫 Por que ChatGPT, Grok e Gemini Não Atendem Escolas?</h3>
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="bg-white/10 p-6 rounded-2xl">
-              <h4 className="text-xl font-bold mb-4 text-red-300">❌ Problemas das Outras Plataformas:</h4>
-              <ul className="space-y-3 text-sm">
-                <li className="flex items-start gap-2">
-                  <span className="text-red-400 mt-1">•</span>
-                  <span><strong>Conteúdo não adaptado:</strong> Não há conteúdo específico para idade escolar</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-red-400 mt-1">•</span>
-                  <span><strong>Infraestrutura limitada:</strong> Recursos insuficientes para suportar múltiplos usuários simultâneos</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-red-400 mt-1">•</span>
-                  <span><strong>Armazenamento permanente:</strong> Conversas ficam salvas indefinidamente</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-red-400 mt-1">•</span>
-                  <span><strong>Sem compliance LGPD:</strong> Não atendem regulamentações brasileiras</span>
-                </li>
-              </ul>
-            </div>
-            <div className="bg-white/10 p-6 rounded-2xl">
-              <h4 className="text-xl font-bold mb-4 text-green-300">✅ Soluções HubEdu.ia:</h4>
-              <ul className="space-y-3 text-sm">
-                <li className="flex items-start gap-2">
-                  <span className="text-green-400 mt-1">•</span>
-                  <span><strong>Todas as idades:</strong> Crianças, adolescentes e adultos incluídos</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-green-400 mt-1">•</span>
-                  <span><strong>Infraestrutura global:</strong> Tecnologia de nuvem de ponta para máxima performance</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-green-400 mt-1">•</span>
-                  <span><strong>Conversas temporárias:</strong> Conversas são descartadas automaticamente após cada sessão</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-green-400 mt-1">•</span>
-                  <span><strong>Compliance LGPD:</strong> Atendimento total às regulamentações</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
       </div>
     </section>,
     

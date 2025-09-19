@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom'
+import 'openai/shims/node'
 
 // Mock Next.js router
 jest.mock('next/navigation', () => ({

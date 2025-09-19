@@ -235,7 +235,7 @@ const ENEM_FEATURES = [
   },
   {
     title: "Correção Automática de Redação",
-    description: "IA especializada corrige sua redação seguindo critérios oficiais do ENEM com feedback detalhado.",
+    description: "IA especializada corrige sua redação seguindo critérios oficiais do ENEM com feedback detalhado - permite também o envio de redação escrita à mão por PDF ou pela câmera.",
     icon: "✍️",
     stats: "Correção Instantânea"
   },
@@ -251,19 +251,19 @@ const TESTIMONIALS = [
   {
     name: "Maria Santos",
     role: "Professora, Escola Nova Era",
-    content: "As aulas de 45 minutos são incríveis! Os alunos adoram os quizzes e rankings. A correção automática de redação economiza horas de trabalho.",
+    content: "As aulas interativas são incríveis! Os alunos adoram os quizzes e rankings. A correção automática de redação economiza horas de trabalho.",
     rating: 5
   },
   {
     name: "Carlos Mendes",
     role: "Coordenador, Instituto Esperança", 
-    content: "O simulador ENEM com +3000 questões aumentou o desempenho dos alunos em 45%. Os pais adoram o chat omni-channel.",
+    content: "O simulador ENEM aumentou significativamente o desempenho dos alunos. Os pais adoram o chat omni-channel.",
     rating: 5
   },
   {
     name: "Ana Silva",
     role: "Diretora, Colégio Crescer",
-    content: "A gestão escolar ficou mais fácil com as ferramentas de IA. Chat inteligente para toda comunidade escolar é revolucionário.",
+    content: "A gestão escolar ficou muito mais eficiente com as ferramentas de IA. O chat inteligente para toda comunidade escolar é verdadeiramente revolucionário.",
     rating: 5
   }
 ];
@@ -891,53 +891,6 @@ const HubEduLanding = () => {
             </div>
           </div>
           
-          <div className="bg-gradient-to-r from-green-500 to-blue-600 text-white p-8 rounded-3xl shadow-2xl">
-            <h3 className="text-3xl font-black mb-6 text-center">🚫 Por que ChatGPT, Grok e Gemini Não Atendem Escolas?</h3>
-            <div className="grid md:grid-cols-2 gap-8">
-              <div className="bg-white/10 p-6 rounded-2xl">
-                <h4 className="text-xl font-bold mb-4 text-red-300">❌ Problemas das Outras Plataformas:</h4>
-                <ul className="space-y-3 text-sm">
-                  <li className="flex items-start gap-2">
-                    <span className="text-red-400 mt-1">•</span>
-                    <span><strong>Conteúdo não adaptado:</strong> Não há conteúdo específico para idade escolar</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-red-400 mt-1">•</span>
-                    <span><strong>Infraestrutura limitada:</strong> Recursos insuficientes para suportar múltiplos usuários simultâneos</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-red-400 mt-1">•</span>
-                    <span><strong>Armazenamento permanente:</strong> Conversas ficam salvas indefinidamente</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-red-400 mt-1">•</span>
-                    <span><strong>Sem compliance LGPD:</strong> Não atendem regulamentações brasileiras</span>
-                  </li>
-                </ul>
-              </div>
-              <div className="bg-white/10 p-6 rounded-2xl">
-                <h4 className="text-xl font-bold mb-4 text-green-300">✅ Soluções HubEdu.ia:</h4>
-                <ul className="space-y-3 text-sm">
-                  <li className="flex items-start gap-2">
-                    <span className="text-green-400 mt-1">•</span>
-                    <span><strong>Todas as idades:</strong> Crianças, adolescentes e adultos incluídos</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-green-400 mt-1">•</span>
-                    <span><strong>Infraestrutura global:</strong> Tecnologia de nuvem de ponta para máxima performance</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-green-400 mt-1">•</span>
-                    <span><strong>Conversas temporárias:</strong> Conversas são descartadas automaticamente após cada sessão</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-green-400 mt-1">•</span>
-                    <span><strong>Compliance LGPD:</strong> Atendimento total às regulamentações</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -1072,34 +1025,39 @@ const HubEduLanding = () => {
               <CompetitorCard key={index} competitor={competitor} />
             ))}
             <CompetitorCard 
-              competitor={{ name: "HubEdu.ia", icon: "🎓" }} 
+              competitor={{ name: "HubEdu.ia", icon: "🎓", price: "Preço Especial" }} 
               isSpecial={true} 
             />
           </div>
           
           <div className="text-center bg-gradient-to-r from-yellow-400 to-yellow-600 text-black p-8 rounded-3xl shadow-2xl">
             <h3 className="text-3xl font-black mb-4">🎯 Por que HubEdu.ia é Superior?</h3>
+            <p className="text-lg mb-6 font-medium">Enquanto ChatGPT, Grok e Gemini não atendem escolas adequadamente, nós oferecemos uma solução completa</p>
             <div className="grid md:grid-cols-2 gap-6">
               <div className="text-left">
-                <h4 className="font-bold text-lg mb-3">🚫 Problemas das Outras Plataformas:</h4>
+                <h4 className="font-bold text-lg mb-3">🚫 Por que ChatGPT, Grok e Gemini Não Atendem Escolas:</h4>
                 <ul className="space-y-2 text-sm">
-                  <li>• <strong>Conteúdo não adaptado:</strong> Não há conteúdo específico para idade escolar</li>
+                  <li>• <strong>Restrição de idade:</strong> Menores de 18 anos não podem usar oficialmente</li>
                   <li>• <strong>Preço alto:</strong> US$ 20-30/mês por usuário (~R$ 106-159/mês)</li>
+                  <li>• <strong>Conteúdo não adaptado:</strong> Não há conteúdo específico para idade escolar</li>
                   <li>• <strong>Sem BNCC:</strong> Não baseado na Base Nacional Comum Curricular</li>
                   <li>• <strong>Sem LGPD:</strong> Conversas salvas permanentemente, sem proteção adequada de dados</li>
                   <li>• <strong>Sem simulador ENEM:</strong> Não atendem necessidades específicas brasileiras</li>
                   <li>• <strong>Sem conteúdo educacional:</strong> Não desenvolvido para escolas brasileiras</li>
+                  <li>• <strong>Sem gestão escolar:</strong> Não oferecem ferramentas administrativas</li>
                 </ul>
               </div>
               <div className="text-left">
-                <h4 className="font-bold text-lg mb-3">✅ Soluções HubEdu.ia:</h4>
+                <h4 className="font-bold text-lg mb-3">✅ Por que HubEdu.ia é Superior:</h4>
                 <ul className="space-y-2 text-sm">
-                  <li>• <strong>Todas as idades:</strong> Crianças, adolescentes e adultos incluídos</li>
+                  <li>• <strong>Todas as idades:</strong> Crianças, adolescentes e adultos incluídos oficialmente</li>
                   <li>• <strong>Preço especial:</strong> Valor competitivo para escolas brasileiras</li>
+                  <li>• <strong>Conteúdo adaptado:</strong> Desenvolvido especificamente para educação brasileira</li>
                   <li>• <strong>100% BNCC:</strong> Conteúdo rigorosamente alinhado com currículo nacional</li>
                   <li>• <strong>Total LGPD:</strong> Conversas temporárias (apagadas automaticamente), infraestrutura global, criptografia total</li>
                   <li>• <strong>Simulador ENEM:</strong> +3000 questões oficiais brasileiras</li>
                   <li>• <strong>Educação brasileira:</strong> Desenvolvido especificamente para escolas do Brasil</li>
+                  <li>• <strong>Gestão completa:</strong> Professor IA + Automação + Atendimento + Analytics</li>
                 </ul>
               </div>
             </div>
@@ -1150,7 +1108,7 @@ const HubEduLanding = () => {
             </div>
           </div>
           
-          <div className="flex flex-col sm:flex-row gap-6 justify-center">
+          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
             <button 
               className="px-8 py-4 bg-gray-400 text-white font-bold text-lg rounded-xl shadow-lg flex items-center justify-center gap-2 cursor-not-allowed"
               disabled

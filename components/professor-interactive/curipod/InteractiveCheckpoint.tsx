@@ -102,7 +102,7 @@ export default function InteractiveCheckpoint({
           </div>
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Checkpoint Interativo</h2>
-            <p className="text-sm text-gray-600">Verificando sua compreensão</p>
+            <p className="text-sm text-gray-600">Checking your understanding</p>
           </div>
         </div>
         

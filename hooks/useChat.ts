@@ -77,6 +77,25 @@ export function useChat(onStreamingStart?: () => void) {
     provider?: 'auto' | 'openai' | 'google' | 'anthropic' | 'mistral' | 'groq',
     complexity?: 'simple' | 'complex' | 'fast'
   ) => {
+    // Validate message parameter
+    if (!message || typeof message !== 'string' || message.trim() === '') {
+      console.error('[Chat] Invalid message:', { message, type: typeof message });
+      throw new Error('Invalid message: message must be a non-empty string');
+    }
+
+    // Additional validation to ensure message is not undefined
+    const trimmedMessage = message.trim();
+    if (!trimmedMessage) {
+      console.error('[Chat] Message is empty after trimming:', { originalMessage: message });
+      throw new Error('Message cannot be empty');
+    }
+
+    console.debug('[Chat] Sending message:', { 
+      message: message.substring(0, 50) + '...', 
+      moduleParam, 
+      conversationId 
+    });
+
     // Limpar erros anteriores
     setError(null)
     setFirstTokenReceived(false)
@@ -111,20 +130,26 @@ export function useChat(onStreamingStart?: () => void) {
       const conversationHistory = currentConversation?.messages || []
 
       const requestBody = {
-        message,
+        message: trimmedMessage, // Use the validated trimmed message
         module: finalModule,
-        subject,
-        grade,
+        provider: 'auto',
         conversationId,
-        history: conversationHistory.slice(-10), // Last 10 messages for context
-        image,
-        attachment: attachment ? {
-          name: attachment.name,
-          type: attachment.type,
-          size: attachment.size
-        } : undefined,
-        useWebSearch
+        history: conversationHistory.slice(-10) // Last 10 messages for context
       }
+
+      // Final validation before sending
+      if (!requestBody.message || requestBody.message.length === 0) {
+        console.error('[Chat] Request body validation failed:', requestBody);
+        throw new Error('Request body validation failed: message is empty after trimming');
+      }
+
+      console.debug('[Chat] Request body:', {
+        message: requestBody.message.substring(0, 50) + '...',
+        module: requestBody.module,
+        provider: requestBody.provider,
+        conversationId: requestBody.conversationId,
+        historyLength: requestBody.history.length
+      });
       
       // Retry logic otimizado para network failures
       let response: Response | undefined
@@ -151,12 +176,7 @@ export function useChat(onStreamingStart?: () => void) {
               "Content-Type": "application/json; charset=utf-8",
               // Authorization: `Bearer ${token}`,
             },
-            body: JSON.stringify({ 
-              messages,
-              module: finalModule,
-              provider: 'auto',
-              complexity: 'simple'
-            }),
+            body: JSON.stringify(requestBody),
             signal: abortControllerRef.current.signal
           })
           
@@ -213,6 +233,14 @@ export function useChat(onStreamingStart?: () => void) {
       let finalModel = ""
       let finalTier: "IA" | "IA_SUPER" | "IA_ECO" | undefined = undefined
       let receivedDone = false
+
+      // Check if response is JSON (error case) instead of streaming
+      const contentType = response.headers.get('content-type')
+      if (contentType?.includes('application/json')) {
+        const errorData = await response.json()
+        console.error('[Chat] Received JSON error response:', errorData)
+        throw new Error(errorData.error || errorData.message || 'Erro desconhecido do servidor')
+      }
 
       // Create unique message IDs for proper tracking with additional randomness
       const timestamp = Date.now()
@@ -320,12 +348,64 @@ export function useChat(onStreamingStart?: () => void) {
         console.warn('[Chat] Falha ao alternar módulo automaticamente:', e)
       }
 
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) {
-          receivedDone = true
+      try {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) {
+            receivedDone = true
+            
+            // Finalize the assistant message
+            setCurrentConversation(prev => {
+              if (!prev) return prev
+              
+              const updatedMessages = prev.messages.map(msg => {
+                if (msg.id === assistantMessageId) {
+                  return {
+                    ...msg,
+                    content: assistantMessage,
+                    model: finalModel,
+                    tokens: tokenCount,
+                    tier: finalTier,
+                    module: finalModule,
+                    provider: provider,
+                    complexity: complexity,
+                    routingReasoning: routingReasoning,
+                    isStreaming: false
+                  }
+                }
+                return msg
+              })
+              
+              const finalConversation = {
+                ...prev,
+                messages: updatedMessages,
+                updatedAt: new Date()
+              }
+              
+              // Update conversations list
+              setConversations(prevConvs => {
+                const existingIndex = prevConvs.findIndex(conv => conv.id === finalConversation.id)
+                if (existingIndex >= 0) {
+                  const updated = [...prevConvs]
+                  updated[existingIndex] = finalConversation
+                  return updated
+                } else {
+                  return [finalConversation, ...prevConvs]
+                }
+              })
+              
+              return finalConversation
+            })
+            
+            break
+          }
+
+          const chunk = decoder.decode(value, { stream: true })
           
-          // Finalize the assistant message
+          // Multi-provider retorna texto simples, não JSON
+          assistantMessage += decodeMessage(chunk) // Decodificar chunk Unicode
+          
+          // Atualizar mensagem em tempo real
           setCurrentConversation(prev => {
             if (!prev) return prev
             
@@ -335,48 +415,22 @@ export function useChat(onStreamingStart?: () => void) {
                   ...msg,
                   content: assistantMessage,
                   model: finalModel,
-                  tokens: tokenCount,
-                  tier: finalTier,
-                  module: finalModule,
-                  provider: provider,
-                  complexity: complexity,
-                  routingReasoning: routingReasoning,
-                  isStreaming: false
+                  module: finalModule
                 }
               }
               return msg
             })
             
-            const finalConversation = {
+            return {
               ...prev,
-              messages: updatedMessages,
-              updatedAt: new Date()
+              messages: updatedMessages
             }
-            
-            // Update conversations list
-            setConversations(prevConvs => {
-              const existingIndex = prevConvs.findIndex(conv => conv.id === finalConversation.id)
-              if (existingIndex >= 0) {
-                const updated = [...prevConvs]
-                updated[existingIndex] = finalConversation
-                return updated
-              } else {
-                return [finalConversation, ...prevConvs]
-              }
-            })
-            
-            return finalConversation
           })
-          
-          break
         }
-
-        const chunk = decoder.decode(value)
+      } catch (streamError: any) {
+        console.error('[Chat] Streaming error:', streamError)
         
-        // Multi-provider retorna texto simples, não JSON
-        assistantMessage += decodeMessage(chunk) // Decodificar chunk Unicode
-        
-        // Atualizar mensagem em tempo real
+        // If streaming fails, ensure the assistant message is finalized
         setCurrentConversation(prev => {
           if (!prev) return prev
           
@@ -384,9 +438,15 @@ export function useChat(onStreamingStart?: () => void) {
             if (msg.id === assistantMessageId) {
               return {
                 ...msg,
-                content: assistantMessage,
+                content: assistantMessage || "Desculpe, ocorreu um erro durante o streaming da resposta.",
                 model: finalModel,
-                module: finalModule
+                tokens: tokenCount,
+                tier: finalTier,
+                module: finalModule,
+                provider: provider,
+                complexity: complexity,
+                routingReasoning: routingReasoning,
+                isStreaming: false
               }
             }
             return msg
@@ -394,9 +454,12 @@ export function useChat(onStreamingStart?: () => void) {
           
           return {
             ...prev,
-            messages: updatedMessages
+            messages: updatedMessages,
+            updatedAt: new Date()
           }
         })
+        
+        throw new Error(`Erro no streaming: ${streamError.message}`)
       }
       
       // Hide loading when streaming starts

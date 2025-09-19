@@ -63,7 +63,7 @@ export function EnemDatabaseStats() {
         <CardContent className="p-6">
           <div className="flex items-center justify-center gap-3">
             <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
-            <span className="text-blue-700 font-medium">Verificando base de dados...</span>
+            <span className="text-blue-700 font-medium">Checking database...</span>
           </div>
         </CardContent>
       </Card>
@@ -114,7 +114,7 @@ export function EnemDatabaseStats() {
               <p className={`text-sm ${
                 local_database.available ? 'text-green-600' : 'text-red-600'
               }`}>
-                {local_database.available ? 'Disponível' : 'Indisponível'}
+                {local_database.available ? 'Available' : 'Unavailable'}
               </p>
             </div>
           </div>
@@ -132,22 +132,22 @@ export function EnemDatabaseStats() {
               <p className={`text-sm ${
                 external_api.available ? 'text-green-600' : 'text-yellow-600'
               }`}>
-                {external_api.available ? 'Disponível' : 'Indisponível'}
+                {external_api.available ? 'Available' : 'Unavailable'}
               </p>
             </div>
           </div>
         </div>
 
-        {/* Estatísticas da Base Local */}
+        {/* Local Database Statistics */}
         {local_database.available && local_database.stats && (
           <div className="space-y-4">
-            <h4 className="font-semibold text-lg text-gray-800">Estatísticas da Base Local</h4>
+            <h4 className="font-semibold text-lg text-gray-800">Local Database Statistics</h4>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="text-center p-4 bg-white/50 rounded-lg">
                 <Calendar className="h-8 w-8 text-blue-600 mx-auto mb-2" />
                 <p className="text-2xl font-bold text-gray-800">{local_database.stats.totalYears}</p>
-                <p className="text-sm text-gray-600">Anos Disponíveis</p>
+                <p className="text-sm text-gray-600">Available Years</p>
               </div>
 
               <div className="text-center p-4 bg-white/50 rounded-lg">
@@ -155,7 +155,7 @@ export function EnemDatabaseStats() {
                 <p className="text-2xl font-bold text-gray-800">
                   {local_database.stats.totalQuestions.toLocaleString()}
                 </p>
-                <p className="text-sm text-gray-600">Questões Totais</p>
+                <p className="text-sm text-gray-600">Total Questions</p>
               </div>
 
               <div className="text-center p-4 bg-white/50 rounded-lg">
@@ -167,9 +167,9 @@ export function EnemDatabaseStats() {
               </div>
             </div>
 
-            {/* Questões por Disciplina */}
+            {/* Questions by Subject */}
             <div>
-              <h5 className="font-semibold text-gray-800 mb-3">Questões por Disciplina</h5>
+              <h5 className="font-semibold text-gray-800 mb-3">Questions by Subject</h5>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {Object.entries(local_database.stats.questionsByDiscipline).map(([discipline, count]) => (
                   <div key={discipline} className="p-3 bg-white/50 rounded-lg text-center">
@@ -200,7 +200,7 @@ export function EnemDatabaseStats() {
           </div>
         )}
 
-        {/* Informações de Fallback */}
+        {/* Fallback Information */}
         <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
           <div className="flex items-start gap-3">
             <CheckCircle className="h-5 w-5 text-blue-600 mt-0.5" />

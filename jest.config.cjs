@@ -9,11 +9,14 @@ const createJestConfig = nextJest({
 const customJestConfig = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   testEnvironment: 'jsdom',
-  testPathIgnorePatterns: ['<rootDir>/.next/', '<rootDir>/node_modules/'],
+  testPathIgnorePatterns: ['<rootDir>/.next/', '<rootDir>/node_modules/', '<rootDir>/tests/e2e/'],
   modulePathIgnorePatterns: ['<rootDir>/backup-before-fix/'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
   },
+  transformIgnorePatterns: [
+    'node_modules/(?!(remark-gfm|react-markdown|rehype-highlight|rehype-katex|remark-math|lucide-react)/)',
+  ],
   collectCoverageFrom: [
     'app/**/*.{js,jsx,ts,tsx}',
     'components/**/*.{js,jsx,ts,tsx}',
@@ -36,8 +39,9 @@ const customJestConfig = {
     },
   },
   testMatch: [
-    '<rootDir>/tests/**/*.{js,jsx,ts,tsx}',
-    '<rootDir>/__tests__/**/*.{js,jsx,ts,tsx}',
+    '<rootDir>/tests/**/*.{test,spec}.{js,jsx,ts,tsx}',
+    '<rootDir>/__tests__/**/*.{test,spec}.{js,jsx,ts,tsx}',
+    '!<rootDir>/tests/e2e/**/*',
   ],
   testTimeout: 30000,
   verbose: true,

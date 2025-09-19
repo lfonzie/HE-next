@@ -39,13 +39,22 @@ types/
 ## 🎯 Funcionalidades Implementadas
 
 ### 1. Interface de Submissão (`/redacao`)
-- **Seleção de Tema**: Temas oficiais do ENEM dos últimos anos
+- **Seleção de Tema**: Temas oficiais do ENEM dos últimos anos + temas gerados por IA
 - **Editor de Texto**: Campo de texto responsivo com contador de palavras
 - **Validação**: Verificação de limite de palavras (100-1000)
 - **Feedback Visual**: Indicadores de status da redação
-- **Dicas**: Guia das 5 competências do ENEM
+- **Upload de Arquivos**: Suporte a PDF, DOC, DOCX, TXT, MD e fotos
+- **Dicas**: Guia das 5 competências do ENEM baseado na apostila oficial
 
-### 2. Sistema de Avaliação (`/api/redacao/avaliar`)
+### 2. Conteúdo Educacional Integrado
+- **História do ENEM**: Evolução desde 1998 até os dias atuais
+- **5 Competências Detalhadas**: Explicações completas baseadas na apostila da Professora Mestra Camila Dalla Pozza
+- **Estrutura Dissertativa-Argumentativa**: Guia visual da estrutura ideal
+- **Análise Histórica dos Temas**: Temas de 1998-2016 com padrões identificados
+- **Como Evitar Nota Zero**: Armadilhas e estratégias de prevenção
+- **Dicas de Estudo**: Práticas recomendadas baseadas na apostila oficial
+
+### 3. Sistema de Avaliação (`/api/redacao/avaliar`)
 - **IA Integration**: Uso do GPT-4o-mini para avaliação
 - **5 Competências**: Avaliação baseada nos critérios oficiais:
   - Competência 1: Domínio da norma padrão (0-200)

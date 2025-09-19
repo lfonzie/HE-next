@@ -37,7 +37,9 @@ type MinimalChatHook = {
     conversationId?: string,
     image?: string,
     attachment?: File,
-    useWebSearch?: boolean
+    useWebSearch?: boolean,
+    provider?: 'auto' | 'openai' | 'google' | 'anthropic' | 'mistral' | 'groq',
+    complexity?: 'simple' | 'complex' | 'fast'
   ) => Promise<{ conversationId: string | undefined; response: string; tokens: number; model: string }>;
   isStreaming: boolean;
   lastClassification: { module: string; confidence: number; rationale: string } | null;
@@ -125,25 +127,34 @@ export default function ChatPage() {
 
   // Handle send message with optimized loading
   const handleSendMessage = useCallback(async (message: string) => {
-    console.log('🚀 handleSendMessage called with:', { message, selectedModule, currentConversationId: currentConversation?.id });
+    console.log('handleSendMessage called with:', { message, selectedModule, currentConversationId: currentConversation?.id });
     
-    if (!message.trim()) {
-      console.log('❌ Empty message, returning');
+    // Validate message parameter
+    if (!message || typeof message !== 'string' || !message.trim()) {
+      console.error('[ChatPage] Invalid message:', { message, type: typeof message });
+      toast({
+        title: "Erro",
+        description: "Mensagem invalida. Por favor, digite uma mensagem valida.",
+        variant: "destructive"
+      });
       return;
     }
+
+    const trimmedMessage = message.trim();
+    console.debug('[ChatPage] Sending message:', trimmedMessage.substring(0, 50) + '...');
     
     // Start loading with optimized system
     const loadingKey = startLoading('message', {
-      message: 'Carregando…',
+      message: 'Carregando...',
       cancelable: true,
       priority: 'normal',
       timeout: 12000 // 12s timeout
     });
     
     try {
-      console.log('📤 Calling sendMessage API...');
-      await (sendMessage as any)(
-        message, 
+      console.log('Calling sendMessage API...');
+      await sendMessage(
+        trimmedMessage, 
         selectedModule || "auto",
         undefined,
         undefined,
@@ -154,20 +165,20 @@ export default function ChatPage() {
         'auto',
         'simple'
       );
-      console.log('✅ Message sent successfully');
+      console.log('Message sent successfully');
       setInputMessage("");
       
-      // Destacar o módulo ativo após enviar a mensagem
+      // Highlight the active module after sending the message
       highlightActiveModule();
       
     } catch (error: any) {
-      console.error('❌ Error sending message:', error);
+      console.error('Error sending message:', error);
       endLoading(loadingKey, 'error'); // Hide overlay on error
       
       // Show retry option for network errors
       if (error.message?.includes('rede') || error.message?.includes('network')) {
         startLoading('retry', {
-          message: 'Conexão lenta, tentando novamente...',
+          message: 'Conexao lenta, tentando novamente...',
           cancelable: true,
           priority: 'normal',
           timeout: 8000
@@ -177,7 +188,7 @@ export default function ChatPage() {
         setTimeout(async () => {
           try {
             await sendMessage(
-              message, 
+              trimmedMessage, 
               selectedModule || "auto",
               undefined,
               undefined,
@@ -189,7 +200,7 @@ export default function ChatPage() {
             endLoading('retry', 'error');
             toast({
               title: "Erro",
-              description: "Falha na conexão. Tente novamente.",
+              description: "Falha na conexao. Tente novamente.",
               variant: "destructive"
             });
           }
@@ -206,15 +217,39 @@ export default function ChatPage() {
 
   // Handle suggestion click
   const handleSuggestionClick = useCallback(async (suggestion: string) => {
-    console.log('🎯 handleSuggestionClick called with:', suggestion);
-    await handleSendMessage(`Me ajude com: ${suggestion}`);
-  }, [handleSendMessage]);
+    console.log('handleSuggestionClick called with:', suggestion);
+    
+    // Validate suggestion parameter
+    if (!suggestion || typeof suggestion !== 'string' || !suggestion.trim()) {
+      console.error('[ChatPage] Invalid suggestion:', { suggestion, type: typeof suggestion });
+      toast({
+        title: "Erro",
+        description: "Sugestao invalida. Tente novamente.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const trimmedSuggestion = suggestion.trim();
+    console.debug('[ChatPage] Handling suggestion click:', trimmedSuggestion.substring(0, 50) + '...');
+    
+    try {
+      await handleSendMessage(`Me ajude com: ${trimmedSuggestion}`);
+    } catch (error: any) {
+      console.error('[ChatPage] Error in handleSuggestionClick:', error);
+      toast({
+        title: "Erro",
+        description: "Falha ao processar sugestao. Tente novamente.",
+        variant: "destructive"
+      });
+    }
+  }, [handleSendMessage, toast]);
 
   // Stop streaming
   const handleStopStreaming = useCallback(() => {
     try {
       cancelCurrentRequest();
-      toast({ title: "Interrompido", description: "Geração cancelada." });
+      toast({ title: "Interrompido", description: "Geracao cancelada." });
     } catch (e) {
       // noop
     }
@@ -344,7 +379,7 @@ export default function ChatPage() {
                   className="border-yellow-500 text-yellow-700 hover:bg-yellow-100 bg-yellow-50"
                 >
                   <History className="w-4 h-4 mr-2" />
-                  Histórico
+                  Historico
                 </Button>
                 <Button
                   onClick={() => setIsSupportModalOpen(true)}
@@ -364,7 +399,7 @@ export default function ChatPage() {
         {showConversationHistory && (
           <div className="w-80 bg-white dark:bg-zinc-800 border-r border-gray-200 dark:border-zinc-700 flex flex-col">
             <div className="p-4 border-b border-gray-200 dark:border-zinc-700 space-y-2">
-              <h3 className="font-semibold text-gray-900 dark:text-zinc-100">Histórico de Conversas</h3>
+              <h3 className="font-semibold text-gray-900 dark:text-zinc-100">Historico de Conversas</h3>
               <p className="text-sm text-gray-600 dark:text-zinc-400">
                 {conversations.length} conversa{conversations.length !== 1 ? 's' : ''}
               </p>
@@ -373,7 +408,7 @@ export default function ChatPage() {
                 <Input
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Buscar no histórico..."
+                  placeholder="Buscar no historico..."
                   className="pl-8 h-9 text-sm"
                   aria-label="Buscar conversas"
                 />
@@ -446,9 +481,9 @@ export default function ChatPage() {
                   const isLastMessage = index === messages.length - 1;
                   const shouldRenderStreaming = message.isStreaming;
                   
-                  // Debug log para verificar streaming (remover em produção)
+                  // Debug log to verify streaming (remove in production)
                   if (process.env.NODE_ENV === 'development') {
-                    console.log('🔍 Message render debug:', {
+                    console.log('Message render debug:', {
                       messageId: message.id,
                       index,
                       isLastMessage,
@@ -532,7 +567,7 @@ export default function ChatPage() {
               placeholder={
                 currentModuleId 
                   ? `Digite sua pergunta sobre ${MODULES[currentModuleId]?.label?.toLowerCase()}...`
-                  : "Digite sua pergunta ou escolha um módulo..."
+                  : "Digite sua pergunta ou escolha um modulo..."
               }
             />
           </div>

@@ -24,7 +24,7 @@ import { MODULES, convertToOldModuleId } from "@/lib/modules";
 import { getModuleIcon } from "@/lib/moduleIcons";
 import { getModuleIconKey, getModuleColor, debugIconMapping } from "@/lib/iconMapping";
 import { useState, useEffect } from "react";
-import { useAutoClassification } from "@/hooks/useAutoClassification";
+// import { useAutoClassification } from "@/hooks/useAutoClassification"; // REMOVED: Duplicate classification
 import { isWeatherQuery } from "@/utils/weatherApi";
 
 /* ---------- Utils ---------- */
@@ -78,41 +78,25 @@ export const ChatMessage = memo(function ChatMessage({
 }: Props) {
 
   const msgTime = useMemo(() => formatHourMinute(message.timestamp.getTime()), [message.timestamp]);
-  const [autoClassifiedModule, setAutoClassifiedModule] = useState<ModuleId | null>(null);
-  const { classifyMessage } = useAutoClassification();
+  // REMOVED: Duplicate classification - orchestrator already handles this
 
   const roleClass = isUser ? "justify-end" : "justify-start";
   const bubbleRole = isUser ? "user" : "assistant";
   const msgId = message.id ?? `${message.timestamp ?? ""}-${bubbleRole}`;
 
-  // Auto-classify message ONLY if it's a USER message and no module is selected
-  useEffect(() => {
-    if (isUser && !currentModuleId && message.content) {
-      // Use the hook's classification function which has built-in caching and deduplication
-      classifyMessage(message.content).then((result) => {
-        setAutoClassifiedModule(result.module as ModuleId);
-      }).catch((error) => {
-        console.error('Auto-classification failed:', error);
-      });
-    }
-  }, [isUser, currentModuleId, message.content, classifyMessage]);
+  // REMOVED: Duplicate classification - orchestrator already handles this
 
   // Determine the effective module ID with priority:
-  // 1. message.module (from streaming/API response) - highest priority for assistant messages
-  // 2. autoClassifiedModule (from classification) - for user messages
-  // 3. currentModuleId (from context) - fallback
+  // 1. message.module (from streaming/API response) - highest priority
+  // 2. currentModuleId (from context) - fallback
   const effectiveModuleId = useMemo(() => {
-    if (!isUser && message.module) {
-      // For assistant messages, use the module from the message (from API response)
+    if (message.module) {
+      // Use the module from the message (from API response)
       return convertToOldModuleId(message.module as ModuleId);
-    }
-    if (isUser && autoClassifiedModule) {
-      // For user messages, use auto-classified module if available
-      return convertToOldModuleId(autoClassifiedModule);
     }
     // Fallback to current module context
     return currentModuleId;
-  }, [isUser, message.module, autoClassifiedModule, currentModuleId]);
+  }, [message.module, currentModuleId]);
 
   // Debug log para verificar consistência de módulos (remover em produção)
   if (process.env.NODE_ENV === 'development') {
@@ -120,7 +104,6 @@ export const ChatMessage = memo(function ChatMessage({
       messageId: message.id,
       isUser,
       messageModule: message.module,
-      autoClassifiedModule,
       currentModuleId,
       effectiveModuleId,
       convertedModule: message.module ? convertToOldModuleId(message.module as ModuleId) : 'N/A',

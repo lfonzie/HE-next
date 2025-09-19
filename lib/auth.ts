@@ -112,8 +112,8 @@ export const authOptions: NextAuthOptions = {
           console.error('❌ Authentication error:', error)
           throw new Error('Unable to sign in')
         }
-      },
-    }),
+      }
+    })
   ],
   callbacks: {
     async jwt({ token, user }) {
@@ -168,8 +168,8 @@ export const authOptions: NextAuthOptions = {
       // Allows callback URLs on the same origin
       else if (new URL(url).origin === baseUrl) return url
       return baseUrl
-    },
-  },
+    }
+  }
 }
 
 export const auth = () => getServerSession(authOptions)

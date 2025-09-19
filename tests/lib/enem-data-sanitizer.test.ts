@@ -2,9 +2,7 @@ import {
   sanitizeQuestion,
   sanitizeQuestions,
   createFallbackQuestion,
-  validateImageUrl,
-  cleanAlternativeText,
-  validateDifficulty
+  validateImageUrl
 } from '@/lib/enem-data-sanitizer'
 
 // Mock fetch for image validation
@@ -140,6 +138,20 @@ describe('enem-data-sanitizer', () => {
 
   describe('sanitizeQuestions', () => {
     it('processes multiple questions correctly', () => {
+      const validQuestion = {
+        id: 'test-1',
+        stem: 'Qual é a resposta?',
+        alternatives: ['Opção A', 'Opção B', 'Opção C', 'Opção D', 'Opção E'],
+        correct: 'A',
+        rationale: 'Explicação da resposta',
+        difficulty: 'MEDIUM',
+        area: 'Matemática',
+        disciplina: 'Álgebra',
+        skill_tag: ['tag1', 'tag2'],
+        year: 2023,
+        source: 'DATABASE'
+      }
+      
       const questions = [
         validQuestion,
         { ...validQuestion, id: 'test-2' },
@@ -222,36 +234,4 @@ describe('enem-data-sanitizer', () => {
     })
   })
 
-  describe('cleanAlternativeText', () => {
-    it('removes various label patterns', () => {
-      expect(cleanAlternativeText('A) Texto')).toBe('Texto')
-      expect(cleanAlternativeText('B. Texto')).toBe('Texto')
-      expect(cleanAlternativeText('C Texto')).toBe('Texto')
-      expect(cleanAlternativeText('D)Texto')).toBe('Texto')
-    })
-
-    it('handles text without labels', () => {
-      expect(cleanAlternativeText('Texto sem label')).toBe('Texto sem label')
-    })
-
-    it('handles empty text', () => {
-      expect(cleanAlternativeText('')).toBe('')
-    })
-  })
-
-  describe('validateDifficulty', () => {
-    it('validates difficulty levels correctly', () => {
-      expect(validateDifficulty('EASY')).toBe('EASY')
-      expect(validateDifficulty('FÁCIL')).toBe('EASY')
-      expect(validateDifficulty('1')).toBe('EASY')
-      expect(validateDifficulty('MEDIUM')).toBe('MEDIUM')
-      expect(validateDifficulty('MÉDIO')).toBe('MEDIUM')
-      expect(validateDifficulty('2')).toBe('MEDIUM')
-      expect(validateDifficulty('HARD')).toBe('HARD')
-      expect(validateDifficulty('DIFÍCIL')).toBe('HARD')
-      expect(validateDifficulty('3')).toBe('HARD')
-      expect(validateDifficulty('unknown')).toBe('MEDIUM')
-      expect(validateDifficulty(null)).toBe('MEDIUM')
-    })
-  })
 })

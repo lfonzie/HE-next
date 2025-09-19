@@ -22,8 +22,8 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'HubEdu.ia - Plataforma Educacional com IA',
-  description: 'Plataforma educacional completa com IA conversacional, simulador ENEM e 8 módulos educacionais',
-  keywords: ['educação', 'IA', 'ENEM', 'simulador', 'professor', 'escola', 'aprendizado'],
+  description: 'Plataforma educacional completa com IA conversacional, simulador ENEM e 8 modulos educacionais',
+  keywords: ['educacao', 'IA', 'ENEM', 'simulador', 'professor', 'escola', 'aprendizado'],
   authors: [{ name: 'HubEdu.ia' }],
   creator: 'HubEdu.ia',
   publisher: 'HubEdu.ia',
@@ -60,13 +60,13 @@ export const metadata: Metadata = {
     locale: 'pt_BR',
     url: 'https://hubedu.ia',
     title: 'HubEdu.ia - Plataforma Educacional com IA',
-    description: 'Plataforma educacional completa com IA conversacional, simulador ENEM e 8 módulos educacionais',
+    description: 'Plataforma educacional completa com IA conversacional, simulador ENEM e 8 modulos educacionais',
     siteName: 'HubEdu.ia',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'HubEdu.ia - Plataforma Educacional com IA',
-    description: 'Plataforma educacional completa com IA conversacional, simulador ENEM e 8 módulos educacionais',
+    description: 'Plataforma educacional completa com IA conversacional, simulador ENEM e 8 modulos educacionais',
   },
 }
 

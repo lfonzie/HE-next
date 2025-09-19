@@ -50,24 +50,24 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname()
   const { isVisible } = useLoading()
   
-  // Verificar se estamos na página do chat
+  // Check if we are on the chat page
   const isChatPage = pathname === '/chat'
   
-  // Verificar se estamos na página de apresentação
+  // Check if we are on the presentation page
   const isApresentacaoPage = pathname === '/apresentacao'
   
-  // Verificar se estamos na página enem (sem sidebar)
+  // Check if we are on the enem page (without sidebar)
   const isEnemPage = pathname === '/enem'
 
-  // Verificar autenticação para rotas protegidas
+  // Check authentication for protected routes
   useEffect(() => {
-    console.log('🔍 Dashboard layout - Session check:', { status, session: !!session, pathname })
+    console.log('Dashboard layout - Session check:', { status, session: !!session, pathname })
     if (status === 'loading') return
     if (!session) {
-      console.log('❌ No session found, redirecting to login')
+      console.log('No session found, redirecting to login')
       router.push('/login')
     } else {
-      console.log('✅ Session found, user:', session.user?.email)
+      console.log('Session found, user:', session.user?.email)
     }
   }, [session, status, router, pathname])
 
@@ -76,7 +76,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       <div className="flex items-center justify-center min-h-screen">
         <div className="flex items-center space-x-3">
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-          <span className="text-gray-600">Verificando autenticação...</span>
+          <span className="text-gray-600" suppressHydrationWarning>
+            Checking authentication...
+          </span>
         </div>
       </div>
     )
@@ -86,13 +88,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     return null
   }
 
-  // Layout especial para enem - sem sidebar
+  // Special layout for enem - without sidebar
   if (isEnemPage) {
     return (
       <ChatProvider>
         <QuotaProvider>
           <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50">
-            {/* Layout sem sidebar - conteúdo ocupa toda a tela */}
+            {/* Layout without sidebar - content occupies full screen */}
             <div className="w-full h-screen overflow-y-auto">
               {children}
             </div>
@@ -102,13 +104,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     )
   }
 
-  // Layout especial para apresentação - sem sidebar, tela cheia
+  // Special layout for presentation - without sidebar, full screen
   if (isApresentacaoPage) {
     return (
       <ChatProvider>
         <QuotaProvider>
           <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50">
-            {/* Layout sem sidebar - conteúdo ocupa toda a tela */}
+            {/* Layout without sidebar - content occupies full screen */}
             <div className="w-full h-screen overflow-y-auto">
               {children}
             </div>

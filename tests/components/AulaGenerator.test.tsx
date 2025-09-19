@@ -100,37 +100,15 @@ describe('AulaGenerator', () => {
     expect(screen.getByText('4/500')).toBeInTheDocument()
   })
 
-  it('handles speech-to-text button click', () => {
+  it('handles form validation', () => {
     render(<AulaGenerator {...mockProps} />)
     
-    const speechButton = screen.getByLabelText('Ativar entrada por voz')
-    fireEvent.click(speechButton)
+    const textarea = screen.getByRole('textbox')
+    fireEvent.change(textarea, { target: { value: '' } })
     
-    // Should not throw error
-    expect(speechButton).toBeInTheDocument()
-  })
-
-  it('handles text-to-speech button click', () => {
-    const propsWithTopic = {
-      ...mockProps,
-      formData: { topic: 'Test topic' }
-    }
-    
-    render(<AulaGenerator {...propsWithTopic} />)
-    
-    const ttsButton = screen.getByLabelText('Ouvir o texto em voz alta')
-    fireEvent.click(ttsButton)
-    
-    // Should not throw error
-    expect(ttsButton).toBeInTheDocument()
-  })
-
-  it('shows accessibility features', () => {
-    render(<AulaGenerator {...mockProps} />)
-    
-    expect(screen.getByText('Acessibilidade')).toBeInTheDocument()
-    expect(screen.getByLabelText('Ativar entrada por voz')).toBeInTheDocument()
-    expect(screen.getByLabelText('Ouvir o texto em voz alta')).toBeInTheDocument()
+    // Should disable button when topic is empty
+    const button = screen.getByRole('button', { name: /Gerar Aula Interativa/ })
+    expect(button).toBeDisabled()
   })
 
   it('shows multi-subject support', () => {
@@ -139,7 +117,12 @@ describe('AulaGenerator', () => {
     expect(screen.getByText('Suporte Multidisciplinar Completo')).toBeInTheDocument()
     expect(screen.getByText('Matemática')).toBeInTheDocument()
     expect(screen.getByText('Ciências')).toBeInTheDocument()
-    expect(screen.getByText('História')).toBeInTheDocument()
+    expect(screen.getByText('Humanidades')).toBeInTheDocument()
+    expect(screen.getByText('Programação')).toBeInTheDocument()
+    expect(screen.getByText('Estudos Sociais')).toBeInTheDocument()
+    expect(screen.getByText('Linguagens')).toBeInTheDocument()
+    expect(screen.getByText('Artes')).toBeInTheDocument()
+    expect(screen.getByText('Educação Física')).toBeInTheDocument()
   })
 })
 

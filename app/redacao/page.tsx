@@ -496,60 +496,186 @@ export default function RedacaoPage() {
           </Card>
         </div>
 
-        {/* Dicas de Redação */}
-        <Card className="mt-8">
+
+        {/* Estrutura da Dissertação-Argumentativa */}
+        <Card className="mt-6">
           <CardHeader>
-            <CardTitle>Dicas para uma Boa Redação</CardTitle>
+            <CardTitle className="flex items-center">
+              <FileText className="h-5 w-5 mr-2" />
+              Estrutura da Dissertação-Argumentativa
+            </CardTitle>
+            <CardDescription>
+              Como estruturar sua redação seguindo o modelo ENEM
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-              <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                <div className="text-2xl font-bold text-green-600 mb-2">1</div>
-                <h4 className="font-medium text-green-800 dark:text-green-200 mb-1">
-                  Domínio da Norma
-                </h4>
-                <p className="text-sm text-green-700 dark:text-green-300">
-                  Gramática e ortografia corretas
-                </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Introdução */}
+              <div className="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg">
+                <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-white font-bold">1</span>
+                </div>
+                <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-3">Introdução</h4>
+                <div className="text-sm text-blue-700 dark:text-blue-300 space-y-2">
+                  <p><strong>Contextualizar</strong> o tema</p>
+                  <p><strong>Apresentar</strong> tese clara</p>
+                  <p><strong>Formas:</strong> conceituação, dados, metáfora, narração breve</p>
+                </div>
+              </div>
+
+              {/* Desenvolvimento */}
+              <div className="text-center p-6 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-lg">
+                <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-white font-bold">2</span>
+                </div>
+                <h4 className="font-semibold text-green-800 dark:text-green-200 mb-3">Desenvolvimento</h4>
+                <div className="text-sm text-green-700 dark:text-green-300 space-y-2">
+                  <p><strong>Sustentar</strong> tese com argumentos</p>
+                  <p><strong>Usar:</strong> fatos, opiniões, dados</p>
+                  <p><strong>Recursos:</strong> conectores, exemplificações</p>
+                </div>
+              </div>
+
+              {/* Conclusão */}
+              <div className="text-center p-6 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-lg">
+                <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-white font-bold">3</span>
+                </div>
+                <h4 className="font-semibold text-purple-800 dark:text-purple-200 mb-3">Conclusão</h4>
+                <div className="text-sm text-purple-700 dark:text-purple-300 space-y-2">
+                  <p><strong>Proposta</strong> de intervenção</p>
+                  <p><strong>Viável</strong> e detalhada</p>
+                  <p><strong>Respeitar</strong> direitos humanos</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Como Evitar Nota Zero */}
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="flex items-center text-red-600">
+              <span className="text-2xl mr-2">⚠️</span>
+              Como NÃO Tirar Zero na Redação do ENEM
+            </CardTitle>
+            <CardDescription>
+              Principais armadilhas que podem zerar sua redação
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-3">
+                <h4 className="font-semibold text-red-800 dark:text-red-200 mb-3">❌ Causas de Nota Zero:</h4>
+                <ul className="space-y-2 text-sm text-red-700 dark:text-red-300">
+                  <li className="flex items-start">
+                    <span className="text-red-500 mr-2">•</span>
+                    <span><strong>Fuga ao tema</strong> - Não abordar o tema proposto</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-red-500 mr-2">•</span>
+                    <span><strong>Tipo textual errado</strong> - Não seguir dissertação-argumentativa</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-red-500 mr-2">•</span>
+                    <span><strong>Ausência de intervenção</strong> - Não propor solução</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-red-500 mr-2">•</span>
+                    <span><strong>Cópias</strong> - Repetir texto da coletânea</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-red-500 mr-2">•</span>
+                    <span><strong>Menos de 7 linhas</strong> - Texto muito curto</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-red-500 mr-2">•</span>
+                    <span><strong>Caligrafia ilegível</strong> - Texto incompreensível</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-red-500 mr-2">•</span>
+                    <span><strong>Violar direitos humanos</strong> - Propostas discriminatórias</span>
+                  </li>
+                </ul>
               </div>
               
-              <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <div className="text-2xl font-bold text-blue-600 mb-2">2</div>
-                <h4 className="font-medium text-blue-800 dark:text-blue-200 mb-1">
-                  Compreensão
-                </h4>
+              <div className="space-y-3">
+                <h4 className="font-semibold text-green-800 dark:text-green-200 mb-3">✅ Estratégias de Prevenção:</h4>
+                <ul className="space-y-2 text-sm text-green-700 dark:text-green-300">
+                  <li className="flex items-start">
+                    <span className="text-green-500 mr-2">•</span>
+                    <span><strong>Leia atentamente</strong> a proposta e coletânea</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-500 mr-2">•</span>
+                    <span><strong>Planeje</strong> sua estrutura no rascunho</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-500 mr-2">•</span>
+                    <span><strong>Evite quebras</strong> semânticas</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-500 mr-2">•</span>
+                    <span><strong>Escreva legível</strong> e dentro das margens</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-500 mr-2">•</span>
+                    <span><strong>Use caneta</strong> azul ou preta</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-500 mr-2">•</span>
+                    <span><strong>Respeite</strong> os direitos humanos</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-500 mr-2">•</span>
+                    <span><strong>Proponha</strong> intervenção detalhada</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+
+
+        {/* Dicas de Estudo */}
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Sparkles className="h-5 w-5 mr-2" />
+              Dicas de Estudo para Redação ENEM
+            </CardTitle>
+            <CardDescription>
+              Práticas recomendadas baseadas na apostila oficial
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">📚 Leitura Diária</h4>
                 <p className="text-sm text-blue-700 dark:text-blue-300">
-                  Entender o tema proposto
+                  Leia jornais, artigos acadêmicos e textos argumentativos para enriquecer seu vocabulário e argumentos.
                 </p>
               </div>
               
-              <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                <div className="text-2xl font-bold text-purple-600 mb-2">3</div>
-                <h4 className="font-medium text-purple-800 dark:text-purple-200 mb-1">
-                  Organização
-                </h4>
+              <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2">✍️ Escrita Semanal</h4>
+                <p className="text-sm text-green-700 dark:text-green-300">
+                  Escreva pelo menos uma redação por semana com temas simulados para praticar a estrutura.
+                </p>
+              </div>
+              
+              <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                <h4 className="font-semibold text-purple-800 dark:text-purple-200 mb-2">🔄 Revisão</h4>
                 <p className="text-sm text-purple-700 dark:text-purple-300">
-                  Argumentos bem estruturados
+                  Revise suas correções e analise redações modelo nota 1000 para identificar padrões de sucesso.
                 </p>
               </div>
               
-              <div className="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-                <div className="text-2xl font-bold text-orange-600 mb-2">4</div>
-                <h4 className="font-medium text-orange-800 dark:text-orange-200 mb-1">
-                  Linguagem
-                </h4>
+              <div className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                <h4 className="font-semibold text-orange-800 dark:text-orange-200 mb-2">👥 Grupos de Estudo</h4>
                 <p className="text-sm text-orange-700 dark:text-orange-300">
-                  Mecanismos linguísticos
-                </p>
-              </div>
-              
-              <div className="text-center p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                <div className="text-2xl font-bold text-red-600 mb-2">5</div>
-                <h4 className="font-medium text-red-800 dark:text-red-200 mb-1">
-                  Intervenção
-                </h4>
-                <p className="text-sm text-red-700 dark:text-red-300">
-                  Proposta de solução
+                  Participe de grupos de discussão para receber feedback e trocar experiências com outros candidatos.
                 </p>
               </div>
             </div>

@@ -4,23 +4,8 @@ import userEvent from '@testing-library/user-event'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { 
-  TestDataFactory, 
-  AccessibilityTestHelper, 
-  PerformanceTestHelper,
-  setupTestEnvironment 
-} from '../utils/test-helpers'
 
 describe('Component Unit Tests', () => {
-  let cleanup: () => void
-
-  beforeEach(() => {
-    cleanup = setupTestEnvironment().restoreConsole
-  })
-
-  afterEach(() => {
-    cleanup()
-  })
 
   describe('Button Component', () => {
     test('should render with correct text', () => {

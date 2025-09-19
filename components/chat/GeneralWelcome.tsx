@@ -220,9 +220,10 @@ export const GeneralWelcome: React.FC<GeneralWelcomeProps> = ({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log('🎯 Suggestion clicked: Quero tirar uma dúvida de geometria');
-                if (quotaAvailable) {
-                  onSuggestionClick("Quero tirar uma dúvida de geometria");
+                const suggestion = "Quero tirar uma dúvida de geometria";
+                console.log('🎯 Suggestion clicked:', suggestion);
+                if (quotaAvailable && suggestion && suggestion.trim()) {
+                  onSuggestionClick(suggestion);
                 }
               }}
               onMouseDown={(e) => {
@@ -246,9 +247,10 @@ export const GeneralWelcome: React.FC<GeneralWelcomeProps> = ({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log('🎯 Suggestion clicked: Preciso de ajuda antes da prova de história');
-                if (quotaAvailable) {
-                  onSuggestionClick("Preciso de ajuda antes da prova de história");
+                const suggestion = "Preciso de ajuda antes da prova de história";
+                console.log('🎯 Suggestion clicked:', suggestion);
+                if (quotaAvailable && suggestion && suggestion.trim()) {
+                  onSuggestionClick(suggestion);
                 }
               }}
               onMouseDown={(e) => {
@@ -272,9 +274,10 @@ export const GeneralWelcome: React.FC<GeneralWelcomeProps> = ({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log('🎯 Suggestion clicked: Quero entender como funciona a fotossíntese');
-                if (quotaAvailable) {
-                  onSuggestionClick("Quero entender como funciona a fotossíntese");
+                const suggestion = "Quero entender como funciona a fotossíntese";
+                console.log('🎯 Suggestion clicked:', suggestion);
+                if (quotaAvailable && suggestion && suggestion.trim()) {
+                  onSuggestionClick(suggestion);
                 }
               }}
               onMouseDown={(e) => {
@@ -309,9 +312,10 @@ export const GeneralWelcome: React.FC<GeneralWelcomeProps> = ({
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  console.log(`🎯 Topic clicked: ${topic}`);
-                  if (quotaAvailable) {
-                    onSuggestionClick(`Me ajude com ${topic.toLowerCase()}`);
+                  const suggestion = `Me ajude com ${topic.toLowerCase()}`;
+                  console.log('🎯 Topic clicked:', suggestion);
+                  if (quotaAvailable && suggestion && suggestion.trim()) {
+                    onSuggestionClick(suggestion);
                   }
                 }}
                 onMouseDown={(e) => {

@@ -8,16 +8,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const navItems = [
-    { href: '/admin', label: 'Dashboard', icon: '📊' },
-    { href: '/admin/schools', label: 'Escolas', icon: '🏫' },
-    { href: '/admin/users', label: 'Usuários', icon: '👥' },
-    { href: '/admin/conversations', label: 'Conversas', icon: '💬' },
-    { href: '/admin/models', label: 'Modelos', icon: '🤖' },
-    { href: '/admin/prompts', label: 'Prompts', icon: '📝' },
-    { href: '/admin/system-prompts', label: 'Prompts Sistema', icon: '⚡' },
-    { href: '/admin/enem', label: 'ENEM Admin', icon: '🎯' },
-    { href: '/admin/database-stats', label: 'Estatísticas DB', icon: '🗄️' },
-    { href: '/admin/system-info', label: 'Sistema', icon: '⚙️' }
+    { href: '/admin', label: 'Dashboard', icon: 'chart' },
+    { href: '/admin/schools', label: 'Escolas', icon: 'school' },
+    { href: '/admin/users', label: 'Usuarios', icon: 'users' },
+    { href: '/admin/conversations', label: 'Conversas', icon: 'chat' },
+    { href: '/admin/models', label: 'Modelos', icon: 'bot' },
+    { href: '/admin/prompts', label: 'Prompts', icon: 'edit' },
+    { href: '/admin/system-prompts', label: 'Prompts Sistema', icon: 'lightning' },
+    { href: '/admin/enem', label: 'ENEM Admin', icon: 'target' },
+    { href: '/admin/database-stats', label: 'Estatisticas DB', icon: 'database' },
+    { href: '/admin/system-info', label: 'Sistema', icon: 'settings' }
   ];
 
   return (
@@ -32,7 +32,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               onClick={() => setSidebarOpen(false)}
               className="text-gray-400 hover:text-gray-600"
             >
-              ✕
+              X
             </button>
           </div>
           <nav className="flex-1 px-4 py-4">
@@ -96,7 +96,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             onClick={() => setSidebarOpen(true)}
           >
             <span className="sr-only">Open sidebar</span>
-            ☰
+            Menu
           </button>
           <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
             <div className="flex flex-1"></div>
