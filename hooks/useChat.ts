@@ -11,17 +11,20 @@ function convertApiModuleToSystem(apiModule: string): string {
     'PROFESSOR': 'professor',
     'AULA_EXPANDIDA': 'aula-expandida',
     'ENEM_INTERATIVO': 'enem-interativo',
-    'TI': 'ti',
-    'RH': 'rh',
+    'AULA_INTERATIVA': 'aula_interativa',
+    'ENEM': 'enem',
+    'TI_TROUBLESHOOTING': 'ti_troubleshooting',
+    'FAQ_ESCOLA': 'faq_escola',
     'FINANCEIRO': 'financeiro',
+    'RH': 'rh',
     'COORDENACAO': 'coordenacao',
-    'ATENDIMENTO': 'atendimento',
-    'SOCIAL_MEDIA': 'social-media',
     'BEM_ESTAR': 'bem-estar',
-    'SECRETARIA': 'secretaria'
+    'SOCIAL_MEDIA': 'social-media',
+    'CONTEUDO_MIDIA': 'conteudo_midia',
+    'ATENDIMENTO': 'atendimento'
   }
   
-  return moduleMapping[apiModule] || 'atendimento'
+  return moduleMapping[apiModule] || 'auto'
 }
 
 export function useChat(onStreamingStart?: () => void) {
@@ -100,8 +103,8 @@ export function useChat(onStreamingStart?: () => void) {
       // const token = localStorage.getItem("token")
       // if (!token) throw new Error("No auth token available")
 
-      // Usar módulo fornecido ou padrão - classificação será feita no orchestrator
-      let finalModule = moduleParam || "ATENDIMENTO"
+      // Usar módulo fornecido ou 'auto' para classificação automática
+      let finalModule = moduleParam || "auto"
       console.log(`🎯 Usando módulo: ${finalModule}`)
 
       // Include conversation history for context
@@ -241,7 +244,7 @@ export function useChat(onStreamingStart?: () => void) {
                 isStreaming: true
               }
             ],
-            module: moduleParam || "ATENDIMENTO",
+            module: moduleParam || "auto",
             subject,
             grade,
             tokenCount: 0,

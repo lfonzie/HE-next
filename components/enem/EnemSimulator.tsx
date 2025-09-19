@@ -120,7 +120,7 @@ interface EnemSimulatorProps {
 }
 
 export function EnemSimulator({ area, numQuestions, duration, useRealQuestions = true, year, useProgressiveLoading = true }: EnemSimulatorProps) {
-  const sessionId = `session_${Date.now()}`;
+  const sessionId = `session_${typeof window !== 'undefined' ? Date.now() : 0}`;
   const {
     questions,
     currentQuestion,

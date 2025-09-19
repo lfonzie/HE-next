@@ -16,7 +16,7 @@ export function SplashScreen({
   className 
 }: SplashScreenProps) {
   const [isVisible, setIsVisible] = useState(true);
-  const [startTime] = useState(Date.now());
+  const [startTime] = useState(() => typeof window !== 'undefined' ? Date.now() : 0);
 
   // Set global flag to prevent other loadings
   useEffect(() => {

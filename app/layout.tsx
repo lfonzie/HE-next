@@ -17,6 +17,7 @@ import { Toaster } from '@/components/ui/toaster'
 import { GlobalLoadingProvider } from '@/hooks/useGlobalLoading'
 import { NotificationProvider } from '@/components/providers/NotificationProvider'
 import { ToastProvider } from '@/hooks/use-toast'
+import PWAManagerWrapper from '@/components/pwa/PWAManagerWrapper'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -48,7 +49,7 @@ export const metadata: Metadata = {
       { rel: 'mask-icon', url: '/favicon.svg', color: '#ffd233' },
     ],
   },
-  manifest: '/manifest.webmanifest',
+  manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
@@ -83,7 +84,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body className="min-h-screen bg-background font-sans text-foreground antialiased">
         {/* <SplashScreen /> */}
         <SessionProvider>
-          <PWAProvider>
+          {/* <PWAProvider> */}
             <LoadingProvider>
               <GlobalLoadingProvider>
                 <PageTransitionProvider>
@@ -91,6 +92,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                     <ToastProvider>
                       <NotificationProvider>
                         {children}
+                        {/* <PWAManagerWrapper /> */}
                         <Toaster />
                       </NotificationProvider>
                     </ToastProvider>
@@ -98,7 +100,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 </PageTransitionProvider>
               </GlobalLoadingProvider>
             </LoadingProvider>
-          </PWAProvider>
+          {/* </PWAProvider> */}
         </SessionProvider>
       </body>
     </html>

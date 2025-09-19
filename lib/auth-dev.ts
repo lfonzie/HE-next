@@ -21,7 +21,7 @@ export const authOptions: NextAuthOptions = {
     signIn: "/login",
     error: "/error",
   },
-  debug: true,
+  debug: process.env.NODE_ENV === 'development',
   providers: [
     CredentialsProvider({
       name: "credentials",

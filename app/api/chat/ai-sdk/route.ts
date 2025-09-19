@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Determinar módulo se não especificado
-    let targetModule = module || 'atendimento'
+    let targetModule = module || 'auto'
     
     // Se módulo for 'auto', usar orquestrador para classificação
     if (module === 'auto' || !module) {
@@ -50,11 +50,11 @@ export async function POST(request: NextRequest) {
           context: { module: 'auto' }
         })
         
-        targetModule = orchestratorResult.trace?.module || 'atendimento'
+        targetModule = orchestratorResult.trace?.module || 'auto'
         console.log('🎯 [ORCHESTRATOR] Module selected:', targetModule)
       } catch (error) {
         console.error('Orchestrator error:', error)
-        targetModule = 'atendimento'
+        targetModule = 'auto'
       }
     }
 

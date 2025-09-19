@@ -213,11 +213,11 @@ export function useModuleOrchestrator(config: ModuleOrchestratorConfig = {
         
         // Use best module based on context
         const bestModule = findBestModule({ message, history, userId })
-        return bestModule?.id || 'atendimento'
+        return bestModule?.id || 'auto'
       }
     } catch (error) {
       console.error('Error selecting optimal module:', error)
-      return 'atendimento'
+      return 'auto'
     }
   }, [
     config,

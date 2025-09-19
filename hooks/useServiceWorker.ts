@@ -14,12 +14,15 @@ export function useServiceWorker() {
   const [state, setState] = useState<ServiceWorkerState>({
     isSupported: false,
     isRegistered: false,
-    isOnline: navigator.onLine,
+    isOnline: true, // Default to online to prevent hydration mismatch
     registration: null,
     error: null,
   });
 
   useEffect(() => {
+    // Initialize actual online status after hydration
+    setState(prev => ({ ...prev, isOnline: navigator.onLine }));
+    
     // Check if service workers are supported
     if (!('serviceWorker' in navigator)) {
       setState(prev => ({ ...prev, isSupported: false }));

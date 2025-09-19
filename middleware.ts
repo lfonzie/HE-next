@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getToken } from 'next-auth/jwt'
 
 export async function middleware(request: NextRequest) {
-  console.log('🔍 Middleware - Processing:', request.nextUrl.pathname)
+  const isDevelopment = process.env.NODE_ENV === 'development'
+  
+  if (isDevelopment) {
+    console.log('🔍 Middleware - Processing:', request.nextUrl.pathname)
+  }
   
   // Skip middleware for static files and API routes
   if (request.nextUrl.pathname.startsWith('/_next/') ||
@@ -56,15 +60,19 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith(route + '/')
   )
 
-  console.log('🔍 Route analysis:', {
-    path: request.nextUrl.pathname,
-    isPublic: isPublicRoute,
-    cookies: request.cookies.getAll().map(c => c.name)
-  })
+  if (isDevelopment) {
+    console.log('🔍 Route analysis:', {
+      path: request.nextUrl.pathname,
+      isPublic: isPublicRoute,
+      cookies: request.cookies.getAll().map(c => c.name)
+    })
+  }
 
   // For debugging, let's be more permissive
   if (isPublicRoute) {
-    console.log('✅ Public route, allowing access')
+    if (isDevelopment) {
+      console.log('✅ Public route, allowing access')
+    }
     return NextResponse.next()
   }
 
@@ -84,20 +92,28 @@ export async function middleware(request: NextRequest) {
         cookieName: cookieName
       })
       if (token) {
-        console.log('✅ Token found with cookie:', cookieName)
+        if (isDevelopment) {
+          console.log('✅ Token found with cookie:', cookieName)
+        }
         break
       }
     } catch (error) {
-      console.log('❌ Error getting token with cookie:', cookieName, error)
+      if (isDevelopment) {
+        console.log('❌ Error getting token with cookie:', cookieName, error)
+      }
     }
   }
 
   if (!token) {
-    console.log('🔒 No valid token found, redirecting to login')
+    if (isDevelopment) {
+      console.log('🔒 No valid token found, redirecting to login')
+    }
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  console.log('✅ Token validated, allowing access to:', request.nextUrl.pathname)
+  if (isDevelopment) {
+    console.log('✅ Token validated, allowing access to:', request.nextUrl.pathname)
+  }
   return NextResponse.next()
 }
 

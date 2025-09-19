@@ -86,7 +86,7 @@ export async function classifyIntent(input: { text: string; context?: Record<str
     const classificationContext = {
       userMessage: input.text,
       history: input.context?.history || [],
-      currentModule: input.context?.module || 'atendimento'
+      currentModule: input.context?.module || 'auto'
     };
 
     const response = await fetch(classifyUrl, {
@@ -107,17 +107,20 @@ export async function classifyIntent(input: { text: string; context?: Record<str
           'PROFESSOR': 'professor',
           'AULA_EXPANDIDA': 'aula-expandida',
           'ENEM_INTERATIVO': 'enem-interativo',
-          'TI': 'ti_troubleshooting',
-          'SECRETARIA': 'faq_escola',
+          'AULA_INTERATIVA': 'aula_interativa',
+          'ENEM': 'enem',
+          'TI_TROUBLESHOOTING': 'ti_troubleshooting',
+          'FAQ_ESCOLA': 'faq_escola',
           'FINANCEIRO': 'financeiro',
           'RH': 'rh',
           'COORDENACAO': 'coordenacao',
           'BEM_ESTAR': 'bem-estar',
           'SOCIAL_MEDIA': 'social-media',
+          'CONTEUDO_MIDIA': 'conteudo_midia',
           'ATENDIMENTO': 'atendimento'
         };
 
-        const mappedModule = moduleMapping[classification.module] || 'atendimento';
+        const mappedModule = moduleMapping[classification.module] || 'auto';
         
         const result = {
           intent: classification.module.toLowerCase(),

@@ -141,6 +141,12 @@ const ADVANTAGES = [
   "✅ Conversas temporárias (apagadas automaticamente) para máxima privacidade",
   "✅ Infraestrutura global de ponta garantindo máxima performance",
   "✅ Simulador ENEM com +3000 questões oficiais",
+  "✅ Tutor IA Pessoal com aprendizado adaptativo",
+  "✅ Laboratórios virtuais para disciplinas STEM",
+  "✅ Realidade aumentada baseada em navegador",
+  "✅ Progressive Web App com funcionalidades offline",
+  "✅ Análise de sentimento em tempo real",
+  "✅ Exercícios adaptativos personalizados",
   "✅ Suporte nacional especializado",
   "✅ Plataforma pioneira desenvolvida para educação brasileira"
 ];
@@ -173,6 +179,34 @@ const HERO_MODULES = [
     icon: "💬",
     features: ["Professor IA", "Suporte T.I.", "Atendimento Pais", "Bem-estar", "Social Media", "Coordenação", "Secretaria", "RH", "Financeiro", "Gestão", "Conversas temporárias LGPD"],
     cta: "Explorar Módulos"
+  },
+  {
+    title: "Tutor IA Pessoal",
+    description: "IA avançada que adapta conteúdo e ritmo baseado no perfil de aprendizado único de cada aluno.",
+    icon: "🧠",
+    features: ["Aprendizado adaptativo", "Exercícios personalizados", "Análise de sentimento", "Recomendações inteligentes", "Progresso em tempo real"],
+    cta: "Experimentar Tutor"
+  },
+  {
+    title: "Laboratórios Virtuais",
+    description: "Simulações interativas para física, química, biologia e matemática com experimentos 3D.",
+    icon: "🔬",
+    features: ["Simulações realistas", "Experimentos seguros", "Visualização 3D", "Múltiplas disciplinas", "Feedback instantâneo"],
+    cta: "Explorar Laboratórios"
+  },
+  {
+    title: "Realidade Aumentada",
+    description: "AR baseada em navegador para visualizar conceitos abstratos de forma imersiva.",
+    icon: "📱",
+    features: ["AR no navegador", "Visualização 3D", "Interação natural", "Múltiplos dispositivos", "Conteúdo educativo"],
+    cta: "Testar AR"
+  },
+  {
+    title: "PWA Offline",
+    description: "Progressive Web App com funcionalidades offline completas e instalação nativa.",
+    icon: "📲",
+    features: ["Funciona offline", "Instalação nativa", "Sincronização automática", "Notificações push", "Experiência mobile"],
+    cta: "Instalar PWA"
   }
 ];
 
@@ -549,6 +583,8 @@ const HubEduLanding = () => {
     terms: false,
     lgpd: false,
   });
+  
+  // Estados para navegação entre slides
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -572,12 +608,83 @@ const HubEduLanding = () => {
     }));
   }, []);
 
+  // Funções de navegação entre slides
+  const nextSlide = useCallback(() => {
+    if (currentSlide < 9 && !isTransitioning) {
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setCurrentSlide((prev) => Math.min(prev + 1, 9));
+        setTimeout(() => setIsTransitioning(false), 150);
+      }, 80);
+    }
+  }, [currentSlide, isTransitioning]);
+
+  const prevSlide = useCallback(() => {
+    if (currentSlide > 0 && !isTransitioning) {
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setCurrentSlide((prev) => Math.max(prev - 1, 0));
+        setTimeout(() => setIsTransitioning(false), 150);
+      }, 80);
+    }
+  }, [currentSlide, isTransitioning]);
+
+  const goToSlide = useCallback(
+    (index) => {
+      if (index !== currentSlide && !isTransitioning && index >= 0 && index < 10) {
+        setIsTransitioning(true);
+        setTimeout(() => {
+          setCurrentSlide(index);
+          setTimeout(() => setIsTransitioning(false), 150);
+        }, 80);
+      }
+    },
+    [currentSlide, isTransitioning]
+  );
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen();
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen();
+      setIsFullscreen(false);
+    }
+  };
+
   useEffect(() => {
     setIsVisible(true);
     const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Controle de teclado para navegação entre slides
+  useEffect(() => {
+    const handleKeyPress = (event) => {
+      const target = event.target;
+      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.contentEditable === "true")) {
+        return;
+      }
+      if (isTransitioning) {
+        return;
+      }
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        if (currentSlide < 9) {
+          nextSlide();
+        }
+      } else if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        if (currentSlide > 0) {
+          prevSlide();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, [currentSlide, isTransitioning, nextSlide, prevSlide]);
 
   const headerClasses = useMemo(() => 
     `fixed top-0 w-full z-50 transition-all duration-300 ${
@@ -586,6 +693,497 @@ const HubEduLanding = () => {
     [scrollY]
   );
 
+  // Dividir conteúdo em slides
+  const slides = [
+    // Slide 0: Hero Section
+    <section key="hero" className="bg-gradient-to-br from-yellow-50 via-white to-yellow-100 text-black pt-24 pb-16 relative overflow-hidden">
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-10 left-10 w-96 h-96 bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-10 right-10 w-80 h-80 bg-gradient-to-r from-yellow-500 to-yellow-700 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '3s' }} />
+      </div>
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-6 py-3 rounded-full text-sm font-bold mb-6 shadow-lg">
+            <Rocket className="w-5 h-5" />
+            🚀 EM BREVE - Aulas por IA + Simulador ENEM + Chat Inteligente = Educação Brasileira do Futuro
+          </div>
+
+          <div className="flex justify-center mb-6">
+            <Image 
+              src="/assets/Logo_HubEdu.ia.svg" 
+              alt="HubEdu.ia Logo" 
+              width={120}
+              height={120}
+              className="h-20 w-auto"
+            />
+          </div>
+
+          <h1 className="text-5xl lg:text-7xl font-black mb-6 leading-tight text-black">
+            <span className="bg-gradient-to-r from-yellow-500 to-yellow-700 bg-clip-text text-transparent">
+              {BRAND.name}
+            </span>
+            <br />
+            <span className="text-3xl lg:text-5xl font-bold text-gray-800">
+              {BRAND.tagline}
+            </span>
+          </h1>
+          
+          <p className="text-xl lg:text-2xl mb-8 text-gray-700 leading-relaxed max-w-4xl mx-auto font-medium">
+            {BRAND.description}
+          </p>
+          
+          {/* CTAs */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+            <button 
+              className="px-8 py-4 bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black font-black text-lg shadow-2xl rounded-2xl flex items-center justify-center gap-3 cursor-not-allowed transition-all duration-300"
+              disabled
+            >
+              <Play className="w-5 h-5" />
+              Em Breve
+            </button>
+            <button 
+              className="px-8 py-4 border-2 border-yellow-400 hover:bg-yellow-400 hover:text-black text-yellow-600 font-bold text-lg rounded-2xl flex items-center justify-center gap-3 cursor-not-allowed transition-all duration-300"
+              disabled
+            >
+              <Phone className="w-5 h-5" />
+              Ver Demonstração
+              <ArrowRight className="w-5 h-5" />
+            </button>
+          </div>
+          
+          {/* Modules Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {HERO_MODULES.map((module, index) => (
+              <ModuleCard key={index} module={module} />
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>,
+    
+    // Slide 1: Innovation Section
+    <section key="innovation" className="py-16 bg-gradient-to-r from-purple-50 to-pink-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <SectionTitle subtitle="Tecnologia de ponta combinada com pedagogia brasileira para criar a experiência educacional mais avançada do país">
+          🚀 <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Inovação em Educação</span>
+        </SectionTitle>
+        
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+          <div className="bg-white p-8 rounded-2xl border-2 border-purple-200 hover:border-purple-400 transition-all duration-300 shadow-lg hover:shadow-xl">
+            <div className="text-center">
+              <div className="text-6xl mb-4">🧠</div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Tutor IA Pessoal</h3>
+              <p className="text-gray-600 text-sm leading-relaxed">IA que adapta conteúdo e ritmo baseado no perfil único de cada aluno, com análise de sentimento e exercícios adaptativos.</p>
+            </div>
+          </div>
+          
+          <div className="bg-white p-8 rounded-2xl border-2 border-blue-200 hover:border-blue-400 transition-all duration-300 shadow-lg hover:shadow-xl">
+            <div className="text-center">
+              <div className="text-6xl mb-4">🔬</div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Laboratórios Virtuais</h3>
+              <p className="text-gray-600 text-sm leading-relaxed">Simulações interativas para física, química, biologia e matemática com experimentos 3D seguros e realistas.</p>
+            </div>
+          </div>
+          
+          <div className="bg-white p-8 rounded-2xl border-2 border-green-200 hover:border-green-400 transition-all duration-300 shadow-lg hover:shadow-xl">
+            <div className="text-center">
+              <div className="text-6xl mb-4">📱</div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Realidade Aumentada</h3>
+              <p className="text-gray-600 text-sm leading-relaxed">AR baseada em navegador para visualizar conceitos abstratos de forma imersiva em múltiplos dispositivos.</p>
+            </div>
+          </div>
+          
+          <div className="bg-white p-8 rounded-2xl border-2 border-orange-200 hover:border-orange-400 transition-all duration-300 shadow-lg hover:shadow-xl">
+            <div className="text-center">
+              <div className="text-6xl mb-4">📲</div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">PWA Offline</h3>
+              <p className="text-gray-600 text-sm leading-relaxed">Progressive Web App com funcionalidades offline completas, instalação nativa e sincronização automática.</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-gradient-to-r from-purple-500 to-pink-600 text-white p-8 rounded-3xl shadow-2xl">
+          <h3 className="text-3xl font-black mb-6 text-center">🌟 Por que HubEdu.ia é Revolucionário?</h3>
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="bg-white/10 p-6 rounded-2xl">
+              <h4 className="text-xl font-bold mb-4 text-purple-300">🔬 Tecnologia de Ponta:</h4>
+              <ul className="space-y-3 text-sm">
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-400 mt-1">•</span>
+                  <span><strong>IA Multimodal:</strong> Processa texto, imagem e áudio simultaneamente</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-400 mt-1">•</span>
+                  <span><strong>IA Avançada:</strong> Tecnologia OpenAI (ChatGPT) e Google (Gemini)</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-400 mt-1">•</span>
+                  <span><strong>Conteúdo Estruturado:</strong> Aulas organizadas com introdução, desenvolvimento e conclusão</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-400 mt-1">•</span>
+                  <span><strong>Cloud Native:</strong> Arquitetura escalável e resiliente</span>
+                </li>
+              </ul>
+            </div>
+            <div className="bg-white/10 p-6 rounded-2xl">
+              <h4 className="text-xl font-bold mb-4 text-pink-300">🎓 Pedagogia Brasileira:</h4>
+              <ul className="space-y-3 text-sm">
+                <li className="flex items-start gap-2">
+                  <span className="text-pink-400 mt-1">•</span>
+                  <span><strong>BNCC Integrada:</strong> Cada conteúdo alinhado com competências</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-pink-400 mt-1">•</span>
+                  <span><strong>Metodologias Ativas:</strong> Aprendizado interativo com quizzes e atividades práticas</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-pink-400 mt-1">•</span>
+                  <span><strong>Gamificação:</strong> Elementos de jogos para engajamento</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-pink-400 mt-1">•</span>
+                  <span><strong>Inclusão Digital:</strong> Acessível para todos os perfis</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>,
+    
+    // Slide 2: Features Overview
+    <section key="features" className="py-16 bg-gradient-to-br from-yellow-50 via-white to-yellow-100">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <SectionTitle subtitle="4 módulos principais + 10 módulos customizados de chat para transformar sua escola">
+          🎮 <span className="bg-gradient-to-r from-yellow-500 to-yellow-700 bg-clip-text text-transparent">Veja Como Funciona</span>
+        </SectionTitle>
+        
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+          {LESSONS_FEATURES.map((feature, index) => (
+            <FeatureCard key={index} feature={feature} index={index} />
+          ))}
+        </div>
+        
+        <div className="text-center">
+          <ChatModulesGrid />
+        </div>
+      </div>
+    </section>,
+    
+    // Slide 3: ENEM Section
+    <section key="enem" className="py-16 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <SectionTitle subtitle="A plataforma mais completa para estudantes brasileiros se prepararem para o Exame Nacional do Ensino Médio - 100% alinhado com a BNCC">
+          🎓 <span className="bg-gradient-to-r from-yellow-500 to-yellow-700 bg-clip-text text-transparent">Preparação Completa para o ENEM</span>
+        </SectionTitle>
+        
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+          {ENEM_FEATURES.map((feature, index) => (
+            <FeatureCard key={index} feature={feature} index={index} />
+          ))}
+        </div>
+        
+        <div className="text-center">
+          <div className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black p-8 rounded-3xl shadow-2xl">
+            <h3 className="text-3xl font-black mb-4">🏆 Por que Escolher Nosso Simulador?</h3>
+            <div className="grid md:grid-cols-3 gap-6">
+              <div className="text-center">
+                <div className="text-4xl mb-3">📈</div>
+                <h4 className="font-bold text-lg mb-2">Resultados Comprovados</h4>
+                <p className="text-sm">Estudantes aumentam 45% no desempenho</p>
+              </div>
+              <div className="text-center">
+                <div className="text-4xl mb-3">🎯</div>
+                <h4 className="font-bold text-lg mb-2">Foco no ENEM</h4>
+                <p className="text-sm">Desenvolvido especificamente para o exame brasileiro</p>
+              </div>
+              <div className="text-center">
+                <div className="text-4xl mb-3">⚡</div>
+                <h4 className="font-bold text-lg mb-2">Tecnologia Avançada</h4>
+                <p className="text-sm">IA que gera questões infinitas e personalizadas</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>,
+    
+    // Slide 4: Schools Section
+    <section key="schools" className="py-16 bg-gradient-to-b from-gray-900 to-black text-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <SectionTitle subtitle="Plataforma completa desenvolvida especificamente para atender as necessidades das instituições de ensino brasileiras - BNCC + LGPD">
+          🏫 <span className="bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">Soluções para Escolas Brasileiras</span>
+        </SectionTitle>
+        
+        <div className="grid md:grid-cols-3 gap-8 mb-16">
+          {SCHOOL_FEATURES.map((feature, index) => (
+            <FeatureCard 
+              key={index} 
+              feature={feature} 
+              index={index}
+              gradient="from-gray-800 to-gray-900"
+              border="border-yellow-400 hover:border-yellow-300"
+            />
+          ))}
+        </div>
+      </div>
+    </section>,
+    
+    // Slide 5: LGPD Compliance Section
+    <section key="lgpd" className="py-16 bg-gradient-to-r from-green-50 to-blue-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <SectionTitle subtitle="Totalmente compatível com a Lei Geral de Proteção de Dados - Privacidade e segurança garantidas">
+          🛡️ <span className="bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">Compliance Total com LGPD</span>
+        </SectionTitle>
+        
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+          <div className="bg-white p-8 rounded-2xl border-2 border-green-200 hover:border-green-400 transition-all duration-300 shadow-lg hover:shadow-xl">
+            <div className="text-center">
+              <div className="text-6xl mb-4">🗑️</div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Conversas Temporárias</h3>
+              <p className="text-gray-600 text-sm leading-relaxed">Conversas são descartadas automaticamente após cada sessão. Informações pessoais não ficam registradas no sistema.</p>
+            </div>
+          </div>
+          
+          <div className="bg-white p-8 rounded-2xl border-2 border-blue-200 hover:border-blue-400 transition-all duration-300 shadow-lg hover:shadow-xl">
+            <div className="text-center">
+              <div className="text-6xl mb-4">🌐</div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Infraestrutura Global</h3>
+              <p className="text-gray-600 text-sm leading-relaxed">Infraestrutura de ponta com tecnologia de nuvem global, garantindo máxima performance e disponibilidade.</p>
+            </div>
+          </div>
+          
+          <div className="bg-white p-8 rounded-2xl border-2 border-purple-200 hover:border-purple-400 transition-all duration-300 shadow-lg hover:shadow-xl">
+            <div className="text-center">
+              <div className="text-6xl mb-4">🔒</div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Criptografia Total</h3>
+              <p className="text-gray-600 text-sm leading-relaxed">Dados protegidos com criptografia de ponta a ponta. Acesso restrito e auditado.</p>
+            </div>
+          </div>
+          
+          <div className="bg-white p-8 rounded-2xl border-2 border-yellow-200 hover:border-yellow-400 transition-all duration-300 shadow-lg hover:shadow-xl">
+            <div className="text-center">
+              <div className="text-6xl mb-4">👶</div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Todas as Idades</h3>
+              <p className="text-gray-600 text-sm leading-relaxed">Plataforma pioneira desenvolvida especificamente para o contexto educacional brasileiro, com foco em segurança e adequação pedagógica.</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-gradient-to-r from-green-500 to-blue-600 text-white p-8 rounded-3xl shadow-2xl">
+          <h3 className="text-3xl font-black mb-6 text-center">🚫 Por que ChatGPT, Grok e Gemini Não Atendem Escolas?</h3>
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="bg-white/10 p-6 rounded-2xl">
+              <h4 className="text-xl font-bold mb-4 text-red-300">❌ Problemas das Outras Plataformas:</h4>
+              <ul className="space-y-3 text-sm">
+                <li className="flex items-start gap-2">
+                  <span className="text-red-400 mt-1">•</span>
+                  <span><strong>Conteúdo não adaptado:</strong> Não há conteúdo específico para idade escolar</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-red-400 mt-1">•</span>
+                  <span><strong>Infraestrutura limitada:</strong> Recursos insuficientes para suportar múltiplos usuários simultâneos</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-red-400 mt-1">•</span>
+                  <span><strong>Armazenamento permanente:</strong> Conversas ficam salvas indefinidamente</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-red-400 mt-1">•</span>
+                  <span><strong>Sem compliance LGPD:</strong> Não atendem regulamentações brasileiras</span>
+                </li>
+              </ul>
+            </div>
+            <div className="bg-white/10 p-6 rounded-2xl">
+              <h4 className="text-xl font-bold mb-4 text-green-300">✅ Soluções HubEdu.ia:</h4>
+              <ul className="space-y-3 text-sm">
+                <li className="flex items-start gap-2">
+                  <span className="text-green-400 mt-1">•</span>
+                  <span><strong>Todas as idades:</strong> Crianças, adolescentes e adultos incluídos</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-green-400 mt-1">•</span>
+                  <span><strong>Infraestrutura global:</strong> Tecnologia de nuvem de ponta para máxima performance</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-green-400 mt-1">•</span>
+                  <span><strong>Conversas temporárias:</strong> Conversas são descartadas automaticamente após cada sessão</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-green-400 mt-1">•</span>
+                  <span><strong>Compliance LGPD:</strong> Atendimento total às regulamentações</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>,
+    
+    // Slide 6: BNCC Compliance Section
+    <section key="bncc" className="py-16 bg-gradient-to-r from-blue-50 to-purple-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <SectionTitle subtitle="Todas as aulas e conteúdos seguem rigorosamente a Base Nacional Comum Curricular brasileira">
+          📚 <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">100% Baseado na BNCC</span>
+        </SectionTitle>
+        
+        <div className="grid md:grid-cols-3 gap-8 mb-16">
+          <div className="bg-white p-8 rounded-2xl border-2 border-blue-200 hover:border-blue-400 transition-all duration-300 shadow-lg hover:shadow-xl">
+            <div className="text-center">
+              <div className="text-6xl mb-4">🎯</div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Competências BNCC</h3>
+              <p className="text-gray-600 text-sm leading-relaxed">Desenvolvimento das 10 competências gerais da BNCC em todas as atividades e aulas.</p>
+            </div>
+          </div>
+          
+          <div className="bg-white p-8 rounded-2xl border-2 border-purple-200 hover:border-purple-400 transition-all duration-300 shadow-lg hover:shadow-xl">
+            <div className="text-center">
+              <div className="text-6xl mb-4">📋</div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Objetivos de Aprendizagem</h3>
+              <p className="text-gray-600 text-sm leading-relaxed">Cada aula alinhada com objetivos específicos da BNCC para cada ano e componente curricular.</p>
+            </div>
+          </div>
+          
+          <div className="bg-white p-8 rounded-2xl border-2 border-green-200 hover:border-green-400 transition-all duration-300 shadow-lg hover:shadow-xl">
+            <div className="text-center">
+              <div className="text-6xl mb-4">🔄</div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Atualizações Automáticas</h3>
+              <p className="text-gray-600 text-sm leading-relaxed">Conteúdo sempre atualizado conforme mudanças na BNCC e diretrizes do MEC.</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-8 rounded-3xl shadow-2xl">
+          <h3 className="text-3xl font-black mb-6 text-center">🎓 Por que a BNCC é Fundamental?</h3>
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="bg-white/10 p-6 rounded-2xl">
+              <h4 className="text-xl font-bold mb-4 text-blue-300">📖 Base Nacional Comum Curricular:</h4>
+              <ul className="space-y-3 text-sm">
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-400 mt-1">•</span>
+                  <span><strong>Padronização:</strong> Conteúdo unificado em todo território nacional</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-400 mt-1">•</span>
+                  <span><strong>Competências:</strong> Desenvolvimento de habilidades do século XXI</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-400 mt-1">•</span>
+                  <span><strong>Flexibilidade:</strong> Adaptação às realidades locais</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-400 mt-1">•</span>
+                  <span><strong>Qualidade:</strong> Garantia de educação de qualidade</span>
+                </li>
+              </ul>
+            </div>
+            <div className="bg-white/10 p-6 rounded-2xl">
+              <h4 className="text-xl font-bold mb-4 text-purple-300">🚀 HubEdu.ia + BNCC:</h4>
+              <ul className="space-y-3 text-sm">
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-400 mt-1">•</span>
+                  <span><strong>IA Alinhada:</strong> Inteligência artificial configurada especificamente para gerar conteúdo baseado na BNCC</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-400 mt-1">•</span>
+                  <span><strong>Conteúdo Personalizado:</strong> Aulas geradas seguindo rigorosamente a BNCC</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-400 mt-1">•</span>
+                  <span><strong>Avaliação BNCC:</strong> Questões e atividades alinhadas com objetivos</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-purple-400 mt-1">•</span>
+                  <span><strong>Relatórios BNCC:</strong> Acompanhamento do desenvolvimento das competências</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>,
+    
+    // Slide 7: Testimonials Section
+    <section key="testimonials" className="py-16 bg-gradient-to-b from-gray-900 to-black text-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <SectionTitle>
+          💬 O que dizem <span className="text-yellow-400">sobre nós</span>
+        </SectionTitle>
+        
+        <div className="grid md:grid-cols-3 gap-8">
+          {TESTIMONIALS.map((testimonial, index) => (
+            <TestimonialCard key={index} testimonial={testimonial} index={index} />
+          ))}
+        </div>
+      </div>
+    </section>,
+    
+    // Slide 8: FAQ Section
+    <section key="faq" className="py-16 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <SectionTitle subtitle="Tire suas principais dúvidas sobre o HubEdu.ia">
+          ❓ Perguntas <span className="text-yellow-500">Frequentes</span>
+        </SectionTitle>
+        
+        <div className="space-y-4">
+          {FAQ_ITEMS.map((item, index) => (
+            <FAQItem 
+              key={index}
+              item={item}
+              index={index}
+              isOpen={openFAQs.has(index)}
+              onToggle={toggleFAQ}
+            />
+          ))}
+        </div>
+      </div>
+    </section>,
+    
+    // Slide 9: Pricing Comparison Section (PENÚLTIMO - DEMO)
+    <section key="demo" className="py-16 bg-gradient-to-r from-yellow-50 to-white">
+      <div className="mx-auto max-w-[1200px] px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-8">
+          <h2 className="text-4xl lg:text-5xl font-bold mb-2">🎮 Demonstração</h2>
+          <p className="text-lg text-gray-600">Versão demo com 5 mensagens</p>
+        </div>
+        <div className="w-full bg-white/95 backdrop-blur rounded-2xl shadow-xl border overflow-hidden flex flex-col">
+          <div className="bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-3 text-white font-medium">HubEdu.ia Chat – Demo</div>
+          <div className="flex-1 relative overflow-y-auto">
+            <div className="flex flex-col h-full">
+              <div className="flex-1 p-4 space-y-4">
+                <div className="bg-gray-100 p-3 rounded-lg">
+                  <p className="text-sm text-gray-700">Olá! Sou o HubEdu.ia. Como posso ajudar você hoje?</p>
+                </div>
+                <div className="bg-blue-100 p-3 rounded-lg ml-8">
+                  <p className="text-sm text-gray-700">Preciso de ajuda com matemática</p>
+                </div>
+                <div className="bg-gray-100 p-3 rounded-lg">
+                  <p className="text-sm text-gray-700">Claro! Vou te ajudar com matemática. Qual tópico específico você gostaria de estudar?</p>
+                </div>
+              </div>
+              <div className="p-4 border-t">
+                <div className="flex space-x-2">
+                  <input
+                    type="text"
+                    placeholder="Digite sua mensagem..."
+                    className="flex-1 p-2 border rounded-lg text-sm"
+                    disabled
+                  />
+                  <button className="px-4 py-2 bg-yellow-500 text-black rounded-lg text-sm flex items-center gap-2" disabled>
+                    <ArrowRight className="w-4 h-4" />
+                    Enviar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  ];
+
   return (
     <div className="min-h-screen w-full overflow-x-hidden">
       {/* Launch Banner */}
@@ -593,653 +1191,115 @@ const HubEduLanding = () => {
         🚀 EM BREVE - Aulas por IA + Simulador ENEM + Chat Inteligente = Educação Brasileira do Futuro
       </div>
 
-      {/* Header */}
-      <header className={headerClasses}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+      {/* Header com controles de navegação */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur border-b border-slate-200">
+        <div className="flex items-center justify-between px-4 py-2">
           <div className="flex items-center gap-3">
-            <Image 
-              src="/assets/Logo_HubEdu.ia.svg" 
-              alt="HubEdu.ia Logo" 
-              width={40}
-              height={40}
-              className="h-10 w-auto"
-            />
-            <div className="text-xl font-bold">
-              <span className="text-black">Hub</span>
-              <span className="text-yellow-500">Edu</span>
-              <span className="text-black">.ia</span>
+            <Image src="/assets/Logo_HubEdu.ia.svg" alt="HubEdu.ia" width={32} height={32} className="h-8 w-8" />
+            <div className="text-lg font-bold text-gray-900">
+              Hub<span className="text-yellow-500">Edu</span>.ia
             </div>
           </div>
-          
-          <button 
-            disabled
-            className="px-6 py-3 bg-gray-400 text-white font-bold rounded-xl shadow-lg flex items-center gap-2 cursor-not-allowed"
-          >
-            <LogIn className="w-4 h-4" />
-            EM BREVE
-            <ArrowRight className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-4">
+            <div className="flex gap-1">
+              {slides.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => goToSlide(index)}
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    index === currentSlide ? "w-6 bg-yellow-500" : "w-2 bg-slate-300 hover:bg-slate-400"
+                  }`}
+                  title={`Slide ${index + 1}`}
+                />
+              ))}
+            </div>
+            <button
+              onClick={toggleFullscreen}
+              className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+              title={isFullscreen ? "Sair do modo tela cheia" : "Modo tela cheia"}
+            >
+              {isFullscreen ? "⛶" : "⛶"}
+            </button>
+          </div>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="bg-gradient-to-br from-yellow-50 via-white to-yellow-100 text-black pt-24 pb-16 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-10 left-10 w-96 h-96 bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-10 right-10 w-80 h-80 bg-gradient-to-r from-yellow-500 to-yellow-700 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '3s' }} />
-        </div>
-        
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-6 py-3 rounded-full text-sm font-bold mb-6 shadow-lg">
-              <Rocket className="w-5 h-5" />
-              🚀 EM BREVE - Aulas por IA + Simulador ENEM + Chat Inteligente = Educação Brasileira do Futuro
+      {/* Conteúdo dos slides */}
+      <div className="relative min-h-screen pt-16">
+        <div className="relative h-screen overflow-hidden">
+          {slides.map((slide, index) => (
+            <div
+              key={index}
+              className={`absolute inset-0 transition-opacity duration-500 ${
+                index === currentSlide ? "opacity-100" : "opacity-0"
+              }`}
+            >
+              <div className="min-h-full w-full">
+                <div className="min-h-screen">
+                  {slide}
+                </div>
+              </div>
             </div>
-
-            <div className="flex justify-center mb-6">
-              <Image 
-                src="/assets/Logo_HubEdu.ia.svg" 
-                alt="HubEdu.ia Logo" 
-                width={120}
-                height={120}
-                className="h-20 w-auto"
-              />
-            </div>
-
-            <h1 className="text-5xl lg:text-7xl font-black mb-6 leading-tight text-black">
-              <span className="bg-gradient-to-r from-yellow-500 to-yellow-700 bg-clip-text text-transparent">
-                {BRAND.name}
-              </span>
-              <br />
-              <span className="text-3xl lg:text-5xl font-bold text-gray-800">
-                {BRAND.tagline}
-              </span>
-            </h1>
-            
-            <p className="text-xl lg:text-2xl mb-8 text-gray-700 leading-relaxed max-w-4xl mx-auto font-medium">
-              {BRAND.description}
-            </p>
-            
-            {/* CTAs */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-              <button 
-                className="px-8 py-4 bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black font-black text-lg shadow-2xl rounded-2xl flex items-center justify-center gap-3 cursor-not-allowed transition-all duration-300"
-                disabled
+          ))}
+          
+          {/* Controles de navegação */}
+          <div className="absolute inset-x-0 bottom-6 z-20 px-4">
+            <div className="mx-auto flex w-full max-w-4xl items-center justify-between gap-4 rounded-full bg-white/90 px-6 py-3 shadow-xl backdrop-blur">
+              <button
+                onClick={prevSlide}
+                disabled={currentSlide === 0}
+                className="flex items-center gap-2 rounded-full border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Play className="w-5 h-5" />
-                Em Breve
+                ← Anterior
               </button>
-              <button 
-                className="px-8 py-4 border-2 border-yellow-400 hover:bg-yellow-400 hover:text-black text-yellow-600 font-bold text-lg rounded-2xl flex items-center justify-center gap-3 cursor-not-allowed transition-all duration-300"
-                disabled
+              <div className="flex flex-col items-center text-center">
+                <span className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
+                  Slide {currentSlide + 1}/{slides.length}
+                </span>
+                <span className="text-sm font-semibold text-slate-700">
+                  {currentSlide === 0 && "Hero"}
+                  {currentSlide === 1 && "Inovação"}
+                  {currentSlide === 2 && "Funcionalidades"}
+                  {currentSlide === 3 && "ENEM"}
+                  {currentSlide === 4 && "Escolas"}
+                  {currentSlide === 5 && "LGPD"}
+                  {currentSlide === 6 && "BNCC"}
+                  {currentSlide === 7 && "Depoimentos"}
+                  {currentSlide === 8 && "FAQ"}
+                  {currentSlide === 9 && "Demo"}
+                </span>
+              </div>
+              <button
+                onClick={nextSlide}
+                disabled={currentSlide === slides.length - 1}
+                className="flex items-center gap-2 rounded-full border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Phone className="w-5 h-5" />
-                Ver Demonstração
-                <ArrowRight className="w-5 h-5" />
+                Próximo →
               </button>
             </div>
-            
-            {/* Modules Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {HERO_MODULES.map((module, index) => (
-                <ModuleCard key={index} module={module} />
-              ))}
-            </div>
           </div>
         </div>
-      </section>
-
-
-
-
-      {/* Innovation Section */}
-      <section className="py-16 bg-gradient-to-r from-purple-50 to-pink-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <SectionTitle subtitle="Tecnologia de ponta combinada com pedagogia brasileira para criar a experiência educacional mais avançada do país">
-            🚀 <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Inovação em Educação</span>
-          </SectionTitle>
-          
-          <div className="grid md:grid-cols-3 gap-8 mb-16">
-            <div className="bg-white p-8 rounded-2xl border-2 border-purple-200 hover:border-purple-400 transition-all duration-300 shadow-lg hover:shadow-xl">
-              <div className="text-center">
-                <div className="text-6xl mb-4">🧠</div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">IA Generativa Avançada</h3>
-                <p className="text-gray-600 text-sm leading-relaxed">Algoritmos de última geração que criam conteúdo educacional personalizado em tempo real, adaptando-se ao perfil de cada aluno.</p>
-              </div>
-            </div>
-            
-            <div className="bg-white p-8 rounded-2xl border-2 border-pink-200 hover:border-pink-400 transition-all duration-300 shadow-lg hover:shadow-xl">
-              <div className="text-center">
-                <div className="text-6xl mb-4">🤖</div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">Correção Automática</h3>
-                <p className="text-gray-600 text-sm leading-relaxed">IA avançada corrige redações, simulados e atividades instantaneamente, seguindo critérios oficiais do ENEM e BNCC.</p>
-              </div>
-            </div>
-            
-            <div className="bg-white p-8 rounded-2xl border-2 border-blue-200 hover:border-blue-400 transition-all duration-300 shadow-lg hover:shadow-xl">
-              <div className="text-center">
-                <div className="text-6xl mb-4">📚</div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">Aulas Estruturadas</h3>
-                <p className="text-gray-600 text-sm leading-relaxed">Slides organizados com introdução, desenvolvimento e conclusão, incluindo atividades práticas e quizzes interativos.</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-gradient-to-r from-purple-500 to-pink-600 text-white p-8 rounded-3xl shadow-2xl">
-            <h3 className="text-3xl font-black mb-6 text-center">🌟 Por que HubEdu.ia é Revolucionário?</h3>
-            <div className="grid md:grid-cols-2 gap-8">
-              <div className="bg-white/10 p-6 rounded-2xl">
-                <h4 className="text-xl font-bold mb-4 text-purple-300">🔬 Tecnologia de Ponta:</h4>
-                <ul className="space-y-3 text-sm">
-                  <li className="flex items-start gap-2">
-                    <span className="text-purple-400 mt-1">•</span>
-                    <span><strong>IA Multimodal:</strong> Processa texto, imagem e áudio simultaneamente</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-purple-400 mt-1">•</span>
-                    <span><strong>IA Avançada:</strong> Tecnologia OpenAI (ChatGPT) e Google (Gemini)</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-purple-400 mt-1">•</span>
-                    <span><strong>Conteúdo Estruturado:</strong> Aulas organizadas com introdução, desenvolvimento e conclusão</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-purple-400 mt-1">•</span>
-                    <span><strong>Cloud Native:</strong> Arquitetura escalável e resiliente</span>
-                  </li>
-                </ul>
-              </div>
-              <div className="bg-white/10 p-6 rounded-2xl">
-                <h4 className="text-xl font-bold mb-4 text-pink-300">🎓 Pedagogia Brasileira:</h4>
-                <ul className="space-y-3 text-sm">
-                  <li className="flex items-start gap-2">
-                    <span className="text-pink-400 mt-1">•</span>
-                    <span><strong>BNCC Integrada:</strong> Cada conteúdo alinhado com competências</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-pink-400 mt-1">•</span>
-                    <span><strong>Metodologias Ativas:</strong> Aprendizado interativo com quizzes e atividades práticas</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-pink-400 mt-1">•</span>
-                    <span><strong>Gamificação:</strong> Elementos de jogos para engajamento</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-pink-400 mt-1">•</span>
-                    <span><strong>Inclusão Digital:</strong> Acessível para todos os perfis</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Overview */}
-      <section className="py-16 bg-gradient-to-br from-yellow-50 via-white to-yellow-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <SectionTitle subtitle="4 módulos principais + 10 módulos customizados de chat para transformar sua escola">
-            🎮 <span className="bg-gradient-to-r from-yellow-500 to-yellow-700 bg-clip-text text-transparent">Veja Como Funciona</span>
-          </SectionTitle>
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
-            {LESSONS_FEATURES.map((feature, index) => (
-              <FeatureCard key={index} feature={feature} index={index} />
-            ))}
-          </div>
-          
-          <div className="text-center">
-            <ChatModulesGrid />
-          </div>
-        </div>
-      </section>
-
-      {/* ENEM Section */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <SectionTitle subtitle="A plataforma mais completa para estudantes brasileiros se prepararem para o Exame Nacional do Ensino Médio - 100% alinhado com a BNCC">
-            🎓 <span className="bg-gradient-to-r from-yellow-500 to-yellow-700 bg-clip-text text-transparent">Preparação Completa para o ENEM</span>
-          </SectionTitle>
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
-            {ENEM_FEATURES.map((feature, index) => (
-              <FeatureCard key={index} feature={feature} index={index} />
-            ))}
-          </div>
-          
-          <div className="text-center">
-            <div className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black p-8 rounded-3xl shadow-2xl">
-              <h3 className="text-3xl font-black mb-4">🏆 Por que Escolher Nosso Simulador?</h3>
-              <div className="grid md:grid-cols-3 gap-6">
-                <div className="text-center">
-                  <div className="text-4xl mb-3">📈</div>
-                  <h4 className="font-bold text-lg mb-2">Resultados Comprovados</h4>
-                  <p className="text-sm">Estudantes aumentam 45% no desempenho</p>
-                </div>
-                <div className="text-center">
-                  <div className="text-4xl mb-3">🎯</div>
-                  <h4 className="font-bold text-lg mb-2">Foco no ENEM</h4>
-                  <p className="text-sm">Desenvolvido especificamente para o exame brasileiro</p>
-                </div>
-                <div className="text-center">
-                  <div className="text-4xl mb-3">⚡</div>
-                  <h4 className="font-bold text-lg mb-2">Tecnologia Avançada</h4>
-                  <p className="text-sm">IA que gera questões infinitas e personalizadas</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Schools Section */}
-      <section className="py-16 bg-gradient-to-b from-gray-900 to-black text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <SectionTitle subtitle="Plataforma completa desenvolvida especificamente para atender as necessidades das instituições de ensino brasileiras - BNCC + LGPD">
-            🏫 <span className="bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">Soluções para Escolas Brasileiras</span>
-          </SectionTitle>
-          
-          <div className="grid md:grid-cols-3 gap-8 mb-16">
-            {SCHOOL_FEATURES.map((feature, index) => (
-              <FeatureCard 
-                key={index} 
-                feature={feature} 
-                index={index}
-                gradient="from-gray-800 to-gray-900"
-                border="border-yellow-400 hover:border-yellow-300"
-              />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* LGPD Compliance Section */}
-      <section className="py-16 bg-gradient-to-r from-green-50 to-blue-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <SectionTitle subtitle="Totalmente compatível com a Lei Geral de Proteção de Dados - Privacidade e segurança garantidas">
-            🛡️ <span className="bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">Compliance Total com LGPD</span>
-          </SectionTitle>
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
-            <div className="bg-white p-8 rounded-2xl border-2 border-green-200 hover:border-green-400 transition-all duration-300 shadow-lg hover:shadow-xl">
-              <div className="text-center">
-                <div className="text-6xl mb-4">🗑️</div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">Conversas Temporárias</h3>
-                <p className="text-gray-600 text-sm leading-relaxed">Conversas são descartadas automaticamente após cada sessão. Informações pessoais não ficam registradas no sistema.</p>
-              </div>
-            </div>
-            
-            <div className="bg-white p-8 rounded-2xl border-2 border-blue-200 hover:border-blue-400 transition-all duration-300 shadow-lg hover:shadow-xl">
-              <div className="text-center">
-                <div className="text-6xl mb-4">🌐</div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">Infraestrutura Global</h3>
-                <p className="text-gray-600 text-sm leading-relaxed">Infraestrutura de ponta com tecnologia de nuvem global, garantindo máxima performance e disponibilidade.</p>
-              </div>
-            </div>
-            
-            <div className="bg-white p-8 rounded-2xl border-2 border-purple-200 hover:border-purple-400 transition-all duration-300 shadow-lg hover:shadow-xl">
-              <div className="text-center">
-                <div className="text-6xl mb-4">🔒</div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">Criptografia Total</h3>
-                <p className="text-gray-600 text-sm leading-relaxed">Dados protegidos com criptografia de ponta a ponta. Acesso restrito e auditado.</p>
-              </div>
-            </div>
-            
-            <div className="bg-white p-8 rounded-2xl border-2 border-yellow-200 hover:border-yellow-400 transition-all duration-300 shadow-lg hover:shadow-xl">
-              <div className="text-center">
-                <div className="text-6xl mb-4">👶</div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">Todas as Idades</h3>
-                <p className="text-gray-600 text-sm leading-relaxed">Plataforma pioneira desenvolvida especificamente para o contexto educacional brasileiro, com foco em segurança e adequação pedagógica.</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-gradient-to-r from-green-500 to-blue-600 text-white p-8 rounded-3xl shadow-2xl">
-            <h3 className="text-3xl font-black mb-6 text-center">🚫 Por que ChatGPT, Grok e Gemini Não Atendem Escolas?</h3>
-            <div className="grid md:grid-cols-2 gap-8">
-              <div className="bg-white/10 p-6 rounded-2xl">
-                <h4 className="text-xl font-bold mb-4 text-red-300">❌ Problemas das Outras Plataformas:</h4>
-                <ul className="space-y-3 text-sm">
-                  <li className="flex items-start gap-2">
-                    <span className="text-red-400 mt-1">•</span>
-                    <span><strong>Conteúdo não adaptado:</strong> Não há conteúdo específico para idade escolar</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-red-400 mt-1">•</span>
-                    <span><strong>Infraestrutura limitada:</strong> Recursos insuficientes para suportar múltiplos usuários simultâneos</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-red-400 mt-1">•</span>
-                    <span><strong>Armazenamento permanente:</strong> Conversas ficam salvas indefinidamente</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-red-400 mt-1">•</span>
-                    <span><strong>Sem compliance LGPD:</strong> Não atendem regulamentações brasileiras</span>
-                  </li>
-                </ul>
-              </div>
-              <div className="bg-white/10 p-6 rounded-2xl">
-                <h4 className="text-xl font-bold mb-4 text-green-300">✅ Soluções HubEdu.ia:</h4>
-                <ul className="space-y-3 text-sm">
-                  <li className="flex items-start gap-2">
-                    <span className="text-green-400 mt-1">•</span>
-                    <span><strong>Todas as idades:</strong> Crianças, adolescentes e adultos incluídos</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-green-400 mt-1">•</span>
-                    <span><strong>Infraestrutura global:</strong> Tecnologia de nuvem de ponta para máxima performance</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-green-400 mt-1">•</span>
-                    <span><strong>Conversas temporárias:</strong> Conversas são descartadas automaticamente após cada sessão</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-green-400 mt-1">•</span>
-                    <span><strong>Compliance LGPD:</strong> Atendimento total às regulamentações</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* BNCC Compliance Section */}
-      <section className="py-16 bg-gradient-to-r from-blue-50 to-purple-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <SectionTitle subtitle="Todas as aulas e conteúdos seguem rigorosamente a Base Nacional Comum Curricular brasileira">
-            📚 <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">100% Baseado na BNCC</span>
-          </SectionTitle>
-          
-          <div className="grid md:grid-cols-3 gap-8 mb-16">
-            <div className="bg-white p-8 rounded-2xl border-2 border-blue-200 hover:border-blue-400 transition-all duration-300 shadow-lg hover:shadow-xl">
-              <div className="text-center">
-                <div className="text-6xl mb-4">🎯</div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">Competências BNCC</h3>
-                <p className="text-gray-600 text-sm leading-relaxed">Desenvolvimento das 10 competências gerais da BNCC em todas as atividades e aulas.</p>
-              </div>
-            </div>
-            
-            <div className="bg-white p-8 rounded-2xl border-2 border-purple-200 hover:border-purple-400 transition-all duration-300 shadow-lg hover:shadow-xl">
-              <div className="text-center">
-                <div className="text-6xl mb-4">📋</div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">Objetivos de Aprendizagem</h3>
-                <p className="text-gray-600 text-sm leading-relaxed">Cada aula alinhada com objetivos específicos da BNCC para cada ano e componente curricular.</p>
-              </div>
-            </div>
-            
-            <div className="bg-white p-8 rounded-2xl border-2 border-green-200 hover:border-green-400 transition-all duration-300 shadow-lg hover:shadow-xl">
-              <div className="text-center">
-                <div className="text-6xl mb-4">🔄</div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">Atualizações Automáticas</h3>
-                <p className="text-gray-600 text-sm leading-relaxed">Conteúdo sempre atualizado conforme mudanças na BNCC e diretrizes do MEC.</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-8 rounded-3xl shadow-2xl">
-            <h3 className="text-3xl font-black mb-6 text-center">🎓 Por que a BNCC é Fundamental?</h3>
-            <div className="grid md:grid-cols-2 gap-8">
-              <div className="bg-white/10 p-6 rounded-2xl">
-                <h4 className="text-xl font-bold mb-4 text-blue-300">📖 Base Nacional Comum Curricular:</h4>
-                <ul className="space-y-3 text-sm">
-                  <li className="flex items-start gap-2">
-                    <span className="text-blue-400 mt-1">•</span>
-                    <span><strong>Padronização:</strong> Conteúdo unificado em todo território nacional</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-blue-400 mt-1">•</span>
-                    <span><strong>Competências:</strong> Desenvolvimento de habilidades do século XXI</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-blue-400 mt-1">•</span>
-                    <span><strong>Flexibilidade:</strong> Adaptação às realidades locais</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-blue-400 mt-1">•</span>
-                    <span><strong>Qualidade:</strong> Garantia de educação de qualidade</span>
-                  </li>
-                </ul>
-              </div>
-              <div className="bg-white/10 p-6 rounded-2xl">
-                <h4 className="text-xl font-bold mb-4 text-purple-300">🚀 HubEdu.ia + BNCC:</h4>
-                <ul className="space-y-3 text-sm">
-                  <li className="flex items-start gap-2">
-                    <span className="text-purple-400 mt-1">•</span>
-                    <span><strong>IA Alinhada:</strong> Inteligência artificial configurada especificamente para gerar conteúdo baseado na BNCC</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-purple-400 mt-1">•</span>
-                    <span><strong>Conteúdo Personalizado:</strong> Aulas geradas seguindo rigorosamente a BNCC</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-purple-400 mt-1">•</span>
-                    <span><strong>Avaliação BNCC:</strong> Questões e atividades alinhadas com objetivos</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-purple-400 mt-1">•</span>
-                    <span><strong>Relatórios BNCC:</strong> Acompanhamento do desenvolvimento das competências</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials Section */}
-      <section className="py-16 bg-gradient-to-b from-gray-900 to-black text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <SectionTitle>
-            💬 O que dizem <span className="text-yellow-400">sobre nós</span>
-          </SectionTitle>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            {TESTIMONIALS.map((testimonial, index) => (
-              <TestimonialCard key={index} testimonial={testimonial} index={index} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ Section */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <SectionTitle subtitle="Tire suas principais dúvidas sobre o HubEdu.ia">
-            ❓ Perguntas <span className="text-yellow-500">Frequentes</span>
-          </SectionTitle>
-          
-          <div className="space-y-4">
-            {FAQ_ITEMS.map((item, index) => (
-              <FAQItem 
-                key={index}
-                item={item}
-                index={index}
-                isOpen={openFAQs.has(index)}
-                onToggle={toggleFAQ}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing Comparison Section */}
-      <section className="py-16 bg-gradient-to-br from-yellow-50 via-white to-yellow-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <SectionTitle subtitle="Comparativo com as principais plataformas de IA - Única com BNCC + LGPD">
-            💰 <span className="bg-gradient-to-r from-yellow-500 to-yellow-700 bg-clip-text text-transparent">Por que Escolher HubEdu.ia?</span>
-          </SectionTitle>
-          
-          <div className="grid md:grid-cols-3 gap-8 mb-12">
-            {COMPETITORS.map((competitor, index) => (
-              <CompetitorCard key={index} competitor={competitor} />
-            ))}
-            <CompetitorCard 
-              competitor={{ name: "HubEdu.ia", icon: "🎓" }} 
-              isSpecial={true} 
-            />
-          </div>
-          
-          <div className="text-center bg-gradient-to-r from-yellow-400 to-yellow-600 text-black p-8 rounded-3xl shadow-2xl">
-            <h3 className="text-3xl font-black mb-4">🎯 Por que HubEdu.ia é Superior?</h3>
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="text-left">
-                <h4 className="font-bold text-lg mb-3">🚫 Problemas das Outras Plataformas:</h4>
-                <ul className="space-y-2 text-sm">
-                  <li>• <strong>Conteúdo não adaptado:</strong> Não há conteúdo específico para idade escolar</li>
-                  <li>• <strong>Preço alto:</strong> US$ 20-30/mês por usuário (~R$ 106-159/mês)</li>
-                  <li>• <strong>Sem BNCC:</strong> Não baseado na Base Nacional Comum Curricular</li>
-                  <li>• <strong>Sem LGPD:</strong> Conversas salvas permanentemente, sem proteção adequada de dados</li>
-                  <li>• <strong>Sem simulador ENEM:</strong> Não atendem necessidades específicas brasileiras</li>
-                  <li>• <strong>Sem conteúdo educacional:</strong> Não desenvolvido para escolas brasileiras</li>
-                </ul>
-              </div>
-              <div className="text-left">
-                <h4 className="font-bold text-lg mb-3">✅ Soluções HubEdu.ia:</h4>
-                <ul className="space-y-2 text-sm">
-                  <li>• <strong>Todas as idades:</strong> Crianças, adolescentes e adultos incluídos</li>
-                  <li>• <strong>Preço especial:</strong> Valor competitivo para escolas brasileiras</li>
-                  <li>• <strong>100% BNCC:</strong> Conteúdo rigorosamente alinhado com currículo nacional</li>
-                  <li>• <strong>Total LGPD:</strong> Conversas temporárias (apagadas automaticamente), infraestrutura global, criptografia total</li>
-                  <li>• <strong>Simulador ENEM:</strong> +3000 questões oficiais brasileiras</li>
-                  <li>• <strong>Educação brasileira:</strong> Desenvolvido especificamente para escolas do Brasil</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Final CTA Section */}
-      <section className="bg-gradient-to-b from-neutral-950 to-neutral-900 text-white py-16 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-yellow-400 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-yellow-400 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-        </div>
-        
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <h2 className="text-4xl sm:text-5xl font-extrabold text-white mb-6">
-            A Educação do Futuro Chega Em Breve
-          </h2>
-          <p className="text-xl mb-8 text-gray-300 max-w-3xl mx-auto leading-relaxed">
-            Prepare sua escola para uma nova era. BNCC + LGPD + IA = Educação brasileira do futuro.
-          </p>
-          
-          <div className="bg-gradient-to-r from-gray-800 to-gray-900 p-8 rounded-2xl mb-12 border border-gray-700">
-            <h3 className="text-2xl font-bold mb-6 text-yellow-400">🎯 4 Módulos Principais:</h3>
-            <div className="grid md:grid-cols-2 gap-6 mb-6">
-              {[
-                { title: "Aulas Interativas", desc: "30-40 min (assíncronas) geradas por IA - alunos assistem no seu próprio ritmo", icon: "🎮", color: "from-blue-500 to-blue-600" },
-                { title: "Simulador ENEM", desc: "+3000 questões oficiais + infinitas por IA", icon: "📚", color: "from-green-500 to-green-600" },
-                { title: "Redação ENEM", desc: "Correção automática com temas oficiais", icon: "✍️", color: "from-purple-500 to-purple-600" },
-                { title: "Chat Inteligente", desc: "10 módulos customizados para toda escola", icon: "💬", color: "from-yellow-500 to-yellow-600" }
-              ].map((feature, index) => (
-                <div key={index} className="flex items-center gap-4 p-4 bg-gray-700/50 rounded-xl border border-gray-600">
-                  <div className={`text-3xl p-3 rounded-xl bg-gradient-to-r ${feature.color} text-white shadow-lg`}>
-                    {feature.icon}
-                  </div>
-                  <div>
-                    <div className="text-gray-300 font-bold text-lg">{feature.title}</div>
-                    <div className="text-gray-400 text-sm">{feature.desc}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="text-center">
-              <div className="flex items-center justify-center gap-3 p-3 bg-gray-700/50 rounded-xl">
-                <CheckCircle className="w-6 h-6 text-yellow-400 flex-shrink-0" />
-                <span className="text-gray-300 font-medium">Suporte nacional e configuração rápida</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex flex-col sm:flex-row gap-6 justify-center">
-            <button 
-              className="px-8 py-4 bg-gray-400 text-white font-bold text-lg rounded-xl shadow-lg flex items-center justify-center gap-2 cursor-not-allowed"
-              disabled
-            >
-              <Play className="w-5 h-5" />
-              Em Breve
-            </button>
-            <button 
-              className="px-8 py-4 border-2 border-gray-400 text-gray-400 font-semibold rounded-xl flex items-center justify-center gap-2 cursor-not-allowed"
-              disabled
-            >
-              <MessageSquare className="w-5 h-5" />
-              Agendar Demonstração
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-gradient-to-b from-gray-900 to-black text-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <div className="flex justify-center items-center gap-3 mb-6">
-              <Image 
-                src="/assets/Logo_HubEdu.ia.svg" 
-                alt="HubEdu.ia Logo" 
-                width={60}
-                height={60}
-                className="h-15 w-auto"
-              />
-              <div className="text-3xl font-bold">
-                <span className="text-white">Hub</span>
-                <span className="text-yellow-400">Edu</span>
-                <span className="text-white">.ia</span>
-              </div>
-            </div>
-            
-            <div className="flex justify-center items-center gap-3 mb-6">
-              <Mail className="w-6 h-6 text-yellow-400" />
-              <a 
-                href="mailto:contato@hubedu.ia.br"
-                className="text-xl font-semibold text-white hover:text-yellow-400 transition-colors"
-              >
-                contato@hubedu.ia.br
-              </a>
-            </div>
-          </div>
-          
-          <div className="border-t border-gray-800 pt-8">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-              <p className="text-gray-500 text-sm">
-                © 2025 HubEdu.ia - Transformando a educação
-              </p>
-              <div className="flex gap-6 text-sm text-gray-500">
-                <button
-                  onClick={() => toggleModal('privacy')}
-                  className="hover:text-yellow-400 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-400 rounded px-3 py-1 border border-gray-600 hover:border-yellow-400"
-                >
-                  Privacidade
-                </button>
-                <button
-                  onClick={() => toggleModal('terms')}
-                  className="hover:text-yellow-400 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-400 rounded px-3 py-1 border border-gray-600 hover:border-yellow-400"
-                >
-                  Termos
-                </button>
-                <button
-                  onClick={() => toggleModal('lgpd')}
-                  className="hover:text-yellow-400 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-400 rounded px-3 py-1 border border-gray-600 hover:border-yellow-400"
-                >
-                  LGPD
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer>
+      </div>
 
       {/* Modals */}
-      <Suspense fallback={null}>
-        {modalsState.privacy && <PrivacyPolicyModal isOpen={modalsState.privacy} onClose={() => toggleModal('privacy')} />}
-        {modalsState.terms && <TermsOfUseModal isOpen={modalsState.terms} onClose={() => toggleModal('terms')} />}
-        {modalsState.lgpd && <LGPDModal isOpen={modalsState.lgpd} onClose={() => toggleModal('lgpd')} />}
+      <Suspense fallback={<div>Carregando...</div>}>
+        <PrivacyPolicyModal 
+          isOpen={modalsState.privacy} 
+          onClose={() => toggleModal('privacy')} 
+        />
+        <TermsOfUseModal 
+          isOpen={modalsState.terms} 
+          onClose={() => toggleModal('terms')} 
+        />
+        <LGPDModal 
+          isOpen={modalsState.lgpd} 
+          onClose={() => toggleModal('lgpd')} 
+        />
       </Suspense>
     </div>
   );
 };
+
+// Viewport configuration is handled in the root layout.tsx
 
 export default HubEduLanding;

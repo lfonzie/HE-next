@@ -469,7 +469,7 @@ export function EnemSimulatorV2({
       const timeSpent = Math.floor((Date.now() - questionStartTime) / 1000)
       
       const response: EnemResponse = {
-        response_id: `resp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        response_id: `resp_${typeof window !== 'undefined' ? Date.now() : 0}_${typeof window !== 'undefined' ? Math.random().toString(36).substr(2, 9) : 'server'}`,
         session_id: sessionId,
         item_id: currentItem.item_id,
         selected_answer: answer as "A" | "B" | "C" | "D" | "E",

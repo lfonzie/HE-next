@@ -1,226 +1,264 @@
-// Service Worker para HubEdu.ia
-// Cache do app shell para carregamento instantâneo
+const CACHE_NAME = 'hubedu-v1.0.0';
+const STATIC_CACHE_NAME = 'hubedu-static-v1.0.0';
+const DYNAMIC_CACHE_NAME = 'hubedu-dynamic-v1.0.0';
 
-const CACHE_NAME = 'hubedu-v6';
-const STATIC_CACHE = 'hubedu-static-v4';
-const DYNAMIC_CACHE = 'hubedu-dynamic-v4';
-
-// Recursos essenciais para cache imediato
+// Recursos estáticos para cache
 const STATIC_ASSETS = [
   '/',
-  '/manifest.webmanifest',
-  '/browserconfig.xml',
-  '/favicon.ico',
-  '/favicon.svg'
+  '/manifest.json',
+  '/offline.html',
+  '/android-chrome-192x192.png',
+  '/android-chrome-512x512.png',
+  '/apple-touch-icon.png',
+  '/favicon-32x32.png',
+  '/favicon-16x16.png',
+  '/assets/Logo_HubEdu.ia.svg'
 ];
 
-// Instalação do SW
+// APIs que devem ser cacheadas
+const API_CACHE_PATTERNS = [
+  /^\/api\/health/,
+  /^\/api\/enem\/questions/,
+  /^\/api\/aulas/,
+  /^\/api\/chat/
+];
+
+// Instalação do Service Worker
 self.addEventListener('install', (event) => {
-  console.log('[SW] Instalando...');
+  console.log('Service Worker: Instalando...');
   
   event.waitUntil(
-    caches.open(STATIC_CACHE)
+    caches.open(STATIC_CACHE_NAME)
       .then((cache) => {
-        console.log('[SW] Cacheando recursos estáticos');
-        // Cache individualmente para evitar falhas em recursos não encontrados
-        return Promise.allSettled(
-          STATIC_ASSETS.map(asset => 
-            cache.add(asset).catch(err => {
-              console.warn(`[SW] Não foi possível cachear ${asset}:`, err);
-              return null;
-            })
-          )
-        );
+        console.log('Service Worker: Cacheando recursos estáticos');
+        return cache.addAll(STATIC_ASSETS);
       })
       .then(() => {
-        console.log('[SW] Instalação concluída');
+        console.log('Service Worker: Instalação concluída');
         return self.skipWaiting();
       })
       .catch((error) => {
-        console.error('[SW] Erro na instalação:', error);
-        // Mesmo com erro, continua a instalação
-        return self.skipWaiting();
+        console.error('Service Worker: Erro na instalação', error);
       })
   );
 });
 
-// Ativação do SW
+// Ativação do Service Worker
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Ativando...');
+  console.log('Service Worker: Ativando...');
   
   event.waitUntil(
     caches.keys()
       .then((cacheNames) => {
         return Promise.all(
           cacheNames.map((cacheName) => {
-            // Limpar todos os caches antigos (v5 e anteriores)
-            if (cacheName.includes('hubedu-v5') || cacheName.includes('hubedu-v4') || cacheName.includes('hubedu-v3') || 
-                (cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE)) {
-              console.log('[SW] Removendo cache antigo:', cacheName);
+            if (cacheName !== STATIC_CACHE_NAME && cacheName !== DYNAMIC_CACHE_NAME) {
+              console.log('Service Worker: Removendo cache antigo:', cacheName);
               return caches.delete(cacheName);
             }
           })
         );
       })
       .then(() => {
-        console.log('[SW] Ativação concluída');
+        console.log('Service Worker: Ativação concluída');
         return self.clients.claim();
       })
   );
 });
 
-// Interceptação de requests
+// Interceptação de requisições
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
-  
-  // Em desenvolvimento, não interceptar NENHUM request
-  if (url.hostname === '127.0.0.1' || url.hostname === 'localhost') {
+
+  // Ignora requisições não-HTTP
+  if (!request.url.startsWith('http')) {
     return;
   }
-  
-  // Ignorar requests que não devem ser interceptados
-  if (shouldIgnoreRequest(request)) {
-    return;
-  }
-  
-  // Para desenvolvimento, usar Network First para evitar problemas de cache
+
+  // Estratégia para diferentes tipos de recursos
   if (request.method === 'GET') {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          // Se a resposta é válida, cacheia e retorna
-          if (response.status === 200) {
-            const responseClone = response.clone();
-            
-            // Cacheia recursos estáticos
-            if (isStaticAsset(request.url)) {
-              caches.open(STATIC_CACHE)
-                .then((cache) => {
-                  cache.put(request, responseClone);
-                })
-                .catch((error) => {
-                  console.warn('[SW] Erro ao cachear recurso estático:', error);
-                });
-            }
-            // Cacheia outros recursos dinamicamente
-            else if (isCacheable(request)) {
-              caches.open(DYNAMIC_CACHE)
-                .then((cache) => {
-                  cache.put(request, responseClone);
-                })
-                .catch((error) => {
-                  console.warn('[SW] Erro ao cachear recurso dinâmico:', error);
-                });
-            }
-          }
-          
-          return response;
-        })
-        .catch((error) => {
-          // Silenciar erros de fetch em desenvolvimento
-          if (url.hostname === '127.0.0.1' || url.hostname === 'localhost') {
-            console.warn('[SW] Erro de rede em desenvolvimento, tentando cache:', request.url);
-          } else {
-            console.error('[SW] Erro no fetch, tentando cache:', error);
-          }
-          
-          // Se falhou na rede, tenta o cache
-          return caches.match(request)
-            .then((cachedResponse) => {
-              if (cachedResponse) {
-                console.log('[SW] Servindo do cache:', request.url);
-                return cachedResponse;
-              }
-              
-              // Fallback para página principal se for navegação
-              if (request.mode === 'navigate') {
-                return caches.match('/index.html');
-              }
-              
-              // Em desenvolvimento, não falhar completamente
-              if (url.hostname === '127.0.0.1' || url.hostname === 'localhost') {
-                return new Response('Recurso não encontrado', { status: 404 });
-              }
-              
-              throw error;
-            });
-        })
-    );
+    // Recursos estáticos - Cache First
+    if (STATIC_ASSETS.includes(url.pathname) || 
+        url.pathname.startsWith('/_next/static/') ||
+        url.pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2)$/)) {
+      event.respondWith(cacheFirst(request));
+    }
+    // APIs - Network First com fallback
+    else if (API_CACHE_PATTERNS.some(pattern => pattern.test(url.pathname))) {
+      event.respondWith(networkFirst(request));
+    }
+    // Páginas HTML - Stale While Revalidate
+    else if (request.headers.get('accept')?.includes('text/html')) {
+      event.respondWith(staleWhileRevalidate(request));
+    }
+    // Outros recursos - Network First
+    else {
+      event.respondWith(networkFirst(request));
+    }
   }
 });
 
-// Verifica se o request deve ser ignorado pelo SW
-function shouldIgnoreRequest(request) {
-  const url = new URL(request.url);
-  
-  // Ignorar requests de WebSocket
-  if (url.protocol === 'ws:' || url.protocol === 'wss:') {
-    return true;
+// Estratégia Cache First
+async function cacheFirst(request) {
+  try {
+    const cachedResponse = await caches.match(request);
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+
+    const networkResponse = await fetch(request);
+    if (networkResponse.ok) {
+      const cache = await caches.open(STATIC_CACHE_NAME);
+      cache.put(request, networkResponse.clone());
+    }
+    return networkResponse;
+  } catch (error) {
+    console.error('Cache First: Erro', error);
+    return new Response('Recurso não disponível offline', { status: 503 });
   }
-  
-  // Ignorar requests de API em desenvolvimento
-  if (url.pathname.startsWith('/api/') && (url.hostname === '127.0.0.1' || url.hostname === 'localhost')) {
-    return true;
-  }
-  
-  // Ignorar requests de hot reload do Vite
-  if (url.pathname.includes('__vite') || url.pathname.includes('@vite')) {
-    return true;
-  }
-  
-  // Ignorar requests de source maps
-  if (url.pathname.endsWith('.map')) {
-    return true;
-  }
-  
-  return false;
 }
 
-// Verifica se é um recurso estático
-function isStaticAsset(url) {
-  return STATIC_ASSETS.some(asset => url.includes(asset)) ||
-         url.includes('/icons/') ||
-         url.includes('/_next/static/') ||
-         url.includes('.css') ||
-         url.includes('.js') ||
-         url.includes('.svg') ||
-         url.includes('.png') ||
-         url.includes('.ico') ||
-         url.includes('.woff') ||
-         url.includes('.woff2');
-}
+// Estratégia Network First
+async function networkFirst(request) {
+  try {
+    const networkResponse = await fetch(request);
+    
+    if (networkResponse.ok) {
+      const cache = await caches.open(DYNAMIC_CACHE_NAME);
+      cache.put(request, networkResponse.clone());
+    }
+    
+    return networkResponse;
+  } catch (error) {
+    console.log('Network First: Tentando cache', error);
+    
+    const cachedResponse = await caches.match(request);
+    if (cachedResponse) {
+      return cachedResponse;
+    }
 
-// Verifica se o recurso deve ser cacheado
-function isCacheable(request) {
-  const url = new URL(request.url);
-  
-  // Não cacheia requests de API ou recursos externos
-  if (url.pathname.startsWith('/api/') ||
-      url.hostname !== location.hostname ||
-      request.method !== 'GET') {
-    return false;
+    // Fallback para páginas HTML
+    if (request.headers.get('accept')?.includes('text/html')) {
+      return caches.match('/offline.html');
+    }
+
+    return new Response('Recurso não disponível offline', { status: 503 });
   }
-  
-  return true;
 }
 
-// Limpeza periódica do cache dinâmico
-self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'CLEAN_CACHE') {
+// Estratégia Stale While Revalidate
+async function staleWhileRevalidate(request) {
+  const cache = await caches.open(DYNAMIC_CACHE_NAME);
+  const cachedResponse = await cache.match(request);
+
+  const fetchPromise = fetch(request).then((networkResponse) => {
+    if (networkResponse.ok) {
+      cache.put(request, networkResponse.clone());
+    }
+    return networkResponse;
+  }).catch(() => {
+    // Se a rede falhar, retorna cache ou página offline
+    return cachedResponse || caches.match('/offline.html');
+  });
+
+  return cachedResponse || fetchPromise;
+}
+
+// Sincronização em background
+self.addEventListener('sync', (event) => {
+  console.log('Service Worker: Sincronização em background', event.tag);
+  
+  if (event.tag === 'background-sync') {
+    event.waitUntil(doBackgroundSync());
+  }
+});
+
+async function doBackgroundSync() {
+  try {
+    // Sincroniza dados pendentes quando a conexão voltar
+    console.log('Service Worker: Executando sincronização em background');
+    
+    // Aqui você pode implementar a sincronização de dados offline
+    // Por exemplo, enviar respostas de exercícios salvos localmente
+    
+  } catch (error) {
+    console.error('Service Worker: Erro na sincronização', error);
+  }
+}
+
+// Notificações push
+self.addEventListener('push', (event) => {
+  console.log('Service Worker: Push recebido');
+  
+  const options = {
+    body: event.data ? event.data.text() : 'Nova notificação do HubEdu.ia',
+    icon: '/android-chrome-192x192.png',
+    badge: '/favicon-32x32.png',
+    vibrate: [200, 100, 200],
+    data: {
+      dateOfArrival: Date.now(),
+      primaryKey: 1
+    },
+    actions: [
+      {
+        action: 'explore',
+        title: 'Explorar',
+        icon: '/icons/explore-96x96.png'
+      },
+      {
+        action: 'close',
+        title: 'Fechar',
+        icon: '/icons/close-96x96.png'
+      }
+    ]
+  };
+
+  event.waitUntil(
+    self.registration.showNotification('HubEdu.ia', options)
+  );
+});
+
+// Clique em notificação
+self.addEventListener('notificationclick', (event) => {
+  console.log('Service Worker: Clique em notificação', event.action);
+  
+  event.notification.close();
+
+  if (event.action === 'explore') {
     event.waitUntil(
-      caches.open(DYNAMIC_CACHE)
-        .then((cache) => {
-          return cache.keys().then((keys) => {
-            // Remove entradas antigas (mantém as 50 mais recentes)
-            if (keys.length > 50) {
-              const keysToDelete = keys.slice(0, keys.length - 50);
-              return Promise.all(
-                keysToDelete.map(key => cache.delete(key))
-              );
-            }
-          });
-        })
+      clients.openWindow('/')
+    );
+  } else if (event.action === 'close') {
+    // Apenas fecha a notificação
+  } else {
+    // Clique no corpo da notificação
+    event.waitUntil(
+      clients.openWindow('/')
     );
   }
 });
+
+// Mensagens do cliente
+self.addEventListener('message', (event) => {
+  console.log('Service Worker: Mensagem recebida', event.data);
+  
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+  
+  if (event.data && event.data.type === 'GET_VERSION') {
+    event.ports[0].postMessage({ version: CACHE_NAME });
+  }
+});
+
+// Limpeza periódica do cache
+setInterval(() => {
+  caches.open(DYNAMIC_CACHE_NAME).then((cache) => {
+    cache.keys().then((keys) => {
+      if (keys.length > 50) { // Limita a 50 itens no cache dinâmico
+        cache.delete(keys[0]);
+      }
+    });
+  });
+}, 60000); // Executa a cada minuto

@@ -144,7 +144,7 @@ export default function ChatPage() {
       console.log('📤 Calling sendMessage API...');
       await (sendMessage as any)(
         message, 
-        selectedModule || "atendimento",
+        selectedModule || "auto",
         undefined,
         undefined,
         currentConversation?.id,
@@ -178,7 +178,7 @@ export default function ChatPage() {
           try {
             await sendMessage(
               message, 
-              selectedModule || "atendimento",
+              selectedModule || "auto",
               undefined,
               undefined,
               currentConversation?.id

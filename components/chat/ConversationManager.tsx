@@ -81,7 +81,7 @@ export function ConversationManager({
   // Actions
   const handleCreateConversation = useCallback(async () => {
     try {
-      const newConversation = await createConversation('atendimento', 'Nova Conversa')
+      const newConversation = await createConversation('auto', 'Nova Conversa')
       onSelectConversation(newConversation)
       onClose()
       notifySuccess('Nova Conversa', 'Conversa criada com sucesso!')

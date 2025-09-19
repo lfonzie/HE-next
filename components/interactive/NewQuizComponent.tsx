@@ -21,6 +21,16 @@ interface QuizQuestion {
   explanation?: string
 }
 
+interface QuizResult {
+  questions: QuizQuestion[]
+  userAnswers: Record<string, string> // questionId -> optionId
+  correctMap: Record<string, string> // questionId -> correctOptionId
+  submittedAt: number | null
+  correctCount: number
+  totalQuestions: number
+  percentage: number
+}
+
 interface QuizComponentProps {
   questions: QuizQuestion[]
   onComplete: (score: number, totalQuestions: number) => void
@@ -37,25 +47,55 @@ export default function NewQuizComponent({
   allowRetry = false
 }: QuizComponentProps) {
   
+  // Helper function to normalize correct answer format
+  const normalizeCorrectAnswer = (correct: 'a' | 'b' | 'c' | 'd'): 'a' | 'b' | 'c' | 'd' => {
+    return (correct || 'a').toLowerCase() as 'a' | 'b' | 'c' | 'd'
+  }
+  
+  // Helper function to compute result from single source of truth
+  const computeResult = (userAnswers: Record<string, string>, correctMap: Record<string, string>): QuizResult => {
+    const correctCount = Object.keys(correctMap).reduce((count, questionId) => {
+      const userAnswer = userAnswers[questionId]
+      const correctAnswer = correctMap[questionId]
+      return count + (userAnswer === correctAnswer ? 1 : 0)
+    }, 0)
+    
+    return {
+      questions,
+      userAnswers,
+      correctMap,
+      submittedAt: Date.now(),
+      correctCount,
+      totalQuestions: questions.length,
+      percentage: Math.round((correctCount / questions.length) * 100)
+    }
+  }
+  
+  // Helper function to check if answer is correct
+  const isCorrect = (questionId: string, optionId: string): boolean => {
+    const userAnswer = result?.userAnswers[questionId]
+    const correctAnswer = result?.correctMap[questionId]
+    return userAnswer === optionId && optionId === correctAnswer
+  }
+  
+  // Single source of truth state
+  const [result, setResult] = useState<QuizResult | null>(null)
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState<'a' | 'b' | 'c' | 'd' | null>(null)
-  const [answers, setAnswers] = useState<(string | null)[]>(new Array(questions.length).fill(null))
-  const [showResult, setShowResult] = useState(false)
-  const [score, setScore] = useState(0)
+  const [userAnswers, setUserAnswers] = useState<Record<string, string>>({})
   const [timeLeft, setTimeLeft] = useState(timeLimit)
-  const [isCompleted, setIsCompleted] = useState(false)
-  const [showExplanationsState, setShowExplanationsState] = useState(false)
   const [showConfirmation, setShowConfirmation] = useState(false)
   const [pendingAnswer, setPendingAnswer] = useState<'a' | 'b' | 'c' | 'd' | null>(null)
   const [questionStartTime, setQuestionStartTime] = useState(Date.now())
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Timer effect
   useEffect(() => {
-    if (timeLimit > 0 && !isCompleted) {
+    if (timeLimit > 0 && !result) {
       const timer = setInterval(() => {
         setTimeLeft(prev => {
           if (prev <= 1) {
-            handleComplete()
+            handleSubmit()
             return 0
           }
           return prev - 1
@@ -64,8 +104,7 @@ export default function NewQuizComponent({
 
       return () => clearInterval(timer)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timeLimit, isCompleted])
+  }, [timeLimit, result])
 
   // Reset question timer when question changes
   useEffect(() => {
@@ -83,21 +122,22 @@ export default function NewQuizComponent({
     if (pendingAnswer === null) return
     
     setSelectedAnswer(pendingAnswer)
-    const newAnswers = [...answers]
-    const safeCurrentQuestion = Math.min(currentQuestion, questions.length - 1)
-    newAnswers[safeCurrentQuestion] = pendingAnswer
-    setAnswers(newAnswers)
+    const questionId = `q${currentQuestion}`
+    setUserAnswers(prev => ({
+      ...prev,
+      [questionId]: pendingAnswer
+    }))
     
     setShowConfirmation(false)
     setPendingAnswer(null)
 
     // Auto-advance after selection
     setTimeout(() => {
-      if (safeCurrentQuestion < questions.length - 1) {
+      if (currentQuestion < questions.length - 1) {
         setCurrentQuestion(prev => prev + 1)
         setSelectedAnswer(null)
       } else {
-        handleComplete()
+        handleSubmit()
       }
     }, 1500) // Increased delay for better UX
   }
@@ -126,27 +166,43 @@ export default function NewQuizComponent({
     )
   }
 
-  const handleComplete = () => {
-    const correctAnswers = answers.filter((answer, index) => {
-      const correctAnswer = (questions[index].correct || 'a').toLowerCase() as 'a' | 'b' | 'c' | 'd'
-      return answer === correctAnswer
-    }).length
+  const handleSubmit = () => {
+    if (isSubmitting || result) return // Prevent double submission
     
-    setScore(correctAnswers)
-    setIsCompleted(true)
-    setShowResult(true)
-    onComplete(correctAnswers, questions.length)
+    console.log('🔍 DEBUG: handleSubmit chamado');
+    console.log('🔍 DEBUG: userAnswers:', userAnswers);
+    console.log('🔍 DEBUG: questions:', questions);
+    
+    setIsSubmitting(true)
+    
+    // Freeze userAnswers and create correctMap
+    const frozenUserAnswers = { ...userAnswers }
+    const correctMap: Record<string, string> = {}
+    
+    questions.forEach((question, index) => {
+      const questionId = `q${index}`
+      correctMap[questionId] = normalizeCorrectAnswer(question.correct)
+    })
+    
+    // Compute result from single source of truth
+    const computedResult = computeResult(frozenUserAnswers, correctMap)
+    
+    console.log('🔍 DEBUG: Computed result:', computedResult)
+    
+    // Set result (single source of truth)
+    setResult(computedResult)
+    
+    // Call completion callback
+    onComplete(computedResult.correctCount, computedResult.totalQuestions)
   }
 
   const handleRetry = () => {
+    setResult(null)
     setCurrentQuestion(0)
     setSelectedAnswer(null)
-    setAnswers(new Array(questions.length).fill(null))
-    setShowResult(false)
-    setScore(0)
-    setIsCompleted(false)
+    setUserAnswers({})
     setTimeLeft(timeLimit)
-    setShowExplanationsState(false)
+    setIsSubmitting(false)
   }
 
   const formatTime = (seconds: number) => {
@@ -155,8 +211,7 @@ export default function NewQuizComponent({
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
-  const getScoreBadge = (score: number, total: number) => {
-    const percentage = (score / total) * 100
+  const getScoreBadge = (percentage: number) => {
     if (percentage >= 90) return { 
       color: 'bg-green-500', 
       text: '🎉 Parabéns! Excelente trabalho!', 
@@ -183,140 +238,146 @@ export default function NewQuizComponent({
     }
   }
 
-  if (showResult) {
-    const scoreBadge = getScoreBadge(score, questions.length)
-    const ScoreIcon = scoreBadge.icon
-
+  // Show loading skeleton until result is computed
+  if (!result) {
     return (
       <Card className="w-full max-w-2xl mx-auto">
         <CardHeader className="text-center">
           <CardTitle className="flex items-center justify-center gap-2">
-            <ScoreIcon className="h-6 w-6" />
-            Resultado do Quiz
+            <div className="h-6 w-6 bg-gray-200 rounded animate-pulse" />
+            <div className="h-6 w-32 bg-gray-200 rounded animate-pulse" />
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Score Display */}
           <div className="text-center">
-            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-white ${scoreBadge.color}`}>
-              <ScoreIcon className="h-5 w-5" />
-              {scoreBadge.text}
-            </div>
-            <div className="mt-4">
-              <div className="text-3xl font-bold">{score}/{questions.length}</div>
-              <div className="text-gray-600">
-                {Math.round((score / questions.length) * 100)}% de acertos
-              </div>
-              <div className="mt-2 text-sm text-gray-700 italic">
-                {scoreBadge.message}
-              </div>
-            </div>
-          </div>
-
-          {/* Progress Bar */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Progresso</span>
-              <span>{Math.round((() => {
-                const correctAnswers = answers.filter((answer, index) => {
-                  return answer === questions[index].correct
-                }).length
-                return (correctAnswers / questions.length) * 100
-              })())}%</span>
-            </div>
-            <Progress value={(() => {
-              const correctAnswers = answers.filter((answer, index) => {
-                return answer === questions[index].correct
-              }).length
-              return (correctAnswers / questions.length) * 100
-            })()} className="h-2" />
-          </div>
-
-          {/* Question Review */}
-          {showExplanationsState && (
-            <div className="space-y-4">
-              <h3 className="font-semibold">Revisão das Respostas:</h3>
-              {questions.map((question, index) => {
-                const userAnswer = answers[index]
-                const isCorrect = userAnswer === question.correct
-                
-                return (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className={`p-4 rounded-lg border ${
-                      isCorrect ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      {isCorrect ? (
-                        <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
-                      ) : (
-                        <XCircle className="h-5 w-5 text-red-600 mt-0.5" />
-                      )}
-                      <div className="flex-1">
-                        <div className="mb-2">
-                          <MarkdownRenderer content={question.question} className="font-medium" />
-                        </div>
-                        <div className="space-y-1">
-                          {Object.entries(question.options).map(([key, option]) => {
-                            const isUserAnswer = key === userAnswer
-                            const isCorrectAnswer = key === question.correct
-                            
-                            return (
-                              <div
-                                key={key}
-                                className={`text-sm p-2 rounded flex items-center gap-2 ${
-                                  isCorrectAnswer
-                                    ? 'bg-green-100 text-green-800 font-medium'
-                                    : isUserAnswer && !isCorrect
-                                    ? 'bg-red-100 text-red-800'
-                                    : 'bg-gray-100'
-                                }`}
-                              >
-                                {isCorrectAnswer && <CheckCircle className="h-4 w-4 text-green-600" />}
-                                {isUserAnswer && !isCorrect && <XCircle className="h-4 w-4 text-red-600" />}
-                                <span>
-                                  {key.toUpperCase()}) {option}
-                                </span>
-                              </div>
-                            )
-                          })}
-                        </div>
-                        {question.explanation && (
-                          <div className="mt-2 text-sm text-gray-600 italic">
-                            <MarkdownRenderer content={`💡 ${question.explanation}`} />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </motion.div>
-                )
-              })}
-            </div>
-          )}
-
-          {/* Actions */}
-          <div className="flex gap-3 justify-center">
-            <Button
-              onClick={() => setShowExplanationsState(!showExplanationsState)}
-              variant="outline"
-            >
-              {showExplanationsState ? 'Ocultar Explicações' : 'Ver Explicações'}
-            </Button>
-            {allowRetry && (
-              <Button onClick={handleRetry}>
-                <RotateCcw className="h-4 w-4 mr-2" />
-                Tentar Novamente
-              </Button>
-            )}
+            <div className="h-8 w-48 bg-gray-200 rounded animate-pulse mx-auto mb-4" />
+            <div className="h-12 w-24 bg-gray-200 rounded animate-pulse mx-auto mb-2" />
+            <div className="h-6 w-32 bg-gray-200 rounded animate-pulse mx-auto" />
           </div>
         </CardContent>
       </Card>
     )
   }
+
+  // Show result using single source of truth
+  const scoreBadge = getScoreBadge(result.percentage)
+  const ScoreIcon = scoreBadge.icon
+
+  return (
+    <Card className="w-full max-w-2xl mx-auto">
+      <CardHeader className="text-center">
+        <CardTitle className="flex items-center justify-center gap-2">
+          <ScoreIcon className="h-6 w-6" />
+          Resultado do Quiz
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Score Display - Derived from single source of truth */}
+        <div className="text-center">
+          <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-white ${scoreBadge.color}`}>
+            <ScoreIcon className="h-5 w-5" />
+            {scoreBadge.text}
+          </div>
+          <div className="mt-4">
+            <div className="text-3xl font-bold">{result.correctCount}/{result.totalQuestions}</div>
+            <div className="text-gray-600">
+              {result.percentage}% de acertos
+            </div>
+            <div className="mt-2 text-sm text-gray-700 italic">
+              {scoreBadge.message}
+            </div>
+          </div>
+        </div>
+
+        {/* Progress Bar - Derived from single source of truth */}
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm">
+            <span>Progresso</span>
+            <span>{result.percentage}%</span>
+          </div>
+          <Progress value={result.percentage} className="h-2" />
+        </div>
+
+        {/* Question Review - Derived from single source of truth */}
+        {showExplanations && (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Resultados Detalhados</h3>
+            {questions.map((question, index) => {
+              const questionId = `q${index}`
+              const userAnswer = result.userAnswers[questionId]
+              const correctAnswer = result.correctMap[questionId]
+              const isCorrect = userAnswer === correctAnswer
+              
+              return (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className={`p-4 rounded-lg border ${
+                    isCorrect ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    {isCorrect ? (
+                      <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
+                    ) : (
+                      <XCircle className="h-5 w-5 text-red-600 mt-0.5" />
+                    )}
+                    <div className="flex-1">
+                      <div className="mb-2">
+                        <MarkdownRenderer content={question.question} className="font-medium" />
+                      </div>
+                      <div className="space-y-1">
+                        {Object.entries(question.options).map(([key, option]) => {
+                          const isUserAnswer = key === userAnswer
+                          const isCorrectAnswer = key === correctAnswer
+                          
+                          return (
+                            <div
+                              key={key}
+                              className={`text-sm p-2 rounded flex items-center gap-2 ${
+                                isCorrectAnswer
+                                  ? 'bg-green-100 text-green-800 font-medium'
+                                  : isUserAnswer && !isCorrect
+                                  ? 'bg-red-100 text-red-800'
+                                  : 'bg-gray-100'
+                              }`}
+                            >
+                              {isCorrectAnswer && <CheckCircle className="h-4 w-4 text-green-600" />}
+                              {isUserAnswer && !isCorrect && <XCircle className="h-4 w-4 text-red-600" />}
+                              <span>
+                                {key.toUpperCase()}) {option}
+                              </span>
+                            </div>
+                          )
+                        })}
+                      </div>
+                      {question.explanation && (
+                        <div className="mt-2 text-sm text-gray-600 italic">
+                          <MarkdownRenderer content={`💡 ${question.explanation}`} />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              )
+            })}
+          </div>
+        )}
+
+        {/* Actions */}
+        <div className="flex gap-3 justify-center">
+          {allowRetry && (
+            <Button onClick={handleRetry}>
+              <RotateCcw className="h-4 w-4 mr-2" />
+              Tentar Novamente
+            </Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  )
 
   // Ensure currentQuestion is within bounds
   const safeCurrentQuestion = Math.min(currentQuestion, questions.length - 1)
@@ -449,10 +510,10 @@ export default function NewQuizComponent({
                 setCurrentQuestion(prev => prev + 1)
                 setSelectedAnswer(null)
               } else {
-                handleComplete()
+                handleSubmit()
               }
             }}
-            disabled={selectedAnswer === null}
+            disabled={selectedAnswer === null || isSubmitting}
           >
             {currentQuestion < questions.length - 1 ? 'Próxima' : 'Finalizar'}
           </Button>

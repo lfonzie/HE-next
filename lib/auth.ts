@@ -23,7 +23,7 @@ export const authOptions: NextAuthOptions = {
     signIn: '/login',
     error: '/error',
   },
-  debug: true, // Always enable debug for troubleshooting
+  debug: isDevelopment, // Only enable debug in development
   useSecureCookies: process.env.NODE_ENV === 'production', // Only use secure cookies in production
   cookies: {
     sessionToken: {
@@ -134,12 +134,14 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       try {
-        console.log('🔍 NextAuth session callback:', { 
-          hasToken: !!token, 
-          hasSession: !!session, 
-          tokenId: token?.id,
-          sessionUser: session?.user?.email 
-        })
+        if (isDevelopment) {
+          console.log('🔍 NextAuth session callback:', { 
+            hasToken: !!token, 
+            hasSession: !!session, 
+            tokenId: token?.id,
+            sessionUser: session?.user?.email 
+          })
+        }
         
         if (token && session.user) {
           session.user.id = token.id as string
@@ -149,7 +151,9 @@ export const authOptions: NextAuthOptions = {
             ;(session.user as Record<string, unknown>).role = tokenRole
           }
           
-          console.log('✅ NextAuth session created for user:', session.user.email, 'Role:', tokenRole)
+          if (isDevelopment) {
+            console.log('✅ NextAuth session created for user:', session.user.email, 'Role:', tokenRole)
+          }
         }
 
         return session

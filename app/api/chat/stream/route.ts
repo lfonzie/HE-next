@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
 
     // Preparar contexto para o orchestrator
     const orchestratorContext = {
-      module: context?.module || 'atendimento',
+      module: context?.module || 'auto',
       history: context?.history || [],
       ...context
     }
@@ -104,7 +104,7 @@ Quando responder:
 - Use APENAS símbolos Unicode para matemática: x², √, ±, ÷, ×, ½, π, α, β, ∫, ∑, ∞
 - NUNCA use LaTeX, KaTeX, $...$, $$...$$, \\(...\\), \\[...\\]
 
-Contexto atual: Módulo: ${orchestratorResult.trace?.module || 'atendimento'}`
+Contexto atual: Módulo: ${orchestratorResult.trace?.module || 'auto'}`
 
       // Incluir histórico da conversa para manter contexto
       const conversationHistory = orchestratorContext.history || []
@@ -164,7 +164,7 @@ Contexto atual: Módulo: ${orchestratorResult.trace?.module || 'atendimento'}`
             finishReason: result.finishReason,
             usage: result.usage,
             provider: useGoogleAI ? 'google' : 'openai',
-            module: orchestratorResult.trace?.module || 'atendimento'
+            module: orchestratorResult.trace?.module || 'auto'
           })
         }
       })

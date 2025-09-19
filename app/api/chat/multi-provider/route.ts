@@ -1,258 +1,209 @@
-import { NextRequest } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { streamText } from 'ai'
-import { openai } from '@ai-sdk/openai'
-import { google } from '@ai-sdk/google'
-import { getSystemPrompt } from '@/lib/ai-sdk-config'
-import { orchestrate } from '@/lib/orchestrator'
-import { educationalTools } from '@/lib/ai-tools'
-import { classifyComplexity, getProviderConfig } from '@/lib/complexity-classifier'
-import '@/lib/orchestrator-modules' // ensure modules are registered
-import { logTokens, extractTotalTokens } from '@/lib/token-logger'
+import { NextRequest, NextResponse } from 'next/server'
+import { Message, streamText } from 'ai'
+import { openai } from 'ai/openai'
+import { anthropic } from 'ai/anthropic'
+import { google } from 'ai/google'
+import { z } from 'zod'
+import { routeAIModel } from '@/lib/ai-model-router'
+import { orchestrator } from '@/lib/orchestrator'
 
-// Provider configurations
-const PROVIDER_MODELS = {
-  openai: {
-    'gpt-4o': 'GPT-4 Omni',
-    'gpt-4o-mini': 'GPT-4 Omni Mini',
-    'gpt-4-turbo': 'GPT-4 Turbo',
-    'gpt-3.5-turbo': 'GPT-3.5 Turbo'
-  },
-  google: {
-    'gemini-1.5-pro': 'Gemini 1.5 Pro',
-    'gemini-1.5-flash': 'Gemini 1.5 Flash',
-    'gemini-pro': 'Gemini Pro'
-  }
-}
+// Schema para validação de entrada
+const RequestSchema = z.object({
+  message: z.string(),
+  provider: z.enum(['auto', 'openai', 'anthropic', 'google']).optional().default('auto'),
+  module: z.string().optional(),
+  history: z.array(z.any()).optional().default([]),
+  conversationId: z.string().optional()
+});
 
-const getAvailableProviders = () => Object.keys(PROVIDER_MODELS)
+// Políticas de provider por módulo
+const MODULE_PROVIDER_POLICIES = {
+  enem: { preferred: 'openai', model: 'gpt-4o-mini', complexModel: 'gpt-4o' },
+  professor: { preferred: 'openai', model: 'gpt-4o-mini', complexModel: 'gpt-4o' },
+  aula_interativa: { preferred: 'openai', model: 'gpt-4o-mini', complexModel: 'gpt-4o' },
+  financeiro: { preferred: 'openai', model: 'gpt-4o-mini', complexModel: 'gpt-4o' },
+  social_media: { preferred: 'openai', model: 'gpt-4o-mini', complexModel: 'gpt-4o' },
+  atendimento: { preferred: 'openai', model: 'gpt-4o-mini', complexModel: 'gpt-4o' }
+} as const;
+
+const PROVIDER_CONFIDENCE_THRESHOLD = 0.75;
 
 export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+  
   try {
-    // Verificar autenticação - OBRIGATÓRIO
-    const session = await getServerSession(authOptions)
-    if (!session) {
-      return new Response('Unauthorized', { status: 401 })
+    // Validar entrada
+    const body = await request.json();
+    const validationResult = RequestSchema.safeParse(body);
+    
+    if (!validationResult.success) {
+      console.error('❌ [MULTI-PROVIDER] Invalid request schema:', validationResult.error.errors);
+      return NextResponse.json(
+        { error: 'Invalid request format' },
+        { status: 400 }
+      );
     }
 
-    const { messages, module, provider, complexity } = await request.json()
-
-    if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      return new Response('Messages are required', { status: 400 })
-    }
-
-    const lastMessage = messages[messages.length - 1]
-    if (!lastMessage?.content) {
-      return new Response('Last message content is required', { status: 400 })
-    }
-
-    console.log('🤖 Multi-Provider Chat request:', {
-      message: lastMessage.content,
-      module: module || 'auto',
-      provider: provider || 'auto',
-      complexity: complexity || 'simple',
-      messageCount: messages.length
-    })
-
-    // Usar sistema de roteamento inteligente com classificação otimizada
-    const complexityResult = classifyComplexity(lastMessage.content, module)
-    const detectedComplexity = complexityResult.classification
+    const { message, provider, module, history, conversationId } = validationResult.data;
     
-    console.log(`⚡ [MULTI-PROVIDER] Complexity classification: ${detectedComplexity} (${complexityResult.method}${complexityResult.cached ? ', cached' : ''})`)
+    // Calcular messageCount a partir do payload atual
+    const messageCount = history.length + 1;
     
-    // Obter configuração do provider baseada na complexidade
-    const providerConfig = getProviderConfig(detectedComplexity)
-    const selectedProvider = providerConfig.provider
-    const selectedModel = providerConfig.model
-    const tier = providerConfig.tier
-    
-    console.log('🎯 [ROUTING] Result:', {
-      content: lastMessage.content.substring(0, 50) + '...',
-      provider: selectedProvider,
-      model: selectedModel,
-      complexity: detectedComplexity
-    })
+    console.log(`🤖 [MULTI-PROVIDER] Starting request: msg="${message.substring(0, 30)}..." provider=${provider} module=${module || 'auto'} msgCount=${messageCount}`);
 
-    // Determinar módulo de forma otimizada
-    let targetModule = module || 'atendimento'
+    // 1. Determinação do módulo com prioridade explícita
+    let targetModule = module || 'auto';
+    let moduleSource = 'default';
+    let classificationConfidence = 0;
+    let moduleScores = {};
     
-    // Só usar orquestrador se realmente necessário (módulo 'auto' ou não especificado)
-    if (module === 'auto' || !module) {
+    if (module && module !== 'auto') {
+      // Override do cliente
+      moduleSource = 'client_override';
+      classificationConfidence = 1.0;
+      console.log(`🎯 [MODULE] Client override: ${module}`);
+    } else {
+      // Usar orquestrador para classificação
       try {
-        const orchestratorResult = await orchestrate({
-          text: lastMessage.content,
-          context: { module: 'auto' }
-        })
+        console.log('🔄 [MODULE] Calling orchestrator for classification...');
         
-        targetModule = orchestratorResult.trace?.module || 'atendimento'
-        console.log('🎯 [ORCHESTRATOR] Module selected:', targetModule)
+        const orchestratorResult = await orchestrator({
+          message,
+          context: {
+            module: 'auto',
+            history,
+            conversationId
+          }
+        });
+
+        if (orchestratorResult.trace?.module) {
+          targetModule = orchestratorResult.trace.module;
+          moduleSource = 'orchestrator';
+          classificationConfidence = orchestratorResult.trace.confidence || 0.8;
+          moduleScores = orchestratorResult.trace.scores || {};
+          
+          console.log(`🎯 [MODULE] Orchestrator result: ${targetModule} (confidence: ${classificationConfidence})`);
+        } else {
+          console.warn('⚠️ [MODULE] Orchestrator failed to determine module, using fallback');
+          targetModule = 'atendimento';
+          moduleSource = 'fallback';
+          classificationConfidence = 0.0;
+        }
       } catch (error) {
-        console.error('Orchestrator error:', error)
-        targetModule = 'atendimento'
+        console.error('❌ [MODULE] Orchestrator error:', error);
+        targetModule = 'atendimento';
+        moduleSource = 'error_fallback';
+        classificationConfidence = 0.0;
       }
-    } else {
-      console.log('🎯 [MULTI-PROVIDER] Using provided module:', targetModule)
     }
 
-    // Obter system prompt para o módulo
-    const systemPrompt = getSystemPrompt(targetModule)
+    // 2. Classificação de complexidade
+    console.log('⚡ [COMPLEXITY] Classifying complexity...');
+    const complexityResult = await routeAIModel(message, { module: targetModule, history });
     
-    // Preparar mensagens para o AI SDK
-    const aiMessages = [
-      {
-        role: 'system' as const,
-        content: systemPrompt
-      },
-      ...messages.map(msg => ({
-        role: msg.role as 'user' | 'assistant',
-        content: msg.content
-      }))
-    ]
+    const complexity = complexityResult.complexity || 'simples';
+    console.log(`⚡ [COMPLEXITY] Result: ${complexity} (source: ${complexityResult.source || 'local'})`);
 
-    // Usar OpenAI diretamente com configuração simples
-    const streamConfig = { temperature: 0.7, maxTokens: 2000, timeout: 20000 }
-
-    console.log('🚀 [MULTI-PROVIDER] Starting stream with:', {
-      provider: selectedProvider,
-      model: selectedModel,
-      complexity: detectedComplexity,
-      tier: tier,
-      module: targetModule,
-      messageCount: aiMessages.length
-    })
-
-    // Criar modelo baseado no provedor selecionado
-    let modelInstance;
-    if (selectedProvider === 'google') {
-      modelInstance = google(selectedModel)
+    // 3. Seleção de provider com base em políticas
+    let finalProvider = provider;
+    let finalModel = 'gpt-4o-mini';
+    let providerSource = 'default';
+    
+    if (provider === 'auto') {
+      // Aplicar política baseada no módulo
+      const policy = MODULE_PROVIDER_POLICIES[targetModule as keyof typeof MODULE_PROVIDER_POLICIES] || MODULE_PROVIDER_POLICIES.atendimento;
+      
+      finalProvider = policy.preferred;
+      finalModel = complexity === 'complexa' ? policy.complexModel : policy.model;
+      providerSource = 'module_policy';
+      
+      console.log(`🎯 [PROVIDER] Auto-selected: ${finalProvider}:${finalModel} (policy for ${targetModule}, complexity: ${complexity})`);
     } else {
-      modelInstance = openai(selectedModel)
+      providerSource = 'client_specified';
+      console.log(`🎯 [PROVIDER] Client specified: ${finalProvider}`);
     }
 
-    // Usar streamText do AI SDK com modelo selecionado
+    // 4. Configuração do modelo
+    let modelInstance;
+    switch (finalProvider) {
+      case 'anthropic':
+        modelInstance = anthropic(finalModel === 'gpt-4o' ? 'claude-3-5-sonnet-20241022' : 'claude-3-haiku-20240307');
+        break;
+      case 'google':
+        modelInstance = google(finalModel === 'gpt-4o' ? 'gemini-1.5-pro' : 'gemini-1.5-flash');
+        break;
+      case 'openai':
+      default:
+        modelInstance = openai(finalModel);
+        break;
+    }
+
+    // 5. Preparar contexto final
+    const finalContext = {
+      module: targetModule,
+      provider: finalProvider,
+      model: finalModel,
+      complexity,
+      tier: 'IA',
+      messageCount,
+      conversationId,
+      classification: {
+        confidence: classificationConfidence,
+        source: moduleSource,
+        scores: moduleScores
+      }
+    };
+
+    // Telemetria compacta
+    console.log(`[MULTI] msg=${message.substring(0, 20)}... module=${targetModule} src=${moduleSource} conf=${classificationConfidence.toFixed(2)} provider=${finalProvider}:${finalModel} msgCount=${messageCount} complexity=${complexity}`);
+
+    // 6. Streaming da resposta
+    console.log(`🚀 [STREAM] Starting with context:`, finalContext);
+
     const result = await streamText({
       model: modelInstance,
-      messages: aiMessages,
-      temperature: streamConfig.temperature,
+      messages: [
+        {
+          role: 'system',
+          content: `Você é um assistente educacional especializado no módulo ${targetModule}. Responda de forma clara e educativa.`
+        },
+        ...history.map((msg: any) => ({
+          role: msg.role,
+          content: msg.content
+        })),
+        {
+          role: 'user',
+          content: message
+        }
+      ] as Message[],
+      temperature: 0.7,
+      maxTokens: 1000,
       onFinish: (result) => {
-        console.log('✅ [MULTI-PROVIDER] Stream finished:', {
-          finishReason: result.finishReason,
-          usage: result.usage,
-          provider: selectedProvider,
-          model: selectedModel,
-          complexity: detectedComplexity,
-          tier: tier,
-          module: targetModule,
-          toolCalls: result.toolCalls?.length || 0
-        })
-        try {
-          if (session?.user?.id) {
-            const total = extractTotalTokens((result as any).usage)
-            logTokens({
-              userId: session.user.id,
-              moduleGroup: 'Chat',
-              model: selectedModel,
-              totalTokens: total,
-              subject: undefined,
-              grade: undefined,
-              messages: { module: targetModule, messageCount: aiMessages.length }
-            })
-          }
-        } catch (e) {
-          console.warn('⚠️ [MULTI-PROVIDER] Failed to log tokens:', e)
-        }
+        const totalLatency = Date.now() - startTime;
+        console.log(`✅ [MULTI] msg=${message.substring(0, 20)}... module=${targetModule} provider=${finalProvider} tokens=${result.usage?.totalTokens || 0} latency=${totalLatency}ms finish=${result.finishReason}`);
       }
-    })
+    });
 
-    // Retornar como stream de texto
-    const stream = new ReadableStream({
-      async start(controller) {
-        try {
-          for await (const chunk of result.textStream) {
-            controller.enqueue(new TextEncoder().encode(chunk))
-          }
-          controller.close()
-        } catch (error) {
-          controller.error(error)
-        }
-      }
-    })
-
-    return new Response(stream, {
+    return result.toDataStreamResponse({
       headers: {
-        'Content-Type': 'text/plain; charset=utf-8',
-        'X-Provider': selectedProvider,
-        'X-Model': selectedModel,
         'X-Module': targetModule,
-        'X-Complexity': detectedComplexity,
-        'X-Tier': tier,
-        'X-Auto-Selected': 'true',
-        'X-Timestamp': Date.now().toString()
+        'X-Provider': finalProvider,
+        'X-Model': finalModel,
+        'X-Complexity': complexity,
+        'X-Classification-Source': moduleSource,
+        'X-Classification-Confidence': classificationConfidence.toString(),
+        'X-Message-Count': messageCount.toString()
       }
-    })
+    });
 
-  } catch (error) {
-    console.error('❌ Multi-Provider Chat Error:', error)
+  } catch (error: any) {
+    const totalLatency = Date.now() - startTime;
+    console.error(`❌ [MULTI] Fatal error: ${error.message} latency=${totalLatency}ms`);
     
-    // Retornar erro como stream
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-    
-    return new Response(
-      JSON.stringify({
-        error: errorMessage,
-        timestamp: Date.now()
-      }),
-      {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    )
+    return NextResponse.json({
+      error: 'Internal server error',
+      details: error.message,
+      timestamp: new Date().toISOString()
+    }, { status: 500 });
   }
 }
-
-// GET endpoint para listar provedores disponíveis
-export async function GET() {
-  try {
-    const availableProviders = getAvailableProviders()
-    
-    const providersInfo = availableProviders.map(provider => ({
-      id: provider,
-      name: provider.charAt(0).toUpperCase() + provider.slice(1),
-      available: true,
-      models: Object.keys(PROVIDER_MODELS[provider as keyof typeof PROVIDER_MODELS])
-    }))
-
-    return new Response(
-      JSON.stringify({
-        availableProviders,
-        providers: providersInfo,
-        total: availableProviders.length
-      }),
-      {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    )
-  } catch (error) {
-    return new Response(
-      JSON.stringify({
-        error: 'Failed to get providers',
-        availableProviders: []
-      }),
-      {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    )
-  }
-}
-
-// Configurações de CORS para desenvolvimento
-export const runtime = 'nodejs'
-export const dynamic = 'force-dynamic'

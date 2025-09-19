@@ -185,7 +185,7 @@ export class FeatureExtractor {
 
   private buildSessionHistory(context?: Record<string, any>): SessionContext {
     return {
-      module: context?.module || 'atendimento',
+      module: context?.module || 'auto',
       previousInteractions: context?.interactionCount || 0,
       averageResponseTime: context?.avgResponseTime || 1000,
       userSatisfaction: context?.userSatisfaction || 0.8

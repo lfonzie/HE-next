@@ -363,7 +363,7 @@ export function ModuleProvider({ children }: { children: React.ReactNode }) {
       
       // Fallback to simple keyword matching
       const fallbackResult = {
-        module: 'atendimento',
+        module: 'auto',
         confidence: 0.5,
         reasoning: 'Fallback classification due to error',
         suggestedModels: ['gpt-3.5-turbo']
@@ -433,7 +433,7 @@ export function ModuleProvider({ children }: { children: React.ReactNode }) {
     }
     
     // Default fallback
-    return getModuleById('atendimento')
+    return getModuleById('auto')
   }, [enabledModules, getUserProfile, getModuleById])
 
   const contextValue: ModuleContextType = {

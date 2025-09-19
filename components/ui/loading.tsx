@@ -69,7 +69,7 @@ export const LoadingProvider: React.FC<{
   const timeoutRefs = useRef<Map<LoadingKey, NodeJS.Timeout>>(new Map());
 
   const start = useCallback((key?: LoadingKey, options?: LoadingOptions) => {
-    const loadingKey = key ?? `loading-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const loadingKey = key ?? `loading-${typeof window !== 'undefined' ? Date.now() : 0}-${typeof window !== 'undefined' ? Math.random().toString(36).substr(2, 9) : 'server'}`;
     
     if (loadings.size >= maxConcurrentLoadings) {
       console.warn(`Maximum concurrent loadings (${maxConcurrentLoadings}) reached.`);
@@ -85,7 +85,7 @@ export const LoadingProvider: React.FC<{
       onCancel: options?.onCancel,
       priority: options?.priority || "normal",
       timeout,
-      startTime: Date.now(),
+      startTime: typeof window !== 'undefined' ? Date.now() : 0,
       estimatedDuration: options?.estimatedDuration,
       metadata: options?.metadata || {}
     })));

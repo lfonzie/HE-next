@@ -34,7 +34,7 @@ registerModule({
         body: JSON.stringify({ 
           userMessage: text,
           history: context?.history || [],
-          currentModule: context?.module || 'atendimento'
+          currentModule: context?.module || 'auto'
         }),
       });
 
@@ -88,7 +88,7 @@ registerModule({
         body: JSON.stringify({ 
           userMessage: text,
           history: context?.history || [],
-          currentModule: context?.module || 'atendimento'
+          currentModule: context?.module || 'auto'
         }),
       });
 
@@ -144,7 +144,7 @@ registerModule({
         body: JSON.stringify({ 
           userMessage: text,
           history: context?.history || [],
-          currentModule: context?.module || 'atendimento'
+          currentModule: context?.module || 'auto'
         }),
       });
 
@@ -213,7 +213,7 @@ registerModule({
         body: JSON.stringify({ 
           userMessage: text,
           history: context?.history || [],
-          currentModule: context?.module || 'atendimento'
+          currentModule: context?.module || 'auto'
         }),
       });
 
@@ -283,7 +283,7 @@ registerModule({
         body: JSON.stringify({ 
           userMessage: text,
           history: context?.history || [],
-          currentModule: context?.module || 'atendimento'
+          currentModule: context?.module || 'auto'
         }),
       });
 
@@ -344,7 +344,7 @@ registerModule({
         body: JSON.stringify({ 
           userMessage: text,
           history: context?.history || [],
-          currentModule: context?.module || 'atendimento'
+          currentModule: context?.module || 'auto'
         }),
       });
 
@@ -401,7 +401,7 @@ registerModule({
         body: JSON.stringify({ 
           userMessage: text,
           history: context?.history || [],
-          currentModule: context?.module || 'atendimento'
+          currentModule: context?.module || 'auto'
         }),
       });
 
@@ -505,7 +505,7 @@ registerModule({
         body: JSON.stringify({ 
           userMessage: text,
           history: context?.history || [],
-          currentModule: context?.module || 'atendimento'
+          currentModule: context?.module || 'auto'
         }),
       });
 
@@ -562,7 +562,7 @@ registerModule({
         body: JSON.stringify({ 
           userMessage: text,
           history: context?.history || [],
-          currentModule: context?.module || 'atendimento'
+          currentModule: context?.module || 'auto'
         }),
       });
 
@@ -619,7 +619,7 @@ registerModule({
         body: JSON.stringify({ 
           userMessage: text,
           history: context?.history || [],
-          currentModule: context?.module || 'atendimento'
+          currentModule: context?.module || 'auto'
         }),
       });
 
@@ -676,7 +676,7 @@ registerModule({
         body: JSON.stringify({ 
           userMessage: text,
           history: context?.history || [],
-          currentModule: context?.module || 'atendimento'
+          currentModule: context?.module || 'auto'
         }),
       });
 
@@ -733,7 +733,7 @@ registerModule({
         body: JSON.stringify({ 
           userMessage: text,
           history: context?.history || [],
-          currentModule: context?.module || 'atendimento'
+          currentModule: context?.module || 'auto'
         }),
       });
 
@@ -832,7 +832,7 @@ registerModule({
         body: JSON.stringify({ 
           userMessage: text,
           history: context?.history || [],
-          currentModule: context?.module || 'atendimento'
+          currentModule: context?.module || 'auto'
         }),
       });
 
@@ -1012,7 +1012,7 @@ registerModule({
         body: JSON.stringify({ 
           userMessage: text,
           history: context?.history || [],
-          currentModule: context?.module || 'atendimento'
+          currentModule: context?.module || 'auto'
         }),
       });
 

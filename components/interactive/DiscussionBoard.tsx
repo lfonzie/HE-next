@@ -65,14 +65,14 @@ export default function DiscussionBoard({
           ]
           
           const newPost: DiscussionPost = {
-            id: `post_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-            author: `Estudante ${Math.floor(Math.random() * 20) + 1}`,
-            content: samplePosts[Math.floor(Math.random() * samplePosts.length)],
+            id: `post_${typeof window !== 'undefined' ? Date.now() : 0}_${typeof window !== 'undefined' ? Math.random().toString(36).substr(2, 9) : 'server'}`,
+            author: `Estudante ${typeof window !== 'undefined' ? Math.floor(Math.random() * 20) + 1 : 1}`,
+            content: samplePosts[typeof window !== 'undefined' ? Math.floor(Math.random() * samplePosts.length) : 0],
             timestamp: new Date(),
-            likes: Math.floor(Math.random() * 10),
-            dislikes: Math.floor(Math.random() * 3),
+            likes: typeof window !== 'undefined' ? Math.floor(Math.random() * 10) : 0,
+            dislikes: typeof window !== 'undefined' ? Math.floor(Math.random() * 3) : 0,
             replies: [],
-            isTeacher: Math.random() < 0.1 // 10% chance of being a teacher
+            isTeacher: typeof window !== 'undefined' ? Math.random() < 0.1 : false // 10% chance of being a teacher
           }
           
           setPosts(prev => [newPost, ...prev])
@@ -89,7 +89,7 @@ export default function DiscussionBoard({
     setIsSubmitting(true)
     
     const post: DiscussionPost = {
-      id: `post_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `post_${typeof window !== 'undefined' ? Date.now() : 0}_${typeof window !== 'undefined' ? Math.random().toString(36).substr(2, 9) : 'server'}`,
       author: 'Você',
       content: newPost.trim(),
       timestamp: new Date(),
@@ -127,7 +127,7 @@ export default function DiscussionBoard({
     if (!replyContent.trim()) return
 
     const reply: DiscussionPost = {
-      id: `reply_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `reply_${typeof window !== 'undefined' ? Date.now() : 0}_${typeof window !== 'undefined' ? Math.random().toString(36).substr(2, 9) : 'server'}`,
       author: 'Você',
       content: replyContent.trim(),
       timestamp: new Date(),
