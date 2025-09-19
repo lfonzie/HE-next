@@ -32,12 +32,12 @@ const RequestSchema = z.object({
 
 // Políticas de provider por módulo
 const MODULE_PROVIDER_POLICIES = {
-  enem: { preferred: 'openai', model: 'gpt-4o-mini', complexModel: 'gpt-4o' },
-  professor: { preferred: 'openai', model: 'gpt-4o-mini', complexModel: 'gpt-4o' },
-  aula_interativa: { preferred: 'openai', model: 'gpt-4o-mini', complexModel: 'gpt-4o' },
-  financeiro: { preferred: 'openai', model: 'gpt-4o-mini', complexModel: 'gpt-4o' },
-  social_media: { preferred: 'openai', model: 'gpt-4o-mini', complexModel: 'gpt-4o' },
-  atendimento: { preferred: 'openai', model: 'gpt-4o-mini', complexModel: 'gpt-4o' }
+  enem: { preferred: 'openai', model: 'gpt-4o-mini', complexModel: 'gpt-5-chat-latest' },
+  professor: { preferred: 'openai', model: 'gpt-4o-mini', complexModel: 'gpt-5-chat-latest' },
+  aula_interativa: { preferred: 'openai', model: 'gpt-4o-mini', complexModel: 'gpt-5-chat-latest' },
+  financeiro: { preferred: 'openai', model: 'gpt-4o-mini', complexModel: 'gpt-5-chat-latest' },
+  social_media: { preferred: 'openai', model: 'gpt-4o-mini', complexModel: 'gpt-5-chat-latest' },
+  atendimento: { preferred: 'openai', model: 'gpt-4o-mini', complexModel: 'gpt-5-chat-latest' }
 } as const;
 
 const PROVIDER_CONFIDENCE_THRESHOLD = 0.75;

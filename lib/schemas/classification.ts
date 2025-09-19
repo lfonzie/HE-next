@@ -64,12 +64,12 @@ export const PROVIDER_CONFIDENCE_THRESHOLD = 0.75
 
 // Políticas de provider por módulo
 export const MODULE_PROVIDER_POLICIES = {
-  enem: { preferred: 'openai', model: 'gpt-4o-mini', complexModel: 'gpt-4o' },
-  professor: { preferred: 'openai', model: 'gpt-4o-mini', complexModel: 'gpt-4o' },
-  aula_interativa: { preferred: 'openai', model: 'gpt-4o-mini', complexModel: 'gpt-4o' },
-  financeiro: { preferred: 'openai', model: 'gpt-4o-mini', complexModel: 'gpt-4o' },
-  admin: { preferred: 'openai', model: 'gpt-4o-mini', complexModel: 'gpt-4o' },
-  atendimento: { preferred: 'openai', model: 'gpt-4o-mini', complexModel: 'gpt-4o' }
+  enem: { preferred: 'openai', model: 'gpt-4o-mini', complexModel: 'gpt-5-chat-latest' },
+  professor: { preferred: 'openai', model: 'gpt-4o-mini', complexModel: 'gpt-5-chat-latest' },
+  aula_interativa: { preferred: 'openai', model: 'gpt-4o-mini', complexModel: 'gpt-5-chat-latest' },
+  financeiro: { preferred: 'openai', model: 'gpt-4o-mini', complexModel: 'gpt-5-chat-latest' },
+  admin: { preferred: 'openai', model: 'gpt-4o-mini', complexModel: 'gpt-5-chat-latest' },
+  atendimento: { preferred: 'openai', model: 'gpt-4o-mini', complexModel: 'gpt-5-chat-latest' }
 } as const
 
 // Heurísticas de alta precisão em português
