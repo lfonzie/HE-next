@@ -102,64 +102,15 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     )
   }
 
-  // Layout especial para apresentação - sidebar compacta
+  // Layout especial para apresentação - sem sidebar, tela cheia
   if (isApresentacaoPage) {
     return (
       <ChatProvider>
         <QuotaProvider>
           <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50">
-            <div className="flex h-screen">
-              {/* Sidebar compacta para apresentação */}
-              <div className="w-16 flex-shrink-0 bg-white/90 backdrop-blur-sm border-r border-gray-200 flex flex-col items-center py-4 space-y-4">
-                {/* Logo */}
-                <div className="w-10 h-10 bg-yellow-500 rounded-lg flex items-center justify-center">
-                  <Image
-                    src="/Logo_HubEdu.ia.svg"
-                    alt="HubEdu.ia"
-                    width={32}
-                    height={32}
-                    className="w-8 h-8 object-contain"
-                  />
-                </div>
-                
-                {/* Botões de navegação compactos */}
-                <button
-                  onClick={() => window.location.href = '/chat'}
-                  className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center transition-colors"
-                  title="Chat"
-                >
-                  <MessageSquare className="w-5 h-5 text-gray-600" />
-                </button>
-                
-                <button
-                  onClick={() => window.location.href = '/aula'}
-                  className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center transition-colors"
-                  title="Aula Expandida"
-                >
-                  <BookOpen className="w-5 h-5 text-gray-600" />
-                </button>
-                
-                <button
-                  onClick={() => window.location.href = '/enem'}
-                  className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center transition-colors"
-                  title="Simulador ENEM"
-                >
-                  <GraduationCap className="w-5 h-5 text-gray-600" />
-                </button>
-                
-                <button
-                  onClick={() => window.location.href = '/admin'}
-                  className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center transition-colors"
-                  title="Admin"
-                >
-                  <Settings className="w-5 h-5 text-gray-600" />
-                </button>
-              </div>
-
-              {/* Main content - fullscreen para apresentação */}
-              <div className="flex-1 overflow-hidden">
-                {children}
-              </div>
+            {/* Layout sem sidebar - conteúdo ocupa toda a tela */}
+            <div className="w-full h-screen overflow-y-auto">
+              {children}
             </div>
           </div>
         </QuotaProvider>

@@ -218,7 +218,7 @@ export async function GET(request: NextRequest) {
     if (includeAI && process.env.OPENAI_API_KEY) {
       try {
         const aiThemes = await generateAIThemes()
-        allThemes = [...officialThemes, ...aiThemes]
+        allThemes = [...aiThemes, ...officialThemes]
       } catch (error) {
         console.error('Erro ao gerar temas com IA:', error)
         // Continuar apenas com temas oficiais se IA falhar
@@ -228,9 +228,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       themes: allThemes.sort((a, b) => {
-        // Ordenar oficiais primeiro, depois IA gerados
-        if (a.isOfficial && !b.isOfficial) return -1
-        if (!a.isOfficial && b.isOfficial) return 1
+        if (a.isAIGenerated && !b.isAIGenerated) return -1
+        if (!a.isAIGenerated && b.isAIGenerated) return 1
         return b.year - a.year
       })
     })
@@ -281,7 +280,7 @@ Responda apenas com um JSON array contendo objetos com as propriedades: id, year
     // Validar e formatar os temas gerados
     return aiThemes.map((theme: any, index: number) => ({
       id: `ai-${Date.now()}-${index}`,
-      year: 2024,
+      year: 2025,
       theme: theme.theme || theme.title || 'Tema gerado por IA',
       description: theme.description || 'Tema gerado por IA para prática',
       isAIGenerated: true
@@ -293,14 +292,14 @@ Responda apenas com um JSON array contendo objetos com as propriedades: id, year
     return [
       {
         id: `ai-fallback-${Date.now()}`,
-        year: 2024,
+        year: 2025,
         theme: 'Desafios para a sustentabilidade ambiental nas cidades brasileiras',
         description: 'Tema gerado por IA para prática',
         isAIGenerated: true
       },
       {
         id: `ai-fallback-${Date.now()}-2`,
-        year: 2024,
+        year: 2025,
         theme: 'Impactos da inteligência artificial na educação brasileira',
         description: 'Tema gerado por IA para prática',
         isAIGenerated: true

@@ -74,27 +74,27 @@ export default function ProfessorPage() {
   const { toast } = useToast()
 
   const subjects: Subject[] = [
-    { id: "matematica", name: "Matemática", color: "bg-blue-500", icon: "🔢" },
-    { id: "portugues", name: "Português", color: "bg-green-500", icon: "📚" },
-    { id: "ciencias", name: "Ciências", color: "bg-purple-500", icon: "🔬" },
-    { id: "historia", name: "História", color: "bg-orange-500", icon: "📖" },
-    { id: "geografia", name: "Geografia", color: "bg-teal-500", icon: "🌍" },
-    { id: "ingles", name: "Inglês", color: "bg-red-500", icon: "🇺🇸" },
-    { id: "artes", name: "Artes", color: "bg-pink-500", icon: "🎨" },
-    { id: "educacao-fisica", name: "Educação Física", color: "bg-indigo-500", icon: "⚽" },
+    { id: "matematica", name: "Matemática (MT)", color: "bg-blue-500", icon: "🔢" },
+    { id: "ciencias-natureza", name: "Ciências da Natureza (CN)", color: "bg-green-500", icon: "🔬" },
+    { id: "ciencias-humanas", name: "Ciências Humanas (CH)", color: "bg-purple-500", icon: "🌍" },
+    { id: "linguagens", name: "Linguagens e Códigos (LC)", color: "bg-orange-500", icon: "📚" },
+    { id: "redacao", name: "Redação", color: "bg-red-500", icon: "✍️" },
+    { id: "fisica", name: "Física", color: "bg-indigo-500", icon: "⚡" },
+    { id: "quimica", name: "Química", color: "bg-teal-500", icon: "🧪" },
+    { id: "biologia", name: "Biologia", color: "bg-emerald-500", icon: "🧬" },
   ]
 
   const commonQuestions = [
-    "Explique frações em Matemática",
-    "O que é sujeito em Português?",
-    "Explique a Segunda Guerra Mundial",
-    "Como ensinar Geografia?",
-    "Diferença entre mitose e meiose",
-    "Regras de acentuação",
+    "Função quadrática ENEM",
+    "Segunda Guerra Mundial ENEM",
+    "Sistema digestório humano",
     "Equações do segundo grau",
-    "Fatores climáticos",
-    "Literatura brasileira",
-    "Sistema solar"
+    "Fotossíntese e respiração",
+    "Interpretação de texto ENEM",
+    "Geometria espacial",
+    "História do Brasil República",
+    "Química orgânica",
+    "Redação ENEM estrutura"
   ]
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -152,8 +152,8 @@ export default function ProfessorPage() {
         setShowGamified(true)
         
         toast({
-          title: "Aula Gamificada Criada!",
-          description: "Sua pergunta foi transformada em uma apresentação interativa com quiz!",
+          title: "Aula ENEM Criada!",
+          description: "Sua pergunta foi transformada em uma aula focada no ENEM com quiz interativo!",
           variant: "default",
         })
       } else {
@@ -162,7 +162,7 @@ export default function ProfessorPage() {
         
         toast({
           title: "Resposta Gerada",
-          description: "O Professor IA respondeu sua pergunta com sucesso!",
+          description: "O Assistente ENEM respondeu sua pergunta com sucesso!",
           variant: "default",
         })
       }
@@ -180,16 +180,16 @@ export default function ProfessorPage() {
 
   const detectSubject = (text: string) => {
     const keywords = {
-      matematica: ['matemática', 'matematica', 'número', 'número', 'equação', 'equacao', 'álgebra', 'algebra', 'geometria', 'fração', 'fracao', 'cálculo', 'calculo'],
-      portugues: ['português', 'portugues', 'gramática', 'gramatica', 'literatura', 'sujeito', 'predicado', 'verbo', 'substantivo', 'adjetivo'],
-      ciencias: ['ciências', 'ciencias', 'física', 'fisica', 'química', 'quimica', 'biologia', 'meiose', 'mitose', 'célula', 'celula'],
-      historia: ['história', 'historia', 'guerra', 'revolução', 'revolucao', 'independência', 'independencia', 'império', 'imperio'],
-      geografia: ['geografia', 'clima', 'relevo', 'população', 'populacao', 'economia', 'país', 'pais', 'continente']
+      matematica: ['matemática', 'matematica', 'número', 'número', 'equação', 'equacao', 'álgebra', 'algebra', 'geometria', 'fração', 'fracao', 'cálculo', 'calculo', 'função', 'funcao', 'trigonometria'],
+      'ciencias-natureza': ['ciências da natureza', 'ciencias da natureza', 'física', 'fisica', 'química', 'quimica', 'biologia', 'meiose', 'mitose', 'célula', 'celula', 'fotossíntese', 'fotossintese'],
+      'ciencias-humanas': ['ciências humanas', 'ciencias humanas', 'história', 'historia', 'geografia', 'filosofia', 'sociologia', 'guerra', 'revolução', 'revolucao', 'independência', 'independencia'],
+      linguagens: ['linguagens e códigos', 'linguagens e codigos', 'português', 'portugues', 'gramática', 'gramatica', 'literatura', 'inglês', 'ingles', 'espanhol', 'interpretação', 'interpretacao'],
+      redacao: ['redação', 'redacao', 'dissertação', 'dissertacao', 'argumentação', 'argumentacao', 'proposta', 'intervenção', 'intervencao']
     }
 
     const words = text.toLowerCase().split(/\s+/)
     let maxScore = 0
-    let detectedSubject = 'matematica'
+    let detectedSubject = 'ciencias-natureza'
     let matchedKeywords: string[] = []
 
     for (const [subject, subjectKeywords] of Object.entries(keywords)) {
@@ -270,45 +270,45 @@ export default function ProfessorPage() {
   const capabilities = [
     {
       icon: BookOpen,
-      title: "Explicações Diretas",
-      description: "Respostas claras e objetivas para suas dúvidas acadêmicas"
+      title: "Conteúdos ENEM",
+      description: "Foco nos conteúdos que mais caem no ENEM conforme estatísticas oficiais"
     },
     {
       icon: Brain,
-      title: "Resolução de Problemas",
-      description: "Soluções passo a passo para exercícios e questões"
+      title: "Questões Estilo ENEM",
+      description: "Questões com explicações detalhadas seguindo o padrão TRI"
     },
     {
       icon: Lightbulb,
-      title: "Conceitos Fundamentais",
-      description: "Explicações dos conceitos básicos de cada disciplina"
+      title: "Estratégias de Prova",
+      description: "Dicas para otimizar tempo e performance no exame"
     },
     {
       icon: Target,
-      title: "Foco no Aprendizado",
-      description: "Respostas diretas sem distrações ou atividades extras"
+      title: "Preparação Completa",
+      description: "Aulas interativas focadas nas 4 áreas do ENEM"
     }
   ]
 
   const features = [
     {
-      title: "IA Avançada",
-      description: "Usando GPT-4 para respostas precisas e educativas",
+      title: "IA Especializada",
+      description: "Usando GPT-4 otimizado para preparação ENEM",
       color: "bg-green-500"
     },
     {
-      title: "Múltiplas Disciplinas",
-      description: "Suporte para todas as matérias escolares",
+      title: "4 Áreas ENEM",
+      description: "CN, CH, LC e MT com conteúdos específicos",
       color: "bg-blue-500"
     },
     {
-      title: "Sem Histórico",
-      description: "Cada pergunta é tratada independentemente",
+      title: "Sistema TRI",
+      description: "Questões baseadas na Teoria de Resposta ao Item",
       color: "bg-purple-500"
     },
     {
-      title: "Conteúdo Filtrado",
-      description: "Respostas adequadas para cada faixa etária",
+      title: "Contexto Brasileiro",
+      description: "Situações do cotidiano brasileiro",
       color: "bg-orange-500"
     }
   ]
@@ -322,13 +322,13 @@ export default function ProfessorPage() {
             <BookOpen className="h-6 w-6 text-white" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Professor IA</h1>
-            <p className="text-gray-600">Dúvidas pedagógicas e exercícios</p>
+            <h1 className="text-3xl font-bold text-gray-900">Assistente ENEM</h1>
+            <p className="text-gray-600">Preparação completa para o Exame Nacional do Ensino Médio</p>
           </div>
         </div>
         <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-          Assistente educacional para estudantes. Receba explicações claras, resoluções de exercícios 
-          e conceitos fundamentais de todas as disciplinas escolares.
+          Assistente especializado em preparação para o ENEM. Receba aulas focadas nos conteúdos que mais caem,
+          questões estilo ENEM com explicações detalhadas e estratégias para otimizar sua performance no exame.
         </p>
       </div>
 
@@ -447,7 +447,7 @@ export default function ProfessorPage() {
         <CardContent className="space-y-4">
           <form onSubmit={handleSubmit}>
             <Textarea
-              placeholder="Digite sua dúvida ou pergunta... (ex: Como resolver equações do primeiro grau?)"
+              placeholder="Digite sua dúvida ou pergunta... (ex: Função quadrática ENEM, Sistema digestório, Segunda Guerra Mundial)"
               value={query}
               onChange={(e) => handleQueryChange(e.target.value)}
               onKeyPress={handleKeyPress}
@@ -484,12 +484,12 @@ export default function ProfessorPage() {
               {loading ? (
                 <>
                   <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Criando Aula Gamificada...
+                  Criando Aula ENEM...
                 </>
               ) : (
                 <>
                   <Gamepad2 className="w-5 h-5 mr-2" />
-                  Criar Aula Interativa
+                  Criar Aula ENEM
                 </>
               )}
             </Button>
@@ -579,7 +579,7 @@ export default function ProfessorPage() {
             <CardTitle className="flex items-center justify-between">
               <span className="flex items-center gap-2 text-green-700">
                 <MessageSquare className="w-5 h-5" />
-                Resposta do Professor IA
+                Resposta do Assistente ENEM
               </span>
               <Button
                 variant="outline"

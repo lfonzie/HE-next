@@ -298,9 +298,9 @@ export default function ChatPage() {
   }, [messages, isStreaming]);
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-gray-50 dark:bg-zinc-900">
+    <div className="flex-1 flex flex-col h-full bg-gradient-to-br from-yellow-50 via-white to-yellow-100 dark:bg-zinc-900">
         {/* Header */}
-        <div className="bg-white dark:bg-zinc-900 shadow-sm border-b border-gray-200 dark:border-zinc-700 p-4 flex-shrink-0">
+        <div className="bg-white dark:bg-zinc-900 shadow-sm border-b border-yellow-200 dark:border-zinc-700 p-4 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div>
@@ -331,7 +331,7 @@ export default function ChatPage() {
                     variant="outline"
                     size="sm"
                     disabled={isExporting}
-                    className="border-blue-500 text-blue-700 hover:bg-blue-100 bg-blue-50"
+                    className="border-yellow-500 text-yellow-700 hover:bg-yellow-100 bg-yellow-50"
                   >
                     <Download className="w-4 h-4 mr-2" />
                     {isExporting ? "Exportando..." : "Exportar"}
@@ -341,7 +341,7 @@ export default function ChatPage() {
                   onClick={() => setShowConversationHistory(!showConversationHistory)}
                   variant="outline"
                   size="sm"
-                  className="border-purple-500 text-purple-700 hover:bg-purple-100 bg-purple-50"
+                  className="border-yellow-500 text-yellow-700 hover:bg-yellow-100 bg-yellow-50"
                 >
                   <History className="w-4 h-4 mr-2" />
                   Histórico
@@ -350,7 +350,7 @@ export default function ChatPage() {
                   onClick={() => setIsSupportModalOpen(true)}
                   variant="outline"
                   size="sm"
-                  className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                  className="border-yellow-500 text-yellow-700 hover:bg-yellow-100 bg-yellow-50"
                 >
                   <Headphones className="w-4 h-4 mr-2" />
                   Suporte
@@ -424,7 +424,7 @@ export default function ChatPage() {
         )}
 
         {/* Messages Container - Reading Column Layout */}
-        <main className="flex-1 overflow-y-auto chat-messages-container chat-content-with-fixed-input bg-gray-50 dark:bg-zinc-900" ref={messagesContainerRef}>
+        <main className="flex-1 overflow-y-auto chat-messages-container chat-content-with-fixed-input bg-gradient-to-br from-yellow-50 via-white to-yellow-100 dark:bg-zinc-900" ref={messagesContainerRef}>
           {hasMessages ? (
             <div className="mx-auto max-w-screen-md px-4 md:px-6 lg:px-8 leading-relaxed text-pretty">
               <div 
@@ -507,7 +507,7 @@ export default function ChatPage() {
         </main>
 
         {/* Chat Input - Fixed Composer with Blur */}
-        <div className="sticky bottom-0 left-0 right-0 backdrop-blur supports-[backdrop-filter]:bg-white/70 dark:supports-[backdrop-filter]:bg-zinc-900/60 border-t border-zinc-200/60 dark:border-zinc-700/50 shadow-[0_-1px_0_0_rgba(0,0,0,0.04)] px-4 md:px-6 lg:px-8 py-3">
+        <div className="sticky bottom-0 left-0 right-0 backdrop-blur supports-[backdrop-filter]:bg-white/70 dark:supports-[backdrop-filter]:bg-zinc-900/60 border-t border-yellow-200/60 dark:border-zinc-700/50 shadow-[0_-1px_0_0_rgba(0,0,0,0.04)] px-4 md:px-6 lg:px-8 py-3">
           <div className="mx-auto max-w-screen-md">
             
             {isStreaming && (

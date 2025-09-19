@@ -78,37 +78,6 @@ export default function AulaGenerator({
             <span className="text-red-500">*</span>
           </label>
           
-          {/* Accessibility Features */}
-          <div className="flex items-center gap-2 mb-2">
-            <div className="flex items-center gap-1 px-2 py-1 bg-blue-50 rounded-md border border-blue-200">
-              <Accessibility className="h-4 w-4 text-blue-600" />
-              <span className="text-xs text-blue-700 font-medium">Acessibilidade</span>
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-8 px-3 text-xs"
-              onClick={handleSpeechToText}
-              title="Ativar entrada por voz"
-              aria-label="Ativar entrada por voz"
-            >
-              <Mic className="h-3 w-3 mr-1" />
-              Voz
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-8 px-3 text-xs"
-              onClick={handleTextToSpeech}
-              title="Ouvir o texto em voz alta"
-              aria-label="Ouvir o texto em voz alta"
-            >
-              <Volume2 className="h-3 w-3 mr-1" />
-              Ouvir
-            </Button>
-          </div>
 
           <Textarea
             id="topic"

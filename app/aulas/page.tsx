@@ -545,11 +545,11 @@ export default function AulasPage() {
       {generatedLesson && (
         <header className="text-center mb-8">
           <div className="flex items-center justify-center gap-4 mb-4">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-500 to-blue-600 rounded-2xl">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl">
               <CheckCircle className="h-8 w-8 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-yellow-600 to-yellow-700 bg-clip-text text-transparent">
                 Aula Gerada com Sucesso!
               </h1>
               <p className="text-lg text-gray-600">{(generatedLesson as any)?.title || "Título da Aula"}</p>
@@ -572,7 +572,7 @@ export default function AulasPage() {
             </Button>
             <Button 
               onClick={handleStartLesson}
-              className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 flex items-center gap-2"
+              className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 flex items-center gap-2"
             >
               <Users className="h-4 w-4" />
               Iniciar Aula
@@ -583,11 +583,11 @@ export default function AulasPage() {
 
       {/* Enhanced Header - Oculto durante carregamento E quando aula foi gerada */}
       {!isGenerating && !generatedLesson && (
-        <header className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-6">
+        <header className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl mb-6">
             <BookOpen className="h-10 w-10 text-white" aria-hidden="true" />
           </div>
-          <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-yellow-600 to-yellow-700 bg-clip-text text-transparent">
             Aulas Interativas com IA
           </h1>
           <p className="text-xl text-gray-600 mb-2 max-w-2xl mx-auto">
@@ -610,241 +610,18 @@ export default function AulasPage() {
         </header>
       )}
 
-      {/* Educational Methodology Section */}
+      {/* Lesson Generator - Moved right after header */}
       {!isGenerating && !generatedLesson && (
-        <Card className="mb-8 border-2 border-indigo-100 bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50">
-          <CardHeader className="text-center">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
-                <Lightbulb className="h-6 w-6 text-white" />
-              </div>
-              <CardTitle className="text-2xl font-bold text-indigo-800">
-                Metodologia Educacional Avançada
-              </CardTitle>
-            </div>
-            <CardDescription className="text-lg text-indigo-700 max-w-4xl mx-auto">
-              Nossa plataforma utiliza metodologias educacionais comprovadas cientificamente, 
-              priorizando a orientação socrática e o desenvolvimento do pensamento crítico.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-              <div className="text-center p-4 bg-white/60 rounded-xl border border-indigo-200">
-                <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Target className="h-5 w-5 text-white" />
-                </div>
-                <h3 className="font-semibold text-gray-900 mb-2">Método Socrático</h3>
-                <p className="text-sm text-gray-600">
-                  Guiamos você através de perguntas que estimulam o raciocínio, 
-                  em vez de fornecer respostas diretas.
-                </p>
-              </div>
-              <div className="text-center p-4 bg-white/60 rounded-xl border border-indigo-200">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Users className="h-5 w-5 text-white" />
-                </div>
-                <h3 className="font-semibold text-gray-900 mb-2">Tutor Personalizado</h3>
-                <p className="text-sm text-gray-600">
-                  IA disponível 24/7 que se adapta ao seu ritmo e estilo de aprendizado único.
-                </p>
-              </div>
-              <div className="text-center p-4 bg-white/60 rounded-xl border border-indigo-200">
-                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <BookOpen className="h-5 w-5 text-white" />
-                </div>
-                <h3 className="font-semibold text-gray-900 mb-2">Multidisciplinar</h3>
-                <p className="text-sm text-gray-600">
-                  Matemática, ciências, humanidades, programação e estudos sociais em uma só plataforma.
-                </p>
-              </div>
-            </div>
-            
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
-              <h4 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
-                <AlertCircle className="h-5 w-5" />
-                Como Funciona Nossa Abordagem Educacional
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-800">
-                <div className="space-y-2">
-                  <div className="flex items-start gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span><strong>Orientação Guiada:</strong> Fazemos perguntas que levam você à descoberta</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span><strong>Feedback Imediato:</strong> Correções e orientações em tempo real</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span><strong>Aprendizagem Ativa:</strong> Você é o protagonista do seu aprendizado</span>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-start gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span><strong>Adaptação Personalizada:</strong> Conteúdo que se ajusta ao seu ritmo</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span><strong>Pensamento Crítico:</strong> Desenvolvemos habilidades analíticas</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
-                    <span><strong>Retenção de Conhecimento:</strong> Metodologia comprovada cientificamente</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-
-
-      {/* Enhanced Suggestions - Oculto durante carregamento E quando aula foi gerada */}
-      {!isGenerating && !generatedLesson && (
-        <Card className="border-2 border-blue-100 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 mb-8">
-        <CardHeader className="text-center pb-4">
-          <div className="flex items-center justify-center gap-3">
-            <CardTitle className="flex items-center gap-2 text-2xl">
-              <Lightbulb className="h-7 w-7 text-yellow-500" />
-              Sugestões Inteligentes
-            </CardTitle>
-            <Button
-              onClick={refreshSuggestions}
-              variant="outline"
-              size="sm"
-              className="ml-2"
-              disabled={suggestionsLoading}
-            >
-              <RefreshCw className={`h-4 w-4 ${suggestionsLoading ? 'animate-spin' : ''}`} />
-            </Button>
-          </div>
-          <CardDescription className="text-base">
-            Sugestões geradas por IA que mudam a cada carregamento
-          </CardDescription>
-          {suggestionsError && (
-            <Alert className="mt-4 border-orange-200 bg-orange-50">
-              <AlertCircle className="h-4 w-4 text-orange-600" />
-              <AlertDescription className="text-orange-800">
-                Usando sugestões de fallback. Recarregue para tentar novamente.
-              </AlertDescription>
-            </Alert>
-          )}
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {suggestionsLoading ? (
-              // Show loading skeleton while suggestions are being generated
-              Array.from({ length: 3 }).map((_, index) => (
-                <div
-                  key={index}
-                  className="p-6 border-2 border-gray-200 rounded-xl bg-gray-50 animate-pulse"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 bg-gray-300 rounded-full flex-shrink-0"></div>
-                    <div className="flex-1">
-                      <div className="h-4 bg-gray-300 rounded mb-2"></div>
-                      <div className="h-3 bg-gray-300 rounded w-2/3 mb-3"></div>
-                      <div className="flex gap-2 mb-3">
-                        <div className="h-5 bg-gray-300 rounded w-16"></div>
-                        <div className="h-5 bg-gray-300 rounded w-20"></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              suggestions.map((suggestion, index) => (
-                <button
-                  key={`${suggestion.text}-${index}`}
-                  onClick={() => handleSuggestionClick(suggestion)}
-                  className="group p-6 text-left border-2 border-blue-200 rounded-xl hover:border-blue-400 hover:bg-white hover:shadow-xl transition-all duration-300 bg-white/80 backdrop-blur-sm transform hover:scale-105 hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={isGenerating}
-                  aria-label={`Gerar aula sobre ${suggestion.text}`}
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
-                      <span className="text-sm font-bold text-white">{index + 1}</span>
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-gray-800 group-hover:text-blue-800 leading-relaxed mb-2">
-                        {suggestion.text}
-                      </p>
-                      <div className="flex gap-2 mb-3">
-                        <Badge variant="secondary" className="text-xs">{suggestion.category}</Badge>
-                        <Badge variant="outline" className="text-xs">{suggestion.level}</Badge>
-                      </div>
-                      <div className="flex items-center gap-1 text-xs text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Send className="h-3 w-3" />
-                        <span>Clique para gerar automaticamente</span>
-                      </div>
-                    </div>
-                  </div>
-                </button>
-              ))
-            )}
-          </div>
-          <div className="mt-8 text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/60 rounded-full border border-blue-200">
-              <TrendingUp className="h-4 w-4 text-blue-600" />
-              <span className="text-sm text-gray-700">
-                Ou descreva seu próprio tópico abaixo
-              </span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-      )}
-
-      {/* Loading State - Mostra entretenimento e progresso */}
-      {isGenerating && (
-        <div className="max-w-4xl mx-auto">
-          <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-purple-50">
-            <CardHeader className="text-center">
-              <div className="flex items-center justify-center gap-3 mb-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center">
-                  <Loader2 className="h-8 w-8 text-white animate-spin" />
-                </div>
-                <div>
-                  <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                    Gerando sua Aula Personalizada
-                  </h1>
-                  <p className="text-lg text-gray-600">Nossa IA está trabalhando intensamente para você!</p>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Progress Bar */}
-              <LessonProgress
-                progress={generationProgress}
-                status={generationStatus}
-                isGenerating={isGenerating}
-                elapsedTime={elapsedTime}
-                className="min-h-[120px]"
-              />
-              
-              {/* Entertainment Section */}
-              <LoadingEntertainment elapsedTime={elapsedTime} />
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Main Content Grid - Oculto quando aula foi gerada E durante loading */}
-      {!generatedLesson && !isGenerating && (
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-        {/* Generation Form - Larger */}
-        <div className="lg:col-span-3">
-          <Card className="h-fit">
+        <div className="max-w-2xl mx-auto mb-8">
+          <Card className="border-2 border-yellow-200 bg-gradient-to-br from-yellow-50 to-yellow-100">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-xl">
-                <Sparkles className="h-6 w-6 text-blue-600" />
+                <Sparkles className="h-6 w-6 text-yellow-600" />
                 Gerador de Aulas Personalizado
               </CardTitle>
-              <CardDescription>
+              <p className="text-sm text-gray-600">
                 Descreva qualquer tópico e nossa IA criará uma experiência de aprendizado completa
-              </CardDescription>
+              </p>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-3">
@@ -853,48 +630,6 @@ export default function AulasPage() {
                   <span className="text-red-500">*</span>
                 </label>
                 
-                {/* Accessibility Features */}
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="flex items-center gap-1 px-2 py-1 bg-blue-50 rounded-md border border-blue-200">
-                    <Accessibility className="h-4 w-4 text-blue-600" />
-                    <span className="text-xs text-blue-700 font-medium">Acessibilidade</span>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-8 px-3 text-xs"
-                    onClick={() => {
-                      // Mock speech-to-text functionality
-                      console.log('Speech-to-text activated')
-                      toast.success('Funcionalidade de voz ativada! Fale seu tópico.')
-                    }}
-                    title="Ativar entrada por voz"
-                  >
-                    <Mic className="h-3 w-3 mr-1" />
-                    Voz
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-8 px-3 text-xs"
-                    onClick={() => {
-                      // Mock text-to-speech functionality
-                      if (formData.topic) {
-                        console.log('Text-to-speech activated for:', formData.topic)
-                        toast.success('Lendo o texto em voz alta...')
-                      } else {
-                        toast.error('Digite algo primeiro para ouvir')
-                      }
-                    }}
-                    title="Ouvir o texto em voz alta"
-                  >
-                    <Volume2 className="h-3 w-3 mr-1" />
-                    Ouvir
-                  </Button>
-                </div>
-
                 <Textarea
                   id="topic"
                   placeholder="Exemplo: Como a fotossíntese transforma luz solar em energia química, incluindo as reações e fatores que influenciam o processo..."
@@ -932,12 +667,12 @@ export default function AulasPage() {
                 </div>
               </div>
 
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
-                <h4 className="font-medium text-blue-900 mb-2 flex items-center gap-2">
+              <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 border border-yellow-200 rounded-lg p-4">
+                <h4 className="font-medium text-yellow-900 mb-2 flex items-center gap-2">
                   <Target className="h-4 w-4" />
                   O que nossa IA fará automaticamente:
                 </h4>
-                <ul className="text-sm text-blue-800 space-y-1">
+                <ul className="text-sm text-yellow-800 space-y-1">
                   <li>✨ Identificar a matéria e série ideais</li>
                   <li>🎯 Criar objetivos de aprendizagem específicos</li>
                   <li>🎮 Desenvolver atividades interativas e gamificadas</li>
@@ -946,55 +681,10 @@ export default function AulasPage() {
                 </ul>
               </div>
 
-              {/* Multi-Subject Support */}
-              <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-4">
-                <h4 className="font-medium text-purple-900 mb-3 flex items-center gap-2">
-                  <BookOpen className="h-4 w-4" />
-                  Suporte Multidisciplinar Completo
-                </h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className="text-purple-800">Matemática</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <span className="text-purple-800">Ciências</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                    <span className="text-purple-800">Humanidades</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                    <span className="text-purple-800">Programação</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                    <span className="text-purple-800">Estudos Sociais</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                    <span className="text-purple-800">Linguagens</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
-                    <span className="text-purple-800">Artes</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-teal-500 rounded-full"></div>
-                    <span className="text-purple-800">Educação Física</span>
-                  </div>
-                </div>
-                <p className="text-xs text-purple-700 mt-2">
-                  Da educação básica ao ensino superior, cobrimos todas as disciplinas com metodologias adaptadas.
-                </p>
-              </div>
-
               <Button
                 onClick={() => handleGenerate()}
                 disabled={isGenerating || !formData.topic.trim()}
-                className="w-full h-12 text-lg font-medium bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                className="w-full h-12 text-lg font-medium bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700"
                 size="lg"
               >
                 {isGenerating ? (
@@ -1012,133 +702,114 @@ export default function AulasPage() {
             </CardContent>
           </Card>
         </div>
+      )}
 
-        {/* Generated Lesson Preview - Smaller but detailed */}
-        <div className="lg:col-span-2">
-          <Card className="h-fit sticky top-4">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5 text-green-600" />
-                Sua Aula Gerada
-              </CardTitle>
-              <CardDescription>
-                Preview da experiência de aprendizado
-              </CardDescription>
+
+
+
+      {/* Minimalist Suggestions */}
+      {!isGenerating && !generatedLesson && (
+        <div className="max-w-4xl mx-auto mb-8">
+          <div className="text-center mb-4">
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">💡 Sugestões Rápidas</h3>
+            <p className="text-sm text-gray-600">Clique em qualquer sugestão para gerar automaticamente</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {suggestionsLoading ? (
+              Array.from({ length: 6 }).map((_, index) => (
+                <div key={index} className="p-3 border border-gray-200 rounded-lg bg-gray-50 animate-pulse">
+                  <div className="h-4 bg-gray-300 rounded mb-2"></div>
+                  <div className="h-3 bg-gray-300 rounded w-2/3"></div>
+                </div>
+              ))
+            ) : (
+              suggestions.map((suggestion, index) => (
+                <button
+                  key={`${suggestion.text}-${index}`}
+                  onClick={() => handleSuggestionClick(suggestion)}
+                  className="p-3 text-left border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 bg-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isGenerating}
+                  aria-label={`Gerar aula sobre ${suggestion.text}`}
+                >
+                  <p className="text-sm font-medium text-gray-800 mb-1 line-clamp-2">
+                    {suggestion.text}
+                  </p>
+                  <div className="flex gap-1">
+                    <Badge variant="secondary" className="text-xs px-1 py-0">{suggestion.category}</Badge>
+                    <Badge variant="outline" className="text-xs px-1 py-0">{suggestion.level}</Badge>
+                  </div>
+                </button>
+              ))
+            )}
+          </div>
+          
+          <div className="text-center mt-4">
+            <Button
+              onClick={refreshSuggestions}
+              variant="outline"
+              size="sm"
+              disabled={suggestionsLoading}
+              className="text-xs"
+            >
+              <RefreshCw className={`h-3 w-3 mr-1 ${suggestionsLoading ? 'animate-spin' : ''}`} />
+              Atualizar Sugestões
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Loading State - Mostra entretenimento e progresso */}
+      {isGenerating && (
+        <div className="max-w-4xl mx-auto">
+          <Card className="border-2 border-yellow-200 bg-gradient-to-br from-yellow-50 to-yellow-100">
+            <CardHeader className="text-center">
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl flex items-center justify-center">
+                  <Loader2 className="h-8 w-8 text-white animate-spin" />
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-yellow-600 to-yellow-700 bg-clip-text text-transparent">
+                    Gerando sua Aula Personalizada
+                  </h1>
+                  <p className="text-lg text-gray-600">Nossa IA está trabalhando intensamente para você!</p>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent>
-              {generatedLesson ? (
-                <div className="space-y-6">
-                  <div className="text-center p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200">
-                    <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <CheckCircle className="h-6 w-6 text-white" />
-                    </div>
-                    <h3 className="font-bold text-lg text-gray-900 mb-2">{(generatedLesson as any)?.title || "Título da Aula"}</h3>
-                    <div className="flex flex-wrap justify-center gap-2 mb-3">
-                      <Badge className="bg-blue-100 text-blue-800">{(generatedLesson as any)?.subject || "Matéria"}</Badge>
-                      <Badge className="bg-purple-100 text-purple-800">{(generatedLesson as any)?.level || "Nível"}</Badge>
-                      <Badge className="bg-orange-100 text-orange-800">{(generatedLesson as any)?.difficulty || "Médio"}</Badge>
-                    </div>
-                    <div className="flex justify-center gap-4 text-sm text-gray-600">
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
-                        {(generatedLesson as any)?.estimatedDuration || ""} min
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Target className="h-4 w-4" />
-                        {generatedLesson.stages.length} etapas
-                      </span>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h4 className="font-semibold mb-3 flex items-center gap-2">
-                      <Target className="h-4 w-4 text-blue-600" />
-                      Objetivos de Aprendizagem:
-                    </h4>
-                    <ul className="space-y-2">
-                      {generatedLesson.objectives.map((objective: string, index: number) => (
-                        <li key={index} className="flex items-start gap-2 text-sm">
-                          <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" />
-                          <span className="text-gray-700">{objective}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div>
-                    <h4 className="font-semibold mb-3 flex items-center gap-2">
-                      <BookOpen className="h-4 w-4 text-purple-600" />
-                      Estrutura da Aula:
-                    </h4>
-                    <div className="space-y-3">
-                      {generatedLesson.stages.map((stage: any, index: number) => (
-                        <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                          <div className="w-8 h-8 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center flex-shrink-0">
-                            <span className="text-xs font-bold text-white">{index + 1}</span>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm text-gray-900 truncate">{stage.etapa}</p>
-                            <div className="flex items-center gap-2 mt-1">
-                              <Badge variant="secondary" className="text-xs">{stage.type}</Badge>
-                              <span className="text-xs text-gray-500">{stage.estimatedTime} min</span>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Métricas de Pacing Profissional */}
-                  <PacingMetrics 
-                    metrics={pacingMetrics} 
-                    warnings={pacingWarnings}
-                    className="bg-blue-50 p-4 rounded-lg border border-blue-200"
-                  />
-
-                  <div className="grid grid-cols-2 gap-3 pt-4">
-                    <Button 
-                      onClick={handleStartLesson} 
-                      className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
-                    >
-                      <Users className="mr-2 h-4 w-4" />
-                      Iniciar
-                    </Button>
-                    <Button onClick={handleSaveLesson} variant="outline">
-                      💾 Salvar
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-12 text-gray-500">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <BookOpen className="h-8 w-8 opacity-50" />
-                  </div>
-                  <p className="text-lg font-medium mb-2">Aguardando sua aula</p>
-                  <p className="text-sm">Descreva um tópico para ver o preview aqui</p>
-                </div>
-              )}
+            <CardContent className="space-y-6">
+              {/* Progress Bar */}
+              <LessonProgress
+                progress={generationProgress}
+                status={generationStatus}
+                isGenerating={isGenerating}
+                elapsedTime={elapsedTime}
+                className="min-h-[120px]"
+              />
+              
+              {/* Entertainment Section */}
+              <LoadingEntertainment elapsedTime={elapsedTime} />
             </CardContent>
           </Card>
         </div>
-      </div>
       )}
+
 
       {/* Aula Gerada - Layout completo quando aula está presente */}
       {generatedLesson && (
         <div className="max-w-4xl mx-auto">
-          <Card className="border-2 border-green-200 bg-gradient-to-br from-green-50 to-blue-50">
+          <Card className="border-2 border-yellow-200 bg-gradient-to-br from-yellow-50 to-yellow-100">
             <CardContent className="p-8">
               <div className="space-y-8">
                 {/* Informações principais da aula */}
                 <div className="text-center">
-                  <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <div className="w-20 h-20 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-6">
                     <CheckCircle className="h-10 w-10 text-white" />
                   </div>
                   <h2 className="text-2xl font-bold text-gray-900 mb-2">{(generatedLesson as any)?.title || "Título da Aula"}</h2>
                   <div className="flex flex-wrap justify-center gap-2 mb-4">
-                    <Badge className="bg-blue-100 text-blue-800">{(generatedLesson as any)?.subject || "Matéria"}</Badge>
-                    <Badge className="bg-purple-100 text-purple-800">{(generatedLesson as any)?.level || "Nível"}</Badge>
-                    <Badge className="bg-orange-100 text-orange-800">{(generatedLesson as any)?.difficulty || "Médio"}</Badge>
+                    <Badge className="bg-yellow-100 text-yellow-800">{(generatedLesson as any)?.subject || "Matéria"}</Badge>
+                    <Badge className="bg-yellow-100 text-yellow-800">{(generatedLesson as any)?.level || "Nível"}</Badge>
+                    <Badge className="bg-yellow-100 text-yellow-800">{(generatedLesson as any)?.difficulty || "Médio"}</Badge>
                   </div>
                   <div className="flex justify-center gap-6 text-sm text-gray-600">
                     <span className="flex items-center gap-1">
@@ -1155,13 +826,13 @@ export default function AulasPage() {
                 {/* Objetivos de Aprendizagem */}
                 <div>
                   <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
-                    <Target className="h-5 w-5 text-blue-600" />
+                    <Target className="h-5 w-5 text-yellow-600" />
                     Objetivos de Aprendizagem
                   </h3>
                   <ul className="space-y-3">
                     {generatedLesson.objectives.map((objective: string, index: number) => (
                       <li key={index} className="flex items-start gap-3">
-                        <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
+                        <CheckCircle className="h-5 w-5 text-yellow-500 flex-shrink-0 mt-0.5" />
                         <span className="text-gray-700">{objective}</span>
                       </li>
                     ))}
@@ -1171,7 +842,7 @@ export default function AulasPage() {
                 {/* Estrutura da Aula */}
                 <div>
                   <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
-                    <BookOpen className="h-5 w-5 text-purple-600" />
+                    <BookOpen className="h-5 w-5 text-yellow-600" />
                     Estrutura da Aula
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1196,14 +867,14 @@ export default function AulasPage() {
                 <PacingMetrics 
                   metrics={pacingMetrics} 
                   warnings={pacingWarnings}
-                  className="bg-blue-50 p-6 rounded-lg border border-blue-200"
+                  className="bg-yellow-50 p-6 rounded-lg border border-yellow-200"
                 />
 
                 {/* Botões de ação */}
                 <div className="flex flex-col sm:flex-row gap-4 pt-6">
                   <Button 
                     onClick={handleStartLesson} 
-                    className="flex-1 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 h-12 text-lg"
+                    className="flex-1 bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 h-12 text-lg"
                   >
                     <Users className="mr-2 h-5 w-5" />
                     Iniciar Aula Agora
@@ -1211,7 +882,7 @@ export default function AulasPage() {
                   <Button 
                     onClick={handleSaveLesson} 
                     variant="outline" 
-                    className="sm:w-auto h-12"
+                    className="sm:w-auto h-12 border-yellow-400 text-yellow-700 hover:bg-yellow-50"
                   >
                     <FileText className="mr-2 h-4 w-4" />
                     Salvar Aula
@@ -1223,232 +894,8 @@ export default function AulasPage() {
         </div>
       )}
 
-      {/* Teacher Assistant Features Section */}
-      {!isGenerating && !generatedLesson && (
-        <Card className="mt-8 border-2 border-orange-100 bg-gradient-to-br from-orange-50 to-yellow-50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-xl">
-              <Users className="h-6 w-6 text-orange-600" />
-              Assistente para Educadores
-            </CardTitle>
-            <CardDescription>
-              Ferramentas gratuitas para professores automatizarem tarefas administrativas e focarem no ensino
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-orange-600 flex-shrink-0 mt-1" />
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Planejamento de Aulas</h4>
-                    <p className="text-sm text-gray-600">Gera planos alinhados a padrões curriculares com diferenciações</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-orange-600 flex-shrink-0 mt-1" />
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Acompanhamento de Progresso</h4>
-                    <p className="text-sm text-gray-600">Resumos em tempo real e análise de trabalhos dos alunos</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-orange-600 flex-shrink-0 mt-1" />
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Recursos Pedagógicos</h4>
-                    <p className="text-sm text-gray-600">Criação de rubricas, bilhetes de saída e agrupamentos</p>
-                  </div>
-                </div>
-              </div>
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-orange-600 flex-shrink-0 mt-1" />
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Comunicação Multilíngue</h4>
-                    <p className="text-sm text-gray-600">Redação de e-mails e newsletters de classe em múltiplos idiomas</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-orange-600 flex-shrink-0 mt-1" />
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Identificação de Lacunas</h4>
-                    <p className="text-sm text-gray-600">Detecção automática de dificuldades de aprendizado</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-orange-600 flex-shrink-0 mt-1" />
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Histórico e Documentos</h4>
-                    <p className="text-sm text-gray-600">Acesso a chats anteriores e materiais salvos</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="mt-6 p-4 bg-gradient-to-r from-orange-50 to-yellow-50 border border-orange-200 rounded-lg">
-              <h4 className="font-semibold text-orange-900 mb-2 flex items-center gap-2">
-                <Lightbulb className="h-4 w-4" />
-                Benefícios para Educadores
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-orange-800">
-                <div className="space-y-1">
-                  <div>• <strong>Produtividade:</strong> Automatiza tarefas administrativas demoradas</div>
-                  <div>• <strong>Personalização:</strong> Sugere diferenciações para grupos diversos</div>
-                  <div>• <strong>Eficiência:</strong> Curva de aprendizado mínima e uso intuitivo</div>
-                </div>
-                <div className="space-y-1">
-                  <div>• <strong>Qualidade:</strong> Ferramentas projetadas por educadores</div>
-                  <div>• <strong>Acesso:</strong> Gratuito para professores em territórios qualificados</div>
-                  <div>• <strong>Integração:</strong> Funciona com recursos existentes da escola</div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
-      {/* Ethical AI Guidelines Section */}
-      {!isGenerating && !generatedLesson && (
-        <Card className="mt-8 border-2 border-purple-100 bg-gradient-to-br from-purple-50 to-indigo-50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-xl">
-              <AlertCircle className="h-6 w-6 text-purple-600" />
-              IA Ética e Segura
-            </CardTitle>
-            <CardDescription>
-              Compromisso com práticas educacionais responsáveis e proteção da privacidade
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-purple-600 flex-shrink-0 mt-1" />
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Privacidade Protegida</h4>
-                    <p className="text-sm text-gray-600">Não coletamos informações pessoalmente identificáveis (PII)</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-purple-600 flex-shrink-0 mt-1" />
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Alinhamento Ético</h4>
-                    <p className="text-sm text-gray-600">Respostas filtradas para evitar conteúdo inadequado</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-purple-600 flex-shrink-0 mt-1" />
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Supervisão Humana</h4>
-                    <p className="text-sm text-gray-600">Educadores podem monitorar e orientar o uso da IA</p>
-                  </div>
-                </div>
-              </div>
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-purple-600 flex-shrink-0 mt-1" />
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Transparência</h4>
-                    <p className="text-sm text-gray-600">Explicamos como nossa IA funciona e suas limitações</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-purple-600 flex-shrink-0 mt-1" />
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Conformidade Educacional</h4>
-                    <p className="text-sm text-gray-600">Seguimos padrões e regulamentações educacionais</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-purple-600 flex-shrink-0 mt-1" />
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Uso Responsável</h4>
-                    <p className="text-sm text-gray-600">Promovemos pensamento crítico, não dependência da IA</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="mt-6 p-4 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg">
-              <h4 className="font-semibold text-purple-900 mb-2 flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4" />
-                Diretrizes de Uso Seguro
-              </h4>
-              <ul className="text-sm text-purple-800 space-y-1">
-                <li>• Não compartilhe informações pessoais como nomes ou endereços</li>
-                <li>• Use a IA como ferramenta de apoio, não como substituto do pensamento</li>
-                <li>• Sempre verifique informações importantes com fontes confiáveis</li>
-                <li>• Reporte qualquer comportamento inadequado da IA</li>
-              </ul>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
-      {/* Educational Benefits Section - Oculto durante carregamento E quando aula foi gerada */}
-      {!isGenerating && !generatedLesson && (
-        <Card className="mt-8 border-2 border-green-100 bg-gradient-to-br from-green-50 to-emerald-50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-xl">
-            <TrendingUp className="h-6 w-6 text-green-600" />
-            Benefícios Pedagógicos Comprovados
-          </CardTitle>
-          <CardDescription>
-            Baseado em metodologias educacionais modernas e pesquisa científica
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-1" />
-                <div>
-                  <h4 className="font-semibold text-gray-900">Aprendizagem Ativa</h4>
-                  <p className="text-sm text-gray-600">Metodologia que coloca o aluno como protagonista do seu aprendizado</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-1" />
-                <div>
-                  <h4 className="font-semibold text-gray-900">Personalização Adaptativa</h4>
-                  <p className="text-sm text-gray-600">Conteúdo que se ajusta ao ritmo e estilo de cada estudante</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-1" />
-                <div>
-                  <h4 className="font-semibold text-gray-900">Feedback Imediato</h4>
-                  <p className="text-sm text-gray-600">Correções e orientações em tempo real para otimizar o aprendizado</p>
-                </div>
-              </div>
-            </div>
-            <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-1" />
-                <div>
-                  <h4 className="font-semibold text-gray-900">Microlearning</h4>
-                  <p className="text-sm text-gray-600">Conteúdo dividido em pequenas doses para melhor retenção</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-1" />
-                <div>
-                  <h4 className="font-semibold text-gray-900">Avaliação Formativa</h4>
-                  <p className="text-sm text-gray-600">Acompanhamento contínuo do progresso e identificação de lacunas</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-1" />
-                <div>
-                  <h4 className="font-semibold text-gray-900">Conectivismo Digital</h4>
-                  <p className="text-sm text-gray-600">Integração com recursos digitais e redes de conhecimento</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-      )}
 
     </div>
   )

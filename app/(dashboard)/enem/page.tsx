@@ -3,11 +3,13 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { 
   BookOpen, 
   Target, 
   Clock, 
   Users, 
+  Sparkles,
   Zap, 
   Play,
   Settings,
@@ -319,12 +321,12 @@ function EnemSimulatorContent() {
   // Render based on current state
   if (appState === 'simulation' && sessionId && simulationConfig) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-        <div className="bg-white shadow-sm border-b">
+      <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-yellow-100">
+        <div className="bg-white shadow-sm border-b border-yellow-200">
           <div className="max-w-7xl mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-yellow-600 to-yellow-700 bg-clip-text text-transparent">
                   Simulado ENEM - {simulationConfig.mode}
                 </h1>
                 <p className="text-sm text-gray-600">
@@ -332,7 +334,7 @@ function EnemSimulatorContent() {
                   {simulationConfig.timeLimit && ` • ${simulationConfig.timeLimit} minutos`}
                 </p>
               </div>
-              <Button onClick={handleBackToSetup} variant="outline">
+              <Button onClick={handleBackToSetup} variant="outline" className="border-yellow-400 text-yellow-700 hover:bg-yellow-50">
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Voltar à Configuração
               </Button>
@@ -354,19 +356,19 @@ function EnemSimulatorContent() {
 
   if (appState === 'results' && score) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-        <div className="bg-white shadow-sm border-b">
+      <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-yellow-100">
+        <div className="bg-white shadow-sm border-b border-yellow-200">
           <div className="max-w-7xl mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-yellow-600 to-yellow-700 bg-clip-text text-transparent">
                   Resultados do Simulado
                 </h1>
                 <p className="text-sm text-gray-600">
                   Análise detalhada do seu desempenho
                 </p>
               </div>
-              <Button onClick={handleBackToSetup} variant="outline">
+              <Button onClick={handleBackToSetup} variant="outline" className="border-yellow-400 text-yellow-700 hover:bg-yellow-50">
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Novo Simulado
               </Button>
@@ -390,12 +392,12 @@ function EnemSimulatorContent() {
 
   if (appState === 'customization') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-        <div className="bg-white shadow-sm border-b">
+      <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-yellow-100">
+        <div className="bg-white shadow-sm border-b border-yellow-200">
           <div className="max-w-7xl mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-yellow-600 to-yellow-700 bg-clip-text text-transparent">
                   Personalizar Simulado
                 </h1>
                 <p className="text-sm text-gray-600">
@@ -419,19 +421,33 @@ function EnemSimulatorContent() {
 
   // Default: Mode Selection
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-4xl mx-auto px-6 py-8">
-          <div className="text-center">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-4">
-              Simulador ENEM
-            </h1>
-            <p className="text-lg text-gray-600">
-              Prepare-se para o ENEM com questões oficiais de anos anteriores
-            </p>
+    <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-yellow-100">
+      <div className="max-w-4xl mx-auto px-6 py-8">
+        <header className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl mb-6">
+            <BookOpen className="h-10 w-10 text-white" aria-hidden="true" />
           </div>
-        </div>
+          <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-yellow-600 to-yellow-700 bg-clip-text text-transparent">
+            Simulador ENEM
+          </h1>
+          <p className="text-xl text-gray-600 mb-2 max-w-2xl mx-auto">
+            Prepare-se para o ENEM com questões oficiais de anos anteriores
+          </p>
+          <div className="flex flex-wrap justify-center gap-2 mt-6">
+            <Badge variant="secondary" className="flex items-center gap-1">
+              <Sparkles className="h-3 w-3" />
+              IA Avançada
+            </Badge>
+            <Badge variant="secondary" className="flex items-center gap-1">
+              <Target className="h-3 w-3" />
+              Personalizado
+            </Badge>
+            <Badge variant="secondary" className="flex items-center gap-1">
+              <Users className="h-3 w-3" />
+              Interativo
+            </Badge>
+          </div>
+        </header>
       </div>
       
       <div className="max-w-4xl mx-auto p-6">
@@ -491,7 +507,7 @@ function EnemSimulatorContent() {
 
         {/* Simple Info */}
         <div className="mt-8 text-center text-sm text-gray-500">
-          <p className="text-blue-600 font-medium">
+          <p className="text-yellow-600 font-medium">
             📚 Questões reais do ENEM • Banco completo 2009-2023
           </p>
         </div>

@@ -62,7 +62,7 @@ Responda apenas com um JSON array contendo objetos com as propriedades: theme, d
     // Validar e formatar os temas gerados
     const formattedThemes: EnemTheme[] = aiThemes.map((theme: any, index: number) => ({
       id: `ai-${Date.now()}-${index}`,
-      year: 2024,
+      year: 2025,
       theme: theme.theme || theme.title || 'Tema gerado por IA',
       description: theme.description || 'Tema gerado por IA para prática',
       isAIGenerated: true
@@ -81,21 +81,21 @@ Responda apenas com um JSON array contendo objetos com as propriedades: theme, d
     const fallbackThemes: EnemTheme[] = [
       {
         id: `ai-fallback-${Date.now()}`,
-        year: 2024,
+        year: 2025,
         theme: 'Desafios para a sustentabilidade ambiental nas cidades brasileiras',
         description: 'Tema gerado por IA para prática',
         isAIGenerated: true
       },
       {
         id: `ai-fallback-${Date.now()}-2`,
-        year: 2024,
+        year: 2025,
         theme: 'Impactos da inteligência artificial na educação brasileira',
         description: 'Tema gerado por IA para prática',
         isAIGenerated: true
       },
       {
         id: `ai-fallback-${Date.now()}-3`,
-        year: 2024,
+        year: 2025,
         theme: 'Desafios para a inclusão digital de idosos no Brasil',
         description: 'Tema gerado por IA para prática',
         isAIGenerated: true

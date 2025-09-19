@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, FileText, Send, Clock, Target } from 'lucide-react'
+import { Loader2, FileText, Send, Clock, Target, Sparkles } from 'lucide-react'
 import { useNotifications } from '@/components/providers/NotificationProvider'
 import { useRouter } from 'next/navigation'
 import { FileUpload } from '@/components/redacao/FileUpload'
@@ -43,6 +43,22 @@ export default function RedacaoPage() {
   const [includeAIThemes, setIncludeAIThemes] = useState(false)
   const [isLoadingAIThemes, setIsLoadingAIThemes] = useState(false)
 
+  const prepareThemes = useCallback((list: EnemTheme[]) => {
+    return [...list]
+      .map((theme) => {
+        const isAITheme = theme.isAIGenerated || theme.year >= 2025 || theme.id?.startsWith('ai-')
+        if (isAITheme) {
+          return { ...theme, isAIGenerated: true, year: 2025 }
+        }
+        return { ...theme, isAIGenerated: false }
+      })
+      .sort((a, b) => {
+        if (a.isAIGenerated && !b.isAIGenerated) return -1
+        if (!a.isAIGenerated && b.isAIGenerated) return 1
+        return b.year - a.year
+      })
+  }, [])
+
   // Carregar temas do ENEM
   useEffect(() => {
     const loadThemes = async () => {
@@ -51,10 +67,10 @@ export default function RedacaoPage() {
         const response = await fetch(url)
         if (response.ok) {
           const data = await response.json()
-          setThemes(data.themes || [])
+          setThemes(prepareThemes(data.themes || []))
         } else {
           // Fallback para temas estáticos se a API falhar
-          setThemes([
+          setThemes(prepareThemes([
             {
               id: '2024-1',
               year: 2024,
@@ -125,7 +141,7 @@ export default function RedacaoPage() {
               description: 'Tema da redação ENEM 2015',
               isOfficial: true
             }
-          ])
+          ]))
         }
       } catch (error) {
         console.error('Erro ao carregar temas:', error)
@@ -136,7 +152,7 @@ export default function RedacaoPage() {
     }
 
     loadThemes()
-  }, [addNotification, includeAIThemes])
+  }, [addNotification, includeAIThemes, prepareThemes])
 
   // Contar palavras em tempo real
   useEffect(() => {
@@ -238,26 +254,34 @@ export default function RedacaoPage() {
   }
 
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="bg-gradient-to-br from-yellow-50 via-white to-yellow-100 dark:from-gray-900 dark:to-gray-800">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-4">
-            <FileText className="h-12 w-12 text-blue-600 mr-4" />
-            <div>
-              <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
-                Redação ENEM
-              </h1>
-              <p className="text-lg text-gray-600 dark:text-gray-300 mt-2">
-                Pratique sua redação com temas oficiais do ENEM
-              </p>
-            </div>
+        <header className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl mb-6">
+            <FileText className="h-10 w-10 text-white" aria-hidden="true" />
           </div>
-        </div>
+          <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-yellow-600 to-yellow-700 bg-clip-text text-transparent">
+            Redação ENEM
+          </h1>
+          <p className="text-xl text-gray-600 mb-2 max-w-2xl mx-auto">
+            Pratique sua redação com temas oficiais do ENEM
+          </p>
+          <div className="flex flex-wrap justify-center gap-2 mt-6">
+            <Badge variant="secondary" className="flex items-center gap-1">
+              <Sparkles className="h-3 w-3" />
+              IA Avançada
+            </Badge>
+            <Badge variant="secondary" className="flex items-center gap-1">
+              <Target className="h-3 w-3" />
+              Personalizado
+            </Badge>
+          </div>
+        </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="space-y-6">
           {/* Seleção de Tema */}
-          <Card className="lg:col-span-1">
+          <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
                 <Target className="h-5 w-5 mr-2" />
@@ -305,11 +329,11 @@ export default function RedacaoPage() {
               )}
               
               {selectedTheme && (
-                <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                  <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
+                <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                  <h4 className="font-medium text-yellow-900 dark:text-yellow-100 mb-2">
                     Tema Selecionado:
                   </h4>
-                  <p className="text-sm text-blue-800 dark:text-blue-200">
+                  <p className="text-sm text-yellow-800 dark:text-yellow-200">
                     {themes.find(t => t.id === selectedTheme)?.theme}
                   </p>
                   {themes.find(t => t.id === selectedTheme)?.isAIGenerated && (
@@ -342,7 +366,7 @@ export default function RedacaoPage() {
                         if (response.ok) {
                           const data = await response.json()
                           const currentOfficialThemes = themes.filter(t => t.isOfficial)
-                          setThemes([...currentOfficialThemes, ...data.themes])
+                          setThemes(prepareThemes([...data.themes, ...currentOfficialThemes]))
                           setIncludeAIThemes(true)
                           addNotification({
                             type: 'success',
@@ -388,16 +412,6 @@ export default function RedacaoPage() {
             </CardContent>
           </Card>
 
-          {/* Upload de Arquivo */}
-          <div className="lg:col-span-2">
-            <FileUpload 
-              onTextExtracted={handleTextExtracted}
-              onFileProcessed={handleFileProcessed}
-            />
-          </div>
-        </div>
-
-        <div className="mt-6">
           {/* Editor de Redação */}
           <Card>
             <CardHeader>
@@ -416,7 +430,7 @@ export default function RedacaoPage() {
                 </Badge>
               </CardTitle>
               <CardDescription>
-                Digite sua redação seguindo a estrutura dissertativa-argumentativa ou use o upload acima para carregar um arquivo
+                Digite sua redação seguindo a estrutura dissertativa-argumentativa ou use o upload abaixo para carregar um arquivo
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -459,6 +473,20 @@ export default function RedacaoPage() {
                   )}
                 </Button>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Upload de Arquivo */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Upload de Arquivo ou Foto</CardTitle>
+              <CardDescription>Envie um arquivo (PDF, DOC, DOCX, TXT, MD) ou tire uma foto</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <FileUpload 
+                onTextExtracted={handleTextExtracted}
+                onFileProcessed={handleFileProcessed}
+              />
             </CardContent>
           </Card>
         </div>
