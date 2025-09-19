@@ -14,30 +14,33 @@ PROFESSOR: Dúvidas acadêmicas, conceitos, exercícios, matérias escolares
 - Matemática, física, química, biologia, história, geografia, português, inglês, artes
 - Redação, literatura, gramática, interpretação de texto, produção textual
 - Conceitos acadêmicos, teorias, fórmulas, exercícios, provas, simulados
-- Exemplos: "como resolver equação", "história do Brasil", "redação ENEM", "fórmula de Bhaskara", "dúvida de geometria", "explicar conceito", "ajuda com exercício"
+- Exemplos: "como resolver equação", "história do Brasil", "redação ENEM", "fórmula de Bhaskara", "dúvida de geometria", "explicar conceito", "ajuda com exercício", "Me ajude com: Quero tirar uma dúvida de geometria", "tirar uma dúvida de matemática"
 
 AULA_EXPANDIDA: Solicitações por aulas completas ou detalhadas
 - Exemplos: "quero uma aula expandida sobre fotossíntese", "aula completa de matemática", "aula detalhada sobre", "explicação completa de"
 - IMPORTANTE: Se o usuário mencionou um tópico acadêmico anteriormente e agora diz "comece", "iniciar", "começar", classifique como AULA_EXPANDIDA
 
-ENEM_INTERATIVO: Solicitações por simulados ENEM interativos
+ENEM_INTERACTIVE: Solicitações por simulados ENEM interativos
 - Exemplos: "quero um enem interativo", "simulado com explicações detalhadas", "simulado ENEM", "questões do ENEM", "prova do ENEM"
-
-AULA_INTERATIVA: Solicitações por aulas interativas ou dinâmicas
-- Exemplos: "aula interativa", "aula dinâmica", "aula participativa", "aula com atividades"
 
 ENEM: Simulados rápidos ou questões ENEM simples
 - Exemplos: "simulado rápido", "questões ENEM", "prova rápida", "teste rápido"
 
+PROFESSOR_INTERATIVO: Professor interativo com aulas e quizzes
+- Exemplos: "professor interativo", "aula interativa", "quiz interativo"
+
+AULA_INTERATIVA: Solicitações por aulas interativas ou dinâmicas
+- Exemplos: "aula interativa", "aula dinâmica", "aula participativa", "aula com atividades"
+
 BEM_ESTAR: Apoio emocional, ansiedade, conflitos, saúde mental
 - Exemplos: "estou ansioso", "conflito com colega", "apoio emocional", "estresse", "depressão", "bullying", "conflito familiar"
 
-TI_TROUBLESHOOTING: Problemas técnicos, equipamentos, sistemas
+TI: Suporte técnico educacional
 - Internet, login, bugs, projetores, TVs, computadores, impressoras, sistemas
 - Exemplos: "projetor não funciona", "internet lenta", "login não funciona", "configurar impressora", "bug no sistema", "computador travou"
 
-FAQ_ESCOLA: Perguntas frequentes sobre a escola, documentos, procedimentos
-- Exemplos: "horário de funcionamento", "como funciona a matrícula", "documentos necessários", "regulamento da escola", "normas da escola"
+TI_SUPORTE: Suporte técnico específico (bugs, builds, deployments)
+- Exemplos: "build falhou", "deploy error", "bug no sistema", "problema de API"
 
 FINANCEIRO: Pagamentos de alunos/famílias
 - Exemplos: "mensalidade", "boleto", "pagamento", "desconto", "valor da matrícula", "taxa de matrícula", "parcelamento"
@@ -55,20 +58,38 @@ SOCIAL_MEDIA: Criação de conteúdo para redes sociais
 CONTEUDO_MIDIA: Solicitações por conteúdo visual, imagens, diagramas
 - Exemplos: "preciso de uma imagem", "diagrama de fotossíntese", "gráfico", "ilustração", "infográfico", "conteúdo visual", "material visual"
 
+SECRETARIA: Tarefas administrativas, matrículas, documentos, horários
+- Exemplos: "matrícula", "documentos necessários", "horário de funcionamento", "procedimentos administrativos", "secretaria", "whatsapp da secretaria"
+
+RESULTADOS_BOLSAS: Gestão de resultados de bolsas e cálculos de descontos
+- Exemplos: "prova de bolsas", "resultado da bolsa", "percentual de desconto", "cálculo de bolsa", "bolsa de estudo"
+
+JURIDICO_CONTRATOS: Documentos legais, contratos e questões jurídicas
+- Exemplos: "contrato", "documentos jurídicos", "termo de uso", "acordo", "cláusula contratual", "contratação"
+
+MARKETING_DESIGN: Conteúdo de marketing, design e campanhas promocionais
+- Exemplos: "marketing", "design", "campanha", "publicidade", "branding", "identidade visual", "material promocional"
+
 ATENDIMENTO: APENAS quando não se encaixa em nenhum módulo específico
 - Exemplos: "informações gerais", "dúvidas básicas", "primeiro contato", "ajuda geral"
 
 REGRAS CRÍTICAS:
 1. PROFESSOR: Para QUALQUER dúvida acadêmica, conceito, exercício, matéria escolar
-2. TI_TROUBLESHOOTING: Para QUALQUER problema técnico, equipamento, sistema
-3. RH: Para funcionários/colaboradores (benefícios, férias, atestados, salário)
-4. FINANCEIRO: Para pagamentos de alunos/famílias (mensalidades, boletos)
-5. SOCIAL_MEDIA: Para QUALQUER criação de conteúdo, posts, marketing digital, redes sociais
-6. CONTEUDO_MIDIA: Para solicitações de imagens, diagramas, conteúdo visual
-7. BEM_ESTAR: Para questões emocionais, psicológicas, conflitos, bullying
-8. FAQ_ESCOLA: Para perguntas sobre procedimentos, normas, regulamentos da escola
-9. COORDENACAO: Para questões pedagógicas, calendários, gestão acadêmica
-10. ATENDIMENTO: APENAS como último recurso
+2. Se a mensagem contém "Me ajude com" seguido de qualquer termo acadêmico → SEMPRE PROFESSOR
+3. Se a mensagem contém "tirar uma dúvida" seguido de qualquer matéria escolar → SEMPRE PROFESSOR
+4. TI/TI_TROUBLESHOOTING: Para QUALQUER problema técnico, equipamento, sistema, desenvolvimento
+5. RH: Para funcionários/colaboradores (benefícios, férias, atestados, salário)
+6. FINANCEIRO: Para pagamentos de alunos/famílias (mensalidades, boletos)
+7. SOCIAL_MEDIA: Para QUALQUER criação de conteúdo, posts, marketing digital, redes sociais
+8. CONTEUDO_MIDIA: Para solicitações de imagens, diagramas, conteúdo visual
+9. BEM_ESTAR: Para questões emocionais, psicológicas, conflitos, bullying
+10. FAQ_ESCOLA: Para perguntas sobre procedimentos, normas, regulamentos da escola
+11. COORDENACAO: Para questões pedagógicas, calendários, gestão acadêmica
+12. SECRETARIA: Para tarefas administrativas, matrículas, documentos, horários
+13. RESULTADOS_BOLSAS: Para questões sobre bolsas de estudo, provas de bolsas, cálculos de desconto
+14. JURIDICO_CONTRATOS: Para documentos legais, contratos, questões jurídicas
+15. MARKETING_DESIGN: Para conteúdo de marketing, design, campanhas promocionais
+16. ATENDIMENTO: APENAS como último recurso
 
 CONTEXTO IMPORTANTE:
 - Se o histórico menciona um tópico acadêmico (como "fotossíntese") e a mensagem atual é "comece", "iniciar", "começar", classifique como AULA_EXPANDIDA

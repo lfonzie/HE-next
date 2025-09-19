@@ -48,7 +48,9 @@ export function ChatInterface() {
     if (!message.trim() || isLoading) return
 
     try {
-      await sendMessage(message, selectedModule)
+      // TEMPORÁRIO: Debug - sempre usar "auto" para permitir classificação automática
+      console.log('🔍 [ChatInterface] selectedModule antes do override:', selectedModule);
+      await sendMessage(message, "auto") // Forçar "auto" para permitir classificação automática
       setMessage('')
       setIsTyping(false)
     } catch (error) {

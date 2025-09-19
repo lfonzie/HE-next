@@ -89,20 +89,44 @@ export async function POST(request: NextRequest) {
 
     // Salvar resultado no banco de dados
     const selectedTheme = await getThemeById(theme)
-    await prisma.redacaoSession.create({
+    
+    // Criar sessão de redação
+    await prisma.essay_sessions.create({
       data: {
         id: sessionId,
-        userId: session.user.id,
-        theme: finalThemeText,
-        themeYear: selectedTheme?.year || 2024,
-        content: content,
-        wordCount: wordCount,
-        scores: evaluation.scores,
-        totalScore: evaluation.totalScore,
-        feedback: evaluation.feedback,
-        suggestions: evaluation.suggestions,
-        highlights: evaluation.highlights || {},
-        status: 'COMPLETED'
+        user_id: session.user.id,
+        topic_prompt: finalThemeText,
+        area: 'Linguagens',
+        status: 'completed'
+      }
+    })
+
+    // Salvar pontuação geral
+    await prisma.essay_overall_scores.create({
+      data: {
+        session_id: sessionId,
+        total: evaluation.totalScore,
+        comp1: evaluation.scores.comp1,
+        comp2: evaluation.scores.comp2,
+        comp3: evaluation.scores.comp3,
+        comp4: evaluation.scores.comp4,
+        comp5: evaluation.scores.comp5,
+        issues: {
+          feedback: evaluation.feedback,
+          suggestions: evaluation.suggestions,
+          highlights: evaluation.highlights || {},
+          wordCount: wordCount,
+          themeYear: selectedTheme?.year || 2024
+        }
+      }
+    })
+
+    // Salvar conteúdo da redação como parágrafo único
+    await prisma.essay_paragraphs.create({
+      data: {
+        session_id: sessionId,
+        idx: 0,
+        content: content
       }
     })
 
@@ -145,10 +169,44 @@ export async function POST(request: NextRequest) {
 }
 
 async function getThemeById(themeId: string) {
-  // Se for um tema de IA, extrair o tema da string
+  // Se for um tema de IA, buscar no banco de dados
   if (themeId.startsWith('ai-')) {
-    // Para temas de IA, vamos usar o ID como tema por enquanto
-    // Em uma implementação completa, isso seria buscado no banco de dados
+    try {
+      const savedTheme = await prisma.conversations.findFirst({
+        where: {
+          user_id: '00000000-0000-0000-0000-000000000000',
+          module: 'redacao',
+          subject: {
+            startsWith: 'Tema:'
+          }
+        },
+        orderBy: {
+          created_at: 'desc'
+        }
+      })
+
+      if (savedTheme) {
+        try {
+          const messages = JSON.parse(savedTheme.messages)
+          const themeData = JSON.parse(messages[0]?.content || '{}')
+          
+          // Verificar se é o tema correto pelo ID
+          if (themeData.themeId === themeId) {
+            return {
+              id: themeData.themeId,
+              year: themeData.year || 2025,
+              theme: themeData.theme || 'Tema gerado por IA'
+            }
+          }
+        } catch (error) {
+          console.warn('Erro ao processar tema de IA:', error)
+        }
+      }
+    } catch (error) {
+      console.warn('Erro ao buscar tema de IA no banco:', error)
+    }
+    
+    // Fallback se não encontrar
     return {
       id: themeId,
       year: 2025,

@@ -11,18 +11,24 @@ const ClassificationSchema = z.object({
   module: z.enum([
     'professor',
     'aula_expandida', 
-    'enem_interativo',
-    'aula_interativa',
+    'enem_interactive',
     'enem',
-    'ti_troubleshooting',
-    'faq_escola',
-    'financeiro',
+    'professor_interativo',
+    'aula_interativa',
+    'ti',
+    'ti_suporte',
     'rh',
+    'financeiro',
     'coordenacao',
     'bem_estar',
     'social_media',
     'conteudo_midia',
-    'atendimento'
+    'atendimento',
+    'secretaria',
+    'resultados_bolsas',
+    'juridico_contratos',
+    'marketing_design',
+    'chat_geral'
   ]),
   complexity: z.enum(['simples', 'media', 'complexa']),
   confidence: z.number().min(0).max(1),
@@ -30,17 +36,23 @@ const ClassificationSchema = z.object({
     atendimento: z.number().min(0).max(1),
     professor: z.number().min(0).max(1),
     aula_expandida: z.number().min(0).max(1),
-    enem_interativo: z.number().min(0).max(1),
-    aula_interativa: z.number().min(0).max(1),
+    enem_interactive: z.number().min(0).max(1),
     enem: z.number().min(0).max(1),
-    ti_troubleshooting: z.number().min(0).max(1),
-    faq_escola: z.number().min(0).max(1),
-    financeiro: z.number().min(0).max(1),
+    professor_interativo: z.number().min(0).max(1),
+    aula_interativa: z.number().min(0).max(1),
+    ti: z.number().min(0).max(1),
+    ti_suporte: z.number().min(0).max(1),
     rh: z.number().min(0).max(1),
+    financeiro: z.number().min(0).max(1),
     coordenacao: z.number().min(0).max(1),
     bem_estar: z.number().min(0).max(1),
     social_media: z.number().min(0).max(1),
-    conteudo_midia: z.number().min(0).max(1)
+    conteudo_midia: z.number().min(0).max(1),
+    secretaria: z.number().min(0).max(1),
+    resultados_bolsas: z.number().min(0).max(1),
+    juridico_contratos: z.number().min(0).max(1),
+    marketing_design: z.number().min(0).max(1),
+    chat_geral: z.number().min(0).max(1)
   }),
   rationale: z.string(),
   provider_hint: z.enum(['openai', 'anthropic', 'gemini', 'groq']).optional()
@@ -54,11 +66,19 @@ const CLASSIFICATION_THRESHOLD = 0.65;
 // Heurísticas de alta precisão em português
 const PORTUGUESE_HEURISTICS = {
   enem: /\b(enem|simulado|tri|prova objetiva|redação|questões de múltipla escolha|gabarito)\b/i,
-  professor: /\b(dúvida|explicação|conceito|matéria|disciplina|geometria|álgebra|física|química|biologia|história|geografia)\b/i,
-  social_media: /\b(post|rede social|instagram|facebook|tiktok|youtube|conteúdo digital)\b/i,
-  financeiro: /\b(pagamento|boleto|mensalidade|financeiro|valor|preço|custo)\b/i,
-  quiz: /\b(quiz|acertos|percentual|pontuação|correção)\b/i,
-  aula_interativa: /\b(aula interativa|slides|explicação passo a passo|atividade|demonstração)\b/i
+  professor: /\b(dúvida|explicação|conceito|matéria|disciplina|geometria|álgebra|física|química|biologia|história|geografia|me ajude com.*dúvida|tirar uma dúvida|ajuda com.*exercício|como resolver|fórmula|teorema|demonstração|prova|análise|síntese|comparar|explicar detalhadamente|processo complexo|estatística|probabilidade|vetores|matriz|logaritmo|exponencial|limite|continuidade)\b/i,
+  social_media: /\b(post|rede social|instagram|facebook|tiktok|youtube|conteúdo digital|marketing digital|postagem|compartilhar nas redes)\b/i,
+  financeiro: /\b(pagamento|boleto|mensalidade|financeiro|valor|preço|custo|desconto|parcelamento|taxa de matrícula)\b/i,
+  aula_interativa: /\b(aula interativa|slides|explicação passo a passo|atividade|demonstração)\b/i,
+  ti: /\b(projetor|internet|lenta|login|não funciona|configurar|impressora|bug|sistema|computador|travou|build|deploy|render|porta|log|404|405|nextauth|rota|api)\b/i,
+  rh: /\b(benefícios|férias|atestado|médico|salário|treinamento|carreira|promoção|recursos humanos|colaboradores|funcionários)\b/i,
+  coordenacao: /\b(calendário|provas|coordenador|pedagógico|gestão|acadêmica|planejamento|pedagógico|metodologia|ensino)\b/i,
+  bem_estar: /\b(ansioso|conflito|colega|apoio|emocional|estresse|depressão|bullying|conflito|familiar|saúde|mental)\b/i,
+  secretaria: /\b(matrícula|matrícula|documentos|horário|horário|secretaria|whats|procedimentos|administrativos)\b/i,
+  resultados_bolsas: /\b(prova de bolsas|resultado|percentual|bolsa|bolsas|cálculo|desconto|bolsa de estudo)\b/i,
+  juridico_contratos: /\b(contrato|jurídico|termo|legal|documentos|legais|acordo|cláusula|contratação)\b/i,
+  marketing_design: /\b(marketing|design|campanha|publicidade|branding|identidade|visual|material|promocional)\b/i,
+  conteudo_midia: /\b(preciso de uma imagem|diagrama|gráfico|ilustração|infográfico|conteúdo visual|material visual)\b/i
 };
 
 function applyHeuristics(message: string): string | null {
@@ -163,9 +183,9 @@ export async function POST(request: NextRequest) {
             content: `Você é um classificador especializado em mensagens educacionais. Classifique cada mensagem no módulo mais específico e apropriado.
 
 IMPORTANTE: Retorne um JSON com:
-- module: o módulo escolhido
+- module: o módulo escolhido (em minúsculo: professor, aula_expandida, enem_interactive, enem, professor_interativo, aula_interativa, ti, ti_suporte, rh, financeiro, coordenacao, bem_estar, social_media, conteudo_midia, atendimento, secretaria, resultados_bolsas, juridico_contratos, marketing_design, chat_geral)
 - confidence: número entre 0 e 1
-- scores: objeto com score para TODOS os módulos (0-1, soma = 1)
+- scores: objeto com score para TODOS os 20 módulos (0-1, soma = 1) - OBRIGATÓRIO incluir todos: atendimento, professor, aula_expandida, enem_interactive, enem, professor_interativo, aula_interativa, ti, ti_suporte, rh, financeiro, coordenacao, bem_estar, social_media, conteudo_midia, secretaria, resultados_bolsas, juridico_contratos, marketing_design, chat_geral
 - rationale: explicação da escolha
 - complexity: 'simples', 'media', ou 'complexa'
 
@@ -175,28 +195,31 @@ PROFESSOR: Para QUALQUER dúvida acadêmica, conceito, exercício, matéria esco
 - Matemática, física, química, biologia, história, geografia, português, inglês, artes
 - Redação, literatura, gramática, interpretação de texto, produção textual
 - Conceitos acadêmicos, teorias, fórmulas, exercícios, provas, simulados
-- Exemplos: "como resolver equação", "história do Brasil", "redação ENEM", "fórmula de Bhaskara", "dúvida de geometria", "explicar conceito", "ajuda com exercício", "explique detalhadamente a revolução"
+- Exemplos: "como resolver equação", "história do Brasil", "redação ENEM", "fórmula de Bhaskara", "dúvida de geometria", "explicar conceito", "ajuda com exercício", "explique detalhadamente a revolução", "Me ajude com: Quero tirar uma dúvida de geometria", "tirar uma dúvida de matemática", "ajuda com exercício de física"
 
 AULA_EXPANDIDA: Solicitações por aulas completas ou detalhadas
 - Exemplos: "quero uma aula expandida sobre fotossíntese", "aula completa de matemática", "aula detalhada sobre"
 
-ENEM_INTERATIVO: Solicitações por simulados ENEM interativos
+ENEM_INTERACTIVE: Solicitações por simulados ENEM interativos
 - Exemplos: "quero um enem interativo", "simulado com explicações detalhadas", "simulado ENEM"
-
-AULA_INTERATIVA: Solicitações por aulas interativas ou dinâmicas
-- Exemplos: "aula interativa", "aula dinâmica", "aula participativa"
 
 ENEM: Simulados rápidos ou questões ENEM simples
 - Exemplos: "simulado rápido", "questões ENEM", "prova rápida"
 
+PROFESSOR_INTERATIVO: Professor interativo com aulas e quizzes
+- Exemplos: "professor interativo", "aula interativa", "quiz interativo"
+
+AULA_INTERATIVA: Solicitações por aulas interativas ou dinâmicas
+- Exemplos: "aula interativa", "aula dinâmica", "aula participativa"
+
 BEM_ESTAR: Apoio emocional, ansiedade, conflitos, saúde mental
 - Exemplos: "estou ansioso", "conflito com colega", "apoio emocional", "estresse"
 
-TI_TROUBLESHOOTING: Problemas técnicos, equipamentos, sistemas
-- Exemplos: "projetor não funciona", "internet lenta", "login não funciona"
+TI: Suporte técnico educacional
+- Exemplos: "projetor não funciona", "internet lenta", "login não funciona", "problema técnico"
 
-FAQ_ESCOLA: Perguntas frequentes sobre a escola, documentos, procedimentos
-- Exemplos: "horário de funcionamento", "como funciona a matrícula", "documentos necessários"
+TI_SUPORTE: Suporte técnico específico (bugs, builds, deployments)
+- Exemplos: "build falhou", "deploy error", "bug no sistema", "problema de API"
 
 FINANCEIRO: Pagamentos de alunos/famílias
 - Exemplos: "mensalidade", "boleto", "pagamento", "desconto"
@@ -213,6 +236,18 @@ SOCIAL_MEDIA: Criação de conteúdo para redes sociais
 CONTEUDO_MIDIA: Solicitações por conteúdo visual, imagens, diagramas
 - Exemplos: "preciso de uma imagem", "diagrama de fotossíntese", "gráfico", "ilustração"
 
+SECRETARIA: Tarefas administrativas, matrículas, documentos, horários
+- Exemplos: "matrícula", "documentos necessários", "horário de funcionamento", "procedimentos administrativos", "secretaria", "whatsapp da secretaria"
+
+RESULTADOS_BOLSAS: Gestão de resultados de bolsas e cálculos de descontos
+- Exemplos: "prova de bolsas", "resultado da bolsa", "percentual de desconto", "cálculo de bolsa", "bolsa de estudo"
+
+JURIDICO_CONTRATOS: Documentos legais, contratos e questões jurídicas
+- Exemplos: "contrato", "documentos jurídicos", "termo de uso", "acordo", "cláusula contratual", "contratação"
+
+MARKETING_DESIGN: Conteúdo de marketing, design e campanhas promocionais
+- Exemplos: "marketing", "design", "campanha", "publicidade", "branding", "identidade visual", "material promocional"
+
 ATENDIMENTO: APENAS quando não se encaixa em nenhum módulo específico
 - Exemplos: "informações gerais", "dúvidas básicas", "primeiro contato", "ajuda geral"
 
@@ -220,9 +255,53 @@ REGRAS CRÍTICAS:
 1. PROFESSOR: Para QUALQUER dúvida acadêmica, conceito, exercício, matéria escolar
 2. Se a mensagem contém palavras como "explique", "como funciona", "conceito", "dúvida", "exercício", "ajuda com", "como resolver", "fórmula", "geometria", "álgebra", "trigonometria", "cálculo", "derivada", "integral", "equação", "função", "teorema", "demonstração", "prova", "análise", "síntese", "comparar", "explicar detalhadamente", "processo complexo", "estatística", "probabilidade", "vetores", "matriz", "logaritmo", "exponencial", "limite", "continuidade" → SEMPRE PROFESSOR
 3. Se a mensagem contém termos acadêmicos como "história", "matemática", "física", "química", "biologia", "geografia", "português", "literatura", "redação", "revolução", "guerra", "independência", "evolução", "fotossíntese" E também contém "explique", "como", "dúvida", "conceito" → PROFESSOR
-4. ATENDIMENTO: APENAS quando não se encaixa em nenhum módulo específico
+4. Se a mensagem contém "Me ajude com" seguido de qualquer termo acadêmico → SEMPRE PROFESSOR
+5. Se a mensagem contém "tirar uma dúvida" seguido de qualquer matéria escolar → SEMPRE PROFESSOR
+6. TI/TI_TROUBLESHOOTING: Para QUALQUER problema técnico, equipamento, sistema, desenvolvimento
+7. RH: Para funcionários/colaboradores (benefícios, férias, atestados, salário)
+8. FINANCEIRO: Para pagamentos de alunos/famílias (mensalidades, boletos)
+9. SOCIAL_MEDIA: Para QUALQUER criação de conteúdo, posts, marketing digital, redes sociais
+10. CONTEUDO_MIDIA: Para solicitações de imagens, diagramas, conteúdo visual
+11. BEM_ESTAR: Para questões emocionais, psicológicas, conflitos, bullying
+12. FAQ_ESCOLA: Para perguntas sobre procedimentos, normas, regulamentos da escola
+13. COORDENACAO: Para questões pedagógicas, calendários, gestão acadêmica
+14. SECRETARIA: Para tarefas administrativas, matrículas, documentos, horários
+15. RESULTADOS_BOLSAS: Para questões sobre bolsas de estudo, provas de bolsas, cálculos de desconto
+16. JURIDICO_CONTRATOS: Para documentos legais, contratos, questões jurídicas
+17. MARKETING_DESIGN: Para conteúdo de marketing, design, campanhas promocionais
+18. ATENDIMENTO: APENAS quando não se encaixa em nenhum módulo específico
 
-IMPORTANTE: Seja específico! Escolha o módulo mais adequado baseado no contexto completo da mensagem, não ATENDIMENTO.`
+IMPORTANTE: Seja específico! Escolha o módulo mais adequado baseado no contexto completo da mensagem, não ATENDIMENTO.
+
+EXEMPLO DE RESPOSTA VÁLIDA:
+{
+  "module": "professor",
+  "confidence": 0.9,
+  "scores": {
+    "atendimento": 0.05,
+    "professor": 0.9,
+    "aula_expandida": 0.01,
+    "enem_interactive": 0.01,
+    "enem": 0.01,
+    "professor_interativo": 0.01,
+    "aula_interativa": 0.01,
+    "ti": 0.0,
+    "ti_suporte": 0.0,
+    "rh": 0.0,
+    "financeiro": 0.0,
+    "coordenacao": 0.0,
+    "bem_estar": 0.0,
+    "social_media": 0.0,
+    "conteudo_midia": 0.0,
+    "secretaria": 0.0,
+    "resultados_bolsas": 0.0,
+    "juridico_contratos": 0.0,
+    "marketing_design": 0.0,
+    "chat_geral": 0.0
+  },
+  "rationale": "Mensagem educacional sobre conceito acadêmico",
+  "complexity": "complexa"
+}`
           },
           {
             role: "user",
@@ -247,7 +326,48 @@ IMPORTANTE: Seja específico! Escolha o módulo mais adequado baseado no context
         console.log(`🤖 [AI_SUCCESS] module=${aiResult.module} confidence=${aiResult.confidence}`);
       } else {
         console.warn(`⚠️ [SCHEMA_FAIL] AI returned invalid schema:`, validationResult.error.errors);
-        aiError = 'schema_validation_failed';
+        
+        // Fallback: tentar corrigir o resultado da IA
+        const correctedResult = {
+          module: parsed.module?.toLowerCase() || 'professor',
+          confidence: parsed.confidence || 0.8,
+          scores: {
+            atendimento: 0.1,
+            professor: 0.8,
+            aula_expandida: 0.01,
+            enem_interactive: 0.01,
+            enem: 0.01,
+            professor_interativo: 0.01,
+            aula_interativa: 0.01,
+            ti: 0.01,
+            ti_suporte: 0.01,
+            rh: 0.01,
+            financeiro: 0.01,
+            coordenacao: 0.01,
+            bem_estar: 0.01,
+            social_media: 0.01,
+            conteudo_midia: 0.01,
+            secretaria: 0.01,
+            resultados_bolsas: 0.01,
+            juridico_contratos: 0.01,
+            marketing_design: 0.01,
+            chat_geral: 0.01
+          },
+          rationale: parsed.rationale || 'Classificação automática corrigida',
+          complexity: parsed.complexity || 'complexa'
+        };
+        
+        // Validar o resultado corrigido
+        const correctedValidation = ClassificationSchema.safeParse(correctedResult);
+        if (correctedValidation.success) {
+          aiResult = correctedValidation.data;
+          source = 'classifier_corrected';
+          confidence = aiResult.confidence;
+          scores = aiResult.scores;
+          console.log(`✅ [SCHEMA_CORRECTED] module=${aiResult.module} confidence=${aiResult.confidence}`);
+        } else {
+          aiError = 'schema_validation_failed';
+        }
       }
       
     } catch (error) {
@@ -256,9 +376,9 @@ IMPORTANTE: Seja específico! Escolha o módulo mais adequado baseado no context
     }
 
     // 4. Lógica de decisão com prioridade
-    let finalModule = 'atendimento';
+    let finalModule = 'professor';
     let finalConfidence = 0.0;
-    let finalScores = { atendimento: 1.0 };
+    let finalScores = { professor: 1.0 };
     let finalRationale = 'Fallback default';
     
     if (aiResult && aiResult.confidence >= CLASSIFICATION_THRESHOLD) {
@@ -279,9 +399,9 @@ IMPORTANTE: Seja específico! Escolha o módulo mais adequado baseado no context
       // IA com confiança baixa, mas melhor que fallback
       const analysis = calculateScoreAnalysis(aiResult.scores);
       if (analysis.isCloseCall) {
-        finalModule = 'atendimento';
+        finalModule = 'professor';
         finalConfidence = 0.5;
-        finalScores = { atendimento: 0.5 };
+        finalScores = { professor: 0.5 };
         finalRationale = 'Low confidence, close call';
         source = 'fallback';
       } else {

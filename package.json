@@ -5,9 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
+    "dev:turbo": "next dev --turbopack",
+    "dev:turbo:fix": "./scripts/fix-turbopack-permissions.sh && npm run dev:turbo",
     "dev:clean": "rm -rf .next && npm run dev",
     "dev:turbo-alt": "./dev-turbo-alternative.sh",
     "build": "next build",
+    "build:turbo": "next build --turbopack",
     "start": "next start",
     "health": "curl -f http://localhost:${PORT:-10000}/api/health || exit 1",
     "healthz": "curl -f http://localhost:${PORT:-10000}/api/healthz || exit 1",

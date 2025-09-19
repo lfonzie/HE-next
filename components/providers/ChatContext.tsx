@@ -16,6 +16,9 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined)
 export function ChatProvider({ children }: { children: ReactNode }) {
   const [selectedModule, setSelectedModule] = useState<ModuleType | null>(null)
   const [isModuleHighlighted, setIsModuleHighlighted] = useState(false)
+  
+  // Debug log para verificar quando selectedModule muda
+  console.log('🔍 [ChatProvider] selectedModule:', selectedModule)
 
   const highlightActiveModule = useCallback(() => {
     if (selectedModule) {

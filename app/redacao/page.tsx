@@ -36,68 +36,80 @@ function RedacaoPageContent() {
   const { addNotification } = useNotifications()
   const router = useRouter()
   
-  const [themes, setThemes] = useState<EnemTheme[]>([])
-  const [selectedTheme, setSelectedTheme] = useState<string>('')
   const [content, setContent] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isLoadingThemes, setIsLoadingThemes] = useState(true)
   const [wordCount, setWordCount] = useState(0)
   const [uploadedFileName, setUploadedFileName] = useState<string>('')
   const [uploadedFileSize, setUploadedFileSize] = useState<number>(0)
-  const [includeAIThemes, setIncludeAIThemes] = useState(false)
   const [isLoadingAIThemes, setIsLoadingAIThemes] = useState(false)
-  const [generatedThemes, setGeneratedThemes] = useState<EnemTheme[]>([])
+  const [currentTheme, setCurrentTheme] = useState<EnemTheme | null>(null)
+  const [availableThemes, setAvailableThemes] = useState<EnemTheme[]>([])
+  const [officialThemes, setOfficialThemes] = useState<EnemTheme[]>([])
+  const [aiThemes, setAiThemes] = useState<EnemTheme[]>([])
   const [showGeneratedModal, setShowGeneratedModal] = useState(false)
-
-  const prepareThemes = useCallback((list: EnemTheme[]) => {
-    return [...list]
-      .map((theme) => {
-        const isAITheme = theme.isAIGenerated || theme.year >= 2025 || theme.id?.startsWith('ai-')
-        if (isAITheme) {
-          return { ...theme, isAIGenerated: true }
-        }
-        return { ...theme, isAIGenerated: false }
-      })
-      .sort((a, b) => {
-        // Priorizar temas gerados para a sessão atual
-        if (a.isSessionGenerated && !b.isSessionGenerated) return -1
-        if (!a.isSessionGenerated && b.isSessionGenerated) return 1
-        // Depois temas de IA em geral
-        if (a.isAIGenerated && !b.isAIGenerated) return -1
-        if (!a.isAIGenerated && b.isAIGenerated) return 1
-        return b.year - a.year
-      })
-  }, [])
-
-  // Carregar temas do ENEM
-  useEffect(() => {
-    const loadThemes = async () => {
-      try {
-        const response = await fetch('/api/redacao/temas')
-        if (response.ok) {
-          const data = await response.json()
-          const preparedThemes = prepareThemes(data.themes || [])
-          setThemes(preparedThemes)
-        } else {
-          console.error('Erro ao carregar temas:', response.statusText)
-          addNotification({ type: 'error', title: 'Erro', message: 'Falha ao carregar temas de redação' })
-        }
-      } catch (error) {
-        console.error('Erro ao carregar temas:', error)
-        addNotification({ type: 'error', title: 'Erro', message: 'Falha ao carregar temas de redação' })
-      } finally {
-        setIsLoadingThemes(false)
-      }
-    }
-
-    loadThemes()
-  }, [addNotification, prepareThemes])
+  const [generatedThemes, setGeneratedThemes] = useState<EnemTheme[]>([])
 
   // Contar palavras em tempo real
   useEffect(() => {
     const words = content.trim().split(/\s+/).filter(word => word.length > 0)
     setWordCount(words.length)
   }, [content])
+
+  // Carregar temas automaticamente quando a página carrega
+  useEffect(() => {
+    const loadThemes = async () => {
+      try {
+        console.log('Carregando temas automaticamente...')
+        const response = await fetch(`/api/redacao/temas?t=${Date.now()}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          console.log('Temas carregados:', data.officialThemes?.length || 0, 'oficiais +', data.aiThemes?.length || 0, 'IA')
+          
+          // Separar temas oficiais e de IA
+          setOfficialThemes(data.officialThemes || [])
+          setAiThemes(data.aiThemes || [])
+          
+          // Manter compatibilidade com código existente
+          const allThemes = [...(data.officialThemes || []), ...(data.aiThemes || [])]
+          setAvailableThemes(allThemes)
+          
+          addNotification({
+            type: 'success',
+            title: 'Temas Carregados!',
+            message: `${data.officialCount || 0} temas oficiais + ${data.aiCount || 0} temas de IA disponíveis`
+          })
+        } else {
+          console.warn('Erro ao carregar temas:', response.status)
+          addNotification({
+            type: 'error',
+            title: 'Erro',
+            message: 'Falha ao carregar temas. Tente novamente.'
+          })
+        }
+      } catch (error) {
+        console.error('Erro ao carregar temas:', error)
+        addNotification({
+          type: 'error',
+          title: 'Erro',
+          message: 'Falha ao carregar temas. Verifique sua conexão.'
+        })
+      }
+    }
+
+    // Aguardar um pouco antes de carregar para evitar conflitos
+    const timer = setTimeout(loadThemes, 1000)
+    return () => clearTimeout(timer)
+  }, [addNotification])
+
+
 
 
   // Função para lidar com texto extraído de arquivo
@@ -118,8 +130,8 @@ function RedacaoPageContent() {
       return
     }
 
-    if (!selectedTheme) {
-      addNotification({ type: 'error', title: 'Erro', message: 'Selecione um tema para sua redação' })
+    if (!currentTheme) {
+      addNotification({ type: 'error', title: 'Erro', message: 'Gere um tema para sua redação' })
       return
     }
 
@@ -136,8 +148,6 @@ function RedacaoPageContent() {
     setIsSubmitting(true)
     addNotification({ type: 'info', title: 'Processando', message: 'Enviando redação para avaliação...' })
 
-    const selectedThemeData = themes.find(t => t.id === selectedTheme)
-
     try {
       const response = await fetch('/api/redacao/avaliar', {
         method: 'POST',
@@ -145,8 +155,8 @@ function RedacaoPageContent() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          theme: selectedTheme,
-          themeText: selectedThemeData?.theme,
+          theme: currentTheme.id,
+          themeText: currentTheme.theme,
           content: content.trim(),
           wordCount,
           uploadedFileName: uploadedFileName || undefined,
@@ -235,60 +245,110 @@ function RedacaoPageContent() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {isLoadingThemes ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-6 w-6 animate-spin" />
+              {!currentTheme && officialThemes.length === 0 && aiThemes.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <p>Nenhum tema disponível</p>
+                  <p className="text-sm">Clique em "Gerar Tema com IA" para carregar temas</p>
                 </div>
-              ) : (
-                <Select value={selectedTheme} onValueChange={setSelectedTheme}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione um tema..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {themes.map((theme) => (
-                      <SelectItem key={theme.id} value={theme.id}>
-                        <div className="flex flex-col">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">{theme.year}</span>
-                            {theme.isAIGenerated && (
-                              <Badge variant="secondary" className="text-xs bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
-                                🤖 IA
-                              </Badge>
-                            )}
-                            {theme.isOfficial && (
-                              <Badge variant="default" className="text-xs">
-                                ✓ Oficial
-                              </Badge>
-                            )}
-                            {selectedTheme === theme.id && (
-                              <Badge variant="outline" className="text-xs bg-green-50 text-green-700 dark:bg-green-900 dark:text-green-200">
-                                ✓ Selecionado
-                              </Badge>
-                            )}
-                          </div>
-                          <span className="text-sm text-gray-500 truncate max-w-xs">
-                            {theme.theme}
-                          </span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-              
-              {selectedTheme && (
-                <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-                  <h4 className="font-medium text-yellow-900 dark:text-yellow-100 mb-2">
-                    Tema Selecionado:
-                  </h4>
-                  <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                    {themes.find(t => t.id === selectedTheme)?.theme || 'Tema não encontrado'}
-                  </p>
-                  {themes.find(t => t.id === selectedTheme)?.isAIGenerated && (
-                    <Badge variant="secondary" className="mt-2">
-                      🤖 Gerado por IA
-                    </Badge>
+              ) : null}
+
+              {!currentTheme && (officialThemes.length > 0 || aiThemes.length > 0) ? (
+                <div className="space-y-6">
+                  {/* Temas Oficiais */}
+                  {officialThemes.length > 0 && (
+                    <div className="space-y-3">
+                      <h4 className="font-medium text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                        <Badge variant="outline" className="text-xs">
+                          📚 ENEM
+                        </Badge>
+                        Temas Oficiais ({officialThemes.length})
+                      </h4>
+                      <Select onValueChange={(value) => {
+                        const theme = officialThemes.find(t => t.id === value)
+                        if (theme) setCurrentTheme(theme)
+                      }}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione um tema oficial do ENEM" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {officialThemes.map((theme) => (
+                            <SelectItem key={theme.id} value={theme.id}>
+                              <div className="flex flex-col items-start">
+                                <span className="font-medium">{theme.theme}</span>
+                                <span className="text-xs text-gray-500">ENEM {theme.year}</span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   )}
+
+                  {/* Temas de IA */}
+                  {aiThemes.length > 0 && (
+                    <div className="space-y-3">
+                      <h4 className="font-medium text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                        <Badge variant="secondary" className="text-xs">
+                          🤖 IA
+                        </Badge>
+                        Temas Gerados por IA ({aiThemes.length})
+                      </h4>
+                      <Select onValueChange={(value) => {
+                        const theme = aiThemes.find(t => t.id === value)
+                        if (theme) setCurrentTheme(theme)
+                      }}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione um tema gerado por IA" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {aiThemes.map((theme) => (
+                            <SelectItem key={theme.id} value={theme.id}>
+                              <div className="flex flex-col items-start">
+                                <span className="font-medium">{theme.theme}</span>
+                                <span className="text-xs text-gray-500">
+                                  {theme.createdAt ? new Date(theme.createdAt).toLocaleDateString('pt-BR') : 'IA'}
+                                </span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </div>
+              ) : null}
+              
+              {currentTheme && (
+                <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h4 className="font-medium text-yellow-900 dark:text-yellow-100 mb-2">
+                        Tema Selecionado:
+                      </h4>
+                      <p className="text-sm text-yellow-800 dark:text-yellow-200 mb-2">
+                        {currentTheme.theme}
+                      </p>
+                      {currentTheme.isAIGenerated ? (
+                        <Badge variant="secondary" className="text-xs">
+                          🤖 Gerado por IA
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-xs">
+                          📚 ENEM {currentTheme.year}
+                        </Badge>
+                      )}
+                    </div>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => {
+                        setCurrentTheme(null)
+                        setAvailableThemes([])
+                      }}
+                    >
+                      Trocar Tema
+                    </Button>
+                  </div>
                 </div>
               )}
 
@@ -298,43 +358,51 @@ function RedacaoPageContent() {
                   variant="outline"
                   size="sm"
                   onClick={async () => {
-                    // Sempre gerar novos temas - não ocultar os existentes
-                    if (!includeAIThemes) {
+                    // Sempre gerar novo tema
                       setIsLoadingAIThemes(true)
                       try {
-                        const response = await fetch('/api/redacao/temas/ai', {
+                        console.log('Iniciando requisição para API...')
+                        const response = await fetch(`/api/redacao/temas/ai?t=${Date.now()}`, {
                           method: 'POST',
                           headers: {
                             'Content-Type': 'application/json',
+                            'Cache-Control': 'no-cache',
+                            'Pragma': 'no-cache'
                           },
-                          body: JSON.stringify({ count: 3 })
+                          body: JSON.stringify({ count: 1 })
                         })
+                        console.log('Resposta recebida:', response.status, response.statusText)
                         
                         if (response.ok) {
                           const data = await response.json()
-                          // Adicionar novos temas à lista existente
-                          const sessionAIGeneratedThemes = data.themes.map((theme: any) => ({
-                            ...theme,
-                            isSessionGenerated: true // Marcar como gerado para esta sessão
-                          }))
-                          const allThemes = [...sessionAIGeneratedThemes, ...themes]
-                          const preparedThemes = prepareThemes(allThemes)
-                          setThemes(preparedThemes)
-                          setIncludeAIThemes(true)
+                          console.log('Dados recebidos da API:', data)
                           
-                          // Salvar temas gerados para mostrar no modal
-                          setGeneratedThemes(data.themes)
-                          setShowGeneratedModal(true)
+                          // Recarregar todos os temas para incluir os novos gerados
+                          const themesResponse = await fetch(`/api/redacao/temas?t=${Date.now()}`, {
+                            method: 'GET',
+                            headers: {
+                              'Content-Type': 'application/json',
+                              'Cache-Control': 'no-cache',
+                              'Pragma': 'no-cache'
+                            }
+                          })
                           
-                          // Manter seleção atual - não limpar
+                          if (themesResponse.ok) {
+                            const themesData = await themesResponse.json()
+                            setOfficialThemes(themesData.officialThemes || [])
+                            setAiThemes(themesData.aiThemes || [])
+                            const allThemes = [...(themesData.officialThemes || []), ...(themesData.aiThemes || [])]
+                            setAvailableThemes(allThemes)
+                          }
                           
                           addNotification({
                             type: 'success',
                             title: 'Temas Gerados!',
-                            message: `${data.themes.length} novos temas foram gerados por IA`
+                            message: `Novos temas foram gerados com IA. Escolha um para começar.`
                           })
                         } else {
-                          throw new Error('Falha ao gerar temas')
+                          const errorData = await response.json()
+                          throw new Error(errorData.message || 'Falha ao carregar temas')
                         }
                       } catch (error) {
                         console.error('Erro ao gerar temas:', error)
@@ -346,7 +414,6 @@ function RedacaoPageContent() {
                       } finally {
                         setIsLoadingAIThemes(false)
                       }
-                    }
                   }}
                   disabled={isLoadingAIThemes}
                   className="w-full"
@@ -354,16 +421,16 @@ function RedacaoPageContent() {
                   {isLoadingAIThemes ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Gerando temas...
+                      Gerando tema...
                     </>
                   ) : (
                     <>
-                      🤖 Gerar Novos Temas com IA
+                      🤖 {availableThemes.length > 0 ? 'Gerar Novos Temas com IA' : 'Gerar Temas com IA'}
                     </>
                   )}
                 </Button>
                 <p className="text-xs text-gray-500 mt-2 text-center">
-                  Clique para gerar novos temas com IA
+                  {availableThemes.length > 0 ? 'Clique para gerar novos temas únicos com IA' : 'Clique para gerar temas únicos com IA'}
                 </p>
               </div>
             </CardContent>
@@ -413,7 +480,7 @@ function RedacaoPageContent() {
 
                 <Button
                   onClick={handleSubmit}
-                  disabled={isSubmitting || !selectedTheme || wordCount < 100 || wordCount > 1000}
+                  disabled={isSubmitting || !currentTheme || wordCount < 100 || wordCount > 1000}
                   className="w-full"
                   size="lg"
                 >

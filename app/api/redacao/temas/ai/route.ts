@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
+import { prisma } from '@/lib/prisma'
 
 interface EnemTheme {
   id: string
@@ -25,16 +26,28 @@ function cleanAIResponse(response: string): string {
     .replace(/\s*```$/i, '')       // Remove fim do bloco
     .trim()
   
-  // Remove texto antes do primeiro [ se existir
+  // Primeiro, tentar encontrar um objeto JSON
+  const firstBrace = cleaned.indexOf('{')
   const firstBracket = cleaned.indexOf('[')
-  if (firstBracket > 0) {
-    cleaned = cleaned.substring(firstBracket)
-  }
   
-  // Remove texto após o último ] se existir
-  const lastBracket = cleaned.lastIndexOf(']')
-  if (lastBracket > 0 && lastBracket < cleaned.length - 1) {
-    cleaned = cleaned.substring(0, lastBracket + 1)
+  // Se encontrar um objeto antes de um array, usar o objeto
+  if (firstBrace !== -1 && (firstBracket === -1 || firstBrace < firstBracket)) {
+    if (firstBrace > 0) {
+      cleaned = cleaned.substring(firstBrace)
+    }
+    const lastBrace = cleaned.lastIndexOf('}')
+    if (lastBrace > 0 && lastBrace < cleaned.length - 1) {
+      cleaned = cleaned.substring(0, lastBrace + 1)
+    }
+  } else if (firstBracket !== -1) {
+    // Se encontrar um array, extrair o primeiro objeto
+    if (firstBracket > 0) {
+      cleaned = cleaned.substring(firstBracket)
+    }
+    const lastBracket = cleaned.lastIndexOf(']')
+    if (lastBracket > 0 && lastBracket < cleaned.length - 1) {
+      cleaned = cleaned.substring(0, lastBracket + 1)
+    }
   }
   
   return cleaned.trim()
@@ -42,165 +55,190 @@ function cleanAIResponse(response: string): string {
 
 export async function POST(request: NextRequest) {
   try {
-    if (!process.env.OPENAI_API_KEY) {
+    const body = await request.json()
+    const { count = 3 } = body // Sempre retornar 3 temas aleatórios
+
+    console.log('Buscando temas aleatórios do banco de dados...')
+
+    // Buscar todos os temas salvos no banco de dados
+    const savedThemes = await prisma.conversations.findMany({
+      where: {
+        user_id: '00000000-0000-0000-0000-000000000000',
+        module: 'redacao',
+        subject: {
+          startsWith: 'Tema:'
+        }
+      },
+      orderBy: {
+        created_at: 'desc'
+      }
+    })
+
+    console.log(`Encontrados ${savedThemes.length} temas salvos no banco`)
+
+    // Se não há temas salvos, gerar novos temas com IA
+    if (savedThemes.length === 0) {
+      console.log('Nenhum tema salvo encontrado. Gerando novos temas com IA...')
+      
+      const prompt = `Gere 3 temas de redação para o ENEM seguindo os padrões oficiais. Cada tema deve ser atual, relevante e adequado para uma dissertação-argumentativa.
+
+Responda APENAS com um JSON válido no formato:
+{
+  "themes": [
+    {
+      "themeId": "ai-${Date.now()}-1",
+      "year": 2025,
+      "theme": "Tema da redação aqui",
+      "description": "Descrição detalhada do tema e contexto",
+      "isAIGenerated": true,
+      "createdAt": "${new Date().toISOString()}"
+    },
+    {
+      "themeId": "ai-${Date.now()}-2", 
+      "year": 2025,
+      "theme": "Segundo tema aqui",
+      "description": "Descrição do segundo tema",
+      "isAIGenerated": true,
+      "createdAt": "${new Date().toISOString()}"
+    },
+    {
+      "themeId": "ai-${Date.now()}-3",
+      "year": 2025, 
+      "theme": "Terceiro tema aqui",
+      "description": "Descrição do terceiro tema",
+      "isAIGenerated": true,
+      "createdAt": "${new Date().toISOString()}"
+    }
+  ]
+}
+
+IMPORTANTE: Responda APENAS com JSON válido, sem formatação markdown ou texto adicional.`
+
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          { 
+            role: "system", 
+            content: "Você é um especialista em temas de redação do ENEM. Gere temas atuais, relevantes e adequados para dissertação-argumentativa." 
+          },
+          { role: "user", content: prompt }
+        ],
+        temperature: 0.8,
+        max_tokens: 1000,
+      })
+
+      const response = completion.choices[0]?.message?.content
+      if (!response) {
+        throw new Error('Resposta vazia da OpenAI')
+      }
+
+      const cleanedResponse = cleanAIResponse(response)
+      const themeData = JSON.parse(cleanedResponse)
+      
+      if (!themeData.themes || !Array.isArray(themeData.themes)) {
+        throw new Error('Formato de resposta inválido da IA')
+      }
+
+      // Salvar os novos temas no banco de dados
+      const savedThemes = []
+      for (const theme of themeData.themes) {
+        try {
+          const savedTheme = await prisma.conversations.create({
+            data: {
+              user_id: '00000000-0000-0000-0000-000000000000',
+              module: 'redacao',
+              subject: `Tema: ${theme.theme}`,
+              grade: 'ENEM',
+              messages: JSON.stringify([{
+                role: 'system',
+                content: JSON.stringify({
+                  type: 'redacao_theme',
+                  themeId: theme.themeId,
+                  year: theme.year,
+                  theme: theme.theme,
+                  description: theme.description,
+                  isAIGenerated: theme.isAIGenerated,
+                  createdAt: theme.createdAt
+                })
+              }]),
+              token_count: 0,
+              model: 'redacao-theme-generator',
+              created_at: new Date(),
+              updated_at: new Date()
+            }
+          })
+          savedThemes.push(savedTheme)
+          console.log(`Tema salvo: ${theme.theme}`)
+        } catch (error) {
+          console.warn('Erro ao salvar tema:', error)
+        }
+      }
+
+      console.log(`${savedThemes.length} novos temas gerados e salvos`)
+
+      return NextResponse.json({
+        success: true,
+        themes: themeData.themes,
+        totalAvailable: themeData.themes.length,
+        selectedAt: new Date().toISOString(),
+        message: 'Novos temas gerados com IA'
+      })
+    }
+
+    // Converter para formato EnemTheme e filtrar válidos
+    const allThemes = savedThemes.map(conversation => {
+      try {
+        const messages = JSON.parse(conversation.messages)
+        const themeData = JSON.parse(messages[0]?.content || '{}')
+        
+        return {
+          id: themeData.themeId || conversation.id,
+          year: themeData.year || 2025,
+          theme: themeData.theme || conversation.subject?.replace('Tema: ', '') || 'Tema gerado por IA',
+          description: themeData.description || 'Tema gerado por IA',
+          isAIGenerated: themeData.isAIGenerated || true,
+          createdAt: themeData.createdAt || conversation.created_at.toISOString()
+        }
+      } catch (error) {
+        console.warn('Erro ao processar tema salvo:', error)
+        return null
+      }
+    }).filter(Boolean)
+
+    console.log(`${allThemes.length} temas válidos encontrados`)
+
+    if (allThemes.length === 0) {
       return NextResponse.json(
-        { error: 'API key da OpenAI não configurada' },
-        { status: 500 }
+        { 
+          error: 'Nenhum tema válido encontrado',
+          message: 'Todos os temas salvos estão corrompidos'
+        },
+        { status: 404 }
       )
     }
 
-    const body = await request.json()
-    const { count = 3, category } = body
-
-    // Gerar elementos aleatórios para diversificar os temas
-    const randomElements = [
-      ['sustentabilidade', 'tecnologia', 'educação', 'saúde', 'cultura', 'economia', 'política', 'meio ambiente'],
-      ['jovens', 'idosos', 'mulheres', 'crianças', 'trabalhadores', 'estudantes', 'famílias', 'comunidades'],
-      ['digitais', 'urbanas', 'rurais', 'sociais', 'econômicas', 'ambientais', 'culturais', 'políticas'],
-      ['contemporâneas', 'modernas', 'emergentes', 'críticas', 'urgentes', 'complexas', 'desafiadoras', 'transformadoras']
-    ]
-
-    const randomTopic = randomElements[0][Math.floor(Math.random() * randomElements[0].length)]
-    const randomGroup = randomElements[1][Math.floor(Math.random() * randomElements[1].length)]
-    const randomContext = randomElements[2][Math.floor(Math.random() * randomElements[2].length)]
-    const randomAdjective = randomElements[3][Math.floor(Math.random() * randomElements[3].length)]
-
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: `Você é um especialista em temas de redação do ENEM. Gere ${count} temas de redação ÚNICOS e DIVERSOS para o Brasil contemporâneo.
-
-IMPORTANTE: Cada chamada deve gerar temas COMPLETAMENTE DIFERENTES dos anteriores. Use criatividade e varie:
-- Áreas: educação, saúde, tecnologia, meio ambiente, cultura, economia, política, sociedade
-- Grupos: jovens, idosos, mulheres, crianças, trabalhadores, estudantes, famílias, comunidades
-- Contextos: urbanos, rurais, digitais, sociais, econômicos, ambientais, culturais
-- Perspectivas: desafios, oportunidades, impactos, transformações, inclusão, exclusão
-
-Cada tema deve:
-- Ser relevante para o Brasil atual (2024-2025)
-- Permitir argumentação e proposta de intervenção
-- Ser adequado para estudantes do ensino médio
-- Ter formato variado: "Desafios para...", "Impactos da...", "A importância de...", etc.
-- ${category ? `Focar na categoria: ${category}` : 'Abordar diferentes áreas sociais'}
-
-Elementos inspiradores desta geração: ${randomTopic}, ${randomGroup}, ${randomContext}, ${randomAdjective}
-
-Responda apenas com um JSON array contendo objetos com as propriedades: theme, description.`
-        },
-        {
-          role: "user",
-          content: `Gere ${count} temas de redação ÚNICOS e DIVERSOS para o ENEM. Use os elementos inspiradores: ${randomTopic}, ${randomGroup}, ${randomContext}, ${randomAdjective}.${category ? ` Foque na categoria: ${category}.` : ''} Seja criativo e varie os formatos dos temas!`
-        }
-      ],
-      temperature: 1.2, // Aumentei a temperatura para mais criatividade
-      max_tokens: 1500
-    })
-
-    const response = completion.choices[0]?.message?.content
-    if (!response) {
-      throw new Error('Resposta vazia da IA')
+    // Selecionar 3 temas aleatórios
+    const randomThemes = []
+    const availableThemes = [...allThemes] // Copiar array para não modificar o original
+    
+    for (let i = 0; i < Math.min(3, availableThemes.length); i++) {
+      const randomIndex = Math.floor(Math.random() * availableThemes.length)
+      randomThemes.push(availableThemes[randomIndex])
+      availableThemes.splice(randomIndex, 1) // Remover para evitar duplicatas
     }
 
-    console.log('Resposta bruta da IA:', response)
-
-    const cleanedResponse = cleanAIResponse(response)
-    console.log('Resposta limpa da IA:', cleanedResponse)
-
-    let aiThemes
-    try {
-      aiThemes = JSON.parse(cleanedResponse)
-      console.log('JSON parseado com sucesso:', aiThemes)
-    } catch (parseError) {
-      console.error('Erro ao fazer parse do JSON:', parseError)
-      console.error('Conteúdo que falhou no parse:', cleanedResponse)
-      
-      // Tentar extrair JSON de forma mais robusta
-      const jsonMatch = cleanedResponse.match(/\[[\s\S]*\]/)
-      if (jsonMatch) {
-        try {
-          aiThemes = JSON.parse(jsonMatch[0])
-          console.log('JSON extraído com regex:', aiThemes)
-        } catch (regexError) {
-          console.error('Erro ao fazer parse com regex:', regexError)
-          throw new Error(`Erro ao fazer parse do JSON da IA: ${parseError.message}`)
-        }
-      } else {
-        throw new Error(`Erro ao fazer parse do JSON da IA: ${parseError.message}`)
-      }
-    }
-
-    // Validar se é um array
-    if (!Array.isArray(aiThemes)) {
-      console.error('Resposta da IA não é um array:', aiThemes)
-      throw new Error('Resposta da IA não é um array válido')
-    }
-
-    // Validar e formatar os temas gerados
-    const formattedThemes: EnemTheme[] = aiThemes.map((theme: any, index: number) => ({
-      id: `ai-${Date.now()}-${index}`,
-      year: 2025,
-      theme: theme.theme || theme.title || 'Tema gerado por IA',
-      description: theme.description || 'Tema gerado por IA para prática',
-      isAIGenerated: true
-    }))
-
-    // Salvar temas no banco de dados usando uma tabela simples
-    try {
-      // Usar a tabela de conversas para armazenar temporariamente os temas
-      // Em uma implementação completa, seria uma tabela específica
-      for (const theme of formattedThemes) {
-        await prisma.conversations.create({
-          data: {
-            // Não definir id, deixar o Prisma gerar um UUID
-            user_id: '00000000-0000-0000-0000-000000000000', // UUID especial para temas do sistema
-            module: 'redacao',
-            subject: `Tema: ${theme.theme}`,
-            grade: 'ENEM',
-            messages: JSON.stringify([{
-              role: 'system',
-              content: JSON.stringify({
-                type: 'redacao_theme',
-                themeId: theme.id, // Manter o ID original do tema no conteúdo
-                year: theme.year,
-                theme: theme.theme,
-                description: theme.description,
-                isAIGenerated: theme.isAIGenerated,
-                createdAt: new Date().toISOString()
-              })
-            }]),
-            token_count: 0,
-            model: 'redacao-theme-generator',
-            created_at: new Date(),
-            updated_at: new Date()
-          }
-        }).catch((error) => {
-          console.warn('Erro ao salvar tema individual:', theme.id, error.message)
-        })
-      }
-    } catch (error) {
-      console.warn('Erro ao salvar temas no banco:', error)
-    }
-
-    console.log('Temas formatados:', formattedThemes)
+    console.log('Temas aleatórios selecionados:', randomThemes.map(t => t.theme))
 
     const responseData = {
       success: true,
-      themes: formattedThemes,
-      generatedAt: new Date().toISOString()
+      themes: randomThemes,
+      totalAvailable: allThemes.length,
+      selectedAt: new Date().toISOString()
     }
 
     console.log('Dados da resposta:', responseData)
 
-    try {
-      const response = NextResponse.json(responseData)
-      console.log('Resposta NextResponse criada com sucesso')
-      return response
-    } catch (responseError) {
-      console.error('Erro ao criar NextResponse:', responseError)
-      throw responseError
-    }
+    return NextResponse.json(responseData)
 
   } catch (error) {
     console.error('=== ERRO CAPTURADO NO CATCH ===')

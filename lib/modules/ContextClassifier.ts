@@ -75,7 +75,7 @@ export class ContextClassifier extends EventEmitter {
       enableCaching: true,
       cacheTimeout: 300000, // 5 minutes
       enableFallback: true,
-      fallbackModule: 'atendimento',
+      fallbackModule: 'auto',
       enableAnalytics: true,
       enableML: false,
       confidenceThreshold: 0.7,

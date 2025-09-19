@@ -160,7 +160,7 @@ export function useModuleOrchestrator(config: ModuleOrchestratorConfig = {
       
       // Fallback classification
       return {
-        module: 'atendimento',
+        module: 'professor',
         confidence: 0.5,
         reasoning: 'Fallback due to classification error',
         suggestedModels: ['gpt-3.5-turbo'],

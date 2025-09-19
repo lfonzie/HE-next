@@ -125,6 +125,7 @@ export function useChat(onStreamingStart?: () => void) {
       // Usar módulo fornecido ou 'auto' para classificação automática
       let finalModule = moduleParam || "auto"
       console.log(`🎯 Usando módulo: ${finalModule}`)
+      console.log(`🔍 [useChat] moduleParam received:`, moduleParam, `(type: ${typeof moduleParam})`)
 
       // Include conversation history for context
       const conversationHistory = currentConversation?.messages || []

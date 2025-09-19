@@ -74,6 +74,78 @@
       "blocklist": []
     },
     {
+      "module_id": "professor",
+      "name": "Professor",
+      "description": "Assistente de estudos focado no aluno - dúvidas acadêmicas, conceitos, exercícios, matérias escolares.",
+      "keywords": ["dúvida", "explicação", "conceito", "matéria", "disciplina", "geometria", "álgebra", "física", "química", "biologia", "história", "geografia", "me ajude com", "tirar uma dúvida", "ajuda com exercício", "como resolver", "fórmula", "teorema", "demonstração", "prova", "análise", "síntese", "comparar", "explicar detalhadamente", "processo complexo", "estatística", "probabilidade", "vetores", "matriz", "logaritmo", "exponencial", "limite", "continuidade"],
+      "entities": ["tema", "assunto", "conceito", "exercício"],
+      "blocklist": []
+    },
+    {
+      "module_id": "aula_interativa",
+      "name": "Aula Interativa",
+      "description": "Solicitações por aulas interativas ou dinâmicas.",
+      "keywords": ["aula interativa", "aula dinâmica", "aula participativa", "aula com atividades", "slides", "explicação passo a passo", "atividade", "demonstração"],
+      "entities": ["tema", "atividade"],
+      "blocklist": []
+    },
+    {
+      "module_id": "ti",
+      "name": "TI",
+      "description": "Suporte técnico educacional - problemas técnicos, equipamentos, sistemas.",
+      "keywords": ["projetor", "internet", "lenta", "login", "não funciona", "configurar", "impressora", "bug", "sistema", "computador", "travou", "build", "deploy", "render", "porta", "log", "404", "405", "nextauth", "rota", "api"],
+      "entities": ["erro", "rota", "sistema"],
+      "blocklist": []
+    },
+    {
+      "module_id": "rh",
+      "name": "RH",
+      "description": "Recursos humanos - questões de funcionários/colaboradores.",
+      "keywords": ["benefícios", "férias", "atestado", "médico", "salário", "treinamento", "carreira", "promoção", "recursos humanos", "colaboradores", "funcionários"],
+      "entities": ["funcionário", "benefício"],
+      "blocklist": []
+    },
+    {
+      "module_id": "coordenacao",
+      "name": "Coordenação",
+      "description": "Gestão pedagógica, calendário escolar.",
+      "keywords": ["calendário", "provas", "coordenador", "pedagógico", "gestão", "acadêmica", "planejamento", "pedagógico", "metodologia", "ensino"],
+      "entities": ["calendário", "prova"],
+      "blocklist": []
+    },
+    {
+      "module_id": "bem_estar",
+      "name": "Bem-Estar",
+      "description": "Suporte socioemocional - apoio emocional, ansiedade, conflitos, saúde mental.",
+      "keywords": ["ansioso", "conflito", "colega", "apoio", "emocional", "estresse", "depressão", "bullying", "conflito", "familiar", "saúde", "mental"],
+      "entities": ["conflito", "emocional"],
+      "blocklist": []
+    },
+    {
+      "module_id": "social_media",
+      "name": "Social Media",
+      "description": "Criação de conteúdo para redes sociais.",
+      "keywords": ["post", "rede social", "instagram", "facebook", "tiktok", "youtube", "conteúdo digital", "marketing digital", "postagem", "compartilhar nas redes", "criar post", "post social media", "destacar conquistas", "celebrar resultados"],
+      "entities": ["post", "rede social"],
+      "blocklist": []
+    },
+    {
+      "module_id": "conteudo_midia",
+      "name": "Conteúdo Mídia",
+      "description": "Solicitações por conteúdo visual, imagens, diagramas.",
+      "keywords": ["preciso de uma imagem", "diagrama", "gráfico", "ilustração", "infográfico", "conteúdo visual", "material visual"],
+      "entities": ["imagem", "diagrama"],
+      "blocklist": []
+    },
+    {
+      "module_id": "atendimento",
+      "name": "Atendimento",
+      "description": "Suporte multicanal - apenas quando não se encaixa em nenhum módulo específico.",
+      "keywords": ["informações gerais", "dúvidas básicas", "primeiro contato", "ajuda geral"],
+      "entities": [],
+      "blocklist": []
+    },
+    {
       "module_id": "chat_geral",
       "name": "Chat Geral",
       "description": "Fallback for general queries not matching other modules.",

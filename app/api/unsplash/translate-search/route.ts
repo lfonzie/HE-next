@@ -18,12 +18,6 @@ export async function POST(request: NextRequest) {
 
     console.log('🖼️ Buscando imagem com tradução para:', query);
 
-    // Verificar se a API key está configurada
-    if (!process.env.UNSPLASH_ACCESS_KEY) {
-      console.warn('⚠️ UNSPLASH_ACCESS_KEY não configurada, usando fallback');
-      return getFallbackResponse(query, count);
-    }
-
     // 1. Detectar e traduzir o tema
     let englishQuery: string;
     let themeInfo: any = {};
@@ -37,6 +31,23 @@ export async function POST(request: NextRequest) {
       console.warn('⚠️ Erro na detecção de tema, usando tradução simples:', error);
       // Fallback: tradução simples
       englishQuery = await translateThemeToEnglish(query);
+    }
+
+    // Se count é 0, retornar apenas a detecção de tema
+    if (count === 0) {
+      return NextResponse.json({
+        success: true,
+        theme: themeInfo.theme || query,
+        englishTheme: englishQuery,
+        category: themeInfo.category || 'geral',
+        confidence: themeInfo.confidence || 0.8
+      });
+    }
+
+    // Verificar se a API key está configurada
+    if (!process.env.UNSPLASH_ACCESS_KEY) {
+      console.warn('⚠️ UNSPLASH_ACCESS_KEY não configurada, usando fallback');
+      return getFallbackResponse(query, count);
     }
 
     // 2. Expandir a query com termos relacionados

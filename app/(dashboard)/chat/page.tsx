@@ -153,9 +153,11 @@ export default function ChatPage() {
     
     try {
       console.log('Calling sendMessage API...');
+      // TEMPORÁRIO: Debug - sempre usar "auto" para permitir classificação automática
+      console.log('🔍 [ChatPage] selectedModule antes do override:', selectedModule);
       await sendMessage(
         trimmedMessage, 
-        selectedModule || "auto",
+        "auto", // Forçar "auto" para permitir classificação automática
         undefined,
         undefined,
         currentConversation?.id,
@@ -185,25 +187,36 @@ export default function ChatPage() {
         });
         
         // Auto-retry once after delay
-        setTimeout(async () => {
-          try {
-            await sendMessage(
-              trimmedMessage, 
-              selectedModule || "auto",
-              undefined,
-              undefined,
-              currentConversation?.id
-            );
-            setInputMessage("");
-            highlightActiveModule();
-          } catch (retryError: any) {
+        setTimeout(() => {
+          // Wrap async function to handle promise properly
+          (async () => {
+            try {
+              await sendMessage(
+                trimmedMessage, 
+                "auto", // Forçar "auto" para permitir classificação automática
+                undefined,
+                undefined,
+                currentConversation?.id
+              );
+              setInputMessage("");
+              highlightActiveModule();
+            } catch (retryError: any) {
+              endLoading('retry', 'error');
+              toast({
+                title: "Erro",
+                description: "Falha na conexao. Tente novamente.",
+                variant: "destructive"
+              });
+            }
+          })().catch((error) => {
+            console.error('Unhandled promise rejection in retry:', error);
             endLoading('retry', 'error');
             toast({
               title: "Erro",
               description: "Falha na conexao. Tente novamente.",
               variant: "destructive"
             });
-          }
+          });
         }, 2000);
       } else {
         toast({

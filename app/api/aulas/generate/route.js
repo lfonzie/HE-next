@@ -54,86 +54,46 @@ function calculateLessonDuration(slides, mode = 'sync') {
 }
 
 function generateImageQuery(topic, slideNumber, slideType) {
-  // Limpar o tópico para criar queries mais específicas e precisas
+  // Tradução simples local sem usar APIs externas
+  const translations = {
+    'eletricidade': 'electricity', 'corrente': 'current', 'voltagem': 'voltage',
+    'resistência': 'resistance', 'circuito': 'circuit', 'matemática': 'mathematics',
+    'álgebra': 'algebra', 'geometria': 'geometry', 'história': 'history',
+    'brasil': 'brazil', 'independência': 'independence', 'física': 'physics',
+    'química': 'chemistry', 'biologia': 'biology', 'fotossíntese': 'photosynthesis',
+    'célula': 'cell', 'dna': 'dna', 'genética': 'genetics', 'evolução': 'evolution',
+    'geografia': 'geography', 'clima': 'climate', 'relevo': 'relief',
+    'literatura': 'literature', 'português': 'portuguese', 'gramática': 'grammar',
+    'redação': 'writing', 'filosofia': 'philosophy', 'sociologia': 'sociology',
+    'arte': 'art', 'música': 'music', 'educação': 'education',
+    'aprendizado': 'learning', 'ensino': 'teaching', 'estudo': 'study',
+    'como': 'how', 'funciona': 'works', 'o que é': 'what is', 'definição': 'definition'
+  };
+  
+  // Limpar e traduzir o tópico
   const cleanTopic = topic.toLowerCase()
     .replace(/[?¿!¡.,;:]/g, '') // Remove pontuação
     .replace(/\s+/g, ' ') // Normaliza espaços
     .trim();
   
-  // Extrair palavras-chave principais do tópico
-  const topicKeywords = cleanTopic.split(' ').filter(word => 
+  const englishTopic = cleanTopic.split(' ')
+    .map(word => translations[word] || word)
+    .join(' ');
+  
+  // Extrair apenas a primeira palavra-chave principal
+  const mainKeyword = englishTopic.split(' ').filter(word => 
     word.length > 2 && 
-    !['sobre', 'para', 'como', 'quando', 'onde', 'porque', 'que', 'uma', 'um', 'de', 'da', 'do', 'das', 'dos'].includes(word)
-  );
+    !['about', 'for', 'how', 'when', 'where', 'why', 'what', 'a', 'an', 'the', 'of', 'in', 'on', 'at', 'to', 'from'].includes(word)
+  )[0] || englishTopic.split(' ')[0];
   
-  const mainKeyword = topicKeywords[0] || cleanTopic;
-  const secondaryKeyword = topicKeywords[1] || '';
+  console.log(`🔍 Query de imagem gerada para slide ${slideNumber}: ${mainKeyword}`);
   
-  // Queries específicas e precisas por tipo de slide e número com palavras-chave relevantes
-  const queries = {
-    1: `${mainKeyword} ${secondaryKeyword} introduction concept overview`, // Abertura
-    2: `${mainKeyword} ${secondaryKeyword} fundamentals basics principles`, // Conceitos fundamentais
-    3: `${mainKeyword} ${secondaryKeyword} process mechanism steps`, // Desenvolvimento
-    4: `${mainKeyword} ${secondaryKeyword} application examples real world`, // Aplicações práticas
-    5: `${mainKeyword} ${secondaryKeyword} variations adaptations types`, // Variações
-    6: `${mainKeyword} ${secondaryKeyword} advanced connections relationships`, // Conexões avançadas
-    7: `${mainKeyword} ${secondaryKeyword} quiz test question`, // Quiz 1
-    8: `${mainKeyword} ${secondaryKeyword} deep dive analysis`, // Aprofundamento
-    9: `${mainKeyword} ${secondaryKeyword} practical examples demonstration`, // Exemplos práticos
-    10: `${mainKeyword} ${secondaryKeyword} critical analysis evaluation`, // Análise crítica
-    11: `${mainKeyword} ${secondaryKeyword} synthesis summary`, // Síntese intermediária
-    12: `${mainKeyword} ${secondaryKeyword} situational analysis quiz`, // Quiz 2
-    13: `${mainKeyword} ${secondaryKeyword} future applications innovation`, // Aplicações futuras
-    14: `${mainKeyword} ${secondaryKeyword} conclusion summary recap` // Encerramento
-  };
-  
-  // Fallback mais específico se não encontrar
-  const fallbackQueries = {
-    1: `${mainKeyword} concept introduction`,
-    2: `${mainKeyword} basics fundamentals`,
-    3: `${mainKeyword} process mechanism`,
-    4: `${mainKeyword} examples applications`,
-    5: `${mainKeyword} types variations`,
-    6: `${mainKeyword} advanced connections`,
-    7: `${mainKeyword} quiz test`,
-    8: `${mainKeyword} analysis deep`,
-    9: `${mainKeyword} practical demonstration`,
-    10: `${mainKeyword} critical evaluation`,
-    11: `${mainKeyword} synthesis summary`,
-    12: `${mainKeyword} situational quiz`,
-    13: `${mainKeyword} future innovation`,
-    14: `${mainKeyword} conclusion recap`
-  };
-  
-  return queries[slideNumber] || fallbackQueries[slideNumber] || `${mainKeyword} concept`;
+  return mainKeyword;
 }
 
 function expandImageQuery(originalQuery, topic) {
-  // Expandir a query original com termos relacionados para melhor cobertura no Wikimedia Commons
-  const cleanTopic = topic.toLowerCase()
-    .replace(/[?¿!¡.,;:]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-  
-  const topicKeywords = cleanTopic.split(' ').filter(word => 
-    word.length > 2 && 
-    !['sobre', 'para', 'como', 'quando', 'onde', 'porque', 'que', 'uma', 'um', 'de', 'da', 'do', 'das', 'dos'].includes(word)
-  );
-  
-  const mainKeyword = topicKeywords[0] || cleanTopic;
-  
-  // Adicionar termos educacionais e científicos comuns no Wikimedia Commons
-  const educationalTerms = [
-    'education', 'educational', 'learning', 'teaching', 'school', 'student',
-    'science', 'scientific', 'research', 'study', 'academic', 'university',
-    'knowledge', 'information', 'concept', 'theory', 'practice', 'example'
-  ];
-  
-  // Combinar query original com termos educacionais
-  const expandedTerms = [...originalQuery.split(' '), ...educationalTerms.slice(0, 3)];
-  const uniqueTerms = [...new Set(expandedTerms)];
-  
-  return uniqueTerms.join(' ');
+  // Retornar apenas a query original, sem expandir com termos educacionais
+  return originalQuery;
 }
 
 // Função para gerar URL de imagem dinâmica baseada no tema
@@ -161,7 +121,7 @@ REGRAS IMPORTANTES:
 - Use linguagem clara e didática em português brasileiro
 - NÃO use frases como "imagine uma tabela", "crie um gráfico" ou "desenhe um diagrama"
 - Use \\n\\n para quebras de linha entre parágrafos no conteúdo dos slides
-- Para quiz, INCLUA o campo "correct" como índice 0, 1, 2 ou 3 indicando a alternativa correta; "options" deve conter exatamente 4 strings
+- Para quiz, INCLUA o campo "correct" como índice 0, 1, 2 ou 3 indicando a alternativa correta (0=A, 1=B, 2=C, 3=D); "options" deve conter exatamente 4 strings SEM prefixos de letras (A), B), etc.)
 - CADA SLIDE DEVE TER MÍNIMO 500 TOKENS DE CONTEÚDO (conteúdo extenso e detalhado)
 
 ESTRUTURA DA AULA (45-60 minutos) - EXATAMENTE 14 SLIDES:
@@ -320,9 +280,9 @@ Para slides de quiz (type: "quiz"), inclua:
   "questions": [
     {
       "q": "Pergunta clara e objetiva relacionada ao tema específico?",
-      "options": ["A) Alternativa A detalhada", "B) Alternativa B detalhada", "C) Alternativa C detalhada", "D) Alternativa D detalhada"],
+      "options": ["Alternativa A detalhada", "Alternativa B detalhada", "Alternativa C detalhada", "Alternativa D detalhada"],
       "correct": 0,
-      "explanation": "Explicação detalhada da resposta correta"
+      "explanation": "Explicação detalhada da resposta correta e por que as outras alternativas estão incorretas"
     }
   ]
 }
@@ -340,7 +300,7 @@ IMPORTANTE:
 - Evite termos genéricos como "education", "classroom", "learning", "educational"
 - Use apenas palavras-chave específicas do conteúdo (ex: "eletricidade corrente", "matemática álgebra", "história independência")
 - Para quiz: "correct" deve ser um número de 0 a 3 indicando a resposta correta (0=A, 1=B, 2=C, 3=D)
-- As alternativas devem ser claramente identificadas como A), B), C), D) no conteúdo das opções
+- As alternativas devem ser strings limpas SEM prefixos de letras (A), B), C), D) - apenas o texto da alternativa
 - Use quebras de linha \\n\\n para separar parágrafos e melhorar a legibilidade
 - Para diagramas e tabelas, use a sintaxe especial: <<<criar um diagrama da fotossíntese, sem letras somente imagem>>> ou <<<criar uma tabela comparativa>>>
 - CRÍTICO: Cada slide deve ter um título ÚNICO e ESPECÍFICO ao tema "${topic}". NÃO use títulos genéricos como "Conceitos Fundamentais", "Aplicações Práticas", etc. Crie títulos que sejam específicos ao conteúdo de cada slide.
@@ -531,22 +491,20 @@ export async function POST(request) {
       timestamp: new Date().toISOString()
     };
     
-    log.info('🎓 Iniciando geração de aula', baseContext, {
-      topic,
-      mode,
-      schoolId: schoolId || 'N/A',
-      hasCustomPrompt: !!customPrompt
-    });
+    // Define contexto compartilhado para reduzir repetição
+    log.setSharedContext(baseContext);
+    
+    log.aulaStart(topic, mode, schoolId);
     
     if (!topic) {
-      log.validationError('topic', topic, 'string não vazia', baseContext);
+      log.validationError('topic', topic, 'string não vazia');
       return NextResponse.json({ 
         error: 'Tópico é obrigatório' 
       }, { status: 400 });
     }
     
     // Timer para preparação do prompt
-    const promptTimer = log.timeStart('preparacao-prompt', baseContext);
+    const promptTimer = log.aulaTimer('preparacao-prompt');
     
     // TODO: Integrar com Neo4j para prompts customizados por escola
     // const customPromptQuery = `
@@ -561,23 +519,18 @@ export async function POST(request) {
     // Gerar conteúdo usando template plug-and-play
     const generationPrompt = getLessonPromptTemplate(topic, systemPrompt);
     
-    log.timeEnd(promptTimer, 'preparacao-prompt', baseContext);
+    log.aulaTimerEnd(promptTimer, 'preparacao-prompt');
     
-    log.info('📋 Prompt preparado', baseContext, {
+    log.aulaStep('📋 Prompt preparado', {
       promptLength: generationPrompt.length,
       estimatedTokens: Math.ceil(generationPrompt.length / 4),
       hasCustomPrompt: !!customPrompt
     });
     
     // Timer para chamada OpenAI
-    const openaiTimer = log.timeStart('openai-generation', baseContext);
+    const openaiTimer = log.aulaTimer('openai-generation');
     
-    log.info('🤖 Chamando OpenAI GPT-4o Mini', baseContext, {
-      model: 'gpt-4o-mini',
-      maxTokens: 10000,
-      temperature: 0.7,
-      estimatedPromptTokens: Math.ceil(generationPrompt.length / 4)
-    });
+    log.aulaOpenAI('gpt-4o-mini', Math.ceil(generationPrompt.length / 4), 0.7);
     
     const openaiStartTime = Date.now();
     const response = await openai.chat.completions.create({
@@ -588,14 +541,14 @@ export async function POST(request) {
     });
     
     const openaiDuration = Math.round((Date.now() - openaiStartTime) / 1000);
-    log.timeEnd(openaiTimer, 'openai-generation', baseContext);
+    log.aulaTimerEnd(openaiTimer, 'openai-generation');
     
-    log.success('✅ Resposta OpenAI recebida', baseContext, {
-      duration: openaiDuration,
-      usage: response.usage,
-      finishReason: response.choices[0]?.finish_reason,
-      responseLength: response.choices[0]?.message?.content?.length || 0
-    });
+    log.aulaResponse(
+      openaiDuration,
+      response.usage,
+      response.choices[0]?.finish_reason,
+      response.choices[0]?.message?.content?.length || 0
+    );
 
     // Persist token usage (per module: Aulas)
     try {
@@ -616,51 +569,51 @@ export async function POST(request) {
       console.warn('⚠️ [AULAS] Failed to log tokens:', e);
     }
     // Timer para parsing do conteúdo
-    const parsingTimer = log.timeStart('parsing-conteudo', baseContext);
+    const parsingTimer = log.aulaTimer('parsing-conteudo');
     
-    log.info('🔍 Parseando conteúdo da IA', baseContext, {
-      responseLength: response.choices[0]?.message?.content?.length || 0,
-      estimatedCost: ((response.usage?.total_tokens || 0) * 0.000015).toFixed(4)
-    });
+    log.aulaParsing(
+      response.choices[0]?.message?.content?.length || 0,
+      ((response.usage?.total_tokens || 0) * 0.000015).toFixed(4)
+    );
     
     const rawContent = response.choices[0]?.message?.content || '';
     const generatedContent = parseGeneratedContent(rawContent);
     
-    log.timeEnd(parsingTimer, 'parsing-conteudo', baseContext);
+    log.aulaTimerEnd(parsingTimer, 'parsing-conteudo');
     
     log.parsing('conteudo-ia', true, {
       slidesCount: generatedContent.slides?.length || 0,
       rawContentLength: rawContent.length,
       parsedSuccessfully: !!generatedContent.slides
-    }, baseContext);
+    });
     
     // Timer para validação
-    const validationTimer = log.timeStart('validacao-estrutura', baseContext);
+    const validationTimer = log.aulaTimer('validacao-estrutura');
     
-    log.info('🔍 Validando estrutura da aula', baseContext, {
+    log.aulaStep('🔍 Validando estrutura da aula', {
       slidesCount: generatedContent.slides?.length || 0
     });
     
     const validation = validateLessonStructure(generatedContent);
     
-    log.timeEnd(validationTimer, 'validacao-estrutura', baseContext);
+    log.aulaTimerEnd(validationTimer, 'validacao-estrutura');
     
     if (!validation.isValid) {
-      log.validationError('lesson-structure', generatedContent, 'estrutura válida', baseContext);
-      log.error('❌ Validação da estrutura falhou', baseContext, {
+      log.validationError('lesson-structure', generatedContent, 'estrutura válida');
+      log.error('❌ Validação da estrutura falhou', {}, {
         errors: validation.errors,
         warnings: validation.warnings
       });
     } else {
-      log.success('✅ Validação da estrutura passou', baseContext, {
+      log.success('✅ Validação da estrutura passou', {}, {
         warnings: validation.warnings?.length || 0
       });
     }
     
     // Timer para preparação de imagens
-    const imageTimer = log.timeStart('preparacao-imagens', baseContext);
+    const imageTimer = log.aulaTimer('preparacao-imagens');
     
-    log.info('🖼️ Preparando queries de imagem', baseContext, {
+    log.aulaStep('🖼️ Preparando queries de imagem', {
       slidesCount: generatedContent.slides?.length || 0
     });
     
@@ -670,7 +623,7 @@ export async function POST(request) {
       if (slide.number === 1 || slide.number === 7 || slide.number === 14) {
         const imageQuery = slide.imageQuery || generateImageQuery(topic, slide.number, slide.type);
         
-        // Tentar múltiplas fontes de imagem com prioridade Wikimedia
+        // Usar apenas Wikimedia Commons para busca de imagens
         let imageUrl = null;
         let imageSource = 'fallback';
 
@@ -686,64 +639,14 @@ export async function POST(request) {
             if (wikiData.success && wikiData.photos && wikiData.photos.length > 0) {
               imageUrl = wikiData.photos[0].urls?.regular || wikiData.photos[0].url;
               imageSource = 'wikimedia';
-              console.log(`✅ Imagem Wikimedia para slide ${slide.number}:`, imageUrl);
+              console.log(`✅ Imagem Wikimedia Commons para slide ${slide.number}:`, imageUrl);
             }
           }
         } catch (error) {
-          console.warn(`⚠️ Erro ao buscar imagem Wikimedia para slide ${slide.number}:`, error);
+          console.warn(`⚠️ Erro ao buscar imagem Wikimedia Commons para slide ${slide.number}:`, error);
         }
 
-        // 2. Classificador multi-fonte (secundário)
-        if (!imageUrl) {
-          try {
-            const classifyResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/images/classify-source`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ query: imageQuery, subject: topic, grade: '5', count: 1 }),
-            });
-
-            if (classifyResponse.ok) {
-              const classifyData = await classifyResponse.json();
-              if (classifyData.success && classifyData.images && classifyData.images.length > 0) {
-                const bestImage = classifyData.images[0];
-                imageUrl = bestImage.url;
-                imageSource = bestImage.source?.source || bestImage.source || 'mixed';
-                console.log(`✅ Imagem classificada para slide ${slide.number}:`, {
-                  source: bestImage.source?.name || imageSource,
-                  relevance: bestImage.relevanceScore,
-                  themeMatch: bestImage.themeMatch,
-                  educationalSuitability: bestImage.educationalSuitability
-                });
-              }
-            }
-          } catch (error) {
-            console.warn(`⚠️ Erro ao classificar imagem para slide ${slide.number}:`, error);
-          }
-        }
-
-        // 3. Pixabay (terciário)
-        if (!imageUrl) {
-          try {
-            const pixabayResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/pixabay`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ action: 'search', query: imageQuery, perPage: 1, category: 'education', type: 'images' }),
-            });
-
-            if (pixabayResponse.ok) {
-              const pixabayData = await pixabayResponse.json();
-              if (pixabayData.success && pixabayData.data && pixabayData.data.length > 0) {
-                imageUrl = pixabayData.data[0].url;
-                imageSource = 'pixabay';
-                console.log(`✅ Imagem Pixabay carregada para slide ${slide.number}:`, imageUrl);
-              }
-            }
-          } catch (error) {
-            console.warn(`⚠️ Erro ao buscar imagem Pixabay para slide ${slide.number}:`, error);
-          }
-        }
-
-        // 4. Wikimedia Commons com query expandida (terciário)
+        // 2. Wikimedia Commons com query expandida (secundário)
         if (!imageUrl) {
           try {
             // Tentar com query expandida para melhor cobertura
@@ -758,37 +661,15 @@ export async function POST(request) {
               if (wikiData2.success && wikiData2.photos && wikiData2.photos.length > 0) {
                 imageUrl = wikiData2.photos[0].urls?.regular || wikiData2.photos[0].url;
                 imageSource = 'wikimedia';
-                console.log(`✅ Imagem Wikimedia (query expandida) para slide ${slide.number}:`, imageUrl);
+                console.log(`✅ Imagem Wikimedia Commons (query expandida) para slide ${slide.number}:`, imageUrl);
               }
             }
           } catch (error) {
-            console.warn(`⚠️ Erro ao buscar imagem Wikimedia expandida para slide ${slide.number}:`, error);
+            console.warn(`⚠️ Erro ao buscar imagem Wikimedia Commons expandida para slide ${slide.number}:`, error);
           }
         }
 
-        // 5. Unsplash (quaternário)
-        if (!imageUrl) {
-          try {
-            const unsplashResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/unsplash/translate-search`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ query: imageQuery, subject: topic, count: 1 }),
-            });
-
-            if (unsplashResponse.ok) {
-              const unsplashData = await unsplashResponse.json();
-              if (unsplashData.photos && unsplashData.photos.length > 0) {
-                imageUrl = unsplashData.photos[0].urls.regular;
-                imageSource = 'unsplash';
-                console.log(`✅ Imagem Unsplash carregada para slide ${slide.number}:`, imageUrl);
-              }
-            }
-          } catch (error) {
-            console.warn(`⚠️ Erro ao buscar imagem Unsplash para slide ${slide.number}:`, error);
-          }
-        }
-
-        // 6. Fallback final para Wikimedia placeholder
+        // 3. Fallback final para Wikimedia placeholder
         if (!imageUrl) {
           imageUrl = `https://commons.wikimedia.org/wiki/Special:FilePath/Education%20-%20The%20Noun%20Project.svg?width=800&height=400`;
           imageSource = 'wikimedia';
@@ -814,12 +695,12 @@ export async function POST(request) {
       }
     }));
     
-    log.timeEnd(imageTimer, 'preparacao-imagens', baseContext);
+    log.aulaTimerEnd(imageTimer, 'preparacao-imagens');
     
     // Timer para cálculo de métricas
-    const metricsTimer = log.timeStart('calculo-metricas', baseContext);
+    const metricsTimer = log.aulaTimer('calculo-metricas');
     
-    log.info('📈 Calculando métricas de qualidade', baseContext, {
+    log.aulaStep('📈 Calculando métricas de qualidade', {
       slidesCount: slidesWithImageQueries.length
     });
     
@@ -834,7 +715,7 @@ export async function POST(request) {
     });
     const validSlides = slideValidations.filter(v => v.isValid).length;
     
-    log.debug('📊 Validação inicial de tokens', baseContext, {
+    log.debug('📊 Validação inicial de tokens', {}, {
       totalSlides: slidesWithImages.length,
       validSlides,
       averageTokens: Math.round(slideValidations.reduce((sum, v) => sum + v.tokens, 0) / slideValidations.length)
@@ -849,7 +730,7 @@ export async function POST(request) {
     });
     const finalValidSlides = finalValidations.filter(v => v.isValid).length;
     
-    log.debug('📊 Validação final de tokens', baseContext, {
+    log.debug('📊 Validação final de tokens', {}, {
       totalSlides: finalSlides.length,
       validSlides: finalValidSlides,
       averageTokens: Math.round(finalValidations.reduce((sum, v) => sum + v.tokens, 0) / finalValidations.length),
@@ -877,11 +758,11 @@ export async function POST(request) {
       }
     };
     
-    log.timeEnd(metricsTimer, 'calculo-metricas', baseContext);
+    log.aulaTimerEnd(metricsTimer, 'calculo-metricas');
     
-    log.performance('geracao-aula', metrics, baseContext);
+    log.performance('geracao-aula', metrics);
     
-    log.success('📊 Métricas calculadas', baseContext, {
+    log.success('📊 Métricas calculadas', {}, {
       duration: `${metrics.duration.sync} min (sync) / ${metrics.duration.async} min (async)`,
       tokens: `${metrics.content.totalTokens.toLocaleString()} (média: ${metrics.content.averageTokensPerSlide}/slide)`,
       words: metrics.content.totalWords.toLocaleString(),
@@ -910,13 +791,25 @@ export async function POST(request) {
             try {
               // First normalize to strict format (q, options[4], correct index/letter, explanation)
               const normalized = ensureQuizFormat(slide.questions);
-              processedQuestions = randomizeQuizQuestions(normalized);
-              log.debug('🎲 Quiz questions randomized', baseContext, {
-                slideNumber: slide.number,
-                questionCount: processedQuestions.length
-              });
+              
+              // Check if questions are already randomized by looking for originalCorrect property
+              const isAlreadyRandomized = normalized.some(q => q.hasOwnProperty('originalCorrect'));
+              
+              if (!isAlreadyRandomized) {
+                processedQuestions = randomizeQuizQuestions(normalized);
+                log.debug('🎲 Quiz questions randomized', {}, {
+                  slideNumber: slide.number,
+                  questionCount: processedQuestions.length
+                });
+              } else {
+                log.debug('🎲 Quiz questions already randomized, skipping', {}, {
+                  slideNumber: slide.number,
+                  questionCount: normalized.length
+                });
+                processedQuestions = normalized;
+              }
             } catch (error) {
-              log.warn('⚠️ Failed to randomize quiz questions', baseContext, {
+              log.warn('⚠️ Failed to randomize quiz questions', {}, {
                 slideNumber: slide.number,
                 error: error.message
               });
@@ -948,13 +841,28 @@ export async function POST(request) {
           if (slide.type === 'quiz' && slide.questions) {
             try {
               const normalized = ensureQuizFormat(slide.questions);
-              const randomizedQuestions = randomizeQuizQuestions(normalized);
-              return {
-                ...slide,
-                questions: randomizedQuestions
-              };
+              
+              // Check if questions are already randomized by looking for originalCorrect property
+              const isAlreadyRandomized = normalized.some(q => q.hasOwnProperty('originalCorrect'));
+              
+              if (!isAlreadyRandomized) {
+                const randomizedQuestions = randomizeQuizQuestions(normalized);
+                return {
+                  ...slide,
+                  questions: randomizedQuestions
+                };
+              } else {
+                log.debug('🎲 Quiz questions already randomized in slides, skipping', {}, {
+                  slideNumber: slide.number,
+                  questionCount: normalized.length
+                });
+                return {
+                  ...slide,
+                  questions: normalized
+                };
+              }
             } catch (error) {
-              log.warn('⚠️ Failed to randomize quiz questions in slides', baseContext, {
+              log.warn('⚠️ Failed to randomize quiz questions in slides', {}, {
                 slideNumber: slide.number,
                 error: error.message
               });

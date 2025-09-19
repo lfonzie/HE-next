@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
+import { prisma } from '@/lib/prisma'
 
 interface EnemTheme {
   id: string
@@ -21,9 +22,152 @@ const openai = new OpenAI({
 
 export async function GET(request: NextRequest) {
   try {
-    // Parâmetro includeAI removido - temas de IA são gerados apenas via /api/redacao/temas/ai
+    console.log('API /api/redacao/temas chamada - carregando temas oficiais e salvos')
     
-    // Temas oficiais do ENEM - Lista completa desde 1998
+    // Temas oficiais do ENEM
+    const officialThemes: EnemTheme[] = [
+      {
+        id: '2024-1',
+        year: 2024,
+        theme: 'Inclusão digital como direito de todos',
+        description: 'Tema da redação ENEM 2024 - 1º dia',
+        isOfficial: true
+      },
+      {
+        id: '2023-1',
+        year: 2023,
+        theme: 'Desafios para o enfrentamento da invisibilidade do trabalho de cuidado realizado pela mulher no Brasil',
+        description: 'Tema da redação ENEM 2023 - 1º dia',
+        isOfficial: true
+      },
+      {
+        id: '2022-1',
+        year: 2022,
+        theme: 'Desafios para a valorização de comunidades e povos tradicionais no Brasil',
+        description: 'Tema da redação ENEM 2022 - 1º dia',
+        isOfficial: true
+      },
+      {
+        id: '2021-1',
+        year: 2021,
+        theme: 'Invisibilidade e registro civil: garantia de acesso à cidadania no Brasil',
+        description: 'Tema da redação ENEM 2021 - 1º dia',
+        isOfficial: true
+      },
+      {
+        id: '2020-1',
+        year: 2020,
+        theme: 'O estigma associado às doenças mentais na sociedade brasileira',
+        description: 'Tema da redação ENEM 2020 - 1º dia',
+        isOfficial: true
+      },
+      {
+        id: '2019-1',
+        year: 2019,
+        theme: 'Democratização do acesso ao cinema no Brasil',
+        description: 'Tema da redação ENEM 2019 - 1º dia',
+        isOfficial: true
+      },
+      {
+        id: '2018-1',
+        year: 2018,
+        theme: 'Manipulação do comportamento do usuário pelo controle de dados na internet',
+        description: 'Tema da redação ENEM 2018 - 1º dia',
+        isOfficial: true
+      },
+      {
+        id: '2017-1',
+        year: 2017,
+        theme: 'Desafios para a formação educacional de surdos no Brasil',
+        description: 'Tema da redação ENEM 2017 - 1º dia',
+        isOfficial: true
+      },
+      {
+        id: '2016-1',
+        year: 2016,
+        theme: 'Caminhos para combater a intolerância religiosa no Brasil',
+        description: 'Tema da redação ENEM 2016 - 1º dia',
+        isOfficial: true
+      },
+      {
+        id: '2015-1',
+        year: 2015,
+        theme: 'A persistência da violência contra a mulher na sociedade brasileira',
+        description: 'Tema da redação ENEM 2015 - 1º dia',
+        isOfficial: true
+      }
+    ]
+
+    let allThemes = [...officialThemes]
+
+    // Buscar temas salvos no banco de dados
+    try {
+      const savedThemes = await prisma.conversations.findMany({
+        where: {
+          user_id: '00000000-0000-0000-0000-000000000000',
+          module: 'redacao',
+          subject: {
+            startsWith: 'Tema:'
+          }
+        },
+        orderBy: {
+          created_at: 'desc'
+        },
+        take: 20 // Limitar a 20 temas mais recentes de IA
+      })
+
+      // Converter para formato EnemTheme
+      const aiThemes = savedThemes.map(conversation => {
+        try {
+          const messages = JSON.parse(conversation.messages)
+          const themeData = JSON.parse(messages[0]?.content || '{}')
+          
+          return {
+            id: themeData.themeId || conversation.id,
+            year: themeData.year || 2025,
+            theme: themeData.theme || conversation.subject?.replace('Tema: ', '') || 'Tema gerado por IA',
+            description: themeData.description || 'Tema gerado por IA',
+            isAIGenerated: themeData.isAIGenerated || true,
+            createdAt: themeData.createdAt || conversation.created_at.toISOString()
+          }
+        } catch (error) {
+          console.warn('Erro ao processar tema salvo:', error)
+          return null
+        }
+      }).filter(Boolean)
+
+      // Adicionar temas de IA à lista (primeiro os de IA, depois os oficiais)
+      allThemes = [...aiThemes, ...allThemes]
+    } catch (error) {
+      console.warn('Erro ao buscar temas salvos:', error)
+    }
+
+    // Separar temas oficiais dos temas de IA
+    const officialThemesFromDB = allThemes.filter(theme => theme.isOfficial)
+    const aiThemes = allThemes.filter(theme => theme.isAIGenerated)
+    
+    // Ordenar temas oficiais por ano (mais recentes primeiro)
+    const sortedOfficialThemes = officialThemesFromDB.sort((a, b) => b.year - a.year)
+    
+    // Ordenar temas de IA por data de criação (mais recentes primeiro)
+    const sortedAIThemes = aiThemes.sort((a, b) => {
+      const dateA = new Date(a.createdAt || 0).getTime()
+      const dateB = new Date(b.createdAt || 0).getTime()
+      return dateB - dateA
+    })
+
+    return NextResponse.json({
+      success: true,
+      officialThemes: sortedOfficialThemes,
+      aiThemes: sortedAIThemes,
+      message: `${sortedOfficialThemes.length} temas oficiais + ${sortedAIThemes.length} temas de IA carregados`,
+      totalAvailable: allThemes.length,
+      officialCount: sortedOfficialThemes.length,
+      aiCount: sortedAIThemes.length
+    })
+    
+    // Código antigo comentado - temas oficiais do ENEM não são mais necessários
+    /*
     const officialThemes: EnemTheme[] = [
       {
         id: '2024-1',
@@ -218,11 +362,47 @@ export async function GET(request: NextRequest) {
 
     let allThemes = [...officialThemes]
 
-    // Não carregar temas salvos do servidor - apenas temas oficiais
-    // Os temas de IA serão adicionados apenas quando gerados para a sessão atual
+    // Buscar temas salvos no banco de dados
+    try {
+      const savedThemes = await prisma.conversations.findMany({
+        where: {
+          user_id: '00000000-0000-0000-0000-000000000000',
+          module: 'redacao',
+          subject: {
+            startsWith: 'Tema:'
+          }
+        },
+        orderBy: {
+          created_at: 'desc'
+        },
+        take: 50 // Limitar a 50 temas mais recentes
+      })
 
-    // Não gerar temas com IA na API principal - apenas temas oficiais
-    // Temas de IA são gerados apenas via /api/redacao/temas/ai
+      // Converter para formato EnemTheme
+      const aiThemes = savedThemes.map(conversation => {
+        try {
+          const messages = JSON.parse(conversation.messages)
+          const themeData = JSON.parse(messages[0]?.content || '{}')
+          
+          return {
+            id: themeData.themeId || conversation.id,
+            year: themeData.year || 2025,
+            theme: themeData.theme || conversation.subject?.replace('Tema: ', '') || 'Tema gerado por IA',
+            description: themeData.description || 'Tema gerado por IA',
+            isAIGenerated: themeData.isAIGenerated || true,
+            createdAt: themeData.createdAt || conversation.created_at.toISOString()
+          }
+        } catch (error) {
+          console.warn('Erro ao processar tema salvo:', error)
+          return null
+        }
+      }).filter(Boolean)
+
+      // Adicionar temas de IA à lista
+      allThemes = [...aiThemes, ...allThemes]
+    } catch (error) {
+      console.warn('Erro ao buscar temas salvos:', error)
+    }
 
     return NextResponse.json({
       success: true,
@@ -233,6 +413,7 @@ export async function GET(request: NextRequest) {
       })
     })
 
+    */
   } catch (error) {
     console.error('Erro ao carregar temas:', error)
     return NextResponse.json(

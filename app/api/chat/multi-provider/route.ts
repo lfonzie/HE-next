@@ -7,7 +7,7 @@ import { z } from 'zod'
 import { routeAIModel } from '@/lib/ai-model-router'
 import { orchestrate } from '@/lib/orchestrator'
 import { getModelTier } from '@/lib/ai-config'
-import { classifyComplexity, getProviderConfig } from '@/lib/complexity-classifier'
+import { classifyComplexity, classifyComplexityAsync, getProviderConfig } from '@/lib/complexity-classifier'
 
 // Schema para validação de entrada - suporta ambos os formatos
 const RequestSchema = z.object({
@@ -97,6 +97,7 @@ export async function POST(request: NextRequest) {
     const messageCount = finalMessages.length;
     
     console.log(`🤖 [MULTI-PROVIDER] Starting request: msg="${finalMessage.substring(0, 30)}..." provider=${provider} module=${module || 'auto'} msgCount=${messageCount} complexity=${complexity}`);
+    console.log(`🔍 [DEBUG] Module parameter received: "${module}" (type: ${typeof module})`);
 
     // 1. Determinação do módulo com prioridade explícita
     let targetModule = module || 'auto';
@@ -114,16 +115,20 @@ export async function POST(request: NextRequest) {
       try {
         console.log('🔄 [MODULE] Calling orchestrator for classification...');
         
-        // Temporário para debug
-        targetModule = 'atendimento';
-        moduleSource = 'fallback';
-        classificationConfidence = 0.8;
+        const orchestrateResponse = await orchestrate({ 
+          text: finalMessage,
+          context: { history: finalMessages.slice(0, -1) }
+        });
+        
+        targetModule = orchestrateResponse.trace?.module || 'professor';
+        moduleSource = 'orchestrator';
+        classificationConfidence = orchestrateResponse.trace?.confidence || 0.5;
         moduleScores = {};
         
         console.log(`🎯 [MODULE] Orchestrator result: ${targetModule} (confidence: ${classificationConfidence})`);
       } catch (error) {
         console.error('❌ [MODULE] Orchestrator error:', error);
-        targetModule = 'atendimento';
+        targetModule = 'professor';
         moduleSource = 'error_fallback';
         classificationConfidence = 0.0;
       }
@@ -131,7 +136,7 @@ export async function POST(request: NextRequest) {
 
         // 2. Classificação de complexidade
         console.log('⚡ [COMPLEXITY] Classifying complexity...');
-        const complexityResult = classifyComplexity(finalMessage, targetModule);
+        const complexityResult = await classifyComplexityAsync(finalMessage, targetModule);
         const complexityLevel = complexityResult.classification;
         console.log(`⚡ [COMPLEXITY] Result: ${complexityLevel} (source: ${complexityResult.method}, cached: ${complexityResult.cached})`);
 

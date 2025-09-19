@@ -72,11 +72,6 @@ export default function AnimationSlide({
 
   return (
     <Card className="w-full max-w-4xl mx-auto">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>{title}</CardTitle>
-        </div>
-      </CardHeader>
       <CardContent className="space-y-6">
         {/* Content */}
         <div className="text-left space-y-4">

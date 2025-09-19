@@ -63,20 +63,46 @@ export async function POST(request: NextRequest) {
       const page = pages[pageId];
       if (page.imageinfo && page.imageinfo.length > 0) {
         const imageInfo = page.imageinfo[0];
-        photos.push({
-          id: pageId,
-          title: page.title,
-          url: imageInfo.url,
-          width: imageInfo.width,
-          height: imageInfo.height,
-          mime: imageInfo.mime,
-          source: 'wikimedia',
-          description: page.title.replace('File:', ''),
-          urls: {
-            regular: imageInfo.url,
-            small: imageInfo.url
-          }
-        });
+        
+        // Filtrar apenas arquivos de imagem válidos (não PDFs, documentos, etc.)
+        const isValidImage = imageInfo.mime && (
+          imageInfo.mime.startsWith('image/') ||
+          imageInfo.mime === 'image/jpeg' ||
+          imageInfo.mime === 'image/png' ||
+          imageInfo.mime === 'image/gif' ||
+          imageInfo.mime === 'image/webp' ||
+          imageInfo.mime === 'image/svg+xml'
+        );
+        
+        // Verificar se a URL é realmente uma imagem (não PDF)
+        const isImageUrl = imageInfo.url && (
+          imageInfo.url.includes('.jpg') ||
+          imageInfo.url.includes('.jpeg') ||
+          imageInfo.url.includes('.png') ||
+          imageInfo.url.includes('.gif') ||
+          imageInfo.url.includes('.webp') ||
+          imageInfo.url.includes('.svg') ||
+          imageInfo.url.includes('commons/') // Wikimedia Commons images
+        );
+        
+        if (isValidImage && isImageUrl) {
+          photos.push({
+            id: pageId,
+            title: page.title,
+            url: imageInfo.url,
+            width: imageInfo.width,
+            height: imageInfo.height,
+            mime: imageInfo.mime,
+            source: 'wikimedia',
+            description: page.title.replace('File:', ''),
+            urls: {
+              regular: imageInfo.url,
+              small: imageInfo.url
+            }
+          });
+        } else {
+          console.log(`⚠️ Arquivo não é uma imagem válida: ${page.title} (${imageInfo.mime})`);
+        }
       }
     }
 
@@ -462,46 +488,6 @@ async function translateToEnglish(query: string, subject?: string): Promise<stri
 
 // Função para melhorar a query para busca no Wikimedia Commons
 function enhanceQueryForWikimedia(query: string, subject?: string): string {
-  // Adicionar termos educacionais e científicos comuns
-  const educationalTerms = [
-    'education',
-    'learning',
-    'teaching',
-    'science',
-    'academic',
-    'study',
-    'research',
-    'knowledge'
-  ];
-
-  // Adicionar termos específicos por disciplina
-  const subjectTerms: Record<string, string[]> = {
-    'ciencias': ['biology', 'chemistry', 'physics', 'natural science'],
-    'matematica': ['mathematics', 'math', 'algebra', 'geometry', 'calculus'],
-    'historia': ['history', 'historical', 'ancient', 'medieval', 'modern'],
-    'geografia': ['geography', 'earth', 'world', 'map', 'continent'],
-    'portugues': ['language', 'literature', 'writing', 'grammar'],
-    'ingles': ['english', 'language', 'communication'],
-    'fisica': ['physics', 'mechanics', 'thermodynamics', 'optics'],
-    'quimica': ['chemistry', 'molecular', 'atomic', 'reaction'],
-    'biologia': ['biology', 'life', 'organism', 'evolution', 'genetics'],
-    'anatomia': ['anatomy', 'human body', 'organs', 'tissues'],
-    'neurologia': ['neurology', 'brain', 'nervous system', 'neuroscience'],
-    'psicologia': ['psychology', 'mind', 'behavior', 'cognitive']
-  };
-
-  // Construir query melhorada
-  let enhancedQuery = query;
-  
-  // Adicionar termos educacionais
-  enhancedQuery += ' ' + educationalTerms.slice(0, 3).join(' ');
-  
-  // Adicionar termos específicos da disciplina
-  if (subject && subjectTerms[subject.toLowerCase()]) {
-    enhancedQuery += ' ' + subjectTerms[subject.toLowerCase()].slice(0, 2).join(' ');
-  }
-
-  // Limitar o tamanho da query para evitar problemas na API
-  const words = enhancedQuery.split(' ').slice(0, 8);
-  return words.join(' ');
+  // Retornar apenas a query original, sem adicionar termos educacionais
+  return query;
 }

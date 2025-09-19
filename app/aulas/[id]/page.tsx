@@ -605,13 +605,6 @@ export default function LessonPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
-      {/* Header (simplified) - apenas título */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">
-          {lessonData?.title || 'Aula'}
-        </h1>
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Sidebar - Stage Navigation */}
         <div className="lg:col-span-1">

@@ -12,35 +12,41 @@ export async function GET() {
     }
 
     // Buscar histórico de redações do usuário
-    const history = await prisma.redacaoSession.findMany({
+    const sessions = await prisma.essay_sessions.findMany({
       where: {
-        userId: session.user.id
-      },
-      select: {
-        id: true,
-        theme: true,
-        themeYear: true,
-        wordCount: true,
-        totalScore: true,
-        createdAt: true,
-        status: true
+        user_id: session.user.id
       },
       orderBy: {
-        createdAt: 'desc'
+        created_at: 'desc'
       }
     })
 
+    // Buscar pontuações para cada sessão
+    const history = await Promise.all(
+      sessions.map(async (session) => {
+        const scores = await prisma.essay_overall_scores.findFirst({
+          where: {
+            session_id: session.id
+          }
+        })
+
+        const issues = scores?.issues as any || {}
+
+        return {
+          id: session.id,
+          theme: session.topic_prompt,
+          themeYear: issues.themeYear || 2024,
+          wordCount: issues.wordCount || 0,
+          totalScore: scores?.total || 0,
+          createdAt: session.created_at.toISOString(),
+          status: session.status
+        }
+      })
+    )
+
     return NextResponse.json({
       success: true,
-      history: history.map(item => ({
-        id: item.id,
-        theme: item.theme,
-        themeYear: item.themeYear,
-        wordCount: item.wordCount,
-        totalScore: item.totalScore,
-        createdAt: item.createdAt.toISOString(),
-        status: item.status
-      }))
+      history: history
     })
 
   } catch (error) {

@@ -17,46 +17,58 @@ export async function GET(
     const { sessionId } = params
 
     // Buscar resultado da redação
-    const result = await prisma.redacaoSession.findFirst({
+    const session = await prisma.essay_sessions.findFirst({
       where: {
         id: sessionId,
-        userId: session.user.id
-      },
-      select: {
-        id: true,
-        theme: true,
-        themeYear: true,
-        content: true,
-        wordCount: true,
-        scores: true,
-        totalScore: true,
-        feedback: true,
-        suggestions: true,
-        highlights: true,
-        createdAt: true,
-        status: true
+        user_id: session.user.id
       }
     })
 
-    if (!result) {
+    if (!session) {
       return NextResponse.json({ error: 'Resultado não encontrado' }, { status: 404 })
     }
+
+    // Buscar pontuação e detalhes
+    const scores = await prisma.essay_overall_scores.findFirst({
+      where: {
+        session_id: sessionId
+      }
+    })
+
+    // Buscar conteúdo da redação
+    const paragraphs = await prisma.essay_paragraphs.findMany({
+      where: {
+        session_id: sessionId
+      },
+      orderBy: {
+        idx: 'asc'
+      }
+    })
+
+    const content = paragraphs.map(p => p.content).join('\n\n')
+    const issues = scores?.issues as any || {}
 
     return NextResponse.json({
       success: true,
       result: {
-        id: result.id,
-        theme: result.theme,
-        themeYear: result.themeYear,
-        content: result.content,
-        wordCount: result.wordCount,
-        scores: result.scores as any,
-        totalScore: result.totalScore,
-        feedback: result.feedback,
-        suggestions: result.suggestions as string[],
-        highlights: result.highlights as any,
-        createdAt: result.createdAt.toISOString(),
-        status: result.status
+        id: session.id,
+        theme: session.topic_prompt,
+        themeYear: issues.themeYear || 2024,
+        content: content,
+        wordCount: issues.wordCount || 0,
+        scores: {
+          comp1: scores?.comp1 || 0,
+          comp2: scores?.comp2 || 0,
+          comp3: scores?.comp3 || 0,
+          comp4: scores?.comp4 || 0,
+          comp5: scores?.comp5 || 0
+        },
+        totalScore: scores?.total || 0,
+        feedback: issues.feedback || '',
+        suggestions: issues.suggestions || [],
+        highlights: issues.highlights || {},
+        createdAt: session.created_at.toISOString(),
+        status: session.status
       }
     })
 

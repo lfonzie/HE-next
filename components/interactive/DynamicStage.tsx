@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import QuizComponent from './QuizComponent'
 import NewQuizComponent from './NewQuizComponent'
@@ -11,7 +11,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { CheckCircle, Clock, Star, Trophy, XCircle } from 'lucide-react'
-import { randomizeQuizQuestions } from '@/lib/quiz-randomization'
 
 interface StageActivity {
   component: string
@@ -76,10 +75,85 @@ export default function DynamicStage({
   const [stageResult, setStageResult] = useState<any>(null)
   const [startTime] = useState(Date.now())
 
+  // Memoize quiz questions to prevent re-processing on re-renders
+  const processedQuizQuestions = useMemo(() => {
+    console.log('🔍 DEBUG DynamicStage - useMemo triggered for stage:', stageIndex)
+    console.log('🔍 DEBUG DynamicStage - stage.activity.component:', stage.activity.component)
+    console.log('🔍 DEBUG DynamicStage - stage.activity.questions:', stage.activity.questions)
+    
+    if (stage.activity.component === 'QuizComponent' && stage.activity.questions) {
+      const originalQuestions = stage.activity.questions || []
+      
+      console.log('🔍 DEBUG Original questions from API:', originalQuestions)
+      
+      // Transform questions to the format expected by NewQuizComponent
+      // Note: Questions are already randomized by the API, so we just need to format them
+      return originalQuestions.map((q: any, index: number) => {
+        console.log(`🔍 DEBUG Processing Question ${index + 1}:`, {
+          originalCorrect: q.correct,
+          originalType: typeof q.correct,
+          originalOptions: q.options
+        });
+
+        // Normalize options by stripping any leading letters like "A) "
+        const cleanOption = (text: string | undefined, fallback: string) => {
+          const raw = (text || fallback)
+          return raw.replace(/^[A-D]\)\s*/, '').trim()
+        }
+
+        // Determine correct answer letter from q.correct
+        let correctAnswer: 'a' | 'b' | 'c' | 'd' = 'a'
+        
+        if (typeof q.correct === 'number' && q.correct >= 0 && q.correct <= 3) {
+          // If it's already a number (0-3), convert to letter
+          correctAnswer = ['a', 'b', 'c', 'd'][q.correct] as 'a' | 'b' | 'c' | 'd'
+          console.log(`🔍 DEBUG: Question ${index + 1} - Correct index: ${q.correct}, Correct letter: ${correctAnswer}`)
+        } else if (typeof q.correct === 'string') {
+          // If it's a string, normalize it
+          const normalized = q.correct.toLowerCase()
+          if (['a', 'b', 'c', 'd'].includes(normalized)) {
+            correctAnswer = normalized as 'a' | 'b' | 'c' | 'd'
+            console.log(`🔍 DEBUG: Question ${index + 1} - Correct string: ${q.correct}, Correct letter: ${correctAnswer}`)
+          } else {
+            console.warn(`⚠️ Invalid correct answer string: "${q.correct}". Defaulting to 'a'.`)
+            correctAnswer = 'a'
+          }
+        } else {
+          console.warn(`⚠️ Invalid correct answer type: ${typeof q.correct}. Defaulting to 'a'.`)
+          correctAnswer = 'a'
+        }
+
+        const transformed = {
+          question: q.q || q.question || 'Pergunta não disponível',
+          options: {
+            a: cleanOption(q.options?.[0], 'Opção A'),
+            b: cleanOption(q.options?.[1], 'Opção B'),
+            c: cleanOption(q.options?.[2], 'Opção C'),
+            d: cleanOption(q.options?.[3], 'Opção D')
+          },
+          correct: correctAnswer,
+          explanation: (q.explanation || '').trim() || 'Explicação não disponível'
+        }
+
+        console.log(`🔍 DEBUG: Final transformed question ${index + 1}:`, {
+          correct: transformed.correct,
+          options: transformed.options
+        })
+
+        return transformed
+      })
+    }
+    return null
+  }, [stage.activity.component, stage.activity.questions])
+
   const handleStageComplete = (result: any) => {
+    console.log('🔍 DEBUG DynamicStage - handleStageComplete called with result:', result)
+    console.log('🔍 DEBUG DynamicStage - isCompleted:', isCompleted)
+    
     if (!isCompleted) {
       setIsCompleted(true)
       setStageResult(result)
+      console.log('🔍 DEBUG DynamicStage - calling onComplete with stageIndex:', stageIndex, 'result:', result)
       onComplete(stageIndex, result)
     }
   }
@@ -134,61 +208,23 @@ export default function DynamicStage({
 
     switch (activity.component) {
       case 'QuizComponent':
-        // First randomize the quiz questions to shuffle the options
-        const originalQuestions = activity.questions || []
-        const randomizedQuestions = randomizeQuizQuestions(originalQuestions)
-        
-        // Transform randomized questions to the format expected by NewQuizComponent
-        const transformedQuestions = randomizedQuestions.map((q: any, index: number) => {
-          console.log(`🔍 DEBUG Randomized Question ${index + 1}:`, {
-            randomizedCorrect: q.correct,
-            randomizedType: typeof q.correct,
-            randomizedOptions: q.options,
-            originalCorrect: q.originalCorrect
-          });
-
-          // Normalize options by stripping any leading letters like "A) "
-          const cleanOption = (text: string | undefined, fallback: string) => {
-            const raw = (text || fallback)
-            return raw.replace(/^[A-D]\)\s*/, '').trim()
-          }
-
-          // Determine correct answer letter from q.correct which should be an index after randomize
-          let correctAnswer: 'a' | 'b' | 'c' | 'd' = 'a'
-          
-          // After randomization, q.correct should always be a number (0-3)
-          if (typeof q.correct === 'number' && q.correct >= 0 && q.correct <= 3) {
-            correctAnswer = ['a', 'b', 'c', 'd'][q.correct] as 'a' | 'b' | 'c' | 'd'
-            console.log(`🔍 DEBUG: Question ${index + 1} - Correct index: ${q.correct}, Correct letter: ${correctAnswer}`)
-          } else {
-            // Fallback for edge cases - log warning and default to 'a'
-            console.warn(`⚠️ Invalid correct answer after randomization: "${q.correct}" (type: ${typeof q.correct}). Defaulting to 'a'.`)
-            correctAnswer = 'a'
-          }
-
-          const transformed = {
-            question: q.q || q.question || 'Pergunta não disponível',
-            options: {
-              a: cleanOption(q.options?.[0], 'Opção A'),
-              b: cleanOption(q.options?.[1], 'Opção B'),
-              c: cleanOption(q.options?.[2], 'Opção C'),
-              d: cleanOption(q.options?.[3], 'Opção D')
-            },
-            correct: correctAnswer,
-            explanation: (q.explanation || '').trim() || 'Explicação não disponível'
-          }
-
-          console.log(`🔍 DEBUG: Final transformed question ${index + 1}:`, {
-            correct: transformed.correct,
-            options: transformed.options
-          })
-
-          return transformed
-        })
+        // Use the memoized processed questions to prevent re-processing on re-renders
+        if (!processedQuizQuestions) {
+          return (
+            <Card className="w-full max-w-2xl mx-auto">
+              <CardContent className="text-center py-8">
+                <div className="text-gray-500">
+                  <p className="text-lg mb-2">Nenhuma questão disponível</p>
+                  <p className="text-sm">Este quiz não possui questões para exibir.</p>
+                </div>
+              </CardContent>
+            </Card>
+          )
+        }
         
         return (
           <NewQuizComponent
-            questions={transformedQuestions}
+            questions={processedQuizQuestions}
             onComplete={(score, total) => handleStageComplete({ score, total, total: total, type: 'quiz' })}
             timeLimit={activity.time ? activity.time * 60 : 0}
             showExplanations={true}
@@ -396,18 +432,10 @@ export default function DynamicStage({
         {renderActivity()}
       </div>
 
-      {/* Navigation */}
+      {/* Stage Info - apenas informações, sem botões de navegação */}
       <Card>
         <CardContent className="p-4">
-          <div className="flex justify-between items-center">
-            <Button
-              onClick={onPrevious}
-              disabled={!canGoPrevious}
-              variant="outline"
-            >
-              Anterior
-            </Button>
-            
+          <div className="flex justify-center items-center">
             <div className="flex items-center gap-2">
               {stage.activity.time && (
                 <Badge variant="outline" className="flex items-center gap-1">
@@ -422,13 +450,6 @@ export default function DynamicStage({
                 </Badge>
               )}
             </div>
-            
-            <Button
-              onClick={handleNext}
-              disabled={!canGoNext && !isCompleted && !['OpenQuestion', 'AnimationSlide', 'DiscussionBoard', 'UploadTask'].includes(stage.activity.component)}
-            >
-              {stageIndex === totalStages - 1 ? 'Finalizar' : 'Próxima'}
-            </Button>
           </div>
         </CardContent>
       </Card>

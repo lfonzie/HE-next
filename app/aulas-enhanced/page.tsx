@@ -102,6 +102,10 @@ export default function AulasEnhancedPage() {
   }
 
   const loadNextSlide = async (slideNumber: number) => {
+    console.log('🔍 DEBUG loadNextSlide called with slideNumber:', slideNumber)
+    console.log('🔍 DEBUG current lesson:', lesson)
+    console.log('🔍 DEBUG current topic:', topic)
+    
     if (!lesson || !topic) return
 
     try {
@@ -118,10 +122,14 @@ export default function AulasEnhancedPage() {
         previousSlides
       };
       
+      console.log('🔍 DEBUG loadNextSlide request body:', requestBody)
+      
       // Validate request body
       if (!topic || !slideNumber) {
         throw new Error('Topic and slide number are required');
       }
+      
+      console.log('🔍 DEBUG calling /api/aulas/next-slide API')
       
       const response = await fetch('/api/aulas/next-slide', {
         method: 'POST',
@@ -161,15 +169,21 @@ export default function AulasEnhancedPage() {
   }
 
   const completeStage = async (etapa: number) => {
+    console.log('🔍 DEBUG completeStage called with etapa:', etapa)
+    console.log('🔍 DEBUG current lesson:', lesson)
+    
     if (!lesson) return
 
     // Marcar etapa como concluída
     const updatedStages = lesson.stages.map(stage => {
       if (stage.etapa === etapa) {
+        console.log('🔍 DEBUG marking stage as completed:', stage)
         return { ...stage, completed: true, points: stage.type === 'Avaliação' ? 0 : 5 }
       }
       return stage
     })
+
+    console.log('🔍 DEBUG updated stages:', updatedStages)
 
     setLesson({
       ...lesson,

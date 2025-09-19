@@ -290,7 +290,7 @@ export function useMessageComposer(config: MessageComposerConfig = {
       await addMessage(currentConversation.id, message)
 
       // Auto-select optimal module if not already selected
-      if (!currentConversation.module || currentConversation.module === 'atendimento') {
+      if (!currentConversation.module || currentConversation.module === 'auto') {
         try {
           const optimalModule = await selectOptimalModule(
             messageContent,

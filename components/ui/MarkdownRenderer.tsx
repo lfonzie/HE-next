@@ -30,10 +30,16 @@ export default function MarkdownRenderer({ content = '', className = '' }: Markd
         return <br key={index} />
       }
       
-      // Se a linha começar com #, tratar como cabeçalho
+      // Se a linha começar com #, tratar como cabeçalho (exceto nível 1 que já aparece no cabeçalho)
       if (processedLine.startsWith('#')) {
         const level = processedLine.match(/^#+/)?.[0].length || 1
         const text = processedLine.replace(/^#+\s*/, '')
+        
+        // Não renderizar cabeçalhos de nível 1 pois já aparecem no cabeçalho do slide
+        if (level === 1) {
+          return null // Skip rendering level 1 headers completely
+        }
+        
         const HeadingTag = `h${Math.min(level, 6)}` as keyof JSX.IntrinsicElements
         
         return React.createElement(
@@ -41,7 +47,6 @@ export default function MarkdownRenderer({ content = '', className = '' }: Markd
           { 
             key: index, 
             className: `font-bold mb-2 ${
-              level === 1 ? 'text-xl' : 
               level === 2 ? 'text-lg' : 
               level === 3 ? 'text-base' : 'text-sm'
             }`

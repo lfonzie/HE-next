@@ -154,7 +154,7 @@ export async function classifyIntent(input: { text: string; context?: Record<str
   // Fallback apenas em caso de erro
   return { 
     intent: 'general', 
-    module: 'atendimento', 
+    module: 'professor', 
     confidence: 0.4, 
     slots: {},
     rationale: 'fallback_erro_openai'

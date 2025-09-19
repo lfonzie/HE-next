@@ -651,7 +651,6 @@ export default function ProgressiveLessonComponent({
     return (
       <div className="space-y-6">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">{slide.title}</h2>
           <div>
             <MarkdownRenderer 
               content={slide.content} 

@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Classificação de Módulos Atualizada</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        .test-section h3 {
+            color: #2c3e50;
+            margin-top: 0;
+        }
+        .test-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        .test-button {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        .test-button:hover {
+            background-color: #2980b9;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        .module-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .module-card {
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: white;
+            text-align: center;
+        }
+        .module-card h4 {
+            margin: 0 0 10px 0;
+            color: #2c3e50;
+        }
+        .module-card p {
+            margin: 0;
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧠 Teste de Classificação de Módulos Atualizada</h1>
+        
+        <div class="test-section">
+            <h3>📝 Teste Individual</h3>
+            <input type="text" id="testMessage" class="test-input" placeholder="Digite uma mensagem para testar a classificação...">
+            <button onclick="testClassification()" class="test-button">🔍 Classificar</button>
+            <button onclick="clearResults()" class="test-button">🗑️ Limpar</button>
+            <div id="individualResult" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🎯 Testes Automáticos</h3>
+            <button onclick="runAllTests()" class="test-button">▶️ Executar Todos os Testes</button>
+            <button onclick="testNewModules()" class="test-button">🆕 Testar Novos Módulos</button>
+            <div id="automaticResults" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Módulos Disponíveis</h3>
+            <div class="module-grid" id="modulesGrid">
+                <!-- Módulos serão carregados dinamicamente -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Lista de módulos reais do sistema
+        const modules = [
+            { id: 'professor', name: 'Professor', description: 'Dúvidas acadêmicas, conceitos, exercícios' },
+            { id: 'aula_expandida', name: 'Aula Expandida', description: 'Aulas completas e detalhadas' },
+            { id: 'enem_interactive', name: 'ENEM Interactive', description: 'Simulados ENEM interativos' },
+            { id: 'enem', name: 'ENEM', description: 'Simulados rápidos ENEM' },
+            { id: 'professor_interativo', name: 'Professor Interativo', description: 'Professor interativo com aulas e quizzes' },
+            { id: 'aula_interativa', name: 'Aula Interativa', description: 'Aulas dinâmicas e participativas' },
+            { id: 'ti', name: 'TI', description: 'Suporte técnico educacional' },
+            { id: 'ti_suporte', name: 'TI Suporte', description: 'Suporte técnico específico' },
+            { id: 'rh', name: 'RH', description: 'Recursos humanos e funcionários' },
+            { id: 'financeiro', name: 'Financeiro', description: 'Pagamentos e questões financeiras' },
+            { id: 'coordenacao', name: 'Coordenação', description: 'Gestão pedagógica e calendário' },
+            { id: 'bem_estar', name: 'Bem-Estar', description: 'Suporte socioemocional' },
+            { id: 'social_media', name: 'Social Media', description: 'Criação de conteúdo para redes sociais' },
+            { id: 'conteudo_midia', name: 'Conteúdo Mídia', description: 'Conteúdo visual e imagens' },
+            { id: 'atendimento', name: 'Atendimento', description: 'Suporte geral' },
+            { id: 'secretaria', name: 'Secretaria', description: 'Tarefas administrativas' },
+            { id: 'resultados_bolsas', name: 'Resultados Bolsas', description: 'Gestão de bolsas e descontos' },
+            { id: 'juridico_contratos', name: 'Jurídico Contratos', description: 'Documentos legais e contratos' },
+            { id: 'marketing_design', name: 'Marketing Design', description: 'Marketing e design' },
+            { id: 'chat_geral', name: 'Chat Geral', description: 'Chat geral (fallback)' }
+        ];
+
+        // Carregar módulos na interface
+        function loadModules() {
+            const grid = document.getElementById('modulesGrid');
+            grid.innerHTML = modules.map(module => `
+                <div class="module-card">
+                    <h4>${module.name}</h4>
+                    <p>${module.description}</p>
+                </div>
+            `).join('');
+        }
+
+        // Teste individual
+        async function testClassification() {
+            const message = document.getElementById('testMessage').value.trim();
+            if (!message) {
+                alert('Por favor, digite uma mensagem para testar.');
+                return;
+            }
+
+            const resultDiv = document.getElementById('individualResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.textContent = '🔄 Classificando...';
+
+            try {
+                const response = await fetch('/api/classify', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        userMessage: message,
+                        history: [],
+                        currentModule: 'auto'
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ Classificação bem-sucedida!
+
+📝 Mensagem: "${message}"
+🎯 Módulo: ${data.classification.module}
+📊 Confiança: ${(data.classification.confidence * 100).toFixed(1)}%
+🔍 Fonte: ${data.source}
+📈 Complexidade: ${data.classification.complexity}
+💭 Justificativa: ${data.classification.rationale}
+
+📊 Scores detalhados:
+${JSON.stringify(data.classification.scores, null, 2)}
+
+⏱️ Latência: ${data.latency}ms
+📅 Timestamp: ${data.timestamp}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ Erro na classificação: ${data.error || 'Erro desconhecido'}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Erro na requisição: ${error.message}`;
+            }
+        }
+
+        // Testes automáticos
+        async function runAllTests() {
+            const resultDiv = document.getElementById('automaticResults');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.textContent = '🔄 Executando testes automáticos...';
+
+            const testCases = [
+                { message: "Me ajude com: Quero tirar uma dúvida de geometria", expected: "professor" },
+                { message: "Como resolver uma equação de segundo grau?", expected: "professor" },
+                { message: "Projetor não está funcionando", expected: "ti" },
+                { message: "Preciso de ajuda com o login", expected: "ti" },
+                { message: "Build falhou no deploy", expected: "ti_suporte" },
+                { message: "Quero criar um post para o Instagram", expected: "social_media" },
+                { message: "Como funciona a matrícula?", expected: "secretaria" },
+                { message: "Preciso de documentos para matrícula", expected: "secretaria" },
+                { message: "Qual o valor da mensalidade?", expected: "financeiro" },
+                { message: "Estou ansioso com as provas", expected: "bem_estar" },
+                { message: "Preciso de um contrato", expected: "juridico_contratos" },
+                { message: "Quero uma campanha de marketing", expected: "marketing_design" },
+                { message: "Como calcular minha bolsa?", expected: "resultados_bolsas" },
+                { message: "Quero um simulado ENEM", expected: "enem_interactive" },
+                { message: "Professor interativo", expected: "professor_interativo" }
+            ];
+
+            let results = '🧪 RESULTADOS DOS TESTES AUTOMÁTICOS\n\n';
+            let correct = 0;
+            let total = testCases.length;
+
+            for (const testCase of testCases) {
+                try {
+                    const response = await fetch('/api/classify', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            userMessage: testCase.message,
+                            history: [],
+                            currentModule: 'auto'
+                        })
+                    });
+
+                    const data = await response.json();
+                    const predicted = data.classification.module.toLowerCase();
+                    const isCorrect = predicted === testCase.expected;
+                    
+                    if (isCorrect) correct++;
+
+                    results += `${isCorrect ? '✅' : '❌'} "${testCase.message}"\n`;
+                    results += `   Esperado: ${testCase.expected} | Obtido: ${predicted} | Confiança: ${(data.classification.confidence * 100).toFixed(1)}%\n\n`;
+                } catch (error) {
+                    results += `❌ "${testCase.message}" - ERRO: ${error.message}\n\n`;
+                }
+            }
+
+            results += `📊 RESUMO: ${correct}/${total} testes corretos (${((correct/total)*100).toFixed(1)}%)`;
+            
+            resultDiv.className = 'result success';
+            resultDiv.textContent = results;
+        }
+
+        // Teste específico dos novos módulos
+        async function testNewModules() {
+            const resultDiv = document.getElementById('automaticResults');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.textContent = '🔄 Testando novos módulos...';
+
+            const newModuleTests = [
+                { message: "Preciso de ajuda com matrícula", expected: "secretaria" },
+                { message: "Quais documentos preciso para matrícula?", expected: "secretaria" },
+                { message: "Como calcular minha bolsa de estudo?", expected: "resultados_bolsas" },
+                { message: "Qual o resultado da prova de bolsas?", expected: "resultados_bolsas" },
+                { message: "Preciso de um contrato de prestação de serviços", expected: "juridico_contratos" },
+                { message: "Quero revisar os termos do contrato", expected: "juridico_contratos" },
+                { message: "Preciso de uma campanha de marketing", expected: "marketing_design" },
+                { message: "Quero criar material promocional", expected: "marketing_design" },
+                { message: "Projetor não funciona", expected: "ti" },
+                { message: "Build falhou no deploy", expected: "ti_suporte" },
+                { message: "Preciso de ajuda com benefícios", expected: "rh" },
+                { message: "Como funciona o salário?", expected: "rh" },
+                { message: "Quero um simulado ENEM interativo", expected: "enem_interactive" },
+                { message: "Professor interativo com quiz", expected: "professor_interativo" },
+                { message: "Preciso de uma imagem", expected: "conteudo_midia" }
+            ];
+
+            let results = '🆕 TESTE DOS NOVOS MÓDULOS\n\n';
+            let correct = 0;
+            let total = newModuleTests.length;
+
+            for (const testCase of newModuleTests) {
+                try {
+                    const response = await fetch('/api/classify', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            userMessage: testCase.message,
+                            history: [],
+                            currentModule: 'auto'
+                        })
+                    });
+
+                    const data = await response.json();
+                    const predicted = data.classification.module.toLowerCase();
+                    const isCorrect = predicted === testCase.expected;
+                    
+                    if (isCorrect) correct++;
+
+                    results += `${isCorrect ? '✅' : '❌'} "${testCase.message}"\n`;
+                    results += `   Esperado: ${testCase.expected} | Obtido: ${predicted} | Confiança: ${(data.classification.confidence * 100).toFixed(1)}%\n\n`;
+                } catch (error) {
+                    results += `❌ "${testCase.message}" - ERRO: ${error.message}\n\n`;
+                }
+            }
+
+            results += `📊 RESUMO: ${correct}/${total} testes corretos (${((correct/total)*100).toFixed(1)}%)`;
+            
+            resultDiv.className = 'result success';
+            resultDiv.textContent = results;
+        }
+
+        // Limpar resultados
+        function clearResults() {
+            document.getElementById('individualResult').style.display = 'none';
+            document.getElementById('automaticResults').style.display = 'none';
+            document.getElementById('testMessage').value = '';
+        }
+
+        // Permitir Enter no input
+        document.getElementById('testMessage').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                testClassification();
+            }
+        });
+
+        // Carregar módulos ao inicializar
+        loadModules();
+    </script>
+</body>
+</html>
