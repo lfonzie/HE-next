@@ -3,293 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HubEdu.ia - Modo Offline</title>
-    <link rel="icon" href="/favicon.ico">
+    <title>HubEdu.ia - Offline</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #1f2937;
+            color: white;
         }
-        
         .container {
             text-align: center;
             max-width: 500px;
-            padding: 2rem;
-            background: white;
-            border-radius: 1rem;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
-        
-        .logo {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 1.5rem;
-            background: #fbbf24;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-        }
-        
         h1 {
-            font-size: 1.875rem;
-            font-weight: 800;
-            margin-bottom: 1rem;
-            color: #1f2937;
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            font-weight: 700;
         }
-        
-        .subtitle {
-            font-size: 1.125rem;
-            color: #6b7280;
-            margin-bottom: 2rem;
+        p {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
         }
-        
-        .offline-icon {
+        .icon {
             font-size: 4rem;
-            margin-bottom: 1.5rem;
-            opacity: 0.7;
+            margin-bottom: 20px;
         }
-        
-        .message {
-            background: #fef3c7;
-            border: 1px solid #fbbf24;
-            border-radius: 0.5rem;
-            padding: 1rem;
-            margin-bottom: 2rem;
-            color: #92400e;
-        }
-        
-        .features {
-            text-align: left;
-            margin-bottom: 2rem;
-        }
-        
-        .features h3 {
-            font-size: 1.125rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            color: #1f2937;
-        }
-        
-        .features ul {
-            list-style: none;
-        }
-        
-        .features li {
-            padding: 0.5rem 0;
-            color: #4b5563;
-            display: flex;
-            align-items: center;
-        }
-        
-        .features li::before {
-            content: "✓";
-            color: #10b981;
-            font-weight: bold;
-            margin-right: 0.5rem;
-        }
-        
         .retry-btn {
-            background: #fbbf24;
-            color: #1f2937;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            font-weight: 600;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-size: 1rem;
             cursor: pointer;
-            transition: background-color 0.2s;
-            margin-right: 1rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
         }
-        
         .retry-btn:hover {
-            background: #f59e0b;
-        }
-        
-        .offline-btn {
-            background: transparent;
-            color: #6b7280;
-            border: 1px solid #d1d5db;
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .offline-btn:hover {
-            background: #f9fafb;
-            border-color: #9ca3af;
-        }
-        
-        .status {
-            margin-top: 1.5rem;
-            padding: 0.75rem;
-            border-radius: 0.5rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-        }
-        
-        .status.online {
-            background: #d1fae5;
-            color: #065f46;
-            border: 1px solid #10b981;
-        }
-        
-        .status.offline {
-            background: #fee2e2;
-            color: #991b1b;
-            border: 1px solid #ef4444;
-        }
-        
-        @media (max-width: 640px) {
-            .container {
-                margin: 1rem;
-                padding: 1.5rem;
-            }
-            
-            h1 {
-                font-size: 1.5rem;
-            }
-            
-            .retry-btn, .offline-btn {
-                display: block;
-                width: 100%;
-                margin: 0.5rem 0;
-            }
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="logo">🎓</div>
-        
-        <h1>HubEdu.ia</h1>
-        <p class="subtitle">A Educação do Futuro</p>
-        
-        <div class="offline-icon">📡</div>
-        
-        <div class="message">
-            <strong>Você está offline!</strong><br>
-            Não se preocupe, você ainda pode usar algumas funcionalidades do HubEdu.ia.
-        </div>
-        
-        <div class="features">
-            <h3>Funcionalidades Disponíveis Offline:</h3>
-            <ul>
-                <li>Visualizar aulas já carregadas</li>
-                <li>Continuar exercícios salvos</li>
-                <li>Acessar simulados baixados</li>
-                <li>Revisar conteúdo estudado</li>
-                <li>Usar calculadora e ferramentas</li>
-            </ul>
-        </div>
-        
-        <div>
-            <button class="retry-btn" onclick="retryConnection()">
-                🔄 Tentar Novamente
-            </button>
-            <button class="offline-btn" onclick="continueOffline()">
-                📚 Continuar Offline
-            </button>
-        </div>
-        
-        <div id="status" class="status offline">
-            Status: Offline
-        </div>
+        <div class="icon">📡</div>
+        <h1>Você está offline</h1>
+        <p>Parece que você perdeu a conexão com a internet. Verifique sua conexão e tente novamente.</p>
+        <a href="/" class="retry-btn">Tentar Novamente</a>
     </div>
-
+    
     <script>
-        let isOnline = navigator.onLine;
+        // Auto-retry when connection is restored
+        window.addEventListener('online', () => {
+            window.location.href = '/';
+        });
         
-        function updateStatus() {
-            const statusEl = document.getElementById('status');
-            isOnline = navigator.onLine;
-            
-            if (isOnline) {
-                statusEl.textContent = 'Status: Online - Reconectado!';
-                statusEl.className = 'status online';
-                
-                // Aguarda um pouco e redireciona
-                setTimeout(() => {
-                    window.location.href = '/';
-                }, 2000);
-            } else {
-                statusEl.textContent = 'Status: Offline';
-                statusEl.className = 'status offline';
-            }
-        }
-        
-        function retryConnection() {
-            if (isOnline) {
+        // Retry button functionality
+        document.querySelector('.retry-btn').addEventListener('click', (e) => {
+            e.preventDefault();
+            if (navigator.onLine) {
                 window.location.href = '/';
             } else {
-                // Força uma tentativa de conexão
-                fetch('/api/health', { 
-                    method: 'HEAD',
-                    cache: 'no-cache'
-                })
-                .then(() => {
-                    window.location.href = '/';
-                })
-                .catch(() => {
-                    alert('Ainda sem conexão. Tente novamente em alguns instantes.');
-                });
+                alert('Ainda sem conexão. Verifique sua internet e tente novamente.');
             }
-        }
-        
-        function continueOffline() {
-            // Tenta acessar funcionalidades offline
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.ready.then(registration => {
-                    // Verifica se há conteúdo em cache
-                    caches.keys().then(cacheNames => {
-                        if (cacheNames.length > 0) {
-                            // Redireciona para a página principal que pode funcionar offline
-                            window.location.href = '/';
-                        } else {
-                            alert('Nenhum conteúdo offline disponível. Conecte-se à internet para usar o HubEdu.ia.');
-                        }
-                    });
-                });
-            } else {
-                alert('Seu navegador não suporta funcionalidades offline.');
-            }
-        }
-        
-        // Monitora mudanças de conectividade
-        window.addEventListener('online', updateStatus);
-        window.addEventListener('offline', updateStatus);
-        
-        // Verifica status inicial
-        updateStatus();
-        
-        // Verifica periodicamente
-        setInterval(() => {
-            if (!isOnline) {
-                fetch('/api/health', { 
-                    method: 'HEAD',
-                    cache: 'no-cache'
-                })
-                .then(() => {
-                    updateStatus();
-                })
-                .catch(() => {
-                    // Ainda offline
-                });
-            }
-        }, 5000);
+        });
     </script>
 </body>
 </html>

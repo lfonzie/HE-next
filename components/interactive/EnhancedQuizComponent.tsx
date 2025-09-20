@@ -96,6 +96,40 @@ export default function EnhancedQuizComponent({
     }
   }, [questions, shuffleOptions])
 
+  // Calculate quiz statistics
+  const calculateStats = useCallback((): QuizStats => {
+    const totalQuestions = questions.length
+    const correctAnswers = quizResults.filter(r => r.isCorrect).length
+    const wrongAnswers = quizResults.filter(r => !r.isCorrect && r.selectedAnswer !== null).length
+    const unansweredQuestions = totalQuestions - correctAnswers - wrongAnswers
+    const totalScore = quizResults.reduce((sum, r) => sum + r.pointsEarned, 0)
+    const totalTimeSpent = quizResults.reduce((sum, r) => sum + r.timeSpent, 0)
+    const averageTimePerQuestion = totalQuestions > 0 ? Math.round(totalTimeSpent / totalQuestions) : 0
+    const accuracy = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0
+
+    console.log('🔍 DEBUG EnhancedQuizComponent - calculateStats:', {
+      totalQuestions,
+      correctAnswers,
+      wrongAnswers,
+      unansweredQuestions,
+      totalScore,
+      totalTimeSpent,
+      averageTimePerQuestion,
+      accuracy
+    })
+
+    return {
+      totalQuestions,
+      correctAnswers,
+      wrongAnswers,
+      unansweredQuestions,
+      totalScore,
+      totalTimeSpent,
+      averageTimePerQuestion,
+      accuracy
+    }
+  }, [questions.length, quizResults])
+
   // Timer effect
   useEffect(() => {
     if (timeLimit > 0 && !isCompleted) {
@@ -212,41 +246,6 @@ export default function EnhancedQuizComponent({
       setCurrentQuestionIndex(prev => prev - 1)
     }
   }, [currentQuestionIndex])
-
-
-  // Calculate quiz statistics
-  const calculateStats = useCallback((): QuizStats => {
-    const totalQuestions = questions.length
-    const correctAnswers = quizResults.filter(r => r.isCorrect).length
-    const wrongAnswers = quizResults.filter(r => !r.isCorrect && r.selectedAnswer !== null).length
-    const unansweredQuestions = totalQuestions - correctAnswers - wrongAnswers
-    const totalScore = quizResults.reduce((sum, r) => sum + r.pointsEarned, 0)
-    const totalTimeSpent = quizResults.reduce((sum, r) => sum + r.timeSpent, 0)
-    const averageTimePerQuestion = totalQuestions > 0 ? Math.round(totalTimeSpent / totalQuestions) : 0
-    const accuracy = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0
-
-    console.log('🔍 DEBUG EnhancedQuizComponent - calculateStats:', {
-      totalQuestions,
-      correctAnswers,
-      wrongAnswers,
-      unansweredQuestions,
-      totalScore,
-      totalTimeSpent,
-      averageTimePerQuestion,
-      accuracy
-    })
-
-    return {
-      totalQuestions,
-      correctAnswers,
-      wrongAnswers,
-      unansweredQuestions,
-      totalScore,
-      totalTimeSpent,
-      averageTimePerQuestion,
-      accuracy
-    }
-  }, [questions.length, quizResults])
 
   // Handle retry
   const handleRetry = useCallback(() => {

@@ -118,6 +118,11 @@ async function cacheFirst(request) {
       return cachedResponse;
     }
 
+    // Check if the request URL is valid before attempting to fetch
+    if (!request.url || request.url === 'about:blank' || request.url.startsWith('chrome-extension://')) {
+      throw new Error('Invalid request URL');
+    }
+
     const networkResponse = await fetch(request);
     if (networkResponse.ok) {
       const cache = await caches.open(STATIC_CACHE_NAME);
@@ -125,7 +130,16 @@ async function cacheFirst(request) {
     }
     return networkResponse;
   } catch (error) {
-    console.error('Cache First: Erro', error);
+    console.warn('Cache First: Erro ao buscar recurso', request.url, error.message);
+    
+    // For HTML requests, try to return a cached version of the main page
+    if (request.headers.get('accept')?.includes('text/html')) {
+      const fallbackResponse = await caches.match('/');
+      if (fallbackResponse) {
+        return fallbackResponse;
+      }
+    }
+    
     // Return a more graceful fallback instead of throwing
     return new Response('Recurso não disponível offline', { 
       status: 503,
@@ -137,6 +151,11 @@ async function cacheFirst(request) {
 // Estratégia Network First
 async function networkFirst(request) {
   try {
+    // Check if the request URL is valid before attempting to fetch
+    if (!request.url || request.url === 'about:blank' || request.url.startsWith('chrome-extension://')) {
+      throw new Error('Invalid request URL');
+    }
+
     const networkResponse = await fetch(request);
     
     if (networkResponse.ok) {
@@ -146,7 +165,7 @@ async function networkFirst(request) {
     
     return networkResponse;
   } catch (error) {
-    console.log('Network First: Tentando cache', error);
+    console.warn('Network First: Tentando cache', request.url, error.message);
     
     const cachedResponse = await caches.match(request);
     if (cachedResponse) {
@@ -155,7 +174,15 @@ async function networkFirst(request) {
 
     // Fallback para páginas HTML
     if (request.headers.get('accept')?.includes('text/html')) {
-      return caches.match('/offline.html');
+      const fallbackResponse = await caches.match('/offline.html');
+      if (fallbackResponse) {
+        return fallbackResponse;
+      }
+      // If no offline page, try the main page
+      const mainPageResponse = await caches.match('/');
+      if (mainPageResponse) {
+        return mainPageResponse;
+      }
     }
 
     return new Response('Recurso não disponível offline', { status: 503 });
