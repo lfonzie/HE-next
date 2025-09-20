@@ -1,6 +1,7 @@
 // lib/system-prompts/utils.ts
 import { SystemPromptConfig, SystemPromptMessage } from '../../types/system-prompts';
 import { UNIFIED_SYSTEM_PROMPTS } from './unified-config';
+import { addUnicodeInstructions } from './common';
 
 export interface PromptRequest {
   key: string;
@@ -70,10 +71,13 @@ export class SystemPromptManager {
       throw new Error(`Prompt not found: ${request.key}`);
     }
 
+    // Adicionar instruções de Unicode ao prompt do sistema
+    const systemContent = addUnicodeInstructions(prompt.json.content);
+
     const messages: SystemPromptMessage[] = [
       {
         role: 'system',
-        content: prompt.json.content
+        content: systemContent
       }
     ];
 

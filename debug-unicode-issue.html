@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 Debug - Problema Unicode</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 5px solid #007bff;
+        }
+        .formula {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            border: 1px solid #dee2e6;
+            font-family: monospace;
+        }
+        .original {
+            background: #fff3cd;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 5px 0;
+            color: #856404;
+        }
+        .converted {
+            background: #d1ecf1;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 5px 0;
+            font-size: 1.2em;
+            color: #0c5460;
+        }
+        .debug-info {
+            background: #e2e3e5;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 5px 0;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin: 5px;
+        }
+        .status.working {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.problem {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Debug - Problema Unicode</h1>
+        
+        <div class="test-section">
+            <h2>🧮 Teste de Conversão Unicode</h2>
+            <p>Vamos testar se a função convertMathToUnicode está funcionando corretamente:</p>
+            
+            <button onclick="testUnicodeConversion()">Testar Conversão</button>
+            <button onclick="testRealWorldExample()">Testar Exemplo Real</button>
+            
+            <div id="test-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔍 Possíveis Causas do Problema</h2>
+            
+            <div class="formula">
+                <h3>1. Conteúdo não está passando pela conversão</h3>
+                <div class="debug-info">
+                    - Verificar se MarkdownRenderer está sendo usado<br>
+                    - Verificar se convertMathToUnicode está sendo chamado<br>
+                    - Verificar se há cache de conteúdo antigo
+                </div>
+            </div>
+            
+            <div class="formula">
+                <h3>2. Conteúdo vem já processado da IA</h3>
+                <div class="debug-info">
+                    - A IA pode estar retornando LaTeX mesmo com instruções<br>
+                    - Pode haver conflito entre diferentes prompts<br>
+                    - Pode ser conteúdo em cache de sessões anteriores
+                </div>
+            </div>
+            
+            <div class="formula">
+                <h3>3. Problema de renderização</h3>
+                <div class="debug-info">
+                    - ReactMarkdown pode estar interferindo<br>
+                    - CSS pode estar ocultando caracteres Unicode<br>
+                    - Fontes podem não suportar símbolos matemáticos
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🛠️ Soluções Propostas</h2>
+            
+            <div class="formula">
+                <h3>Solução 1: Forçar conversão em todos os pontos</h3>
+                <div class="debug-info">
+                    - Adicionar convertMathToUnicode em todos os componentes<br>
+                    - Garantir que nenhum conteúdo escape da conversão<br>
+                    - Adicionar logs para debug
+                </div>
+            </div>
+            
+            <div class="formula">
+                <h3>Solução 2: Melhorar instruções da IA</h3>
+                <div class="debug-info">
+                    - Tornar instruções de Unicode mais específicas<br>
+                    - Adicionar exemplos explícitos<br>
+                    - Usar instruções mais agressivas
+                </div>
+            </div>
+            
+            <div class="formula">
+                <h3>Solução 3: Pós-processamento obrigatório</h3>
+                <div class="debug-info">
+                    - Aplicar conversão em todas as respostas da IA<br>
+                    - Não confiar apenas na IA para seguir instruções<br>
+                    - Garantir conversão no backend
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>📋 Checklist de Verificação</h2>
+            
+            <div class="formula">
+                <input type="checkbox" id="check1"> <label for="check1">MarkdownRenderer está sendo usado?</label><br>
+                <input type="checkbox" id="check2"> <label for="check2">convertMathToUnicode está sendo chamado?</label><br>
+                <input type="checkbox" id="check3"> <label for="check3">Instruções de Unicode estão nos prompts?</label><br>
+                <input type="checkbox" id="check4"> <label for="check4">Não há cache de conteúdo antigo?</label><br>
+                <input type="checkbox" id="check5"> <label for="check5">Fontes suportam símbolos Unicode?</label><br>
+                <input type="checkbox" id="check6"> <label for="check6">CSS não está interferindo?</label>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Função de conversão Unicode (baseada no código real)
+        function convertMathToUnicode(text) {
+            if (!text) return '';
+            
+            return text
+                // Funções trigonométricas
+                .replace(/\\sin/g, 'sin')
+                .replace(/\\cos/g, 'cos')
+                .replace(/\\tan/g, 'tan')
+                .replace(/\\cot/g, 'cot')
+                .replace(/\\sec/g, 'sec')
+                .replace(/\\csc/g, 'csc')
+                
+                // Frações
+                .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '$1⁄$2')
+                
+                // Sobrescritos
+                .replace(/\^(\d+)/g, (match, num) => {
+                    const superscripts = {
+                        '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵',
+                        '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹'
+                    };
+                    return num.split('').map(d => superscripts[d] || d).join('');
+                })
+                
+                // Subscritos
+                .replace(/_(\d+)/g, (match, num) => {
+                    const subscripts = {
+                        '0': '₀', '1': '₁', '2': '₂', '3': '₃', '4': '₄', '5': '₅',
+                        '6': '₆', '7': '₇', '8': '₈', '9': '₉'
+                    };
+                    return num.split('').map(d => subscripts[d] || d).join('');
+                })
+                
+                // Símbolos
+                .replace(/\\pm/g, '±')
+                .replace(/\\mp/g, '∓')
+                .replace(/\\times/g, '×')
+                .replace(/\\div/g, '÷')
+                .replace(/\\neq/g, '≠')
+                .replace(/\\leq/g, '≤')
+                .replace(/\\geq/g, '≥')
+                .replace(/\\approx/g, '≈')
+                .replace(/\\infty/g, '∞')
+                
+                // Raízes
+                .replace(/\\sqrt\{([^}]+)\}/g, '√$1')
+                
+                // Letras gregas
+                .replace(/\\alpha/g, 'α')
+                .replace(/\\beta/g, 'β')
+                .replace(/\\gamma/g, 'γ')
+                .replace(/\\delta/g, 'δ')
+                .replace(/\\epsilon/g, 'ε')
+                .replace(/\\theta/g, 'θ')
+                .replace(/\\lambda/g, 'λ')
+                .replace(/\\mu/g, 'μ')
+                .replace(/\\pi/g, 'π')
+                .replace(/\\sigma/g, 'σ')
+                .replace(/\\phi/g, 'φ')
+                .replace(/\\omega/g, 'ω');
+        }
+        
+        function testUnicodeConversion() {
+            const testCases = [
+                '(\\sin^2(x) + \\cos^2(x) = 1)',
+                '(1 + \\tan^2(x) = \\sec^2(x))',
+                '(\\sin(a + b) = \\sin(a)\\cos(b) + \\cos(a)\\sin(b))',
+                '(\\cos(a + b) = \\cos(a)\\cos(b) - \\sin(a)\\sin(b))',
+                '(\\tan(a + b) = \\frac{\\tan(a) + \\tan(b)}{1 - \\tan(a)\\tan(b)})'
+            ];
+            
+            let results = '<h3>Resultados dos Testes:</h3>';
+            
+            testCases.forEach((test, index) => {
+                const result = convertMathToUnicode(test);
+                const passed = result !== test; // Se mudou, funcionou
+                
+                results += `
+                    <div class="formula">
+                        <div class="original">Teste ${index + 1}: ${test}</div>
+                        <div class="converted">Resultado: ${result}</div>
+                        <div class="status ${passed ? 'working' : 'problem'}">
+                            ${passed ? '✅ FUNCIONANDO' : '❌ PROBLEMA'}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            document.getElementById('test-results').innerHTML = results;
+        }
+        
+        function testRealWorldExample() {
+            // Simular o conteúdo que estava aparecendo na imagem
+            const realWorldContent = `
+                Aquí tienes un resumen de algunas de las fórmulas más importantes en trigonometría:
+                
+                Identidades Trigonométricas Fundamentales
+                
+                1. Identidades básicas:
+                (\\sin^2(x) + \\cos^2(x) = 1)
+                (1 + \\tan^2(x) = \\sec^2(x))
+                (1 + \\cot^2(x) = \\csc^2(x))
+                
+                Funciones Trigonométricas Recíprocas
+                (\\sin(x) = \\frac{1}{\\csc(x)})
+                (\\cos(x) = \\frac{1}{\\sec(x)})
+                (\\tan(x) = \\frac{1}{\\cot(x)})
+                
+                Fórmulas de Adición y Sustracción
+                1. Suma:
+                (\\sin(a + b) = \\sin(a)\\cos(b) + \\cos(a)\\sin(b))
+                (\\cos(a + b) = \\cos(a)\\cos(b) - \\sin(a)\\sin(b))
+            `;
+            
+            const converted = convertMathToUnicode(realWorldContent);
+            
+            let results = '<h3>Exemplo do Mundo Real:</h3>';
+            results += `
+                <div class="formula">
+                    <h4>Conteúdo Original (com problemas):</h4>
+                    <div class="original">${realWorldContent.replace(/\n/g, '<br>')}</div>
+                </div>
+                <div class="formula">
+                    <h4>Após Conversão Unicode:</h4>
+                    <div class="converted">${converted.replace(/\n/g, '<br>')}</div>
+                </div>
+            `;
+            
+            document.getElementById('test-results').innerHTML = results;
+        }
+        
+        // Executar teste inicial
+        testUnicodeConversion();
+    </script>
+</body>
+</html>

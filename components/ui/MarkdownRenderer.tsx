@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { normalizeUnicode, processMessageForDisplay, convertMathToUnicode, forceConvertMathToUnicode } from "@/utils/unicode";
 
 interface MarkdownRendererProps {
   content?: string
@@ -8,6 +9,11 @@ interface MarkdownRendererProps {
 }
 
 export default function MarkdownRenderer({ content = '', className = '' }: MarkdownRendererProps) {
+  // Processar Unicode e normalizar conteúdo
+  const processedContent = processMessageForDisplay(content);
+  const mathProcessedContent = forceConvertMathToUnicode(processedContent);
+  const normalizedContent = mathProcessedContent.replace(/\n{2,}/g, '\n').trim();
+  
   // Função para processar markdown básico
   const processMarkdown = (text: string) => {
     // Verificar se text é válido
@@ -68,7 +74,7 @@ export default function MarkdownRenderer({ content = '', className = '' }: Markd
 
   return (
     <div className={`text-left whitespace-pre-line ${className}`}>
-      {processMarkdown(content)}
+      {processMarkdown(normalizedContent)}
     </div>
   )
 }

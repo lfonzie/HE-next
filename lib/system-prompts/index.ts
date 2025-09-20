@@ -24,3 +24,8 @@ export {
   sanitizePromptContent, 
   validatePromptContent 
 } from './utils';
+export { 
+  addUnicodeInstructions,
+  UNICODE_INSTRUCTIONS,
+  DEFAULT_SYSTEM_PROMPT 
+} from './common';

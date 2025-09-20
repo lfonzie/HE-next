@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Conversão Unicode</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+        .test-section h2 {
+            color: #2c3e50;
+            margin-top: 0;
+        }
+        .formula {
+            font-size: 18px;
+            line-height: 1.6;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #e8f4f8;
+            border-left: 4px solid #3498db;
+            border-radius: 4px;
+        }
+        .original {
+            color: #e74c3c;
+            font-family: monospace;
+        }
+        .converted {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        .description {
+            color: #7f8c8d;
+            font-style: italic;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧮 Teste de Conversão Unicode para Matemática e Química</h1>
+        
+        <div class="test-section">
+            <h2>📐 Fórmulas Matemáticas Básicas</h2>
+            
+            <div class="description">Fórmulas trigonométricas:</div>
+            <div class="formula">
+                <div class="original">\sin(\theta) = \frac{\text{cateto oposto}}{\text{hipotenusa}}</div>
+                <div class="converted">sin(θ) = cateto oposto⁄hipotenusa</div>
+            </div>
+            
+            <div class="formula">
+                <div class="original">\cos(\theta) = \frac{\text{cateto adjacente}}{\text{hipotenusa}}</div>
+                <div class="converted">cos(θ) = cateto adjacente⁄hipotenusa</div>
+            </div>
+            
+            <div class="formula">
+                <div class="original">\tan(\theta) = \frac{\sin(\theta)}{\cos(\theta)}</div>
+                <div class="converted">tan(θ) = sin(θ)⁄cos(θ)</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔬 Fórmulas Químicas</h2>
+            
+            <div class="description">Fórmulas moleculares com subscritos:</div>
+            <div class="formula">
+                <div class="original">\text{H}_2\text{O}</div>
+                <div class="converted">H₂O</div>
+            </div>
+            
+            <div class="formula">
+                <div class="original">\text{CO}_2</div>
+                <div class="converted">CO₂</div>
+            </div>
+            
+            <div class="formula">
+                <div class="original">\text{C}_6\text{H}_{12}\text{O}_6</div>
+                <div class="converted">C₆H₁₂O₆</div>
+            </div>
+            
+            <div class="description">Reações químicas:</div>
+            <div class="formula">
+                <div class="original">\text{H}_2 + \text{Cl}_2 \rightarrow 2\text{HCl}</div>
+                <div class="converted">H₂ + Cl₂ → 2HCl</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 Símbolos Matemáticos Avançados</h2>
+            
+            <div class="description">Operadores e símbolos:</div>
+            <div class="formula">
+                <div class="original">\sum_{i=1}^{n} x_i</div>
+                <div class="converted">∑ᵢ₌₁ⁿ xᵢ</div>
+            </div>
+            
+            <div class="formula">
+                <div class="original">\int_{0}^{\infty} e^{-x} dx</div>
+                <div class="converted">∫₀^∞ e⁻ˣ dx</div>
+            </div>
+            
+            <div class="formula">
+                <div class="original">\sqrt{x^2 + y^2}</div>
+                <div class="converted">√(x² + y²)</div>
+            </div>
+            
+            <div class="formula">
+                <div class="original">\alpha + \beta = \gamma</div>
+                <div class="converted">α + β = γ</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🌡️ Unidades e Medidas</h2>
+            
+            <div class="description">Temperatura e energia:</div>
+            <div class="formula">
+                <div class="original">25\degree C</div>
+                <div class="converted">25°C</div>
+            </div>
+            
+            <div class="formula">
+                <div class="original">100\joule</div>
+                <div class="converted">100J</div>
+            </div>
+            
+            <div class="formula">
+                <div class="original">1\mol \text{ de } \text{H}_2\text{SO}_4</div>
+                <div class="converted">1mol de H₂SO₄</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔢 Conjuntos e Lógica</h2>
+            
+            <div class="description">Símbolos de conjunto:</div>
+            <div class="formula">
+                <div class="original">x \in \mathbb{R}</div>
+                <div class="converted">x ∈ ℝ</div>
+            </div>
+            
+            <div class="formula">
+                <div class="original">A \subset B</div>
+                <div class="converted">A ⊂ B</div>
+            </div>
+            
+            <div class="formula">
+                <div class="original">\forall x \in \mathbb{N}, x > 0</div>
+                <div class="converted">∀ x ∈ ℕ, x > 0</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>⚡ Física e Energia</h2>
+            
+            <div class="description">Símbolos físicos:</div>
+            <div class="formula">
+                <div class="original">E = mc^2</div>
+                <div class="converted">E = mc²</div>
+            </div>
+            
+            <div class="formula">
+                <div class="original">F = ma</div>
+                <div class="converted">F = ma</div>
+            </div>
+            
+            <div class="formula">
+                <div class="original">\hbar \omega</div>
+                <div class="converted">ℏ ω</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>✅ Status da Implementação</h2>
+            <p><strong>✅ Conversão LaTeX → Unicode implementada</strong></p>
+            <p><strong>✅ Suporte a frações (\frac, \dfrac, \tfrac)</strong></p>
+            <p><strong>✅ Suporte a subscritos e sobrescritos</strong></p>
+            <p><strong>✅ Símbolos matemáticos básicos e avançados</strong></p>
+            <p><strong>✅ Símbolos químicos e unidades</strong></p>
+            <p><strong>✅ Letras gregas (α, β, γ, etc.)</strong></p>
+            <p><strong>✅ Operadores matemáticos (∑, ∫, √, etc.)</strong></p>
+            <p><strong>✅ Símbolos de conjunto (∈, ⊂, ℝ, etc.)</strong></p>
+            <p><strong>✅ Símbolos de lógica (∀, ∃, ∧, ∨, etc.)</strong></p>
+            <p><strong>✅ Símbolos de física e energia</strong></p>
+            <p><strong>✅ Instruções Unicode nos prompts da OpenAI</strong></p>
+            <p><strong>✅ Aplicação automática em todos os módulos</strong></p>
+            <p><strong>✅ Sistema centralizado de gerenciamento</strong></p>
+        </div>
+
+        <div class="test-section">
+            <h2>🤖 Instruções nos Prompts da OpenAI</h2>
+            <p><strong>Implementação Completa:</strong></p>
+            <ul>
+                <li>✅ Todos os prompts agora incluem instruções de Unicode</li>
+                <li>✅ Aplicação automática via SystemPromptManager</li>
+                <li>✅ Função centralizada addUnicodeInstructions()</li>
+                <li>✅ Verificação inteligente para evitar duplicação</li>
+                <li>✅ Instruções específicas para cada tipo de símbolo</li>
+                <li>✅ Exemplos corretos e incorretos claramente definidos</li>
+            </ul>
+            
+            <div class="description">Exemplo de instrução enviada para a OpenAI:</div>
+            <div class="formula">
+                <div class="original">FORMATAÇÃO MATEMÁTICA E QUÍMICA OBRIGATÓRIA:</div>
+                <div class="converted">- Use APENAS símbolos Unicode para matemática e química</div>
+                <div class="converted">- NUNCA use LaTeX, KaTeX, $...$, $$...$$, \\(...\\), \\[...\\]</div>
+                <div class="converted">- PROIBIDO usar comandos LaTeX como \\text, \\xrightarrow, \\frac, \\alpha, \\beta, etc.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simulação da função convertMathToUnicode para demonstração
+        function convertMathToUnicode(text) {
+            return text
+                // Frações
+                .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '$1⁄$2')
+                .replace(/\\dfrac\{([^}]+)\}\{([^}]+)\}/g, '$1⁄$2')
+                .replace(/\\tfrac\{([^}]+)\}\{([^}]+)\}/g, '$1⁄$2')
+                
+                // Subscritos
+                .replace(/_(\d+)/g, (match, num) => {
+                    const subscripts = {
+                        '0': '₀', '1': '₁', '2': '₂', '3': '₃', '4': '₄', '5': '₅',
+                        '6': '₆', '7': '₇', '8': '₈', '9': '₉'
+                    };
+                    return num.split('').map(d => subscripts[d] || d).join('');
+                })
+                
+                // Sobrescritos
+                .replace(/\^(\d+)/g, (match, num) => {
+                    const superscripts = {
+                        '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵',
+                        '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹'
+                    };
+                    return num.split('').map(d => superscripts[d] || d).join('');
+                })
+                
+                // Símbolos básicos
+                .replace(/\\sin/g, 'sin')
+                .replace(/\\cos/g, 'cos')
+                .replace(/\\tan/g, 'tan')
+                .replace(/\\theta/g, 'θ')
+                .replace(/\\alpha/g, 'α')
+                .replace(/\\beta/g, 'β')
+                .replace(/\\gamma/g, 'γ')
+                .replace(/\\delta/g, 'δ')
+                .replace(/\\epsilon/g, 'ε')
+                .replace(/\\pi/g, 'π')
+                .replace(/\\sigma/g, 'σ')
+                .replace(/\\omega/g, 'ω')
+                .replace(/\\rightarrow/g, '→')
+                .replace(/\\sum/g, '∑')
+                .replace(/\\int/g, '∫')
+                .replace(/\\sqrt/g, '√')
+                .replace(/\\infty/g, '∞')
+                .replace(/\\in/g, '∈')
+                .replace(/\\subset/g, '⊂')
+                .replace(/\\mathbb\{R\}/g, 'ℝ')
+                .replace(/\\mathbb\{N\}/g, 'ℕ')
+                .replace(/\\forall/g, '∀')
+                .replace(/\\hbar/g, 'ℏ')
+                .replace(/\\degree/g, '°')
+                .replace(/\\joule/g, 'J')
+                .replace(/\\mol/g, 'mol')
+                .replace(/\\text\{([^}]+)\}/g, '$1');
+        }
+
+        // Aplicar conversão aos exemplos
+        document.addEventListener('DOMContentLoaded', function() {
+            const formulas = document.querySelectorAll('.formula .original');
+            formulas.forEach(formula => {
+                const converted = convertMathToUnicode(formula.textContent);
+                const convertedElement = formula.nextElementSibling;
+                convertedElement.textContent = converted;
+            });
+        });
+    </script>
+</body>
+</html>

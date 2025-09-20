@@ -141,12 +141,11 @@ export default function ProgressiveLessonComponent({
       // 2) Wikimedia Commons com query expandida - buscar as 3 melhores imagens
       if (!selectedUrl) {
         try {
-          // Expandir a query para melhor cobertura
-          const expandedQuery = `${query} education learning teaching science academic`;
+          // Usar apenas a query original, sem termos genéricos
           const wikiRes2 = await fetch('/api/wikimedia/search', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query: expandedQuery, subject: skeleton?.subject || '', count: 3 })
+            body: JSON.stringify({ query: query, subject: skeleton?.subject || '', count: 3 })
           });
           if (wikiRes2.ok) {
             const wikiData2 = await wikiRes2.json();
@@ -154,8 +153,8 @@ export default function ProgressiveLessonComponent({
               // Selecionar a melhor imagem das 3 (primeira é geralmente a melhor classificada)
               const bestImage = wikiData2.photos[0];
               selectedUrl = bestImage.urls?.regular || bestImage.url;
-              console.log(`✅ Melhor imagem Wikimedia Commons expandida (de ${wikiData2.photos.length} opções):`, selectedUrl);
-              console.log(`📊 Opções expandidas disponíveis:`, wikiData2.photos.map((img, idx) => `${idx + 1}. ${img.title}`).join(', '));
+              console.log(`✅ Melhor imagem Wikimedia Commons (de ${wikiData2.photos.length} opções):`, selectedUrl);
+              console.log(`📊 Opções disponíveis:`, wikiData2.photos.map((img, idx) => `${idx + 1}. ${img.title}`).join(', '));
             }
           }
         } catch (e) {

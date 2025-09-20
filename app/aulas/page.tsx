@@ -387,10 +387,10 @@ function AulasPageContent() {
     }, 300)
 
     try {
-      // Chamar API real para gerar aula
-      console.log('Chamando API para gerar aula:', { topic })
+      // Chamar API do Gemini para gerar aula
+      console.log('Chamando API do Gemini para gerar aula:', { topic })
       
-      const response = await fetch('/api/aulas/generate', {
+      const response = await fetch('/api/aulas/generate-gemini', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

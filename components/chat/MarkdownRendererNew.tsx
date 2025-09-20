@@ -3,12 +3,9 @@
 import React from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import remarkMath from "remark-math";
-import rehypeKatex from "rehype-katex";
 import rehypeHighlight from "rehype-highlight";
-import "katex/dist/katex.min.css";
 import "highlight.js/styles/github.css";
-import { normalizeUnicode, processMessageForDisplay, convertMathToUnicode } from "@/utils/unicode";
+import { normalizeUnicode, processMessageForDisplay, convertMathToUnicode, forceConvertMathToUnicode } from "@/utils/unicode";
 
 interface MarkdownRendererProps {
   content: string;
@@ -23,14 +20,14 @@ export const MarkdownRendererNew: React.FC<MarkdownRendererProps> = ({
 }) => {
   // Processar Unicode e normalizar conteúdo
   const processedContent = processMessageForDisplay(content);
-  const mathProcessedContent = convertMathToUnicode(processedContent);
+  const mathProcessedContent = forceConvertMathToUnicode(processedContent);
   const normalizedContent = mathProcessedContent.replace(/\n{2,}/g, '\n').trim();
   
   return (
     <div className={`markdown-content ${className}`}>
       <ReactMarkdown
-        remarkPlugins={[remarkGfm, remarkMath]}
-        rehypePlugins={[rehypeKatex, rehypeHighlight]}
+        remarkPlugins={[remarkGfm]}
+        rehypePlugins={[rehypeHighlight]}
         skipHtml={false}
         components={{
           // Headers

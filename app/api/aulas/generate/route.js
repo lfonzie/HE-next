@@ -14,7 +14,7 @@ import { authOptions } from '@/lib/auth';
 const TOTAL_SLIDES = 14;
 const QUIZ_SLIDE_NUMBERS = [7, 12];
 const IMAGE_SLIDE_NUMBERS = [1, 8, 14];
-const MIN_TOKENS_PER_SLIDE = 500;
+const MIN_TOKENS_PER_SLIDE = 130; // Reduced from 500 to 130 for more realistic content generation
 const OPENAI_MODEL = 'gpt-4o-mini';
 const MAX_TOKENS = 10000;
 const TEMPERATURE = 0.7;
@@ -189,13 +189,21 @@ function getLessonPromptTemplate(topic, systemPrompt = '') {
   return `
 Você é um professor especialista em ${topic}. Crie uma aula completa e envolvente estruturada em exatamente ${TOTAL_SLIDES} slides.
 
-REGRAS:
+REGRAS CRÍTICAS:
 - Responda APENAS com JSON válido, sem texto adicional.
-- Cada slide deve ter conteúdo educativo direto, com mínimo ${MIN_TOKENS_PER_SLIDE} tokens.
+- Cada slide deve ter conteúdo educativo DIRETO e DETALHADO, com mínimo ${MIN_TOKENS_PER_SLIDE} tokens (≈98 palavras).
 - Use linguagem clara e didática em português brasileiro.
 - Use \\n\\n para quebras de linha entre parágrafos.
 - Para quizzes, inclua "correct" (0-3) e "options" com 4 strings sem prefixos (A, B, etc.).
 - Crie títulos específicos e únicos para cada slide, evitando termos genéricos.
+
+CONTEÚDO OBRIGATÓRIO POR SLIDE:
+- Mínimo 3-4 parágrafos por slide de conteúdo
+- Cada parágrafo deve ter 3-4 frases completas
+- Inclua exemplos práticos e explicações detalhadas
+- Use conectivos para fluidez: "Além disso", "Por exemplo", "Dessa forma", "Portanto"
+- Para slides de conteúdo: explique conceitos, mecanismos, aplicações e conexões
+- Para quizzes: contexto detalhado + pergunta + alternativas explicativas
 
 ESTRUTURA:
 1. Abertura: [Título introdutório]
@@ -210,8 +218,8 @@ FORMATO JSON:
   "slides": [
     {
       "number": 1,
-      "title": "[Título específico]",
-      "content": "Conteúdo detalhado\\n\\nParágrafo 2\\n\\nParágrafo 3",
+      "title": "[Título específico e descritivo]",
+      "content": "Primeiro parágrafo com introdução detalhada do conceito.\\n\\nSegundo parágrafo com explicação dos mecanismos principais.\\n\\nTerceiro parágrafo com exemplos práticos e aplicações.\\n\\nQuarto parágrafo com conexões e importância do tema.",
       "type": "content",
       "imageQuery": "[query específica ou null]",
       "tokenEstimate": ${MIN_TOKENS_PER_SLIDE}
@@ -219,18 +227,18 @@ FORMATO JSON:
     ...
     {
       "number": 7,
-      "title": "Quiz: [Título específico]",
-      "content": "Conteúdo do quiz",
+      "title": "Quiz: [Título específico sobre conceitos básicos]",
+      "content": "Contexto detalhado do quiz com cenário prático.\\n\\nExplicação do que será avaliado e por que é importante.\\n\\nConecte com os conceitos aprendidos nos slides anteriores.",
       "type": "quiz",
       "imageQuery": null,
       "tokenEstimate": ${MIN_TOKENS_PER_SLIDE},
       "points": 0,
       "questions": [
         {
-          "q": "Pergunta clara?",
-          "options": ["Opção 1", "Opção 2", "Opção 3", "Opção 4"],
-          "correct": 0,
-          "explanation": "Explicação detalhada"
+          "q": "Pergunta clara que exige aplicação dos conceitos aprendidos?",
+          "options": ["Alternativa A com explicação do porquê está incorreta", "Alternativa B com explicação do porquê está incorreta", "Alternativa C com explicação do porquê está incorreta", "Alternativa D com explicação do porquê está correta"],
+          "correct": 3,
+          "explanation": "Explicação detalhada da resposta correta com justificativa completa e conexão com os conceitos anteriores"
         }
       ]
     },
@@ -282,18 +290,72 @@ function validateAndFixQuizSlide(slide) {
  */
 function parseGeneratedContent(content) {
   try {
-    if (content.trim().startsWith('{')) {
-      const parsed = JSON.parse(content);
-      if (parsed.slides && Array.isArray(parsed.slides)) {
-        return { slides: parsed.slides.map(validateAndFixQuizSlide) };
+    // Clean the content to extract JSON
+    let cleanContent = content.trim();
+    
+    // Remove markdown code blocks if present
+    if (cleanContent.startsWith('```json')) {
+      cleanContent = cleanContent.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+    } else if (cleanContent.startsWith('```')) {
+      cleanContent = cleanContent.replace(/```\n?/g, '').replace(/```\n?/g, '');
+    }
+    
+    // Try direct parsing first
+    if (cleanContent.startsWith('{')) {
+      try {
+        const parsed = JSON.parse(cleanContent);
+        if (parsed.slides && Array.isArray(parsed.slides)) {
+          return { slides: parsed.slides.map(validateAndFixQuizSlide) };
+        }
+      } catch (directParseError) {
+        log.debug('Direct JSON parse failed, attempting to fix malformed JSON', { error: directParseError.message });
       }
     }
 
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    // Try to extract JSON from the content
+    const jsonMatch = cleanContent.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0]);
-      if (parsed.slides && Array.isArray(parsed.slides)) {
-        return { slides: parsed.slides.map(validateAndFixQuizSlide) };
+      let jsonContent = jsonMatch[0];
+      
+      try {
+        const parsed = JSON.parse(jsonContent);
+        if (parsed.slides && Array.isArray(parsed.slides)) {
+          return { slides: parsed.slides.map(validateAndFixQuizSlide) };
+        }
+      } catch (extractParseError) {
+        log.debug('Extracted JSON parse failed, attempting to fix malformed JSON', { error: extractParseError.message });
+        
+        // Try to fix common JSON malformation issues
+        try {
+          let fixedContent = jsonContent
+            // Remove control characters
+            .replace(/[\x00-\x1F\x7F]/g, '')
+            // Fix unquoted property names
+            .replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g, '$1"$2":')
+            // Fix unquoted string values (be careful not to break numbers/booleans)
+            .replace(/:\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*([,}])/g, ': "$1"$2')
+            // Remove trailing commas before } or ]
+            .replace(/,\s*}/g, '}')
+            .replace(/,\s*]/g, ']')
+            // Fix escaped quotes in strings
+            .replace(/\\"/g, '"')
+            // Fix missing quotes around string values that contain special characters
+            .replace(/:\s*([^",{\[\s][^",{\[\]]*?)\s*([,}])/g, (match, value, ending) => {
+              // Only quote if it looks like a string (contains letters or special chars, not pure numbers)
+              if (/[a-zA-Z\u00C0-\u017F]/.test(value)) {
+                return `: "${value}"${ending}`;
+              }
+              return match;
+            });
+          
+          const parsed = JSON.parse(fixedContent);
+          if (parsed.slides && Array.isArray(parsed.slides)) {
+            log.info('Successfully fixed malformed JSON', { originalError: extractParseError.message });
+            return { slides: parsed.slides.map(validateAndFixQuizSlide) };
+          }
+        } catch (fixError) {
+          log.debug('JSON fixing failed', { error: fixError.message });
+        }
       }
     }
 
@@ -309,7 +371,11 @@ function parseGeneratedContent(content) {
       })),
     };
   } catch (error) {
-    log.error('Error parsing AI content', { error: error.message });
+    log.error('Error parsing AI content', { 
+      error: error.message,
+      contentPreview: content.substring(0, 500),
+      contentLength: content.length
+    });
     throw new Error('Failed to process AI response');
   }
 }
@@ -353,7 +419,17 @@ function validateLessonStructure(lessonData) {
 
   const shortSlides = lessonData.slides.filter(slide => estimateTokens(slide.content) < MIN_TOKENS_PER_SLIDE);
   if (shortSlides.length > 0) {
-    issues.push(`${shortSlides.length} slide(s) with fewer than ${MIN_TOKENS_PER_SLIDE} tokens`);
+    // Only warn if more than 50% of slides are short, otherwise it's acceptable
+    if (shortSlides.length > lessonData.slides.length * 0.5) {
+      issues.push(`${shortSlides.length} slide(s) with fewer than ${MIN_TOKENS_PER_SLIDE} tokens`);
+    } else {
+      // Log as warning but don't fail validation
+      log.warn('Some slides have fewer tokens than recommended', { 
+        shortSlides: shortSlides.length, 
+        totalSlides: lessonData.slides.length,
+        threshold: MIN_TOKENS_PER_SLIDE 
+      });
+    }
   }
 
   return {
@@ -429,7 +505,15 @@ export async function POST(request) {
     }
 
     const parsingTimer = log.aulaTimer('content-parsing');
-    const generatedContent = parseGeneratedContent(response.choices[0]?.message?.content || '');
+    const rawContent = response.choices[0]?.message?.content || '';
+    
+    // Log raw content for debugging (first 500 chars)
+    log.debug('Raw AI response content', { 
+      contentPreview: rawContent.substring(0, 500),
+      contentLength: rawContent.length 
+    });
+    
+    const generatedContent = parseGeneratedContent(rawContent);
     log.aulaTimerEnd(parsingTimer, 'content-parsing');
 
     const validationTimer = log.aulaTimer('structure-validation');

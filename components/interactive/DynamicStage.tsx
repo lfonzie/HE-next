@@ -77,7 +77,7 @@ export default function DynamicStage({
   canGoPrevious = true,
   timeSpent = 0,
   pointsEarned = 0,
-  lessonTheme = 'education',
+  lessonTheme = 'geral',
   lessonData,
   onRestart,
   onNewLesson
@@ -234,7 +234,7 @@ export default function DynamicStage({
         }
         
         return (
-          <QuizComponent
+          <NewQuizComponent
             questions={processedQuizQuestions}
             onComplete={(score, total) => handleStageComplete({ score, total, total: total, type: 'quiz' })}
             timeLimit={activity.time ? activity.time * 60 : 0}

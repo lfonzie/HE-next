@@ -50,9 +50,9 @@ export async function POST(request: NextRequest) {
       return getFallbackResponse(query, count);
     }
 
-    // 2. Expandir a query com termos relacionados
-    const expandedQuery = expandSearchQuery(englishQuery, themeInfo.category);
-    console.log('🔍 Query expandida:', expandedQuery);
+    // 2. Usar apenas a query original, sem expansão desnecessária
+    const expandedQuery = englishQuery;
+    console.log('🔍 Query para busca:', expandedQuery);
 
     // 3. Buscar imagens no Unsplash
     let searchResults;

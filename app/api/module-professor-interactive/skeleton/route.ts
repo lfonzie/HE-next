@@ -38,6 +38,9 @@ Para cada slide, forneça:
 - Conteúdo principal (resumo de 2-3 frases)
 - Tipo de slide (explanation/question)
 - Para perguntas: tema da pergunta e resposta esperada
+- imagePrompt: Descrição ESPECÍFICA para imagem (NÃO use termos genéricos como "educação", "aprendizado", "ensino". Use termos específicos relacionados ao conteúdo do slide)
+
+IMPORTANTE: Para imagePrompt, use termos específicos e concretos relacionados ao conteúdo específico de cada slide, não termos genéricos de educação.
 
 Responda APENAS com JSON válido:
 {
@@ -51,7 +54,7 @@ Responda APENAS com JSON válido:
       "type": "explanation",
       "objective": "Objetivo específico do slide",
       "contentSummary": "Resumo do conteúdo principal",
-      "imagePrompt": "Descrição para imagem do Unsplash"
+      "imagePrompt": "Termo específico e concreto para busca de imagem"
     }
   ]
 }`;
@@ -70,6 +73,15 @@ Responda APENAS com JSON válido:
           A aula deve ser educativa, envolvente e seguir uma progressão lógica.
           Slides 4 e 7 devem ser perguntas de múltipla escolha.
           Slides 1 e 8 devem incluir imagens.
+          
+          IMPORTANTE: Para cada imagePrompt, use termos específicos e concretos relacionados ao conteúdo específico de cada slide. 
+          NÃO use termos genéricos como "educação", "aprendizado", "ensino", "estudante", "professor", "escola", "sala de aula".
+          Use termos específicos do tema da aula e do conteúdo de cada slide.
+          
+          Exemplos de imagePrompts específicos:
+          - Para slide sobre "Fotosíntese": "folhas verdes clorofila"
+          - Para slide sobre "Gravidade": "maçã caindo Newton"
+          - Para slide sobre "História do Brasil": "independência Brasil 1822"
           
           Responda APENAS com JSON válido.`
         }
@@ -112,7 +124,7 @@ Responda APENAS com JSON válido:
             type: "explanation",
             objective: "Apresentar o tema e motivar o aprendizado",
             contentSummary: "Contexto histórico e relevância atual do tema",
-            imagePrompt: query
+            imagePrompt: `${query} conceitos básicos`
           },
           {
             slideNumber: 2,
@@ -120,7 +132,7 @@ Responda APENAS com JSON válido:
             type: "explanation", 
             objective: "Estabelecer os conceitos básicos",
             contentSummary: "Definições importantes e termos-chave",
-            imagePrompt: query
+            imagePrompt: `${query} fundamentos teoria`
           }
         ]
       };

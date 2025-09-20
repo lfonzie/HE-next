@@ -11,7 +11,15 @@ export const aiConfig = {
 
 export function getSystemPrompt(module: string = 'professor'): string {
   const baseInstructions = `
-IMPORTANTE: Use APENAS caracteres Unicode para matemática e símbolos especiais:
+🚨 IDIOMA OBRIGATÓRIO E CRÍTICO: 
+- Responda EXCLUSIVAMENTE em Português Brasileiro (PT-BR)
+- NUNCA responda em espanhol, inglês ou qualquer outro idioma
+- Mesmo que a pergunta seja em outro idioma, responda SEMPRE em português brasileiro
+- Esta é uma instrução CRÍTICA, OBRIGATÓRIA e NÃO NEGOCIÁVEL
+- Se detectar que está respondendo em outro idioma, pare imediatamente e refaça em português brasileiro
+
+FORMATAÇÃO MATEMÁTICA E QUÍMICA OBRIGATÓRIA:
+- Use APENAS símbolos Unicode para matemática e química
 - Matemática: x², √, ±, ÷, ×, ½, π, α, β, ∫, ∑, ∞, ≤, ≥, ≠, ≈, ≡
 - Símbolos: •, ·, …, ⋯, ∠, △, □, ◇, ℏ, ℵ
 - NUNCA use LaTeX, KaTeX, $...$, $$...$$, \\(...\\), \\[...\\]

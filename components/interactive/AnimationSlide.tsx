@@ -35,30 +35,22 @@ export default function AnimationSlide({
   onComplete,
   isFirstSlide = false,
   isLastSlide = false,
-  lessonTheme = 'education',
+  lessonTheme = 'geral',
   imageUrl
 }: AnimationSlideProps) {
   // Removed animation-related state variables
 
-  // Debug: verificar se imageUrl está sendo passada
-  console.log('[AnimationSlide] Debug:', {
-    imageUrl,
-    isFirstSlide,
-    isLastSlide,
-    lessonTheme,
-    shouldFetchUnsplash: !imageUrl && (isFirstSlide || isLastSlide)
-  });
-
   // Buscar imagem do Unsplash apenas se não há imageUrl da API
-  const imageQuery = !imageUrl && (isFirstSlide || isLastSlide)
+  const shouldFetchImage = !imageUrl && (isFirstSlide || isLastSlide)
+  const imageQuery = shouldFetchImage
     ? isFirstSlide 
-      ? `${lessonTheme} concept education` 
-      : `${lessonTheme} summary conclusion`
+      ? `${lessonTheme} conceito introdução` 
+      : `${lessonTheme} resumo conclusão`
     : ''
   
   const { image: unsplashImage, loading: imageLoading } = useUnsplashImage(
     imageQuery, 
-    !imageUrl && (isFirstSlide || isLastSlide)
+    shouldFetchImage
   )
 
   // Removed animation effects - call onComplete immediately

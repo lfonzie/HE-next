@@ -711,7 +711,7 @@ export default function LessonPage() {
                   canGoPrevious={currentStage > 0}
                   timeSpent={stageResults.find(sr => sr.stageIndex === currentStage)?.timeSpent || 0}
                   pointsEarned={stageResults.find(sr => sr.stageIndex === currentStage)?.pointsEarned || 0}
-                  lessonTheme={lessonData?.metadata?.subject || 'education'}
+                  lessonTheme={lessonData?.metadata?.subject || lessonData?.title?.toLowerCase() || 'geral'}
                   lessonData={lessonData ? {
                     title: lessonData.title,
                     totalPoints,

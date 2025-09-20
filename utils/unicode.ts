@@ -91,6 +91,11 @@ export function isValidUnicode(text: string): boolean {
 export function convertMathToUnicode(text: string): string {
   if (!text) return '';
   
+  // Log para debug - remover em produção
+  if (typeof window !== 'undefined' && text.includes('\\')) {
+    console.log('🔍 [UNICODE DEBUG] Convertendo:', text.substring(0, 100) + '...');
+  }
+  
   /**
    * Extrai conteúdo balanceado entre chaves, começando no índice da '{'.
    * Retorna null se não houver fechamento correspondente.
@@ -219,6 +224,24 @@ export function convertMathToUnicode(text: string): string {
   
   // Primeiro processar frações com parser robusto
   let result = replaceLatexFractions(text)
+    // Processar funções trigonométricas específicas
+    .replace(/\\sin/g, 'sin')
+    .replace(/\\cos/g, 'cos')
+    .replace(/\\tan/g, 'tan')
+    .replace(/\\cot/g, 'cot')
+    .replace(/\\sec/g, 'sec')
+    .replace(/\\csc/g, 'csc')
+    .replace(/\\arcsin/g, 'arcsin')
+    .replace(/\\arccos/g, 'arccos')
+    .replace(/\\arctan/g, 'arctan')
+    
+    // Processar funções trigonométricas com parênteses
+    .replace(/\\sin\(/g, 'sin(')
+    .replace(/\\cos\(/g, 'cos(')
+    .replace(/\\tan\(/g, 'tan(')
+    .replace(/\\cot\(/g, 'cot(')
+    .replace(/\\sec\(/g, 'sec(')
+    .replace(/\\csc\(/g, 'csc(')
     // Normalizar fórmulas químicas com \text{} primeiro
     .replace(/\\text\{([A-Za-z]+)\}_([0-9]+)/g, (match, element, subscript) => {
       const unicodeSubscript = subscript.split('').map(n => {
@@ -247,6 +270,20 @@ export function convertMathToUnicode(text: string): string {
     .replace(/\\\)/g, ')')
     .replace(/\\\[/g, '[')
     .replace(/\\\]/g, ']')
+    
+    // Parênteses e colchetes específicos
+    .replace(/\\left\(/g, '(')
+    .replace(/\\right\)/g, ')')
+    .replace(/\\left\[/g, '[')
+    .replace(/\\right\]/g, ']')
+    .replace(/\\left\{/g, '{')
+    .replace(/\\right\}/g, '}')
+    .replace(/\\left\|/g, '|')
+    .replace(/\\right\|/g, '|')
+    
+    // Símbolos específicos de trigonometria
+    .replace(/\\pm/g, '±')
+    .replace(/\\mp/g, '∓')
     
     // Raízes
     .replace(/\\sqrt\{([^}]+)\}/g, '√$1')
@@ -417,6 +454,174 @@ export function convertMathToUnicode(text: string): string {
     .replace(/\\Im/g, 'ℑ')
     .replace(/\\aleph/g, 'ℵ')
     
+    // Símbolos químicos adicionais
+    .replace(/\\rightarrow/g, '→')
+    .replace(/\\leftarrow/g, '←')
+    .replace(/\\leftrightarrow/g, '↔')
+    .replace(/\\uparrow/g, '↑')
+    .replace(/\\downarrow/g, '↓')
+    .replace(/\\updownarrow/g, '↕')
+    .replace(/\\rightleftharpoons/g, '⇌')
+    .replace(/\\leftrightharpoons/g, '⇋')
+    .replace(/\\rightleftarrows/g, '⇄')
+    .replace(/\\leftrightarrows/g, '⇆')
+    
+    // Símbolos de temperatura e energia
+    .replace(/\\degree/g, '°')
+    .replace(/\\celsius/g, '°C')
+    .replace(/\\fahrenheit/g, '°F')
+    .replace(/\\kelvin/g, 'K')
+    .replace(/\\joule/g, 'J')
+    .replace(/\\watt/g, 'W')
+    .replace(/\\volt/g, 'V')
+    .replace(/\\ampere/g, 'A')
+    .replace(/\\ohm/g, 'Ω')
+    .replace(/\\hertz/g, 'Hz')
+    
+    // Símbolos de unidades químicas
+    .replace(/\\mol/g, 'mol')
+    .replace(/\\molar/g, 'M')
+    .replace(/\\normal/g, 'N')
+    .replace(/\\percent/g, '%')
+    .replace(/\\permille/g, '‰')
+    .replace(/\\ppm/g, 'ppm')
+    .replace(/\\ppb/g, 'ppb')
+    
+    // Símbolos de reação química
+    .replace(/\\catalyst/g, '→')
+    .replace(/\\heat/g, 'Δ')
+    .replace(/\\light/g, 'hν')
+    .replace(/\\electricity/g, '⚡')
+    
+    // Símbolos matemáticos avançados
+    .replace(/\\subsetneq/g, '⊊')
+    .replace(/\\supsetneq/g, '⊋')
+    .replace(/\\subsetneqq/g, '⫋')
+    .replace(/\\supsetneqq/g, '⫌')
+    .replace(/\\nsubseteq/g, '⊈')
+    .replace(/\\nsupseteq/g, '⊉')
+    .replace(/\\nsubset/g, '⊄')
+    .replace(/\\nsupset/g, '⊅')
+    
+    // Símbolos de comparação
+    .replace(/\\ll/g, '≪')
+    .replace(/\\gg/g, '≫')
+    .replace(/\\lll/g, '⋘')
+    .replace(/\\ggg/g, '⋙')
+    .replace(/\\lesssim/g, '≲')
+    .replace(/\\gtrsim/g, '≳')
+    .replace(/\\lessapprox/g, '⪅')
+    .replace(/\\gtrapprox/g, '⪆')
+    .replace(/\\lessdot/g, '⋖')
+    .replace(/\\gtrdot/g, '⋗')
+    
+    // Símbolos de geometria avançada
+    .replace(/\\cong/g, '≅')
+    .replace(/\\sim/g, '∼')
+    .replace(/\\simeq/g, '≃')
+    .replace(/\\asymp/g, '≍')
+    .replace(/\\doteq/g, '≐')
+    .replace(/\\propto/g, '∝')
+    .replace(/\\varpropto/g, '∝')
+    
+    // Símbolos de cálculo
+    .replace(/\\nabla/g, '∇')
+    .replace(/\\partial/g, '∂')
+    .replace(/\\Delta/g, 'Δ')
+    .replace(/\\delta/g, 'δ')
+    .replace(/\\epsilon/g, 'ε')
+    .replace(/\\varepsilon/g, 'ε')
+    .replace(/\\theta/g, 'θ')
+    .replace(/\\vartheta/g, 'ϑ')
+    .replace(/\\phi/g, 'φ')
+    .replace(/\\varphi/g, 'ϕ')
+    .replace(/\\pi/g, 'π')
+    .replace(/\\varpi/g, 'ϖ')
+    .replace(/\\rho/g, 'ρ')
+    .replace(/\\varrho/g, 'ϱ')
+    .replace(/\\sigma/g, 'σ')
+    .replace(/\\varsigma/g, 'ς')
+    .replace(/\\tau/g, 'τ')
+    .replace(/\\upsilon/g, 'υ')
+    .replace(/\\omega/g, 'ω')
+    
+    // Símbolos de integração
+    .replace(/\\oint/g, '∮')
+    .replace(/\\iint/g, '∬')
+    .replace(/\\iiint/g, '∭')
+    .replace(/\\oiiint/g, '∰')
+    .replace(/\\oiint/g, '∯')
+    
+    // Símbolos de limite
+    .replace(/\\limsup/g, 'lim sup')
+    .replace(/\\liminf/g, 'lim inf')
+    .replace(/\\max/g, 'max')
+    .replace(/\\min/g, 'min')
+    .replace(/\\sup/g, 'sup')
+    .replace(/\\inf/g, 'inf')
+    
+    // Símbolos de conjunto avançados
+    .replace(/\\bigcup/g, '⋃')
+    .replace(/\\bigcap/g, '⋂')
+    .replace(/\\bigvee/g, '⋁')
+    .replace(/\\bigwedge/g, '⋀')
+    .replace(/\\bigoplus/g, '⊕')
+    .replace(/\\bigotimes/g, '⊗')
+    .replace(/\\bigodot/g, '⊙')
+    .replace(/\\biguplus/g, '⊎')
+    .replace(/\\bigsqcup/g, '⊔')
+    
+    // Símbolos de matriz
+    .replace(/\\det/g, 'det')
+    .replace(/\\rank/g, 'rank')
+    .replace(/\\trace/g, 'tr')
+    .replace(/\\dim/g, 'dim')
+    .replace(/\\ker/g, 'ker')
+    .replace(/\\im/g, 'im')
+    .replace(/\\span/g, 'span')
+    .replace(/\\null/g, 'null')
+    
+    // Símbolos de probabilidade
+    .replace(/\\prob/g, 'P')
+    .replace(/\\expect/g, 'E')
+    .replace(/\\var/g, 'Var')
+    .replace(/\\cov/g, 'Cov')
+    .replace(/\\corr/g, 'Corr')
+    .replace(/\\std/g, 'σ')
+    .replace(/\\mean/g, 'μ')
+    .replace(/\\median/g, 'med')
+    .replace(/\\mode/g, 'mode')
+    
+    // Símbolos de estatística
+    .replace(/\\chi/g, 'χ')
+    .replace(/\\chi^2/g, 'χ²')
+    .replace(/\\t/g, 't')
+    .replace(/\\F/g, 'F')
+    .replace(/\\z/g, 'z')
+    .replace(/\\p/g, 'p')
+    .replace(/\\alpha/g, 'α')
+    .replace(/\\beta/g, 'β')
+    .replace(/\\gamma/g, 'γ')
+    .replace(/\\delta/g, 'δ')
+    .replace(/\\epsilon/g, 'ε')
+    .replace(/\\zeta/g, 'ζ')
+    .replace(/\\eta/g, 'η')
+    .replace(/\\theta/g, 'θ')
+    .replace(/\\iota/g, 'ι')
+    .replace(/\\kappa/g, 'κ')
+    .replace(/\\lambda/g, 'λ')
+    .replace(/\\mu/g, 'μ')
+    .replace(/\\nu/g, 'ν')
+    .replace(/\\xi/g, 'ξ')
+    .replace(/\\pi/g, 'π')
+    .replace(/\\rho/g, 'ρ')
+    .replace(/\\sigma/g, 'σ')
+    .replace(/\\tau/g, 'τ')
+    .replace(/\\upsilon/g, 'υ')
+    .replace(/\\phi/g, 'φ')
+    .replace(/\\psi/g, 'ψ')
+    .replace(/\\omega/g, 'ω')
+    
     // Parênteses, colchetes e chaves
     .replace(/\\left\(/g, '(')
     .replace(/\\right\)/g, ')')
@@ -431,6 +636,148 @@ export function convertMathToUnicode(text: string): string {
     .replace(/[ \t]+/g, ' ')
     .replace(/\s+\n/g, '\n')
     .replace(/\n\s+/g, '\n');
+  
+  return result;
+}
+
+/**
+ * Função de conversão Unicode mais agressiva que garante conversão completa
+ * @param text - Texto contendo caracteres matemáticos
+ * @returns Texto com caracteres Unicode matemáticos
+ */
+export function forceConvertMathToUnicode(text: string): string {
+  if (!text) return '';
+  
+  // Log para debug
+  if (typeof window !== 'undefined' && text.includes('\\')) {
+    console.log('🚀 [FORCE UNICODE] Convertendo:', text.substring(0, 100) + '...');
+  }
+  
+  let result = text;
+  
+  // Conversão mais agressiva - múltiplas passadas
+  for (let i = 0; i < 3; i++) {
+    const beforeConversion = result;
+    
+    result = result
+      // Funções trigonométricas - ordem específica para evitar conflitos
+      .replace(/\\sin\(/g, 'sin(')
+      .replace(/\\cos\(/g, 'cos(')
+      .replace(/\\tan\(/g, 'tan(')
+      .replace(/\\cot\(/g, 'cot(')
+      .replace(/\\sec\(/g, 'sec(')
+      .replace(/\\csc\(/g, 'csc(')
+      .replace(/\\arcsin\(/g, 'arcsin(')
+      .replace(/\\arccos\(/g, 'arccos(')
+      .replace(/\\arctan\(/g, 'arctan(')
+      
+      // Funções trigonométricas sem parênteses
+      .replace(/\\sin\b/g, 'sin')
+      .replace(/\\cos\b/g, 'cos')
+      .replace(/\\tan\b/g, 'tan')
+      .replace(/\\cot\b/g, 'cot')
+      .replace(/\\sec\b/g, 'sec')
+      .replace(/\\csc\b/g, 'csc')
+      .replace(/\\arcsin\b/g, 'arcsin')
+      .replace(/\\arccos\b/g, 'arccos')
+      .replace(/\\arctan\b/g, 'arctan')
+      
+      // Frações - múltiplas formas
+      .replace(/\\frac\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}/g, '$1⁄$2')
+      .replace(/\\dfrac\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}/g, '$1⁄$2')
+      .replace(/\\tfrac\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}/g, '$1⁄$2')
+      
+      // Sobrescritos
+      .replace(/\^(\d+)/g, (match, num) => {
+        const superscripts = {
+          '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵',
+          '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹'
+        };
+        return num.split('').map(d => superscripts[d] || d).join('');
+      })
+      
+      // Subscritos
+      .replace(/_(\d+)/g, (match, num) => {
+        const subscripts = {
+          '0': '₀', '1': '₁', '2': '₂', '3': '₃', '4': '₄', '5': '₅',
+          '6': '₆', '7': '₇', '8': '₈', '9': '₉'
+        };
+        return num.split('').map(d => subscripts[d] || d).join('');
+      })
+      
+      // Símbolos matemáticos
+      .replace(/\\pm/g, '±')
+      .replace(/\\mp/g, '∓')
+      .replace(/\\times/g, '×')
+      .replace(/\\cdot/g, '·')
+      .replace(/\\div/g, '÷')
+      .replace(/\\neq/g, '≠')
+      .replace(/\\leq/g, '≤')
+      .replace(/\\geq/g, '≥')
+      .replace(/\\approx/g, '≈')
+      .replace(/\\infty/g, '∞')
+      .replace(/\\sum/g, '∑')
+      .replace(/\\int/g, '∫')
+      .replace(/\\lim/g, 'lim')
+      
+      // Raízes
+      .replace(/\\sqrt\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}/g, '√$1')
+      .replace(/\\sqrt\[([^\]]+)\]\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}/g, '$1√$2')
+      
+      // Letras gregas
+      .replace(/\\alpha/g, 'α')
+      .replace(/\\beta/g, 'β')
+      .replace(/\\gamma/g, 'γ')
+      .replace(/\\delta/g, 'δ')
+      .replace(/\\epsilon/g, 'ε')
+      .replace(/\\zeta/g, 'ζ')
+      .replace(/\\eta/g, 'η')
+      .replace(/\\theta/g, 'θ')
+      .replace(/\\iota/g, 'ι')
+      .replace(/\\kappa/g, 'κ')
+      .replace(/\\lambda/g, 'λ')
+      .replace(/\\mu/g, 'μ')
+      .replace(/\\nu/g, 'ν')
+      .replace(/\\xi/g, 'ξ')
+      .replace(/\\pi/g, 'π')
+      .replace(/\\rho/g, 'ρ')
+      .replace(/\\sigma/g, 'σ')
+      .replace(/\\tau/g, 'τ')
+      .replace(/\\upsilon/g, 'υ')
+      .replace(/\\phi/g, 'φ')
+      .replace(/\\chi/g, 'χ')
+      .replace(/\\psi/g, 'ψ')
+      .replace(/\\omega/g, 'ω')
+      
+      // Parênteses e delimitadores
+      .replace(/\\left\(/g, '(')
+      .replace(/\\right\)/g, ')')
+      .replace(/\\left\[/g, '[')
+      .replace(/\\right\]/g, ']')
+      .replace(/\\left\{/g, '{')
+      .replace(/\\right\}/g, '}')
+      .replace(/\\left\|/g, '|')
+      .replace(/\\right\|/g, '|')
+      
+      // Delimitadores inline
+      .replace(/\\\(/g, '(')
+      .replace(/\\\)/g, ')')
+      .replace(/\\\[/g, '[')
+      .replace(/\\\]/g, ']')
+      
+      // Remover comandos \text{}
+      .replace(/\\text\{([^}]*)\}/g, '$1');
+    
+    // Se não houve mudança nesta passada, parar
+    if (result === beforeConversion) {
+      break;
+    }
+  }
+  
+  // Log do resultado
+  if (typeof window !== 'undefined' && result !== text) {
+    console.log('✅ [FORCE UNICODE] Resultado:', result.substring(0, 100) + '...');
+  }
   
   return result;
 }
