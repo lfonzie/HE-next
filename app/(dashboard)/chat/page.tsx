@@ -19,7 +19,7 @@ import { Input } from "@/components/ui/input";
 import { useChatContext } from "@/components/providers/ChatContext";
 import { useQuota } from "@/components/providers/QuotaProvider";
 import { SupportModal } from "@/components/modals/SupportModal";
-import { useLoading } from "@/components/ui/loading";
+import { useGlobalLoading } from "@/hooks/useGlobalLoading";
 import { useNavigationLoading } from "@/hooks/useNavigationLoading";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -51,7 +51,7 @@ type MinimalChatHook = {
 
 export default function ChatPage() {
   const router = useRouter();
-  const { start: startLoading, end: endLoading } = useLoading();
+  const { startLoading, stopLoading } = useGlobalLoading();
   const { stopLoading: stopNavLoading } = useNavigationLoading();
   const { 
     conversations,
@@ -63,7 +63,7 @@ export default function ChatPage() {
     fetchConversations,
     setCurrentConversation,
     cancelCurrentRequest
-  } = useChat(() => endLoading('message')) as unknown as MinimalChatHook; // Pass endLoading callback to hide overlay when streaming starts
+  } = useChat(() => stopLoading()) as unknown as MinimalChatHook; // Pass stopLoading callback to hide overlay when streaming starts
   const { toast } = useToast();
   const { selectedModule, setSelectedModule, highlightActiveModule } = useChatContext();
   const { quota, maxQuota, decrementQuota, resetQuota } = useQuota();
@@ -71,10 +71,9 @@ export default function ChatPage() {
   // Clear all loading states when page loads
   useEffect(() => {
     stopNavLoading();
-    // Clear any remaining loading keys from login
-    endLoading('login-redirect', 'success');
-    endLoading('login', 'success');
-  }, [stopNavLoading, endLoading]);
+    // Clear any remaining loading states
+    stopLoading();
+  }, [stopNavLoading, stopLoading]);
   
   // State
   const [inputMessage, setInputMessage] = useState("");
@@ -143,13 +142,8 @@ export default function ChatPage() {
     const trimmedMessage = message.trim();
     console.debug('[ChatPage] Sending message:', trimmedMessage.substring(0, 50) + '...');
     
-    // Start loading with optimized system
-    const loadingKey = startLoading('message', {
-      message: 'Carregando...',
-      cancelable: true,
-      priority: 'normal',
-      timeout: 12000 // 12s timeout
-    });
+    // Start loading
+    startLoading('Carregando...', 'data');
     
     try {
       console.log('Calling sendMessage API...');
@@ -175,16 +169,11 @@ export default function ChatPage() {
       
     } catch (error: any) {
       console.error('Error sending message:', error);
-      endLoading(loadingKey, 'error'); // Hide overlay on error
+      stopLoading(); // Hide overlay on error
       
       // Show retry option for network errors
       if (error.message?.includes('rede') || error.message?.includes('network')) {
-        startLoading('retry', {
-          message: 'Conexao lenta, tentando novamente...',
-          cancelable: true,
-          priority: 'normal',
-          timeout: 8000
-        });
+        startLoading('Conexao lenta, tentando novamente...', 'data');
         
         // Auto-retry once after delay
         setTimeout(() => {
@@ -201,7 +190,7 @@ export default function ChatPage() {
               setInputMessage("");
               highlightActiveModule();
             } catch (retryError: any) {
-              endLoading('retry', 'error');
+              stopLoading();
               toast({
                 title: "Erro",
                 description: "Falha na conexao. Tente novamente.",
@@ -210,7 +199,7 @@ export default function ChatPage() {
             }
           })().catch((error) => {
             console.error('Unhandled promise rejection in retry:', error);
-            endLoading('retry', 'error');
+            stopLoading();
             toast({
               title: "Erro",
               description: "Falha na conexao. Tente novamente.",
@@ -226,7 +215,7 @@ export default function ChatPage() {
         });
       }
     }
-  }, [sendMessage, selectedModule, currentConversation?.id, toast, highlightActiveModule, startLoading, endLoading]);
+  }, [sendMessage, selectedModule, currentConversation?.id, toast, highlightActiveModule, startLoading, stopLoading]);
 
   // Handle suggestion click
   const handleSuggestionClick = useCallback(async (suggestion: string) => {

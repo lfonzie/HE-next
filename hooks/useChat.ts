@@ -133,9 +133,10 @@ export function useChat(onStreamingStart?: () => void) {
       const requestBody = {
         message: trimmedMessage, // Use the validated trimmed message
         module: finalModule,
-        provider: 'auto',
         conversationId,
-        history: conversationHistory.slice(-10) // Last 10 messages for context
+        history: conversationHistory.slice(-3), // AI SDK Multi uses only last 3 messages for speed
+        useCache: true, // Enable cache for better performance
+        forceProvider: 'auto' // Let AI SDK choose the best provider automatically
       }
 
       // Final validation before sending
@@ -147,9 +148,10 @@ export function useChat(onStreamingStart?: () => void) {
       console.debug('[Chat] Request body:', {
         message: requestBody.message.substring(0, 50) + '...',
         module: requestBody.module,
-        provider: requestBody.provider,
         conversationId: requestBody.conversationId,
-        historyLength: requestBody.history.length
+        historyLength: requestBody.history.length,
+        useCache: requestBody.useCache,
+        forceProvider: requestBody.forceProvider
       });
       
       // Retry logic otimizado para network failures
@@ -159,19 +161,7 @@ export function useChat(onStreamingStart?: () => void) {
       
       while (currentRetryCount <= maxRetries) {
         try {
-          // Preparar mensagens para o multi-provider
-          const messages = [
-            ...conversationHistory.slice(-10).map(msg => ({
-              role: msg.role,
-              content: decodeMessage(msg.content) // Decodificar mensagens do histórico
-            })),
-            {
-              role: 'user' as const,
-              content: encodeMessage(message) // Codificar mensagem atual
-            }
-          ]
-
-          response = await fetch('/api/chat/multi-provider', {
+          response = await fetch('/api/chat/ai-sdk-multi', {
             method: "POST",
             headers: {
               "Content-Type": "application/json; charset=utf-8",
@@ -234,6 +224,14 @@ export function useChat(onStreamingStart?: () => void) {
       let finalModel = ""
       let finalTier: "IA" | "IA_SUPER" | "IA_ECO" | undefined = undefined
       let receivedDone = false
+      
+      // Capturar metadados do multi-provider
+      const provider = response.headers.get('X-Provider') || 'unknown'
+      const model = response.headers.get('X-Model') || 'unknown'
+      const complexity = response.headers.get('X-Complexity') || 'unknown'
+      const latency = parseInt(response.headers.get('X-Latency') || '0')
+      
+      console.log(`🎯 [MULTI-PROVIDER] Using ${provider}:${model} (complexity: ${complexity}, latency: ${latency}ms)`)
 
       // Check if response is JSON (error case) instead of streaming
       const contentType = response.headers.get('content-type')
@@ -314,7 +312,11 @@ export function useChat(onStreamingStart?: () => void) {
               content: "",
               timestamp: new Date(),
               isStreaming: true,
-              module: undefined // Garantir que não há módulo inicial
+              module: undefined, // Garantir que não há módulo inicial
+              provider: provider,
+              model: model,
+              complexity: complexity,
+              latency: latency
             })
           }
           
@@ -326,11 +328,11 @@ export function useChat(onStreamingStart?: () => void) {
         }
       })
 
-      // Extrair informações do provedor dos headers
-      const provider = response.headers.get('X-Provider') || 'unknown'
-      const model = response.headers.get('X-Model') || 'unknown'
+      // Extrair informações do provedor dos headers (já capturado acima)
+      // const provider = response.headers.get('X-Provider') || 'unknown'
+      // const model = response.headers.get('X-Model') || 'unknown'
       const module = response.headers.get('X-Module') || finalModule
-      const complexity = response.headers.get('X-Complexity') || 'simple'
+      // const complexity = response.headers.get('X-Complexity') || 'simple' // já capturado acima
       const tier = response.headers.get('X-Tier') as "IA" | "IA_SUPER" | "IA_ECO" | undefined
       const routingReasoning = response.headers.get('X-Routing-Reasoning') || ''
       

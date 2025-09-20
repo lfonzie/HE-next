@@ -115,12 +115,18 @@ const classificationCache = new Map<string, { result: any; timestamp: number }>(
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
+  const timestamp = new Date().toISOString();
   let source = 'fallback';
   let confidence = 0;
   let scores = {};
   
+  console.log(`🚀 [CLASSIFY] START - ${timestamp}`);
+  
   try {
+    const parseStart = Date.now();
     const { userMessage, history = [], currentModule = 'auto' } = await request.json();
+    const parseTime = Date.now() - parseStart;
+    console.log(`⏱️ [PARSE] Completed in ${parseTime}ms`);
 
     if (!userMessage) {
       return NextResponse.json(
@@ -136,7 +142,9 @@ export async function POST(request: NextRequest) {
 
     // 1. Override do cliente (se veio com módulo explícito)
     if (currentModule && currentModule !== 'auto') {
+      const overrideTime = Date.now() - startTime;
       console.log(`🎯 [CLIENT_OVERRIDE] Using client module: ${currentModule}`);
+      console.log(`⏱️ [CLIENT_OVERRIDE] Completed in ${overrideTime}ms`);
       return NextResponse.json({
         success: true,
         classification: {
@@ -149,30 +157,41 @@ export async function POST(request: NextRequest) {
         source: 'client_override',
         messageCount,
         timestamp: new Date().toISOString(),
-        cached: false
+        cached: false,
+        timing: { total: overrideTime, parse: parseTime }
       });
     }
 
     // Cache key incluindo messageCount
+    const cacheStart = Date.now();
     const cacheKey = `${userMessage.toLowerCase().trim()}_${messageCount}`;
     const cached = classificationCache.get(cacheKey);
+    const cacheTime = Date.now() - cacheStart;
     
     if (cached && Date.now() - cached.timestamp < 300000) { // 5 min
+      const totalTime = Date.now() - startTime;
       console.log(`🚀 [CACHE_HIT] Found cached classification`);
+      console.log(`⏱️ [CACHE_HIT] Completed in ${totalTime}ms`);
       return NextResponse.json({
         ...cached.result,
-        cached: true
+        cached: true,
+        timing: { total: totalTime, parse: parseTime, cache: cacheTime }
       });
     }
 
     // 2. Heurísticas de alta precisão
+    const heuristicStart = Date.now();
     const heuristicResult = applyHeuristics(userMessage);
+    const heuristicTime = Date.now() - heuristicStart;
+    console.log(`⏱️ [HEURISTICS] Completed in ${heuristicTime}ms`);
     
     // 3. Classificador IA
+    const aiStart = Date.now();
     let aiResult: ClassificationResult | null = null;
     let aiError = null;
     
     try {
+      const openaiStart = Date.now();
       const completion = await openai.chat.completions.create({
         model: "gpt-4o-mini",
         temperature: 0.1,
@@ -317,11 +336,17 @@ EXEMPLO DE RESPOSTA VÁLIDA:
         response_format: { type: "json_object" }
       });
 
+      const openaiTime = Date.now() - openaiStart;
+      console.log(`⏱️ [OPENAI-CALL] Completed in ${openaiTime}ms`);
+      
       const raw = completion.choices[0]?.message?.content || "{}";
       const parsed = JSON.parse(raw);
       
       // Validar com Zod
+      const validationStart = Date.now();
       const validationResult = ClassificationSchema.safeParse(parsed);
+      const validationTime = Date.now() - validationStart;
+      console.log(`⏱️ [SCHEMA-VALIDATION] Completed in ${validationTime}ms`);
       
       if (validationResult.success) {
         aiResult = validationResult.data;
@@ -377,9 +402,14 @@ EXEMPLO DE RESPOSTA VÁLIDA:
       }
       
     } catch (error) {
+      const aiTime = Date.now() - aiStart;
       console.error(`❌ [AI_ERROR] OpenAI call failed:`, error);
+      console.log(`⏱️ [AI-ERROR] Failed after ${aiTime}ms`);
       aiError = 'openai_failed';
     }
+    
+    const aiTime = Date.now() - aiStart;
+    console.log(`⏱️ [AI-CLASSIFICATION] Total time: ${aiTime}ms`);
 
     // 4. Lógica de decisão com prioridade
     let finalModule = 'professor';
@@ -419,6 +449,7 @@ EXEMPLO DE RESPOSTA VÁLIDA:
       }
     }
 
+    const totalTime = Date.now() - startTime;
     const result = {
       success: true,
       classification: {
@@ -433,7 +464,14 @@ EXEMPLO DE RESPOSTA VÁLIDA:
       model: "gpt-4o-mini",
       timestamp: new Date().toISOString(),
       cached: false,
-      latency: Date.now() - startTime
+      latency: totalTime,
+      timing: {
+        total: totalTime,
+        parse: parseTime,
+        cache: cacheTime,
+        heuristics: heuristicTime,
+        ai: aiTime
+      }
     };
 
     // Cache result
@@ -441,7 +479,8 @@ EXEMPLO DE RESPOSTA VÁLIDA:
 
     // Telemetria compacta
     const scoreAnalysis = calculateScoreAnalysis(finalScores);
-    console.log(`[CLASSIFY] msg=${userMessage.substring(0, 20)}... module=${finalModule} src=${source} conf=${finalConfidence.toFixed(2)} delta=${scoreAnalysis.deltaToSecond.toFixed(2)} msgCount=${messageCount} latency=${Date.now() - startTime}ms`);
+    console.log(`[CLASSIFY] msg=${userMessage.substring(0, 20)}... module=${finalModule} src=${source} conf=${finalConfidence.toFixed(2)} delta=${scoreAnalysis.deltaToSecond.toFixed(2)} msgCount=${messageCount} latency=${totalTime}ms`);
+    console.log(`📊 [CLASSIFY-TIMING] Parse: ${parseTime}ms | Cache: ${cacheTime}ms | Heuristics: ${heuristicTime}ms | AI: ${aiTime}ms | TOTAL: ${totalTime}ms`);
 
     return NextResponse.json(result);
 

@@ -45,11 +45,17 @@ const PROVIDER_CONFIDENCE_THRESHOLD = 0.75;
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
+  const timestamp = new Date().toISOString();
+  
+  console.log(`🚀 [MULTI-PROVIDER] START - ${timestamp}`);
   
   try {
     // Validar entrada
+    const validationStart = Date.now();
     const body = await request.json();
     const validationResult = RequestSchema.safeParse(body);
+    const validationTime = Date.now() - validationStart;
+    console.log(`⏱️ [VALIDATION] Completed in ${validationTime}ms`);
     
     if (!validationResult.success) {
       console.error('❌ [MULTI-PROVIDER] Invalid request schema:', validationResult.error.errors);
@@ -100,6 +106,7 @@ export async function POST(request: NextRequest) {
     console.log(`🔍 [DEBUG] Module parameter received: "${module}" (type: ${typeof module})`);
 
     // 1. Determinação do módulo com prioridade explícita
+    const moduleStart = Date.now();
     let targetModule = module || 'auto';
     let moduleSource = 'default';
     let classificationConfidence = 0;
@@ -114,11 +121,15 @@ export async function POST(request: NextRequest) {
       // Usar orquestrador para classificação
       try {
         console.log('🔄 [MODULE] Calling orchestrator for classification...');
+        const orchestrateStart = Date.now();
         
         const orchestrateResponse = await orchestrate({ 
           text: finalMessage,
           context: { history: finalMessages.slice(0, -1) }
         });
+        
+        const orchestrateTime = Date.now() - orchestrateStart;
+        console.log(`⏱️ [ORCHESTRATOR] Completed in ${orchestrateTime}ms`);
         
         targetModule = orchestrateResponse.trace?.module || 'professor';
         moduleSource = 'orchestrator';
@@ -133,14 +144,21 @@ export async function POST(request: NextRequest) {
         classificationConfidence = 0.0;
       }
     }
+    
+    const moduleTime = Date.now() - moduleStart;
+    console.log(`⏱️ [MODULE-DETECTION] Total time: ${moduleTime}ms`);
 
         // 2. Classificação de complexidade
+        const complexityStart = Date.now();
         console.log('⚡ [COMPLEXITY] Classifying complexity...');
         const complexityResult = await classifyComplexityAsync(finalMessage, targetModule);
         const complexityLevel = complexityResult.classification;
+        const complexityTime = Date.now() - complexityStart;
         console.log(`⚡ [COMPLEXITY] Result: ${complexityLevel} (source: ${complexityResult.method}, cached: ${complexityResult.cached})`);
+        console.log(`⏱️ [COMPLEXITY] Completed in ${complexityTime}ms`);
 
     // 3. Seleção de provider e modelo baseada na complexidade
+    const providerStart = Date.now();
     let finalProvider = provider;
     let finalModel = 'gpt-4o-mini';
     let providerSource = 'default';
@@ -165,8 +183,12 @@ export async function POST(request: NextRequest) {
       
       console.log(`🎯 [PROVIDER] Client specified: ${finalProvider}:${finalModel} (complexity: ${complexityLevel}, tier: ${tier})`);
     }
+    
+    const providerTime = Date.now() - providerStart;
+    console.log(`⏱️ [PROVIDER-SELECTION] Completed in ${providerTime}ms`);
 
     // 4. Configuração do modelo baseada na complexidade
+    const modelStart = Date.now();
     let modelInstance;
     try {
       switch (finalProvider) {
@@ -234,6 +256,9 @@ export async function POST(request: NextRequest) {
         }
       );
     }
+    
+    const modelTime = Date.now() - modelStart;
+    console.log(`⏱️ [MODEL-CONFIG] Completed in ${modelTime}ms`);
 
     // 5. Tier já foi calculado baseado na complexidade
     
@@ -257,6 +282,7 @@ export async function POST(request: NextRequest) {
     console.log(`[MULTI] msg=${finalMessage.substring(0, 20)}... module=${targetModule} src=${moduleSource} conf=${classificationConfidence.toFixed(2)} provider=${finalProvider}:${finalModel} msgCount=${messageCount} complexity=${complexityLevel} tier=${tier}`);
 
     // 7. Streaming da resposta
+    const streamStart = Date.now();
     console.log(`🚀 [STREAM] Starting with context:`, finalContext);
 
     // Mensagens já preparadas em finalMessages
@@ -274,20 +300,27 @@ export async function POST(request: NextRequest) {
 
     // Usar streaming real com a IA
     try {
+      const streamTextStart = Date.now();
       const result = await streamText({
         model: modelInstance,
         messages: finalMessages,
         maxTokens: 1000,
         temperature: 0.7,
       });
+      
+      const streamTextTime = Date.now() - streamTextStart;
+      console.log(`⏱️ [STREAM-TEXT] Completed in ${streamTextTime}ms`);
 
       // Use the correct method name for Vercel AI SDK v5
       return result.toTextStreamResponse({
         headers,
         onFinish: async () => {
           const endTime = Date.now();
-          const duration = endTime - startTime;
-          console.log(`✅ [MULTI-PROVIDER] Request completed in ${duration}ms`);
+          const totalDuration = endTime - startTime;
+          const streamDuration = endTime - streamStart;
+          console.log(`⏱️ [STREAM-TOTAL] Streaming completed in ${streamDuration}ms`);
+          console.log(`✅ [MULTI-PROVIDER] TOTAL REQUEST completed in ${totalDuration}ms`);
+          console.log(`📊 [TIMING-BREAKDOWN] Validation: ${validationTime}ms | Module: ${moduleTime}ms | Complexity: ${complexityTime}ms | Provider: ${providerTime}ms | Model: ${modelTime}ms | Stream: ${streamDuration}ms`);
         }
       });
     } catch (streamingError: any) {

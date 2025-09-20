@@ -112,6 +112,7 @@
     "prisma": "^6.16.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-is": "^18.3.1",
     "react-markdown": "^9.0.0",
     "react-syntax-highlighter": "^15.6.6",
     "recharts": "^3.2.0",
@@ -181,6 +182,7 @@
   "resolutions": {
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-is": "^18.3.1",
     "@types/react": "^18.3.24",
     "@types/react-dom": "^18.3.7",
     "typescript": "^5.0.0"
