@@ -181,6 +181,16 @@ export default function DynamicStage({
       'UploadTask'
     ]
     
+    // For QuizComponent, only allow navigation if the quiz is completed
+    if (stage.activity.component === 'QuizComponent') {
+      if (isCompleted) {
+        onNext()
+      }
+      // Don't navigate if quiz is not completed
+      return
+    }
+    
+    // For other components, allow navigation if completed or always allowed
     if (isCompleted || alwaysAllowNext.includes(stage.activity.component)) {
       onNext()
     }
@@ -584,11 +594,15 @@ export default function DynamicStage({
         </div>
 
         <Button
-          onClick={onNext}
-          disabled={!canGoNext}
+          onClick={handleNext}
+          disabled={
+            stage.activity.component === 'QuizComponent' 
+              ? !isCompleted 
+              : !canGoNext
+          }
           className="flex items-center gap-2"
         >
-          Próxima
+          {stageIndex === totalStages - 1 ? 'Finalizar' : 'Próxima'}
           <ArrowRight className="h-4 w-4" />
         </Button>
       </div>
