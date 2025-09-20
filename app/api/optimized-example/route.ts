@@ -1,10 +1,18 @@
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
 /**
  * Optimized API Route Example
  * Demonstrates compression, caching, and optimization features
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+
 import { optimizeApiRoute } from '@/lib/api/compression';
+
+
 
 // Example data - simulating a large response
 const generateLargeResponse = (size: number = 10000) => {

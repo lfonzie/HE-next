@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 // Optional: edge runtime can be faster for simple fetch + transform
 // export const runtime = 'edge';
 

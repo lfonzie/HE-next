@@ -1,6 +1,15 @@
 // app/api/illustrations/external/route.ts - Integração com APIs externas públicas
 import { NextRequest, NextResponse } from 'next/server';
+
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 import { z } from 'zod';
+
+
 
 // Schema de validação
 const ExternalSearchSchema = z.object({

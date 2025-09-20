@@ -1,6 +1,15 @@
 // app/api/pixabay/[id]/route.ts - Endpoint para buscar imagem específica por ID
 import { NextRequest, NextResponse } from 'next/server';
+
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 import { pixabayService } from '@/lib/pixabay';
+
+
 
 /**
  * GET /api/pixabay/[id] - Busca imagem específica por ID

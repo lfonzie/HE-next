@@ -1,9 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
+
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 import { getServerSession } from 'next-auth'
+
+
 import { authOptions } from '@/lib/auth'
+
+
 import { prisma } from '@/lib/prisma'
+
+
 import { OpenAI } from 'openai'
+
+
 import { logTokens } from '@/lib/token-logger'
+
+
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,

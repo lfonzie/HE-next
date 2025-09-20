@@ -1,9 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
+
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 import { getServerSession } from 'next-auth'
+
+
 import { authOptions } from '@/lib/auth'
+
+
 import { enemApi } from '@/lib/enem-api'
+
+
 import { openai } from '@/lib/openai'
+
+
 import { ENEM_SYSTEM_PROMPT_ENHANCED } from '@/lib/system-prompts/enem'
+
+
 
 // Progressive loading implementation following the architectural guide
 // Generates questions in batches of 2 initially, then one at a time on demand

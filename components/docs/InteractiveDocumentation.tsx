@@ -23,8 +23,8 @@ import {
   Maximize2,
   Minimize2
 } from 'lucide-react';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import SyntaxHighlighter from 'react-syntax-highlighter';
+import { tomorrow } from 'react-syntax-highlighter/dist/styles/tomorrow';
 
 export interface DiagramData {
   id: string;

@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 interface Suggestion {
   text: string
   category: string

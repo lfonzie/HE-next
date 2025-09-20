@@ -1,6 +1,15 @@
 // app/api/images/enhanced-search/route.ts - Enhanced image search endpoint
 import { NextRequest, NextResponse } from 'next/server';
+
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 import { enhancedImageService } from '@/lib/enhanced-image-service';
+
+
 
 export async function POST(request: NextRequest) {
   try {

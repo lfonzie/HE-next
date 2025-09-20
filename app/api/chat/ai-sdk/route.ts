@@ -11,6 +11,10 @@ import { classifyComplexity, getProviderConfig } from '@/lib/complexity-classifi
 import { logUsageFromCallback } from '@/lib/token-logger'
 import '@/lib/orchestrator-modules' // ensure modules are registered
 
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     // Verificar autenticação - OBRIGATÓRIO
@@ -180,4 +184,3 @@ export async function POST(request: NextRequest) {
 
 // Configurações de CORS para desenvolvimento
 export const runtime = 'nodejs'
-export const dynamic = 'force-dynamic'

@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 interface ImageSource {
   source: 'unsplash' | 'wikimedia' | 'pixabay' | 'pexels' | 'nasa' | 'smithsonian';
   name: string;

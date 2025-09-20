@@ -1,14 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server'
+
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 import { getServerSession } from 'next-auth'
+
+
 import { authOptions } from '@/lib/auth'
+
+
 import { prisma } from '@/lib/db'
+
+
 import OpenAI from 'openai'
+
+
 import { GoogleGenerativeAI } from '@google/generative-ai'
+
+
 import { ensureQuizFormat } from '@/lib/quiz-validation'
+
+
 import { STRUCTURED_LESSON_PROMPT } from '@/lib/system-prompts/lessons-structured'
+
+
 import { PROFESSIONAL_PACING_LESSON_PROMPT, validateProfessionalPacing, calculatePacingMetrics } from '@/lib/system-prompts/lessons-professional-pacing'
+
+
 import { populateLessonWithImages } from '@/lib/unsplash-integration'
+
+
 import { AutoImageService } from '@/lib/autoImageService'
+
+
 
 const openai = new OpenAI({ 
   apiKey: process.env.OPENAI_API_KEY 

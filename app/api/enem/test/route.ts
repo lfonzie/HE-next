@@ -1,7 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
+
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 import { getServerSession } from 'next-auth'
+
+
 import { authOptions } from '@/lib/auth'
+
+
 import { enemApi } from '@/lib/enem-api'
+
+
 
 export async function GET(request: NextRequest) {
   try {

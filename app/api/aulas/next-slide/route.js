@@ -2,11 +2,28 @@
 // Endpoint para carregar próximo slide sob demanda
 
 import { NextResponse } from 'next/server';
+
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 import OpenAI from 'openai';
+
+
 import { ensureQuizFormat } from '@/lib/quiz-validation';
+
+
 import { logTokens } from '@/lib/token-logger';
+
+
 import { getServerSession } from 'next-auth';
+
+
 import { authOptions } from '@/lib/auth';
+
+
 
 const openai = new OpenAI({ 
   apiKey: process.env.OPENAI_API_KEY 

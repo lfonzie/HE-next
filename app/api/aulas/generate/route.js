@@ -2,13 +2,34 @@
 // Dedicated API route for generating educational lessons with professional pacing using Vercel AI SDK
 
 import { NextResponse } from 'next/server';
+
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 import { generateText } from 'ai';
+
+
 import { google } from '@ai-sdk/google';
+
+
 import { ensureQuizFormat } from '@/lib/quiz-validation';
+
+
 import { log } from '@/lib/lesson-logger';
+
+
 import { logTokens } from '@/lib/token-logger';
+
+
 import { getServerSession } from 'next-auth';
+
+
 import { authOptions } from '@/lib/auth';
+
+
 
 // Constants for configuration
 const TOTAL_SLIDES = 14;
@@ -725,4 +746,3 @@ export async function POST(request) {
   }
 }
 
-export const runtime = 'nodejs';

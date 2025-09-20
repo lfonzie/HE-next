@@ -1,8 +1,21 @@
 // app/api/unsplash/translate-search/route.ts
 import { NextRequest, NextResponse } from 'next/server';
+
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 import { detectTheme, translateThemeToEnglish } from '@/lib/themeDetection';
+
+
 import { unsplashService } from '@/lib/unsplash';
+
+
 import { enhancedImageService } from '@/lib/enhanced-image-service';
+
+
 
 export async function POST(request: NextRequest) {
   try {

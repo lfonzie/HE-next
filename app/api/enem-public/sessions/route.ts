@@ -1,6 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
+
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 import { PrismaClient } from '@prisma/client';
+
+
 import { enemLocalDB } from '@/lib/enem-local-database';
+
+
 
 const prisma = new PrismaClient();
 

@@ -1,7 +1,18 @@
 // app/api/pixabay/route.ts - Endpoint dedicado para API Pixabay
 import { NextRequest, NextResponse } from 'next/server';
+
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 import { z } from 'zod';
+
+
 import { pixabayService } from '@/lib/pixabay';
+
+
 
 // Schema de validação para busca de imagens
 const ImageSearchSchema = z.object({

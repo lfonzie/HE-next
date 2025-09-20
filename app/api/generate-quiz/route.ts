@@ -1,6 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
+
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 import { openai } from '@/lib/openai'
+
+
 import { ensureQuizFormat, ValidatedQuizQuestion } from '@/lib/quiz-validation'
+
+
 
 interface QuizGenerationRequest {
   topic: string

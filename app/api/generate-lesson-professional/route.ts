@@ -4,7 +4,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 // Force dynamic rendering to prevent prerendering issues
-export const dynamic = 'force-dynamic'
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'

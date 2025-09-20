@@ -1,6 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
+
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 import { getServerSession } from 'next-auth';
+
+
 import { authOptions } from '@/lib/auth';
+
+
 
 // Mock data - em produção isso viria do banco de dados
 const mockSchools = [

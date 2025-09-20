@@ -1,8 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
+
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 import { Message, streamText } from 'ai'
+
+
 import { openai } from '@ai-sdk/openai'
+
+
 import { fastClassify } from '@/lib/fast-classifier'
+
+
 import { z } from 'zod'
+
+
 
 // Schema simplificado - apenas campos essenciais
 const FastRequestSchema = z.object({

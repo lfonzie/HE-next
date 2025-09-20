@@ -3,6 +3,12 @@
 
 import { NextResponse } from 'next/server';
 
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 export async function POST(request) {
   try {
     const { lessonId, etapa, completed, points = 0 } = await request.json();

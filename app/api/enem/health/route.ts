@@ -1,5 +1,11 @@
 import { NextResponse } from 'next/server';
 
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 export async function GET() {
   // ENEM API health check endpoint
   // This endpoint is used for ENEM-specific health monitoring

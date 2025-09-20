@@ -1,7 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
+
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 import { auth } from '@/lib/auth';
+
+
 import { openai, selectModel, getModelConfig } from '@/lib/openai';
+
+
 import { Slide, SlideGenerationRequest, SlideGenerationResponse } from '@/types/slides';
+
+
 
 // Simple similarity function (can be replaced with embeddings)
 function calculateSimilarity(text1: string, text2: string): number {

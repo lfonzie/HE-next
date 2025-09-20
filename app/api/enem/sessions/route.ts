@@ -1,9 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
+
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 import { auth } from '@/lib/auth';
+
+
 import { EnemSessionRequest, EnemSessionResponse, EnemArea } from '@/types/enem';
+
+
 import { PrismaClient } from '@prisma/client';
+
+
 import { promises as fs } from 'fs';
+
+
 import path from 'path';
+
+
 
 const prisma = new PrismaClient();
 

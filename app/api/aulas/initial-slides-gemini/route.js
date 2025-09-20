@@ -2,9 +2,22 @@
 // Endpoint para gerar os 2 primeiros slides da aula usando Gemini com Vercel AI SDK
 
 import { NextResponse } from 'next/server';
+
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 import { generateText } from 'ai';
+
+
 import { google } from '@ai-sdk/google';
+
+
 import { log } from '@/lib/lesson-logger';
+
+
 
 // Initialize Gemini client via Vercel AI SDK
 const geminiModel = google('gemini-2.0-flash-exp', {

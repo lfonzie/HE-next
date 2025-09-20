@@ -1,15 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server'
+
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 import { Message, streamText } from 'ai'
+
+
 import { openai } from '@ai-sdk/openai'
+
+
 import { anthropic } from '@ai-sdk/anthropic'
+
+
 import { google } from '@ai-sdk/google'
+
+
 import { z } from 'zod'
+
+
 import { routeAIModel } from '@/lib/ai-model-router'
+
+
 import { orchestrate } from '@/lib/orchestrator'
+
+
 import { getModelTier } from '@/lib/ai-config'
+
+
 import { classifyComplexity, classifyComplexityAsync, getProviderConfig } from '@/lib/complexity-classifier'
+
+
 import { normalizeScientificText } from '@/lib/math-normalizer'
+
+
 import { addEnhancedUnicodeInstructions } from '@/lib/system-prompts/math-unicode'
+
+
 
 // Schema para validação de entrada - suporta ambos os formatos
 const RequestSchema = z.object({

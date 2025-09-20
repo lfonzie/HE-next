@@ -2,12 +2,31 @@
 // Endpoint para carregar próximo slide sob demanda usando Gemini com Vercel AI SDK
 
 import { NextResponse } from 'next/server';
+
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 import { generateText } from 'ai';
+
+
 import { google } from '@ai-sdk/google';
+
+
 import { ensureQuizFormat } from '@/lib/quiz-validation';
+
+
 import { logTokens } from '@/lib/token-logger';
+
+
 import { getServerSession } from 'next-auth';
+
+
 import { authOptions } from '@/lib/auth';
+
+
 
 // Initialize Gemini client via Vercel AI SDK
 const geminiModel = google('gemini-2.0-flash-exp', {

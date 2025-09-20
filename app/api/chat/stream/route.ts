@@ -1,14 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server'
+
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 import { getServerSession } from 'next-auth'
+
+
 import { authOptions } from '@/lib/auth'
+
+
 import { openai } from '@/lib/openai'
+
+
 import { google } from '@ai-sdk/google'
+
+
 import { streamText } from 'ai'
+
+
 import { getModelTier } from '@/lib/ai-config'
+
+
 import { routeAIModel } from '@/lib/ai-model-router'
+
+
 import { orchestrate } from '@/lib/orchestrator'
+
+
 import { logUsageFromCallback } from '@/lib/token-logger'
+
+
 import '@/lib/orchestrator-modules' // ensure modules are registered
+
+
 
 export async function POST(request: NextRequest) {
   try {

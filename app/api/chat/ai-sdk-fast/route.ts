@@ -1,11 +1,32 @@
 import { NextRequest } from 'next/server'
+
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 import { streamText, generateText } from 'ai'
+
+
 import { openai } from '@ai-sdk/openai'
+
+
 import { anthropic } from '@ai-sdk/anthropic'
+
+
 import { google } from '@ai-sdk/google'
+
+
 import { fastClassify } from '@/lib/fast-classifier'
+
+
 import { getOptimizedStreamingConfig } from '@/lib/streaming-optimizer'
+
+
 import { generateCacheKey, responseCache } from '@/lib/aggressive-cache'
+
+
 
 // Schema simplificado para Vercel AI SDK
 const AISDKRequestSchema = {

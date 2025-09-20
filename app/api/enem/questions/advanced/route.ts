@@ -1,8 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
+
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 import { auth } from '@/lib/auth';
+
+
 import { prisma } from '@/lib/db';
+
+
 import { openai } from '@/lib/openai';
+
+
 import { z } from 'zod';
+
+
 
 const QuestionFilterSchema = z.object({
   area: z.enum(['matematica', 'linguagens', 'ciencias_natureza', 'ciencias_humanas']),

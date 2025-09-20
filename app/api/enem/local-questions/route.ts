@@ -1,6 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
+
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 import { promises as fs } from 'fs';
+
+
 import path from 'path';
+
+
 
 interface EnemQuestion {
   title: string;

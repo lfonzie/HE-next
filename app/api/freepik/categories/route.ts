@@ -1,5 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
+
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 import axios from 'axios';
+
+
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);

@@ -1,5 +1,14 @@
 import NextAuth from "next-auth"
+
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 import { authOptions } from "@/lib/auth"
+
+
 
 const handler = NextAuth(authOptions)
 

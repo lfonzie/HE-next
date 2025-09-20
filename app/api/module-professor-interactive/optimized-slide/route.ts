@@ -1,6 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
+
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 import { openai, selectModel, getModelConfig } from '@/lib/openai'
+
+
 import { lessonCache, slideCache } from '@/lib/cache/lessonCache'
+
+
 
 export async function POST(request: NextRequest) {
   try {

@@ -1,6 +1,15 @@
 // app/api/cache/stats/route.ts - Endpoint para monitorar estatísticas do cache de slides
 import { NextRequest, NextResponse } from 'next/server';
+
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 import { slideGenerationCache } from '@/lib/slide-generation-cache';
+
+
 
 export async function GET(request: NextRequest) {
   try {

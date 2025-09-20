@@ -1,5 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
+
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 import OpenAI from 'openai'
+
+
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,

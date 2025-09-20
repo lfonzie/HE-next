@@ -1,8 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
+
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 import { auth } from '@/lib/auth';
+
+
 import { prisma } from '@/lib/db';
+
+
 import { assessmentEngine } from '@/lib/assessment/enem-assessment';
+
+
 import { z } from 'zod';
+
+
 
 const AssessmentRequestSchema = z.object({
   examId: z.string().uuid(),

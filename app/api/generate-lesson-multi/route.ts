@@ -1,10 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
+
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 import { getServerSession } from 'next-auth'
+
+
 import { authOptions } from '@/lib/auth'
+
+
 import { prisma } from '@/lib/db'
+
+
 import { PROFESSIONAL_PACING_LESSON_PROMPT, validateProfessionalPacing, calculatePacingMetrics } from '@/lib/system-prompts/lessons-professional-pacing'
+
+
 import { populateLessonWithImages } from '@/lib/unsplash-integration'
+
+
 import { AutoImageService } from '@/lib/autoImageService'
+
+
 
 // Função para usar o multi-provider router
 async function generateWithMultiProvider(prompt: string, provider: string = 'google', complexity: string = 'simple') {

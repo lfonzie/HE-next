@@ -1,10 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
+
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 import { getServerSession } from 'next-auth'
+
+
 import { authOptions } from '@/lib/auth'
+
+
 import { prisma } from '@/lib/db'
+
+
 import { enemApi, ENEM_AREAS } from '@/lib/enem-api'
+
+
 import { openai, selectModel, getModelConfig } from '@/lib/openai'
+
+
 import { apiConfig } from '@/lib/api-config'
+
+
 
 // Cache para evitar chamadas duplicadas
 const questionCache = new Map<string, { data: any, timestamp: number }>()

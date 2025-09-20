@@ -1,4 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
 import { generateText } from 'ai';
 import { google } from '@ai-sdk/google';
 import { z } from 'zod';

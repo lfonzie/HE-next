@@ -1,6 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
+
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 import { enemApi } from '@/lib/enem-api'
+
+
 import { prisma } from '@/lib/db'
+
+
 
 export async function GET(request: NextRequest) {
   try {

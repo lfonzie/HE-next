@@ -1,10 +1,29 @@
 import { NextRequest } from 'next/server'
+
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 import { streamText, generateText } from 'ai'
+
+
 import { openai } from '@ai-sdk/openai'
+
+
 import { google } from '@ai-sdk/google'
+
+
 import { fastClassify } from '@/lib/fast-classifier'
+
+
 import { classifyComplexityAsync, getProviderConfig } from '@/lib/complexity-classifier'
+
+
 import { generateCacheKey, responseCache } from '@/lib/aggressive-cache'
+
+
 
 // Schema para requisição multi-provider
 const MultiProviderRequestSchema = {

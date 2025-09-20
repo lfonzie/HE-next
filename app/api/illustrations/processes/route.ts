@@ -1,6 +1,15 @@
 // app/api/illustrations/processes/route.ts - API específica para processos educacionais
 import { NextRequest, NextResponse } from 'next/server';
+
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 import { z } from 'zod';
+
+
 
 // Schema para busca de processos específicos
 const ProcessSearchSchema = z.object({

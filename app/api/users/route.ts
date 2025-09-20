@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 // Mock user data
 const users = [
   { id: 1, name: 'John Doe', email: 'john@example.com', role: 'admin' },

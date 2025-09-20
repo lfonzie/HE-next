@@ -1,5 +1,11 @@
 import { NextResponse } from 'next/server';
 
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 export async function GET() {
   // Simple health check that doesn't depend on external services
   // This endpoint is used as a fallback health check

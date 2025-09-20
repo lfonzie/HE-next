@@ -1,6 +1,15 @@
 // app/api/illustrations/search/route.ts - API para buscar ilustrações educacionais
 import { NextRequest, NextResponse } from 'next/server';
+
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 import { z } from 'zod';
+
+
 
 // Schema de validação para a requisição
 const SearchIllustrationSchema = z.object({

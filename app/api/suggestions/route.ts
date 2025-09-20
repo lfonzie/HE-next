@@ -1,5 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
+
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 import { GoogleGenerativeAI } from '@google/generative-ai'
+
+
 
 interface Suggestion {
   text: string

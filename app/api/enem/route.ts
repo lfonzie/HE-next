@@ -1,8 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
+
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 import { auth } from '@/lib/auth';
+
+
 import { withTimeout } from '@/lib/async';
+
+
 import { openai, selectModel, getModelConfig } from '@/lib/openai';
+
+
 import { ENEMItem, ENEMBatchRequest, ENEMBatchResponse } from '@/types/slides';
+
+
 
 const GENERATION_TIMEOUT_MS = 15_000;
 

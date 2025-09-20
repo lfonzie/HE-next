@@ -1,8 +1,23 @@
 import { NextRequest } from 'next/server'
+
+// Prevent prerendering of this API route
+
+// Prevent prerendering of this API route
+export const dynamic = 'force-dynamic';
+
+
 import { streamText, generateText } from 'ai'
+
+
 import { openai } from '@ai-sdk/openai'
+
+
 import { fastClassify } from '@/lib/fast-classifier'
+
+
 import { generateCacheKey, responseCache } from '@/lib/aggressive-cache'
+
+
 
 // Configurações ultra-otimizadas para Vercel AI SDK
 const ULTRA_CONFIGS = {
