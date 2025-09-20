@@ -1,11 +1,11 @@
 "use client";
 
-import RefactoredLessonModule from '@/components/professor-interactive/lesson/RefactoredLessonModule';
+import EnhancedLessonModule from '@/components/professor-interactive/lesson/EnhancedLessonModule';
 
 export default function TestProgressivePage() {
   return (
     <div>
-      <RefactoredLessonModule />
+      <EnhancedLessonModule />
     </div>
   );
 }

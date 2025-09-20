@@ -31,6 +31,7 @@ import { processSlidesForHubEduPattern } from '@/utils/professor-interactive/bui
 import { useProfessorProgressiveLoading } from '@/hooks/useProfessorProgressiveLoading';
 import { useKeyboardNavigation } from '@/hooks/useKeyboardNavigation';
 import { useFullscreen } from '@/hooks/useFullscreen';
+import { useGlobalLoading } from '@/hooks/useGlobalLoading';
 import { detectSubject } from '@/utils/professor-interactive/subjectDetection';
 
 import LessonHeader from './LessonHeader';
@@ -281,7 +282,7 @@ export default function EnhancedLessonModule({
   
   const { lesson, error: generationError, generateLesson, generateMockLesson, clearLesson } = useLessonGeneration();
   const { loadingState, startLoading, updateProgress, finishLoading, stopLoading } = useLessonLoading();
-  const { start: startGlobalLoading, end: endGlobalLoading } = useLoading();
+  const { start: startGlobalLoading, end: endGlobalLoading } = useGlobalLoading();
   const { 
     lessonState, 
     goNext, 

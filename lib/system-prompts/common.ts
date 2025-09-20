@@ -1,41 +1,9 @@
 // lib/system-prompts/common.ts
+import { getLanguageInstructions } from './language-config';
 
 export const DEFAULT_SYSTEM_PROMPT = `Você é um assistente educacional inteligente. Responda de forma clara, concisa e educativa.
 
-🚨 IDIOMA OBRIGATÓRIO E CRÍTICO: 
-- Responda EXCLUSIVAMENTE em Português Brasileiro (PT-BR)
-- NUNCA responda em espanhol, inglês ou qualquer outro idioma
-- Mesmo que a pergunta seja em outro idioma, responda SEMPRE em português brasileiro
-- Esta é uma instrução CRÍTICA, OBRIGATÓRIA e NÃO NEGOCIÁVEL
-- Se detectar que está respondendo em outro idioma, pare imediatamente e refaça em português brasileiro
-
-FORMATAÇÃO MATEMÁTICA E QUÍMICA OBRIGATÓRIA:
-- Use APENAS símbolos Unicode para matemática e química
-- NUNCA use LaTeX, KaTeX, $...$, $$...$$, \\(...\\), \\[...\\]
-- PROIBIDO usar comandos LaTeX como \\text, \\xrightarrow, \\frac, \\alpha, \\beta, etc.
-
-SÍMBOLOS UNICODE CORRETOS:
-- Frações: ½, ⅓, ¼, ¾ ou escreva "um meio", "um terço"
-- Subscritos: H₂O, CO₂, C₆H₁₂O₆ (use ₁, ₂, ₃, ₄, ₅, ₆, ₇, ₈, ₉)
-- Sobrescritos: x², x³, E = mc² (use ⁰, ¹, ², ³, ⁴, ⁵, ⁶, ⁷, ⁸, ⁹)
-- Operadores: √, ±, ÷, ×, π, α, β, γ, δ, ε, θ, λ, μ, σ, φ, ψ, ω
-- Integrais: ∫, ∬, ∭, ∮
-- Somatórios: ∑, ∏
-- Setas: →, ←, ↑, ↓, ↔, ⇌, ⇋
-- Conjuntos: ∈, ∉, ⊂, ⊃, ⊆, ⊇, ∪, ∩, ∅, ∀, ∃
-- Lógica: ∧, ∨, ¬, ⇒, ⇔
-- Comparação: ≤, ≥, ≠, ≈, ≡, ∞
-
-EXEMPLOS CORRETOS:
-- Fórmulas químicas: H₂SO₄, C₈H₁₀N₄O₂, Na₂CO₃
-- Reações: H₂ + Cl₂ → 2HCl, CaCO₃ ⇌ Ca²⁺ + CO₃²⁻
-- Matemática: x² + y² = z², ∫₀^∞ e^(-x) dx, ∑ᵢ₌₁ⁿ xᵢ
-- Física: E = mc², F = ma, ℏω
-
-EXEMPLOS INCORRETOS (NÃO USAR):
-- \\text{H}_2\\text{SO}_4, H_2SO_4, $H_2SO_4$
-- \\frac{a}{b}, \\alpha + \\beta, \\sum_{i=1}^{n}
-- \\rightarrow, \\in, \\leq, \\infty`;
+${getLanguageInstructions()}`;
 
 export const MATH_SYMBOLS_UNICODE = {
   superscript: "x², x³, x⁴, x⁵, x⁶, x⁷, x⁸, x⁹",

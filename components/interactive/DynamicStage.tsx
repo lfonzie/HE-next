@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import NewQuizComponent from './NewQuizComponent'
+import EnhancedQuizComponent from './EnhancedQuizComponent'
 import DrawingPrompt from './DrawingPrompt'
 import AnimationSlide from './AnimationSlide'
 import DiscussionBoard from './DiscussionBoard'
@@ -96,7 +96,7 @@ export default function DynamicStage({
       
       console.log('🔍 DEBUG Original questions from API:', originalQuestions)
       
-      // Transform questions to the format expected by NewQuizComponent
+      // Transform questions to the format expected by EnhancedQuizComponent
       return originalQuestions.map((q: any, index: number) => {
         console.log(`🔍 DEBUG Processing Question ${index + 1}:`, {
           originalCorrect: q.correct,
@@ -110,39 +110,43 @@ export default function DynamicStage({
           return raw.replace(/^[A-D]\)\s*/, '').trim()
         }
 
-        // Determine correct answer - NewQuizComponent expects string ('a','b','c','d')
-        let correctAnswer: 'a' | 'b' | 'c' | 'd' = 'a'
+        // Determine correct answer - EnhancedQuizComponent expects string ('A','B','C','D')
+        let correctAnswer: 'A' | 'B' | 'C' | 'D' = 'A'
         
         if (typeof q.correct === 'number' && q.correct >= 0 && q.correct <= 3) {
           // Convert number to letter
-          const letters = ['a', 'b', 'c', 'd']
-          correctAnswer = letters[q.correct] as 'a' | 'b' | 'c' | 'd'
+          const letters = ['A', 'B', 'C', 'D']
+          correctAnswer = letters[q.correct] as 'A' | 'B' | 'C' | 'D'
           console.log(`🔍 DEBUG: Question ${index + 1} - Correct index: ${q.correct} -> ${correctAnswer}`)
         } else if (typeof q.correct === 'string') {
           // If it's a string, normalize it
-          const normalized = q.correct.toLowerCase()
-          if (['a', 'b', 'c', 'd'].includes(normalized)) {
-            correctAnswer = normalized as 'a' | 'b' | 'c' | 'd'
+          const normalized = q.correct.toUpperCase()
+          if (['A', 'B', 'C', 'D'].includes(normalized)) {
+            correctAnswer = normalized as 'A' | 'B' | 'C' | 'D'
             console.log(`🔍 DEBUG: Question ${index + 1} - Correct string: ${q.correct}`)
           } else {
-            console.warn(`⚠️ Invalid correct answer string: "${q.correct}". Defaulting to 'a'.`)
-            correctAnswer = 'a'
+            console.warn(`⚠️ Invalid correct answer string: "${q.correct}". Defaulting to 'A'.`)
+            correctAnswer = 'A'
           }
         } else {
-          console.warn(`⚠️ Invalid correct answer type: ${typeof q.correct}. Defaulting to 'a'.`)
-          correctAnswer = 'a'
+          console.warn(`⚠️ Invalid correct answer type: ${typeof q.correct}. Defaulting to 'A'.`)
+          correctAnswer = 'A'
         }
 
         const transformed = {
+          id: `q${index + 1}`,
           question: q.q || q.question || 'Pergunta não disponível',
           options: {
-            a: cleanOption(q.options?.[0], 'Opção A'),
-            b: cleanOption(q.options?.[1], 'Opção B'),
-            c: cleanOption(q.options?.[2], 'Opção C'),
-            d: cleanOption(q.options?.[3], 'Opção D')
+            A: cleanOption(q.options?.[0], 'Opção A'),
+            B: cleanOption(q.options?.[1], 'Opção B'),
+            C: cleanOption(q.options?.[2], 'Opção C'),
+            D: cleanOption(q.options?.[3], 'Opção D')
           },
-          correct: correctAnswer,
-          explanation: (q.explanation || '').trim() || 'Explicação não disponível'
+          correctAnswer: correctAnswer,
+          explanation: (q.explanation || '').trim() || 'Explicação não disponível',
+          difficulty: 'MEDIUM' as const,
+          points: 10,
+          timeEstimate: 60
         }
 
         console.log(`🔍 DEBUG: Final transformed question ${index + 1}:`, {
@@ -233,9 +237,9 @@ export default function DynamicStage({
         }
         
         return (
-          <NewQuizComponent
+          <EnhancedQuizComponent
             questions={processedQuizQuestions}
-            onComplete={(score, total) => handleStageComplete({ score, total, total: total, type: 'quiz' })}
+            onComplete={(score, total, results) => handleStageComplete({ score, total, total: total, type: 'quiz' })}
             timeLimit={activity.time ? activity.time * 60 : 0}
             showExplanations={true}
             allowRetry={true}

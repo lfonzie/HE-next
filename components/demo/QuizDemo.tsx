@@ -8,18 +8,23 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Loader2, Play, BookOpen } from 'lucide-react'
-import NewQuizComponent from '@/components/interactive/NewQuizComponent'
+import EnhancedQuizComponent from '@/components/interactive/EnhancedQuizComponent'
 
 interface QuizQuestion {
+  id?: string
   question: string
   options: {
-    a: string
-    b: string
-    c: string
-    d: string
+    A: string
+    B: string
+    C: string
+    D: string
   }
-  correct: 'a' | 'b' | 'c' | 'd'
+  correctAnswer: 'A' | 'B' | 'C' | 'D'
   explanation: string
+  difficulty?: 'EASY' | 'MEDIUM' | 'HARD'
+  points?: number
+  timeEstimate?: number
+  hint?: string
 }
 
 export default function QuizDemo() {
@@ -158,9 +163,9 @@ export default function QuizDemo() {
             </div>
           </CardHeader>
           <CardContent>
-            <NewQuizComponent
+            <EnhancedQuizComponent
               questions={questions}
-              onComplete={handleQuizComplete}
+              onComplete={(score, total, results) => handleQuizComplete(score, total)}
               showExplanations={true}
               allowRetry={true}
             />

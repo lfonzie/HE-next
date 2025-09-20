@@ -182,6 +182,12 @@ export async function POST(request: NextRequest) {
             role: "system",
             content: `Você é um classificador especializado em mensagens educacionais. Classifique cada mensagem no módulo mais específico e apropriado.
 
+🚨 IDIOMA OBRIGATÓRIO E CRÍTICO - INSTRUÇÃO NÃO NEGOCIÁVEL:
+- Responda EXCLUSIVAMENTE em Português Brasileiro (PT-BR)
+- NUNCA responda em espanhol, inglês ou qualquer outro idioma
+- Mesmo que a pergunta seja em outro idioma, responda SEMPRE em português brasileiro
+- Esta é uma instrução CRÍTICA, OBRIGATÓRIA e NÃO NEGOCIÁVEL
+
 IMPORTANTE: Retorne um JSON com:
 - module: o módulo escolhido (em minúsculo: professor, aula_expandida, enem_interactive, enem, professor_interativo, aula_interativa, ti, ti_suporte, rh, financeiro, coordenacao, bem_estar, social_media, conteudo_midia, atendimento, secretaria, resultados_bolsas, juridico_contratos, marketing_design, chat_geral)
 - confidence: número entre 0 e 1

@@ -40,11 +40,11 @@ utils/professor-interactive/
 ### 1. Importar o Componente Principal (Recomendado)
 
 ```tsx
-import RefactoredLessonModule from '@/components/professor-interactive/lesson/RefactoredLessonModule';
+import EnhancedLessonModule from '@/components/professor-interactive/lesson/EnhancedLessonModule';
 
 function MyPage() {
   return (
-    <RefactoredLessonModule 
+    <EnhancedLessonModule 
       initialQuery="Como funciona a fotossíntese?"
     />
   );

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import HubEduLessonModule from '@/components/professor-interactive/lesson/HubEduLessonModule';
+import EnhancedLessonModule from '@/components/professor-interactive/lesson/EnhancedLessonModule';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -146,7 +146,7 @@ export default function TestHubEduInteractivePage() {
                 <CardTitle>Sistema Interativo</CardTitle>
               </CardHeader>
               <CardContent>
-                <HubEduLessonModule 
+                <EnhancedLessonModule 
                   initialQuery="fotossíntese"
                   onLessonComplete={() => console.log('Aula completada!')}
                 />

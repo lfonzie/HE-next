@@ -1,4 +1,5 @@
 // lib/system-prompts/classification.ts
+import { generateBNCCPrompt } from './bncc-config';
 
 export const MODULE_CLASSIFICATION_PROMPT = `Você é um especialista em classificação de mensagens escolares. Classifique cada mensagem no módulo mais específico e apropriado, CONSIDERANDO O CONTEXTO DA CONVERSA.
 

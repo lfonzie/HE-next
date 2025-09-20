@@ -1,7 +1,7 @@
 // Professor Interactive Module - Main Exports
 
 // Main Components
-export { default as RefactoredLessonModule } from './lesson/RefactoredLessonModule';
+export { default as EnhancedLessonModule } from './lesson/EnhancedLessonModule';
 export { default as ProfessorInteractiveContent } from './chat/ProfessorInteractiveContent';
 export { default as ProfessorInteractiveContentFixed } from './chat/ProfessorInteractiveContent-fixed';
 

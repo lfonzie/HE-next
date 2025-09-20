@@ -19,6 +19,12 @@ export async function detectTheme(query: string, subject?: string): Promise<Them
   try {
     const prompt = `Analise a seguinte consulta educacional e extraia o tema principal:
 
+🚨 IDIOMA OBRIGATÓRIO E CRÍTICO - INSTRUÇÃO NÃO NEGOCIÁVEL:
+- Responda EXCLUSIVAMENTE em Português Brasileiro (PT-BR)
+- NUNCA responda em espanhol, inglês ou qualquer outro idioma
+- Mesmo que a pergunta seja em outro idioma, responda SEMPRE em português brasileiro
+- Esta é uma instrução CRÍTICA, OBRIGATÓRIA e NÃO NEGOCIÁVEL
+
 Consulta: "${query}"
 Disciplina: ${subject || 'Não especificada'}
 
@@ -113,7 +119,13 @@ export async function translateThemeToEnglish(theme: string): Promise<string> {
       messages: [
         { 
           role: "system", 
-          content: "Você é um tradutor especializado em termos educacionais. Traduza apenas o termo principal para inglês, sem explicações." 
+          content: `Você é um tradutor especializado em termos educacionais. Traduza apenas o termo principal para inglês, sem explicações.
+
+🚨 IDIOMA OBRIGATÓRIO E CRÍTICO - INSTRUÇÃO NÃO NEGOCIÁVEL:
+- Responda EXCLUSIVAMENTE em Português Brasileiro (PT-BR)
+- NUNCA responda em espanhol, inglês ou qualquer outro idioma
+- Mesmo que a pergunta seja em outro idioma, responda SEMPRE em português brasileiro
+- Esta é uma instrução CRÍTICA, OBRIGATÓRIA e NÃO NEGOCIÁVEL` 
         },
         { 
           role: "user", 

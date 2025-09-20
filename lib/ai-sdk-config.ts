@@ -1,4 +1,7 @@
 import { openai } from '@ai-sdk/openai'
+import { getLanguageInstructions } from './system-prompts/language-config'
+import { generateBNCCPrompt, getCompetenciasByDisciplina } from './system-prompts/bncc-config'
+import { createBNCCClassifier } from './ai/bncc-classifier'
 
 export const aiConfig = {
   openai: openai({
@@ -10,21 +13,7 @@ export const aiConfig = {
 }
 
 export function getSystemPrompt(module: string = 'professor'): string {
-  const baseInstructions = `
-🚨 IDIOMA OBRIGATÓRIO E CRÍTICO: 
-- Responda EXCLUSIVAMENTE em Português Brasileiro (PT-BR)
-- NUNCA responda em espanhol, inglês ou qualquer outro idioma
-- Mesmo que a pergunta seja em outro idioma, responda SEMPRE em português brasileiro
-- Esta é uma instrução CRÍTICA, OBRIGATÓRIA e NÃO NEGOCIÁVEL
-- Se detectar que está respondendo em outro idioma, pare imediatamente e refaça em português brasileiro
-
-FORMATAÇÃO MATEMÁTICA E QUÍMICA OBRIGATÓRIA:
-- Use APENAS símbolos Unicode para matemática e química
-- Matemática: x², √, ±, ÷, ×, ½, π, α, β, ∫, ∑, ∞, ≤, ≥, ≠, ≈, ≡
-- Símbolos: •, ·, …, ⋯, ∠, △, □, ◇, ℏ, ℵ
-- NUNCA use LaTeX, KaTeX, $...$, $$...$$, \\(...\\), \\[...\\]
-- Sempre normalize caracteres Unicode para garantir compatibilidade
-`;
+  const baseInstructions = getLanguageInstructions(module);
 
   const prompts = {
     professor: `Você é um assistente especializado em preparação para o ENEM, criando aulas interativas que focam especificamente nos conteúdos e habilidades exigidas pelo Exame Nacional do Ensino Médio.
@@ -43,7 +32,10 @@ IMPORTANTE SOBRE AS PERGUNTAS (ESTILO ENEM):
 - Inclua situações do cotidiano brasileiro
 - Teste habilidades de análise, síntese e argumentação
 - Use alternativas plausíveis que testem conhecimento real
-- Foque em competências e habilidades da BNCC
+- Foque em competências e habilidades específicas da BNCC
+- Identifique e desenvolva as competências BNCC relacionadas ao conteúdo
+- Exercite habilidades específicas da BNCC em cada atividade
+- Sempre indique quais competências BNCC estão sendo desenvolvidas
 - Oriente o aluno a identificar palavras-chave e eliminar alternativas
 
 ${baseInstructions}`,
@@ -59,6 +51,31 @@ ${baseInstructions}`,
   }
   
   return prompts[module as keyof typeof prompts] || prompts.professor
+}
+
+// Função para validar alinhamento BNCC
+export async function validateBNCCAlignment(content: string, subject: string): Promise<boolean> {
+  try {
+    const bnccClassifier = createBNCCClassifier(aiConfig.openai);
+    const competencias = getCompetenciasByDisciplina(subject);
+    const expectedCompetencies = competencias.map(comp => comp.id);
+    
+    return await bnccClassifier.validateBNCCAlignment(content, expectedCompetencies);
+  } catch (error) {
+    console.error('Error validating BNCC alignment:', error);
+    return false;
+  }
+}
+
+// Função para gerar conteúdo alinhado à BNCC
+export async function generateBNCCAlignedContent(content: string, subject: string, level: string): Promise<string> {
+  try {
+    const bnccClassifier = createBNCCClassifier(aiConfig.openai);
+    return await bnccClassifier.generateBNCCAlignedContent(content, subject, level);
+  } catch (error) {
+    console.error('Error generating BNCC aligned content:', error);
+    return content;
+  }
 }
 
 export default aiConfig
