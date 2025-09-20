@@ -324,7 +324,7 @@ const FeatureCard = ({ feature, index, gradient = "from-yellow-50 to-white", bor
     <div className="text-center">
       <div className="text-4xl mb-4">{feature.icon}</div>
       <h3 className="text-lg font-bold text-yellow-600 mb-3">{feature.title}</h3>
-      <p className="text-gray-600 text-sm leading-relaxed">{feature.description}</p>
+      <p className="text-gray-600 text-sm leading-relaxed" suppressHydrationWarning>{feature.description}</p>
       {feature.stats && (
         <div className="mt-4">
           <div className="text-sm font-bold text-black bg-yellow-400 px-3 py-1 rounded-full inline-block">
@@ -543,6 +543,7 @@ const FAQItem = ({ item, index, isOpen, onToggle }) => (
 const HubEduLanding = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [scrollY, setScrollY] = useState(0);
+  const [isClient, setIsClient] = useState(false);
   const [openFAQs, setOpenFAQs] = useState(new Set());
   const [modalsState, setModalsState] = useState({
     privacy: false,
@@ -570,7 +571,10 @@ const HubEduLanding = () => {
   }, []);
 
   useEffect(() => {
+    setIsClient(true);
     setIsVisible(true);
+    // Set initial scroll position to avoid hydration mismatch
+    setScrollY(window.scrollY);
     const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -578,9 +582,9 @@ const HubEduLanding = () => {
 
   const headerClasses = useMemo(() => 
     `fixed top-0 w-full z-50 transition-all duration-300 ${
-      scrollY > 50 ? 'bg-white/95 backdrop-blur-md shadow-lg' : 'bg-white/90 backdrop-blur-sm'
+      isClient && scrollY > 50 ? 'bg-white/95 backdrop-blur-md shadow-lg' : 'bg-white/90 backdrop-blur-sm'
     } border-b border-yellow-200`,
-    [scrollY]
+    [scrollY, isClient]
   );
 
   return (
