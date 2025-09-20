@@ -5,7 +5,7 @@ import { z } from 'zod';
 
 // Initialize Google AI client via Vercel AI SDK
 const googleModel = google('gemini-2.0-flash-exp', {
-  apiKey: process.env.GOOGLE_GEMINI_API_KEY || process.env.GOOGLE_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+  apiKey: process.env.GOOGLE_GEMINI_API_KEY || process.env.GOOGLE_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY || '',
 });
 
 // Schema para validação da saída do classificador
@@ -333,7 +333,6 @@ EXEMPLO DE RESPOSTA VÁLIDA:
 
 Mensagem: "${userMessage}"
 Histórico: ${history.length} mensagens`,
-        maxTokens: 300,
         temperature: 0.1,
       });
 
@@ -430,7 +429,29 @@ Histórico: ${history.length} mensagens`,
       // Heurística quebra empate ou substitui IA com baixa confiança
       finalModule = heuristicResult;
       finalConfidence = 0.8;
-      finalScores = { [heuristicResult]: 0.8, atendimento: 0.2 };
+      finalScores = { 
+        [heuristicResult]: 0.8, 
+        atendimento: 0.2,
+        professor: 0,
+        aula_expandida: 0,
+        enem_interactive: 0,
+        enem: 0,
+        professor_interativo: 0,
+        aula_interativa: 0,
+        ti: 0,
+        ti_suporte: 0,
+        rh: 0,
+        financeiro: 0,
+        coordenacao: 0,
+        bem_estar: 0,
+        social_media: 0,
+        conteudo_midia: 0,
+        secretaria: 0,
+        resultados_bolsas: 0,
+        juridico_contratos: 0,
+        marketing_design: 0,
+        chat_geral: 0
+      };
       finalRationale = 'Heuristic pattern match';
       source = 'heuristic';
     } else if (aiResult) {
@@ -439,7 +460,28 @@ Histórico: ${history.length} mensagens`,
       if (analysis.isCloseCall) {
         finalModule = 'professor';
         finalConfidence = 0.5;
-        finalScores = { professor: 0.5 };
+        finalScores = { 
+          professor: 0.5,
+          atendimento: 0.1,
+          aula_expandida: 0.1,
+          enem_interactive: 0.1,
+          enem: 0.1,
+          professor_interativo: 0.1,
+          aula_interativa: 0.1,
+          ti: 0,
+          ti_suporte: 0,
+          rh: 0,
+          financeiro: 0,
+          coordenacao: 0,
+          bem_estar: 0,
+          social_media: 0,
+          conteudo_midia: 0,
+          secretaria: 0,
+          resultados_bolsas: 0,
+          juridico_contratos: 0,
+          marketing_design: 0,
+          chat_geral: 0
+        };
         finalRationale = 'Low confidence, close call';
         source = 'fallback';
       } else {
