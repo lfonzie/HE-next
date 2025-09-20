@@ -22,5 +22,9 @@ services:
         sync: false # Prompt for value during deployment
       - key: OPENAI_API_KEY
         sync: false # Prompt for value during deployment
+      - key: GOOGLE_GENERATIVE_AI_API_KEY
+        sync: false # Prompt for value during deployment (for Google Gemini)
+      - key: NEXT_PUBLIC_BASE_URL
+        value: https://your-hubedu-app.onrender.com
     healthCheckPath: /api/health
     autoDeploy: true
