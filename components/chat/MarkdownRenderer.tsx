@@ -5,6 +5,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import { normalizeUnicode, processMessageForDisplay, convertMathToUnicode, forceConvertMathToUnicode } from "@/utils/unicode";
+import { normalizeFormulas } from "@/lib/utils/latex-normalization";
 import "highlight.js/styles/github.css";
 
 interface MarkdownRendererProps {
@@ -20,7 +21,8 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
 }) => {
   // Processar Unicode e normalizar conteúdo
   const processedContent = processMessageForDisplay(content);
-  const mathProcessedContent = forceConvertMathToUnicode(processedContent);
+  const latexNormalizedContent = normalizeFormulas(processedContent);
+  const mathProcessedContent = forceConvertMathToUnicode(latexNormalizedContent);
   const normalizedContent = mathProcessedContent.replace(/\n{2,}/g, '\n').trim();
   
   return (

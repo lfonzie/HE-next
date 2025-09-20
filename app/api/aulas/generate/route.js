@@ -3,7 +3,6 @@
 
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
-import { randomizeQuizQuestions } from '@/lib/quiz-randomization';
 import { ensureQuizFormat } from '@/lib/quiz-validation';
 import { log } from '@/lib/lesson-logger';
 import { logTokens } from '@/lib/token-logger';

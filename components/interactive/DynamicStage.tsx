@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import QuizComponent from './QuizComponent'
 import NewQuizComponent from './NewQuizComponent'
 import DrawingPrompt from './DrawingPrompt'
 import AnimationSlide from './AnimationSlide'
@@ -10,7 +9,7 @@ import DiscussionBoard from './DiscussionBoard'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { CheckCircle, Clock, Star, Trophy, XCircle, ArrowLeft, ArrowRight } from 'lucide-react'
+import { CheckCircle, Clock, Star, Trophy, XCircle, ArrowLeft, ArrowRight, BookOpen } from 'lucide-react'
 
 interface StageActivity {
   component: string
@@ -98,7 +97,6 @@ export default function DynamicStage({
       console.log('🔍 DEBUG Original questions from API:', originalQuestions)
       
       // Transform questions to the format expected by NewQuizComponent
-      // Note: Questions are already randomized by the API, so we just need to format them
       return originalQuestions.map((q: any, index: number) => {
         console.log(`🔍 DEBUG Processing Question ${index + 1}:`, {
           originalCorrect: q.correct,
@@ -112,19 +110,20 @@ export default function DynamicStage({
           return raw.replace(/^[A-D]\)\s*/, '').trim()
         }
 
-        // Determine correct answer letter from q.correct
+        // Determine correct answer - NewQuizComponent expects string ('a','b','c','d')
         let correctAnswer: 'a' | 'b' | 'c' | 'd' = 'a'
         
         if (typeof q.correct === 'number' && q.correct >= 0 && q.correct <= 3) {
-          // If it's already a number (0-3), convert to letter
-          correctAnswer = ['a', 'b', 'c', 'd'][q.correct] as 'a' | 'b' | 'c' | 'd'
-          console.log(`🔍 DEBUG: Question ${index + 1} - Correct index: ${q.correct}, Correct letter: ${correctAnswer}`)
+          // Convert number to letter
+          const letters = ['a', 'b', 'c', 'd']
+          correctAnswer = letters[q.correct] as 'a' | 'b' | 'c' | 'd'
+          console.log(`🔍 DEBUG: Question ${index + 1} - Correct index: ${q.correct} -> ${correctAnswer}`)
         } else if (typeof q.correct === 'string') {
           // If it's a string, normalize it
           const normalized = q.correct.toLowerCase()
           if (['a', 'b', 'c', 'd'].includes(normalized)) {
             correctAnswer = normalized as 'a' | 'b' | 'c' | 'd'
-            console.log(`🔍 DEBUG: Question ${index + 1} - Correct string: ${q.correct}, Correct letter: ${correctAnswer}`)
+            console.log(`🔍 DEBUG: Question ${index + 1} - Correct string: ${q.correct}`)
           } else {
             console.warn(`⚠️ Invalid correct answer string: "${q.correct}". Defaulting to 'a'.`)
             correctAnswer = 'a'
@@ -391,52 +390,77 @@ export default function DynamicStage({
       transition={{ duration: 0.5 }}
       className="w-full"
     >
-      {/* Stage Header */}
-      <Card className="mb-6">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-3">
-              <span className="text-2xl">{getStageIcon(stage.type)}</span>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span>{stage.etapa}</span>
-                  <Badge className={getStageColor(stage.type)}>
-                    {stage.type}
-                  </Badge>
+      {/* Stage Header - Apenas título principal da lição */}
+      {lessonData && stageIndex === 0 && (
+        <Card className="mb-6">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-3">
+                <BookOpen className="h-6 w-6 text-blue-500" />
+                <div>
+                  <div className="text-2xl font-bold">{lessonData.title}</div>
+                  <div className="text-sm text-gray-500 mt-1">
+                    {totalStages} etapas
+                  </div>
                 </div>
-                <div className="text-sm text-gray-500 mt-1">
-                  Etapa {stageIndex + 1} de {totalStages}
-                </div>
-              </div>
-            </CardTitle>
+              </CardTitle>
             
             <div className="flex items-center gap-4">
-              {pointsEarned > 0 && (
-                <div className="flex items-center gap-1 text-yellow-600">
-                  <Star className="h-4 w-4" />
-                  <span className="text-sm font-medium">{pointsEarned}</span>
-                </div>
-              )}
-              
-              {timeSpent > 0 && (
-                <div className="flex items-center gap-1 text-blue-600">
-                  <Clock className="h-4 w-4" />
-                  <span className="text-sm">{formatTime(timeSpent)}</span>
-                </div>
-              )}
-              
-              {isCompleted && (
-                <div className="flex items-center gap-1 text-green-600">
-                  <CheckCircle className="h-4 w-4" />
-                  <span className="text-sm">Concluído</span>
-                </div>
-              )}
+              {/* Estatísticas da lição no título principal */}
             </div>
           </div>
           
           {/* Progress removed as requested */}
         </CardHeader>
       </Card>
+      )}
+
+      {/* Stage info for non-first stages */}
+      {stageIndex > 0 && (
+        <Card className="mb-6">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-3">
+                <span className="text-2xl">{getStageIcon(stage.type)}</span>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span>{stage.etapa}</span>
+                    <Badge className={getStageColor(stage.type)}>
+                      {stage.type}
+                    </Badge>
+                  </div>
+                  <div className="text-sm text-gray-500 mt-1">
+                    Etapa {stageIndex + 1} de {totalStages}
+                  </div>
+                </div>
+              </CardTitle>
+              
+              <div className="flex items-center gap-4">
+                {pointsEarned > 0 && (
+                  <div className="flex items-center gap-1 text-yellow-600">
+                    <Star className="h-4 w-4" />
+                    <span className="text-sm font-medium">{pointsEarned}</span>
+                  </div>
+                )}
+                
+                {timeSpent > 0 && (
+                  <div className="flex items-center gap-1 text-blue-600">
+                    <Clock className="h-4 w-4" />
+                    <span className="text-sm">{formatTime(timeSpent)}</span>
+                  </div>
+                )}
+                
+                {isCompleted && (
+                  <div className="flex items-center gap-1 text-green-600">
+                    <CheckCircle className="h-4 w-4" />
+                    <span className="text-sm">Concluído</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </CardHeader>
+        </Card>
+      )}
 
       {/* Activity Content */}
       <div className="mb-6">

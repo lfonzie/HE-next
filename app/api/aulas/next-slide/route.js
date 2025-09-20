@@ -3,7 +3,6 @@
 
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
-import { randomizeQuizQuestions } from '@/lib/quiz-randomization';
 import { ensureQuizFormat } from '@/lib/quiz-validation';
 import { logTokens } from '@/lib/token-logger';
 import { getServerSession } from 'next-auth';
@@ -157,24 +156,13 @@ export async function POST(request) {
 
     const slide = await generateNextSlide(topic, slideNumber, previousSlides);
     
-    // Normalize and randomize quiz questions if this is a quiz slide
-    // Only randomize if questions haven't been randomized yet (check for originalCorrect property)
+    // Normalize quiz questions if this is a quiz slide (NO RANDOMIZATION)
     if (slide.type === 'quiz' && slide.questions) {
       try {
-        const normalized = ensureQuizFormat(slide.questions);
-        
-        // Check if questions are already randomized by looking for originalCorrect property
-        const isAlreadyRandomized = normalized.some(q => q.hasOwnProperty('originalCorrect'));
-        
-        if (!isAlreadyRandomized) {
-          slide.questions = randomizeQuizQuestions(normalized);
-          console.log(`🎲 Quiz questions randomized for slide ${slideNumber}`);
-        } else {
-          console.log(`🎲 Quiz questions already randomized for slide ${slideNumber}, skipping randomization`);
-          slide.questions = normalized;
-        }
+        slide.questions = ensureQuizFormat(slide.questions);
+        console.log(`✅ Quiz questions normalized for slide ${slideNumber} (no randomization)`);
       } catch (error) {
-        console.warn(`⚠️ Failed to randomize quiz questions for slide ${slideNumber}:`, error.message);
+        console.warn(`⚠️ Failed to normalize quiz questions for slide ${slideNumber}:`, error.message);
       }
     }
 

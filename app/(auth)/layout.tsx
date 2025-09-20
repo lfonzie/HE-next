@@ -1,4 +1,5 @@
 import { ReactNode } from 'react'
+import { LoadingProvider } from '@/components/ui/Loading'
 
 interface AuthLayoutProps {
   children: ReactNode
@@ -6,8 +7,10 @@ interface AuthLayoutProps {
 
 export default function AuthLayout({ children }: AuthLayoutProps) {
   return (
-    <div className="min-h-screen">
-      {children}
-    </div>
+    <LoadingProvider>
+      <div className="min-h-screen">
+        {children}
+      </div>
+    </LoadingProvider>
   )
 }

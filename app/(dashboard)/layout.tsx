@@ -10,8 +10,7 @@ import { UnifiedSidebar } from '@/components/layout/UnifiedSidebar'
 import { ChatProvider, useChatContext } from '@/components/providers/ChatContext'
 import { QuotaProvider } from '@/components/providers/QuotaProvider'
 import { ModuleType } from '@/types'
-import { LoadingCard, LoadingOverlay } from '@/components/ui/loading'
-import { useLoading } from '@/components/ui/loading'
+import { LoadingCard, LoadingOverlay, LoadingProvider } from '@/components/ui/Loading'
 import { MessageSquare, BookOpen, Settings, GraduationCap } from 'lucide-react'
 import '../globals.css'
 
@@ -48,7 +47,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { data: session, status } = useSession()
   const router = useRouter()
   const pathname = usePathname()
-  const { isVisible } = useLoading()
   
   // Check if we are on the chat page
   const isChatPage = pathname === '/chat'
@@ -91,42 +89,48 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   // Special layout for enem - without sidebar
   if (isEnemPage) {
     return (
-      <ChatProvider>
-        <QuotaProvider>
-          <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50">
-            {/* Layout without sidebar - content occupies full screen */}
-            <div className="w-full h-screen overflow-y-auto">
-              {children}
+      <LoadingProvider>
+        <ChatProvider>
+          <QuotaProvider>
+            <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50">
+              {/* Layout without sidebar - content occupies full screen */}
+              <div className="w-full h-screen overflow-y-auto">
+                {children}
+              </div>
             </div>
-          </div>
-        </QuotaProvider>
-      </ChatProvider>
+          </QuotaProvider>
+        </ChatProvider>
+      </LoadingProvider>
     )
   }
 
   // Special layout for presentation - without sidebar, full screen
   if (isApresentacaoPage) {
     return (
-      <ChatProvider>
-        <QuotaProvider>
-          <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50">
-            {/* Layout without sidebar - content occupies full screen */}
-            <div className="w-full h-screen overflow-y-auto">
-              {children}
+      <LoadingProvider>
+        <ChatProvider>
+          <QuotaProvider>
+            <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50">
+              {/* Layout without sidebar - content occupies full screen */}
+              <div className="w-full h-screen overflow-y-auto">
+                {children}
+              </div>
             </div>
-          </div>
-        </QuotaProvider>
-      </ChatProvider>
+          </QuotaProvider>
+        </ChatProvider>
+      </LoadingProvider>
     )
   }
 
   return (
-    <ChatProvider>
-      <QuotaProvider>
-        <SidebarWrapper>
-          {children}
-        </SidebarWrapper>
-      </QuotaProvider>
-    </ChatProvider>
+    <LoadingProvider>
+      <ChatProvider>
+        <QuotaProvider>
+          <SidebarWrapper>
+            {children}
+          </SidebarWrapper>
+        </QuotaProvider>
+      </ChatProvider>
+    </LoadingProvider>
   )
 }

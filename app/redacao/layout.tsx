@@ -1,4 +1,5 @@
 import { RedacaoNotifications } from '@/components/redacao/RedacaoNotifications'
+import { LoadingProvider } from '@/components/ui/Loading'
 
 export default function RedacaoLayout({
   children,
@@ -6,9 +7,11 @@ export default function RedacaoLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <main>{children}</main>
-      <RedacaoNotifications />
-    </div>
+    <LoadingProvider>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <main>{children}</main>
+        <RedacaoNotifications />
+      </div>
+    </LoadingProvider>
   )
 }

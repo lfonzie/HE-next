@@ -10,7 +10,7 @@ const inter = Inter({
 })
 import { LessonProvider } from '@/components/providers/LessonProvider'
 import { PWAProvider } from '@/components/providers/PWAProvider'
-import { LoadingProvider } from '@/components/ui/loading'
+import { LoadingProvider } from '@/components/ui/Loading'
 import { PageTransitionProvider } from '@/components/providers/PageTransitionProvider'
 import { SplashScreen } from '@/components/ui/SplashScreen'
 import { Toaster } from '@/components/ui/toaster'
@@ -86,21 +86,19 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         {/* <SplashScreen /> */}
         <SessionProvider>
           {/* <PWAProvider> */}
-            <LoadingProvider>
-              <GlobalLoadingProvider>
-                <PageTransitionProvider>
-                  <LessonProvider>
-                    <ToastProvider>
-                      <NotificationProvider>
-                        {children}
-                        {/* <PWAManagerWrapper /> */}
-                        <Toaster />
-                      </NotificationProvider>
-                    </ToastProvider>
-                  </LessonProvider>
-                </PageTransitionProvider>
-              </GlobalLoadingProvider>
-            </LoadingProvider>
+            <GlobalLoadingProvider>
+              <PageTransitionProvider>
+                <LessonProvider>
+                  <ToastProvider>
+                    <NotificationProvider>
+                      {children}
+                      {/* <PWAManagerWrapper /> */}
+                      <Toaster />
+                    </NotificationProvider>
+                  </ToastProvider>
+                </LessonProvider>
+              </PageTransitionProvider>
+            </GlobalLoadingProvider>
           {/* </PWAProvider> */}
         </SessionProvider>
       </body>

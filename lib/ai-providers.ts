@@ -28,9 +28,7 @@ export const AI_PROVIDERS = {
     if (!process.env.OPENAI_API_KEY) {
       throw new Error('OpenAI API key not configured')
     }
-    return openai(modelName, {
-      apiKey: process.env.OPENAI_API_KEY,
-    })
+    return openai(modelName)
   },
   anthropic: createUnavailableProvider('anthropic'),
   google: (modelName: string) => {
@@ -38,9 +36,7 @@ export const AI_PROVIDERS = {
     if (!apiKey) {
       throw new Error('Google API key not configured')
     }
-    return google(modelName, {
-      apiKey: apiKey,
-    })
+    return google(modelName)
   },
   mistral: createUnavailableProvider('mistral'),
   groq: createUnavailableProvider('groq'),

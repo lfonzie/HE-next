@@ -493,6 +493,13 @@ export function convertMathToUnicode(text: string): string {
     .replace(/\\light/g, 'hν')
     .replace(/\\electricity/g, '⚡')
     
+    // Conversões específicas para fotossíntese e reações químicas
+    .replace(/\\rightarrow/g, '→')
+    .replace(/\\leftarrow/g, '←')
+    .replace(/\\leftrightarrow/g, '↔')
+    .replace(/\\rightleftharpoons/g, '⇌')
+    .replace(/\\leftrightharpoons/g, '⇋')
+    
     // Símbolos matemáticos avançados
     .replace(/\\subsetneq/g, '⊊')
     .replace(/\\supsetneq/g, '⊋')
@@ -764,6 +771,13 @@ export function forceConvertMathToUnicode(text: string): string {
       .replace(/\\\)/g, ')')
       .replace(/\\\[/g, '[')
       .replace(/\\\]/g, ']')
+      
+      // Símbolos de reação química - ordem específica
+      .replace(/\\rightarrow/g, '→')
+      .replace(/\\leftarrow/g, '←')
+      .replace(/\\leftrightarrow/g, '↔')
+      .replace(/\\rightleftharpoons/g, '⇌')
+      .replace(/\\leftrightharpoons/g, '⇋')
       
       // Remover comandos \text{}
       .replace(/\\text\{([^}]*)\}/g, '$1');
