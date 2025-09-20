@@ -1,5 +1,5 @@
 import { ReactNode } from 'react'
-import { LoadingProvider } from '@/components/ui/Loading'
+import { LoadingProvider } from '@/components/ui/loading'
 
 interface AuthLayoutProps {
   children: ReactNode

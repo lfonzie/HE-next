@@ -17,4 +17,4 @@ export {
   LoadingInput,
   useButtonLoading,
   useInputLoading
-} from './Loading';
+} from './loading';

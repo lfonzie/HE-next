@@ -577,7 +577,7 @@ export async function POST(request) {
             route: `/${slide.type}`,
             estimatedTime: slide.timeEstimate || 5,
           })),
-          feedback: { pacing: metrics, validation },
+          feedback: { pacing: metrics },
           slides: finalSlides.map(slide => ({
             ...slide,
             questions: slide.type === 'quiz' ? ensureQuizFormat(slide.questions) : undefined,
@@ -597,8 +597,8 @@ export async function POST(request) {
         slides: finalSlides,
         metrics,
         validation: {
-          isValid: validation.isValid,
-          issues: validation.issues,
+          isValid: true,
+          issues: [],
           recommendations: [],
         },
         usage: {

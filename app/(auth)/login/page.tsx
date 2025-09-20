@@ -11,7 +11,7 @@ import { Separator } from '@/components/ui/separator'
 import { Mail, Lock, Eye, EyeOff, AlertCircle, ArrowLeft } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
-import { useLoading } from '@/components/ui/Loading'
+import { useLoading } from '@/components/ui/loading'
 
 function LoginForm() {
   const [email, setEmail] = useState('')

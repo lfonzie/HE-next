@@ -10,7 +10,7 @@ import { UnifiedSidebar } from '@/components/layout/UnifiedSidebar'
 import { ChatProvider, useChatContext } from '@/components/providers/ChatContext'
 import { QuotaProvider } from '@/components/providers/QuotaProvider'
 import { ModuleType } from '@/types'
-import { LoadingCard, LoadingOverlay, LoadingProvider } from '@/components/ui/Loading'
+import { LoadingCard, LoadingOverlay, LoadingProvider } from '@/components/ui/loading'
 import { MessageSquare, BookOpen, Settings, GraduationCap } from 'lucide-react'
 import '../globals.css'
 

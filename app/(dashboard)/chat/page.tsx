@@ -19,7 +19,7 @@ import { Input } from "@/components/ui/input";
 import { useChatContext } from "@/components/providers/ChatContext";
 import { useQuota } from "@/components/providers/QuotaProvider";
 import { SupportModal } from "@/components/modals/SupportModal";
-import { useLoading } from "@/components/ui/Loading";
+import { useLoading } from "@/components/ui/loading";
 import { useNavigationLoading } from "@/hooks/useNavigationLoading";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";

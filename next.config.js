@@ -111,6 +111,19 @@ const nextConfig = {
       use: ['@svgr/webpack'],
     })
     
+    // Fix for core-js and jspdf compatibility issues
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      'canvg': false,
+      'core-js/modules/es.string.match': false,
+      'core-js/modules/es.string.replace': false,
+      'core-js/modules/es.string.split': false,
+    }
+    
+    // Ignore problematic modules
+    config.externals = config.externals || []
+    config.externals.push('canvg')
+    
     return config
   }
 }

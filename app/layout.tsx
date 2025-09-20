@@ -10,7 +10,7 @@ const inter = Inter({
 })
 import { LessonProvider } from '@/components/providers/LessonProvider'
 import { PWAProvider } from '@/components/providers/PWAProvider'
-import { LoadingProvider } from '@/components/ui/Loading'
+import { LoadingProvider } from '@/components/ui/loading'
 import { PageTransitionProvider } from '@/components/providers/PageTransitionProvider'
 import { SplashScreen } from '@/components/ui/SplashScreen'
 import { Toaster } from '@/components/ui/toaster'

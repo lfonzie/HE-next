@@ -1,5 +1,5 @@
 import { RedacaoNotifications } from '@/components/redacao/RedacaoNotifications'
-import { LoadingProvider } from '@/components/ui/Loading'
+import { LoadingProvider } from '@/components/ui/loading'
 
 export default function RedacaoLayout({
   children,
