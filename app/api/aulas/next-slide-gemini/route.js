@@ -1,27 +1,17 @@
 // app/api/aulas/next-slide-gemini/route.js
-// Endpoint para carregar próximo slide sob demanda usando Gemini
+// Endpoint para carregar próximo slide sob demanda usando Gemini com Vercel AI SDK
 
 import { NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { generateText } from 'ai';
+import { google } from '@ai-sdk/google';
 import { ensureQuizFormat } from '@/lib/quiz-validation';
 import { logTokens } from '@/lib/token-logger';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
-// Initialize Gemini client
-const genAI = new GoogleGenerativeAI(
-  process.env.GOOGLE_GEMINI_API_KEY || 
-  process.env.GOOGLE_API_KEY || 
-  process.env.GOOGLE_GENERATIVE_AI_API_KEY || 
-  ''
-);
-
-const geminiModel = genAI.getGenerativeModel({ 
-  model: 'gemini-2.0-flash-exp',
-  generationConfig: {
-    temperature: 0.7,
-    maxOutputTokens: 2000,
-  }
+// Initialize Gemini client via Vercel AI SDK
+const geminiModel = google('gemini-2.0-flash-exp', {
+  apiKey: process.env.GOOGLE_GEMINI_API_KEY || process.env.GOOGLE_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY,
 });
 
 /**
@@ -131,9 +121,14 @@ ${slideNumber}. ${slideTitle} (${slideType === 'quiz' ? 'Avaliação, 0 pontos' 
 - Responda APENAS com JSON válido. Não inclua formatação markdown, blocos de código ou texto adicional.`;
 
   try {
-    const result = await geminiModel.generateContent(prompt);
-    const response = await result.response;
-    const content = response.text();
+    const response = await generateText({
+      model: geminiModel,
+      prompt: prompt,
+      maxTokens: 2000,
+      temperature: 0.7,
+    });
+    
+    const content = response.text;
     
     // Clean the content to extract JSON
     let cleanContent = content.trim();

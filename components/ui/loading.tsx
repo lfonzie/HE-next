@@ -211,7 +211,6 @@ export const LoadingProvider: React.FC<{
   return (
     <LoadingContext.Provider value={value}>
       {children}
-      <LoadingOverlay />
     </LoadingContext.Provider>
   );
 };

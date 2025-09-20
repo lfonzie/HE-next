@@ -820,6 +820,58 @@ enum enem_mode {
   OFFICIAL
 }
 
+model enem_session {
+  session_id String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String              @db.Uuid
+  mode       enem_mode
+  area       String[]            @db.VarChar(50)
+  config     Json
+  status     enem_session_status @default(ACTIVE)
+  start_time DateTime            @default(now()) @db.Timestamp(6)
+  end_time   DateTime?           @db.Timestamp(6)
+  created_at DateTime            @default(now()) @db.Timestamp(6)
+  updated_at DateTime            @default(now()) @db.Timestamp(6)
+
+  // Relations
+  responses enem_response[]
+  score     enem_score?
+
+  @@index([user_id], map: "idx_enem_sessions_user")
+  @@index([area], map: "idx_enem_sessions_area")
+  @@index([status], map: "idx_enem_sessions_status")
+}
+
+model enem_response {
+  response_id    String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  session_id     String   @db.Uuid
+  item_id        String   @db.VarChar(50)
+  selected_answer String   @db.VarChar(1)
+  time_spent     Int      // in seconds
+  is_correct     Boolean
+  timestamp      DateTime @default(now()) @db.Timestamp(6)
+
+  // Relations
+  session enem_session @relation(fields: [session_id], references: [session_id], onDelete: Cascade)
+
+  @@index([session_id], map: "idx_enem_responses_session")
+  @@index([item_id], map: "idx_enem_responses_item")
+}
+
+model enem_score {
+  score_id     String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  session_id   String   @unique @db.Uuid
+  area_scores  Json
+  total_score  Float
+  tri_estimated Json
+  stats        Json
+  created_at   DateTime @default(now()) @db.Timestamp(6)
+
+  // Relations
+  session enem_session @relation(fields: [session_id], references: [session_id], onDelete: Cascade)
+
+  @@index([session_id], map: "idx_enem_scores_session")
+}
+
 enum enem_session_status {
   ACTIVE
   COMPLETED

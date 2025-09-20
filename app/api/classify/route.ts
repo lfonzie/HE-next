@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import OpenAI from 'openai';
+import { generateText } from 'ai';
+import { google } from '@ai-sdk/google';
 import { z } from 'zod';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+// Initialize Google AI client via Vercel AI SDK
+const googleModel = google('gemini-2.0-flash-exp', {
+  apiKey: process.env.GOOGLE_GEMINI_API_KEY || process.env.GOOGLE_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY,
 });
 
 // Schema para validação da saída do classificador
@@ -191,15 +193,16 @@ export async function POST(request: NextRequest) {
     let aiError = null;
     
     try {
-      const openaiStart = Date.now();
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        temperature: 0.1,
-        max_tokens: 300,
-        messages: [
-          {
-            role: "system",
-            content: `Você é um classificador especializado em mensagens educacionais. Classifique cada mensagem no módulo mais específico e apropriado.
+      const googleStart = Date.now();
+      
+      // Check if Google API key is configured
+      if (!process.env.GOOGLE_GEMINI_API_KEY && !process.env.GOOGLE_API_KEY && !process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+        throw new Error('Google API key not configured');
+      }
+
+      const response = await generateText({
+        model: googleModel,
+        prompt: `Você é um classificador especializado em mensagens educacionais. Classifique cada mensagem no módulo mais específico e apropriado.
 
 🚨 IDIOMA OBRIGATÓRIO E CRÍTICO - INSTRUÇÃO NÃO NEGOCIÁVEL:
 - Responda EXCLUSIVAMENTE em Português Brasileiro (PT-BR)
@@ -326,20 +329,18 @@ EXEMPLO DE RESPOSTA VÁLIDA:
   },
   "rationale": "Mensagem educacional sobre conceito acadêmico",
   "complexity": "complexa"
-}`
-          },
-          {
-            role: "user",
-            content: `Mensagem: "${userMessage}"\nHistórico: ${history.length} mensagens`
-          }
-        ],
-        response_format: { type: "json_object" }
+}
+
+Mensagem: "${userMessage}"
+Histórico: ${history.length} mensagens`,
+        maxTokens: 300,
+        temperature: 0.1,
       });
 
-      const openaiTime = Date.now() - openaiStart;
-      console.log(`⏱️ [OPENAI-CALL] Completed in ${openaiTime}ms`);
+      const googleTime = Date.now() - googleStart;
+      console.log(`⏱️ [GOOGLE-CALL] Completed in ${googleTime}ms`);
       
-      const raw = completion.choices[0]?.message?.content || "{}";
+      const raw = response.text || "{}";
       const parsed = JSON.parse(raw);
       
       // Validar com Zod
@@ -355,6 +356,7 @@ EXEMPLO DE RESPOSTA VÁLIDA:
         scores = aiResult.scores;
         
         console.log(`🤖 [AI_SUCCESS] module=${aiResult.module} confidence=${aiResult.confidence}`);
+        console.log(`⏱️ [GOOGLE-TOTAL] ${googleTime}ms`);
       } else {
         console.warn(`⚠️ [SCHEMA_FAIL] AI returned invalid schema:`, validationResult.error.errors);
         

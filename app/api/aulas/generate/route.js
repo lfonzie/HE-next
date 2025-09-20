@@ -1,8 +1,9 @@
 // app/api/aulas/generate/route.js
-// Dedicated API route for generating educational lessons with professional pacing
+// Dedicated API route for generating educational lessons with professional pacing using Vercel AI SDK
 
 import { NextResponse } from 'next/server';
-import OpenAI from 'openai';
+import { generateText } from 'ai';
+import { google } from '@ai-sdk/google';
 import { ensureQuizFormat } from '@/lib/quiz-validation';
 import { log } from '@/lib/lesson-logger';
 import { logTokens } from '@/lib/token-logger';
@@ -14,13 +15,13 @@ const TOTAL_SLIDES = 14;
 const QUIZ_SLIDE_NUMBERS = [7, 12];
 const IMAGE_SLIDE_NUMBERS = [1, 8, 14];
 const MIN_TOKENS_PER_SLIDE = 130; // Reduced from 500 to 130 for more realistic content generation
-const OPENAI_MODEL = 'gpt-4o-mini';
+const GOOGLE_MODEL = 'gemini-2.0-flash-exp';
 const MAX_TOKENS = 10000;
 const TEMPERATURE = 0.7;
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+// Initialize Google AI client via Vercel AI SDK
+const googleModel = google(GOOGLE_MODEL, {
+  apiKey: process.env.GOOGLE_GEMINI_API_KEY || process.env.GOOGLE_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY,
 });
 
 // Translation dictionary for image query generation
@@ -473,30 +474,40 @@ export async function POST(request) {
     const generationPrompt = getLessonPromptTemplate(topic, systemPrompt);
     log.aulaTimerEnd(promptTimer, 'prompt-preparation');
 
-    const openaiTimer = log.aulaTimer('openai-generation');
-    const openaiStartTime = Date.now();
-    const response = await openai.chat.completions.create({
-      model: OPENAI_MODEL,
-      messages: [{ role: 'system', content: generationPrompt }],
-      max_tokens: MAX_TOKENS,
+    const googleTimer = log.aulaTimer('google-generation');
+    const googleStartTime = Date.now();
+    
+    // Check if Google API key is configured
+    if (!process.env.GOOGLE_GEMINI_API_KEY && !process.env.GOOGLE_API_KEY && !process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+      log.error('Google API key not configured');
+      return NextResponse.json({ 
+        error: 'Google API key not configured. Please set GOOGLE_GEMINI_API_KEY, GOOGLE_API_KEY, or GOOGLE_GENERATIVE_AI_API_KEY environment variable.' 
+      }, { status: 500 });
+    }
+
+    const response = await generateText({
+      model: googleModel,
+      prompt: generationPrompt,
+      maxTokens: MAX_TOKENS,
       temperature: TEMPERATURE,
     });
-    const openaiDuration = Math.round((Date.now() - openaiStartTime) / 1000);
-    log.aulaTimerEnd(openaiTimer, 'openai-generation');
+    
+    const googleDuration = Math.round((Date.now() - googleStartTime) / 1000);
+    log.aulaTimerEnd(googleTimer, 'google-generation');
 
-    log.info('OpenAI response', {
-      duration: openaiDuration,
+    log.info('Google AI response', {
+      duration: googleDuration,
       usage: response.usage,
-      finishReason: response.choices[0]?.finish_reason,
+      finishReason: response.finishReason,
     });
 
     // Log token usage
-    const totalTokens = response.usage?.total_tokens || 0;
+    const totalTokens = response.usage?.totalTokens || 0;
     if (session?.user?.id && totalTokens > 0) {
       await logTokens({
         userId: session.user.id,
         moduleGroup: 'Aulas',
-        model: OPENAI_MODEL,
+        model: GOOGLE_MODEL,
         totalTokens,
         subject: topic,
         messages: { requestId, mode },
@@ -504,7 +515,7 @@ export async function POST(request) {
     }
 
     const parsingTimer = log.aulaTimer('content-parsing');
-    const rawContent = response.choices[0]?.message?.content || '';
+    const rawContent = response.text || '';
     
     // Log raw content for debugging (first 500 chars)
     log.debug('Raw AI response content', { 
@@ -662,8 +673,8 @@ export async function POST(request) {
         recommendations: [],
       },
       usage: {
-        promptTokens: response.usage?.prompt_tokens || 0,
-        completionTokens: response.usage?.completion_tokens || 0,
+        promptTokens: response.usage?.promptTokens || 0,
+        completionTokens: response.usage?.completionTokens || 0,
         totalTokens,
         costEstimate: (totalTokens * 0.000015).toFixed(4),
       },

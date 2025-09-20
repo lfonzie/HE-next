@@ -1,8 +1,9 @@
 // app/api/aulas/generate-gemini/route.js
-// API route para geração de aulas usando Google Gemini com formato JSON estruturado
+// API route para geração de aulas usando Google Gemini com Vercel AI SDK
 
 import { NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { generateText } from 'ai';
+import { google } from '@ai-sdk/google';
 import { ensureQuizFormat } from '@/lib/quiz-validation';
 import { log } from '@/lib/lesson-logger';
 import { logTokens } from '@/lib/token-logger';
@@ -18,20 +19,9 @@ const GEMINI_MODEL = 'gemini-2.0-flash-exp';
 const MAX_TOKENS = 8000;
 const TEMPERATURE = 0.7;
 
-// Initialize Gemini client
-const genAI = new GoogleGenerativeAI(
-  process.env.GOOGLE_GEMINI_API_KEY || 
-  process.env.GOOGLE_API_KEY || 
-  process.env.GOOGLE_GENERATIVE_AI_API_KEY || 
-  ''
-);
-
-const geminiModel = genAI.getGenerativeModel({ 
-  model: GEMINI_MODEL,
-  generationConfig: {
-    temperature: TEMPERATURE,
-    maxOutputTokens: MAX_TOKENS,
-  }
+// Initialize Gemini client via Vercel AI SDK
+const geminiModel = google(GEMINI_MODEL, {
+  apiKey: process.env.GOOGLE_GEMINI_API_KEY || process.env.GOOGLE_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY,
 });
 
 // Translation dictionary for image query generation
@@ -438,36 +428,38 @@ export async function POST(request) {
     const geminiStartTime = Date.now();
     
     try {
-      const result = await geminiModel.generateContent(generationPrompt);
-      const response = await result.response;
-      const generatedContent = response.text();
+      const response = await generateText({
+        model: geminiModel,
+        prompt: generationPrompt,
+        maxTokens: MAX_TOKENS,
+        temperature: TEMPERATURE,
+      });
       
       const geminiDuration = Math.round((Date.now() - geminiStartTime) / 1000);
       log.aulaTimerEnd(geminiTimer, 'gemini-generation');
 
       log.info('Gemini response', {
         duration: geminiDuration,
-        finishReason: result.response?.candidates?.[0]?.finishReason,
-        contentLength: generatedContent?.length || 0,
+        usage: response.usage,
+        finishReason: response.finishReason,
+        contentLength: response.text?.length || 0,
       });
 
-      // Estimate token usage for Gemini (approximate)
-      const estimatedTokens = Math.ceil((generationPrompt.length + generatedContent.length) / 4);
-      
       // Log token usage
-      if (session?.user?.id && estimatedTokens > 0) {
+      const totalTokens = response.usage?.totalTokens || 0;
+      if (session?.user?.id && totalTokens > 0) {
         await logTokens({
           userId: session.user.id,
           moduleGroup: 'Aulas',
           model: GEMINI_MODEL,
-          totalTokens: estimatedTokens,
+          totalTokens,
           subject: topic,
           messages: { requestId, mode, provider: 'gemini' },
         });
       }
 
       const parsingTimer = log.aulaTimer('content-parsing');
-      const parsedContent = parseGeminiContent(generatedContent);
+      const parsedContent = parseGeminiContent(response.text);
       log.aulaTimerEnd(parsingTimer, 'content-parsing');
 
       // Validação de qualidade desabilitada - slides já estão bons
@@ -602,8 +594,10 @@ export async function POST(request) {
           recommendations: [],
         },
         usage: {
-          estimatedTokens,
-          costEstimate: (estimatedTokens * 0.000001).toFixed(6), // Gemini pricing estimate
+          promptTokens: response.usage?.promptTokens || 0,
+          completionTokens: response.usage?.completionTokens || 0,
+          totalTokens,
+          costEstimate: (totalTokens * 0.000001).toFixed(6), // Gemini pricing estimate
           provider: 'gemini',
           model: GEMINI_MODEL,
         },

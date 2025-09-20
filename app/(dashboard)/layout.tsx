@@ -98,6 +98,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 {children}
               </div>
             </div>
+            <LoadingOverlay />
           </QuotaProvider>
         </ChatProvider>
       </LoadingProvider>
@@ -116,6 +117,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 {children}
               </div>
             </div>
+            <LoadingOverlay />
           </QuotaProvider>
         </ChatProvider>
       </LoadingProvider>
@@ -129,6 +131,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           <SidebarWrapper>
             {children}
           </SidebarWrapper>
+          <LoadingOverlay />
         </QuotaProvider>
       </ChatProvider>
     </LoadingProvider>
