@@ -20,14 +20,14 @@ export async function POST(request: NextRequest) {
     console.log('🎓 Gerando aula para:', query, 'Subject:', subject);
     console.log('🔑 OpenAI API Key exists:', !!process.env.OPENAI_API_KEY);
 
-    // Buscar imagem automaticamente para os slides
-    console.log('🖼️ Buscando imagem automática para o tema...');
+    // Buscar imagem automaticamente para os slides usando Wikimedia Commons
+    console.log('🖼️ Buscando imagem automática no Wikimedia Commons para o tema...');
     const imageResult = await AutoImageService.getImagesForSlides(query, subject);
     
     if (imageResult.introImage) {
-      console.log('✅ Imagem encontrada:', imageResult.introImage.id, 'Tema:', imageResult.theme);
+      console.log('✅ Imagem encontrada no Wikimedia Commons:', imageResult.introImage.title, 'Tema:', imageResult.theme);
     } else {
-      console.log('⚠️ Nenhuma imagem encontrada para o tema');
+      console.log('⚠️ Nenhuma imagem encontrada no Wikimedia Commons para o tema');
     }
 
     // Gerar aula interativa usando OpenAI
@@ -183,8 +183,12 @@ export async function POST(request: NextRequest) {
       throw new Error('Resposta vazia da OpenAI');
     }
 
+    // Normalizar fórmulas químicas antes do processamento
+    const { normalizeFormulas } = await import('@/lib/utils/latex-normalization');
+    const normalizedResponse = normalizeFormulas(responseText);
+
     // Limpar possível formatação markdown
-    let cleanedResponse = responseText.trim();
+    let cleanedResponse = normalizedResponse.trim();
     if (cleanedResponse.startsWith('```json')) {
       cleanedResponse = cleanedResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '');
     } else if (cleanedResponse.startsWith('```')) {

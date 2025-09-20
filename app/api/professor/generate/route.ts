@@ -94,9 +94,13 @@ Sempre mantenha um tom empático, educativo e motivador.`
 
       const gamifiedContent = gamifiedResponse.choices[0]?.message?.content || ''
       
+      // Normalizar fórmulas químicas antes do parse
+      const { normalizeFormulas, normalizeObjectFormulas } = await import('@/lib/utils/latex-normalization');
+      const normalizedContent = normalizeFormulas(gamifiedContent);
+      
       // Tentar parsear como JSON
       try {
-        const lessonData = JSON.parse(gamifiedContent)
+        const lessonData = JSON.parse(normalizedContent)
         
         // Validar estrutura básica
         if (lessonData.title && lessonData.sections && lessonData.quiz) {
@@ -122,10 +126,14 @@ Sempre mantenha um tom empático, educativo e motivador.`
     })
 
     const responseContent = simpleResponse.choices[0]?.message?.content || ''
+    
+    // Normalizar fórmulas químicas na resposta simples
+    const { normalizeFormulas } = await import('@/lib/utils/latex-normalization');
+    const normalizedResponse = normalizeFormulas(responseContent);
 
     return NextResponse.json({
       success: true,
-      response: responseContent,
+      response: normalizedResponse,
       type: 'simple',
       subject: subject || 'geral'
     })
