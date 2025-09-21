@@ -1,22 +1,153 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, createContext, useContext, ReactNode } from 'react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
+import { motion, AnimatePresence } from 'framer-motion';
+
+// ============================================================================
+// TIPOS E INTERFACES
+// ============================================================================
 
 interface SplashScreenProps {
   onComplete?: () => void;
   minDisplayTime?: number;
   className?: string;
+  showIntro?: boolean;
 }
+
+interface LoadingState {
+  isLoading: boolean;
+  message?: string;
+  progress?: number;
+  showOverlay?: boolean;
+}
+
+interface LoadingContextType {
+  isLoading: boolean;
+  message?: string;
+  progress?: number;
+  startLoading: (message?: string, showOverlay?: boolean) => void;
+  updateProgress: (progress: number, message?: string) => void;
+  stopLoading: () => void;
+  setMessage: (message: string) => void;
+}
+
+// ============================================================================
+// CONTEXTO E PROVIDER
+// ============================================================================
+
+const LoadingContext = createContext<LoadingContextType | null>(null);
+
+export const LoadingProvider = ({ children }: { children: ReactNode }) => {
+  const [state, setState] = useState<LoadingState>({
+    isLoading: false,
+    message: undefined,
+    progress: undefined,
+    showOverlay: false
+  });
+
+  const startLoading = (message?: string, showOverlay: boolean = true) => {
+    setState({
+      isLoading: true,
+      message: message || "Carregando...",
+      progress: 0,
+      showOverlay
+    });
+  };
+
+  const updateProgress = (progress: number, message?: string) => {
+    setState(prev => ({
+      ...prev,
+      progress: Math.min(100, Math.max(0, progress)),
+      message: message || prev.message
+    }));
+  };
+
+  const stopLoading = () => {
+    setState({
+      isLoading: false,
+      message: undefined,
+      progress: undefined,
+      showOverlay: false
+    });
+  };
+
+  const setMessage = (message: string) => {
+    setState(prev => ({
+      ...prev,
+      message
+    }));
+  };
+
+  const value: LoadingContextType = {
+    isLoading: state.isLoading,
+    message: state.message,
+    progress: state.progress,
+    startLoading,
+    updateProgress,
+    stopLoading,
+    setMessage
+  };
+
+  return (
+    <LoadingContext.Provider value={value}>
+      {children}
+    </LoadingContext.Provider>
+  );
+};
+
+export const useLoading = () => {
+  const context = useContext(LoadingContext);
+  if (!context) {
+    throw new Error('useLoading must be used within LoadingProvider');
+  }
+  return context;
+};
+
+// ============================================================================
+// HOOKS AUXILIARES
+// ============================================================================
+
+export const useAsyncLoader = () => {
+  const { startLoading, stopLoading } = useLoading();
+
+  const withLoading = async <T,>(
+    asyncFn: () => Promise<T>,
+    message?: string
+  ): Promise<T> => {
+    startLoading(message);
+    try {
+      const result = await asyncFn();
+      return result;
+    } finally {
+      stopLoading();
+    }
+  };
+
+  return { withLoading };
+};
+
+// ============================================================================
+// COMPONENTE PRINCIPAL SPLASH SCREEN
+// ============================================================================
 
 export function SplashScreen({ 
   onComplete, 
   minDisplayTime = 2000,
-  className 
+  className,
+  showIntro = true
 }: SplashScreenProps) {
   const [isVisible, setIsVisible] = useState(true);
   const [startTime] = useState(() => typeof window !== 'undefined' ? Date.now() : 0);
+  const [isStandalone, setIsStandalone] = useState(false);
+
+  // Detect PWA standalone mode
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setIsStandalone(window.matchMedia('(display-mode: standalone)').matches);
+    }
+  }, []);
 
   // Set global flag to prevent other loadings
   useEffect(() => {
@@ -60,11 +191,14 @@ export function SplashScreen({
   if (!isVisible) return null;
 
   return (
-    <div 
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.5 }}
       className={cn(
         "fixed inset-0 z-[9999] flex items-center justify-center",
         "bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900",
-        "transition-opacity duration-500 ease-in-out",
         className
       )}
       role="status"
@@ -73,119 +207,264 @@ export function SplashScreen({
     >
       {/* Animated Background Pattern */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-yellow-400/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-yellow-400/10 rounded-full blur-3xl animate-pulse delay-1000" />
+        <motion.div 
+          className="absolute top-1/4 left-1/4 w-96 h-96 bg-yellow-400/10 rounded-full blur-3xl"
+          animate={{ 
+            scale: [1, 1.2, 1],
+            opacity: [0.3, 0.6, 0.3]
+          }}
+          transition={{ 
+            duration: 3,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+        <motion.div 
+          className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-yellow-400/10 rounded-full blur-3xl"
+          animate={{ 
+            scale: [1.2, 1, 1.2],
+            opacity: [0.6, 0.3, 0.6]
+          }}
+          transition={{ 
+            duration: 3,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 1.5
+          }}
+        />
       </div>
 
       <div className="relative z-10 text-center">
         {/* Logo Section */}
-        <div className="mb-8">
-          <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-2xl animate-pulse-glow">
+        <motion.div 
+          className="mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <motion.div 
+            className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-2xl"
+            animate={{ 
+              boxShadow: [
+                "0 0 20px rgba(255, 210, 51, 0.3)",
+                "0 0 40px rgba(255, 210, 51, 0.5)",
+                "0 0 20px rgba(255, 210, 51, 0.3)"
+              ]
+            }}
+            transition={{ 
+              duration: 2,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          >
             <Image 
-              src="/assets/Logo_HubEdu.ia.svg" 
+              src="/favicon.svg" 
               alt="HubEdu.ia" 
               width={48}
               height={48}
               className="object-contain filter drop-shadow-lg"
             />
-          </div>
+          </motion.div>
           
-          <h1 className="text-3xl font-bold text-white mb-2 animate-fade-in">
+          <motion.h1 
+            className="text-4xl font-bold text-yellow-400 mb-2"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
             HubEdu.ia
-          </h1>
-          <p className="text-yellow-300/80 text-lg animate-fade-in delay-200">
+          </motion.h1>
+          <motion.p 
+            className="text-yellow-300/80 text-lg"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+          >
             Inteligência Artificial Educacional Completa
-          </p>
-        </div>
+          </motion.p>
+        </motion.div>
 
         {/* Features Grid */}
-        <div className="grid grid-cols-3 gap-4 mb-8 max-w-md mx-auto">
-          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 animate-slide-up delay-300">
+        <motion.div 
+          className="grid grid-cols-3 gap-4 mb-8 max-w-md mx-auto"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
+        >
+          <motion.div 
+            className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4"
+            whileHover={{ scale: 1.05 }}
+            transition={{ duration: 0.2 }}
+          >
             <div className="w-12 h-12 mx-auto mb-2 bg-yellow-400/20 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-yellow-400" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.94-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+              <svg className="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
               </svg>
             </div>
-            <div className="text-white text-sm font-medium">Professor<br/>Digital</div>
-          </div>
+            <div className="text-yellow-200 text-sm font-medium">Professor<br/>Digital</div>
+          </motion.div>
           
-          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 animate-slide-up delay-400">
+          <motion.div 
+            className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4"
+            whileHover={{ scale: 1.05 }}
+            transition={{ duration: 0.2 }}
+          >
             <div className="w-12 h-12 mx-auto mb-2 bg-yellow-400/20 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-yellow-400" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.82,11.69,4.82,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+              <svg className="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </div>
-            <div className="text-white text-sm font-medium">Automações<br/>Administrativas</div>
-          </div>
+            <div className="text-yellow-200 text-sm font-medium">Automações<br/>Administrativas</div>
+          </motion.div>
           
-          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 animate-slide-up delay-500">
+          <motion.div 
+            className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4"
+            whileHover={{ scale: 1.05 }}
+            transition={{ duration: 0.2 }}
+          >
             <div className="w-12 h-12 mx-auto mb-2 bg-yellow-400/20 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-yellow-400" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12,2A2,2 0 0,1 14,4C14,4.74 13.6,5.39 13,5.73V7H14A7,7 0 0,1 21,14H22A1,1 0 0,1 23,15V18A1,1 0 0,1 22,19H21V20A2,2 0 0,1 19,22H5A2,2 0 0,1 3,20V19H2A1,1 0 0,1 1,18V15A1,1 0 0,1 2,14H3A7,7 0 0,1 10,7H11V5.73C10.4,5.39 10,4.74 10,4A2,2 0 0,1 12,2M7.5,13A2.5,2.5 0 0,0 5,15.5A2.5,2.5 0 0,0 7.5,18A2.5,2.5 0 0,0 10,15.5A2.5,2.5 0 0,0 7.5,13M16.5,13A2.5,2.5 0 0,0 14,15.5A2.5,2.5 0 0,0 16.5,18A2.5,2.5 0 0,0 19,15.5A2.5,2.5 0 0,0 16.5,13Z"/>
+              <svg className="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
             </div>
-            <div className="text-white text-sm font-medium">Atendimento<br/>Inteligente</div>
-          </div>
-        </div>
+            <div className="text-yellow-200 text-sm font-medium">Atendimento<br/>Inteligente</div>
+          </motion.div>
+        </motion.div>
 
         {/* Loading Section */}
-        <div className="animate-slide-up delay-600">
-          <div className="w-8 h-8 mx-auto mb-4 border-2 border-yellow-400/30 border-t-yellow-400 rounded-full animate-spin" />
-          <div className="text-yellow-300/80 text-sm font-medium">
-            <span className="animate-pulse">Carregando</span>
-            <span className="animate-dots">…</span>
-          </div>
-        </div>
-      </div>
+        <motion.div 
+          className="space-y-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.8 }}
+        >
+          <motion.div 
+            className="w-8 h-8 mx-auto border-2 border-yellow-400/30 border-t-yellow-400 rounded-full"
+            animate={{ rotate: 360 }}
+            transition={{ 
+              duration: 1,
+              repeat: Infinity,
+              ease: "linear"
+            }}
+          />
+          <motion.div 
+            className="text-yellow-300/80 text-sm font-medium"
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ 
+              duration: 1.5,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          >
+            Carregando HubEdu.ia...
+          </motion.div>
+        </motion.div>
 
-      {/* Custom Styles */}
-      <style jsx>{`
-        @keyframes pulse-glow {
-          0%, 100% { 
-            box-shadow: 0 0 20px rgba(255, 210, 51, 0.3);
-          }
-          50% { 
-            box-shadow: 0 0 40px rgba(255, 210, 51, 0.5);
-          }
-        }
-        
-        @keyframes fade-in {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        
-        @keyframes slide-up {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        
-        @keyframes dots {
-          0%, 20% { content: ''; }
-          40% { content: '.'; }
-          60% { content: '..'; }
-          80%, 100% { content: '...'; }
-        }
-        
-        .animate-pulse-glow {
-          animation: pulse-glow 2s ease-in-out infinite;
-        }
-        
-        .animate-fade-in {
-          animation: fade-in 0.6s ease-out forwards;
-        }
-        
-        .animate-slide-up {
-          animation: slide-up 0.6s ease-out forwards;
-          opacity: 0;
-        }
-        
-        .animate-dots::after {
-          content: '';
-          animation: dots 1.5s steps(4, end) infinite;
-        }
-      `}</style>
-    </div>
+        {/* PWA Intro Message */}
+        {isStandalone && showIntro && (
+          <motion.div 
+            className="mt-8 text-yellow-200/60 text-xs"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 1 }}
+          >
+            Bem-vindo ao HubEdu.ia
+          </motion.div>
+        )}
+      </div>
+    </motion.div>
   );
 }
+
+// ============================================================================
+// COMPONENTE DE LOADING OVERLAY GLOBAL
+// ============================================================================
+
+export const LoadingOverlay = () => {
+  const { isLoading, message, progress, showOverlay } = useLoading();
+
+  if (!isLoading || !showOverlay) return null;
+
+  return (
+    <AnimatePresence>
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[9998] flex items-center justify-center bg-black/70 backdrop-blur-sm"
+      >
+        <motion.div 
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.9, opacity: 0 }}
+          className="bg-gray-800/95 backdrop-blur-sm rounded-2xl p-6 shadow-xl w-[min(90vw,400px)] text-center border border-gray-700/50"
+        >
+          <div className="flex flex-col items-center gap-4">
+            <motion.div 
+              className="w-12 h-12 border-2 border-yellow-400/30 border-t-yellow-400 rounded-full"
+              animate={{ rotate: 360 }}
+              transition={{ 
+                duration: 1,
+                repeat: Infinity,
+                ease: "linear"
+              }}
+            />
+
+            <div className="space-y-2">
+              <p className="text-yellow-300 text-sm font-medium">
+                {message}
+              </p>
+            </div>
+
+            {progress !== undefined && (
+              <div className="w-full max-w-xs">
+                <div className="bg-gray-700 rounded-full h-2 overflow-hidden">
+                  <motion.div 
+                    className="bg-yellow-400 h-full rounded-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${progress}%` }}
+                    transition={{ duration: 0.3 }}
+                  />
+                </div>
+                <div className="text-xs text-yellow-200/70 mt-1 text-center">
+                  {Math.round(progress)}%
+                </div>
+              </div>
+            )}
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
+
+// ============================================================================
+// COMPONENTE DE INTEGRAÇÃO COM ROTAS
+// ============================================================================
+
+export const RouteLoadingGlue = () => {
+  const { startLoading, stopLoading } = useLoading();
+
+  useEffect(() => {
+    const handleRouteStart = () => {
+      startLoading("Navegando...", true);
+    };
+
+    const handleRouteComplete = () => {
+      stopLoading();
+    };
+
+    // Listen for route changes
+    window.addEventListener('beforeunload', handleRouteStart);
+    window.addEventListener('load', handleRouteComplete);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleRouteStart);
+      window.removeEventListener('load', handleRouteComplete);
+    };
+  }, [startLoading, stopLoading]);
+
+  return null;
+};
 
 export default SplashScreen;

@@ -10,7 +10,7 @@ const inter = Inter({
 })
 import { LessonProvider } from '@/components/providers/LessonProvider'
 import { PWAProvider } from '@/components/providers/PWAProvider'
-import { LoadingProvider } from '@/components/ui/loading'
+import { LoadingProvider, LoadingOverlay, RouteLoadingGlue } from '@/components/ui/SplashScreen'
 import { PageTransitionProvider } from '@/components/providers/PageTransitionProvider'
 import { SplashScreen } from '@/components/ui/SplashScreen'
 import { Toaster } from '@/components/ui/toaster'
@@ -83,24 +83,27 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="pt-BR" className={inter.variable}>
       <body className="min-h-screen bg-background font-sans text-foreground antialiased">
-        {/* <SplashScreen /> */}
-        <SessionProvider>
-          {/* <PWAProvider> */}
-            <GlobalLoadingProvider>
-              <PageTransitionProvider>
-                <LessonProvider>
-                  <ToastProvider>
-                    <NotificationProvider>
-                      {children}
-                      {/* <PWAManagerWrapper /> */}
-                      <Toaster />
-                    </NotificationProvider>
-                  </ToastProvider>
-                </LessonProvider>
-              </PageTransitionProvider>
-            </GlobalLoadingProvider>
-          {/* </PWAProvider> */}
-        </SessionProvider>
+        <LoadingProvider>
+          <RouteLoadingGlue />
+          <LoadingOverlay />
+          <SessionProvider>
+            {/* <PWAProvider> */}
+              <GlobalLoadingProvider>
+                <PageTransitionProvider>
+                  <LessonProvider>
+                    <ToastProvider>
+                      <NotificationProvider>
+                        {children}
+                        {/* <PWAManagerWrapper /> */}
+                        <Toaster />
+                      </NotificationProvider>
+                    </ToastProvider>
+                  </LessonProvider>
+                </PageTransitionProvider>
+              </GlobalLoadingProvider>
+            {/* </PWAProvider> */}
+          </SessionProvider>
+        </LoadingProvider>
       </body>
     </html>
   )

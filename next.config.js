@@ -1,11 +1,17 @@
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Note: serverExternalPackages and outputFileTracingExcludes are Next.js 15+ features
-  // Removed for Next.js 14.2.15 compatibility
-  // Performance optimizations (disabled experimental features for stability)
+  // Next.js 15+ features enabled
   experimental: {
-    // optimizePackageImports disabled for Next.js 14.2.15 compatibility
+    optimizePackageImports: ['@radix-ui/react-icons', 'lucide-react'],
   },
+  // Fix multiple lockfiles warning
+  outputFileTracingRoot: __dirname,
   // Enable faster compilation
   async headers() {
     return [
