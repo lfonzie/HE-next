@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic';
 
 
-import { Message, streamText } from 'ai'
+import { streamText } from 'ai'
 
 
 import { openai } from '@ai-sdk/openai'
@@ -94,16 +94,11 @@ export async function POST(request: NextRequest) {
       const result = await streamText({
         model: modelInstance,
         messages: finalMessages,
-        maxTokens: 1000,
         temperature: 0.7,
       });
 
       return result.toTextStreamResponse({
-        headers,
-        onFinish: async () => {
-          const totalTime = Date.now() - startTime;
-          console.log(`✅ [FAST-CHAT] Completed in ${totalTime}ms`);
-        }
+        headers
       });
     } catch (streamingError: any) {
       console.error('❌ [FAST-CHAT] Streaming error:', streamingError);

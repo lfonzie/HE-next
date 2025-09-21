@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { describe, it, expect, beforeEach, vi } from '@jest/globals';
+import { describe, it, expect, beforeEach } from '@jest/globals';
+import { vi } from 'vitest';
 import { EnemConfiguration } from '@/components/enem/EnemConfiguration';
 import { EnemQuestionCard } from '@/components/enem/EnemQuestionCard';
 import { EnemNavigation } from '@/components/enem/EnemNavigation';

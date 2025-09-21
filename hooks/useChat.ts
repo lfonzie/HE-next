@@ -721,6 +721,107 @@ export function useChat(onStreamingStart?: () => void) {
     }
   }, [])
 
+  // Função para deletar conversa
+  const deleteConversation = useCallback(async (id: string) => {
+    try {
+      const response = await fetch(`/api/chat/conversations/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (response.ok) {
+        setConversations(prev => prev.filter(conv => conv.id !== id))
+        if (currentConversation?.id === id) {
+          setCurrentConversation(null)
+        }
+      } else {
+        throw new Error('Falha ao deletar conversa')
+      }
+    } catch (error) {
+      console.error('Erro ao deletar conversa:', error)
+      throw error
+    }
+  }, [currentConversation])
+
+  // Função para criar conversa
+  const createConversation = useCallback(async (title?: string) => {
+    try {
+      const response = await fetch('/api/chat/conversations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ title }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        const newConversation: Conversation = {
+          id: data.id,
+          title: data.title || 'Nova Conversa',
+          module: 'ATENDIMENTO',
+          messages: [],
+          tokenCount: 0,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+        
+        setConversations(prev => [newConversation, ...prev])
+        setCurrentConversation(newConversation)
+        return newConversation
+      } else {
+        throw new Error('Falha ao criar conversa')
+      }
+    } catch (error) {
+      console.error('Erro ao criar conversa:', error)
+      throw error
+    }
+  }, [])
+
+  // Função para atualizar conversa
+  const updateConversation = useCallback(async (id: string, updates: Partial<Conversation>) => {
+    try {
+      const response = await fetch(`/api/chat/conversations/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updates),
+      })
+
+      if (response.ok) {
+        setConversations(prev => prev.map(conv => 
+          conv.id === id ? { ...conv, ...updates } : conv
+        ))
+        if (currentConversation?.id === id) {
+          setCurrentConversation(prev => prev ? { ...prev, ...updates } : null)
+        }
+      } else {
+        throw new Error('Falha ao atualizar conversa')
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar conversa:', error)
+      throw error
+    }
+  }, [currentConversation])
+
+  // Função para limpar conversa atual
+  const clearCurrentConversation = useCallback(() => {
+    setCurrentConversation(null)
+  }, [])
+
+  // Função para atualizar conversas
+  const refreshConversations = useCallback(async () => {
+    await fetchConversations()
+  }, [fetchConversations])
+
+  // Função para retry
+  const retry = useCallback(() => {
+    clearError()
+  }, [clearError])
+
   return {
     // Estados principais
     conversations,
@@ -753,5 +854,14 @@ export function useChat(onStreamingStart?: () => void) {
     // Funções de importação/exportação
     exportCurrentConversation,
     importConversation,
+    
+    // Funções de CRUD de conversas
+    createConversation,
+    deleteConversation,
+    updateConversation,
+    clearCurrentConversation,
+    refreshConversations,
+    retry,
+    cancelStream: cancelCurrentRequest,
   }
 }

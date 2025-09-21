@@ -47,7 +47,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname()
   const router = useRouter()
   
-  // Check if we are on the chat page
+  // Check if we are on the chat page (without sidebar)
   const isChatPage = pathname === '/chat'
   
   // Check if we are on the presentation page
@@ -119,6 +119,25 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   // For enem page, don't show sidebar
   if (isEnemPage) {
+    return (
+      <LoadingProvider>
+        <ChatProvider>
+          <QuotaProvider>
+            <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50">
+              {/* Layout without sidebar - content occupies full screen */}
+              <div className="w-full h-screen overflow-y-auto">
+                {children}
+              </div>
+            </div>
+            <LoadingOverlay />
+          </QuotaProvider>
+        </ChatProvider>
+      </LoadingProvider>
+    )
+  }
+
+  // For chat page, don't show sidebar
+  if (isChatPage) {
     return (
       <LoadingProvider>
         <ChatProvider>

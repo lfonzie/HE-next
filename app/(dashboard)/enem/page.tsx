@@ -26,9 +26,10 @@ import { EnemCustomizer } from '@/components/enem/EnemCustomizer';
 import { EnemSimulatorV2 } from '@/components/enem/EnemSimulatorV2';
 import { EnemResults } from '@/components/enem/EnemResults';
 import { AuthGuard } from '@/components/AuthGuard';
+import { FixedHeader } from '@/components/layout/FixedHeader';
 import { EnemMode, EnemArea, EnemScore } from '@/types/enem';
 import { ExamGenerationLoading } from '@/components/enem/EnemLoadingStates';
-import { FixedHeader } from '@/components/layout/FixedHeader';
+import { ModernHeader } from '@/components/layout/ModernHeader';
 
 type AppState = 'mode-selection' | 'customization' | 'simulation' | 'results';
 
@@ -316,7 +317,7 @@ function EnemSimulatorContent() {
   if (appState === 'simulation' && sessionId && simulationConfig) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-yellow-100">
-        <FixedHeader />
+        <ModernHeader showNavigation={true} showHome={true} />
         <div className="bg-white shadow-sm border-b border-yellow-200 pt-20">
           <div className="max-w-7xl mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
@@ -352,7 +353,7 @@ function EnemSimulatorContent() {
   if (appState === 'results' && score) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-yellow-100">
-        <FixedHeader />
+        <ModernHeader showNavigation={true} showHome={true} />
         <div className="bg-white shadow-sm border-b border-yellow-200 pt-20">
           <div className="max-w-7xl mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
@@ -389,7 +390,7 @@ function EnemSimulatorContent() {
   if (appState === 'customization') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-yellow-100">
-        <FixedHeader />
+        <ModernHeader showNavigation={true} showHome={true} />
         <div className="bg-white shadow-sm border-b border-yellow-200 pt-20">
           <div className="max-w-7xl mx-auto px-6 py-4">
             <div className="flex items-center justify-between">

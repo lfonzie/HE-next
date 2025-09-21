@@ -3,14 +3,14 @@
  * Provides UI for managing IndexedDB cache, viewing stats, and controlling cache behavior
  */
 
-import React, { useState, useEffect } from 'apos;react'apos;;
-import { Card, CardContent, CardHeader, CardTitle } from 'apos;@/components/ui/card'apos;;
-import { Button } from 'apos;@/components/ui/button'apos;;
-import { Progress } from 'apos;@/components/ui/progress'apos;;
-import { Badge } from 'apos;@/components/ui/badge'apos;;
-import { Switch } from 'apos;@/components/ui/switch'apos;;
-import { Label } from 'apos;@/components/ui/label'apos;;
-import { Separator } from 'apos;@/components/ui/separator'apos;;
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 import { 
   Database, 
   Trash2, 
@@ -24,23 +24,23 @@ import {
   BarChart3,
   AlertTriangle,
   CheckCircle
-} from 'apos;lucide-react'apos;;
-import { useIndexedDBCache, CacheStatus } from 'apos;@/hooks/useIndexedDBCache'apos;;
+} from 'lucide-react';
+import { useIndexedDBCache, CacheStatus } from '@/hooks/useIndexedDBCache';
 
 interface CacheManagerProps {
   className?: string;
   showAdvanced?: boolean;
 }
 
-export function CacheManager({ className = 'apos;'apos;, showAdvanced = false }: CacheManagerProps) {
+export function CacheManager({ className = '', showAdvanced = false }: CacheManagerProps) {
   const cache = useIndexedDBCache({
     autoInitialize: true,
     enableOfflineMode: true,
     onCacheUpdate: (key, data) => {
-      console.log('apos;Cache updated:'apos;, key);
+      console.log('Cache updated:', key);
     },
     onCacheError: (error) => {
-      console.error('apos;Cache error:'apos;, error);
+      console.error('Cache error:', error);
     }
   });
 
@@ -60,11 +60,11 @@ export function CacheManager({ className = 'apos;'apos;, showAdvanced = false }:
   }, [autoCleanup, cache]);
 
   const formatBytes = (bytes: number): string => {
-    if (bytes === 0) return 'apos;0 Bytes'apos;;
+    if (bytes === 0) return '0 Bytes';
     const k = 1024;
-    const sizes = ['apos;Bytes'apos;, 'apos;KB'apos;, 'apos;MB'apos;, 'apos;GB'apos;];
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + 'apos; 'apos; + sizes[i];
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   const formatPercentage = (value: number, total: number): number => {
@@ -72,9 +72,9 @@ export function CacheManager({ className = 'apos;'apos;, showAdvanced = false }:
   };
 
   const getStorageUsageColor = (percentage: number): string => {
-    if (percentage < 50) return 'apos;text-green-600'apos;;
-    if (percentage < 80) return 'apos;text-yellow-600'apos;;
-    return 'apos;text-red-600'apos;;
+    if (percentage < 50) return 'text-green-600';
+    if (percentage < 80) return 'text-yellow-600';
+    return 'text-red-600';
   };
 
   const getCacheStatusIcon = () => {
@@ -313,15 +313,15 @@ export function CacheManager({ className = 'apos;'apos;, showAdvanced = false }:
 }
 
 // Compact version for smaller spaces
-export function CacheManagerCompact({ className = 'apos;'apos; }: { className?: string }) {
+export function CacheManagerCompact({ className = '' }: { className?: string }) {
   const cache = useIndexedDBCache();
 
   const formatBytes = (bytes: number): string => {
-    if (bytes === 0) return 'apos;0 B'apos;;
+    if (bytes === 0) return '0 B';
     const k = 1024;
-    const sizes = ['apos;B'apos;, 'apos;KB'apos;, 'apos;MB'apos;, 'apos;GB'apos;];
+    const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + 'apos; 'apos; + sizes[i];
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
   return (
@@ -344,7 +344,7 @@ export function CacheManagerCompact({ className = 'apos;'apos; }: { className?: 
         className="h-6 w-6 p-0"
         disabled={cache.isLoading}
       >
-        <RefreshCw className={`h-3 w-3 ${cache.isLoading ? 'apos;animate-spin'apos; : 'apos;'apos;}`} />
+        <RefreshCw className={`h-3 w-3 ${cache.isLoading ? 'animate-spin' : ''}`} />
       </Button>
     </div>
   );

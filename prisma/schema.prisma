@@ -877,3 +877,126 @@ enum enem_session_status {
   COMPLETED
   ABANDONED
 }
+
+model user_achievements {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id        String   @db.Uuid
+  achievement_id String   @db.VarChar(50)
+  unlocked_at    DateTime @default(now()) @db.Timestamp(6)
+  session_id     String?  @db.VarChar(100)
+  metadata       Json?
+
+  @@unique([user_id, achievement_id], map: "unique_user_achievement")
+}
+
+model schools {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String   @db.VarChar(255)
+  email       String?  @db.VarChar(255)
+  phone       String?  @db.VarChar(20)
+  address     String?  @db.VarChar(500)
+  created_at  DateTime @default(now()) @db.Timestamp(6)
+  updated_at  DateTime @default(now()) @db.Timestamp(6)
+  
+  // Relations
+  school_prompts school_prompts[]
+}
+
+model system_messages {
+  id                    String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  module                String   @db.VarChar(50)
+  content                String
+  system_prompt         String?
+  description           String?
+  temperature           Float?
+  max_tokens            Int?
+  max_completion_tokens Int?
+  tone                  String?
+  is_active             Boolean  @default(true)
+  created_at            DateTime @default(now()) @db.Timestamp(6)
+  updated_at            DateTime @default(now()) @db.Timestamp(6)
+}
+
+model school_prompts {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  school_id   String   @db.Uuid
+  module      String   @db.VarChar(50)
+  content     String
+  prompt      String?
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now()) @db.Timestamp(6)
+  updated_at  DateTime @default(now()) @db.Timestamp(6)
+  
+  // Relations
+  schools     schools  @relation(fields: [school_id], references: [id])
+}
+
+model enemQuestion {
+  id            String           @id @db.VarChar(50)
+  area          String           @db.VarChar(50)
+  year          Int
+  disciplina    String           @db.VarChar(100)
+  skill_tag     String[]         @db.VarChar(50)
+  stem          String
+  a             String
+  b             String
+  c             String
+  d             String
+  e             String
+  correct       String           @db.VarChar(1)
+  rationale     String
+  difficulty    difficulty_level @default(MEDIUM)
+  source        String           @default("DATABASE") @db.VarChar(50)
+  created_at    DateTime         @default(now()) @db.Timestamp(6)
+  updated_at    DateTime         @default(now()) @db.Timestamp(6)
+}
+
+model enem_item {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  question_id   String   @db.VarChar(50)
+  exam_id       String   @db.Uuid
+  index         Int
+  source        String   @default("DATABASE") @db.VarChar(50)
+  payload_json  Json
+  answer_user   String?  @db.VarChar(1)
+  updated_at    DateTime @default(now()) @db.Timestamp(6)
+
+  @@index([exam_id], map: "idx_enem_items_exam")
+  @@index([question_id], map: "idx_enem_items_question")
+}
+
+model enemExam {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id         String   @db.Uuid
+  area            String   @db.VarChar(50)
+  mode            String   @db.VarChar(50)
+  total_questions Int
+  duration_sec    Int
+  config_json     Json
+  created_at      DateTime @default(now()) @db.Timestamp(6)
+  updated_at      DateTime @default(now()) @db.Timestamp(6)
+}
+
+model enemExamItem {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  exam_id       String   @db.Uuid
+  question_id   String   @db.VarChar(50)
+  index         Int
+  source        String   @default("DATABASE") @db.VarChar(50)
+  payload_json  Json
+  answer_user   String?  @db.VarChar(1)
+  updated_at    DateTime @default(now()) @db.Timestamp(6)
+
+  @@index([exam_id], map: "idx_enem_exam_items_exam")
+  @@index([question_id], map: "idx_enem_exam_items_question")
+}
+
+model enem_exam_template {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String   @db.VarChar(255)
+  area        String   @db.VarChar(50)
+  config_json Json
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now()) @db.Timestamp(6)
+  updated_at  DateTime @default(now()) @db.Timestamp(6)
+}

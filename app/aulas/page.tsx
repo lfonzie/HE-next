@@ -9,7 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, Sparkles, BookOpen, Target, Users, Send, Lightbulb, TrendingUp, AlertCircle, CheckCircle, Clock, RefreshCw, Timer, BarChart3, FileText, AlertTriangle, Mic, Volume2, Accessibility, Coffee, Brain, Zap, Star, Heart, Rocket } from 'lucide-react'
 import { useDynamicSuggestions } from '@/hooks/useDynamicSuggestions'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
-import { FixedHeader } from '@/components/layout/FixedHeader'
+import { ModernHeader } from '@/components/layout/ModernHeader'
 
 // Mock components for demo (replace with actual imports)
 const toast = {
@@ -584,7 +584,7 @@ function AulasPageContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-yellow-50 to-orange-100">
-      <FixedHeader />
+      <ModernHeader showNavigation={true} showHome={true} />
       <div className="container mx-auto px-4 py-8 max-w-7xl pt-24" role="main">
         {/* Header quando aula foi gerada */}
         {generatedLesson && (

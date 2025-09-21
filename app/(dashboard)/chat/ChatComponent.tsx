@@ -23,6 +23,7 @@ import { useNavigationLoading } from "@/hooks/useNavigationLoading";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { ModernHeader } from "@/components/layout/ModernHeader";
 import "@/components/chat/ChatInput.css";
 
 type MinimalChatHook = {
@@ -31,11 +32,14 @@ type MinimalChatHook = {
   sendMessage: (
     message: string,
     module?: string,
-    options?: {
-      onStreamingStart?: () => void;
-      onStreamingEnd?: () => void;
-      onError?: (error: Error) => void;
-    }
+    subject?: string,
+    grade?: string,
+    conversationId?: string,
+    image?: string,
+    attachment?: File,
+    useWebSearch?: boolean,
+    provider?: 'auto' | 'openai' | 'google' | 'anthropic' | 'mistral' | 'groq',
+    complexity?: 'simple' | 'complex' | 'fast'
   ) => Promise<void>;
   createConversation: (title?: string) => Promise<void>;
   deleteConversation: (id: string) => Promise<void>;
@@ -85,6 +89,7 @@ export default function ChatComponent() {
     confidence: number;
     rationale: string;
   } | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -130,7 +135,7 @@ export default function ChatComponent() {
 
     try {
       startLoading("Enviando mensagem...", "data");
-      await sendMessage(message, module, options);
+      await sendMessage(message, module);
       consumeQuota();
       
       if (isScrolledToBottom) {
@@ -332,112 +337,184 @@ export default function ChatComponent() {
   const isQuotaExceeded = quota.used >= quota.limit;
 
   return (
-    <div className="flex flex-col h-full max-w-6xl mx-auto bg-white rounded-lg shadow-lg">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
-        <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-bold text-gray-900">Chat IA</h1>
-          <Badge variant="outline" className="text-blue-600 border-blue-300">
-            {quota.used}/{quota.limit} mensagens
-          </Badge>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleCreateConversation}
-            disabled={isCreatingConversation}
-            className="flex items-center gap-2 fixed top-4 right-4 z-40"
-          >
-            <Plus className="h-4 w-4" />
-            Nova Conversa
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleSupport}
-            className="flex items-center gap-2"
-          >
-            <Settings className="h-4 w-4" />
-            Suporte
-          </Button>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Chat Area */}
-        <div className="flex-1 flex flex-col">
-          {/* Messages */}
-          <div 
-            ref={chatContainerRef}
-            className="flex-1 overflow-y-auto p-4 space-y-4"
-            onScroll={handleScroll}
-          >
-            {!hasMessages ? (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-2xl">💬</span>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-yellow-50 to-orange-100">
+      <ModernHeader showNavigation={true} showHome={true} />
+      <div className="container mx-auto px-4 py-8 max-w-7xl pt-24" role="main">
+        {/* Enhanced Header - Mostrar apenas quando não há mensagens */}
+        {!hasMessages && (
+          <header className="text-center mb-16">
+            <div className="relative">
+              {/* Background decoration */}
+              <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 via-orange-400/20 to-red-400/20 rounded-3xl blur-3xl"></div>
+              
+              <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl p-12 shadow-xl border border-white/20">
+                <div className="relative mb-8">
+                  <div className="w-24 h-24 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-3xl flex items-center justify-center shadow-lg mx-auto mb-6">
+                    <span className="text-4xl">💬</span>
+                  </div>
+                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-sm">✨</span>
+                  </div>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Olá! Como posso ajudar?
-                </h3>
-                <p className="text-gray-600 mb-6">
-                  Digite sua mensagem abaixo e receba sugestões inteligentes para aulas, simulados ENEM e correção de redações.
+                
+                <h1 className="text-6xl font-bold mb-6 bg-gradient-to-r from-yellow-600 to-yellow-700 bg-clip-text text-transparent">
+                  Chat Inteligente com IA
+                </h1>
+                <p className="text-2xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
+                  Converse com assistentes especializados para diferentes áreas e necessidades
                 </p>
-                <div className="flex flex-wrap gap-2 justify-center">
-                  {Object.entries(MODULES).map(([id, module]) => (
-                    <Button
-                      key={id}
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleModuleSelect(convertToOldModuleId(id as ModuleId) as ModuleType)}
-                      className="text-xs"
-                    >
-                      <i className={module.icon}></i> {module.label}
-                    </Button>
-                  ))}
+                
+                <div className="flex flex-wrap justify-center gap-3 mb-8">
+                  <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-yellow-100 text-yellow-800 border border-yellow-200">
+                    <span className="text-sm">✨</span>
+                    IA Avançada
+                  </Badge>
+                  <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-orange-100 text-orange-800 border border-orange-200">
+                    <span className="text-sm">🎯</span>
+                    Especializado
+                  </Badge>
+                  <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-red-100 text-red-800 border border-red-200">
+                    <span className="text-sm">👥</span>
+                    Interativo
+                  </Badge>
+                  <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-green-100 text-green-800 border border-green-200">
+                    <span className="text-sm">🧠</span>
+                    Inteligente
+                  </Badge>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                  <div className="p-4 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-2xl border border-yellow-200">
+                    <div className="w-12 h-12 bg-yellow-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                      <span className="text-white text-xl">💬</span>
+                    </div>
+                    <h3 className="font-semibold text-yellow-900 mb-2">Assistentes Especializados</h3>
+                    <p className="text-sm text-yellow-700">Professores, TI, Secretaria e mais módulos especializados</p>
+                  </div>
+                  <div className="p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl border border-orange-200">
+                    <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                      <span className="text-white text-xl">🎯</span>
+                    </div>
+                    <h3 className="font-semibold text-orange-900 mb-2">Respostas Contextuais</h3>
+                    <p className="text-sm text-orange-700">IA treinada para cada área específica de conhecimento</p>
+                  </div>
+                  <div className="p-4 bg-gradient-to-br from-red-50 to-red-100 rounded-2xl border border-red-200">
+                    <div className="w-12 h-12 bg-red-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                      <span className="text-white text-xl">🧠</span>
+                    </div>
+                    <h3 className="font-semibold text-red-900 mb-2">Conversação Natural</h3>
+                    <p className="text-sm text-red-700">Interface intuitiva para diálogos fluidos e eficientes</p>
+                  </div>
                 </div>
               </div>
-            ) : (
-              <>
-                {currentConversation?.messages.map((message) => (
-                  <ChatMessage
-                    key={message.id}
-                    message={message}
-                    onRetry={handleRetry}
-                    onExport={handleExportConversation}
-                  />
-                ))}
-                {isStreaming && (
-                  <div className="flex items-center gap-3 mb-3 justify-start">
-                    <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="bg-gray-100 border border-gray-200 rounded-2xl px-4 py-3 shadow-sm">
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-                          <span className="text-sm">Gerando resposta...</span>
+            </div>
+          </header>
+        )}
+
+        {/* Chat Interface */}
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-white/90 backdrop-blur-sm border-2 border-yellow-200 shadow-xl rounded-3xl overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-yellow-500 to-yellow-600 text-white">
+              <div className="flex items-center gap-4">
+                <h1 className="text-2xl font-bold">Chat IA</h1>
+                <Badge variant="outline" className="text-yellow-100 border-yellow-300 bg-white/20">
+                  {quota.used}/{quota.limit} mensagens
+                </Badge>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCreateConversation}
+                  disabled={isCreatingConversation}
+                  className="text-black border-yellow-300 hover:bg-white/20"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nova Conversa
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSupport}
+                  className="text-black border-yellow-300 hover:bg-white/20"
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  Suporte
+                </Button>
+              </div>
+            </div>
+
+            {/* Messages */}
+            <div 
+              ref={chatContainerRef}
+              className="flex-1 overflow-y-auto p-4 space-y-4 min-h-[400px]"
+              onScroll={handleScroll}
+            >
+              {!hasMessages ? (
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span className="text-2xl">💬</span>
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    Olá! Como posso ajudar?
+                  </h3>
+                  <p className="text-gray-600 mb-6">
+                    Digite sua mensagem abaixo e receba sugestões inteligentes para aulas, simulados ENEM e correção de redações.
+                  </p>
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    {Object.entries(MODULES).map(([id, module]) => (
+                      <Button
+                        key={id}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleModuleSelect(convertToOldModuleId(id as ModuleId) as ModuleType)}
+                        className="text-xs border-yellow-300 text-yellow-700 hover:bg-yellow-50"
+                      >
+                        <i className={module.icon}></i> {module.label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {currentConversation?.messages.map((message) => (
+                    <ChatMessage
+                      key={message.id}
+                      message={message}
+                      isUser={message.role === 'user'}
+                    />
+                  ))}
+                  {isStreaming && (
+                    <div className="flex items-center gap-3 mb-3 justify-start">
+                      <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="bg-gray-100 border border-gray-200 rounded-2xl px-4 py-3 shadow-sm">
+                          <div className="flex items-center gap-2 text-gray-600">
+                            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+                            <span className="text-sm">Gerando resposta...</span>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                )}
-                <div ref={messagesEndRef} />
-              </>
-            )}
-          </div>
+                  )}
+                  <div ref={messagesEndRef} />
+                </>
+              )}
+            </div>
 
-          {/* Input */}
-          <div className="p-4 border-t bg-white">
-            <ChatInput
-              onSendMessage={handleSendMessage}
-              disabled={isStreaming || isLimitReached}
-              placeholder={isLimitReached ? "Limite de mensagens atingido" : "Digite sua mensagem..."}
-            />
+            {/* Input */}
+            <div className="p-4 border-t bg-gradient-to-r from-yellow-50 to-orange-50">
+              <ChatInput
+                onSendMessage={handleSendMessage}
+                disabled={isStreaming || isLimitReached}
+                placeholder={isLimitReached ? "Limite de mensagens atingido" : "Digite sua mensagem..."}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -448,28 +525,16 @@ export default function ChatComponent() {
           module={classificationData.module}
           confidence={classificationData.confidence}
           rationale={classificationData.rationale}
-          onClose={() => setShowClassificationIndicator(false)}
+          isVisible={showClassificationIndicator}
         />
       )}
 
-      {/* Module Welcome */}
-      {showModuleWelcome && selectedModule && (
-        <ModuleWelcomeScreen
-          moduleId={convertModuleId(selectedModule) as ModuleId}
-          onSuggestionClick={(suggestion) => {
-            handleSendMessage(suggestion, selectedModule);
-            setShowModuleWelcome(false);
-          }}
-          quotaAvailable={!isLimitReached}
-        />
-      )}
 
       {/* Support Modal */}
       <SupportModal
         isOpen={showSupportModal}
         onClose={() => setShowSupportModal(false)}
       />
-
     </div>
   );
 }

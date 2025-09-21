@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic';
 
 
-import { Message, streamText } from 'ai'
+import { streamText } from 'ai'
 
 
 import { openai } from '@ai-sdk/openai'

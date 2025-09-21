@@ -8,7 +8,6 @@ import { normalizeScientificText } from './math-normalizer';
 export interface StreamTextWithNormalizationOptions {
   model: any;
   messages: any[];
-  maxTokens?: number;
   temperature?: number;
   onFinish?: () => void;
 }
@@ -18,14 +17,13 @@ export interface StreamTextWithNormalizationOptions {
  */
 export async function streamTextWithNormalization(
   options: StreamTextWithNormalizationOptions
-): Promise<StreamTextResult> {
-  const { model, messages, maxTokens = 1000, temperature = 0.7, onFinish } = options;
+): Promise<StreamTextResult<any, any>> {
+  const { model, messages, temperature = 0.7, onFinish } = options;
 
   // Criar o stream original
   const result = await streamText({
     model,
     messages,
-    maxTokens,
     temperature,
   });
 

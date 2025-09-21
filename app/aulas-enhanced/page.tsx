@@ -25,6 +25,10 @@ interface LessonData {
     type: string
     completed: boolean
     points: number
+    content?: string
+    imageUrl?: string
+    imagePrompt?: string
+    questions?: any[]
   }>
 }
 

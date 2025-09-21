@@ -140,11 +140,9 @@ export async function POST(request: NextRequest) {
       const result = await streamText({
         model: modelInstance,
         messages,
-        maxTokens: streamingConfig.maxTokens,
         temperature: streamingConfig.temperature,
         // Otimizações específicas do Vercel AI SDK
         experimental_streamData: false, // Desabilitar para velocidade
-        experimental_telemetry: false, // Desabilitar telemetria
       })
 
       // 7. Interceptar stream para cache (se habilitado)

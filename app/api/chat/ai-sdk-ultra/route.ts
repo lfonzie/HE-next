@@ -138,14 +138,12 @@ export async function POST(request: NextRequest) {
       const result = await streamText({
         model: modelInstance,
         messages,
-        maxTokens: config.maxTokens,
         temperature: config.temperature,
         topP: config.topP,
         frequencyPenalty: config.frequencyPenalty,
         presencePenalty: config.presencePenalty,
         // Otimizações específicas do Vercel AI SDK
         experimental_streamData: false,
-        experimental_telemetry: false,
         // Configurações de performance
         abortSignal: request.signal,
       })

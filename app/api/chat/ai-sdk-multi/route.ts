@@ -166,10 +166,8 @@ export async function POST(request: NextRequest) {
 
     // 7. Configurações de streaming otimizadas por complexidade
     const streamingConfig = {
-      maxTokens: complexityResult.classification === 'complexa' ? 2000 : 1000,
       temperature: complexityResult.classification === 'complexa' ? 0.7 : 0.5,
       experimental_streamData: false, // Desabilitar para velocidade
-      experimental_telemetry: false  // Desabilitar telemetria
     }
 
     // 8. Executar streaming

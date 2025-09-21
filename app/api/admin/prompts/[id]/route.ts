@@ -14,7 +14,7 @@ const prisma = new PrismaClient();
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Skip authentication in development
@@ -24,7 +24,7 @@ export async function GET(
       // TODO: Add authentication check for production
     }
 
-    const promptId = params.id;
+    const { id: promptId } = await params;
 
     // Try to find in system_messages first
     let prompt = await prisma.system_messages.findUnique({
@@ -95,7 +95,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Skip authentication in development
@@ -105,7 +105,7 @@ export async function PUT(
       // TODO: Add authentication check for production
     }
 
-    const promptId = params.id;
+    const { id: promptId } = await params;
     const body = await request.json();
     const { 
       text, 
@@ -209,7 +209,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Skip authentication in development
@@ -219,7 +219,7 @@ export async function DELETE(
       // TODO: Add authentication check for production
     }
 
-    const promptId = params.id;
+    const { id: promptId } = await params;
 
     // Try to delete from system_messages first
     const systemPrompt = await prisma.system_messages.findUnique({

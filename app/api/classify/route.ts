@@ -8,9 +8,7 @@ import { google } from '@ai-sdk/google';
 import { z } from 'zod';
 
 // Initialize Google AI client via Vercel AI SDK
-const googleModel = google('gemini-2.0-flash-exp', {
-  apiKey: process.env.GOOGLE_GEMINI_API_KEY || process.env.GOOGLE_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY || '',
-});
+const googleModel = google('gemini-2.0-flash-exp');
 
 // Schema para validação da saída do classificador
 const ClassificationSchema = z.object({

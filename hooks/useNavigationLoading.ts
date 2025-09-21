@@ -36,6 +36,7 @@ export const useNavigationLoading = () => {
 
   return {
     isLoading: state.isLoading,
+    isNavigating: state.isLoading,
     message: state.message,
     startLoading,
     stopLoading,

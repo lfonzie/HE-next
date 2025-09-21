@@ -37,7 +37,6 @@ export async function POST(request: NextRequest) {
     const result = await generateText({
       model,
       prompt,
-      maxTokens: 500,
       temperature: 0.7,
     });
 

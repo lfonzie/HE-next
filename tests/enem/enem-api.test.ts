@@ -1,36 +1,37 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { vi } from 'vitest';
 import { NextRequest } from 'next/server';
 import { POST as questionsAdvanced } from '@/app/api/enem/questions/advanced/route';
 import { POST as createExam } from '@/app/api/enem/exams/route';
 import { POST as assessment } from '@/app/api/enem/assessment/route';
 
 // Mock dependencies
-jest.mock('@/lib/auth', () => ({
-  auth: jest.fn()
+vi.mock('@/lib/auth', () => ({
+  auth: vi.fn()
 }));
 
-jest.mock('@/lib/prisma', () => ({
+vi.mock('@/lib/prisma', () => ({
   prisma: {
     enemQuestion: {
-      count: jest.fn(),
-      findMany: jest.fn()
+      count: vi.fn(),
+      findMany: vi.fn()
     },
     enemExam: {
-      create: jest.fn(),
-      findFirst: jest.fn(),
-      update: jest.fn()
+      create: vi.fn(),
+      findFirst: vi.fn(),
+      update: vi.fn()
     },
     enemExamItem: {
-      findMany: jest.fn()
+      findMany: vi.fn()
     }
   }
 }));
 
-jest.mock('@/lib/openai', () => ({
+vi.mock('@/lib/openai', () => ({
   openai: {
     chat: {
       completions: {
-        create: jest.fn()
+        create: vi.fn()
       }
     }
   }

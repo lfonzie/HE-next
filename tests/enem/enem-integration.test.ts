@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { vi } from 'vitest';
 import { EnemCache, QuestionCache } from '@/lib/cache/enem-cache';
 import { EnemBatchProcessor } from '@/lib/batch/enem-batch-processor';
 import { EnemAssessmentEngine } from '@/lib/assessment/enem-assessment';
