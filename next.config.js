@@ -1,13 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  serverExternalPackages: ['@prisma/client'],
-  // Exclude ENEM API server from build
-  outputFileTracingExcludes: {
-    '*': ['./enem-api-main/**/*']
-  },
-  // Performance optimizations (Turbopack alternative for macOS)
+  // Note: serverExternalPackages and outputFileTracingExcludes are Next.js 15+ features
+  // Removed for Next.js 14.2.15 compatibility
+  // Performance optimizations (disabled experimental features for stability)
   experimental: {
-    optimizePackageImports: ['@radix-ui/react-icons', 'lucide-react'],
+    // optimizePackageImports disabled for Next.js 14.2.15 compatibility
   },
   // Enable faster compilation
   async headers() {
