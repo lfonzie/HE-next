@@ -98,9 +98,9 @@ export default function LessonProgress({
       case 'Avaliação':
         return 'bg-red-100 text-red-800'
       case 'Encerramento':
-        return 'bg-purple-100 text-purple-800'
+        return 'bg-orange-100 text-orange-800'
       default:
-        return 'bg-blue-100 text-blue-800'
+        return 'bg-yellow-100 text-yellow-800'
     }
   }
 

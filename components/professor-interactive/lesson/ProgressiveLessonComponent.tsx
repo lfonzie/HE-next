@@ -116,85 +116,50 @@ export default function ProgressiveLessonComponent({
       
       console.log('🖼️ Carregando imagem para slide:', currentSlide + 1, 'Prompt:', query);
       
-      // 1) Wikimedia Commons first - buscar as 3 melhores imagens
+      // 1) Usar nova API de busca melhorada
       let selectedUrl: string | null = null;
       try {
-        const wikiRes = await fetch('/api/wikimedia/search', {
+        const enhancedRes = await fetch('/api/images/enhanced-search', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ query, subject: skeleton?.subject || '', count: 3 })
+          body: JSON.stringify({ 
+            query, 
+            subject: skeleton?.subject || 'Geral', 
+            count: 1,
+            preferredDimensions: { width: 1350, height: 1080 },
+            sources: ['unsplash', 'pixabay', 'wikimedia']
+          })
         });
-        if (wikiRes.ok) {
-          const wikiData = await wikiRes.json();
-          if (wikiData.success && wikiData.photos && wikiData.photos.length > 0) {
-            // Selecionar a melhor imagem das 3 (primeira é geralmente a melhor classificada)
-            const bestImage = wikiData.photos[0];
-            selectedUrl = bestImage.urls?.regular || bestImage.url;
-            console.log(`✅ Melhor imagem Wikimedia Commons (de ${wikiData.photos.length} opções):`, selectedUrl);
-            console.log(`📊 Opções disponíveis:`, wikiData.photos.map((img, idx) => `${idx + 1}. ${img.title}`).join(', '));
+        if (enhancedRes.ok) {
+          const enhancedData = await enhancedRes.json();
+          if (enhancedData.success && enhancedData.images && enhancedData.images.length > 0) {
+            const bestImage = enhancedData.images[0];
+            selectedUrl = bestImage.resizedUrl || bestImage.url;
+            console.log(`✅ Melhor imagem encontrada:`, {
+              source: bestImage.source,
+              relevanceScore: bestImage.relevanceScore,
+              educationalSuitability: bestImage.educationalSuitability,
+              url: selectedUrl
+            });
           }
         }
       } catch (e) {
-        console.warn('Wikimedia fetch failed, will fallback:', e);
+        console.warn('Enhanced image search failed, will fallback:', e);
       }
 
-      // 2) Wikimedia Commons com query expandida - buscar as 3 melhores imagens
+      // 2) Fallback para imagem educacional genérica se a busca melhorada falhar
       if (!selectedUrl) {
-        try {
-          // Usar apenas a query original, sem termos genéricos
-          const wikiRes2 = await fetch('/api/wikimedia/search', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query: query, subject: skeleton?.subject || '', count: 3 })
-          });
-          if (wikiRes2.ok) {
-            const wikiData2 = await wikiRes2.json();
-            if (wikiData2.success && wikiData2.photos && wikiData2.photos.length > 0) {
-              // Selecionar a melhor imagem das 3 (primeira é geralmente a melhor classificada)
-              const bestImage = wikiData2.photos[0];
-              selectedUrl = bestImage.urls?.regular || bestImage.url;
-              console.log(`✅ Melhor imagem Wikimedia Commons (de ${wikiData2.photos.length} opções):`, selectedUrl);
-              console.log(`📊 Opções disponíveis:`, wikiData2.photos.map((img, idx) => `${idx + 1}. ${img.title}`).join(', '));
-            }
-          }
-        } catch (e) {
-          console.warn('Wikimedia expanded fetch failed:', e);
-        }
-      }
-
-      // 3) Unsplash como fallback
-      if (!selectedUrl) {
-        try {
-          const response = await fetch('/api/unsplash/translate-search', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ 
-              query: query,
-              subject: skeleton?.subject || '',
-              count: 1
-            }),
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            if (data.photos && data.photos.length > 0) {
-              selectedUrl = data.photos[0].urls.regular;
-            }
-          }
-        } catch (e) {
-          console.warn('Unsplash fetch failed:', e);
-        }
+        selectedUrl = 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1350&h=1080&fit=crop&auto=format';
+        console.log(`⚠️ Usando imagem de fallback educacional`);
       }
 
       // 4) Final fallback
       setImageUrl(
-        selectedUrl || `https://commons.wikimedia.org/wiki/Special:FilePath/Education%20-%20The%20Noun%20Project.svg?width=800&height=400`
+        selectedUrl || 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1350&h=1080&fit=crop&auto=format'
       );
     } catch (error) {
       console.error('❌ Erro ao carregar imagem:', error);
-      setImageUrl(`https://commons.wikimedia.org/wiki/Special:FilePath/Education%20-%20The%20Noun%20Project.svg?width=800&height=400`);
+      setImageUrl('https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1350&h=1080&fit=crop&auto=format');
     }
   };
 

@@ -13,7 +13,7 @@ import { ModuleId, MODULES, convertModuleId, convertToOldModuleId } from "@/lib/
 import { ModuleType, Message as ChatMessageType, Conversation as ChatConversation } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Plus, Headphones, Settings, History, Download, Search, Square } from "lucide-react";
+import { Plus, Headphones, Settings, Download, Search, Square } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useChatContext } from "@/components/providers/ChatContext";
 import { useQuota } from "@/components/providers/QuotaProvider";
@@ -74,11 +74,9 @@ export default function ChatComponent() {
   } = useChat();
 
   // UI state
-  const [searchQuery, setSearchQuery] = useState("");
   const [showSupportModal, setShowSupportModal] = useState(false);
   const [isCreatingConversation, setIsCreatingConversation] = useState(false);
   const [isDeletingConversation, setIsDeletingConversation] = useState<string | null>(null);
-  const [showConversationHistory, setShowConversationHistory] = useState(false);
   const [showModuleWelcome, setShowModuleWelcome] = useState(false);
   const [selectedModule, setSelectedModule] = useState<ModuleType | null>(null);
   const [showClassificationIndicator, setShowClassificationIndicator] = useState(false);
@@ -199,7 +197,6 @@ export default function ChatComponent() {
   // Handle conversation selection
   const handleSelectConversation = useCallback((conversation: ChatConversation) => {
     setCurrentConversation(conversation);
-    setShowConversationHistory(false);
   }, [setCurrentConversation]);
 
   // Handle conversation clear
@@ -292,10 +289,6 @@ export default function ChatComponent() {
           e.preventDefault();
           handleCreateConversation();
           break;
-        case "k":
-          e.preventDefault();
-          setShowConversationHistory(true);
-          break;
         case "s":
           e.preventDefault();
           handleSupport();
@@ -335,26 +328,16 @@ export default function ChatComponent() {
   }, [error, toast]);
 
   // Computed values
-  const filteredConversations = useMemo(() => {
-    if (!searchQuery) return conversations;
-    return conversations.filter(conv => 
-      conv.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      conv.messages.some(msg => 
-        msg.content.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    );
-  }, [conversations, searchQuery]);
-
   const hasMessages = currentConversation?.messages && currentConversation.messages.length > 0;
   const isQuotaExceeded = quota.used >= quota.limit;
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-br from-yellow-50 to-orange-50">
+    <div className="flex flex-col h-full max-w-6xl mx-auto bg-white rounded-lg shadow-lg">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 bg-white/90 backdrop-blur-sm border-b border-yellow-200">
+      <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
         <div className="flex items-center gap-4">
           <h1 className="text-2xl font-bold text-gray-900">Chat IA</h1>
-          <Badge variant="outline" className="text-yellow-600 border-yellow-300">
+          <Badge variant="outline" className="text-blue-600 border-blue-300">
             {quota.used}/{quota.limit} mensagens
           </Badge>
         </div>
@@ -363,19 +346,9 @@ export default function ChatComponent() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setShowConversationHistory(true)}
-            className="flex items-center gap-2"
-          >
-            <History className="h-4 w-4" />
-            Histórico
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
             onClick={handleCreateConversation}
             disabled={isCreatingConversation}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 fixed top-4 right-4 z-40"
           >
             <Plus className="h-4 w-4" />
             Nova Conversa
@@ -404,32 +377,28 @@ export default function ChatComponent() {
             onScroll={handleScroll}
           >
             {!hasMessages ? (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-center space-y-4">
-                  <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto">
-                    <Headphones className="h-8 w-8 text-yellow-600" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                      Bem-vindo ao Chat IA
-                    </h2>
-                    <p className="text-gray-600 mb-4">
-                      Comece uma conversa digitando uma mensagem abaixo.
-                    </p>
-                    <div className="flex flex-wrap gap-2 justify-center">
-                      {Object.entries(MODULES).map(([id, module]) => (
-                        <Button
-                          key={id}
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleModuleSelect(convertToOldModuleId(id as ModuleId) as ModuleType)}
-                          className="text-xs"
-                        >
-                          <i className={module.icon}></i> {module.label}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl">💬</span>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Olá! Como posso ajudar?
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  Digite sua mensagem abaixo e receba sugestões inteligentes para aulas, simulados ENEM e correção de redações.
+                </p>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  {Object.entries(MODULES).map(([id, module]) => (
+                    <Button
+                      key={id}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleModuleSelect(convertToOldModuleId(id as ModuleId) as ModuleType)}
+                      className="text-xs"
+                    >
+                      <i className={module.icon}></i> {module.label}
+                    </Button>
+                  ))}
                 </div>
               </div>
             ) : (
@@ -444,13 +413,13 @@ export default function ChatComponent() {
                 ))}
                 {isStreaming && (
                   <div className="flex items-center gap-3 mb-3 justify-start">
-                    <div className="w-10 h-10 rounded-full bg-yellow-500 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     </div>
                     <div className="flex-1">
-                      <div className="bg-white/70 backdrop-blur-sm border border-yellow-200 rounded-2xl px-4 py-3 shadow-sm">
+                      <div className="bg-gray-100 border border-gray-200 rounded-2xl px-4 py-3 shadow-sm">
                         <div className="flex items-center gap-2 text-gray-600">
-                          <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />
+                          <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
                           <span className="text-sm">Gerando resposta...</span>
                         </div>
                       </div>
@@ -463,7 +432,7 @@ export default function ChatComponent() {
           </div>
 
           {/* Input */}
-          <div className="p-4 bg-white/90 backdrop-blur-sm border-t border-yellow-200">
+          <div className="p-4 border-t bg-white">
             <ChatInput
               onSendMessage={handleSendMessage}
               disabled={isStreaming || isLimitReached}
@@ -486,9 +455,12 @@ export default function ChatComponent() {
       {/* Module Welcome */}
       {showModuleWelcome && selectedModule && (
         <ModuleWelcomeScreen
-          module={selectedModule}
-          onClose={() => setShowModuleWelcome(false)}
-          onStart={() => setShowModuleWelcome(false)}
+          moduleId={convertModuleId(selectedModule) as ModuleId}
+          onSuggestionClick={(suggestion) => {
+            handleSendMessage(suggestion, selectedModule);
+            setShowModuleWelcome(false);
+          }}
+          quotaAvailable={!isLimitReached}
         />
       )}
 
@@ -498,60 +470,6 @@ export default function ChatComponent() {
         onClose={() => setShowSupportModal(false)}
       />
 
-      {/* Conversation History */}
-      {showConversationHistory && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[80vh] overflow-hidden">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">Histórico de Conversas</h2>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowConversationHistory(false)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-            
-            <div className="space-y-2 max-h-96 overflow-y-auto">
-              {filteredConversations.map((conversation) => (
-                <div
-                  key={conversation.id}
-                  className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50"
-                >
-                  <div className="flex-1">
-                    <h3 className="font-medium">{conversation.title}</h3>
-                    <p className="text-sm text-gray-500">
-                      {conversation.messages.length} mensagens
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleSelectConversation(conversation)}
-                    >
-                      Abrir
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDeleteConversation(conversation.id)}
-                      disabled={isDeletingConversation === conversation.id}
-                    >
-                      {isDeletingConversation === conversation.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        "Excluir"
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

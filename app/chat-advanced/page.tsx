@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useToast } from '../../hooks/use-toast';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../components/ui/tooltip';
 import { 
   Menu, 
@@ -17,10 +18,16 @@ import {
   MessageSquare,
   BookOpen,
   History,
-  Zap
+  Zap,
+  Brain,
+  Heart,
+  Rocket,
+  Target,
+  Users
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import Link from 'next/link';
+import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 
 interface Module {
   id: string;
@@ -32,19 +39,8 @@ interface Module {
   isActive: boolean;
 }
 
-export default function ChatAdvanced() {
-  // Handle prerendering - return loading state
-  if (typeof window === 'undefined') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-500">Carregando…</p>
-        </div>
-      </div>
-    );
-  }
-
-  const { data: session } = useSession();
+function ChatAdvancedContent() {
+  const session = useSession();
   const { toast } = useToast();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [currentModuleId, setCurrentModuleId] = useState('professor');
@@ -153,194 +149,197 @@ export default function ChatAdvanced() {
     });
   };
 
-  if (!session?.user) {
+  if (!session?.data?.user) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Acesso Negado</h1>
-          <p>Você precisa estar logado para acessar o chat.</p>
-          <Link href="/login">
-            <Button className="mt-4">Fazer Login</Button>
-          </Link>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+        <Card className="w-full max-w-md mx-4 bg-white/90 backdrop-blur-sm border-2 border-blue-200 shadow-xl rounded-3xl">
+          <CardContent className="pt-8">
+            <div className="text-center space-y-6">
+              <div className="flex justify-center">
+                <div className="h-20 w-20 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
+                  <MessageSquare className="h-10 w-10 text-white" />
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <h2 className="text-3xl font-bold text-gray-900">
+                  Acesso Negado
+                </h2>
+                <p className="text-lg text-gray-600">
+                  Você precisa estar logado para acessar o chat avançado.
+                </p>
+              </div>
+              
+              <div className="space-y-3">
+                <Link href="/login">
+                  <Button className="w-full">
+                    Fazer Login
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <TooltipProvider>
-      <div className="flex h-screen bg-background">
-        {/* Sidebar */}
-        <div className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 bg-background border-r transform transition-transform duration-200 ease-in-out",
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full",
-          "md:relative md:translate-x-0 md:flex md:flex-col"
-        )}>
-          <div className="flex items-center justify-between p-4 border-b">
-            <h2 className="text-lg font-semibold">Módulos</h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsSidebarOpen(false)}
-              className="md:hidden"
-            >
-              <X className="h-4 w-4" />
-            </Button>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      <div className="container mx-auto px-4 py-8 max-w-7xl" role="main">
+        {/* Header */}
+        <header className="text-center mb-16">
+          <div className="relative">
+            {/* Background decoration */}
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 via-purple-400/20 to-pink-400/20 rounded-3xl blur-3xl"></div>
+            
+            <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl p-12 shadow-xl border border-white/20">
+              <div className="relative mb-8">
+                <div className="w-24 h-24 bg-gradient-to-br from-blue-400 to-blue-600 rounded-3xl flex items-center justify-center shadow-lg mx-auto mb-6">
+                  <MessageSquare className="h-12 w-12 text-white" />
+                </div>
+                <div className="absolute -top-2 -right-2 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                  <Sparkles className="h-4 w-4 text-white fill-current" />
+                </div>
+              </div>
+              
+              <h1 className="text-6xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
+                Chat Avançado com IA
+              </h1>
+              <p className="text-2xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
+                Converse com assistentes especializados em diferentes áreas educacionais
+              </p>
+              
+              <div className="flex flex-wrap justify-center gap-3 mb-8">
+                <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-100 text-blue-800 border border-blue-200">
+                  <Sparkles className="h-4 w-4" />
+                  IA Avançada
+                </Badge>
+                <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-purple-100 text-purple-800 border border-purple-200">
+                  <Target className="h-4 w-4" />
+                  Especializado
+                </Badge>
+                <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-pink-100 text-pink-800 border border-pink-200">
+                  <Users className="h-4 w-4" />
+                  Interativo
+                </Badge>
+                <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-green-100 text-green-800 border border-green-200">
+                  <Heart className="h-4 w-4" />
+                  Personalizado
+                </Badge>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl border border-blue-200">
+                  <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <Brain className="h-6 w-6 text-white" />
+                  </div>
+                  <h3 className="font-semibold text-blue-900 mb-2">IA Especializada</h3>
+                  <p className="text-sm text-blue-700">Assistentes treinados para diferentes áreas educacionais</p>
+                </div>
+                <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl border border-purple-200">
+                  <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <Zap className="h-6 w-6 text-white" />
+                  </div>
+                  <h3 className="font-semibold text-purple-900 mb-2">Resposta Rápida</h3>
+                  <p className="text-sm text-purple-700">Respostas instantâneas e contextualizadas</p>
+                </div>
+                <div className="p-4 bg-gradient-to-br from-pink-50 to-pink-100 rounded-2xl border border-pink-200">
+                  <div className="w-12 h-12 bg-pink-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <Rocket className="h-6 w-6 text-white" />
+                  </div>
+                  <h3 className="font-semibold text-pink-900 mb-2">Experiência Única</h3>
+                  <p className="text-sm text-pink-700">Cada conversa é adaptada ao seu contexto</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Module Selection */}
+        <div className="max-w-6xl mx-auto mb-16">
+          <div className="text-center mb-8">
+            <h3 className="text-3xl font-bold text-gray-800 mb-4 flex items-center justify-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+                <Target className="h-4 w-4 text-white" />
+              </div>
+              Escolha seu Assistente
+            </h3>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Selecione o módulo que melhor atende às suas necessidades educacionais
+            </p>
           </div>
           
-          <div className="flex-1 overflow-y-auto p-4">
-            <div className="space-y-2">
-              {modules.map((module) => (
-                <button
-                  key={module.id}
-                  onClick={() => handleModuleSelect(module.id)}
-                  className={cn(
-                    "w-full flex items-center gap-3 p-3 rounded-lg text-left transition-colors",
-                    currentModuleId === module.id
-                      ? "bg-primary text-primary-foreground"
-                      : "hover:bg-muted"
-                  )}
-                >
-                  <div className={cn(
-                    "w-8 h-8 rounded-full flex items-center justify-center text-white text-sm",
-                    module.color
-                  )}>
-                    {module.icon}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {modules.map((module) => (
+              <Card
+                key={module.id}
+                className={`group cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 ${
+                  currentModuleId === module.id
+                    ? 'ring-2 ring-blue-500 bg-gradient-to-br from-blue-50 to-blue-100'
+                    : 'hover:bg-gradient-to-br hover:from-gray-50 hover:to-gray-100'
+                }`}
+                onClick={() => handleModuleSelect(module.id)}
+              >
+                <CardHeader className="text-center">
+                  <div className={`w-16 h-16 ${module.color} rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-200`}>
+                    <span className="text-2xl">{module.icon}</span>
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">{module.name}</span>
-                      {!module.isActive && (
-                        <Badge variant="secondary" className="text-xs">
-                          Pro
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {module.description}
-                    </p>
+                  <CardTitle className="text-xl">{module.name}</CardTitle>
+                  <CardDescription>{module.description}</CardDescription>
+                </CardHeader>
+                <CardContent className="text-center">
+                  <div className="flex items-center justify-center gap-2 mb-4">
+                    {!module.isActive && (
+                      <Badge variant="secondary" className="text-xs">
+                        Pro
+                      </Badge>
+                    )}
+                    <Badge variant="outline" className="text-xs">
+                      {module.planRequired}
+                    </Badge>
                   </div>
-                </button>
-              ))}
-            </div>
+                  <Button 
+                    className="w-full"
+                    variant={currentModuleId === module.id ? "default" : "outline"}
+                    disabled={!module.isActive && session?.data?.user?.role !== 'SUPER_ADMIN'}
+                  >
+                    {currentModuleId === module.id ? 'Selecionado' : 'Selecionar'}
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col">
-          {/* Header */}
-          <header className="flex items-center justify-between p-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="flex items-center gap-4">
-              {/* Mobile Menu Button */}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsSidebarOpen(true)}
-                className="md:hidden"
-              >
-                <Menu className="h-5 w-5" />
-              </Button>
-
-              {/* Module Info */}
-              <div className="flex items-center gap-3">
-                <div className={cn(
-                  "w-10 h-10 rounded-full flex items-center justify-center text-white text-lg",
-                  currentModule?.color
-                )}>
-                  {currentModule?.icon}
+        {/* Chat Interface */}
+        <div className="max-w-4xl mx-auto">
+          <Card className="bg-white/90 backdrop-blur-sm border-2 border-blue-200 shadow-xl rounded-3xl overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-8">
+              <CardTitle className="flex items-center gap-3 text-2xl">
+                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                  <MessageSquare className="h-6 w-6" />
                 </div>
-                <div>
-                  <h1 className="text-lg font-semibold">{currentModule?.name}</h1>
-                  <p className="text-sm text-muted-foreground">
-                    {currentModule?.description}
-                  </p>
-                </div>
-                {!hasAccess && (
-                  <Badge variant="secondary" className="text-xs">
-                    Pro
-                  </Badge>
-                )}
-              </div>
-            </div>
-
-            {/* Header Actions */}
-            <div className="flex items-center gap-2">
-              {/* User Info */}
-              <div className="hidden md:flex items-center gap-2">
-                <div className="text-right">
-                  <p className="text-sm font-medium">{session.user.name}</p>
-                  <p className="text-xs text-muted-foreground">{session.user.email}</p>
-                </div>
-                <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                  <User className="h-4 w-4 text-primary" />
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      toast({
-                        title: "Novo chat",
-                        description: "Iniciando nova conversa...",
-                      });
-                    }}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Novo chat (Ctrl+K)</TooltipContent>
-              </Tooltip>
-
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                  >
-                    <Settings className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Configurações (Ctrl+B)</TooltipContent>
-              </Tooltip>
-
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleLogout}
-                  >
-                    <LogOut className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Sair</TooltipContent>
-              </Tooltip>
-            </div>
-          </header>
-
-          {/* Chat Interface */}
-          <div className="flex-1 relative">
-            {hasAccess ? (
-              <div className="flex items-center justify-center h-full bg-gray-50">
-                <div className="text-center">
+                {currentModule?.name} - Interface de Chat
+              </CardTitle>
+              <CardDescription className="text-blue-100 text-lg mt-2">
+                {currentModule?.description}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-8">
+              {hasAccess ? (
+                <div className="text-center py-12">
                   <MessageSquare className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-semibold text-gray-600 mb-2">Interface de Chat Avançada</h3>
                   <p className="text-gray-500">Componente em desenvolvimento</p>
                 </div>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-center max-w-md p-8">
-                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Zap className="h-8 w-8 text-primary" />
+              ) : (
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Zap className="h-8 w-8 text-blue-600" />
                   </div>
                   <h2 className="text-2xl font-bold mb-2">Recurso Premium</h2>
-                  <p className="text-muted-foreground mb-6">
+                  <p className="text-gray-600 mb-6">
                     Este módulo está disponível apenas para usuários com plano completo.
                   </p>
                   <div className="space-y-3">
@@ -354,29 +353,19 @@ export default function ChatAdvanced() {
                     </Button>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
-
-          {/* Footer */}
-          <footer className="flex items-center justify-between p-4 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <span>HubEdu.ia v2.0</span>
-              <span>•</span>
-              <span>Powered by AI</span>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-xs">
-                {session.user.role || 'USER'}
-              </Badge>
-              <Badge variant="secondary" className="text-xs">
-                Basic
-              </Badge>
-            </div>
-          </footer>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
-    </TooltipProvider>
+    </div>
+  );
+}
+
+export default function ChatAdvanced() {
+  return (
+    <ProtectedRoute>
+      <ChatAdvancedContent />
+    </ProtectedRoute>
   );
 }

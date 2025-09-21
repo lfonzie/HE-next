@@ -126,10 +126,10 @@ export const ChatMessage = memo(function ChatMessage({
   // Bubble classes based on role
   const bubbleClass = (role: 'user' | 'assistant' | 'system') => {
     if (role === 'user') {
-      return "self-end bg-amber-300 text-black rounded-2xl px-4 py-3 shadow-sm max-w-prose md:max-w-[65ch] break-words hyphens-auto";
+      return "self-end bg-blue-500 text-white rounded-2xl px-4 py-3 shadow-sm max-w-prose md:max-w-[65ch] break-words hyphens-auto";
     }
     if (role === 'assistant') {
-      return "self-start rounded-2xl px-4 py-3 shadow-sm border border-zinc-200/60 dark:border-zinc-700/50 bg-white/70 dark:bg-zinc-800/60 max-w-prose md:max-w-[65ch] break-words hyphens-auto";
+      return "self-start px-4 py-3 max-w-prose md:max-w-[65ch] break-words hyphens-auto";
     }
     return "self-center text-xs text-zinc-500 bg-zinc-100/60 dark:bg-zinc-800/40 rounded-full px-3 py-1";
   };

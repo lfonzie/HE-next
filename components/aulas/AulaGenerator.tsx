@@ -76,7 +76,7 @@ export default function AulaGenerator({
       <CardContent className="p-8 space-y-8">
         <div className="space-y-4">
           <label htmlFor="topic" className="text-lg font-semibold flex items-center gap-2 text-gray-800">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-lg flex items-center justify-center">
               <Target className="h-4 w-4 text-white" />
             </div>
             O que você quer aprender hoje? 

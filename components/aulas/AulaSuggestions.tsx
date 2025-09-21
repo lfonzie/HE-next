@@ -24,7 +24,7 @@ const AulaSuggestions = memo(({ onSuggestionClick, isGenerating, className }: Au
   const { suggestions, loading: suggestionsLoading, error: suggestionsError, refreshSuggestions } = useDynamicSuggestions()
 
   return (
-    <Card className={`border-2 border-blue-100 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 ${className}`}>
+    <Card className={`border-2 border-yellow-100 bg-gradient-to-br from-yellow-50 via-orange-50 to-red-50 ${className}`}>
       <CardHeader className="text-center pb-4">
         <div className="flex items-center justify-center gap-3">
           <CardTitle className="flex items-center gap-2 text-2xl">

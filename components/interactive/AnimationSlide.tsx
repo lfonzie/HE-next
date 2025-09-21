@@ -77,10 +77,16 @@ export default function AnimationSlide({
                   <img
                     src={imageUrl}
                     alt={`${lessonTheme} - ${title}`}
-                    className="w-full h-48 object-cover rounded-lg shadow-lg"
+                    className="w-full rounded-lg shadow-lg"
+                    style={{ 
+                      aspectRatio: '1350/1080',
+                      height: 'auto',
+                      maxHeight: '400px',
+                      objectFit: 'cover'
+                    }}
                     onError={(e) => {
                       // Fallback para imagem genérica se a dinâmica falhar
-                      e.currentTarget.src = `https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&h=400&fit=crop&auto=format`
+                      e.currentTarget.src = `https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1350&h=1080&fit=crop&auto=format`
                     }}
                   />
                 ) : (

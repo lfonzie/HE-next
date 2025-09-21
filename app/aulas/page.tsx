@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, Sparkles, BookOpen, Target, Users, Send, Lightbulb, TrendingUp, AlertCircle, CheckCircle, Clock, RefreshCw, Timer, BarChart3, FileText, AlertTriangle, Mic, Volume2, Accessibility, Coffee, Brain, Zap, Star, Heart, Rocket } from 'lucide-react'
 import { useDynamicSuggestions } from '@/hooks/useDynamicSuggestions'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
+import { FixedHeader } from '@/components/layout/FixedHeader'
 
 // Mock components for demo (replace with actual imports)
 const toast = {
@@ -52,10 +53,10 @@ const LoadingEntertainment = ({ elapsedTime }: { elapsedTime: number }) => {
   const currentFact = facts[Math.floor(elapsedTime / 15000) % facts.length]
 
   return (
-    <div className="space-y-8 p-8 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 rounded-2xl border border-blue-200">
+    <div className="space-y-8 p-8 bg-gradient-to-br from-yellow-50 via-orange-50 to-red-50 rounded-2xl border border-yellow-200">
       <div className="text-center">
         <div className="flex items-center justify-center gap-3 mb-4">
-          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+          <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-xl flex items-center justify-center">
             <Coffee className="h-6 w-6 text-white" />
           </div>
           <span className="text-2xl font-bold text-gray-800">Enquanto aguardamos...</span>
@@ -63,12 +64,12 @@ const LoadingEntertainment = ({ elapsedTime }: { elapsedTime: number }) => {
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
           Nossa IA está trabalhando intensamente para criar sua aula perfeita! 
           <br />
-          <strong className="text-blue-600">Pode levar até 2 minutos e meio</strong> para garantir qualidade máxima.
+          <strong className="text-yellow-600">Pode levar até 2 minutos e meio</strong> para garantir qualidade máxima.
         </p>
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="p-6 bg-white/70 backdrop-blur-sm rounded-2xl border border-blue-200 shadow-sm">
+        <div className="p-6 bg-white/70 backdrop-blur-sm rounded-2xl border border-yellow-200 shadow-sm">
           <div className="flex items-start gap-4">
             <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center flex-shrink-0">
               <Lightbulb className="h-6 w-6 text-white" />
@@ -80,9 +81,9 @@ const LoadingEntertainment = ({ elapsedTime }: { elapsedTime: number }) => {
           </div>
         </div>
         
-        <div className="p-6 bg-white/70 backdrop-blur-sm rounded-2xl border border-purple-200 shadow-sm">
+        <div className="p-6 bg-white/70 backdrop-blur-sm rounded-2xl border border-orange-200 shadow-sm">
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center flex-shrink-0">
+            <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center flex-shrink-0">
               <Brain className="h-6 w-6 text-white" />
             </div>
             <div>
@@ -128,7 +129,7 @@ const LessonProgress = ({ progress, status, isGenerating, elapsedTime, className
     <div className={`space-y-4 ${className}`}>
       <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
         <div 
-          className="bg-blue-600 h-3 rounded-full transition-all duration-300 ease-out"
+          className="bg-yellow-600 h-3 rounded-full transition-all duration-300 ease-out"
           style={{ width: `${progress}%` }}
         />
       </div>
@@ -137,7 +138,7 @@ const LessonProgress = ({ progress, status, isGenerating, elapsedTime, className
           {isGenerating && <Loader2 className="h-4 w-4 animate-spin" />}
           <span className="text-sm text-gray-600">{status}</span>
         </div>
-        <div className="flex items-center gap-1 text-sm text-blue-600 font-medium">
+        <div className="flex items-center gap-1 text-sm text-yellow-600 font-medium">
           <Timer className="h-4 w-4" />
           <span>{formatTime(elapsedTime)}</span>
         </div>
@@ -166,7 +167,7 @@ const PacingMetrics = ({ metrics, warnings, className }: PacingMetricsProps) => 
   return (
     <div className={`space-y-6 ${className}`}>
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+        <div className="w-10 h-10 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-xl flex items-center justify-center">
           <BarChart3 className="h-5 w-5 text-white" />
         </div>
         <h3 className="text-2xl font-bold text-gray-800">📊 Métricas de Pacing Profissional</h3>
@@ -185,26 +186,14 @@ const PacingMetrics = ({ metrics, warnings, className }: PacingMetricsProps) => 
           </div>
         </div>
         
-        <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-200">
+        <div className="p-6 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl border border-yellow-200">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
+            <div className="w-10 h-10 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-xl flex items-center justify-center">
               <Timer className="h-5 w-5 text-white" />
             </div>
             <div>
               <p className="text-sm font-medium text-gray-600">Tempo Assíncrono</p>
-              <p className="text-2xl font-bold text-blue-600">{metrics.asynchronousTime} min</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl border border-purple-200">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center">
-              <FileText className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total de Tokens</p>
-              <p className="text-2xl font-bold text-purple-600">{metrics.totalTokens.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-yellow-600">{metrics.asynchronousTime} min</p>
             </div>
           </div>
         </div>
@@ -212,11 +201,23 @@ const PacingMetrics = ({ metrics, warnings, className }: PacingMetricsProps) => 
         <div className="p-6 bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl border border-orange-200">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center">
+              <FileText className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total de Tokens</p>
+              <p className="text-2xl font-bold text-orange-600">{metrics.totalTokens.toLocaleString()}</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="p-6 bg-gradient-to-br from-red-50 to-pink-50 rounded-2xl border border-red-200">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-pink-600 rounded-xl flex items-center justify-center">
               <Target className="h-5 w-5 text-white" />
             </div>
             <div>
               <p className="text-sm font-medium text-gray-600">Palavras por Slide</p>
-              <p className="text-2xl font-bold text-orange-600">{metrics.wordsPerSlide}</p>
+              <p className="text-2xl font-bold text-red-600">{metrics.wordsPerSlide}</p>
             </div>
           </div>
         </div>
@@ -582,14 +583,15 @@ function AulasPageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      <div className="container mx-auto px-4 py-8 max-w-7xl" role="main">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-yellow-50 to-orange-100">
+      <FixedHeader />
+      <div className="container mx-auto px-4 py-8 max-w-7xl pt-24" role="main">
         {/* Header quando aula foi gerada */}
         {generatedLesson && (
           <header className="text-center mb-12">
             <div className="relative">
               {/* Background decoration */}
-              <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 via-blue-400/20 to-purple-400/20 rounded-3xl blur-3xl"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 via-orange-400/20 to-red-400/20 rounded-3xl blur-3xl"></div>
               
               <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-white/20">
                 <div className="flex items-center justify-center gap-6 mb-6">
@@ -644,7 +646,7 @@ function AulasPageContent() {
         <header className="text-center mb-16">
           <div className="relative">
             {/* Background decoration */}
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 via-purple-400/20 to-pink-400/20 rounded-3xl blur-3xl"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 via-orange-400/20 to-red-400/20 rounded-3xl blur-3xl"></div>
             
             <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl p-12 shadow-xl border border-white/20">
               <div className="relative mb-8">
@@ -664,15 +666,15 @@ function AulasPageContent() {
               </p>
               
               <div className="flex flex-wrap justify-center gap-3 mb-8">
-                <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-100 text-blue-800 border border-blue-200">
+                <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-yellow-100 text-yellow-800 border border-yellow-200">
                   <Sparkles className="h-4 w-4" />
                   IA Avançada
                 </Badge>
-                <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-purple-100 text-purple-800 border border-purple-200">
+                <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-orange-100 text-orange-800 border border-orange-200">
                   <Target className="h-4 w-4" />
                   Personalizado
                 </Badge>
-                <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-pink-100 text-pink-800 border border-pink-200">
+                <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-red-100 text-red-800 border border-red-200">
                   <Users className="h-4 w-4" />
                   Interativo
                 </Badge>
@@ -683,26 +685,26 @@ function AulasPageContent() {
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-                <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl border border-blue-200">
-                  <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                <div className="p-4 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-2xl border border-yellow-200">
+                  <div className="w-12 h-12 bg-yellow-500 rounded-xl flex items-center justify-center mx-auto mb-3">
                     <Brain className="h-6 w-6 text-white" />
                   </div>
-                  <h3 className="font-semibold text-blue-900 mb-2">IA Inteligente</h3>
-                  <p className="text-sm text-blue-700">Algoritmos avançados que adaptam o conteúdo ao seu nível</p>
+                  <h3 className="font-semibold text-yellow-900 mb-2">IA Inteligente</h3>
+                  <p className="text-sm text-yellow-700">Algoritmos avançados que adaptam o conteúdo ao seu nível</p>
                 </div>
-                <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl border border-purple-200">
-                  <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                <div className="p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl border border-orange-200">
+                  <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center mx-auto mb-3">
                     <Zap className="h-6 w-6 text-white" />
                   </div>
-                  <h3 className="font-semibold text-purple-900 mb-2">Geração Rápida</h3>
-                  <p className="text-sm text-purple-700">Aulas completas em menos de 3 minutos</p>
+                  <h3 className="font-semibold text-orange-900 mb-2">Geração Rápida</h3>
+                  <p className="text-sm text-orange-700">Aulas completas em menos de 3 minutos</p>
                 </div>
-                <div className="p-4 bg-gradient-to-br from-pink-50 to-pink-100 rounded-2xl border border-pink-200">
-                  <div className="w-12 h-12 bg-pink-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                <div className="p-4 bg-gradient-to-br from-red-50 to-red-100 rounded-2xl border border-red-200">
+                  <div className="w-12 h-12 bg-red-500 rounded-xl flex items-center justify-center mx-auto mb-3">
                     <Rocket className="h-6 w-6 text-white" />
                   </div>
-                  <h3 className="font-semibold text-pink-900 mb-2">Experiência Única</h3>
-                  <p className="text-sm text-pink-700">Cada aula é única e adaptada ao seu interesse</p>
+                  <h3 className="font-semibold text-red-900 mb-2">Experiência Única</h3>
+                  <p className="text-sm text-red-700">Cada aula é única e adaptada ao seu interesse</p>
                 </div>
               </div>
             </div>
@@ -715,7 +717,7 @@ function AulasPageContent() {
         <div className="max-w-4xl mx-auto mb-12">
           <div className="relative">
             {/* Background decoration */}
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 via-purple-400/10 to-pink-400/10 rounded-3xl blur-2xl"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/10 via-orange-400/10 to-red-400/10 rounded-3xl blur-2xl"></div>
             
             <Card className="relative bg-white/90 backdrop-blur-sm border-2 border-yellow-200 shadow-xl rounded-3xl overflow-hidden">
               <CardHeader className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white p-8">
@@ -789,9 +791,9 @@ function AulasPageContent() {
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 border border-blue-200 rounded-2xl p-6">
+                <div className="bg-gradient-to-r from-yellow-50 via-orange-50 to-red-50 border border-yellow-200 rounded-2xl p-6">
                   <h4 className="font-semibold text-lg text-gray-800 mb-4 flex items-center gap-2">
-                    <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                    <div className="w-6 h-6 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-lg flex items-center justify-center">
                       <Target className="h-3 w-3 text-white" />
                     </div>
                     O que nossa IA fará automaticamente:
@@ -804,19 +806,19 @@ function AulasPageContent() {
                       <span className="text-gray-700">Identificar matéria e série ideais</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center">
+                      <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg flex items-center justify-center">
                         <Target className="h-4 w-4 text-white" />
                       </div>
                       <span className="text-gray-700">Criar objetivos específicos</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg flex items-center justify-center">
+                      <div className="w-8 h-8 bg-gradient-to-br from-red-400 to-red-600 rounded-lg flex items-center justify-center">
                         <Users className="h-4 w-4 text-white" />
                       </div>
                       <span className="text-gray-700">Desenvolver atividades interativas</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-gradient-to-br from-pink-400 to-pink-600 rounded-lg flex items-center justify-center">
+                      <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-green-600 rounded-lg flex items-center justify-center">
                         <Heart className="h-4 w-4 text-white" />
                       </div>
                       <span className="text-gray-700">Implementar gamificação</span>
@@ -856,7 +858,7 @@ function AulasPageContent() {
         <div className="max-w-6xl mx-auto mb-16">
           <div className="text-center mb-8">
             <h3 className="text-3xl font-bold text-gray-800 mb-4 flex items-center justify-center gap-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+              <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
                 <Lightbulb className="h-4 w-4 text-white" />
               </div>
               Sugestões Rápidas
@@ -883,23 +885,23 @@ function AulasPageContent() {
                 <button
                   key={`${suggestion.text}-${index}`}
                   onClick={() => handleSuggestionClick(suggestion)}
-                  className="group p-6 text-left border-2 border-gray-200 rounded-2xl hover:border-blue-300 hover:bg-gradient-to-br hover:from-blue-50 hover:to-purple-50 transition-all duration-300 bg-white/80 backdrop-blur-sm hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="group p-6 text-left border-2 border-gray-200 rounded-2xl hover:border-yellow-300 hover:bg-gradient-to-br hover:from-yellow-50 hover:to-orange-50 transition-all duration-300 bg-white/80 backdrop-blur-sm hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={isGenerating}
                   aria-label={`Gerar aula sobre ${suggestion.text}`}
                 >
                   <div className="flex items-start gap-3 mb-3">
-                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
+                    <div className="w-8 h-8 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
                       <BookOpen className="h-4 w-4 text-white" />
                     </div>
-                    <p className="text-base font-semibold text-gray-800 group-hover:text-blue-800 line-clamp-2 leading-relaxed">
+                    <p className="text-base font-semibold text-gray-800 group-hover:text-yellow-800 line-clamp-2 leading-relaxed">
                       {suggestion.text}
                     </p>
                   </div>
                   <div className="flex gap-2">
-                    <Badge variant="secondary" className="text-xs px-3 py-1 bg-blue-100 text-blue-800 border border-blue-200">
+                    <Badge variant="secondary" className="text-xs px-3 py-1 bg-yellow-100 text-yellow-800 border border-yellow-200">
                       {suggestion.category}
                     </Badge>
-                    <Badge variant="outline" className="text-xs px-3 py-1 border-purple-200 text-purple-700">
+                    <Badge variant="outline" className="text-xs px-3 py-1 border-orange-200 text-orange-700">
                       {suggestion.level}
                     </Badge>
                   </div>
@@ -914,7 +916,7 @@ function AulasPageContent() {
               variant="outline"
               size="lg"
               disabled={suggestionsLoading}
-              className="border-2 border-purple-200 text-purple-700 hover:bg-purple-50 hover:border-purple-300 transition-all duration-200"
+              className="border-2 border-orange-200 text-orange-700 hover:bg-orange-50 hover:border-orange-300 transition-all duration-200"
             >
               <RefreshCw className={`h-5 w-5 mr-2 ${suggestionsLoading ? 'animate-spin' : ''}`} />
               Atualizar Sugestões
@@ -928,7 +930,7 @@ function AulasPageContent() {
         <div className="max-w-6xl mx-auto">
           <div className="relative">
             {/* Background decoration */}
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 via-purple-400/20 to-pink-400/20 rounded-3xl blur-3xl"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 via-orange-400/20 to-red-400/20 rounded-3xl blur-3xl"></div>
             
             <Card className="relative bg-white/90 backdrop-blur-sm border-2 border-yellow-200 shadow-xl rounded-3xl overflow-hidden">
               <CardHeader className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white p-8 text-center">
@@ -940,7 +942,7 @@ function AulasPageContent() {
                     <h1 className="text-4xl font-bold mb-2">
                       Gerando sua Aula Personalizada
                     </h1>
-                    <p className="text-xl text-blue-100">Nossa IA está trabalhando intensamente para você!</p>
+                    <p className="text-xl text-yellow-100">Nossa IA está trabalhando intensamente para você!</p>
                   </div>
                 </div>
               </CardHeader>
@@ -949,16 +951,16 @@ function AulasPageContent() {
                 <div className="space-y-6">
                   <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden shadow-inner">
                     <div 
-                      className="bg-gradient-to-r from-blue-500 to-purple-600 h-4 rounded-full transition-all duration-500 ease-out shadow-lg"
+                      className="bg-gradient-to-r from-yellow-500 to-orange-600 h-4 rounded-full transition-all duration-500 ease-out shadow-lg"
                       style={{ width: `${generationProgress}%` }}
                     />
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      {isGenerating && <Loader2 className="h-5 w-5 animate-spin text-blue-600" />}
+                      {isGenerating && <Loader2 className="h-5 w-5 animate-spin text-yellow-600" />}
                       <span className="text-lg font-medium text-gray-700">{generationStatus}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-lg text-blue-600 font-semibold">
+                    <div className="flex items-center gap-2 text-lg text-yellow-600 font-semibold">
                       <Timer className="h-5 w-5" />
                       <span>{formatTime(elapsedTime)}</span>
                     </div>
@@ -979,7 +981,7 @@ function AulasPageContent() {
         <div className="max-w-6xl mx-auto">
           <div className="relative">
             {/* Background decoration */}
-            <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 via-blue-400/20 to-purple-400/20 rounded-3xl blur-3xl"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 via-orange-400/20 to-red-400/20 rounded-3xl blur-3xl"></div>
             
             <Card className="relative bg-white/90 backdrop-blur-sm border-2 border-yellow-200 shadow-xl rounded-3xl overflow-hidden">
               <CardContent className="p-12">
@@ -987,15 +989,15 @@ function AulasPageContent() {
                   {/* Objetivos de Aprendizagem */}
                   <div>
                     <h3 className="text-3xl font-bold mb-8 flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-blue-600 rounded-xl flex items-center justify-center">
+                      <div className="w-10 h-10 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-xl flex items-center justify-center">
                         <Target className="h-5 w-5 text-white" />
                       </div>
                       Objetivos de Aprendizagem
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {generatedLesson.objectives.map((objective: string, index: number) => (
-                        <div key={index} className="flex items-start gap-4 p-6 bg-gradient-to-br from-emerald-50 to-blue-50 rounded-2xl border border-emerald-200">
-                          <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <div key={index} className="flex items-start gap-4 p-6 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl border border-yellow-200">
+                          <div className="w-8 h-8 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-lg flex items-center justify-center flex-shrink-0">
                             <CheckCircle className="h-4 w-4 text-white" />
                           </div>
                           <span className="text-gray-700 font-medium leading-relaxed">{objective}</span>
@@ -1007,22 +1009,22 @@ function AulasPageContent() {
                   {/* Estrutura da Aula */}
                   <div>
                     <h3 className="text-3xl font-bold mb-8 flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center">
+                      <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center">
                         <BookOpen className="h-5 w-5 text-white" />
                       </div>
                       Estrutura da Aula
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {generatedLesson.stages.map((stage: any, index: number) => (
-                        <div key={index} className="group p-6 bg-gradient-to-br from-white to-gray-50 rounded-2xl border border-gray-200 hover:border-purple-300 hover:shadow-lg transition-all duration-200">
+                        <div key={index} className="group p-6 bg-gradient-to-br from-white to-gray-50 rounded-2xl border border-gray-200 hover:border-orange-300 hover:shadow-lg transition-all duration-200">
                           <div className="flex items-center gap-4 mb-4">
-                            <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
+                            <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
                               <span className="text-lg font-bold text-white">{index + 1}</span>
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="font-bold text-gray-900 text-lg">{stage.etapa}</p>
                               <div className="flex items-center gap-3 mt-2">
-                                <Badge variant="secondary" className="bg-purple-100 text-purple-800 border border-purple-200">
+                                <Badge variant="secondary" className="bg-orange-100 text-orange-800 border border-orange-200">
                                   {stage.type}
                                 </Badge>
                                 <span className="text-sm text-gray-500 flex items-center gap-1">
@@ -1041,7 +1043,7 @@ function AulasPageContent() {
                   <PacingMetrics 
                     metrics={pacingMetrics} 
                     warnings={pacingWarnings}
-                    className="bg-gradient-to-br from-blue-50 to-purple-50 p-8 rounded-2xl border border-blue-200"
+                    className="bg-gradient-to-br from-yellow-50 to-orange-50 p-8 rounded-2xl border border-yellow-200"
                   />
 
                   {/* Botões de ação */}

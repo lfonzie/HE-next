@@ -634,7 +634,7 @@ export default function LessonPage() {
                       status === 'completed' 
                         ? 'bg-green-50 border border-green-200 text-green-800'
                         : status === 'current'
-                        ? 'bg-blue-50 border border-blue-200 text-blue-800'
+                        ? 'bg-yellow-50 border border-yellow-200 text-yellow-800'
                         : status === 'available'
                         ? 'bg-gray-50 border border-gray-200 hover:bg-gray-100'
                         : 'bg-gray-100 border border-gray-200 text-gray-400 cursor-not-allowed'
@@ -645,7 +645,7 @@ export default function LessonPage() {
                     <div className="flex items-center gap-2">
                       <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
                         status === 'completed' ? 'bg-green-500 text-white' :
-                        status === 'current' ? 'bg-blue-500 text-white' :
+                        status === 'current' ? 'bg-yellow-500 text-white' :
                         status === 'available' ? 'bg-gray-400 text-white' :
                         'bg-gray-300 text-gray-500'
                       }`}>

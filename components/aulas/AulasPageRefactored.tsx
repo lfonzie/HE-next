@@ -230,25 +230,25 @@ export default function AulasPageRefactored() {
         {/* Aula Gerada - Layout completo quando aula está presente */}
         {generatedLesson && (
           <div className="max-w-4xl mx-auto">
-            <Card className="border-2 border-green-200 bg-gradient-to-br from-green-50 to-blue-50">
+            <Card className="border-2 border-yellow-200 bg-gradient-to-br from-yellow-50 to-orange-50">
               <CardContent className="p-8">
                 <div className="space-y-8">
                   {/* Informações principais da aula */}
                   <div className="text-center">
-                    <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <div className="w-20 h-20 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-6">
                       <CheckCircle className="h-10 w-10 text-white" />
                     </div>
                     <h2 className="text-2xl font-bold text-gray-900 mb-2">
                       {generatedLesson.title || "Título da Aula"}
                     </h2>
                     <div className="flex flex-wrap justify-center gap-2 mb-4">
-                      <Badge className="bg-blue-100 text-blue-800">
+                      <Badge className="bg-yellow-100 text-yellow-800">
                         {generatedLesson.subject || "Matéria"}
                       </Badge>
-                      <Badge className="bg-purple-100 text-purple-800">
+                      <Badge className="bg-orange-100 text-orange-800">
                         {generatedLesson.level || "Nível"}
                       </Badge>
-                      <Badge className="bg-orange-100 text-orange-800">
+                      <Badge className="bg-red-100 text-red-800">
                         {generatedLesson.difficulty || "Médio"}
                       </Badge>
                     </div>

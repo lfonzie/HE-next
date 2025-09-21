@@ -48,7 +48,7 @@ const geminiModel = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' })
 // Função para popular imagens com tradução automática
 async function populateLessonWithImagesTranslated(lessonData: any, topic: string): Promise<any> {
   try {
-    console.log('🖼️ Populando imagens apenas no primeiro e último slide para:', topic)
+    console.log('🖼️ Populando imagens com sistema melhorado para:', topic)
     
     const slidesWithImages = await Promise.all(
       lessonData.slides.map(async (slide: any, index: number) => {
@@ -58,8 +58,8 @@ async function populateLessonWithImagesTranslated(lessonData: any, topic: string
         
         if (slide.imagePrompt && (isFirstSlide || isLastSlide)) {
           try {
-            // Usar nova API de classificação de imagens com múltiplas fontes
-            const response = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/images/classify-source`, {
+            // Usar nova API de busca melhorada com múltiplas fontes
+            const response = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/images/enhanced-search`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -68,7 +68,12 @@ async function populateLessonWithImagesTranslated(lessonData: any, topic: string
                 query: slide.imagePrompt,
                 subject: lessonData.subject || 'Geral',
                 grade: lessonData.grade || '5',
-                count: 1
+                count: 1,
+                preferredDimensions: {
+                  width: 1350,
+                  height: 1080
+                },
+                sources: ['unsplash', 'pixabay', 'wikimedia']
               }),
             })
 
@@ -76,30 +81,31 @@ async function populateLessonWithImagesTranslated(lessonData: any, topic: string
               const data = await response.json()
               if (data.success && data.images && data.images.length > 0) {
                 const bestImage = data.images[0]
-                console.log(`✅ Imagem classificada para slide ${index + 1} (${isFirstSlide ? 'primeiro' : 'último'}):`, {
-                  source: bestImage.source.name,
-                  relevance: bestImage.relevanceScore,
-                  themeMatch: bestImage.themeMatch,
-                  educationalSuitability: bestImage.educationalSuitability
+                console.log(`✅ Imagem melhorada para slide ${index + 1} (${isFirstSlide ? 'primeiro' : 'último'}):`, {
+                  source: bestImage.source,
+                  relevanceScore: bestImage.relevanceScore,
+                  educationalSuitability: bestImage.educationalSuitability,
+                  dimensions: `${bestImage.width}x${bestImage.height}`,
+                  resizedUrl: bestImage.resizedUrl
                 })
                 return {
                   ...slide,
-                  imageUrl: bestImage.url,
+                  imageUrl: bestImage.resizedUrl || bestImage.url,
                   imageSource: bestImage.source,
-                  imageClassification: bestImage.classification,
                   imageMetrics: {
                     relevanceScore: bestImage.relevanceScore,
-                    themeMatch: bestImage.themeMatch,
-                    educationalSuitability: bestImage.educationalSuitability
+                    educationalSuitability: bestImage.educationalSuitability,
+                    originalDimensions: `${bestImage.width}x${bestImage.height}`,
+                    resizedDimensions: '1350x1080'
                   }
                 }
               }
             }
             
-            console.warn(`⚠️ Falha na classificação para slide ${index + 1}, usando fallback`)
+            console.warn(`⚠️ Falha na busca melhorada para slide ${index + 1}, usando fallback`)
             return slide
           } catch (error) {
-            console.error(`❌ Erro ao classificar imagem para slide ${index + 1}:`, error)
+            console.error(`❌ Erro ao buscar imagem melhorada para slide ${index + 1}:`, error)
             return slide
           }
         }

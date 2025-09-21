@@ -471,15 +471,16 @@ export const ModuleWelcomeScreen: React.FC<ModuleWelcomeScreenProps> = ({
 }) => {
   const moduleData = moduleWelcomeData[moduleId];
   const moduleInfo = MODULES[moduleId];
-  const IconComponent = moduleData.icon;
 
-  if (!moduleData) {
+  if (!moduleData || !moduleId) {
     return (
       <div className="p-6 text-center">
         <p className="text-gray-500">Módulo não encontrado</p>
       </div>
     );
   }
+
+  const IconComponent = moduleData.icon;
 
   return (
     <div className="p-6 max-w-6xl mx-auto bg-white min-h-full">

@@ -85,7 +85,7 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
       "title": "Abertura: [Tema] e sua Importância",
       "content": "Conteúdo detalhado de abertura com ativação de conhecimentos prévios, objetivos claros e motivação para o aprendizado. Inclua exemplos práticos e conexões com o cotidiano do estudante. MÍNIMO 375 palavras.",
       "microPause": "Pergunta reflexiva: 'Onde você já viu [conceito] na sua vida?'",
-      "imagePrompt": "Prompt específico para imagem educativa do Unsplash",
+      "imagePrompt": "Prompt específico para busca de imagem educativa",
       "timeEstimate": 4,
       "tokenTarget": 500
     },
@@ -95,7 +95,7 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
       "title": "Conceito Principal: [Tema Central]",
       "content": "Explicação detalhada do conceito principal com fundamentos teóricos, definições precisas e exemplos ilustrativos. Desenvolva o tema de forma progressiva e didática. MÍNIMO 375 palavras.",
       "microPause": "Checagem: 'Como você explicaria isso para um amigo?'",
-      "imagePrompt": "Prompt específico para imagem educativa do Unsplash",
+      "imagePrompt": "Prompt específico para busca de imagem educativa",
       "timeEstimate": 5,
       "tokenTarget": 500
     },
@@ -105,7 +105,7 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
       "title": "Desenvolvimento: Mecanismos e Processos",
       "content": "Desenvolvimento detalhado dos mecanismos, processos e etapas envolvidas. Inclua diagramas conceituais em texto, sequências lógicas e explicações passo a passo. MÍNIMO 375 palavras.",
       "microPause": "Reflexão: 'Qual etapa você considera mais importante e por quê?'",
-      "imagePrompt": "Prompt específico para imagem educativa do Unsplash",
+      "imagePrompt": "Prompt específico para busca de imagem educativa",
       "timeEstimate": 5,
       "tokenTarget": 500
     },
@@ -128,7 +128,7 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
         "incorrect": "Não foi desta vez, mas vamos entender o porquê. A resposta correta é [explicação detalhada] porque...",
         "followUp": "Para aprofundar: Como isso se relaciona com [conceito anterior]?"
       },
-      "imagePrompt": "Prompt específico para imagem educativa do Unsplash",
+      "imagePrompt": "Prompt específico para busca de imagem educativa",
       "timeEstimate": 4,
       "tokenTarget": 400
     },
@@ -138,7 +138,7 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
       "title": "Aplicação: Casos Práticos e Exemplos Reais",
       "content": "Aplicações práticas do conceito em situações reais, casos de estudo, exemplos do cotidiano e conexões com outras áreas do conhecimento. MÍNIMO 375 palavras.",
       "microPause": "Aplicação: 'Dê um exemplo de [conceito] que você conhece'",
-      "imagePrompt": "Prompt específico para imagem educativa do Unsplash",
+      "imagePrompt": "Prompt específico para busca de imagem educativa",
       "timeEstimate": 5,
       "tokenTarget": 500
     },
@@ -148,7 +148,7 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
       "title": "Aprofundamento: Fatores Limitantes e Variações",
       "content": "Aprofundamento do tema com fatores limitantes, condições especiais, variações e exceções. Inclua análise crítica e diferentes perspectivas. MÍNIMO 375 palavras.",
       "microPause": "Análise: 'O que aconteceria se [condição] fosse diferente?'",
-      "imagePrompt": "Prompt específico para imagem educativa do Unsplash",
+      "imagePrompt": "Prompt específico para busca de imagem educativa",
       "timeEstimate": 5,
       "tokenTarget": 500
     },
@@ -158,7 +158,7 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
       "title": "Conexões: Adaptações e Contexto Amplo",
       "content": "Conexões com outros temas, adaptações evolutivas, contexto histórico, aplicações tecnológicas e impacto social. MÍNIMO 375 palavras.",
       "microPause": "Síntese: 'Como isso se conecta com [outro tema]?'",
-      "imagePrompt": "Prompt específico para imagem educativa do Unsplash",
+      "imagePrompt": "Prompt específico para busca de imagem educativa",
       "timeEstimate": 5,
       "tokenTarget": 500
     },
@@ -169,10 +169,10 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
       "content": "Contexto da segunda pergunta com cenário complexo que exige síntese e análise crítica.",
       "question": "Pergunta situacional que exige análise de dados, gráficos ou cenários complexos",
       "options": [
-        "Alternativa A - com explicação do porquê está incorreta",
-        "Alternativa B - com explicação do porquê está incorreta",
-        "Alternativa C - com explicação do porquê está incorreta", 
-        "Alternativa D - com explicação do porquê está correta"
+        "Alternativa incorreta - com explicação do porquê está incorreta",
+        "Alternativa correta - com explicação detalhada",
+        "Alternativa incorreta - com explicação do porquê está incorreta", 
+        "Alternativa incorreta - com explicação do porquê está incorreta"
       ],
       "correctAnswer": 1,
       "explanation": "Explicação detalhada com análise do cenário, interpretação de dados e aplicação dos conceitos aprendidos",
@@ -181,7 +181,7 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
         "incorrect": "Boa tentativa! Vamos analisar juntos: [análise detalhada do cenário]...",
         "followUp": "Desafio: Como você aplicaria isso em [situação diferente]?"
       },
-      "imagePrompt": "Prompt específico para imagem educativa do Unsplash",
+      "imagePrompt": "Prompt específico para busca de imagem educativa",
       "timeEstimate": 4,
       "tokenTarget": 400
     },
@@ -191,7 +191,7 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
       "title": "Análise Crítica: Diferentes Perspectivas",
       "content": "Análise crítica do tema com diferentes perspectivas, debates atuais, controvérsias e pontos de vista diversos. MÍNIMO 375 palavras.",
       "microPause": "Debate: 'Qual perspectiva você considera mais válida e por quê?'",
-      "imagePrompt": "Prompt específico para imagem educativa do Unsplash",
+      "imagePrompt": "Prompt específico para busca de imagem educativa",
       "timeEstimate": 5,
       "tokenTarget": 500
     },
@@ -201,7 +201,7 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
       "title": "Síntese: Consolidação de Conceitos",
       "content": "Síntese dos conceitos principais, integração de conhecimentos e consolidação do aprendizado. MÍNIMO 375 palavras.",
       "microPause": "Reflexão: 'Como todos esses conceitos se conectam?'",
-      "imagePrompt": "Prompt específico para imagem educativa do Unsplash",
+      "imagePrompt": "Prompt específico para busca de imagem educativa",
       "timeEstimate": 5,
       "tokenTarget": 500
     },
@@ -212,10 +212,10 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
       "content": "Contexto da segunda pergunta com cenário complexo que exige síntese e análise crítica.",
       "question": "Pergunta situacional que exige análise de dados, gráficos ou cenários complexos",
       "options": [
-        "Alternativa A - com explicação do porquê está incorreta",
-        "Alternativa B - com explicação do porquê está incorreta",
-        "Alternativa C - com explicação do porquê está incorreta", 
-        "Alternativa D - com explicação do porquê está correta"
+        "Alternativa incorreta - com explicação do porquê está incorreta",
+        "Alternativa correta - com explicação detalhada",
+        "Alternativa incorreta - com explicação do porquê está incorreta", 
+        "Alternativa incorreta - com explicação do porquê está incorreta"
       ],
       "correctAnswer": 1,
       "explanation": "Explicação detalhada com análise do cenário, interpretação de dados e aplicação dos conceitos aprendidos",
@@ -224,7 +224,7 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
         "incorrect": "Boa tentativa! Vamos analisar juntos: [análise detalhada do cenário]...",
         "followUp": "Desafio: Como você aplicaria isso em [situação diferente]?"
       },
-      "imagePrompt": "Prompt específico para imagem educativa do Unsplash",
+      "imagePrompt": "Prompt específico para busca de imagem educativa",
       "timeEstimate": 4,
       "tokenTarget": 400
     },
@@ -234,7 +234,7 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
       "title": "Aplicações Futuras: Contexto Amplo",
       "content": "Aplicações futuras do conceito, tendências tecnológicas, impacto social e desenvolvimentos esperados. MÍNIMO 375 palavras.",
       "microPause": "Projeção: 'Como você imagina isso evoluindo nos próximos anos?'",
-      "imagePrompt": "Prompt específico para imagem educativa do Unsplash",
+      "imagePrompt": "Prompt específico para busca de imagem educativa",
       "timeEstimate": 5,
       "tokenTarget": 500
     },
@@ -245,7 +245,7 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
       "content": "Síntese dos pontos principais, erro comum a evitar, mini-desafio aplicado e orientações para próximos estudos. MÍNIMO 300 palavras.",
       "miniChallenge": "Tarefa de 2 minutos: 'Esboce [conceito] em 3 passos principais'",
       "commonMistake": "Erro comum: [descrição do erro] - Como evitar: [orientação]",
-      "imagePrompt": "Prompt específico para imagem educativa do Unsplash",
+      "imagePrompt": "Prompt específico para busca de imagem educativa",
       "timeEstimate": 3,
       "tokenTarget": 400
     }

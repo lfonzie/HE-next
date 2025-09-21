@@ -1,24 +1,14 @@
 import type { Metadata, Viewport } from 'next'
 import type { ReactNode } from 'react'
 import { Inter } from 'next/font/google'
-import { SessionProvider } from '@/components/providers/SessionProvider'
+import { ClientProviders } from '@/components/providers/ClientProviders'
+import './globals.css'
 
 const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-inter',
 })
-import { LessonProvider } from '@/components/providers/LessonProvider'
-import { PWAProvider } from '@/components/providers/PWAProvider'
-import { LoadingProvider, LoadingOverlay, RouteLoadingGlue } from '@/components/ui/SplashScreen'
-import { PageTransitionProvider } from '@/components/providers/PageTransitionProvider'
-import { SplashScreen } from '@/components/ui/SplashScreen'
-import { Toaster } from '@/components/ui/toaster'
-import { GlobalLoadingProvider } from '@/hooks/useGlobalLoading'
-import { NotificationProvider } from '@/components/providers/NotificationProvider'
-import { ToastProvider } from '@/hooks/use-toast'
-import PWAManagerWrapper from '@/components/pwa/PWAManagerWrapper'
-import './globals.css'
 
 export const metadata: Metadata = {
   title: 'HubEdu.ia - Plataforma Educacional com IA',
@@ -83,27 +73,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="pt-BR" className={inter.variable}>
       <body className="min-h-screen bg-background font-sans text-foreground antialiased">
-        <LoadingProvider>
-          <RouteLoadingGlue />
-          <LoadingOverlay />
-          <SessionProvider>
-            {/* <PWAProvider> */}
-              <GlobalLoadingProvider>
-                <PageTransitionProvider>
-                  <LessonProvider>
-                    <ToastProvider>
-                      <NotificationProvider>
-                        {children}
-                        {/* <PWAManagerWrapper /> */}
-                        <Toaster />
-                      </NotificationProvider>
-                    </ToastProvider>
-                  </LessonProvider>
-                </PageTransitionProvider>
-              </GlobalLoadingProvider>
-            {/* </PWAProvider> */}
-          </SessionProvider>
-        </LoadingProvider>
+        <ClientProviders>
+          {children}
+        </ClientProviders>
       </body>
     </html>
   )

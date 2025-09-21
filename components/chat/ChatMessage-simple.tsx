@@ -21,10 +21,10 @@ export function ChatMessage({ message, isUser }: MessageProps) {
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
       <div 
-        className={`max-w-[70%] p-4 rounded-lg ${
+        className={`max-w-[70%] p-4 ${
           isUser 
-            ? 'bg-blue-500 text-white' 
-            : 'bg-white border border-gray-200 text-gray-900'
+            ? 'bg-blue-500 text-white rounded-lg' 
+            : 'text-gray-900'
         }`}
       >
         <div className="whitespace-pre-wrap">

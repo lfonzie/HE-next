@@ -177,6 +177,12 @@ export function EnhancedImage({
           className={`transition-transform duration-300 group-hover:scale-105 ${
             hasError ? 'opacity-0' : ''
           }`}
+          style={{ 
+            aspectRatio: `${width}/${height}`,
+            height: 'auto',
+            maxHeight: '400px',
+            objectFit: 'cover'
+          }}
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
       </motion.div>

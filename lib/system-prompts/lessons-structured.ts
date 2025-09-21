@@ -23,18 +23,23 @@ IMPORTANTE: A aula deve ter EXATAMENTE 12 slides de EXPLICAÇÃO e 2 slides de P
 IMPORTANTE SOBRE AS PERGUNTAS:
 - Crie perguntas que exijam ANÁLISE e APLICAÇÃO dos conceitos
 - Use múltipla escolha com 4 alternativas (A, B, C, D)
+- EMBARALHE AS OPÇÕES: A resposta correta deve aparecer em posições diferentes (A, B, C ou D)
 - ESTRUTURA CORRETA para perguntas:
   * question: Texto da pergunta clara e específica
-  * options: Array com 4 opções ["Opção A", "Opção B", "Opção C", "Opção D"]
-  * correctAnswer: Número do índice da resposta correta (0, 1, 2 ou 3)
+  * options: Array com 4 opções embaralhadas ["Opção incorreta", "Opção correta", "Opção incorreta", "Opção incorreta"]
+  * correctAnswer: Número do índice da resposta correta (0, 1, 2 ou 3) - VARIE entre perguntas
   * explanation: Explicação detalhada da resposta correta
 - Teste compreensão profunda, não apenas memorização
+- DISTRIBUA as respostas corretas: use diferentes índices (0, 1, 2, 3) para cada pergunta
 
 IMPORTANTE SOBRE IMAGENS:
-- SEMPRE inclua sugestões de imagens do Unsplash para cada slide
+- Use os 3 provedores de imagem: Unsplash, Pixabay e Wikimedia Commons
+- SEMPRE inclua sugestões de imagens específicas para cada slide
 - Use prompts descritivos e específicos para o conteúdo
 - Foque em imagens educativas e visualmente atrativas
+- Dimensões recomendadas: 1350x1080 ou 1080x1350 pixels
 - Exemplo: "estudante estudando matemática, mesa com livros, ambiente escolar"
+- Priorize relevância temática sobre qualidade visual
 
 SEMPRE retorne APENAS um JSON válido no seguinte formato:
 {
@@ -49,7 +54,7 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
       "type": "explanation",
       "title": "Título do Slide 1",
       "content": "Conteúdo explicativo detalhado do slide 1",
-      "imagePrompt": "Prompt específico para imagem do Unsplash",
+      "imagePrompt": "Prompt específico para busca de imagem educativa",
       "timeEstimate": 5
     },
     {
@@ -57,7 +62,7 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
       "type": "explanation", 
       "title": "Título do Slide 2",
       "content": "Conteúdo explicativo detalhado do slide 2",
-      "imagePrompt": "Prompt específico para imagem do Unsplash",
+      "imagePrompt": "Prompt específico para busca de imagem educativa",
       "timeEstimate": 5
     },
     {
@@ -65,7 +70,7 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
       "type": "explanation",
       "title": "Título do Slide 3", 
       "content": "Conteúdo explicativo detalhado do slide 3",
-      "imagePrompt": "Prompt específico para imagem do Unsplash",
+      "imagePrompt": "Prompt específico para busca de imagem educativa",
       "timeEstimate": 5
     },
     {
@@ -74,10 +79,10 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
       "title": "Título do Slide 4",
       "content": "Contexto da primeira pergunta",
       "question": "Pergunta que exige análise e aplicação",
-      "options": ["Alternativa A", "Alternativa B", "Alternativa C", "Alternativa D"],
+      "options": ["Alternativa correta", "Alternativa incorreta", "Alternativa incorreta", "Alternativa incorreta"],
       "correctAnswer": 0,
       "explanation": "Explicação detalhada da resposta correta",
-      "imagePrompt": "Prompt específico para imagem do Unsplash",
+      "imagePrompt": "Prompt específico para busca de imagem educativa",
       "timeEstimate": 3
     },
     {
@@ -85,7 +90,7 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
       "type": "explanation",
       "title": "Título do Slide 5",
       "content": "Conteúdo explicativo detalhado do slide 5",
-      "imagePrompt": "Prompt específico para imagem do Unsplash", 
+      "imagePrompt": "Prompt específico para busca de imagem educativa", 
       "timeEstimate": 5
     },
     {
@@ -93,7 +98,7 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
       "type": "explanation",
       "title": "Título do Slide 6",
       "content": "Conteúdo explicativo detalhado do slide 6",
-      "imagePrompt": "Prompt específico para imagem do Unsplash",
+      "imagePrompt": "Prompt específico para busca de imagem educativa",
       "timeEstimate": 5
     },
     {
@@ -102,10 +107,10 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
       "title": "Título do Slide 7",
       "content": "Contexto da segunda pergunta",
       "question": "Pergunta que exige análise e aplicação",
-      "options": ["Alternativa A", "Alternativa B", "Alternativa C", "Alternativa D"],
+      "options": ["Alternativa incorreta", "Alternativa correta", "Alternativa incorreta", "Alternativa incorreta"],
       "correctAnswer": 1,
       "explanation": "Explicação detalhada da resposta correta",
-      "imagePrompt": "Prompt específico para imagem do Unsplash",
+      "imagePrompt": "Prompt específico para busca de imagem educativa",
       "timeEstimate": 3
     },
     {
@@ -114,10 +119,10 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
       "title": "Título do Slide 12",
       "content": "Contexto da segunda pergunta",
       "question": "Pergunta que exige análise e aplicação",
-      "options": ["Alternativa A", "Alternativa B", "Alternativa C", "Alternativa D"],
-      "correctAnswer": 1,
+      "options": ["Alternativa incorreta", "Alternativa incorreta", "Alternativa correta", "Alternativa incorreta"],
+      "correctAnswer": 2,
       "explanation": "Explicação detalhada da resposta correta",
-      "imagePrompt": "Prompt específico para imagem do Unsplash",
+      "imagePrompt": "Prompt específico para busca de imagem educativa",
       "timeEstimate": 3
     },
     {
@@ -125,7 +130,7 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
       "type": "explanation",
       "title": "Título do Slide 13",
       "content": "Conteúdo explicativo detalhado do slide 13",
-      "imagePrompt": "Prompt específico para imagem do Unsplash",
+      "imagePrompt": "Prompt específico para busca de imagem educativa",
       "timeEstimate": 5
     },
     {
@@ -133,7 +138,7 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
       "type": "closing",
       "title": "Título do Slide 14",
       "content": "Resumo final e próximos passos de estudo",
-      "imagePrompt": "Prompt específico para imagem do Unsplash",
+      "imagePrompt": "Prompt específico para busca de imagem educativa",
       "timeEstimate": 3
     }
   ],

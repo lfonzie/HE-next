@@ -165,8 +165,13 @@ export default function Slide({ slide, slideNumber, totalSlides }: SlideProps) {
                   alt={slide.title}
                   width={1350}
                   height={1080}
-                  className="w-full h-auto rounded-lg shadow-sm transition-transform group-hover:scale-105"
-                  style={{ aspectRatio: '1350/1080' }}
+                  className="w-full rounded-lg shadow-sm transition-transform group-hover:scale-105"
+                  style={{ 
+                    aspectRatio: '1350/1080',
+                    height: 'auto',
+                    maxHeight: '400px',
+                    objectFit: 'cover'
+                  }}
                   loading="lazy"
                   onError={(e) => {
                     // Hide image if it fails to load

@@ -117,6 +117,25 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     )
   }
 
+  // For enem page, don't show sidebar
+  if (isEnemPage) {
+    return (
+      <LoadingProvider>
+        <ChatProvider>
+          <QuotaProvider>
+            <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50">
+              {/* Layout without sidebar - content occupies full screen */}
+              <div className="w-full h-screen overflow-y-auto">
+                {children}
+              </div>
+            </div>
+            <LoadingOverlay />
+          </QuotaProvider>
+        </ChatProvider>
+      </LoadingProvider>
+    )
+  }
+
   if (!session) {
     return null
   }

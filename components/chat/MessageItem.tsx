@@ -78,8 +78,7 @@ export function MessageItem({ message, isLast = false }: MessageItemProps) {
       ) : (
         // Mensagem do assistente
         <div className="relative max-w-[85%] lg:max-w-[70%]">
-          <Card className="shadow-md hover:shadow-lg transition-shadow">
-            <CardContent className="p-4">
+          <div className="p-4">
               <div className="space-y-3">
                 {/* Header com informações do módulo */}
                 <div className="flex items-center gap-2 text-sm">
@@ -165,8 +164,7 @@ export function MessageItem({ message, isLast = false }: MessageItemProps) {
                   </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+          </div>
         </div>
       )}
     </div>

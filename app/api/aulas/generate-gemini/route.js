@@ -521,8 +521,10 @@ export async function POST(request) {
             }
 
             if (!imageUrl) {
-              imageUrl = 'https://commons.wikimedia.org/wiki/Special:FilePath/Education%20-%20The%20Noun%20Project.svg?width=800&height=400';
-              log.info('Using Wikimedia placeholder', { slideNumber: validatedSlide.number });
+              // Usar imagem educacional genérica do Unsplash em vez de placeholder do Wikimedia
+              imageUrl = 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1350&h=1080&fit=crop&auto=format';
+              imageSource = 'unsplash-fallback';
+              log.info('Using Unsplash fallback image', { slideNumber: validatedSlide.number });
             }
 
             return { ...validatedSlide, imageQuery, imageUrl, imageSource, subject: topic };

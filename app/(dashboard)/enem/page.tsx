@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -17,7 +17,8 @@ import {
   AlertCircle,
   Brain,
   RefreshCw,
-  ArrowRight
+  ArrowRight,
+  History
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { EnemModeSelector } from '@/components/enem/EnemModeSelector';
@@ -27,6 +28,7 @@ import { EnemResults } from '@/components/enem/EnemResults';
 import { AuthGuard } from '@/components/AuthGuard';
 import { EnemMode, EnemArea, EnemScore } from '@/types/enem';
 import { ExamGenerationLoading } from '@/components/enem/EnemLoadingStates';
+import { FixedHeader } from '@/components/layout/FixedHeader';
 
 type AppState = 'mode-selection' | 'customization' | 'simulation' | 'results';
 
@@ -314,7 +316,8 @@ function EnemSimulatorContent() {
   if (appState === 'simulation' && sessionId && simulationConfig) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-yellow-100">
-        <div className="bg-white shadow-sm border-b border-yellow-200">
+        <FixedHeader />
+        <div className="bg-white shadow-sm border-b border-yellow-200 pt-20">
           <div className="max-w-7xl mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
               <div>
@@ -349,7 +352,8 @@ function EnemSimulatorContent() {
   if (appState === 'results' && score) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-yellow-100">
-        <div className="bg-white shadow-sm border-b border-yellow-200">
+        <FixedHeader />
+        <div className="bg-white shadow-sm border-b border-yellow-200 pt-20">
           <div className="max-w-7xl mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
               <div>
@@ -385,7 +389,8 @@ function EnemSimulatorContent() {
   if (appState === 'customization') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-yellow-100">
-        <div className="bg-white shadow-sm border-b border-yellow-200">
+        <FixedHeader />
+        <div className="bg-white shadow-sm border-b border-yellow-200 pt-20">
           <div className="max-w-7xl mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
               <div>
@@ -413,95 +418,168 @@ function EnemSimulatorContent() {
 
   // Default: Mode Selection
   return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-yellow-100">
-      <div className="max-w-4xl mx-auto px-6 py-8">
-        <header className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl mb-6">
-            <BookOpen className="h-10 w-10 text-white" aria-hidden="true" />
-          </div>
-          <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-yellow-600 to-yellow-700 bg-clip-text text-transparent">
-            Simulador ENEM
-          </h1>
-          <p className="text-xl text-gray-600 mb-2 max-w-2xl mx-auto">
-            Prepare-se para o ENEM com questões oficiais de anos anteriores
-          </p>
-          <div className="flex flex-wrap justify-center gap-2 mt-6">
-            <Badge variant="secondary" className="flex items-center gap-1">
-              <Sparkles className="h-3 w-3" />
-              IA Avançada
-            </Badge>
-            <Badge variant="secondary" className="flex items-center gap-1">
-              <Target className="h-3 w-3" />
-              Personalizado
-            </Badge>
-            <Badge variant="secondary" className="flex items-center gap-1">
-              <Users className="h-3 w-3" />
-              Interativo
-            </Badge>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-yellow-50 to-orange-100">
+      <FixedHeader />
+      <div className="container mx-auto px-4 py-8 max-w-7xl pt-24" role="main">
+        {/* Header */}
+        <header className="text-center mb-16">
+          <div className="relative">
+            {/* Background decoration */}
+            <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 via-orange-400/20 to-red-400/20 rounded-3xl blur-3xl"></div>
+            
+            <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl p-12 shadow-xl border border-white/20">
+              <div className="relative mb-8">
+                <div className="w-24 h-24 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-3xl flex items-center justify-center shadow-lg mx-auto mb-6">
+                  <BookOpen className="h-12 w-12 text-white" />
+                </div>
+                <div className="absolute -top-2 -right-2 w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
+                  <Sparkles className="h-4 w-4 text-white fill-current" />
+                </div>
+              </div>
+              
+              <h1 className="text-6xl font-bold mb-6 bg-gradient-to-r from-yellow-600 to-yellow-700 bg-clip-text text-transparent">
+                Simulador ENEM
+              </h1>
+              <p className="text-2xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
+                Prepare-se para o ENEM com questões oficiais de anos anteriores
+              </p>
+              
+              <div className="flex flex-wrap justify-center gap-3 mb-8">
+                <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-yellow-100 text-yellow-800 border border-yellow-200">
+                  <Sparkles className="h-4 w-4" />
+                  IA Avançada
+                </Badge>
+                <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-orange-100 text-orange-800 border border-orange-200">
+                  <Target className="h-4 w-4" />
+                  Personalizado
+                </Badge>
+                <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-red-100 text-red-800 border border-red-200">
+                  <Users className="h-4 w-4" />
+                  Interativo
+                </Badge>
+                <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-green-100 text-green-800 border border-green-200">
+                  <Brain className="h-4 w-4" />
+                  Inteligente
+                </Badge>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                <div className="p-4 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-2xl border border-yellow-200">
+                  <div className="w-12 h-12 bg-yellow-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <BookOpen className="h-6 w-6 text-white" />
+                  </div>
+                  <h3 className="font-semibold text-yellow-900 mb-2">Questões Reais</h3>
+                  <p className="text-sm text-yellow-700">Banco completo com questões oficiais do ENEM</p>
+                </div>
+                <div className="p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl border border-orange-200">
+                  <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <Target className="h-6 w-6 text-white" />
+                  </div>
+                  <h3 className="font-semibold text-orange-900 mb-2">Simulados Personalizados</h3>
+                  <p className="text-sm text-orange-700">Configure seu simulado conforme suas necessidades</p>
+                </div>
+                <div className="p-4 bg-gradient-to-br from-red-50 to-red-100 rounded-2xl border border-red-200">
+                  <div className="w-12 h-12 bg-red-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <Brain className="h-6 w-6 text-white" />
+                  </div>
+                  <h3 className="font-semibold text-red-900 mb-2">Análise Inteligente</h3>
+                  <p className="text-sm text-red-700">Relatórios detalhados do seu desempenho</p>
+                </div>
+              </div>
+            </div>
           </div>
         </header>
       </div>
       
-      <div className="max-w-4xl mx-auto p-6">
+      <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Error Display */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <div className="flex items-center gap-2">
-              <AlertCircle className="h-4 w-4 text-red-600" />
-              <span className="text-red-800">{error}</span>
+          <div className="mb-8 p-6 bg-red-50 border border-red-200 rounded-2xl">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="h-5 w-5 text-red-600" />
+              <span className="text-red-800 font-medium">{error}</span>
             </div>
           </div>
         )}
 
         {/* Loading State */}
         {loading && (
-          <ExamGenerationLoading
-            currentStep={Math.ceil((loadingProgress / 100) * 3)}
-            message={loadingMessage}
-            showSteps={true}
-          />
-        )}
-
-        {/* Mode Selection */}
-        <EnemModeSelector 
-          onModeSelect={handleModeSelect}
-          onCustomize={handleCustomize}
-        />
-
-        {/* Recent Sessions */}
-        {recentSessions.length > 0 && (
-          <div className="mt-8">
-            <Card>
-              <CardHeader>
-                <CardTitle>Sessões Recentes</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {recentSessions.slice(0, 3).map((s) => (
-                    <div key={s.sessionId} className="flex items-center justify-between border rounded-lg p-3">
-                      <div className="text-sm">
-                        <div className="font-medium">{s.config.mode} • {s.config.areas.join(', ')}</div>
-                        <div className="text-gray-600">
-                          {s.config.numQuestions} questões {s.config.timeLimit ? `• ${s.config.timeLimit} min` : ''}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {new Date(s.createdAt).toLocaleString('pt-BR')}
-                        </div>
-                      </div>
-                      <Button size="sm" onClick={() => handleResumeLocal(s)}>Continuar</Button>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+          <div className="mb-8">
+            <ExamGenerationLoading
+              currentStep={Math.ceil((loadingProgress / 100) * 3)}
+              message={loadingMessage}
+              showSteps={true}
+            />
           </div>
         )}
 
-        {/* Simple Info */}
-        <div className="mt-8 text-center text-sm text-gray-500">
-          <p className="text-yellow-600 font-medium">
-            📚 Questões reais do ENEM • Banco completo 2009-2023
-          </p>
+        {/* Mode Selection */}
+        <div className="mb-12">
+          <EnemModeSelector 
+            onModeSelect={handleModeSelect}
+            onCustomize={handleCustomize}
+          />
+        </div>
+
+        {/* Recent Sessions */}
+        {recentSessions.length > 0 && (
+          <div className="mb-12">
+            <div className="text-center mb-8">
+              <h3 className="text-3xl font-bold text-gray-800 mb-4 flex items-center justify-center gap-3">
+                <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center">
+                  <History className="h-4 w-4 text-white" />
+                </div>
+                Sessões Recentes
+              </h3>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                Continue de onde parou ou revise seus simulados anteriores
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {recentSessions.slice(0, 3).map((s) => (
+                <Card key={s.sessionId} className="group hover:shadow-lg transition-all duration-300 hover:scale-105">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <div className="w-8 h-8 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center">
+                        <Play className="h-4 w-4 text-white" />
+                      </div>
+                      {s.config.mode}
+                    </CardTitle>
+                    <CardDescription>
+                      {s.config.areas.join(', ')} • {s.config.numQuestions} questões
+                      {s.config.timeLimit && ` • ${s.config.timeLimit} min`}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="text-sm text-gray-500">
+                        {new Date(s.createdAt).toLocaleString('pt-BR')}
+                      </div>
+                      <Button 
+                        className="w-full" 
+                        onClick={() => handleResumeLocal(s)}
+                        size="sm"
+                      >
+                        <Play className="h-4 w-4 mr-2" />
+                        Continuar
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Info Section */}
+        <div className="text-center">
+          <div className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-yellow-100 to-orange-100 border border-yellow-200 rounded-2xl">
+            <BookOpen className="h-5 w-5 text-yellow-600" />
+            <span className="text-yellow-800 font-medium">
+              📚 Questões reais do ENEM • Banco completo 2009-2023
+            </span>
+          </div>
         </div>
       </div>
     </div>

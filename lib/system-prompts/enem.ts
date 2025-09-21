@@ -204,7 +204,7 @@ FORMATO DE SAÍDA (JSON):
   "difficulty": "{difficulty}",
   "year": 2023,
   "question": "Enunciado da questão...",
-  "options": ["Alternativa A", "Alternativa B", "Alternativa C", "Alternativa D", "Alternativa E"],
+  "options": ["Alternativa correta", "Alternativa incorreta", "Alternativa incorreta", "Alternativa incorreta", "Alternativa incorreta"],
   "correctAnswer": 0,
   "explanation": "Explicação detalhada...",
   "topics": ["tópico1", "tópico2"],

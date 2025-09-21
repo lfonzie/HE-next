@@ -8,12 +8,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Loader2, FileText, Send, Clock, Target, Sparkles, X, Users, Brain } from 'lucide-react'
+import { Loader2, FileText, Send, Clock, Target, Sparkles, X } from 'lucide-react'
 import { useNotifications } from '@/components/providers/NotificationProvider'
 import { useRouter } from 'next/navigation'
 import { FileUpload } from '@/components/redacao/FileUpload'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
-import { FixedHeader } from '@/components/layout/FixedHeader'
 
 interface EnemTheme {
   id: string
@@ -239,8 +238,7 @@ function RedacaoPageContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-yellow-50 to-orange-100">
-      <FixedHeader />
-      <div className="container mx-auto px-4 py-8 max-w-7xl pt-24" role="main">
+      <div className="container mx-auto px-4 py-8 max-w-7xl" role="main">
         {/* Header */}
         <header className="text-center mb-16">
           <div className="relative">
@@ -324,7 +322,7 @@ function RedacaoPageContent() {
                 Escolha um tema oficial do ENEM ou gerado por IA para praticar
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-8">
+            <CardContent>
               {!currentTheme && officialThemes.length === 0 && randomAiThemes.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   <p>Nenhum tema disponível</p>
@@ -537,7 +535,7 @@ function RedacaoPageContent() {
                 Digite sua redação seguindo a estrutura dissertativa-argumentativa ou use o upload abaixo para carregar um arquivo
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-8">
+            <CardContent>
               <div className="space-y-4">
                 <Textarea
                   value={content}
@@ -601,6 +599,274 @@ function RedacaoPageContent() {
             </CardContent>
           </Card>
         </div>
+
+
+        {/* Estrutura da Dissertação-Argumentativa */}
+        <div className="max-w-6xl mx-auto mt-12">
+          <Card className="bg-white/90 backdrop-blur-sm border-2 border-yellow-200 shadow-xl rounded-3xl overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white p-8">
+              <CardTitle className="flex items-center gap-3 text-2xl">
+                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                  <FileText className="h-6 w-6" />
+                </div>
+                Estrutura da Dissertação-Argumentativa
+              </CardTitle>
+              <CardDescription className="text-yellow-100 text-lg mt-2">
+                Como estruturar sua redação seguindo o modelo ENEM
+              </CardDescription>
+            </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Introdução */}
+              <div className="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg">
+                <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-white font-bold">1</span>
+                </div>
+                <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-3">Introdução</h4>
+                <div className="text-sm text-blue-700 dark:text-blue-300 space-y-2">
+                  <p><strong>Contextualizar</strong> o tema</p>
+                  <p><strong>Apresentar</strong> tese clara</p>
+                  <p><strong>Formas:</strong> conceituação, dados, metáfora, narração breve</p>
+                </div>
+              </div>
+
+              {/* Desenvolvimento */}
+              <div className="text-center p-6 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-lg">
+                <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-white font-bold">2</span>
+                </div>
+                <h4 className="font-semibold text-green-800 dark:text-green-200 mb-3">Desenvolvimento</h4>
+                <div className="text-sm text-green-700 dark:text-green-300 space-y-2">
+                  <p><strong>Sustentar</strong> tese com argumentos</p>
+                  <p><strong>Usar:</strong> fatos, opiniões, dados</p>
+                  <p><strong>Recursos:</strong> conectores, exemplificações</p>
+                </div>
+              </div>
+
+              {/* Conclusão */}
+              <div className="text-center p-6 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-lg">
+                <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-white font-bold">3</span>
+                </div>
+                <h4 className="font-semibold text-purple-800 dark:text-purple-200 mb-3">Conclusão</h4>
+                <div className="text-sm text-purple-700 dark:text-purple-300 space-y-2">
+                  <p><strong>Proposta</strong> de intervenção</p>
+                  <p><strong>Viável</strong> e detalhada</p>
+                  <p><strong>Respeitar</strong> direitos humanos</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Como Evitar Nota Zero */}
+        <div className="max-w-6xl mx-auto mt-12">
+          <Card className="bg-white/90 backdrop-blur-sm border-2 border-red-200 shadow-xl rounded-3xl overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-red-500 to-red-600 text-white p-8">
+              <CardTitle className="flex items-center gap-3 text-2xl">
+                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                  <span className="text-2xl">⚠️</span>
+                </div>
+                Como NÃO Tirar Zero na Redação do ENEM
+              </CardTitle>
+              <CardDescription className="text-red-100 text-lg mt-2">
+                Principais armadilhas que podem zerar sua redação
+              </CardDescription>
+            </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-3">
+                <h4 className="font-semibold text-red-800 dark:text-red-200 mb-3">❌ Causas de Nota Zero:</h4>
+                <ul className="space-y-2 text-sm text-red-700 dark:text-red-300">
+                  <li className="flex items-start">
+                    <span className="text-red-500 mr-2">•</span>
+                    <span><strong>Fuga ao tema</strong> - Não abordar o tema proposto</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-red-500 mr-2">•</span>
+                    <span><strong>Tipo textual errado</strong> - Não seguir dissertação-argumentativa</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-red-500 mr-2">•</span>
+                    <span><strong>Ausência de intervenção</strong> - Não propor solução</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-red-500 mr-2">•</span>
+                    <span><strong>Cópias</strong> - Repetir texto da coletânea</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-red-500 mr-2">•</span>
+                    <span><strong>Menos de 7 linhas</strong> - Texto muito curto</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-red-500 mr-2">•</span>
+                    <span><strong>Caligrafia ilegível</strong> - Texto incompreensível</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-red-500 mr-2">•</span>
+                    <span><strong>Violar direitos humanos</strong> - Propostas discriminatórias</span>
+                  </li>
+                </ul>
+              </div>
+              
+              <div className="space-y-3">
+                <h4 className="font-semibold text-green-800 dark:text-green-200 mb-3">✅ Estratégias de Prevenção:</h4>
+                <ul className="space-y-2 text-sm text-green-700 dark:text-green-300">
+                  <li className="flex items-start">
+                    <span className="text-green-500 mr-2">•</span>
+                    <span><strong>Leia atentamente</strong> a proposta e coletânea</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-500 mr-2">•</span>
+                    <span><strong>Planeje</strong> sua estrutura no rascunho</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-500 mr-2">•</span>
+                    <span><strong>Evite quebras</strong> semânticas</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-500 mr-2">•</span>
+                    <span><strong>Escreva legível</strong> e dentro das margens</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-500 mr-2">•</span>
+                    <span><strong>Use caneta</strong> azul ou preta</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-500 mr-2">•</span>
+                    <span><strong>Respeite</strong> os direitos humanos</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-500 mr-2">•</span>
+                    <span><strong>Proponha</strong> intervenção detalhada</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        </div>
+
+        {/* Dicas de Estudo */}
+        <div className="max-w-6xl mx-auto mt-12">
+          <Card className="bg-white/90 backdrop-blur-sm border-2 border-yellow-200 shadow-xl rounded-3xl overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white p-8">
+              <CardTitle className="flex items-center gap-3 text-2xl">
+                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                  <Sparkles className="h-6 w-6" />
+                </div>
+                Dicas de Estudo para Redação ENEM
+              </CardTitle>
+              <CardDescription className="text-yellow-100 text-lg mt-2">
+                Práticas recomendadas baseadas na apostila oficial
+              </CardDescription>
+            </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">📚 Leitura Diária</h4>
+                <p className="text-sm text-blue-700 dark:text-blue-300">
+                  Leia jornais, artigos acadêmicos e textos argumentativos para enriquecer seu vocabulário e argumentos.
+                </p>
+              </div>
+              
+              <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2">✍️ Escrita Semanal</h4>
+                <p className="text-sm text-green-700 dark:text-green-300">
+                  Escreva pelo menos uma redação por semana com temas simulados para praticar a estrutura.
+                </p>
+              </div>
+              
+              <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                <h4 className="font-semibold text-purple-800 dark:text-purple-200 mb-2">🔄 Revisão</h4>
+                <p className="text-sm text-purple-700 dark:text-purple-300">
+                  Revise suas correções e analise redações modelo nota 1000 para identificar padrões de sucesso.
+                </p>
+              </div>
+              
+              <div className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                <h4 className="font-semibold text-orange-800 dark:text-orange-200 mb-2">👥 Grupos de Estudo</h4>
+                <p className="text-sm text-orange-700 dark:text-orange-300">
+                  Participe de grupos de discussão para receber feedback e trocar experiências com outros candidatos.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        </div>
+
+        {/* Modal de Temas Gerados */}
+        <Dialog open={showGeneratedModal} onOpenChange={setShowGeneratedModal}>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center">
+                <Sparkles className="h-5 w-5 mr-2 text-purple-600" />
+                Temas Gerados por IA
+              </DialogTitle>
+              <DialogDescription>
+                {generatedThemes.length} novos temas foram gerados especialmente para você
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4 mt-4">
+              {generatedThemes.map((theme, index) => (
+                <Card key={theme.id} className="border-l-4 border-l-purple-500">
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Badge variant="secondary" className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                            🤖 IA
+                          </Badge>
+                          <Badge variant="outline">
+                            {theme.year}
+                          </Badge>
+                        </div>
+                        <h4 className="font-semibold text-lg mb-2 text-gray-900 dark:text-gray-100">
+                          {theme.theme}
+                        </h4>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {theme.description}
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setCurrentTheme(theme)
+                          setShowGeneratedModal(false)
+                          addNotification({
+                            type: 'success',
+                            title: 'Tema Selecionado!',
+                            message: `Tema "${theme.theme}" foi selecionado com sucesso`
+                          })
+                        }}
+                        className="ml-4"
+                      >
+                        Selecionar
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            
+            <div className="flex justify-end gap-2 mt-6 pt-4 border-t">
+              <Button
+                variant="outline"
+                onClick={() => setShowGeneratedModal(false)}
+              >
+                Fechar
+              </Button>
+              <Button
+                onClick={() => setShowGeneratedModal(false)}
+                className="bg-purple-600 hover:bg-purple-700"
+              >
+                Continuar
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   )

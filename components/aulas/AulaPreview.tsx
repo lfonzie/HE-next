@@ -230,21 +230,21 @@ const AulaPreview = memo(({
 
           <div>
             <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
-              <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center">
+              <div className="w-6 h-6 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg flex items-center justify-center">
                 <BookOpen className="h-3 w-3 text-white" />
               </div>
               Estrutura da Aula:
             </h4>
-            <div className="text-center p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl border border-purple-200">
+            <div className="text-center p-6 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl border border-yellow-200">
               <div className="flex items-center justify-center gap-3 mb-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center">
+                <div className="w-8 h-8 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-xl flex items-center justify-center">
                   <Target className="h-4 w-4 text-white" />
                 </div>
-                <span className="font-bold text-purple-800 text-lg">
+                <span className="font-bold text-yellow-800 text-lg">
                   {generatedLesson.stages?.length || 0} etapas interativas
                 </span>
               </div>
-              <p className="text-purple-700 font-medium">
+              <p className="text-yellow-700 font-medium">
                 Aula completa com conteúdo personalizado e atividades adaptadas ao seu nível
               </p>
             </div>
@@ -254,7 +254,7 @@ const AulaPreview = memo(({
           <PacingMetrics 
             metrics={pacingMetrics} 
             warnings={pacingWarnings}
-            className="bg-gradient-to-br from-blue-50 to-purple-50 p-6 rounded-2xl border border-blue-200"
+            className="bg-gradient-to-br from-yellow-50 to-orange-50 p-6 rounded-2xl border border-yellow-200"
           />
 
           <div className="grid grid-cols-1 gap-4 pt-4">
