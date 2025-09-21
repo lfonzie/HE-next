@@ -61,6 +61,22 @@ export function useMessageComposer(config: MessageComposerConfig = {
   enableKeyboardShortcuts: true,
   enableRichFormatting: true
 }) {
+  // Handle prerendering - return empty functions
+  if (typeof window === 'undefined') {
+    return {
+      sendMessage: async () => {},
+      isComposing: false,
+      setIsComposing: () => {},
+      message: '',
+      setMessage: () => {},
+      handleSubmit: () => {},
+      handleKeyDown: () => {},
+      clearMessage: () => {},
+      insertText: () => {},
+      focusInput: () => {}
+    }
+  }
+
   const { currentConversation, addMessage, setSelectedModule } = useChatContext()
   const { notifySuccess, notifyError, notifyInfo } = useNotificationContext()
   const { selectOptimalModule } = useModuleOrchestrator()

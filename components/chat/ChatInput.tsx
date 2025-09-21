@@ -7,22 +7,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { Send, Upload, Mic } from "lucide-react";
 
 interface ChatInputProps {
-  message: string;
-  onMessageChange: (message: string) => void;
   onSendMessage: (message: string) => void;
-  isStreaming: boolean;
+  isStreaming?: boolean;
   placeholder?: string;
   disabled?: boolean;
 }
 
 export const ChatInput: React.FC<ChatInputProps> = ({
-  message,
-  onMessageChange,
   onSendMessage,
-  isStreaming,
+  isStreaming = false,
   placeholder = "Digite sua mensagem...",
   disabled = false
 }) => {
+  const [message, setMessage] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -35,6 +32,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       const processedMessage = encodeMessage(message); // Processar Unicode
       console.log('✅ Sending message:', processedMessage);
       onSendMessage(processedMessage);
+      setMessage(""); // Clear the input after sending
     } else {
       console.log('❌ Cannot send message:', { hasMessage: !!message.trim(), isStreaming, disabled });
     }
@@ -68,7 +66,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         <Textarea
           ref={textareaRef}
           value={message}
-          onChange={(e) => onMessageChange(e.target.value)}
+          onChange={(e) => setMessage(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           disabled={isStreaming || disabled}

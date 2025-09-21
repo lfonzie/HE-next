@@ -8,6 +8,17 @@ import { Badge } from '@/components/ui/badge'
 import { Loader2, CheckCircle, XCircle, RefreshCw } from 'lucide-react'
 
 export default function TestAuthPage() {
+  // Handle prerendering - return loading state
+  if (typeof window === 'undefined') {
+    return (
+      <div className="container mx-auto p-6 max-w-4xl">
+        <div className="text-center">
+          <p className="text-gray-500">Carregando…</p>
+        </div>
+      </div>
+    );
+  }
+
   const { data: session, status } = useSession()
   const [testResult, setTestResult] = useState<any>(null)
   const [loading, setLoading] = useState(false)

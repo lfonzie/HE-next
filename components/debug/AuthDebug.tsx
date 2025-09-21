@@ -8,6 +8,17 @@ import { Button } from '@/components/ui/button'
 import { RefreshCw, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
 
 export function AuthDebug() {
+  // Handle prerendering - return loading state
+  if (typeof window === 'undefined') {
+    return (
+      <div className="space-y-4 p-4">
+        <div className="text-center">
+          <p className="text-gray-500">Carregando debug de autenticação…</p>
+        </div>
+      </div>
+    );
+  }
+
   const { data: session, status, update } = useSession()
   const [tokenInfo, setTokenInfo] = useState<any>(null)
   const [cookies, setCookies] = useState<string>('')

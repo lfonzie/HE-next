@@ -35,7 +35,20 @@ interface MultiProviderChatResult {
 export function useMultiProviderChat(options: MultiProviderChatOptions = {}): MultiProviderChatResult {
   const [isStreaming, setIsStreaming] = useState(false)
   const [lastMessage, setLastMessage] = useState<ChatMessage | null>(null)
-  const { data: session } = useSession()
+  
+  // Handle prerendering - don't use useSession during SSR
+  let session = null
+  if (typeof window !== 'undefined') {
+    try {
+      const { useSession } = require('next-auth/react')
+      const sessionResult = useSession()
+      session = sessionResult.data
+    } catch (error) {
+      // Handle case where useSession fails during prerendering
+      session = null
+    }
+  }
+  
   const { startLoading, stopLoading } = useGlobalLoading()
   
   const abortControllerRef = useRef<AbortController | null>(null)

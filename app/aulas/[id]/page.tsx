@@ -407,25 +407,25 @@ export default function LessonPage() {
 
   if (isLoading || progressiveLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-yellow-50 to-orange-100 flex items-center justify-center p-4">
         <div className="text-center space-y-6">
           <div className="flex justify-center">
-            <div className="h-16 w-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center animate-pulse">
-              <BookOpen className="h-8 w-8 text-white" />
+            <div className="h-20 w-20 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-2xl flex items-center justify-center animate-pulse shadow-lg">
+              <BookOpen className="h-10 w-10 text-white" />
             </div>
           </div>
           
-          <div className="space-y-2">
-            <h2 className="text-2xl font-bold text-gray-900">
+          <div className="space-y-3">
+            <h2 className="text-3xl font-bold text-gray-900">
               Preparando sua aula...
             </h2>
-            <p className="text-gray-600">
+            <p className="text-lg text-gray-600">
               Aguarde enquanto carregamos todo o conteúdo
             </p>
           </div>
           
           <div className="flex justify-center">
-            <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+            <Loader2 className="h-8 w-8 animate-spin text-yellow-600" />
           </div>
         </div>
       </div>
@@ -434,23 +434,23 @@ export default function LessonPage() {
 
   if (!lessonData && error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 flex items-center justify-center">
-        <Card className="w-full max-w-md mx-4">
-          <CardContent className="pt-6">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-yellow-50 to-orange-100 flex items-center justify-center">
+        <Card className="w-full max-w-md mx-4 bg-white/90 backdrop-blur-sm border-2 border-yellow-200 shadow-xl rounded-3xl">
+          <CardContent className="pt-8">
             <div className="text-center space-y-6">
               <div className="flex justify-center">
                 <div className="relative">
-                  <div className="h-16 w-16 bg-red-100 rounded-full flex items-center justify-center">
-                    <BookOpen className="h-8 w-8 text-red-600" />
+                  <div className="h-20 w-20 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-2xl flex items-center justify-center shadow-lg">
+                    <BookOpen className="h-10 w-10 text-white" />
                   </div>
                 </div>
               </div>
               
-              <div className="space-y-2">
-                <h2 className="text-2xl font-bold text-gray-900">
+              <div className="space-y-3">
+                <h2 className="text-3xl font-bold text-gray-900">
                   Aula não encontrada
                 </h2>
-                <p className="text-gray-600">
+                <p className="text-lg text-gray-600">
                   {error}
                 </p>
               </div>
@@ -604,17 +604,23 @@ export default function LessonPage() {
   // Stage progress UI removed
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl">
-      {/* TOPO LIMPO - SEM BOTÕES VOLTAR OU BANNERS AZUIS */}
-      {/* Botão Voltar e instruções estão APENAS no footer abaixo */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* Sidebar - Stage Navigation */}
-        <div className="lg:col-span-1">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Etapas da Aula</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-yellow-50 to-orange-100">
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        {/* TOPO LIMPO - SEM BOTÕES VOLTAR OU BANNERS AZUIS */}
+        {/* Botão Voltar e instruções estão APENAS no footer abaixo */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* Sidebar - Stage Navigation */}
+          <div className="lg:col-span-1">
+            <Card className="bg-white/90 backdrop-blur-sm border-2 border-yellow-200 shadow-xl rounded-3xl">
+              <CardHeader className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-t-3xl">
+                <CardTitle className="text-xl flex items-center gap-3">
+                  <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center">
+                    <BookOpen className="h-5 w-5" />
+                  </div>
+                  Etapas da Aula
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 space-y-3">
               {stagesToUse.map((stage, index) => {
                 const status = getStageStatus(index)
                 const result = stageResults.find(sr => sr.stageIndex === index)
@@ -816,6 +822,7 @@ export default function LessonPage() {
           </div>
         </div>
       </div>
+    </div>
     </div>
   )
 }

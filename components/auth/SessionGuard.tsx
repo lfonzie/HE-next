@@ -16,6 +16,11 @@ export function SessionGuard({
   fallback,
   redirectTo = '/login'
 }: SessionGuardProps) {
+  // Handle prerendering - return children without session checks
+  if (typeof window === 'undefined') {
+    return <>{children}</>
+  }
+
   const { data: session, status } = useSession()
   const router = useRouter()
   const [isChecking, setIsChecking] = useState(true)

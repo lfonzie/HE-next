@@ -63,6 +63,17 @@ export function useModuleOrchestrator(config: ModuleOrchestratorConfig = {
     findBestModule
   } = useModuleContext()
 
+  // Handle prerendering - return empty functions
+  if (typeof window === 'undefined') {
+    return {
+      selectOptimalModule: async () => null,
+      classifyMessage: async () => null,
+      getModuleRecommendations: () => [],
+      isClassifying: false,
+      classificationHistory: []
+    }
+  }
+
   const { setSelectedModule, setLastClassification } = useChatContext()
   const { notifyClassification, notifySuccess, notifyError } = useNotificationContext()
 

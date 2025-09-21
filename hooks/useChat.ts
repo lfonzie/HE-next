@@ -40,8 +40,40 @@ export function useChat(onStreamingStart?: () => void) {
   const [retryCount, setRetryCount] = useState(0)
   const [firstTokenReceived, setFirstTokenReceived] = useState(false)
   
+  // Handle prerendering - return empty state
+  if (typeof window === 'undefined') {
+    return {
+      conversations: [],
+      currentConversation: null,
+      isLoading: false,
+      sendMessage: async () => {},
+      createConversation: async () => {},
+      deleteConversation: async () => {},
+      updateConversation: async () => {},
+      clearCurrentConversation: () => {},
+      setCurrentConversation: () => {},
+      refreshConversations: async () => {},
+      isStreaming: false,
+      cancelStream: () => {},
+      error: null,
+      retry: () => {}
+    }
+  }
+
   const { data: session } = useSession()
-  const { setSelectedModule, autoSwitchModule } = useChatContext()
+  
+  // Handle prerendering for ChatContext
+  let setSelectedModule, autoSwitchModule
+  try {
+    const chatContext = useChatContext()
+    setSelectedModule = chatContext.setSelectedModule
+    autoSwitchModule = chatContext.autoSwitchModule
+  } catch (error) {
+    // Handle case where ChatContext is not available during prerendering
+    setSelectedModule = () => {}
+    autoSwitchModule = false
+  }
+  
   const { startLoading, stopLoading, updateProgress } = useGlobalLoading()
   
   // Refs para otimização

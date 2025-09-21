@@ -10,6 +10,17 @@ import { useToast } from "../../hooks/use-toast";
 import { signOut } from "next-auth/react";
 
 export default function Profile() {
+  // Handle prerendering - return loading state
+  if (typeof window === 'undefined') {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-500">Carregando…</p>
+        </div>
+      </div>
+    );
+  }
+
   const { data: session, update } = useSession();
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);

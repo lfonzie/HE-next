@@ -142,22 +142,24 @@ const AulaPreview = memo(({
   if (!generatedLesson) {
     return (
       <Card className={`h-fit sticky top-4 ${className}`}>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CheckCircle className="h-5 w-5 text-green-600" />
+        <CardHeader className="bg-gradient-to-r from-gray-500 to-gray-600 text-white p-6">
+          <CardTitle className="flex items-center gap-3 text-xl">
+            <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center">
+              <CheckCircle className="h-5 w-5" />
+            </div>
             Sua Aula Gerada
           </CardTitle>
-          <p className="text-sm text-gray-600">
+          <p className="text-gray-200">
             Preview da experiência de aprendizado
           </p>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
           <div className="text-center py-12 text-gray-500">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <BookOpen className="h-8 w-8 opacity-50" />
+            <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <BookOpen className="h-10 w-10 opacity-50" />
             </div>
-            <p className="text-lg font-medium mb-2">Aguardando sua aula</p>
-            <p className="text-sm">Descreva um tópico para ver o preview aqui</p>
+            <p className="text-xl font-semibold mb-3">Aguardando sua aula</p>
+            <p className="text-gray-600">Descreva um tópico para ver o preview aqui</p>
           </div>
         </CardContent>
       </Card>
@@ -166,41 +168,43 @@ const AulaPreview = memo(({
 
   return (
     <Card className={`h-fit sticky top-4 ${className}`}>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <CheckCircle className="h-5 w-5 text-green-600" />
+      <CardHeader className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white p-6">
+        <CardTitle className="flex items-center gap-3 text-xl">
+          <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center">
+            <CheckCircle className="h-5 w-5" />
+          </div>
           Sua Aula Gerada
         </CardTitle>
-        <p className="text-sm text-gray-600">
+        <p className="text-yellow-100">
           Preview da experiência de aprendizado
         </p>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-6">
-          <div className="text-center p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200">
-            <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-3">
-              <CheckCircle className="h-6 w-6 text-white" />
+      <CardContent className="p-6">
+        <div className="space-y-8">
+          <div className="text-center p-6 bg-gradient-to-br from-emerald-50 to-blue-50 rounded-2xl border border-emerald-200">
+            <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="h-8 w-8 text-white" />
             </div>
-            <h3 className="font-bold text-lg text-gray-900 mb-2">
+            <h3 className="font-bold text-xl text-gray-900 mb-3">
               {generatedLesson.title || "Título da Aula"}
             </h3>
-            <div className="flex flex-wrap justify-center gap-2 mb-3">
-              <Badge className="bg-blue-100 text-blue-800">
+            <div className="flex flex-wrap justify-center gap-2 mb-4">
+              <Badge className="bg-blue-100 text-blue-800 border border-blue-200 px-3 py-1">
                 {generatedLesson.subject || "Matéria"}
               </Badge>
-              <Badge className="bg-purple-100 text-purple-800">
+              <Badge className="bg-purple-100 text-purple-800 border border-purple-200 px-3 py-1">
                 {generatedLesson.level || "Nível"}
               </Badge>
-              <Badge className="bg-orange-100 text-orange-800">
+              <Badge className="bg-orange-100 text-orange-800 border border-orange-200 px-3 py-1">
                 {generatedLesson.difficulty || "Médio"}
               </Badge>
             </div>
-            <div className="flex justify-center gap-4 text-sm text-gray-600">
-              <span className="flex items-center gap-1">
+            <div className="flex justify-center gap-6 text-sm text-gray-600">
+              <span className="flex items-center gap-2">
                 <Clock className="h-4 w-4" />
                 {generatedLesson.estimatedDuration || ""} min
               </span>
-              <span className="flex items-center gap-1">
+              <span className="flex items-center gap-2">
                 <Target className="h-4 w-4" />
                 {generatedLesson.stages?.length || 0} etapas
               </span>
@@ -208,33 +212,39 @@ const AulaPreview = memo(({
           </div>
 
           <div>
-            <h4 className="font-semibold mb-3 flex items-center gap-2">
-              <Target className="h-4 w-4 text-blue-600" />
+            <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
+              <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                <Target className="h-3 w-3 text-white" />
+              </div>
               Objetivos de Aprendizagem:
             </h4>
-            <ul className="space-y-2">
+            <div className="space-y-3">
               {(generatedLesson.objectives || []).map((objective: string, index: number) => (
-                <li key={index} className="flex items-start gap-2 text-sm">
-                  <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" />
-                  <span className="text-gray-700">{objective}</span>
-                </li>
+                <div key={index} className="flex items-start gap-3 p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-200">
+                  <CheckCircle className="h-5 w-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                  <span className="text-gray-700 font-medium">{objective}</span>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
 
           <div>
-            <h4 className="font-semibold mb-3 flex items-center gap-2">
-              <BookOpen className="h-4 w-4 text-purple-600" />
+            <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
+              <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center">
+                <BookOpen className="h-3 w-3 text-white" />
+              </div>
               Estrutura da Aula:
             </h4>
-            <div className="text-center p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-200">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <Target className="h-5 w-5 text-purple-600" />
-                <span className="font-medium text-purple-800">
+            <div className="text-center p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl border border-purple-200">
+              <div className="flex items-center justify-center gap-3 mb-3">
+                <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center">
+                  <Target className="h-4 w-4 text-white" />
+                </div>
+                <span className="font-bold text-purple-800 text-lg">
                   {generatedLesson.stages?.length || 0} etapas interativas
                 </span>
               </div>
-              <p className="text-sm text-purple-700">
+              <p className="text-purple-700 font-medium">
                 Aula completa com conteúdo personalizado e atividades adaptadas ao seu nível
               </p>
             </div>
@@ -244,19 +254,23 @@ const AulaPreview = memo(({
           <PacingMetrics 
             metrics={pacingMetrics} 
             warnings={pacingWarnings}
-            className="bg-blue-50 p-4 rounded-lg border border-blue-200"
+            className="bg-gradient-to-br from-blue-50 to-purple-50 p-6 rounded-2xl border border-blue-200"
           />
 
-          <div className="grid grid-cols-2 gap-3 pt-4">
+          <div className="grid grid-cols-1 gap-4 pt-4">
             <Button 
               onClick={onStartLesson} 
-              className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
+              className="w-full h-14 text-lg font-bold bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl"
             >
-              <Users className="mr-2 h-4 w-4" />
-              Iniciar
+              <Users className="mr-3 h-5 w-5" />
+              Iniciar Aula
             </Button>
-            <Button onClick={onSaveLesson} variant="outline">
-              💾 Salvar
+            <Button 
+              onClick={onSaveLesson} 
+              variant="outline" 
+              className="w-full h-12 border-2 border-yellow-400 text-yellow-700 hover:bg-yellow-50 hover:border-yellow-500 transition-all duration-200 rounded-xl"
+            >
+              💾 Salvar Aula
             </Button>
           </div>
         </div>

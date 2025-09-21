@@ -33,6 +33,17 @@ interface Module {
 }
 
 export default function ChatAdvanced() {
+  // Handle prerendering - return loading state
+  if (typeof window === 'undefined') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-500">Carregando…</p>
+        </div>
+      </div>
+    );
+  }
+
   const { data: session } = useSession();
   const { toast } = useToast();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);

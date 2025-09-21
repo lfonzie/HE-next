@@ -337,27 +337,27 @@ const FeatureCard = ({ feature, index, gradient = "from-yellow-50 to-white", bor
 );
 
 const ModuleCard = ({ module, disabled = true }) => (
-  <div className="bg-white/95 backdrop-blur-sm p-5 rounded-2xl border-2 border-yellow-200 hover:border-yellow-400 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105">
-    <div className="text-center mb-4">
-      <div className="text-3xl mb-3">{module.icon}</div>
-      <h3 className="text-base font-bold text-gray-800 mb-2">{module.title}</h3>
-      <p className="text-xs text-gray-600 mb-3">{module.description}</p>
+  <div className="bg-white/95 backdrop-blur-sm p-6 rounded-3xl border-2 border-yellow-300 hover:border-yellow-500 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105">
+    <div className="text-center mb-6">
+      <div className="text-4xl mb-4">{module.icon}</div>
+      <h3 className="text-lg font-bold text-gray-800 mb-3">{module.title}</h3>
+      <p className="text-sm text-gray-600 mb-4">{module.description}</p>
     </div>
     
-    <div className="space-y-1 mb-4">
+    <div className="space-y-2 mb-6">
       {module.features.slice(0, 3).map((feature, idx) => (
-        <div key={idx} className="flex items-center gap-2 text-xs text-gray-600">
-          <div className="w-1 h-1 bg-yellow-500 rounded-full"></div>
+        <div key={idx} className="flex items-center gap-3 text-sm text-gray-600">
+          <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
           <span>{feature}</span>
         </div>
       ))}
       {module.features.length > 3 && (
-        <div className="text-xs text-gray-500 text-center">+{module.features.length - 3} mais</div>
+        <div className="text-sm text-gray-500 text-center font-medium">+{module.features.length - 3} mais</div>
       )}
     </div>
     
     <button 
-      className="w-full px-3 py-2 bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black font-bold rounded-xl transition-all duration-300 cursor-not-allowed text-sm"
+      className="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-bold rounded-2xl transition-all duration-300 cursor-not-allowed text-base shadow-lg"
       disabled={disabled}
     >
       {module.cta}
@@ -408,7 +408,7 @@ const ModuleModal = ({ module, isOpen, onClose }) => {
           <div className="mt-6 flex justify-end">
             <button 
               onClick={onClose}
-              className="px-6 py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black font-bold rounded-xl transition-all duration-300"
+              className="px-8 py-4 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-bold rounded-2xl transition-all duration-300 shadow-lg"
             >
               Fechar
             </button>
@@ -435,20 +435,20 @@ const ChatModulesGrid = () => {
 
   return (
     <>
-      <div className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black p-8 rounded-3xl shadow-2xl">
-        <h3 className="text-3xl font-black mb-4 text-center">💬 10 Módulos Customizados de Chat IA</h3>
-        <p className="text-xl font-semibold mb-8 text-center">Sistema completo de inteligência artificial para toda comunidade escolar</p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
+      <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-black p-10 rounded-3xl shadow-2xl">
+        <h3 className="text-4xl font-black mb-6 text-center">💬 10 Módulos Customizados de Chat IA</h3>
+        <p className="text-2xl font-semibold mb-10 text-center">Sistema completo de inteligência artificial para toda comunidade escolar</p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 sm:gap-6">
           {CHAT_MODULES.map((module, index) => (
             <div 
               key={index} 
-              className="text-center bg-white/20 p-3 sm:p-4 rounded-xl cursor-pointer hover:bg-white/30 transition-all duration-300 transform hover:scale-105"
+              className="text-center bg-white/20 p-4 sm:p-6 rounded-2xl cursor-pointer hover:bg-white/30 transition-all duration-300 transform hover:scale-105"
               onClick={() => handleModuleClick(module)}
             >
-              <div className="text-2xl sm:text-3xl mb-1 sm:mb-2">{module.icon}</div>
-              <div className="font-bold text-xs sm:text-sm">{module.name}</div>
-              <div className="text-xs">{module.description}</div>
-              <div className="text-xs mt-1 sm:mt-2 text-yellow-800 font-semibold">Clique para saber mais</div>
+              <div className="text-3xl sm:text-4xl mb-2 sm:mb-3">{module.icon}</div>
+              <div className="font-bold text-sm sm:text-base">{module.name}</div>
+              <div className="text-xs sm:text-sm">{module.description}</div>
+              <div className="text-xs sm:text-sm mt-2 sm:mt-3 text-yellow-800 font-semibold">Clique para saber mais</div>
             </div>
           ))}
         </div>
@@ -582,15 +582,15 @@ const HubEduLanding = () => {
 
   const headerClasses = useMemo(() => 
     `fixed top-0 w-full z-50 transition-all duration-300 ${
-      isClient && scrollY > 50 ? 'bg-white/95 backdrop-blur-md shadow-lg' : 'bg-white/90 backdrop-blur-sm'
-    } border-b border-yellow-200`,
+      isClient && scrollY > 50 ? 'bg-white/95 backdrop-blur-md shadow-xl' : 'bg-white/90 backdrop-blur-sm'
+    } border-b-2 border-yellow-300`,
     [scrollY, isClient]
   );
 
   return (
     <div className="min-h-screen w-full overflow-x-hidden">
       {/* Launch Banner */}
-      <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-center py-2 font-bold text-sm">
+      <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-black text-center py-3 font-bold text-lg">
         🚀 EM BREVE - Aulas por IA + Simulador ENEM + Chat Inteligente = Educação Brasileira do Futuro
       </div>
 
@@ -614,26 +614,26 @@ const HubEduLanding = () => {
           
           <button 
             disabled
-            className="px-6 py-3 bg-gray-400 text-white font-bold rounded-xl shadow-lg flex items-center gap-2 cursor-not-allowed"
+            className="px-8 py-4 bg-gradient-to-r from-yellow-500 to-yellow-600 text-black font-bold rounded-2xl shadow-lg flex items-center gap-2 cursor-not-allowed"
           >
-            <LogIn className="w-4 h-4" />
+            <LogIn className="w-5 h-5" />
             EM BREVE
-            <ArrowRight className="w-4 h-4" />
+            <ArrowRight className="w-5 h-5" />
           </button>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-yellow-50 via-white to-yellow-100 text-black pt-24 pb-16 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-10 left-10 w-96 h-96 bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-10 right-10 w-80 h-80 bg-gradient-to-r from-yellow-500 to-yellow-700 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '3s' }} />
+      <section className="min-h-screen bg-gradient-to-br from-slate-50 via-yellow-50 to-orange-100 text-black pt-24 pb-16 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-10 left-10 w-96 h-96 bg-gradient-to-r from-yellow-400/30 to-yellow-600/30 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-10 right-10 w-80 h-80 bg-gradient-to-r from-yellow-500/30 to-yellow-700/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '3s' }} />
         </div>
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-6 py-3 rounded-full text-sm font-bold mb-6 shadow-lg">
-              <Rocket className="w-5 h-5" />
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-black px-8 py-4 rounded-2xl text-lg font-bold mb-8 shadow-xl">
+              <Rocket className="w-6 h-6" />
               🚀 EM BREVE - Aulas por IA + Simulador ENEM + Chat Inteligente = Educação Brasileira do Futuro
             </div>
 
@@ -647,12 +647,12 @@ const HubEduLanding = () => {
               />
             </div>
 
-            <h1 className="text-5xl lg:text-7xl font-black mb-6 leading-tight text-black">
+            <h1 className="text-6xl lg:text-8xl font-black mb-8 leading-tight text-black">
               <span className="bg-gradient-to-r from-yellow-500 to-yellow-700 bg-clip-text text-transparent">
                 {BRAND.name}
               </span>
               <br />
-              <span className="text-3xl lg:text-5xl font-bold text-gray-800">
+              <span className="text-4xl lg:text-6xl font-bold text-gray-800">
                 {BRAND.tagline}
               </span>
             </h1>
@@ -662,21 +662,21 @@ const HubEduLanding = () => {
             </p>
             
             {/* CTAs */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+            <div className="flex flex-col sm:flex-row gap-6 justify-center mb-16">
               <button 
-                className="px-8 py-4 bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black font-black text-lg shadow-2xl rounded-2xl flex items-center justify-center gap-3 cursor-not-allowed transition-all duration-300"
+                className="px-10 py-5 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-black text-xl shadow-2xl rounded-2xl flex items-center justify-center gap-3 cursor-not-allowed transition-all duration-300"
                 disabled
               >
-                <Play className="w-5 h-5" />
+                <Play className="w-6 h-6" />
                 Em Breve
               </button>
               <button 
-                className="px-8 py-4 border-2 border-yellow-400 hover:bg-yellow-400 hover:text-black text-yellow-600 font-bold text-lg rounded-2xl flex items-center justify-center gap-3 cursor-not-allowed transition-all duration-300"
+                className="px-10 py-5 border-2 border-yellow-500 hover:bg-yellow-500 hover:text-black text-yellow-700 font-bold text-xl rounded-2xl flex items-center justify-center gap-3 cursor-not-allowed transition-all duration-300"
                 disabled
               >
-                <Phone className="w-5 h-5" />
+                <Phone className="w-6 h-6" />
                 Ver Demonstração
-                <ArrowRight className="w-5 h-5" />
+                <ArrowRight className="w-6 h-6" />
               </button>
             </div>
             

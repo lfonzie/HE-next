@@ -1,6 +1,17 @@
 import { useSession, signOut } from 'next-auth/react'
 
 export function useAuth() {
+  // Handle prerendering - return empty state
+  if (typeof window === 'undefined') {
+    return {
+      user: null,
+      isLoading: false,
+      isAuthenticated: false,
+      signOut: async () => {},
+      refreshSession: async () => {}
+    }
+  }
+
   const { data: session, status } = useSession()
   
   const user = session?.user ? {

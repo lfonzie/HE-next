@@ -18,6 +18,11 @@ export function AuthGuard({
   redirectTo = '/login',
   fallback 
 }: AuthGuardProps) {
+  // Handle prerendering - return children without session checks
+  if (typeof window === 'undefined') {
+    return <>{children}</>
+  }
+
   const { data: session, status } = useSession()
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
@@ -55,6 +60,11 @@ export function AuthGuard({
 }
 
 export function AdminGuard({ children }: { children: React.ReactNode }) {
+  // Handle prerendering - return children without session checks
+  if (typeof window === 'undefined') {
+    return <>{children}</>
+  }
+
   const { data: session } = useSession()
   
   if (!session?.user?.email || !session.user.email.includes('admin')) {

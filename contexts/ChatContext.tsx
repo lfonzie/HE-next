@@ -350,6 +350,33 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
 // Hook
 export function useChatContext() {
+  // Handle prerendering - return empty context
+  if (typeof window === 'undefined') {
+    return {
+      state: initialState,
+      dispatch: () => {},
+      currentConversation: null,
+      currentMessages: [],
+      hasActiveConversation: false,
+      setActiveConversation: () => {},
+      setStreaming: () => {},
+      setSelectedModule: () => {},
+      updateSettings: () => {},
+      addMessage: () => {},
+      updateMessage: () => {},
+      clearConversation: () => {},
+      setError: () => {},
+      setLoading: () => {},
+      getModuleById: () => null,
+      getModelById: () => null,
+      getPreferredModel: () => null,
+      setLastClassification: () => {},
+      addToStreamingQueue: () => {},
+      removeFromStreamingQueue: () => {},
+      isInStreamingQueue: () => false
+    }
+  }
+
   const context = useContext(ChatContext)
   if (!context) {
     throw new Error('useChatContext must be used within a ChatProvider')
@@ -359,11 +386,33 @@ export function useChatContext() {
 
 // Selector hooks for performance optimization
 export function useChatState() {
+  // Handle prerendering
+  if (typeof window === 'undefined') {
+    return initialState
+  }
   const { state } = useChatContext()
   return state
 }
 
 export function useChatActions() {
+  // Handle prerendering
+  if (typeof window === 'undefined') {
+    return {
+      setActiveConversation: () => {},
+      setStreaming: () => {},
+      setSelectedModule: () => {},
+      updateSettings: () => {},
+      addMessage: () => {},
+      updateMessage: () => {},
+      clearConversation: () => {},
+      setError: () => {},
+      setLoading: () => {},
+      setLastClassification: () => {},
+      addToStreamingQueue: () => {},
+      removeFromStreamingQueue: () => {}
+    }
+  }
+  
   const {
     setActiveConversation,
     setStreaming,
@@ -396,16 +445,28 @@ export function useChatActions() {
 }
 
 export function useCurrentConversation() {
+  // Handle prerendering
+  if (typeof window === 'undefined') {
+    return { currentConversation: null, currentMessages: [], hasActiveConversation: false }
+  }
   const { currentConversation, currentMessages, hasActiveConversation } = useChatContext()
   return { currentConversation, currentMessages, hasActiveConversation }
 }
 
 export function useChatSettings() {
+  // Handle prerendering
+  if (typeof window === 'undefined') {
+    return { settings: initialState.settings, updateSettings: () => {} }
+  }
   const { state, updateSettings } = useChatContext()
   return { settings: state.settings, updateSettings }
 }
 
 export function useAvailableModules() {
+  // Handle prerendering
+  if (typeof window === 'undefined') {
+    return { modules: [], getModuleById: () => null, getPreferredModel: () => null }
+  }
   const { state, getModuleById, getPreferredModel } = useChatContext()
   return { 
     modules: state.availableModules, 
@@ -415,6 +476,10 @@ export function useAvailableModules() {
 }
 
 export function useAvailableModels() {
+  // Handle prerendering
+  if (typeof window === 'undefined') {
+    return { models: [], getModelById: () => null }
+  }
   const { state, getModelById } = useChatContext()
   return { models: state.availableModels, getModelById }
 }

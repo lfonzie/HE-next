@@ -52,47 +52,54 @@ const LoadingEntertainment = ({ elapsedTime }: { elapsedTime: number }) => {
   const currentFact = facts[Math.floor(elapsedTime / 15000) % facts.length]
 
   return (
-    <div className="space-y-6 p-6 bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl border border-blue-200">
+    <div className="space-y-8 p-8 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 rounded-2xl border border-blue-200">
       <div className="text-center">
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <Coffee className="h-5 w-5 text-blue-600" />
-          <span className="text-lg font-semibold text-blue-800">Enquanto aguardamos...</span>
+        <div className="flex items-center justify-center gap-3 mb-4">
+          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+            <Coffee className="h-6 w-6 text-white" />
+          </div>
+          <span className="text-2xl font-bold text-gray-800">Enquanto aguardamos...</span>
         </div>
-        <p className="text-sm text-blue-700">
+        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
           Nossa IA está trabalhando intensamente para criar sua aula perfeita! 
           <br />
-          <strong>Pode levar até 2 minutos e meio</strong> para garantir qualidade máxima.
+          <strong className="text-blue-600">Pode levar até 2 minutos e meio</strong> para garantir qualidade máxima.
         </p>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="p-4 bg-white/60 rounded-lg border border-blue-200">
-          <div className="flex items-start gap-3">
-            <Lightbulb className="h-5 w-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="p-6 bg-white/70 backdrop-blur-sm rounded-2xl border border-blue-200 shadow-sm">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center flex-shrink-0">
+              <Lightbulb className="h-6 w-6 text-white" />
+            </div>
             <div>
-              <h4 className="font-medium text-gray-900 mb-1">Dica do Dia</h4>
-              <p className="text-sm text-gray-700">{currentTip}</p>
+              <h4 className="text-xl font-bold text-gray-900 mb-3">Dica do Dia</h4>
+              <p className="text-gray-700 leading-relaxed">{currentTip}</p>
             </div>
           </div>
         </div>
         
-        <div className="p-4 bg-white/60 rounded-lg border border-purple-200">
-          <div className="flex items-start gap-3">
-            <Brain className="h-5 w-5 text-purple-500 flex-shrink-0 mt-0.5" />
+        <div className="p-6 bg-white/70 backdrop-blur-sm rounded-2xl border border-purple-200 shadow-sm">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center flex-shrink-0">
+              <Brain className="h-6 w-6 text-white" />
+            </div>
             <div>
-              <h4 className="font-medium text-gray-900 mb-1">Fato Científico</h4>
-              <p className="text-sm text-gray-700">{currentFact}</p>
+              <h4 className="text-xl font-bold text-gray-900 mb-3">Fato Científico</h4>
+              <p className="text-gray-700 leading-relaxed">{currentFact}</p>
             </div>
           </div>
         </div>
       </div>
       
-      <div className="flex justify-center gap-4 text-2xl">
+      <div className="flex justify-center gap-6 text-4xl">
         <div className="animate-bounce" style={{ animationDelay: '0ms' }}>🎯</div>
         <div className="animate-bounce" style={{ animationDelay: '200ms' }}>✨</div>
         <div className="animate-bounce" style={{ animationDelay: '400ms' }}>🚀</div>
         <div className="animate-bounce" style={{ animationDelay: '600ms' }}>💡</div>
         <div className="animate-bounce" style={{ animationDelay: '800ms' }}>🎮</div>
+        <div className="animate-bounce" style={{ animationDelay: '1000ms' }}>🏆</div>
       </div>
     </div>
   )
@@ -157,47 +164,81 @@ const PacingMetrics = ({ metrics, warnings, className }: PacingMetricsProps) => 
   if (!metrics) return null
 
   return (
-    <div className={`space-y-4 ${className}`}>
-      <div className="flex items-center gap-2">
-        <BarChart3 className="h-5 w-5 text-blue-600" />
-        <h3 className="text-lg font-semibold">📊 Métricas de Pacing Profissional</h3>
+    <div className={`space-y-6 ${className}`}>
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+          <BarChart3 className="h-5 w-5 text-white" />
+        </div>
+        <h3 className="text-2xl font-bold text-gray-800">📊 Métricas de Pacing Profissional</h3>
       </div>
       
-      <div className="grid grid-cols-2 gap-4 text-sm">
-        <div className="flex items-center gap-2">
-          <Clock className="h-4 w-4 text-green-600" />
-          <span className="font-medium">Tempo Síncrono:</span>
-          <span className="text-green-600 font-semibold">{metrics.synchronousTime} min</span>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl border border-green-200">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center">
+              <Clock className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-600">Tempo Síncrono</p>
+              <p className="text-2xl font-bold text-green-600">{metrics.synchronousTime} min</p>
+            </div>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Timer className="h-4 w-4 text-blue-600" />
-          <span className="font-medium">Tempo Assíncrono:</span>
-          <span className="text-blue-600 font-semibold">{metrics.asynchronousTime} min</span>
+        
+        <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-200">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
+              <Timer className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-600">Tempo Assíncrono</p>
+              <p className="text-2xl font-bold text-blue-600">{metrics.asynchronousTime} min</p>
+            </div>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <FileText className="h-4 w-4 text-purple-600" />
-          <span className="font-medium">Total de Tokens:</span>
-          <span className="text-purple-600 font-semibold">{metrics.totalTokens.toLocaleString()}</span>
+        
+        <div className="p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl border border-purple-200">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center">
+              <FileText className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total de Tokens</p>
+              <p className="text-2xl font-bold text-purple-600">{metrics.totalTokens.toLocaleString()}</p>
+            </div>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Target className="h-4 w-4 text-orange-600" />
-          <span className="font-medium">Palavras por Slide:</span>
-          <span className="text-orange-600 font-semibold">{metrics.wordsPerSlide}</span>
+        
+        <div className="p-6 bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl border border-orange-200">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center">
+              <Target className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-600">Palavras por Slide</p>
+              <p className="text-2xl font-bold text-orange-600">{metrics.wordsPerSlide}</p>
+            </div>
+          </div>
         </div>
       </div>
       
       {warnings && warnings.length > 0 && (
-        <Alert className="border-yellow-200 bg-yellow-50">
-          <AlertTriangle className="h-4 w-4 text-yellow-600" />
-          <AlertDescription className="text-yellow-800">
-            <div className="font-medium mb-2">⚠️ Avisos de Qualidade:</div>
-            <ul className="list-disc list-inside space-y-1">
-              {warnings.map((warning, index) => (
-                <li key={index} className="text-sm">{warning}</li>
-              ))}
-            </ul>
-          </AlertDescription>
-        </Alert>
+        <div className="p-6 bg-gradient-to-br from-yellow-50 to-orange-50 border border-yellow-200 rounded-2xl">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-xl flex items-center justify-center">
+              <AlertTriangle className="h-5 w-5 text-white" />
+            </div>
+            <div className="text-xl font-bold text-yellow-800">⚠️ Avisos de Qualidade</div>
+          </div>
+          <ul className="space-y-2">
+            {warnings.map((warning, index) => (
+              <li key={index} className="flex items-start gap-3 text-yellow-800">
+                <div className="w-2 h-2 bg-yellow-600 rounded-full mt-2 flex-shrink-0"></div>
+                <span className="font-medium">{warning}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </div>
   )
@@ -541,187 +582,300 @@ function AulasPageContent() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl" role="main">
-      {/* Header quando aula foi gerada */}
-      {generatedLesson && (
-        <header className="text-center mb-8">
-          <div className="flex items-center justify-center gap-4 mb-4">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl">
-              <CheckCircle className="h-8 w-8 text-white" />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      <div className="container mx-auto px-4 py-8 max-w-7xl" role="main">
+        {/* Header quando aula foi gerada */}
+        {generatedLesson && (
+          <header className="text-center mb-12">
+            <div className="relative">
+              {/* Background decoration */}
+              <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 via-blue-400/20 to-purple-400/20 rounded-3xl blur-3xl"></div>
+              
+              <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-white/20">
+                <div className="flex items-center justify-center gap-6 mb-6">
+                  <div className="relative">
+                    <div className="w-20 h-20 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-2xl flex items-center justify-center shadow-lg">
+                      <CheckCircle className="h-10 w-10 text-white" />
+                    </div>
+                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center">
+                      <Star className="h-3 w-3 text-white fill-current" />
+                    </div>
+                  </div>
+                  <div className="text-left">
+                    <h1 className="text-4xl font-bold bg-gradient-to-r from-yellow-600 to-yellow-700 bg-clip-text text-transparent mb-2">
+                      Aula Criada com Sucesso!
+                    </h1>
+                    <p className="text-lg text-gray-600">Sua experiência de aprendizado personalizada está pronta</p>
+                  </div>
+                </div>
+                
+                <div className="flex flex-col sm:flex-row justify-center gap-4">
+                  <Button 
+                    onClick={() => {
+                      setGeneratedLesson(null)
+                      setFormData({ topic: '' })
+                      setFormErrors({})
+                      setPacingMetrics(null)
+                      setPacingWarnings([])
+                    }}
+                    variant="outline"
+                    className="flex items-center gap-2 border-2 hover:bg-gray-50 transition-all duration-200"
+                    size="lg"
+                  >
+                    <RefreshCw className="h-5 w-5" />
+                    Criar Nova Aula
+                  </Button>
+                  <Button 
+                    onClick={handleStartLesson}
+                    className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-200"
+                    size="lg"
+                  >
+                    <Users className="h-5 w-5" />
+                    Iniciar Aula Agora
+                  </Button>
+                </div>
+              </div>
             </div>
-            <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-yellow-600 to-yellow-700 bg-clip-text text-transparent">
-                Aula Gerada com Sucesso!
-              </h1>
-              {/* Título removido */}
-            </div>
-          </div>
-          <div className="flex justify-center gap-4">
-            <Button 
-              onClick={() => {
-                setGeneratedLesson(null)
-                setFormData({ topic: '' })
-                setFormErrors({})
-                setPacingMetrics(null)
-                setPacingWarnings([])
-              }}
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <RefreshCw className="h-4 w-4" />
-              Gerar Nova Aula
-            </Button>
-            <Button 
-              onClick={handleStartLesson}
-              className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 flex items-center gap-2"
-            >
-              <Users className="h-4 w-4" />
-              Iniciar Aula
-            </Button>
-          </div>
-        </header>
-      )}
+          </header>
+        )}
 
       {/* Enhanced Header - Oculto durante carregamento E quando aula foi gerada */}
       {!isGenerating && !generatedLesson && (
-        <header className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl mb-6">
-            <BookOpen className="h-10 w-10 text-white" aria-hidden="true" />
-          </div>
-          <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-yellow-600 to-yellow-700 bg-clip-text text-transparent">
-            Aulas Interativas com IA
-          </h1>
-          <p className="text-xl text-gray-600 mb-2 max-w-2xl mx-auto">
-            Transforme qualquer tópico em uma experiência de aprendizado envolvente e personalizada
-          </p>
-          <div className="flex flex-wrap justify-center gap-2 mt-6">
-            <Badge variant="secondary" className="flex items-center gap-1">
-              <Sparkles className="h-3 w-3" />
-              IA Avançada
-            </Badge>
-            <Badge variant="secondary" className="flex items-center gap-1">
-              <Target className="h-3 w-3" />
-              Personalizado
-            </Badge>
-            <Badge variant="secondary" className="flex items-center gap-1">
-              <Users className="h-3 w-3" />
-              Interativo
-            </Badge>
+        <header className="text-center mb-16">
+          <div className="relative">
+            {/* Background decoration */}
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 via-purple-400/20 to-pink-400/20 rounded-3xl blur-3xl"></div>
+            
+            <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl p-12 shadow-xl border border-white/20">
+              <div className="relative mb-8">
+                <div className="w-24 h-24 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-3xl flex items-center justify-center shadow-lg mx-auto mb-6">
+                  <BookOpen className="h-12 w-12 text-white" />
+                </div>
+                <div className="absolute -top-2 -right-2 w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
+                  <Sparkles className="h-4 w-4 text-white fill-current" />
+                </div>
+              </div>
+              
+              <h1 className="text-6xl font-bold mb-6 bg-gradient-to-r from-yellow-600 to-yellow-700 bg-clip-text text-transparent">
+                Aulas Interativas com IA
+              </h1>
+              <p className="text-2xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
+                Transforme qualquer tópico em uma experiência de aprendizado envolvente e personalizada
+              </p>
+              
+              <div className="flex flex-wrap justify-center gap-3 mb-8">
+                <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-100 text-blue-800 border border-blue-200">
+                  <Sparkles className="h-4 w-4" />
+                  IA Avançada
+                </Badge>
+                <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-purple-100 text-purple-800 border border-purple-200">
+                  <Target className="h-4 w-4" />
+                  Personalizado
+                </Badge>
+                <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-pink-100 text-pink-800 border border-pink-200">
+                  <Users className="h-4 w-4" />
+                  Interativo
+                </Badge>
+                <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-green-100 text-green-800 border border-green-200">
+                  <Heart className="h-4 w-4" />
+                  Gamificado
+                </Badge>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl border border-blue-200">
+                  <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <Brain className="h-6 w-6 text-white" />
+                  </div>
+                  <h3 className="font-semibold text-blue-900 mb-2">IA Inteligente</h3>
+                  <p className="text-sm text-blue-700">Algoritmos avançados que adaptam o conteúdo ao seu nível</p>
+                </div>
+                <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl border border-purple-200">
+                  <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <Zap className="h-6 w-6 text-white" />
+                  </div>
+                  <h3 className="font-semibold text-purple-900 mb-2">Geração Rápida</h3>
+                  <p className="text-sm text-purple-700">Aulas completas em menos de 3 minutos</p>
+                </div>
+                <div className="p-4 bg-gradient-to-br from-pink-50 to-pink-100 rounded-2xl border border-pink-200">
+                  <div className="w-12 h-12 bg-pink-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <Rocket className="h-6 w-6 text-white" />
+                  </div>
+                  <h3 className="font-semibold text-pink-900 mb-2">Experiência Única</h3>
+                  <p className="text-sm text-pink-700">Cada aula é única e adaptada ao seu interesse</p>
+                </div>
+              </div>
+            </div>
           </div>
         </header>
       )}
 
       {/* Lesson Generator - Moved right after header */}
       {!isGenerating && !generatedLesson && (
-        <div className="max-w-2xl mx-auto mb-8">
-          <Card className="border-2 border-yellow-200 bg-gradient-to-br from-yellow-50 to-yellow-100">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-xl">
-                <Sparkles className="h-6 w-6 text-yellow-600" />
-                Gerador de Aulas Personalizado
-              </CardTitle>
-              <p className="text-sm text-gray-600">
-                Descreva qualquer tópico e nossa IA criará uma experiência de aprendizado completa
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-3">
-                <label htmlFor="topic" className="text-sm font-semibold flex items-center gap-2">
-                  O que você quer aprender hoje? 
-                  <span className="text-red-500">*</span>
-                </label>
-                
-                <Textarea
-                  id="topic"
-                  placeholder="Exemplo: Como a fotossíntese transforma luz solar em energia química, incluindo as reações e fatores que influenciam o processo..."
-                  value={formData.topic}
-                  onChange={(e) => {
-                    const newValue = e.target.value
-                    console.log('Mudança no campo topic:', { oldValue: formData.topic, newValue })
-                    setFormData({ ...formData, topic: newValue })
+        <div className="max-w-4xl mx-auto mb-12">
+          <div className="relative">
+            {/* Background decoration */}
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 via-purple-400/10 to-pink-400/10 rounded-3xl blur-2xl"></div>
+            
+            <Card className="relative bg-white/90 backdrop-blur-sm border-2 border-yellow-200 shadow-xl rounded-3xl overflow-hidden">
+              <CardHeader className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white p-8">
+                <CardTitle className="flex items-center gap-3 text-2xl">
+                  <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                    <Sparkles className="h-6 w-6" />
+                  </div>
+                  Gerador de Aulas Personalizado
+                </CardTitle>
+                <p className="text-yellow-100 text-lg mt-2">
+                  Descreva qualquer tópico e nossa IA criará uma experiência de aprendizado completa
+                </p>
+              </CardHeader>
+              <CardContent className="p-8 space-y-8">
+                <div className="space-y-4">
+                  <label htmlFor="topic" className="text-lg font-semibold flex items-center gap-2 text-gray-800">
+                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                      <Target className="h-4 w-4 text-white" />
+                    </div>
+                    O que você quer aprender hoje? 
+                    <span className="text-red-500 text-xl">*</span>
+                  </label>
+                  
+                  <div className="relative">
+                    <Textarea
+                      id="topic"
+                      placeholder="Exemplo: Como a fotossíntese transforma luz solar em energia química, incluindo as reações e fatores que influenciam o processo..."
+                      value={formData.topic}
+                      onChange={(e) => {
+                        const newValue = e.target.value
+                        console.log('Mudança no campo topic:', { oldValue: formData.topic, newValue })
+                        setFormData({ ...formData, topic: newValue })
+                        
+                        // Limpar erro se o campo não estiver mais vazio
+                        if (formErrors.topic && newValue.trim().length >= 5) {
+                          console.log('Limpando erro de validação')
+                          const newErrors = { ...formErrors }
+                          delete newErrors.topic
+                          setFormErrors(newErrors)
+                        }
+                      }}
+                      onKeyPress={handleKeyPress}
+                      rows={6}
+                      className={`resize-none transition-all duration-200 text-lg border-2 rounded-2xl p-4 ${
+                        formErrors.topic ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-blue-200 focus:border-blue-400 bg-white'
+                      }`}
+                      aria-invalid={!!formErrors.topic}
+                      aria-describedby={formErrors.topic ? 'topic-error' : undefined}
+                    />
                     
-                    // Limpar erro se o campo não estiver mais vazio
-                    if (formErrors.topic && newValue.trim().length >= 5) {
-                      console.log('Limpando erro de validação')
-                      const newErrors = { ...formErrors }
-                      delete newErrors.topic
-                      setFormErrors(newErrors)
-                    }
-                  }}
-                  onKeyPress={handleKeyPress}
-                  rows={6}
-                  className={`resize-none transition-colors ${
-                    formErrors.topic ? 'border-red-500 focus:border-red-500' : ''
-                  }`}
-                  aria-invalid={!!formErrors.topic}
-                  aria-describedby={formErrors.topic ? 'topic-error' : undefined}
-                />
-                {formErrors.topic && (
-                  <p id="topic-error" className="text-sm text-red-600 flex items-center gap-1">
-                    <AlertCircle className="h-4 w-4" />
-                    {formErrors.topic}
-                  </p>
-                )}
-                <div className="flex justify-between items-center text-xs text-gray-500">
-                  <span>💡 Quanto mais específico, melhor será sua aula!</span>
-                  <span>{formData.topic.length}/500</span>
+                    {/* Character counter */}
+                    <div className="absolute bottom-3 right-4 text-sm text-gray-400">
+                      {formData.topic.length}/500
+                    </div>
+                  </div>
+                  
+                  {formErrors.topic && (
+                    <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl">
+                      <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
+                      <p id="topic-error" className="text-red-700 font-medium">
+                        {formErrors.topic}
+                      </p>
+                    </div>
+                  )}
+                  
+                  <div className="flex items-center justify-between text-sm text-gray-600">
+                    <span className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
+                      Quanto mais específico, melhor será sua aula!
+                    </span>
+                  </div>
                 </div>
-              </div>
 
-              <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 border border-yellow-200 rounded-lg p-4">
-                <h4 className="font-medium text-yellow-900 mb-2 flex items-center gap-2">
-                  <Target className="h-4 w-4" />
-                  O que nossa IA fará automaticamente:
-                </h4>
-                <ul className="text-sm text-yellow-800 space-y-1">
-                  <li>✨ Identificar a matéria e série ideais</li>
-                  <li>🎯 Criar objetivos de aprendizagem específicos</li>
-                  <li>🎮 Desenvolver atividades interativas e gamificadas</li>
-                  <li>📊 Gerar avaliações personalizadas</li>
-                  <li>🏆 Implementar sistema de conquistas</li>
-                </ul>
-              </div>
+                <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 border border-blue-200 rounded-2xl p-6">
+                  <h4 className="font-semibold text-lg text-gray-800 mb-4 flex items-center gap-2">
+                    <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                      <Target className="h-3 w-3 text-white" />
+                    </div>
+                    O que nossa IA fará automaticamente:
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
+                        <Sparkles className="h-4 w-4 text-white" />
+                      </div>
+                      <span className="text-gray-700">Identificar matéria e série ideais</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center">
+                        <Target className="h-4 w-4 text-white" />
+                      </div>
+                      <span className="text-gray-700">Criar objetivos específicos</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg flex items-center justify-center">
+                        <Users className="h-4 w-4 text-white" />
+                      </div>
+                      <span className="text-gray-700">Desenvolver atividades interativas</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-gradient-to-br from-pink-400 to-pink-600 rounded-lg flex items-center justify-center">
+                        <Heart className="h-4 w-4 text-white" />
+                      </div>
+                      <span className="text-gray-700">Implementar gamificação</span>
+                    </div>
+                  </div>
+                </div>
 
-              <Button
-                onClick={() => handleGenerate()}
-                disabled={isGenerating || !formData.topic.trim()}
-                className="w-full h-12 text-lg font-medium bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700"
-                size="lg"
-              >
-                {isGenerating ? (
-                  <>
-                    <Loader2 className="mr-3 h-5 w-5 animate-spin" />
-                    Gerando sua aula personalizada...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="mr-3 h-5 w-5" />
-                    Gerar Aula Interativa
-                  </>
-                )}
-              </Button>
-            </CardContent>
-          </Card>
+                <Button
+                  onClick={() => handleGenerate()}
+                  disabled={isGenerating || !formData.topic.trim()}
+                  className="w-full h-16 text-xl font-semibold bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 shadow-lg hover:shadow-xl transition-all duration-200 rounded-2xl"
+                  size="lg"
+                >
+                  {isGenerating ? (
+                    <>
+                      <div className="mr-4 h-6 w-6 animate-spin rounded-full border-3 border-white border-t-transparent" />
+                      Gerando sua aula personalizada...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="mr-4 h-6 w-6" />
+                      Gerar Aula Interativa
+                    </>
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       )}
 
 
 
 
-      {/* Minimalist Suggestions */}
+      {/* Enhanced Suggestions */}
       {!isGenerating && !generatedLesson && (
-        <div className="max-w-4xl mx-auto mb-8">
-          <div className="text-center mb-4">
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">💡 Sugestões Rápidas</h3>
-            <p className="text-sm text-gray-600">Clique em qualquer sugestão para gerar automaticamente</p>
+        <div className="max-w-6xl mx-auto mb-16">
+          <div className="text-center mb-8">
+            <h3 className="text-3xl font-bold text-gray-800 mb-4 flex items-center justify-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+                <Lightbulb className="h-4 w-4 text-white" />
+              </div>
+              Sugestões Rápidas
+            </h3>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Clique em qualquer sugestão para gerar automaticamente uma aula personalizada
+            </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {suggestionsLoading ? (
               Array.from({ length: 6 }).map((_, index) => (
-                <div key={index} className="p-3 border border-gray-200 rounded-lg bg-gray-50 animate-pulse">
-                  <div className="h-4 bg-gray-300 rounded mb-2"></div>
-                  <div className="h-3 bg-gray-300 rounded w-2/3"></div>
+                <div key={index} className="p-6 border-2 border-gray-200 rounded-2xl bg-white/50 backdrop-blur-sm animate-pulse">
+                  <div className="h-6 bg-gray-300 rounded-lg mb-3"></div>
+                  <div className="h-4 bg-gray-300 rounded-lg w-2/3 mb-4"></div>
+                  <div className="flex gap-2">
+                    <div className="h-6 w-16 bg-gray-300 rounded-full"></div>
+                    <div className="h-6 w-20 bg-gray-300 rounded-full"></div>
+                  </div>
                 </div>
               ))
             ) : (
@@ -729,154 +883,193 @@ function AulasPageContent() {
                 <button
                   key={`${suggestion.text}-${index}`}
                   onClick={() => handleSuggestionClick(suggestion)}
-                  className="p-3 text-left border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 bg-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="group p-6 text-left border-2 border-gray-200 rounded-2xl hover:border-blue-300 hover:bg-gradient-to-br hover:from-blue-50 hover:to-purple-50 transition-all duration-300 bg-white/80 backdrop-blur-sm hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={isGenerating}
                   aria-label={`Gerar aula sobre ${suggestion.text}`}
                 >
-                  <p className="text-sm font-medium text-gray-800 mb-1 line-clamp-2">
-                    {suggestion.text}
-                  </p>
-                  <div className="flex gap-1">
-                    <Badge variant="secondary" className="text-xs px-1 py-0">{suggestion.category}</Badge>
-                    <Badge variant="outline" className="text-xs px-1 py-0">{suggestion.level}</Badge>
+                  <div className="flex items-start gap-3 mb-3">
+                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
+                      <BookOpen className="h-4 w-4 text-white" />
+                    </div>
+                    <p className="text-base font-semibold text-gray-800 group-hover:text-blue-800 line-clamp-2 leading-relaxed">
+                      {suggestion.text}
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Badge variant="secondary" className="text-xs px-3 py-1 bg-blue-100 text-blue-800 border border-blue-200">
+                      {suggestion.category}
+                    </Badge>
+                    <Badge variant="outline" className="text-xs px-3 py-1 border-purple-200 text-purple-700">
+                      {suggestion.level}
+                    </Badge>
                   </div>
                 </button>
               ))
             )}
           </div>
           
-          <div className="text-center mt-4">
+          <div className="text-center mt-8">
             <Button
               onClick={refreshSuggestions}
               variant="outline"
-              size="sm"
+              size="lg"
               disabled={suggestionsLoading}
-              className="text-xs"
+              className="border-2 border-purple-200 text-purple-700 hover:bg-purple-50 hover:border-purple-300 transition-all duration-200"
             >
-              <RefreshCw className={`h-3 w-3 mr-1 ${suggestionsLoading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`h-5 w-5 mr-2 ${suggestionsLoading ? 'animate-spin' : ''}`} />
               Atualizar Sugestões
             </Button>
           </div>
         </div>
       )}
 
-      {/* Loading State - Mostra entretenimento e progresso */}
+      {/* Enhanced Loading State */}
       {isGenerating && (
-        <div className="max-w-4xl mx-auto">
-          <Card className="border-2 border-yellow-200 bg-gradient-to-br from-yellow-50 to-yellow-100">
-            <CardHeader className="text-center">
-              <div className="flex items-center justify-center gap-3 mb-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl flex items-center justify-center">
-                  <Loader2 className="h-8 w-8 text-white animate-spin" />
-                </div>
-                <div>
-                  <h1 className="text-3xl font-bold bg-gradient-to-r from-yellow-600 to-yellow-700 bg-clip-text text-transparent">
-                    Gerando sua Aula Personalizada
-                  </h1>
-                  <p className="text-lg text-gray-600">Nossa IA está trabalhando intensamente para você!</p>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Progress Bar */}
-              <LessonProgress
-                progress={generationProgress}
-                status={generationStatus}
-                isGenerating={isGenerating}
-                elapsedTime={elapsedTime}
-                className="min-h-[120px]"
-              />
-              
-              {/* Entertainment Section */}
-              <LoadingEntertainment elapsedTime={elapsedTime} />
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-
-      {/* Aula Gerada - Layout completo quando aula está presente */}
-      {generatedLesson && (
-        <div className="max-w-4xl mx-auto">
-          <Card className="border-2 border-yellow-200 bg-gradient-to-br from-yellow-50 to-yellow-100">
-            <CardContent className="p-8">
-              <div className="space-y-8">
-                {/* Informações principais da aula removidas (título, badges e estatísticas) */}
-
-                {/* Objetivos de Aprendizagem */}
-                <div>
-                  <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
-                    <Target className="h-5 w-5 text-yellow-600" />
-                    Objetivos de Aprendizagem
-                  </h3>
-                  <ul className="space-y-3">
-                    {generatedLesson.objectives.map((objective: string, index: number) => (
-                      <li key={index} className="flex items-start gap-3">
-                        <CheckCircle className="h-5 w-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-gray-700">{objective}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* Estrutura da Aula */}
-                <div>
-                  <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
-                    <BookOpen className="h-5 w-5 text-yellow-600" />
-                    Estrutura da Aula
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {generatedLesson.stages.map((stage: any, index: number) => (
-                      <div key={index} className="flex items-center gap-4 p-4 bg-white rounded-lg border border-gray-200">
-                        <div className="w-10 h-10 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center flex-shrink-0">
-                          <span className="text-sm font-bold text-white">{index + 1}</span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-gray-900">{stage.etapa}</p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Badge variant="secondary" className="text-xs">{stage.type}</Badge>
-                            <span className="text-xs text-gray-500">{stage.estimatedTime} min</span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+        <div className="max-w-6xl mx-auto">
+          <div className="relative">
+            {/* Background decoration */}
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 via-purple-400/20 to-pink-400/20 rounded-3xl blur-3xl"></div>
+            
+            <Card className="relative bg-white/90 backdrop-blur-sm border-2 border-yellow-200 shadow-xl rounded-3xl overflow-hidden">
+              <CardHeader className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white p-8 text-center">
+                <div className="flex items-center justify-center gap-4 mb-4">
+                  <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                  </div>
+                  <div>
+                    <h1 className="text-4xl font-bold mb-2">
+                      Gerando sua Aula Personalizada
+                    </h1>
+                    <p className="text-xl text-blue-100">Nossa IA está trabalhando intensamente para você!</p>
                   </div>
                 </div>
-
-                {/* Métricas de Pacing Profissional */}
-                <PacingMetrics 
-                  metrics={pacingMetrics} 
-                  warnings={pacingWarnings}
-                  className="bg-yellow-50 p-6 rounded-lg border border-yellow-200"
-                />
-
-                {/* Botões de ação */}
-                <div className="flex flex-col sm:flex-row gap-4 pt-6">
-                  <Button 
-                    onClick={handleStartLesson} 
-                    className="flex-1 bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 h-12 text-lg"
-                  >
-                    <Users className="mr-2 h-5 w-5" />
-                    Iniciar Aula Agora
-                  </Button>
-                  <Button 
-                    onClick={handleSaveLesson} 
-                    variant="outline" 
-                    className="sm:w-auto h-12 border-yellow-400 text-yellow-700 hover:bg-yellow-50"
-                  >
-                    <FileText className="mr-2 h-4 w-4" />
-                    Salvar Aula
-                  </Button>
+              </CardHeader>
+              <CardContent className="p-8 space-y-8">
+                {/* Enhanced Progress Bar */}
+                <div className="space-y-6">
+                  <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden shadow-inner">
+                    <div 
+                      className="bg-gradient-to-r from-blue-500 to-purple-600 h-4 rounded-full transition-all duration-500 ease-out shadow-lg"
+                      style={{ width: `${generationProgress}%` }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {isGenerating && <Loader2 className="h-5 w-5 animate-spin text-blue-600" />}
+                      <span className="text-lg font-medium text-gray-700">{generationStatus}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-lg text-blue-600 font-semibold">
+                      <Timer className="h-5 w-5" />
+                      <span>{formatTime(elapsedTime)}</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+                
+                {/* Enhanced Entertainment Section */}
+                <LoadingEntertainment elapsedTime={elapsedTime} />
+              </CardContent>
+            </Card>
+          </div>
         </div>
       )}
 
 
+      {/* Enhanced Generated Lesson Display */}
+      {generatedLesson && (
+        <div className="max-w-6xl mx-auto">
+          <div className="relative">
+            {/* Background decoration */}
+            <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 via-blue-400/20 to-purple-400/20 rounded-3xl blur-3xl"></div>
+            
+            <Card className="relative bg-white/90 backdrop-blur-sm border-2 border-yellow-200 shadow-xl rounded-3xl overflow-hidden">
+              <CardContent className="p-12">
+                <div className="space-y-12">
+                  {/* Objetivos de Aprendizagem */}
+                  <div>
+                    <h3 className="text-3xl font-bold mb-8 flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-blue-600 rounded-xl flex items-center justify-center">
+                        <Target className="h-5 w-5 text-white" />
+                      </div>
+                      Objetivos de Aprendizagem
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {generatedLesson.objectives.map((objective: string, index: number) => (
+                        <div key={index} className="flex items-start gap-4 p-6 bg-gradient-to-br from-emerald-50 to-blue-50 rounded-2xl border border-emerald-200">
+                          <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <CheckCircle className="h-4 w-4 text-white" />
+                          </div>
+                          <span className="text-gray-700 font-medium leading-relaxed">{objective}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
 
+                  {/* Estrutura da Aula */}
+                  <div>
+                    <h3 className="text-3xl font-bold mb-8 flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center">
+                        <BookOpen className="h-5 w-5 text-white" />
+                      </div>
+                      Estrutura da Aula
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {generatedLesson.stages.map((stage: any, index: number) => (
+                        <div key={index} className="group p-6 bg-gradient-to-br from-white to-gray-50 rounded-2xl border border-gray-200 hover:border-purple-300 hover:shadow-lg transition-all duration-200">
+                          <div className="flex items-center gap-4 mb-4">
+                            <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
+                              <span className="text-lg font-bold text-white">{index + 1}</span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-bold text-gray-900 text-lg">{stage.etapa}</p>
+                              <div className="flex items-center gap-3 mt-2">
+                                <Badge variant="secondary" className="bg-purple-100 text-purple-800 border border-purple-200">
+                                  {stage.type}
+                                </Badge>
+                                <span className="text-sm text-gray-500 flex items-center gap-1">
+                                  <Clock className="h-4 w-4" />
+                                  {stage.estimatedTime} min
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
 
+                  {/* Métricas de Pacing Profissional */}
+                  <PacingMetrics 
+                    metrics={pacingMetrics} 
+                    warnings={pacingWarnings}
+                    className="bg-gradient-to-br from-blue-50 to-purple-50 p-8 rounded-2xl border border-blue-200"
+                  />
+
+                  {/* Botões de ação */}
+                  <div className="flex flex-col sm:flex-row gap-6 pt-8">
+                    <Button 
+                      onClick={handleStartLesson} 
+                      className="flex-1 h-16 text-xl font-bold bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 shadow-lg hover:shadow-xl transition-all duration-200 rounded-2xl"
+                    >
+                      <Users className="mr-3 h-6 w-6" />
+                      Iniciar Aula Agora
+                    </Button>
+                    <Button 
+                      onClick={handleSaveLesson} 
+                      variant="outline" 
+                      className="sm:w-auto h-16 text-lg border-2 border-yellow-400 text-yellow-700 hover:bg-yellow-50 hover:border-yellow-500 transition-all duration-200 rounded-2xl"
+                    >
+                      <FileText className="mr-2 h-5 w-5" />
+                      Salvar Aula
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )}
+
+      </div>
     </div>
   )
 }

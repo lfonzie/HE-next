@@ -11,6 +11,11 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
+  // Handle prerendering - return children without session checks
+  if (typeof window === 'undefined') {
+    return <>{children}</>
+  }
+
   const { data: session, status } = useSession()
   const router = useRouter()
   const [isClient, setIsClient] = useState(false)

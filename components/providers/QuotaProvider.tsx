@@ -4,18 +4,23 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface QuotaContextType {
-  quota: number;
+  quota: {
+    used: number;
+    limit: number;
+  };
   maxQuota: number;
   isLoading: boolean;
   error: string | null;
   decrementQuota: () => void;
   resetQuota: () => void;
+  isLimitReached: boolean;
+  consumeQuota: () => void;
 }
 
 const QuotaContext = createContext<QuotaContextType | undefined>(undefined);
 
 export function QuotaProvider({ children }: { children: React.ReactNode }) {
-  const [quota, setQuota] = useState(Infinity); // No limit
+  const [quotaState, setQuotaState] = useState({ used: 0, limit: Infinity }); // No limit
   const [maxQuota] = useState(Infinity);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,16 +30,24 @@ export function QuotaProvider({ children }: { children: React.ReactNode }) {
   };
 
   const resetQuota = () => {
-    // No-op since there's no limit
+    setQuotaState({ used: 0, limit: Infinity });
   };
 
+  const consumeQuota = () => {
+    setQuotaState(prev => ({ ...prev, used: prev.used + 1 }));
+  };
+
+  const isLimitReached = quotaState.used >= quotaState.limit;
+
   const value: QuotaContextType = {
-    quota,
+    quota: quotaState,
     maxQuota,
     isLoading,
     error,
     decrementQuota,
     resetQuota,
+    isLimitReached,
+    consumeQuota,
   };
 
   return (

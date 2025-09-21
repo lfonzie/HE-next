@@ -44,9 +44,8 @@ function SidebarWrapper({ children }: { children: ReactNode }) {
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { data: session, status } = useSession()
-  const router = useRouter()
   const pathname = usePathname()
+  const router = useRouter()
   
   // Check if we are on the chat page
   const isChatPage = pathname === '/chat'
@@ -57,17 +56,34 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   // Check if we are on the enem page (without sidebar)
   const isEnemPage = pathname === '/enem'
 
+  // Handle prerendering - return children without session checks
+  if (typeof window === 'undefined') {
+    return <>{children}</>
+  }
+
+  // Use session hook only on client side
+  let session, status
+  try {
+    const sessionResult = useSession()
+    session = sessionResult.data
+    status = sessionResult.status
+  } catch (error) {
+    // Handle case where useSession fails during prerendering
+    session = null
+    status = 'unauthenticated'
+  }
+
   // Check authentication for protected routes
   useEffect(() => {
     console.log('Dashboard layout - Session check:', { status, session: !!session, pathname })
     if (status === 'loading') return
-    if (!session) {
+    if (!session && !isApresentacaoPage) {
       console.log('No session found, redirecting to login')
       router.push('/login')
     } else {
-      console.log('Session found, user:', session.user?.email)
+      console.log('Session found, user:', session?.user?.email)
     }
-  }, [session, status, router, pathname])
+  }, [session, status, router, pathname, isApresentacaoPage])
 
   if (status === 'loading') {
     return (
@@ -82,30 +98,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     )
   }
 
-  if (!session) {
-    return null
-  }
-
-  // Special layout for enem - without sidebar
-  if (isEnemPage) {
-    return (
-      <LoadingProvider>
-        <ChatProvider>
-          <QuotaProvider>
-            <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50">
-              {/* Layout without sidebar - content occupies full screen */}
-              <div className="w-full h-screen overflow-y-auto">
-                {children}
-              </div>
-            </div>
-            <LoadingOverlay />
-          </QuotaProvider>
-        </ChatProvider>
-      </LoadingProvider>
-    )
-  }
-
-  // Special layout for presentation - without sidebar, full screen
+  // For apresentacao page, don't require session
   if (isApresentacaoPage) {
     return (
       <LoadingProvider>
@@ -122,6 +115,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </ChatProvider>
       </LoadingProvider>
     )
+  }
+
+  if (!session) {
+    return null
   }
 
   return (
