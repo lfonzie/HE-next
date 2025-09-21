@@ -7,12 +7,14 @@ export async function middleware(request: NextRequest) {
   // Skip middleware for static files and API routes (no logging for these)
   if (request.nextUrl.pathname.startsWith('/_next/') ||
       request.nextUrl.pathname.startsWith('/api/') ||
-      request.nextUrl.pathname.match(/\.(ico|png|jpg|jpeg|gif|svg|css|js|woff|woff2|ttf|eot|webmanifest)$/) ||
+      request.nextUrl.pathname.match(/\.(ico|png|jpg|jpeg|gif|svg|css|js|woff|woff2|ttf|eot|webmanifest|xml)$/) ||
       request.nextUrl.pathname.includes('favicon') ||
       request.nextUrl.pathname.includes('manifest') ||
       request.nextUrl.pathname.includes('apple-touch-icon') ||
       request.nextUrl.pathname.includes('android-chrome') ||
-      request.nextUrl.pathname.includes('.well-known')) {
+      request.nextUrl.pathname.includes('.well-known') ||
+      request.nextUrl.pathname === '/sitemap.xml' ||
+      request.nextUrl.pathname === '/robots.txt') {
     return NextResponse.next()
   }
 
