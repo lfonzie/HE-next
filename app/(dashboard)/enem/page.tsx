@@ -26,7 +26,6 @@ import { EnemCustomizer } from '@/components/enem/EnemCustomizer';
 import { EnemSimulatorV2 } from '@/components/enem/EnemSimulatorV2';
 import { EnemResults } from '@/components/enem/EnemResults';
 import { AuthGuard } from '@/components/AuthGuard';
-import { FixedHeader } from '@/components/layout/FixedHeader';
 import { EnemMode, EnemArea, EnemScore } from '@/types/enem';
 import { ExamGenerationLoading } from '@/components/enem/EnemLoadingStates';
 import { ModernHeader } from '@/components/layout/ModernHeader';
@@ -420,7 +419,7 @@ function EnemSimulatorContent() {
   // Default: Mode Selection
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-yellow-50 to-orange-100">
-      <FixedHeader />
+      <ModernHeader showNavigation={true} showHome={true} />
       <div className="container mx-auto px-4 py-8 max-w-7xl pt-24" role="main">
         {/* Header */}
         <header className="text-center mb-16">

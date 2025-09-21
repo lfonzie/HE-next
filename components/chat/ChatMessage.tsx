@@ -126,7 +126,7 @@ export const ChatMessage = memo(function ChatMessage({
   // Bubble classes based on role
   const bubbleClass = (role: 'user' | 'assistant' | 'system') => {
     if (role === 'user') {
-      return "self-end bg-blue-500 text-white rounded-2xl px-4 py-3 shadow-sm max-w-prose md:max-w-[65ch] break-words hyphens-auto";
+      return "self-end bg-yellow-500 text-black rounded-2xl px-4 py-3 shadow-sm max-w-prose md:max-w-[65ch] break-words hyphens-auto";
     }
     if (role === 'assistant') {
       return "self-start px-4 py-3 max-w-prose md:max-w-[65ch] break-words hyphens-auto";

@@ -38,8 +38,8 @@ export function ModernHeader({
       transparent 
         ? 'bg-transparent' 
         : isClient && scrollY > 50 
-          ? 'bg-white/95 backdrop-blur-md shadow-xl border-b border-gray-200' 
-          : 'bg-white/90 backdrop-blur-sm border-b border-yellow-300',
+          ? 'bg-white shadow-xl border-b border-gray-200' 
+          : 'bg-white border-b border-yellow-300',
       className
     ),
     [scrollY, isClient, transparent, className]
@@ -47,8 +47,8 @@ export function ModernHeader({
 
   return (
     <header className={headerClasses}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div className="flex justify-between items-center">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 overflow-visible">
+        <div className="flex justify-between items-center overflow-visible">
           {/* Logo */}
           <Link 
             href="/" 
@@ -87,3 +87,4 @@ export function ModernHeader({
     </header>
   )
 }
+

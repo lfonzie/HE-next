@@ -337,9 +337,9 @@ export default function ChatComponent() {
   const isQuotaExceeded = quota.used >= quota.limit;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-yellow-50 to-orange-100">
+    <div className="h-screen bg-gradient-to-br from-slate-50 via-yellow-50 to-orange-100 flex flex-col">
       <ModernHeader showNavigation={true} showHome={true} />
-      <div className="container mx-auto px-4 py-8 max-w-7xl pt-24" role="main">
+      <div className="flex-1 flex flex-col pt-24" role="main">
         {/* Enhanced Header - Mostrar apenas quando não há mensagens */}
         {!hasMessages && (
           <header className="text-center mb-16">
@@ -357,7 +357,7 @@ export default function ChatComponent() {
                   </div>
                 </div>
                 
-                <h1 className="text-6xl font-bold mb-6 bg-gradient-to-r from-yellow-600 to-yellow-700 bg-clip-text text-transparent">
+                <h1 className="text-4xl font-bold mb-6 bg-gradient-to-r from-yellow-600 to-yellow-700 bg-clip-text text-transparent">
                   Chat Inteligente com IA
                 </h1>
                 <p className="text-2xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
@@ -412,8 +412,8 @@ export default function ChatComponent() {
         )}
 
         {/* Chat Interface */}
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-white/90 backdrop-blur-sm border-2 border-yellow-200 shadow-xl rounded-3xl overflow-hidden">
+        <div className="flex-1 flex flex-col">
+          <div className="flex-1 bg-white/90 backdrop-blur-sm border-2 border-yellow-200 shadow-xl rounded-3xl overflow-hidden flex flex-col">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-yellow-500 to-yellow-600 text-white">
               <div className="flex items-center gap-4">
@@ -450,7 +450,7 @@ export default function ChatComponent() {
             {/* Messages */}
             <div 
               ref={chatContainerRef}
-              className="flex-1 overflow-y-auto p-4 space-y-4 min-h-[400px]"
+              className="flex-1 overflow-y-auto p-4 space-y-4"
               onScroll={handleScroll}
             >
               {!hasMessages ? (

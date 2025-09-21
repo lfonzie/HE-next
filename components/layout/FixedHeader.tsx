@@ -45,6 +45,22 @@ export function FixedHeader({ showLoginButton = false }: FixedHeaderProps) {
           </div>
         </Link>
         
+        {/* Navigation Links */}
+        <nav className="hidden md:flex items-center gap-6">
+          <Link href="/chat" className="text-gray-700 hover:text-yellow-600 font-medium transition-colors">
+            Chat IA
+          </Link>
+          <Link href="/enem" className="text-gray-700 hover:text-yellow-600 font-medium transition-colors">
+            Simulador ENEM
+          </Link>
+          <Link href="/redacao" className="text-gray-700 hover:text-yellow-600 font-medium transition-colors">
+            Redação ENEM
+          </Link>
+          <Link href="/aulas" className="text-gray-700 hover:text-yellow-600 font-medium transition-colors">
+            Aulas IA
+          </Link>
+        </nav>
+        
         {showLoginButton && (
           <button 
             disabled
