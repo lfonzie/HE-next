@@ -26,5 +26,8 @@ services:
         sync: false # Prompt for value during deployment (for Google Gemini)
       - key: NEXT_PUBLIC_BASE_URL
         value: https://your-hubedu-app.onrender.com
+      - key: NEXT_TELEMETRY_DISABLED
+        value: "1"
     healthCheckPath: /api/health
     autoDeploy: true
+    plan: starter

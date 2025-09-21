@@ -21,10 +21,11 @@ import {
   Check,
   ExternalLink,
   Maximize2,
-  Minimize2
+  Minimize2,
+  RefreshCw
 } from 'lucide-react';
 import SyntaxHighlighter from 'react-syntax-highlighter';
-import { tomorrow } from 'react-syntax-highlighter/dist/styles/tomorrow';
+import tomorrow from 'react-syntax-highlighter/dist/styles/tomorrow';
 
 export interface DiagramData {
   id: string;
