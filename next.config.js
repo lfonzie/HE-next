@@ -1,8 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   serverExternalPackages: ['@prisma/client'],
-  // Set workspace root to avoid Next.js workspace detection issues
-  outputFileTracingRoot: '/opt/render/project/src',
   // Exclude ENEM API server from build
   outputFileTracingExcludes: {
     '*': ['./enem-api-main/**/*']
