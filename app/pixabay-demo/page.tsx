@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import PixabayImageGallery from '@/components/pixabay/PixabayImageGallery';
-import { PixabayImageGrid, PixabayImageGrid } from '@/components/pixabay/PixabayImageGrid';
+import { PixabayImageGrid } from '@/components/pixabay/PixabayImageGrid';
 import { usePixabayImage } from '@/hooks/usePixabayImage';
 import { 
   BookOpen, 
