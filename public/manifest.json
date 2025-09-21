@@ -1,11 +1,11 @@
 {
-  "name": "HubEdu.ia - A Educação do Futuro",
+  "name": "HubEdu.ia - Plataforma Educacional com IA",
   "short_name": "HubEdu.ia",
-  "description": "Plataforma educacional completa com aulas geradas por IA, simulador ENEM, correção automática de redações e sistema de chat inteligente - tudo alinhado com BNCC e LGPD.",
+  "description": "Plataforma educacional completa com IA conversacional, simulador ENEM e 8 módulos educacionais",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#fbbf24",
+  "theme_color": "#ffd233",
   "orientation": "portrait-primary",
   "scope": "/",
   "lang": "pt-BR",
@@ -13,31 +13,40 @@
   "categories": ["education", "productivity", "utilities"],
   "icons": [
     {
-      "src": "/android-chrome-192x192.png",
+      "src": "/favicon-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.ico",
+      "sizes": "32x32",
+      "type": "image/x-icon",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/android-chrome-512x512.png",
-      "sizes": "512x512",
+      "src": "/icons-new/icon-152x152.png",
+      "sizes": "152x152",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/apple-touch-icon.png",
       "sizes": "180x180",
-      "type": "image/png"
-    },
-    {
-      "src": "/favicon-32x32.png",
-      "sizes": "32x32",
-      "type": "image/png"
-    },
-    {
-      "src": "/favicon-16x16.png",
-      "sizes": "16x16",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     }
   ],
   "screenshots": [
@@ -46,62 +55,53 @@
       "sizes": "1280x720",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "Tela inicial do HubEdu.ia"
+      "label": "HubEdu.ia - Página Principal"
     },
     {
-      "src": "/screenshots/mobile-chat.png",
-      "sizes": "390x844",
+      "src": "/screenshots/mobile-home.png",
+      "sizes": "375x667",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Interface de chat no mobile"
+      "label": "HubEdu.ia - Mobile"
     }
   ],
   "shortcuts": [
     {
-      "name": "Chat IA",
-      "short_name": "Chat",
-      "description": "Acesse o chat inteligente com IA",
-      "url": "/chat",
-      "icons": [
-        {
-          "src": "/icons/chat-96x96.png",
-          "sizes": "96x96"
-        }
-      ]
-    },
-    {
       "name": "Simulador ENEM",
       "short_name": "ENEM",
-      "description": "Faça simulados do ENEM",
-      "url": "/enem",
+      "description": "Acesse o simulador do ENEM",
+      "url": "/simulador",
       "icons": [
         {
-          "src": "/icons/enem-96x96.png",
-          "sizes": "96x96"
+          "src": "/icons/shortcut-enem.png",
+          "sizes": "96x96",
+          "type": "image/png"
         }
       ]
     },
     {
-      "name": "Aulas Interativas",
+      "name": "Aulas",
       "short_name": "Aulas",
-      "description": "Acesse aulas geradas por IA",
+      "description": "Acesse as aulas interativas",
       "url": "/aulas",
       "icons": [
         {
-          "src": "/icons/aulas-96x96.png",
-          "sizes": "96x96"
+          "src": "/icons/shortcut-aulas.png",
+          "sizes": "96x96",
+          "type": "image/png"
         }
       ]
     },
     {
-      "name": "Redação ENEM",
-      "short_name": "Redação",
-      "description": "Correção automática de redações",
-      "url": "/redacao",
+      "name": "Chat IA",
+      "short_name": "Chat",
+      "description": "Converse com o tutor IA",
+      "url": "/chat-advanced",
       "icons": [
         {
-          "src": "/icons/redacao-96x96.png",
-          "sizes": "96x96"
+          "src": "/icons/shortcut-chat.png",
+          "sizes": "96x96",
+          "type": "image/png"
         }
       ]
     }
@@ -112,39 +112,6 @@
     "preferred_width": 400
   },
   "launch_handler": {
-    "client_mode": "navigate-existing"
-  },
-  "protocol_handlers": [
-    {
-      "protocol": "web+hubedu",
-      "url": "/?protocol=%s"
-    }
-  ],
-  "file_handlers": [
-    {
-      "action": "/upload",
-      "accept": {
-        "text/plain": [".txt"],
-        "application/pdf": [".pdf"],
-        "application/msword": [".doc"],
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"]
-      }
-    }
-  ],
-  "share_target": {
-    "action": "/share",
-    "method": "POST",
-    "enctype": "multipart/form-data",
-    "params": {
-      "title": "title",
-      "text": "text",
-      "url": "url",
-      "files": [
-        {
-          "name": "file",
-          "accept": ["text/plain", "application/pdf", "image/*"]
-        }
-      ]
-    }
+    "client_mode": "focus-existing"
   }
 }

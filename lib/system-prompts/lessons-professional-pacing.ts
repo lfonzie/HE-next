@@ -114,15 +114,41 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
       "type": "question",
       "title": "Quiz 1: Verificação de Compreensão",
       "content": "Contexto da primeira pergunta com cenário prático e aplicação dos conceitos aprendidos.",
-      "question": "Pergunta analítica que exige aplicação dos conceitos dos slides anteriores",
-      "options": [
-        "Alternativa A - com explicação do porquê está incorreta",
-        "Alternativa B - com explicação do porquê está incorreta", 
-        "Alternativa C - com explicação do porquê está incorreta",
-        "Alternativa D - com explicação do porquê está correta"
+      "questions": [
+        {
+          "question": "Pergunta analítica que exige aplicação dos conceitos dos slides anteriores",
+          "options": [
+            "Alternativa A - com explicação do porquê está incorreta",
+            "Alternativa B - com explicação do porquê está incorreta", 
+            "Alternativa C - com explicação do porquê está incorreta",
+            "Alternativa D - com explicação do porquê está correta"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Explicação detalhada da resposta correta com justificativa completa e conexão com os conceitos anteriores"
+        },
+        {
+          "question": "Segunda pergunta que testa compreensão dos mecanismos principais",
+          "options": [
+            "Alternativa incorreta - explicação do erro",
+            "Alternativa correta - explicação detalhada",
+            "Alternativa incorreta - explicação do erro",
+            "Alternativa incorreta - explicação do erro"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Explicação detalhada com conexão aos conceitos fundamentais"
+        },
+        {
+          "question": "Terceira pergunta que avalia aplicação prática dos conceitos",
+          "options": [
+            "Alternativa incorreta - explicação do erro",
+            "Alternativa incorreta - explicação do erro",
+            "Alternativa correta - explicação detalhada",
+            "Alternativa incorreta - explicação do erro"
+          ],
+          "correctAnswer": "C",
+          "explanation": "Explicação detalhada com exemplos práticos e aplicações"
+        }
       ],
-      "correctAnswer": 3,
-      "explanation": "Explicação detalhada da resposta correta com justificativa completa e conexão com os conceitos anteriores",
       "feedbackRich": {
         "correct": "Excelente! Você aplicou corretamente o conceito de [conceito]. Isso acontece porque...",
         "incorrect": "Não foi desta vez, mas vamos entender o porquê. A resposta correta é [explicação detalhada] porque...",
@@ -167,15 +193,41 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
       "type": "question",
       "title": "Quiz 2: Análise Situacional",
       "content": "Contexto da segunda pergunta com cenário complexo que exige síntese e análise crítica.",
-      "question": "Pergunta situacional que exige análise de dados, gráficos ou cenários complexos",
-      "options": [
-        "Alternativa incorreta - com explicação do porquê está incorreta",
-        "Alternativa correta - com explicação detalhada",
-        "Alternativa incorreta - com explicação do porquê está incorreta", 
-        "Alternativa incorreta - com explicação do porquê está incorreta"
+      "questions": [
+        {
+          "question": "Pergunta situacional que exige análise de dados, gráficos ou cenários complexos",
+          "options": [
+            "Alternativa incorreta - com explicação do porquê está incorreta",
+            "Alternativa correta - com explicação detalhada",
+            "Alternativa incorreta - com explicação do porquê está incorreta", 
+            "Alternativa incorreta - com explicação do porquê está incorreta"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Explicação detalhada com análise do cenário, interpretação de dados e aplicação dos conceitos aprendidos"
+        },
+        {
+          "question": "Segunda pergunta que avalia síntese de conceitos e conexões",
+          "options": [
+            "Alternativa correta - explicação detalhada",
+            "Alternativa incorreta - explicação do erro",
+            "Alternativa incorreta - explicação do erro",
+            "Alternativa incorreta - explicação do erro"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Explicação detalhada com síntese dos conceitos principais e suas interconexões"
+        },
+        {
+          "question": "Terceira pergunta que testa aplicação crítica e análise",
+          "options": [
+            "Alternativa incorreta - explicação do erro",
+            "Alternativa incorreta - explicação do erro",
+            "Alternativa incorreta - explicação do erro",
+            "Alternativa correta - explicação detalhada"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Explicação detalhada com análise crítica e aplicação dos conceitos em situações complexas"
+        }
       ],
-      "correctAnswer": 1,
-      "explanation": "Explicação detalhada com análise do cenário, interpretação de dados e aplicação dos conceitos aprendidos",
       "feedbackRich": {
         "correct": "Perfeito! Sua análise considerou corretamente [fator]. Isso é importante porque...",
         "incorrect": "Boa tentativa! Vamos analisar juntos: [análise detalhada do cenário]...",
@@ -208,17 +260,43 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
     {
       "slideNumber": 12,
       "type": "question",
-      "title": "Quiz 2: Análise Situacional",
-      "content": "Contexto da segunda pergunta com cenário complexo que exige síntese e análise crítica.",
-      "question": "Pergunta situacional que exige análise de dados, gráficos ou cenários complexos",
-      "options": [
-        "Alternativa incorreta - com explicação do porquê está incorreta",
-        "Alternativa correta - com explicação detalhada",
-        "Alternativa incorreta - com explicação do porquê está incorreta", 
-        "Alternativa incorreta - com explicação do porquê está incorreta"
+      "title": "Quiz 3: Síntese e Aplicação Final",
+      "content": "Contexto da terceira pergunta com cenário complexo que exige síntese e análise crítica.",
+      "questions": [
+        {
+          "question": "Pergunta situacional que exige análise de dados, gráficos ou cenários complexos",
+          "options": [
+            "Alternativa incorreta - com explicação do porquê está incorreta",
+            "Alternativa correta - com explicação detalhada",
+            "Alternativa incorreta - com explicação do porquê está incorreta", 
+            "Alternativa incorreta - com explicação do porquê está incorreta"
+          ],
+          "correctAnswer": "B",
+          "explanation": "Explicação detalhada com análise do cenário, interpretação de dados e aplicação dos conceitos aprendidos"
+        },
+        {
+          "question": "Segunda pergunta que avalia síntese de conceitos e conexões",
+          "options": [
+            "Alternativa correta - explicação detalhada",
+            "Alternativa incorreta - explicação do erro",
+            "Alternativa incorreta - explicação do erro",
+            "Alternativa incorreta - explicação do erro"
+          ],
+          "correctAnswer": "A",
+          "explanation": "Explicação detalhada com síntese dos conceitos principais e suas interconexões"
+        },
+        {
+          "question": "Terceira pergunta que testa aplicação crítica e análise",
+          "options": [
+            "Alternativa incorreta - explicação do erro",
+            "Alternativa incorreta - explicação do erro",
+            "Alternativa incorreta - explicação do erro",
+            "Alternativa correta - explicação detalhada"
+          ],
+          "correctAnswer": "D",
+          "explanation": "Explicação detalhada com análise crítica e aplicação dos conceitos em situações complexas"
+        }
       ],
-      "correctAnswer": 1,
-      "explanation": "Explicação detalhada com análise do cenário, interpretação de dados e aplicação dos conceitos aprendidos",
       "feedbackRich": {
         "correct": "Perfeito! Sua análise considerou corretamente [fator]. Isso é importante porque...",
         "incorrect": "Boa tentativa! Vamos analisar juntos: [análise detalhada do cenário]...",
@@ -272,6 +350,9 @@ IMPORTANTE:
 - Seja encorajador mas mantenha o desafio intelectual
 - CONTEÚDO DOS SLIDES: MÍNIMO 500 tokens por slide (≈375 palavras)
 - Para quizzes: feedback rico com explicações detalhadas de cada alternativa
+- EMBARALHE as alternativas dos quizzes para variar a posição da resposta correta
+- Use diferentes posições para a resposta correta (A, B, C ou D) em cada quiz
+- CADA QUIZ DEVE TER EXATAMENTE 3 QUESTÕES com 4 alternativas cada
 - TODOS os textos devem estar em PORTUGUÊS BRASILEIRO
 - Responda APENAS com JSON válido. Não inclua formatação markdown, blocos de código ou texto adicional.`;
 

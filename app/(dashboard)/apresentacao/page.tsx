@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo, lazy, Suspense, memo } from 'react';
+import { PasswordProtection } from '../../../components/auth/PasswordProtection';
 import { 
   Users, Clock, DollarSign, Star, ArrowRight, Play, CheckCircle, MessageSquare, 
   Bot, Zap, Rocket, Shield, Heart, Phone, Mail, MapPin, Target, TrendingUp, 
@@ -1255,4 +1256,16 @@ const HubEduLanding = () => {
 
 // Viewport configuration is handled in the root layout.tsx
 
-export default HubEduLanding;
+const ProtectedHubEduLanding = () => {
+  return (
+    <PasswordProtection 
+      password="revolucao"
+      title="Apresentação HubEdu.ia"
+      description="Digite a senha para acessar a apresentação completa"
+    >
+      <HubEduLanding />
+    </PasswordProtection>
+  );
+};
+
+export default ProtectedHubEduLanding;

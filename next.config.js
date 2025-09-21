@@ -21,6 +21,22 @@ const nextConfig = {
           {
             key: 'Permissions-Policy',
             value: 'unload=*'
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff'
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY'
+          },
+          {
+            key: 'X-XSS-Protection',
+            value: '1; mode=block'
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin'
           }
         ]
       },
@@ -43,6 +59,71 @@ const nextConfig = {
           {
             key: 'Content-Type',
             value: 'application/manifest+json'
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable'
+          }
+        ]
+      },
+      {
+        source: '/robots.txt',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'text/plain'
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=86400'
+          }
+        ]
+      },
+      {
+        source: '/sitemap.xml',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/xml'
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=86400'
+          }
+        ]
+      },
+      {
+        source: '/humans.txt',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'text/plain'
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=86400'
+          }
+        ]
+      },
+      {
+        source: '/.well-known/security.txt',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'text/plain'
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=86400'
+          }
+        ]
+      },
+      {
+        source: '/browserconfig.xml',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/xml'
           },
           {
             key: 'Cache-Control',

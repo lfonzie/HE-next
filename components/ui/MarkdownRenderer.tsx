@@ -52,7 +52,7 @@ export default function MarkdownRenderer({ content = '', className = '' }: Markd
           HeadingTag,
           { 
             key: index, 
-            className: `font-bold mb-2 ${
+            className: `font-bold mb-4 ${
               level === 2 ? 'text-lg' : 
               level === 3 ? 'text-base' : 'text-sm'
             }`
@@ -65,7 +65,7 @@ export default function MarkdownRenderer({ content = '', className = '' }: Markd
       return (
         <p 
           key={index} 
-          className="mb-2 text-left"
+          className="mb-4 text-left"
           dangerouslySetInnerHTML={{ __html: processedLine }}
         />
       )

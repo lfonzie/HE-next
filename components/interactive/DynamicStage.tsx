@@ -9,7 +9,7 @@ import DiscussionBoard from './DiscussionBoard'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { CheckCircle, Clock, Star, Trophy, XCircle, ArrowLeft, ArrowRight, BookOpen } from 'lucide-react'
+import { CheckCircle, Clock, Star, Trophy, XCircle, ArrowLeft, ArrowRight, BookOpen, Printer, RotateCcw, Plus } from 'lucide-react'
 
 interface StageActivity {
   component: string
@@ -63,6 +63,7 @@ interface DynamicStageProps {
   }
   onRestart?: () => void
   onNewLesson?: () => void
+  onPrint?: () => void
 }
 
 export default function DynamicStage({
@@ -79,7 +80,8 @@ export default function DynamicStage({
   lessonTheme = 'geral',
   lessonData,
   onRestart,
-  onNewLesson
+  onNewLesson,
+  onPrint
 }: DynamicStageProps) {
   const [isCompleted, setIsCompleted] = useState(false)
   const [stageResult, setStageResult] = useState<any>(null)
@@ -253,6 +255,7 @@ export default function DynamicStage({
             timeLimit={activity.time ? activity.time * 60 : 0}
             showExplanations={true}
             allowRetry={true}
+            shuffleOptions={true}
           />
         )
 
@@ -570,26 +573,70 @@ export default function DynamicStage({
             {stageIndex + 1} de {totalStages}
           </span>
           
-          {onRestart && (
-            <Button
-              onClick={onRestart}
-              variant="outline"
-              size="sm"
-              className="text-xs"
-            >
-              Reiniciar
-            </Button>
-          )}
-          
-          {onNewLesson && (
-            <Button
-              onClick={onNewLesson}
-              variant="outline"
-              size="sm"
-              className="text-xs"
-            >
-              Nova Aula
-            </Button>
+          {/* Botões especiais para o último slide */}
+          {stageIndex === totalStages - 1 ? (
+            <div className="flex items-center gap-3">
+              {onPrint && (
+                <Button
+                  onClick={onPrint}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2 text-xs"
+                >
+                  <Printer className="h-4 w-4" />
+                  Imprimir
+                </Button>
+              )}
+              
+              {onRestart && (
+                <Button
+                  onClick={onRestart}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2 text-xs"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  Recomeçar
+                </Button>
+              )}
+              
+              {onNewLesson && (
+                <Button
+                  onClick={onNewLesson}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2 text-xs"
+                >
+                  <Plus className="h-4 w-4" />
+                  Nova Aula
+                </Button>
+              )}
+            </div>
+          ) : (
+            /* Botões normais para slides intermediários */
+            <>
+              {onRestart && (
+                <Button
+                  onClick={onRestart}
+                  variant="outline"
+                  size="sm"
+                  className="text-xs"
+                >
+                  Reiniciar
+                </Button>
+              )}
+              
+              {onNewLesson && (
+                <Button
+                  onClick={onNewLesson}
+                  variant="outline"
+                  size="sm"
+                  className="text-xs"
+                >
+                  Nova Aula
+                </Button>
+              )}
+            </>
           )}
         </div>
 

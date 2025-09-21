@@ -240,7 +240,7 @@ FORMATO JSON ESTRITO:
         {
           "q": "Pergunta clara que exige aplicação dos conceitos aprendidos?",
           "options": ["Primeira alternativa", "Segunda alternativa", "Terceira alternativa", "Quarta alternativa"],
-          "correct": 0,
+          "correct": 2,
           "explanation": "Explicação detalhada da resposta correta com justificativa completa e conexão com os conceitos anteriores"
         }
       ]
@@ -253,10 +253,10 @@ ${systemPrompt ? `[Custom Prompt: ${systemPrompt}]` : ''}
 
 IMPORTANTE: 
 - Use \\n\\n para quebras de linha no conteúdo
-- NÃO embaralhe as questões nem as alternativas - mantenha sempre a ordem original
-- Use sempre a mesma posição para a resposta correta (ex: sempre posição 0)
-- Para o Quiz 1 (slide 7): use correct: 0
-- Para o Quiz 2 (slide 12): use correct: 0
+- EMBARALHE as alternativas dos quizzes para variar a posição da resposta correta
+- Use diferentes posições para a resposta correta (0, 1, 2 ou 3) em cada quiz
+- Para o Quiz 1 (slide 7): use uma posição aleatória entre 0-3
+- Para o Quiz 2 (slide 12): use uma posição aleatória diferente entre 0-3
 - Responda APENAS com JSON válido. Não inclua texto adicional, explicações ou formatação markdown.`;
 }
 

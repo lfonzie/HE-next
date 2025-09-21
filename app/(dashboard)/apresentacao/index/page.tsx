@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { PasswordProtection } from '../../../../components/auth/PasswordProtection';
 import { Users, Clock, DollarSign, Star, ArrowRight, Play, CheckCircle, MessageSquare, Bot, Zap, Rocket, Shield, Heart, Menu, X, Phone, Mail, MapPin, Target, TrendingUp, BookOpen, Lightbulb, LogIn } from 'lucide-react';
 import PrivacyPolicyModal from '@/components/modals/PrivacyPolicyModal';
 import TermsOfUseModal from '@/components/modals/TermsOfUseModal';
@@ -429,4 +430,16 @@ const ApresentacaoPage = () => {
   );
 };
 
-export default ApresentacaoPage;
+const ProtectedApresentacaoPage = () => {
+  return (
+    <PasswordProtection 
+      password="revolucao"
+      title="Apresentação HubEdu.ia"
+      description="Digite a senha para acessar a apresentação completa"
+    >
+      <ApresentacaoPage />
+    </PasswordProtection>
+  );
+};
+
+export default ProtectedApresentacaoPage;

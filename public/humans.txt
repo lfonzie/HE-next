@@ -1,0 +1,22 @@
+/* TEAM */
+Developer: HubEdu.ia Team
+Contact: contato@hubedu.ia
+From: São Paulo, Brazil
+
+/* THANKS */
+Thanks to all contributors and users who make HubEdu.ia possible.
+
+/* SITE */
+Last update: 2024/12/19
+Standards: HTML5, CSS3, JavaScript ES6+, Next.js 15
+Components: React 19, TypeScript, Tailwind CSS
+IDE: Visual Studio Code, Cursor
+Tools: Prisma, NextAuth.js, OpenAI API, Vercel AI SDK
+
+/* PROJECT */
+Name: HubEdu.ia
+Description: Plataforma educacional completa com IA conversacional, simulador ENEM e 8 módulos educacionais
+Version: 0.0.28
+Language: Portuguese (Brazil)
+Doctype: HTML5
+IDE: Visual Studio Code, Cursor

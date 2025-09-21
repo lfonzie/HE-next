@@ -1,0 +1,81 @@
+import { MetadataRoute } from 'next'
+
+export default function robots(): MetadataRoute.Robots {
+  const baseUrl = 'https://hubedu.ia'
+
+  return {
+    rules: [
+      {
+        userAgent: '*',
+        allow: '/',
+        disallow: [
+          '/api/',
+          '/admin/',
+          '/debug-auth/',
+          '/test-auth/',
+          '/test-*/',
+          '/demo-register/',
+          '/loading-demo/',
+          '/multi-provider-demo/',
+          '/splash-test/',
+          '/test-hubedu-interactive/',
+          '/test-math/',
+          '/test-progressive/',
+          '/test-visual/',
+          '/debug/',
+          '/_next/',
+          '/private/',
+          '/temp/',
+        ],
+      },
+      {
+        userAgent: 'Googlebot',
+        allow: '/',
+        disallow: [
+          '/api/',
+          '/admin/',
+          '/debug-auth/',
+          '/test-auth/',
+          '/test-*/',
+          '/demo-register/',
+          '/loading-demo/',
+          '/multi-provider-demo/',
+          '/splash-test/',
+          '/test-hubedu-interactive/',
+          '/test-math/',
+          '/test-progressive/',
+          '/test-visual/',
+          '/debug/',
+          '/_next/',
+          '/private/',
+          '/temp/',
+        ],
+      },
+      {
+        userAgent: 'Bingbot',
+        allow: '/',
+        disallow: [
+          '/api/',
+          '/admin/',
+          '/debug-auth/',
+          '/test-auth/',
+          '/test-*/',
+          '/demo-register/',
+          '/loading-demo/',
+          '/multi-provider-demo/',
+          '/splash-test/',
+          '/test-hubedu-interactive/',
+          '/test-math/',
+          '/test-progressive/',
+          '/test-visual/',
+          '/debug/',
+          '/_next/',
+          '/private/',
+          '/temp/',
+        ],
+      },
+    ],
+    sitemap: `${baseUrl}/sitemap.xml`,
+    host: baseUrl,
+  }
+}

@@ -26,7 +26,6 @@ export async function middleware(request: NextRequest) {
   const publicRoutes = [
     '/',
     '/contato',
-    '/apresentacao',
     '/about',
     '/faq',
     '/privacidade',

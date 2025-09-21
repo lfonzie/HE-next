@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
 import { useProgressiveLoading } from '@/lib/progressive-lesson-loader'
 import { ensureLessonStructure } from '@/lib/lesson-data-transformer'
+import { printLesson } from '@/lib/print-lesson'
 
 interface LessonData {
   title: string
@@ -395,6 +396,12 @@ export default function LessonPage() {
     toast.success('Aula reiniciada!')
   }
 
+  const handlePrintLesson = () => {
+    if (lessonData) {
+      printLesson(lessonData)
+    }
+  }
+
   // Difficulty badges removed from header UI
 
   const getStageStatus = (stageIndex: number) => {
@@ -728,6 +735,7 @@ export default function LessonPage() {
                   } : undefined}
                   onRestart={handleRestart}
                   onNewLesson={() => router.push('/aulas')}
+                  onPrint={handlePrintLesson}
                 />
               );
             })()}
