@@ -183,12 +183,9 @@ export default function DynamicStage({
       'UploadTask'
     ]
     
-    // For QuizComponent, only allow navigation if the quiz is completed
+    // For QuizComponent, always allow navigation (user can navigate manually)
     if (stage.activity.component === 'QuizComponent') {
-      if (isCompleted) {
-        onNext()
-      }
-      // Don't navigate if quiz is not completed
+      onNext()
       return
     }
     
@@ -255,7 +252,7 @@ export default function DynamicStage({
             timeLimit={activity.time ? activity.time * 60 : 0}
             showExplanations={true}
             allowRetry={true}
-            shuffleOptions={true}
+            shuffleOptions={false} // Options are now pre-shuffled from API
           />
         )
 
@@ -642,11 +639,7 @@ export default function DynamicStage({
 
         <Button
           onClick={handleNext}
-          disabled={
-            stage.activity.component === 'QuizComponent' 
-              ? !isCompleted 
-              : !canGoNext
-          }
+          disabled={!canGoNext}
           className="flex items-center gap-2"
         >
           {stageIndex === totalStages - 1 ? 'Finalizar' : 'Próxima'}

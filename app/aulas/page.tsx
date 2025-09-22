@@ -6,10 +6,12 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2, Sparkles, BookOpen, Target, Users, Send, Lightbulb, TrendingUp, AlertCircle, CheckCircle, Clock, RefreshCw, Timer, BarChart3, FileText, AlertTriangle, Mic, Volume2, Accessibility, Coffee, Brain, Zap, Star, Heart, Rocket } from 'lucide-react'
-import { useDynamicSuggestions } from '@/hooks/useDynamicSuggestions'
+import { Loader2, Sparkles, BookOpen, Target, Users, Send, Lightbulb, TrendingUp, AlertCircle, CheckCircle, Clock, RefreshCw, Timer, BarChart3, FileText, AlertTriangle, Mic, Volume2, Accessibility, Coffee, Brain, Zap, Star, Heart, Rocket, Image as ImageIcon } from 'lucide-react'
+import { useEnhancedSuggestions } from '@/hooks/useEnhancedSuggestions'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { ModernHeader } from '@/components/layout/ModernHeader'
+// Removido: seleção manual de imagens - agora é automática
+import Link from 'next/link'
 
 // Mock components for demo (replace with actual imports)
 const toast = {
@@ -64,7 +66,7 @@ const LoadingEntertainment = ({ elapsedTime }: { elapsedTime: number }) => {
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
           Nossa IA está trabalhando intensamente para criar sua aula perfeita! 
           <br />
-          <strong className="text-yellow-600">Pode levar até 2 minutos e meio</strong> para garantir qualidade máxima.
+          <strong className="text-yellow-600">Pode levar até 1 minuto e meio</strong> para garantir qualidade máxima.
         </p>
       </div>
       
@@ -286,9 +288,15 @@ interface FormErrors {
 }
 
 interface Suggestion {
+  id: number
   text: string
   category: string
   level: string
+  description: string
+  tags: string[]
+  difficulty: 'básico' | 'intermediário' | 'avançado'
+  estimatedTime: number
+  popularity: number
 }
 
 // Removido: SUGGESTIONS estáticas - agora usando sugestões dinâmicas do Gemini
@@ -300,7 +308,7 @@ const STATUS_MESSAGES = [
   { progress: 28, message: 'Estruturando conteúdo pedagógico...' },
   { progress: 38, message: 'Gerando atividades interativas e avaliações...' },
   { progress: 48, message: 'Aplicando técnicas de gamificação...' },
-  { progress: 58, message: 'Criando imagens e recursos visuais...' },
+  { progress: 58, message: 'Selecionando imagens educacionais automaticamente...' },
   { progress: 68, message: 'Desenvolvendo sistema de avaliação...' },
   { progress: 78, message: 'Otimizando pacing e sequência didática...' },
   { progress: 88, message: 'Aplicando metodologias pedagógicas avançadas...' },
@@ -324,8 +332,11 @@ function AulasPageContent() {
   const [startTime, setStartTime] = useState<number | null>(null)
   const [elapsedTime, setElapsedTime] = useState(0)
 
-  // Usar sugestões dinâmicas do Gemini
-  const { suggestions, loading: suggestionsLoading, error: suggestionsError, refreshSuggestions } = useDynamicSuggestions()
+  // Usar sugestões melhoradas
+  const { suggestions, loading: suggestionsLoading, error: suggestionsError, refreshSuggestions } = useEnhancedSuggestions({
+    limit: 6, // Mostrar apenas 6 sugestões na página principal
+    sortBy: 'popularity'
+  })
 
   // Cronômetro
   useEffect(() => {
@@ -410,7 +421,7 @@ function AulasPageContent() {
     setStartTime(Date.now())
 
     const generationStartTime = Date.now()
-    const estimatedDuration = 150000 // 150 seconds (2 minutes and 30 seconds) for realistic timing
+    const estimatedDuration = 90000 // 90 seconds (1 minute and 30 seconds) for realistic timing
 
     // Enhanced progress simulation
     const progressInterval = setInterval(() => {
@@ -541,6 +552,8 @@ function AulasPageContent() {
     // Auto-generate after suggestion click
     await handleGenerate(suggestion.text)
   }, [handleGenerate])
+
+// Removido: manipulação manual de imagens - agora é automática
 
   // Enhanced form submission handler
   const handleKeyPress = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -697,7 +710,7 @@ function AulasPageContent() {
                     <Zap className="h-6 w-6 text-white" />
                   </div>
                   <h3 className="font-semibold text-orange-900 mb-2">Geração Rápida</h3>
-                  <p className="text-sm text-orange-700">Aulas completas em menos de 3 minutos</p>
+                  <p className="text-sm text-orange-700">Aulas completas em menos de 2 minutos</p>
                 </div>
                 <div className="p-4 bg-gradient-to-br from-red-50 to-red-100 rounded-2xl border border-red-200">
                   <div className="w-12 h-12 bg-red-500 rounded-xl flex items-center justify-center mx-auto mb-3">
@@ -823,6 +836,36 @@ function AulasPageContent() {
                       </div>
                       <span className="text-gray-700">Implementar gamificação</span>
                     </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg flex items-center justify-center">
+                        <ImageIcon className="h-4 w-4 text-white" />
+                      </div>
+                      <span className="text-gray-700">Selecionar imagens educacionais automaticamente</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Informação sobre seleção automática de imagens */}
+                <div className="bg-gradient-to-r from-purple-50 via-blue-50 to-purple-50 border border-purple-200 rounded-2xl p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <ImageIcon className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-semibold text-gray-800 mb-2">
+                        🎯 Imagens Educacionais Automáticas
+                      </h4>
+                      <p className="text-gray-600 leading-relaxed">
+                        Nossa IA seleciona automaticamente as melhores imagens educacionais para cada slide. 
+                        As imagens são escolhidas com base no contexto educacional e relevância semântica para 
+                        maximizar o aprendizado dos alunos.
+                      </p>
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        <Badge variant="secondary" className="bg-purple-100 text-purple-800 border border-purple-200">
+                          🧠 IA Semântica
+                        </Badge>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -861,10 +904,10 @@ function AulasPageContent() {
               <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
                 <Lightbulb className="h-4 w-4 text-white" />
               </div>
-              Sugestões Rápidas
+              Sugestões Inteligentes
             </h3>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Clique em qualquer sugestão para gerar automaticamente uma aula personalizada
+              Explore nossa biblioteca de tópicos educacionais com filtros inteligentes
             </p>
           </div>
           
@@ -881,36 +924,78 @@ function AulasPageContent() {
                 </div>
               ))
             ) : (
-              suggestions.map((suggestion, index) => (
+              suggestions.map((suggestion) => (
                 <button
-                  key={`${suggestion.text}-${index}`}
+                  key={suggestion.id}
                   onClick={() => handleSuggestionClick(suggestion)}
                   className="group p-6 text-left border-2 border-gray-200 rounded-2xl hover:border-yellow-300 hover:bg-gradient-to-br hover:from-yellow-50 hover:to-orange-50 transition-all duration-300 bg-white/80 backdrop-blur-sm hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={isGenerating}
                   aria-label={`Gerar aula sobre ${suggestion.text}`}
                 >
-                  <div className="flex items-start gap-3 mb-3">
-                    <div className="w-8 h-8 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
-                      <BookOpen className="h-4 w-4 text-white" />
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
+                        <BookOpen className="h-4 w-4 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-base font-semibold text-gray-800 group-hover:text-yellow-800 line-clamp-2 leading-relaxed">
+                          {suggestion.text}
+                        </p>
+                        <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                          {suggestion.description}
+                        </p>
+                      </div>
                     </div>
-                    <p className="text-base font-semibold text-gray-800 group-hover:text-yellow-800 line-clamp-2 leading-relaxed">
-                      {suggestion.text}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Badge variant="secondary" className="text-xs px-3 py-1 bg-yellow-100 text-yellow-800 border border-yellow-200">
-                      {suggestion.category}
-                    </Badge>
-                    <Badge variant="outline" className="text-xs px-3 py-1 border-orange-200 text-orange-700">
-                      {suggestion.level}
-                    </Badge>
+                    
+                    <div className="flex flex-wrap gap-2">
+                      <Badge variant="secondary" className="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 border border-yellow-200">
+                        {suggestion.category}
+                      </Badge>
+                      <Badge variant="outline" className="text-xs px-2 py-1 border-orange-200 text-orange-700">
+                        {suggestion.level}
+                      </Badge>
+                      <Badge 
+                        variant="outline" 
+                        className={`text-xs px-2 py-1 ${
+                          suggestion.difficulty === 'básico' ? 'bg-green-100 text-green-800 border-green-200' :
+                          suggestion.difficulty === 'intermediário' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' :
+                          'bg-red-100 text-red-800 border-red-200'
+                        }`}
+                      >
+                        {suggestion.difficulty}
+                      </Badge>
+                    </div>
+                    
+                    <div className="flex items-center justify-between text-xs text-gray-500">
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        <span>{suggestion.estimatedTime}min</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Star className="h-3 w-3 text-yellow-500" />
+                        <span>{suggestion.popularity}%</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-1">
+                      {suggestion.tags.slice(0, 3).map((tag, index) => (
+                        <span key={index} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                          {tag}
+                        </span>
+                      ))}
+                      {suggestion.tags.length > 3 && (
+                        <span className="text-xs text-gray-400 px-2 py-1">
+                          +{suggestion.tags.length - 3}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </button>
               ))
             )}
           </div>
           
-          <div className="text-center mt-8">
+          <div className="text-center mt-8 space-y-4">
             <Button
               onClick={refreshSuggestions}
               variant="outline"
@@ -921,6 +1006,14 @@ function AulasPageContent() {
               <RefreshCw className={`h-5 w-5 mr-2 ${suggestionsLoading ? 'animate-spin' : ''}`} />
               Atualizar Sugestões
             </Button>
+            
+            <div className="text-sm text-gray-500">
+              <p>Quer ver mais opções? 
+                <Link href="/suggestions-library" className="text-blue-600 hover:text-blue-800 underline ml-1">
+                  Acesse nossa biblioteca completa de sugestões
+                </Link>
+              </p>
+            </div>
           </div>
         </div>
       )}
@@ -986,25 +1079,6 @@ function AulasPageContent() {
             <Card className="relative bg-white/90 backdrop-blur-sm border-2 border-yellow-200 shadow-xl rounded-3xl overflow-hidden">
               <CardContent className="p-12">
                 <div className="space-y-12">
-                  {/* Objetivos de Aprendizagem */}
-                  <div>
-                    <h3 className="text-3xl font-bold mb-8 flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-xl flex items-center justify-center">
-                        <Target className="h-5 w-5 text-white" />
-                      </div>
-                      Objetivos de Aprendizagem
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {generatedLesson.objectives.map((objective: string, index: number) => (
-                        <div key={index} className="flex items-start gap-4 p-6 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl border border-yellow-200">
-                          <div className="w-8 h-8 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <CheckCircle className="h-4 w-4 text-white" />
-                          </div>
-                          <span className="text-gray-700 font-medium leading-relaxed">{objective}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
 
                   {/* Estrutura da Aula */}
                   <div>

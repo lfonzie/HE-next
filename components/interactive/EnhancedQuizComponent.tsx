@@ -65,9 +65,19 @@ export default function EnhancedQuizComponent({
   showExplanations = true,
   allowRetry = false,
   showHints = true,
-  shuffleOptions = false,
+  shuffleOptions = false, // This parameter is now ignored since options come pre-shuffled from API
   className = ""
 }: QuizComponentProps) {
+  
+  console.log('🔍 DEBUG EnhancedQuizComponent - Initial render:', {
+    questionsCount: questions.length,
+    questions: questions.map(q => ({
+      id: q.id,
+      question: q.question?.slice(0, 50),
+      options: q.options,
+      correctAnswer: q.correctAnswer
+    }))
+  });
   
   // State management
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
@@ -79,22 +89,11 @@ export default function EnhancedQuizComponent({
   const [questionStartTime, setQuestionStartTime] = useState(Date.now())
   const [showHint, setShowHint] = useState(false)
   const [quizResults, setQuizResults] = useState<QuizResult[]>([])
-  const [shuffledOptions, setShuffledOptions] = useState<Record<number, string[]>>({})
 
   // Get current question
   const currentQuestion = questions[currentQuestionIndex]
-  const currentOptions = shuffledOptions[currentQuestionIndex] || ['A', 'B', 'C', 'D']
-
-  // Initialize shuffled options if needed
-  useEffect(() => {
-    if (shuffleOptions) {
-      const shuffled: Record<number, string[]> = {}
-      questions.forEach((_, index) => {
-        shuffled[index] = ['A', 'B', 'C', 'D'].sort(() => Math.random() - 0.5)
-      })
-      setShuffledOptions(shuffled)
-    }
-  }, [questions, shuffleOptions])
+  // Options are now pre-shuffled from the API, so we use them directly
+  const currentOptions = ['A', 'B', 'C', 'D']
 
   // Calculate quiz statistics
   const calculateStats = useCallback((): QuizStats => {
@@ -198,22 +197,8 @@ export default function EnhancedQuizComponent({
       updated[currentQuestionIndex] = result
       console.log('🔍 DEBUG EnhancedQuizComponent - updated quizResults:', updated)
       
-      // Check if all questions have been answered
-      const allAnswered = updated.every(r => r !== undefined && r.selectedAnswer !== null)
-      console.log('🔍 DEBUG EnhancedQuizComponent - All questions answered:', allAnswered)
-      
-      if (allAnswered) {
-        console.log('🔍 DEBUG EnhancedQuizComponent - All questions answered, calling handleComplete')
-        setTimeout(() => {
-          setIsCompleted(true)
-          // Calculate final statistics
-          const stats = calculateStats()
-          console.log('🔍 DEBUG EnhancedQuizComponent - calculated stats:', stats)
-          
-          // Call completion callback
-          onComplete(stats.totalScore, stats.totalQuestions, updated)
-        }, 100) // Small delay to ensure state is updated
-      }
+      // Don't auto-complete quiz here - let user navigate manually
+      // The quiz will be completed only when user clicks "Finalizar Quiz" or reaches the end
       
       return updated
     })
@@ -228,24 +213,39 @@ export default function EnhancedQuizComponent({
     
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1)
+      setSelectedAnswer(null) // Reset selected answer for next question
+      setShowResult(false) // Reset result display
+      setShowHint(false) // Reset hint display
+      setQuestionStartTime(Date.now()) // Reset timer for next question
     } else {
-      console.log('🔍 DEBUG EnhancedQuizComponent - calling handleComplete from handleNext')
-      setIsCompleted(true)
-      // Calculate final statistics
-      const stats = calculateStats()
-      console.log('🔍 DEBUG EnhancedQuizComponent - calculated stats:', stats)
-      
-      // Call completion callback
-      onComplete(stats.totalScore, stats.totalQuestions, quizResults)
+      // Only complete if we're on the last question and user explicitly wants to finish
+      console.log('🔍 DEBUG EnhancedQuizComponent - Reached last question, showing completion option')
+      // Don't auto-complete here - let user decide when to finish
     }
-  }, [currentQuestionIndex, questions.length, selectedAnswer, calculateStats, onComplete, quizResults])
+  }, [currentQuestionIndex, questions.length, selectedAnswer])
 
   // Handle previous question
   const handlePrevious = useCallback(() => {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(prev => prev - 1)
+      setSelectedAnswer(null) // Reset selected answer for previous question
+      setShowResult(false) // Reset result display
+      setShowHint(false) // Reset hint display
+      setQuestionStartTime(Date.now()) // Reset timer for previous question
     }
   }, [currentQuestionIndex])
+
+  // Handle manual quiz completion
+  const handleCompleteQuiz = useCallback(() => {
+    console.log('🔍 DEBUG EnhancedQuizComponent - handleCompleteQuiz called')
+    setIsCompleted(true)
+    // Calculate final statistics
+    const stats = calculateStats()
+    console.log('🔍 DEBUG EnhancedQuizComponent - calculated stats:', stats)
+    
+    // Call completion callback
+    onComplete(stats.totalScore, stats.totalQuestions, quizResults)
+  }, [calculateStats, onComplete, quizResults])
 
   // Handle retry
   const handleRetry = useCallback(() => {
@@ -276,7 +276,12 @@ export default function EnhancedQuizComponent({
   // Get option value from label
   const getOptionValue = useCallback((label: string) => {
     const value = currentQuestion.options[label as keyof typeof currentQuestion.options]
-    console.log('🔍 DEBUG EnhancedQuizComponent - getOptionValue:', { label, value })
+    console.log('🔍 DEBUG EnhancedQuizComponent - getOptionValue:', { 
+      label, 
+      value, 
+      options: currentQuestion.options,
+      questionId: currentQuestion.id 
+    })
     return value
   }, [currentQuestion.options])
 
