@@ -179,7 +179,7 @@ FORMATO JSON OBRIGATÓRIO:
       "title": "Abertura: Tema e Objetivos",
       "content": "Conteúdo educativo detalhado com quebras de linha usando \n para parágrafos\n\nExemplo de segundo parágrafo com mais informações detalhadas.\n\nTerceiro parágrafo com exemplos práticos e aplicações reais.",
       "type": "content",
-      "imageQuery": "eletricidade corrente introdução conceito",
+      "imageQuery": "electricity current introduction concept",
       "tokenEstimate": 500
     },
     {

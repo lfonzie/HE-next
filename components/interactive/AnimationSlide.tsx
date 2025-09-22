@@ -96,17 +96,23 @@ export default function AnimationSlide({
                       <div className="w-full h-48 bg-gray-200 rounded-lg animate-pulse flex items-center justify-center">
                         <span className="text-gray-500">Carregando imagem...</span>
                       </div>
-                    ) : (
+                    ) : unsplashImage ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={unsplashImage.urls.regular}
                         alt={unsplashImage.alt_description || `${lessonTheme} image`}
                         className="w-full h-48 object-cover rounded-lg shadow-lg"
                       />
+                    ) : (
+                      <div className="w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center">
+                        <span className="text-gray-500">Imagem não disponível</span>
+                      </div>
                     )}
-                    <div className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
-                      Foto por {unsplashImage.user.name}
-                    </div>
+                    {unsplashImage && (
+                      <div className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                        Foto por {unsplashImage.user.name}
+                      </div>
+                    )}
                   </>
                 )}
               </div>

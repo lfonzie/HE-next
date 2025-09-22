@@ -159,8 +159,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  maximumScale: 5,
+  userScalable: true,
   themeColor: '#ffd233',
   colorScheme: 'light',
 }
@@ -252,7 +252,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <link rel="dns-prefetch" href="//commons.wikimedia.org" />
         <link rel="dns-prefetch" href="//upload.wikimedia.org" />
       </head>
-      <body className="min-h-screen bg-background font-sans text-foreground antialiased">
+      <body className="min-h-dvh bg-background font-sans text-foreground antialiased">
         <ClientProviders>
           {children}
         </ClientProviders>

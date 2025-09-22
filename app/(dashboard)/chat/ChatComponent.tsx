@@ -11,6 +11,8 @@ import { ClassificationIndicator } from "@/components/chat/ClassificationIndicat
 import { useChat } from "@/hooks/useChat";
 import { ModuleId, MODULES, convertModuleId, convertToOldModuleId } from "@/lib/modules";
 import { ModuleType, Message as ChatMessageType, Conversation as ChatConversation } from "@/types";
+import { getRandomSuggestions, ModuleSuggestion } from "@/lib/module-suggestions";
+import { ModuleSuggestions } from "@/components/chat/ModuleSuggestions";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Plus, Headphones, Settings, Download, Search, Square } from "lucide-react";
@@ -83,6 +85,9 @@ export default function ChatComponent() {
   const [isDeletingConversation, setIsDeletingConversation] = useState<string | null>(null);
   const [showModuleWelcome, setShowModuleWelcome] = useState(false);
   const [selectedModule, setSelectedModule] = useState<ModuleType | null>(null);
+  const [showModuleSuggestions, setShowModuleSuggestions] = useState(false);
+  const [currentModuleSuggestions, setCurrentModuleSuggestions] = useState<ModuleSuggestion[]>([]);
+  const [currentModuleInfo, setCurrentModuleInfo] = useState<{name: string, icon: string} | null>(null);
   const [showClassificationIndicator, setShowClassificationIndicator] = useState(false);
   const [classificationData, setClassificationData] = useState<{
     module: string;
@@ -246,6 +251,49 @@ export default function ChatComponent() {
     setShowModuleWelcome(true);
   }, []);
 
+  // Handle module click with suggestions
+  const handleModuleClick = useCallback((moduleId: ModuleId) => {
+    const module = MODULES[moduleId];
+    const suggestions = getRandomSuggestions(moduleId, 3);
+    
+    setSelectedModule(convertToOldModuleId(moduleId) as ModuleType);
+    setCurrentModuleInfo({
+      name: module.label,
+      icon: module.icon
+    });
+    setCurrentModuleSuggestions(suggestions);
+    setShowModuleSuggestions(true);
+  }, []);
+
+  // Handle suggestion click
+  const handleSuggestionClick = useCallback((suggestion: ModuleSuggestion) => {
+    setShowModuleSuggestions(false);
+    // Send the suggestion as a message
+    handleSendMessage(suggestion.text, selectedModule);
+  }, [handleSendMessage, selectedModule]);
+
+  // Handle close suggestions
+  const handleCloseSuggestions = useCallback(() => {
+    setShowModuleSuggestions(false);
+    setCurrentModuleSuggestions([]);
+    setCurrentModuleInfo(null);
+  }, []);
+
+  // Handle click outside to close suggestions
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showModuleSuggestions) {
+        const target = event.target as HTMLElement;
+        if (!target.closest('.module-suggestions-container')) {
+          handleCloseSuggestions();
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showModuleSuggestions, handleCloseSuggestions]);
+
   // Handle classification
   const handleClassification = useCallback((data: {
     module: string;
@@ -302,13 +350,10 @@ export default function ChatComponent() {
           e.preventDefault();
           handleExportConversation();
           break;
-        case "c":
-          e.preventDefault();
-          handleClearConversation();
-          break;
+        // Removed Command+C shortcut to avoid conflict with copy/paste
       }
     }
-  }, [handleCreateConversation, handleSupport, handleExportConversation, handleClearConversation]);
+  }, [handleCreateConversation, handleSupport, handleExportConversation]);
 
   // Effects
   useEffect(() => {
@@ -339,7 +384,9 @@ export default function ChatComponent() {
   return (
     <div className="h-screen bg-gradient-to-br from-slate-50 via-yellow-50 to-orange-100 flex flex-col">
       <ModernHeader showNavigation={true} showHome={true} />
-      <div className="flex-1 flex flex-col pt-24" role="main">
+      
+      {/* Chat Container - Fixed at bottom */}
+      <div className="flex-1 flex flex-col pt-24 pb-0" role="main">
         {/* Enhanced Header - Mostrar apenas quando não há mensagens */}
         {!hasMessages && (
           <header className="text-center mb-16">
@@ -411,16 +458,13 @@ export default function ChatComponent() {
           </header>
         )}
 
-        {/* Chat Interface */}
-        <div className="flex-1 flex flex-col">
-          <div className="flex-1 bg-white/90 backdrop-blur-sm border-2 border-yellow-200 shadow-xl rounded-3xl overflow-hidden flex flex-col">
+        {/* Chat Interface - Fixed at bottom */}
+        <div className="flex-1 flex flex-col min-h-0 px-4 md:px-8 lg:px-16 xl:px-24">
+          <div className="flex-1 bg-white/90 backdrop-blur-sm border-2 border-yellow-200 shadow-xl rounded-3xl overflow-hidden flex flex-col min-h-0">
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-yellow-500 to-yellow-600 text-white">
+            <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-yellow-500 to-yellow-600 text-white flex-shrink-0">
               <div className="flex items-center gap-4">
                 <h1 className="text-2xl font-bold">Chat IA</h1>
-                <Badge variant="outline" className="text-yellow-100 border-yellow-300 bg-white/20">
-                  {quota.used}/{quota.limit} mensagens
-                </Badge>
               </div>
               
               <div className="flex items-center gap-2">
@@ -447,10 +491,10 @@ export default function ChatComponent() {
               </div>
             </div>
 
-            {/* Messages */}
+            {/* Messages - Scrollable area */}
             <div 
               ref={chatContainerRef}
-              className="flex-1 overflow-y-auto p-4 space-y-4"
+              className="flex-1 overflow-y-auto p-4 pb-14 space-y-4 min-h-0"
               onScroll={handleScroll}
             >
               {!hasMessages ? (
@@ -464,18 +508,31 @@ export default function ChatComponent() {
                   <p className="text-gray-600 mb-6">
                     Digite sua mensagem abaixo e receba sugestões inteligentes para aulas, simulados ENEM e correção de redações.
                   </p>
-                  <div className="flex flex-wrap gap-2 justify-center">
+                  <div className="flex flex-wrap gap-2 justify-center relative">
                     {Object.entries(MODULES).map(([id, module]) => (
                       <Button
                         key={id}
                         variant="outline"
                         size="sm"
-                        onClick={() => handleModuleSelect(convertToOldModuleId(id as ModuleId) as ModuleType)}
-                        className="text-xs border-yellow-300 text-yellow-700 hover:bg-yellow-50"
+                        onClick={() => handleModuleClick(id as ModuleId)}
+                        className="text-xs border-yellow-300 text-yellow-700 hover:bg-yellow-50 hover:scale-105 transition-all duration-200"
                       >
                         <i className={module.icon}></i> {module.label}
                       </Button>
                     ))}
+                    
+                    {/* Module Suggestions */}
+                    {showModuleSuggestions && currentModuleInfo && (
+                      <div className="module-suggestions-container">
+                        <ModuleSuggestions
+                          suggestions={currentModuleSuggestions}
+                          onSuggestionClick={handleSuggestionClick}
+                          onClose={handleCloseSuggestions}
+                          moduleName={currentModuleInfo.name}
+                          moduleIcon={currentModuleInfo.icon}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -506,17 +563,17 @@ export default function ChatComponent() {
                 </>
               )}
             </div>
-
-            {/* Input */}
-            <div className="p-4 border-t bg-gradient-to-r from-yellow-50 to-orange-50">
-              <ChatInput
-                onSendMessage={handleSendMessage}
-                disabled={isStreaming || isLimitReached}
-                placeholder={isLimitReached ? "Limite de mensagens atingido" : "Digite sua mensagem..."}
-              />
-            </div>
           </div>
         </div>
+      </div>
+
+      {/* Fixed Input at Bottom */}
+      <div className="chat-input-fixed">
+        <ChatInput
+          onSendMessage={handleSendMessage}
+          disabled={isStreaming || isLimitReached}
+          placeholder={isLimitReached ? "Limite de mensagens atingido" : "Digite sua mensagem..."}
+        />
       </div>
 
       {/* Classification Indicator */}

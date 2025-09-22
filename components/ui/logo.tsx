@@ -46,8 +46,8 @@ export const Logo: React.FC<LogoProps> = ({
           />
         </div>
         <div>
-          <h1 className={cn('font-bold text-gray-900', size === 'sm' ? 'text-sm' : size === 'md' ? 'text-base' : size === 'lg' ? 'text-lg' : 'text-xl')}>HubEdu.ia</h1>
-          <p className={cn('text-gray-600', size === 'sm' ? 'text-xs' : 'text-xs')}>
+          <h1 className={cn('font-bold text-gray-900', size === 'sm' ? 'type-small' : size === 'md' ? 'type-body' : size === 'lg' ? 'type-body-lg' : 'type-h4')}>HubEdu.ia</h1>
+          <p className="type-caption text-gray-600">
             Plataforma Educacional
           </p>
         </div>
@@ -71,8 +71,8 @@ export const Logo: React.FC<LogoProps> = ({
         </div>
         {showText && (
           <div>
-            <h1 className={cn('font-bold text-gray-900', size === 'sm' ? 'text-sm' : size === 'md' ? 'text-base' : size === 'lg' ? 'text-lg' : 'text-xl')}>HubEdu.ia</h1>
-            <p className={cn('text-gray-600', size === 'sm' ? 'text-xs' : 'text-xs')}>
+            <h1 className={cn('font-bold text-gray-900', size === 'sm' ? 'type-small' : size === 'md' ? 'type-body' : size === 'lg' ? 'type-body-lg' : 'type-h4')}>HubEdu.ia</h1>
+            <p className="type-caption text-gray-600">
               Plataforma Educacional
             </p>
           </div>

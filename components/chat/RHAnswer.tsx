@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react";
+import { Users } from 'lucide-react';
 import { MarkdownRenderer } from "./MarkdownRenderer";
 
 interface RHAnswerProps {
@@ -14,7 +14,7 @@ export const RHAnswer: React.FC<RHAnswerProps> = ({ question, answer }) => {
       <div className="bg-gradient-to-r from-purple-50 to-purple-100 border border-purple-200 rounded-lg p-4 mb-4">
         <div className="flex items-center gap-3 mb-3">
           <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
-            <i className="fas fa-users text-white text-sm"></i>
+            <Users className="text-white text-sm w-4 h-4" />
           </div>
           <div>
             <h3 className="text-lg font-semibold text-purple-900">Recursos Humanos</h3>

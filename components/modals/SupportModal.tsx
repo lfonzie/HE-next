@@ -238,8 +238,8 @@ export function SupportModal({ isOpen, onClose }: SupportModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl h-[80vh] p-0">
-        <DialogHeader className="p-6 pb-4 border-b">
+      <DialogContent className="max-w-lg h-[40vh] p-0">
+        <DialogHeader className="p-4 pb-3 border-b">
           <div className="flex items-center justify-between">
             <DialogTitle className="flex items-center gap-2">
               <MessageCircle className="w-5 h-5 text-blue-600" />
@@ -277,7 +277,7 @@ export function SupportModal({ isOpen, onClose }: SupportModalProps) {
           {activeTab === 'chat' ? (
             <div className="flex flex-col h-full">
               {/* Chat Messages */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 {chatMessages.length === 0 ? (
                   <div className="text-center text-gray-500 py-8">
                     <MessageCircle className="w-12 h-12 mx-auto mb-4 text-gray-300" />
@@ -321,7 +321,7 @@ export function SupportModal({ isOpen, onClose }: SupportModalProps) {
               </div>
 
               {/* Chat Input */}
-              <div className="p-6 border-t">
+              <div className="p-4 border-t">
                 <div className="flex gap-2">
                   <Input
                     value={chatMessage}
@@ -342,7 +342,7 @@ export function SupportModal({ isOpen, onClose }: SupportModalProps) {
               </div>
             </div>
           ) : (
-            <div className="h-full overflow-y-auto p-6">
+            <div className="h-full overflow-y-auto p-4">
               {/* Search and Filters */}
               <div className="mb-6">
                 <div className="flex flex-col md:flex-row gap-4 mb-4">
@@ -382,7 +382,7 @@ export function SupportModal({ isOpen, onClose }: SupportModalProps) {
               <div className="space-y-4">
                 {filteredFAQs.map(faq => {
                   const isExpanded = expandedItems.has(faq.id);
-                  const CategoryIcon = categoryIcons[faq.category];
+                  const CategoryIcon = categoryIcons[faq.category] || HelpCircle;
                   
                   return (
                     <Card key={faq.id} className="hover:shadow-md transition-shadow">

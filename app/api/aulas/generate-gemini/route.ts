@@ -1,7 +1,7 @@
 // app/api/aulas/generate-gemini/route.js
 // API route para geração de aulas usando Google Gemini com Vercel AI SDK
 
-import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server.js';
 
 // Prevent prerendering of this API route
 
@@ -24,6 +24,9 @@ import { log } from '@/lib/lesson-logger';
 import { logTokens } from '@/lib/token-logger';
 
 
+import { selectThreeDistinctImages, validateImageSelection } from '@/lib/image-selection-enhanced';
+
+
 import { getServerSession } from 'next-auth';
 
 
@@ -41,9 +44,7 @@ const MAX_TOKENS = 8000;
 const TEMPERATURE = 0.7;
 
 // Initialize Gemini client via Vercel AI SDK
-const geminiModel = google(GEMINI_MODEL, {
-  apiKey: process.env.GOOGLE_GEMINI_API_KEY || process.env.GOOGLE_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY,
-});
+const geminiModel = google(GEMINI_MODEL);
 
 // Translation dictionary for image query generation
 const TRANSLATIONS = {
@@ -151,6 +152,140 @@ function calculateLessonDuration(slides, mode = 'sync') {
 }
 
 /**
+ * Gets the preferred provider for a specific slide to ensure diversity.
+ * @param {number} slideNumber - The slide number.
+ * @returns {string} The preferred provider for this slide.
+ */
+function getPreferredProviderForSlide(slideNumber) {
+  const providers = ['wikimedia', 'unsplash', 'pixabay'];
+  return providers[slideNumber % providers.length];
+}
+
+/**
+ * Generates an educational image query optimized for student learning context.
+ * @param {string} topic - The lesson topic.
+ * @param {number} slideNumber - The slide number.
+ * @param {string} slideType - The slide type ('content' or 'quiz').
+ * @param {string} slideContent - The slide content for context.
+ * @returns {string} The generated educational image query.
+ */
+function generateEducationalImageQuery(topic, slideNumber, slideType, slideContent = '') {
+  const cleanTopic = topic
+    .toLowerCase()
+    .replace(/[?¿!¡.,;:]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  // Palavras-chave educacionais específicas por contexto em PT-BR
+  const educationalKeywords = {
+    introduction: ['fundamentos', 'conceitos básicos', 'introdução', 'definição', 'princípios'],
+    content: ['diagrama', 'ilustração', 'processo', 'mecanismo', 'estrutura', 'fluxograma'],
+    quiz: ['exemplo prático', 'aplicação real', 'caso de estudo', 'exercício', 'problema'],
+    conclusion: ['resumo', 'conclusão', 'síntese', 'pontos principais', 'aplicações futuras']
+  };
+
+  // Determinar contexto do slide
+  let context = 'content';
+  if (slideNumber === 1) context = 'introduction';
+  else if (slideNumber >= 8 && slideNumber <= 12) context = 'quiz';
+  else if (slideNumber === 14) context = 'conclusion';
+
+  // Extrair palavras-chave do conteúdo do slide
+  const contentKeywords = slideContent
+    .toLowerCase()
+    .split(' ')
+    .filter(word => word.length > 3 && !['para', 'com', 'que', 'uma', 'dos', 'das', 'pelo', 'pela', 'sobre', 'como', 'quando', 'onde', 'porque'].includes(word))
+    .slice(0, 3);
+
+  // Construir query educacional em PT-BR
+  const baseQuery = cleanTopic;
+  const contextKeywords = educationalKeywords[context] || educationalKeywords.content;
+  const selectedContextKeyword = contextKeywords[Math.floor(Math.random() * contextKeywords.length)];
+  
+  // Combinar tópico, contexto educacional e palavras do conteúdo
+  const educationalQuery = `${baseQuery} ${selectedContextKeyword} ${contentKeywords.join(' ')} educação aprendizado`.trim();
+  
+  log.debug('Generated educational image query', { 
+    slideNumber, 
+    context, 
+    educationalQuery,
+    contentKeywords: contentKeywords.slice(0, 2)
+  });
+  
+  return educationalQuery;
+}
+
+/**
+ * Selects the best educational image based on slide context and educational value.
+ * @param {Array} images - Array of image objects from semantic search.
+ * @param {number} slideNumber - The slide number.
+ * @param {string} slideType - The slide type.
+ * @param {Set} usedImageUrls - Set of already used image URLs for de-duplication.
+ * @returns {Object} The best educational image.
+ */
+function selectBestEducationalImage(images, slideNumber, slideType, usedImageUrls = new Set()) {
+  if (!images || images.length === 0) return null;
+
+  // Priorizar provedores por qualidade educacional
+  const providerPriority = {
+    'wikimedia': 3, // Maior prioridade - conteúdo educacional confiável
+    'unsplash': 2,  // Boa qualidade visual
+    'pixabay': 1    // Boa variedade
+  };
+
+  // Calcular score educacional combinado
+  const preferredProvider = getPreferredProviderForSlide(slideNumber);
+  const scoredImages = images.map(image => {
+    let educationalScore = image.score || 0;
+    
+    // Penalidade por repetição de imagem
+    if (usedImageUrls.has(image.url)) {
+      educationalScore -= 0.25;
+    }
+    
+    // Bonus por provedor educacional
+    educationalScore += (providerPriority[image.provider] || 0) * 0.1;
+    
+    // Bonus adicional para provedor preferido para este slide (rotação)
+    if (image.provider === preferredProvider) {
+      educationalScore += 0.15;
+    }
+    
+    // Bonus por palavras-chave educacionais no título
+    const educationalTerms = ['diagram', 'chart', 'graph', 'illustration', 'process', 'structure', 'mechanism', 'system', 'educational', 'learning', 'teaching'];
+    const titleWords = (image.title || '').toLowerCase().split(' ');
+    const educationalMatches = educationalTerms.filter(term => titleWords.includes(term)).length;
+    educationalScore += educationalMatches * 0.05;
+    
+    // Bonus por licença educacional (Wikimedia tem licenças mais permissivas)
+    if (image.provider === 'wikimedia') {
+      educationalScore += 0.1;
+    }
+    
+    return { ...image, educationalScore };
+  });
+
+  // Ordenar por score educacional
+  scoredImages.sort((a, b) => b.educationalScore - a.educationalScore);
+  
+  // Selecionar primeira imagem não repetida
+  const bestImage = scoredImages.find(img => !usedImageUrls.has(img.url)) || scoredImages[0];
+  
+  log.debug('Selected best educational image', {
+    slideNumber,
+    provider: bestImage.provider,
+    preferredProvider,
+    educationalScore: bestImage.educationalScore,
+    originalScore: bestImage.score,
+    title: bestImage.title,
+    isRepeated: usedImageUrls.has(bestImage.url),
+    isPreferredProvider: bestImage.provider === preferredProvider
+  });
+  
+  return bestImage;
+}
+
+/**
  * Generates an image query for a specific slide based on the topic and slide type.
  * @param {string} topic - The lesson topic.
  * @param {number} slideNumber - The slide number.
@@ -204,8 +339,8 @@ REGRAS CRÍTICAS:
 - Use linguagem clara e didática em português brasileiro
 - Use \\n\\n para quebras de linha entre parágrafos
 - Para quizzes, inclua "correct" (0-3) e "options" com 4 strings sem prefixos (A, B, etc.)
-- NÃO embaralhe as questões nem as alternativas - mantenha sempre a ordem original
-- Use sempre a mesma posição para a resposta correta (ex: sempre posição 0)
+- EMBARALHE as alternativas dos quizzes para variar a posição da resposta correta
+- Use diferentes posições para a resposta correta (0, 1, 2 ou 3) em cada quiz
 - Crie títulos específicos e únicos para cada slide, evitando termos genéricos
 - Para imageQuery, use termos específicos do tema traduzidos para inglês
 
@@ -238,7 +373,48 @@ FORMATO JSON ESTRITO:
       "points": 0,
       "questions": [
         {
-          "q": "Pergunta clara que exige aplicação dos conceitos aprendidos?",
+          "q": "Primeira pergunta clara que exige aplicação dos conceitos aprendidos?",
+          "options": ["Primeira alternativa", "Segunda alternativa", "Terceira alternativa", "Quarta alternativa"],
+          "correct": 0,
+          "explanation": "Explicação detalhada da resposta correta com justificativa completa e conexão com os conceitos anteriores"
+        },
+        {
+          "q": "Segunda pergunta clara que exige aplicação dos conceitos aprendidos?",
+          "options": ["Primeira alternativa", "Segunda alternativa", "Terceira alternativa", "Quarta alternativa"],
+          "correct": 2,
+          "explanation": "Explicação detalhada da resposta correta com justificativa completa e conexão com os conceitos anteriores"
+        },
+        {
+          "q": "Terceira pergunta clara que exige aplicação dos conceitos aprendidos?",
+          "options": ["Primeira alternativa", "Segunda alternativa", "Terceira alternativa", "Quarta alternativa"],
+          "correct": 1,
+          "explanation": "Explicação detalhada da resposta correta com justificativa completa e conexão com os conceitos anteriores"
+        }
+      ]
+    },
+    {
+      "number": 12,
+      "title": "Quiz: [Título específico sobre análise situacional]",
+      "content": "Contexto detalhado do segundo quiz com cenário prático.\\n\\nExplicação do que será avaliado e por que é importante.\\n\\nConecte com os conceitos aprendidos nos slides anteriores.",
+      "type": "quiz",
+      "imageQuery": null,
+      "tokenEstimate": ${MIN_TOKENS_PER_SLIDE},
+      "points": 0,
+      "questions": [
+        {
+          "q": "Primeira pergunta do segundo quiz que exige análise crítica?",
+          "options": ["Primeira alternativa", "Segunda alternativa", "Terceira alternativa", "Quarta alternativa"],
+          "correct": 3,
+          "explanation": "Explicação detalhada da resposta correta com justificativa completa e conexão com os conceitos anteriores"
+        },
+        {
+          "q": "Segunda pergunta do segundo quiz que exige análise crítica?",
+          "options": ["Primeira alternativa", "Segunda alternativa", "Terceira alternativa", "Quarta alternativa"],
+          "correct": 0,
+          "explanation": "Explicação detalhada da resposta correta com justificativa completa e conexão com os conceitos anteriores"
+        },
+        {
+          "q": "Terceira pergunta do segundo quiz que exige análise crítica?",
           "options": ["Primeira alternativa", "Segunda alternativa", "Terceira alternativa", "Quarta alternativa"],
           "correct": 2,
           "explanation": "Explicação detalhada da resposta correta com justificativa completa e conexão com os conceitos anteriores"
@@ -255,8 +431,9 @@ IMPORTANTE:
 - Use \\n\\n para quebras de linha no conteúdo
 - EMBARALHE as alternativas dos quizzes para variar a posição da resposta correta
 - Use diferentes posições para a resposta correta (0, 1, 2 ou 3) em cada quiz
-- Para o Quiz 1 (slide 7): use uma posição aleatória entre 0-3
-- Para o Quiz 2 (slide 12): use uma posição aleatória diferente entre 0-3
+- Para o Quiz 1 (slide 7): use posições variadas (0, 1, 2, 3) para as 3 perguntas
+- Para o Quiz 2 (slide 12): use posições variadas (0, 1, 2, 3) para as 3 perguntas
+- Cada quiz deve ter EXATAMENTE 3 perguntas
 - Responda APENAS com JSON válido. Não inclua texto adicional, explicações ou formatação markdown.`;
 }
 
@@ -338,7 +515,7 @@ function parseGeminiContent(content) {
       })),
     };
   } catch (error) {
-    log.error('Error parsing Gemini content', { error: error.message });
+    log.error('Error parsing Gemini content', { error: (error as Error).message });
     throw new Error('Failed to process Gemini response');
   }
 }
@@ -416,8 +593,11 @@ export async function POST(request) {
   const requestId = `req_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
 
   try {
-    const { topic, schoolId, mode = 'sync', customPrompt } = await request.json();
+    const { topic, schoolId: originalSchoolId, mode = 'sync', customPrompt } = await request.json();
     const session = await getServerSession(authOptions);
+
+    // Create mutable schoolId variable
+    let schoolId = originalSchoolId;
 
     log.setSharedContext({ requestId, topic, schoolId, mode, timestamp: new Date().toISOString() });
     log.info('Starting Gemini lesson generation', { topic, mode, schoolId });
@@ -430,6 +610,15 @@ export async function POST(request) {
     if (!['sync', 'async'].includes(mode)) {
       log.error('Validation failed', { field: 'mode', value: mode });
       return NextResponse.json({ error: 'Mode must be "sync" or "async"' }, { status: 400 });
+    }
+    
+    // Validate schoolId context
+    if (mode === 'sync' && (!schoolId || schoolId.trim() === '')) {
+      log.warn('SchoolId is empty for sync mode', { schoolId, mode });
+      // Use default school profile instead of failing
+      const defaultSchoolId = 'default-school-profile';
+      log.info('Using default school profile', { originalSchoolId: schoolId, defaultSchoolId });
+      schoolId = defaultSchoolId;
     }
 
     // Check if Gemini API key is configured
@@ -452,7 +641,6 @@ export async function POST(request) {
       const response = await generateText({
         model: geminiModel,
         prompt: generationPrompt,
-        maxTokens: MAX_TOKENS,
         temperature: TEMPERATURE,
       });
       
@@ -493,41 +681,124 @@ export async function POST(request) {
       // }
 
       const imageTimer = log.aulaTimer('image-preparation');
+      
+      // Sistema avançado de seleção de imagens - 3 imagens distintas, 1 por provedor
+      let selectedImages = [];
+      try {
+        selectedImages = await selectThreeDistinctImages(topic);
+        
+        // Validar seleção
+        const validation = validateImageSelection(selectedImages);
+        if (!validation.isValid) {
+          log.warn('Image selection validation failed', { issues: validation.issues });
+        }
+        
+        log.info('Selected distinct images', {
+          totalImages: selectedImages.length,
+          providers: [...new Set(selectedImages.map(img => img.provider))],
+          validation: validation.metrics
+        });
+        
+      } catch (error) {
+        log.error('Failed to select distinct images', { error: (error as Error).message });
+        selectedImages = [];
+      }
+      
+      // Mapear imagens para slides
+      let imageIndex = 0;
       const slidesWithImageQueries = await Promise.all(
         parsedContent.slides.map(async slide => {
           // Validar e corrigir slides de quiz
           const validatedSlide = validateAndFixQuizSlide(slide);
           if (IMAGE_SLIDE_NUMBERS.includes(validatedSlide.number)) {
-            const imageQuery = validatedSlide.imageQuery || generateImageQuery(topic, validatedSlide.number, validatedSlide.type);
             let imageUrl = null;
             let imageSource = 'fallback';
+            let imageMetadata = null;
 
-            try {
-              const wikiResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/wikimedia/search`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query: imageQuery, subject: topic, count: 3 }),
+            // Usar imagem selecionada se disponível
+            if (imageIndex < selectedImages.length) {
+              const selectedImage = selectedImages[imageIndex];
+              imageUrl = selectedImage.url;
+              imageSource = `enhanced-${selectedImage.provider}`;
+              imageMetadata = {
+                provider: selectedImage.provider,
+                title: selectedImage.title,
+                attribution: selectedImage.attribution,
+                license: selectedImage.license,
+                author: selectedImage.author,
+                sourceUrl: selectedImage.sourceUrl
+              };
+              
+              log.info('Using enhanced image selection', { 
+                slideNumber: validatedSlide.number, 
+                imageUrl, 
+                source: imageSource,
+                provider: selectedImage.provider,
+                title: selectedImage.title?.slice(0, 50)
               });
-              if (wikiResponse.ok) {
-                const wikiData = await wikiResponse.json();
-                if (wikiData.success && wikiData.photos?.length > 0) {
-                  imageUrl = wikiData.photos[0].urls?.regular || wikiData.photos[0].url;
-                  imageSource = 'wikimedia';
-                  log.info('Wikimedia image selected', { slideNumber: validatedSlide.number, imageUrl });
-                }
-              }
-            } catch (error) {
-              log.warn('Failed to fetch Wikimedia image', { slideNumber: validatedSlide.number, error: error.message });
+              
+              imageIndex++;
             }
 
+            // Se ainda não encontrou imagem, tentar busca específica no Wikimedia como fallback
             if (!imageUrl) {
-              // Usar imagem educacional genérica do Unsplash em vez de placeholder do Wikimedia
-              imageUrl = 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1350&h=1080&fit=crop&auto=format';
-              imageSource = 'unsplash-fallback';
-              log.info('Using Unsplash fallback image', { slideNumber: validatedSlide.number });
+              try {
+                const imageQuery = generateImageQuery(topic, validatedSlide.number, validatedSlide.type);
+                const wikiResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/wikimedia/search`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ query: imageQuery, subject: topic, count: 1 }),
+                });
+                if (wikiResponse.ok) {
+                  const wikiData = await wikiResponse.json();
+                  if (wikiData.success && wikiData.photos?.length > 0) {
+                    imageUrl = wikiData.photos[0].urls?.regular || wikiData.photos[0].url;
+                    imageSource = 'wikimedia-fallback';
+                    log.info('Wikimedia fallback image selected', { slideNumber: validatedSlide.number, imageUrl });
+                  }
+                }
+              } catch (error) {
+                log.warn('Failed to fetch Wikimedia fallback image', { slideNumber: validatedSlide.number, error: (error as Error).message });
+              }
             }
 
-            return { ...validatedSlide, imageQuery, imageUrl, imageSource, subject: topic };
+            // Último recurso: buscar imagem específica do tópico no Unsplash
+            if (!imageUrl) {
+              try {
+                const imageQuery = generateImageQuery(topic, validatedSlide.number, validatedSlide.type);
+                const unsplashResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/illustrations/search`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ 
+                    query: imageQuery, 
+                    category: topic.toLowerCase().includes('biologia') ? 'biology' : 
+                             topic.toLowerCase().includes('química') ? 'chemistry' :
+                             topic.toLowerCase().includes('física') ? 'physics' :
+                             topic.toLowerCase().includes('matemática') ? 'math' : 'general',
+                    limit: 1 
+                  }),
+                });
+                if (unsplashResponse.ok) {
+                  const unsplashData = await unsplashResponse.json();
+                  if (unsplashData.success && unsplashData.images?.length > 0) {
+                    imageUrl = unsplashData.images[0].url;
+                    imageSource = 'unsplash-specific';
+                    log.info('Unsplash specific image selected', { slideNumber: validatedSlide.number, imageUrl });
+                  }
+                }
+              } catch (error) {
+                log.warn('Failed to fetch Unsplash specific image', { slideNumber: validatedSlide.number, error: (error as Error).message });
+              }
+            }
+
+            return { 
+              ...validatedSlide, 
+              imageQuery: validatedSlide.imageQuery || generateImageQuery(topic, validatedSlide.number, validatedSlide.type),
+              imageUrl, 
+              imageSource, 
+              imageMetadata,
+              subject: topic 
+            };
           }
           return { ...validatedSlide, imageQuery: null, imageUrl: null, imageSource: null, subject: topic };
         })
@@ -617,10 +888,11 @@ export async function POST(request) {
           recommendations: [],
         },
         usage: {
-          promptTokens: response.usage?.promptTokens || 0,
-          completionTokens: response.usage?.completionTokens || 0,
+          promptTokens: (response.usage as any)?.promptTokens || 0,
+          completionTokens: (response.usage as any)?.completionTokens || 0,
           totalTokens,
-          costEstimate: (totalTokens * 0.000001).toFixed(6), // Gemini pricing estimate
+          costEstimate: (totalTokens * 0.000075).toFixed(6), // Gemini 2.0 Flash pricing: ~$0.000075 per 1K tokens
+          pricingNote: 'Estimated cost based on Gemini 2.0 Flash pricing. Verify with current Google AI Studio pricing.',
           provider: 'gemini',
           model: GEMINI_MODEL,
         },
@@ -637,30 +909,30 @@ export async function POST(request) {
       return NextResponse.json(responseData);
 
     } catch (geminiError) {
-      log.error('Gemini API error', { error: geminiError.message });
-      throw new Error(`Gemini API error: ${geminiError.message}`);
+      log.error('Gemini API error', { error: (geminiError as Error).message });
+      throw new Error(`Gemini API error: ${(geminiError as Error).message}`);
     }
 
   } catch (error) {
     const totalDuration = Math.round((Date.now() - startTime) / 1000);
-    log.error('Gemini lesson generation failed', { error: error.message, duration: totalDuration });
+    log.error('Gemini lesson generation failed', { error: (error as Error).message, duration: totalDuration });
 
     let statusCode = 500;
     let friendlyError = 'Internal server error';
 
-    if (error.message.includes('API key')) {
+    if ((error as Error).message.includes('API key')) {
       friendlyError = 'Invalid Gemini API key configuration';
       statusCode = 500;
-    } else if (error.message.includes('rate limit')) {
+    } else if ((error as Error).message.includes('rate limit')) {
       friendlyError = 'Gemini rate limit exceeded. Please try again later.';
       statusCode = 429;
-    } else if (error.message.includes('Topic')) {
-      friendlyError = error.message;
+    } else if ((error as Error).message.includes('Topic')) {
+      friendlyError = (error as Error).message;
       statusCode = 400;
     }
 
     return NextResponse.json(
-      { error: friendlyError, details: error.message, timestamp: new Date().toISOString() },
+      { error: friendlyError, details: (error as Error).message, timestamp: new Date().toISOString() },
       { status: statusCode }
     );
   }

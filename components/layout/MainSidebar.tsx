@@ -52,7 +52,7 @@ export const MainSidebar: React.FC<MainSidebarProps> = ({ selectedModule, onSele
   const [isMobile, setIsMobile] = useState(false)
   const [isTablet, setIsTablet] = useState(false)
 
-  // Detectar tipo de dispositivo
+  // Detectar tipo de dispositivo com mobile-first approach
   useEffect(() => {
     const handleResize = () => {
       const width = window.innerWidth
@@ -62,12 +62,12 @@ export const MainSidebar: React.FC<MainSidebarProps> = ({ selectedModule, onSele
       setIsMobile(newIsMobile)
       setIsTablet(newIsTablet)
       
-      // Em mobile, fechar sidebar ao redimensionar
+      // Mobile-first: fechar sidebar em mobile por padrão
       if (newIsMobile) {
         setIsOpen(false)
       }
       
-      // Em tablet/desktop, manter sidebar aberta
+      // Desktop: manter sidebar aberta
       if (!newIsMobile) {
         setIsOpen(true)
       }
@@ -110,10 +110,10 @@ export const MainSidebar: React.FC<MainSidebarProps> = ({ selectedModule, onSele
   if (isMobile) {
     return (
       <>
-        {/* Botão hamburger para mobile */}
+        {/* Botão hamburger para mobile com safe area */}
         <button
           onClick={toggleSidebar}
-          className="fixed top-4 left-4 z-[1001] bg-white border border-gray-200 rounded-xl p-4 shadow-lg transition-all duration-300 hover:bg-gray-50 hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0 active:shadow-lg w-14 h-14 min-w-11 min-h-11 flex items-center justify-center"
+          className="fixed top-4 left-4 z-[1001] bg-white border border-gray-200 rounded-xl p-4 shadow-lg transition-all duration-300 hover:bg-gray-50 hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0 active:shadow-lg min-w-11 min-h-11 flex items-center justify-center safe-top"
           aria-label="Abrir menu"
           title="Abrir menu"
         >
@@ -122,28 +122,29 @@ export const MainSidebar: React.FC<MainSidebarProps> = ({ selectedModule, onSele
 
         {/* Sidebar mobile como overlay */}
         <div className={`fixed top-0 left-0 w-full h-screen bg-white z-[1002] transform transition-transform duration-300 ease-out flex flex-col overflow-y-auto overflow-x-hidden shadow-2xl ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b-2 border-gray-200 flex-shrink-0 bg-white">
-            <div className="flex items-center gap-4">
+          {/* Header com safe area */}
+          <div className="flex items-center justify-between p-4 sm:p-6 border-b-2 border-gray-200 flex-shrink-0 bg-white safe-top">
+            <div className="flex items-center gap-3 sm:gap-4">
               <Image 
                 src={ASSETS.logoIcon} 
                 alt="HubEdu.ia Logo" 
                 width={32}
                 height={32}
-                className="rounded-lg object-contain"
+                className="rounded-lg object-contain flex-shrink-0"
+                priority
               />
-              <div>
-                <h2 className="text-lg font-bold text-gray-900">
+              <div className="min-w-0">
+                <h2 className="type-h4 font-bold text-gray-900 truncate">
                   {session?.user?.schoolId || "Escola"}
                 </h2>
-                <p className="text-xs text-gray-500">Powered by HubEdu.ia</p>
+                <p className="type-caption text-gray-500">Powered by HubEdu.ia</p>
               </div>
             </div>
             
             <div className="flex items-center gap-2">
               <button
                 onClick={closeSidebar}
-                className="bg-red-500 text-white border-none rounded-lg p-2.5 cursor-pointer text-lg w-10 h-10 flex items-center justify-center transition-all duration-300 shadow-sm hover:-translate-y-0.5 hover:scale-105 hover:shadow-md active:translate-y-0 active:shadow-sm"
+                className="bg-red-500 text-white border-none rounded-lg p-2.5 cursor-pointer min-w-11 min-h-11 flex items-center justify-center transition-all duration-300 shadow-sm hover:-translate-y-0.5 hover:scale-105 hover:shadow-md active:translate-y-0 active:shadow-sm"
                 aria-label="Fechar menu"
                 title="Fechar menu"
               >
@@ -152,27 +153,27 @@ export const MainSidebar: React.FC<MainSidebarProps> = ({ selectedModule, onSele
             </div>
           </div>
 
-          {/* Módulos */}
-          <div className="flex-1 p-6 flex flex-col gap-6 min-h-0 overflow-y-auto overflow-x-hidden">
+          {/* Módulos com espaçamento fluido */}
+          <div className="flex-1 p-4 sm:p-6 flex flex-col gap-4 sm:gap-6 min-h-0 overflow-y-auto overflow-x-hidden">
             <ModuleSelector
               selectedModule={selectedModule}
               onSelectModule={handleModuleSelect}
             />
             
             {/* Footer com informações do usuário */}
-            <div className="p-6 border-t-2 border-gray-200">
-              <div className="flex items-center gap-4 mb-5 p-4 bg-gray-50 rounded-xl border border-gray-200">
-                <Avatar className="w-12 h-12">
+            <div className="p-4 sm:p-6 border-t-2 border-gray-200 safe-bottom">
+              <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-5 p-3 sm:p-4 bg-gray-50 rounded-xl border border-gray-200">
+                <Avatar className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0">
                   <AvatarImage src={session?.user?.image || ''} />
                   <AvatarFallback className="bg-yellow-500 text-black font-semibold">
                     {userInitials}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <p className="text-base font-semibold text-gray-900 truncate">
+                  <p className="type-body font-semibold text-gray-900 truncate">
                     {session?.user?.name || "Usuário"}
                   </p>
-                  <p className="text-xs text-gray-500 truncate">
+                  <p className="type-caption text-gray-500 truncate">
                     {session?.user?.role === "STUDENT" ? "Aluno" : 
                      session?.user?.role === "TEACHER" ? "Professor" :
                      session?.user?.role === "STAFF" ? "Funcionário" : 
@@ -183,33 +184,33 @@ export const MainSidebar: React.FC<MainSidebarProps> = ({ selectedModule, onSele
                 </div>
               </div>
               
-              {/* Admin Buttons */}
+              {/* Admin Buttons com tap targets adequados */}
               {session?.user && (session.user.role === "ADMIN" || session.user.role === "SUPER_ADMIN") && (
-                <div className="flex flex-col gap-3 mb-5">
+                <div className="flex flex-col gap-2 sm:gap-3 mb-4 sm:mb-5">
                   {session.user.role === "SUPER_ADMIN" && (
                     <>
                       <Button 
                         variant="outline" 
-                        className="w-full text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-900/20 justify-start"
+                        className="w-full min-h-11 text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-900/20 justify-start type-small"
                         onClick={() => window.location.href = '/admin-dashboard'}
                       >
-                        <Shield className="w-4 h-4 mr-2" />
+                        <Shield className="w-4 h-4 mr-2 flex-shrink-0" />
                         System Admin
                       </Button>
                       <Button 
                         variant="outline" 
-                        className="w-full text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/20 justify-start"
+                        className="w-full min-h-11 text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/20 justify-start type-small"
                         onClick={() => window.location.href = '/admin-system-prompts'}
                       >
-                        <MessageSquare className="w-4 h-4 mr-2" />
+                        <MessageSquare className="w-4 h-4 mr-2 flex-shrink-0" />
                         System Messages
                       </Button>
                       <Button 
                         variant="outline" 
-                        className="w-full text-green-600 border-green-200 hover:bg-green-50 dark:text-green-400 dark:border-green-800 dark:hover:bg-green-900/20 justify-start"
+                        className="w-full min-h-11 text-green-600 border-green-200 hover:bg-green-50 dark:text-green-400 dark:border-green-800 dark:hover:bg-green-900/20 justify-start type-small"
                         onClick={() => window.location.href = '/admin-escola'}
                       >
-                        <School className="w-4 h-4 mr-2" />
+                        <School className="w-4 h-4 mr-2 flex-shrink-0" />
                         Admin Escola
                       </Button>
                     </>
@@ -228,12 +229,12 @@ export const MainSidebar: React.FC<MainSidebarProps> = ({ selectedModule, onSele
               )}
               
               {/* Botão de Logout */}
-              <Button
-                variant="outline"
+              <Button 
+                variant="outline" 
                 onClick={handleSignOut}
-                className="w-full text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-900/20 justify-start"
+                className="w-full min-h-11 text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-900/20 justify-start type-small"
               >
-                <LogOut className="w-4 h-4 mr-2" />
+                <LogOut className="w-4 h-4 mr-2 flex-shrink-0" />
                 Sair
               </Button>
             </div>
@@ -251,49 +252,50 @@ export const MainSidebar: React.FC<MainSidebarProps> = ({ selectedModule, onSele
     )
   }
 
-  // Em tablet e desktop, renderizar sidebar fixa
+  // Em tablet e desktop, renderizar sidebar fixa com tipografia fluida
   return (
-    <div className={`fixed top-0 left-0 h-screen bg-white border-r-2 border-gray-200 z-[1000] flex flex-col overflow-y-auto overflow-x-hidden shadow-lg min-h-0 ${isTablet ? 'w-70' : 'w-80'}`}>
+    <div className={`fixed top-0 left-0 h-screen bg-white border-r-2 border-gray-200 z-[1000] flex flex-col overflow-y-auto overflow-x-hidden shadow-lg min-h-0 ${isTablet ? 'w-70' : 'w-80'} safe-top`}>
       {/* Header */}
-      <div className="flex items-center justify-between p-6 border-b-2 border-gray-200 flex-shrink-0">
-        <div className="flex items-center gap-4">
+      <div className="flex items-center justify-between p-4 sm:p-6 border-b-2 border-gray-200 flex-shrink-0">
+        <div className="flex items-center gap-3 sm:gap-4">
           <Image 
             src={ASSETS.logoIcon} 
             alt="HubEdu.ia Logo" 
             width={32}
             height={32}
-            className="rounded-lg object-contain"
+            className="rounded-lg object-contain flex-shrink-0"
+            priority
           />
-          <div>
-            <p className="text-lg font-semibold text-gray-900">
+          <div className="min-w-0">
+            <p className="type-h4 font-semibold text-gray-900 truncate">
               {session?.user?.schoolId || "Escola"}
             </p>
-            <p className="text-xs text-gray-500">Powered by HubEdu.ia</p>
+            <p className="type-caption text-gray-500">Powered by HubEdu.ia</p>
           </div>
         </div>
       </div>
 
-      {/* Módulos */}
-      <div className="flex-1 p-6 flex flex-col gap-6 min-h-0 overflow-y-auto overflow-x-hidden">
+      {/* Módulos com espaçamento fluido */}
+      <div className="flex-1 p-4 sm:p-6 flex flex-col gap-4 sm:gap-6 min-h-0 overflow-y-auto overflow-x-hidden">
         <ModuleSelector
           selectedModule={selectedModule}
           onSelectModule={handleModuleSelect}
         />
-
+        
         {/* Footer com informações do usuário */}
-        <div className="p-6 border-t-2 border-gray-200">
-          <div className="flex items-center gap-4 mb-5 p-4 bg-gray-50 rounded-xl border border-gray-200">
-            <Avatar className="w-10 h-10">
+        <div className="p-4 sm:p-6 border-t-2 border-gray-200 safe-bottom">
+          <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-5 p-3 sm:p-4 bg-gray-50 rounded-xl border border-gray-200">
+            <Avatar className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0">
               <AvatarImage src={session?.user?.image || ''} />
               <AvatarFallback className="bg-yellow-500 text-black font-semibold">
                 {userInitials}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">
+              <p className="type-body font-semibold text-gray-900 truncate">
                 {session?.user?.name || "Usuário"}
               </p>
-              <p className="text-xs text-gray-500 truncate">
+              <p className="type-caption text-gray-500 truncate">
                 {session?.user?.role === "STUDENT" ? "Aluno" : 
                  session?.user?.role === "TEACHER" ? "Professor" :
                  session?.user?.role === "STAFF" ? "Funcionário" : 
@@ -304,33 +306,33 @@ export const MainSidebar: React.FC<MainSidebarProps> = ({ selectedModule, onSele
             </div>
           </div>
 
-          {/* Admin Buttons */}
+          {/* Admin Buttons com tap targets adequados */}
           {session?.user && (session.user.role === "ADMIN" || session.user.role === "SUPER_ADMIN") && (
-            <div className="flex flex-col gap-2.5 mb-5">
+            <div className="flex flex-col gap-2 sm:gap-3 mb-4 sm:mb-5">
               {session.user.role === "SUPER_ADMIN" && (
                 <>
                   <Button 
                     variant="outline" 
-                    className="w-full text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-900/20 justify-start"
+                    className="w-full min-h-11 text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-900/20 justify-start type-small"
                     onClick={() => window.location.href = '/admin-dashboard'}
                   >
-                    <Shield className="w-4 h-4 mr-2" />
+                    <Shield className="w-4 h-4 mr-2 flex-shrink-0" />
                     System Admin
                   </Button>
                   <Button 
                     variant="outline" 
-                    className="w-full text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/20 justify-start"
+                    className="w-full min-h-11 text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/20 justify-start type-small"
                     onClick={() => window.location.href = '/admin-system-prompts'}
                   >
-                    <MessageSquare className="w-4 h-4 mr-2" />
+                    <MessageSquare className="w-4 h-4 mr-2 flex-shrink-0" />
                     System Messages
                   </Button>
                   <Button 
                     variant="outline" 
-                    className="w-full text-green-600 border-green-200 hover:bg-green-50 dark:text-green-400 dark:border-green-800 dark:hover:bg-green-900/20 justify-start"
+                    className="w-full min-h-11 text-green-600 border-green-200 hover:bg-green-50 dark:text-green-400 dark:border-green-800 dark:hover:bg-green-900/20 justify-start type-small"
                     onClick={() => window.location.href = '/admin-escola'}
                   >
-                    <School className="w-4 h-4 mr-2" />
+                    <School className="w-4 h-4 mr-2 flex-shrink-0" />
                     Admin Escola
                   </Button>
                 </>
@@ -338,24 +340,24 @@ export const MainSidebar: React.FC<MainSidebarProps> = ({ selectedModule, onSele
               {session.user.role === "ADMIN" && (
                 <Button 
                   variant="outline" 
-                  className="w-full text-green-600 border-green-200 hover:bg-green-50 dark:text-green-400 dark:border-green-800 dark:hover:bg-green-900/20 justify-start"
+                  className="w-full min-h-11 text-green-600 border-green-200 hover:bg-green-50 dark:text-green-400 dark:border-green-800 dark:hover:bg-green-900/20 justify-start type-small"
                   onClick={() => window.location.href = '/admin'}
                 >
-                  <User className="w-4 h-4 mr-2" />
+                  <User className="w-4 h-4 mr-2 flex-shrink-0" />
                   Admin
                 </Button>
               )}
             </div>
           )}
 
-          <Button
-            variant="outline"
-            onClick={handleSignOut}
-            className="w-full text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-900/20 justify-start"
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            Sair
-          </Button>
+              <Button 
+                variant="outline" 
+                onClick={handleSignOut}
+                className="w-full min-h-11 text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-900/20 justify-start type-small"
+              >
+                <LogOut className="w-4 h-4 mr-2 flex-shrink-0" />
+                Sair
+              </Button>
         </div>
       </div>
     </div>

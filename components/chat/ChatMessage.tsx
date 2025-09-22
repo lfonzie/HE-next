@@ -23,7 +23,7 @@ import { ModelChip, ModelDetails } from "./ModelChip";
 import { MODULES, convertToOldModuleId } from "@/lib/modules";
 import { getModuleIcon } from "@/lib/moduleIcons";
 import { getModuleIconKey, getModuleColor, debugIconMapping } from "@/lib/iconMapping";
-import { useState, useEffect } from "react";
+import { Copy, Play, File, GraduationCap } from 'lucide-react';
 // import { useAutoClassification } from "@/hooks/useAutoClassification"; // REMOVED: Duplicate classification
 import { isWeatherQuery } from "@/utils/weatherApi";
 
@@ -257,7 +257,7 @@ export const ChatMessage = memo(function ChatMessage({
               <div className="mt-4 p-4 bg-gradient-to-r from-yellow-50 to-yellow-50 border border-yellow-200 rounded-lg">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
-                    <i className="fas fa-graduation-cap text-white text-sm"></i>
+                    <GraduationCap className="text-white text-sm w-4 h-4" />
                   </div>
                   <h3 className="text-lg font-semibold text-yellow-900">Aula Interativa Disponível</h3>
                 </div>
@@ -275,7 +275,7 @@ export const ChatMessage = memo(function ChatMessage({
                     }}
                     className="px-4 py-2 bg-blue-600 text-yellow-300 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
                   >
-                    <i className="fas fa-play text-sm"></i>
+                    <Play className="text-sm w-4 h-4" />
                     Começar Aula
                   </button>
                   <button
@@ -285,7 +285,7 @@ export const ChatMessage = memo(function ChatMessage({
                     }}
                     className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors flex items-center gap-2"
                   >
-                    <i className="fas fa-copy text-sm"></i>
+                    <Copy className="text-sm w-4 h-4" />
                     Copiar Info
                   </button>
                 </div>
@@ -307,7 +307,7 @@ export const ChatMessage = memo(function ChatMessage({
             {message.attachment && (
               <div className="mt-4" role="region" aria-label="Anexo">
                 <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                  <i className="fas fa-file text-yellow-600 w-5 h-5" aria-hidden />
+                  <File className="text-yellow-600 w-5 h-5" aria-hidden />
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-black truncate">
                       {message.attachment.name}

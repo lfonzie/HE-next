@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Citation } from "@/types/chat";
-import { ExternalLink, Clock } from "lucide-react";
+import { ExternalLink, Clock, Search } from "lucide-react";
 
 interface WebSearchCitationsProps {
   citations: Citation[];
@@ -24,7 +24,7 @@ export const WebSearchCitations: React.FC<WebSearchCitationsProps> = ({
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <div className="flex items-center gap-2 mb-3">
           <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-            <i className="fas fa-search text-white text-xs"></i>
+            <Search className="text-white text-xs w-3 h-3" />
           </div>
           <h4 className="text-sm font-semibold text-blue-900">Fontes Consultadas</h4>
           {searchTime && (

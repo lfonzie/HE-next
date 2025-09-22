@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react";
+import { Share2 } from 'lucide-react';
 import { MarkdownRenderer } from "./MarkdownRenderer";
 
 interface SocialMediaAnswerProps {
@@ -14,7 +14,7 @@ export const SocialMediaAnswer: React.FC<SocialMediaAnswerProps> = ({ question, 
       <div className="bg-gradient-to-r from-pink-50 to-pink-100 border border-pink-200 rounded-lg p-4 mb-4">
         <div className="flex items-center gap-3 mb-3">
           <div className="w-8 h-8 bg-pink-500 rounded-full flex items-center justify-center">
-            <i className="fas fa-share-alt text-white text-sm"></i>
+            <Share2 className="text-white text-sm w-4 h-4" />
           </div>
           <div>
             <h3 className="text-lg font-semibold text-pink-900">Social Media</h3>

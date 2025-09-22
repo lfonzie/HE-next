@@ -18,6 +18,8 @@ export interface ValidatedQuizQuestion {
 }
 
 export function validateAndFixQuizQuestion(question: QuizQuestion): ValidatedQuizQuestion {
+  console.log('🔍 DEBUG validateAndFixQuizQuestion - Input question:', question);
+  
   const errors: string[] = [];
   let fixedQuestion: ValidatedQuizQuestion = {
     q: '',
@@ -155,12 +157,15 @@ export function generateFallbackQuizQuestion(topic: string): ValidatedQuizQuesti
 }
 
 export function ensureQuizFormat(questions: any[]): ValidatedQuizQuestion[] {
+  console.log('🔍 DEBUG ensureQuizFormat - Input questions:', questions);
+  
   if (!Array.isArray(questions) || questions.length === 0) {
     console.warn('⚠️ Nenhuma questão encontrada, gerando questão de fallback');
     return [generateFallbackQuizQuestion('o tópico')];
   }
 
   const validatedQuestions = validateQuizQuestions(questions);
+  console.log('🔍 DEBUG ensureQuizFormat - Validated questions:', validatedQuestions);
   
   // Se todas as questões são inválidas, gerar uma questão de fallback
   if (validatedQuestions.every(q => !q.isValid)) {
@@ -168,5 +173,82 @@ export function ensureQuizFormat(questions: any[]): ValidatedQuizQuestion[] {
     return [generateFallbackQuizQuestion('o tópico')];
   }
 
-  return validatedQuestions;
+  // Randomizar as alternativas de cada questão válida
+  const randomizedQuestions = validatedQuestions.map(question => {
+    if (!question.isValid) return question;
+    
+    return randomizeQuizQuestion(question);
+  });
+
+  console.log('🔍 DEBUG ensureQuizFormat - Final randomized questions:', randomizedQuestions);
+  return randomizedQuestions;
+}
+
+/**
+ * Randomizes the order of quiz question options while maintaining the correct answer
+ * @param question - The original quiz question
+ * @returns A new question with randomized options and updated correct answer index
+ */
+function randomizeQuizQuestion(question: ValidatedQuizQuestion): ValidatedQuizQuestion {
+  console.log('🔍 DEBUG randomizeQuizQuestion - Input question:', question);
+  
+  // Create a copy of the options array
+  const options = [...question.options];
+  
+  // Find the original correct answer index
+  let originalCorrectIndex: number;
+  if (typeof question.correct === 'string') {
+    const normalizedCorrect = question.correct.toLowerCase();
+    if (normalizedCorrect === 'a') originalCorrectIndex = 0;
+    else if (normalizedCorrect === 'b') originalCorrectIndex = 1;
+    else if (normalizedCorrect === 'c') originalCorrectIndex = 2;
+    else if (normalizedCorrect === 'd') originalCorrectIndex = 3;
+    else originalCorrectIndex = normalizedCorrect.charCodeAt(0) - 97;
+  } else {
+    originalCorrectIndex = parseInt(question.correct.toString());
+  }
+  
+  console.log('🔍 DEBUG randomizeQuizQuestion - Original correct index:', originalCorrectIndex);
+  
+  // Store the correct answer text
+  const correctAnswerText = options[originalCorrectIndex];
+  
+  // Create array of indices and shuffle them
+  const indices = [0, 1, 2, 3];
+  const shuffledIndices = shuffleArray(indices);
+  
+  // Create new options array with shuffled order
+  const shuffledOptions = shuffledIndices.map(index => options[index]);
+  
+  // Find the new index of the correct answer
+  const newCorrectIndex = shuffledOptions.findIndex(option => option === correctAnswerText);
+  
+  const result = {
+    ...question,
+    options: shuffledOptions,
+    correct: String.fromCharCode(65 + newCorrectIndex), // Convert back to letter (A, B, C, D)
+    isValid: true,
+    errors: []
+  };
+  
+  console.log('🔍 DEBUG randomizeQuizQuestion - Result:', result);
+  return result;
+}
+
+/**
+ * Shuffles an array using Fisher-Yates algorithm
+ * @param array - Array to shuffle
+ * @returns New shuffled array
+ */
+function shuffleArray<T>(array: T[]): T[] {
+  console.log('🔍 DEBUG shuffleArray - Input array:', array);
+  
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  
+  console.log('🔍 DEBUG shuffleArray - Output array:', shuffled);
+  return shuffled;
 }

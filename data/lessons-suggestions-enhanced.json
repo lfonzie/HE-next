@@ -1,0 +1,460 @@
+{
+  "suggestions": [
+    {
+      "id": 1,
+      "text": "Como funciona a fotossíntese?",
+      "category": "Biologia",
+      "level": "8º ano",
+      "description": "Processo fundamental da vida vegetal que transforma luz solar em energia",
+      "tags": ["plantas", "energia", "oxigênio", "clorofila"],
+      "difficulty": "intermediário",
+      "estimatedTime": 45,
+      "popularity": 95
+    },
+    {
+      "id": 2,
+      "text": "Matemática dos algoritmos",
+      "category": "Matemática",
+      "level": "Ensino Médio",
+      "description": "A lógica matemática por trás dos algoritmos computacionais",
+      "tags": ["programação", "lógica", "computação", "algoritmos"],
+      "difficulty": "avançado",
+      "estimatedTime": 50,
+      "popularity": 88
+    },
+    {
+      "id": 3,
+      "text": "Causas da Revolução Francesa",
+      "category": "História",
+      "level": "9º ano",
+      "description": "Fatores sociais, políticos e econômicos que levaram à revolução de 1789",
+      "tags": ["revolução", "França", "século XVIII", "liberdade"],
+      "difficulty": "intermediário",
+      "estimatedTime": 40,
+      "popularity": 92
+    },
+    {
+      "id": 4,
+      "text": "Como funciona a vacinação?",
+      "category": "Biologia",
+      "level": "7º ano",
+      "description": "Mecanismo de proteção do sistema imunológico através das vacinas",
+      "tags": ["imunidade", "saúde", "prevenção", "anticorpos"],
+      "difficulty": "básico",
+      "estimatedTime": 35,
+      "popularity": 98
+    },
+    {
+      "id": 5,
+      "text": "Física dos esportes",
+      "category": "Física",
+      "level": "9º ano",
+      "description": "Leis físicas aplicadas aos movimentos esportivos",
+      "tags": ["movimento", "força", "esportes", "cinemática"],
+      "difficulty": "intermediário",
+      "estimatedTime": 45,
+      "popularity": 85
+    },
+    {
+      "id": 6,
+      "text": "Por que alguns países são mais desenvolvidos?",
+      "category": "Geografia",
+      "level": "9º ano",
+      "description": "Fatores econômicos, sociais e geográficos que influenciam o desenvolvimento",
+      "tags": ["desenvolvimento", "economia", "geografia", "IDH"],
+      "difficulty": "intermediário",
+      "estimatedTime": 50,
+      "popularity": 78
+    },
+    {
+      "id": 7,
+      "text": "Como funciona a digestão?",
+      "category": "Biologia",
+      "level": "7º ano",
+      "description": "Processo completo de transformação dos alimentos no corpo humano",
+      "tags": ["alimentação", "nutrição", "corpo humano", "enzimas"],
+      "difficulty": "básico",
+      "estimatedTime": 40,
+      "popularity": 90
+    },
+    {
+      "id": 8,
+      "text": "Matemática da música",
+      "category": "Matemática",
+      "level": "8º ano",
+      "description": "Relação entre matemática e música: frequências, escalas e ritmos",
+      "tags": ["música", "frequência", "ritmo", "harmonia"],
+      "difficulty": "intermediário",
+      "estimatedTime": 45,
+      "popularity": 82
+    },
+    {
+      "id": 9,
+      "text": "Causas da Primeira Guerra Mundial",
+      "category": "História",
+      "level": "9º ano",
+      "description": "Fatores políticos, econômicos e sociais que levaram ao conflito de 1914-1918",
+      "tags": ["guerra", "Europa", "século XX", "imperialismo"],
+      "difficulty": "intermediário",
+      "estimatedTime": 50,
+      "popularity": 87
+    },
+    {
+      "id": 10,
+      "text": "Como funciona o sistema solar?",
+      "category": "Astronomia",
+      "level": "6º ano",
+      "description": "Estrutura, dinâmica e características do nosso sistema planetário",
+      "tags": ["planetas", "sol", "espaço", "órbitas"],
+      "difficulty": "básico",
+      "estimatedTime": 35,
+      "popularity": 94
+    },
+    {
+      "id": 11,
+      "text": "Química dos alimentos",
+      "category": "Química",
+      "level": "8º ano",
+      "description": "Transformações químicas que ocorrem na culinária e conservação",
+      "tags": ["alimentação", "reações", "cozinha", "conservação"],
+      "difficulty": "intermediário",
+      "estimatedTime": 45,
+      "popularity": 86
+    },
+    {
+      "id": 12,
+      "text": "Como funciona a internet?",
+      "category": "Tecnologia",
+      "level": "7º ano",
+      "description": "Fundamentos da comunicação digital e infraestrutura da internet",
+      "tags": ["tecnologia", "comunicação", "digital", "protocolos"],
+      "difficulty": "intermediário",
+      "estimatedTime": 40,
+      "popularity": 91
+    },
+    {
+      "id": 13,
+      "text": "Literatura brasileira contemporânea",
+      "category": "Literatura",
+      "level": "Ensino Médio",
+      "description": "Principais autores, obras e movimentos literários do século XXI",
+      "tags": ["literatura", "Brasil", "contemporâneo", "autores"],
+      "difficulty": "avançado",
+      "estimatedTime": 55,
+      "popularity": 73
+    },
+    {
+      "id": 14,
+      "text": "Como funciona o cérebro?",
+      "category": "Biologia",
+      "level": "8º ano",
+      "description": "Estrutura e funcionamento do sistema nervoso central",
+      "tags": ["neurônios", "memória", "pensamento", "sinapses"],
+      "difficulty": "intermediário",
+      "estimatedTime": 50,
+      "popularity": 89
+    },
+    {
+      "id": 15,
+      "text": "Matemática das finanças",
+      "category": "Matemática",
+      "level": "9º ano",
+      "description": "Aplicação da matemática nas finanças pessoais e investimentos",
+      "tags": ["dinheiro", "investimento", "economia", "juros"],
+      "difficulty": "intermediário",
+      "estimatedTime": 45,
+      "popularity": 84
+    },
+    {
+      "id": 16,
+      "text": "Causas do aquecimento global",
+      "category": "Geografia",
+      "level": "8º ano",
+      "description": "Fatores que contribuem para as mudanças climáticas globais",
+      "tags": ["clima", "meio ambiente", "sustentabilidade", "CO2"],
+      "difficulty": "intermediário",
+      "estimatedTime": 45,
+      "popularity": 96
+    },
+    {
+      "id": 17,
+      "text": "Como funciona a respiração?",
+      "category": "Biologia",
+      "level": "7º ano",
+      "description": "Processo de troca gasosa nos pulmões e sistema respiratório",
+      "tags": ["respiração", "pulmões", "oxigênio", "gás carbônico"],
+      "difficulty": "básico",
+      "estimatedTime": 35,
+      "popularity": 88
+    },
+    {
+      "id": 18,
+      "text": "Física da luz e cores",
+      "category": "Física",
+      "level": "8º ano",
+      "description": "Propriedades da luz, formação das cores e fenômenos ópticos",
+      "tags": ["luz", "cores", "óptica", "espectro"],
+      "difficulty": "intermediário",
+      "estimatedTime": 40,
+      "popularity": 83
+    },
+    {
+      "id": 19,
+      "text": "História da arte brasileira",
+      "category": "Arte",
+      "level": "9º ano",
+      "description": "Evolução da arte no Brasil desde o período colonial até hoje",
+      "tags": ["arte", "Brasil", "cultura", "movimentos"],
+      "difficulty": "intermediário",
+      "estimatedTime": 50,
+      "popularity": 76
+    },
+    {
+      "id": 20,
+      "text": "Como funciona a eletricidade?",
+      "category": "Física",
+      "level": "9º ano",
+      "description": "Princípios básicos da eletricidade, circuitos e energia elétrica",
+      "tags": ["eletricidade", "energia", "circuitos", "corrente"],
+      "difficulty": "intermediário",
+      "estimatedTime": 45,
+      "popularity": 87
+    },
+    {
+      "id": 21,
+      "text": "Matemática da natureza",
+      "category": "Matemática",
+      "level": "7º ano",
+      "description": "Padrões matemáticos encontrados na natureza: Fibonacci, fractais e geometria",
+      "tags": ["natureza", "padrões", "geometria", "Fibonacci"],
+      "difficulty": "básico",
+      "estimatedTime": 40,
+      "popularity": 81
+    },
+    {
+      "id": 22,
+      "text": "Como funciona o DNA?",
+      "category": "Biologia",
+      "level": "9º ano",
+      "description": "Estrutura, função e importância do material genético",
+      "tags": ["genética", "hereditariedade", "evolução", "cromossomos"],
+      "difficulty": "avançado",
+      "estimatedTime": 50,
+      "popularity": 85
+    },
+    {
+      "id": 23,
+      "text": "Geografia do Brasil",
+      "category": "Geografia",
+      "level": "8º ano",
+      "description": "Características físicas, humanas e regionais do território brasileiro",
+      "tags": ["Brasil", "território", "regiões", "clima"],
+      "difficulty": "intermediário",
+      "estimatedTime": 45,
+      "popularity": 93
+    },
+    {
+      "id": 24,
+      "text": "Química do meio ambiente",
+      "category": "Química",
+      "level": "9º ano",
+      "description": "Impacto das substâncias químicas no ambiente e sustentabilidade",
+      "tags": ["meio ambiente", "poluição", "sustentabilidade", "química verde"],
+      "difficulty": "avançado",
+      "estimatedTime": 50,
+      "popularity": 79
+    },
+    {
+      "id": 25,
+      "text": "Como funciona a memória?",
+      "category": "Biologia",
+      "level": "8º ano",
+      "description": "Processos de armazenamento e recuperação de informações no cérebro",
+      "tags": ["memória", "aprendizado", "cérebro", "neurônios"],
+      "difficulty": "intermediário",
+      "estimatedTime": 45,
+      "popularity": 88
+    },
+    {
+      "id": 26,
+      "text": "Matemática dos jogos",
+      "category": "Matemática",
+      "level": "6º ano",
+      "description": "Probabilidade, estratégia e lógica aplicadas aos jogos",
+      "tags": ["jogos", "probabilidade", "estratégia", "lógica"],
+      "difficulty": "básico",
+      "estimatedTime": 35,
+      "popularity": 92
+    },
+    {
+      "id": 27,
+      "text": "Causas da Segunda Guerra Mundial",
+      "category": "História",
+      "level": "9º ano",
+      "description": "Fatores que levaram ao conflito de 1939-1945 e suas consequências",
+      "tags": ["guerra", "Europa", "século XX", "Holocausto"],
+      "difficulty": "avançado",
+      "estimatedTime": 55,
+      "popularity": 89
+    },
+    {
+      "id": 28,
+      "text": "Como funciona a fotografia?",
+      "category": "Física",
+      "level": "8º ano",
+      "description": "Princípios ópticos da captura e formação de imagens",
+      "tags": ["fotografia", "luz", "óptica", "lentes"],
+      "difficulty": "intermediário",
+      "estimatedTime": 40,
+      "popularity": 84
+    },
+    {
+      "id": 29,
+      "text": "Literatura de cordel",
+      "category": "Literatura",
+      "level": "8º ano",
+      "description": "Tradição literária popular brasileira e suas características",
+      "tags": ["cordel", "cultura popular", "Brasil", "folclore"],
+      "difficulty": "intermediário",
+      "estimatedTime": 40,
+      "popularity": 77
+    },
+    {
+      "id": 30,
+      "text": "Como funciona a gravidade?",
+      "category": "Física",
+      "level": "9º ano",
+      "description": "Força fundamental que governa o movimento dos corpos no universo",
+      "tags": ["gravidade", "força", "universo", "Newton"],
+      "difficulty": "avançado",
+      "estimatedTime": 50,
+      "popularity": 86
+    },
+    {
+      "id": 31,
+      "text": "Como funciona o sistema imunológico?",
+      "category": "Biologia",
+      "level": "9º ano",
+      "description": "Mecanismos de defesa do organismo contra doenças e infecções",
+      "tags": ["imunidade", "defesa", "anticorpos", "linfócitos"],
+      "difficulty": "avançado",
+      "estimatedTime": 50,
+      "popularity": 82
+    },
+    {
+      "id": 32,
+      "text": "Matemática da criptografia",
+      "category": "Matemática",
+      "level": "Ensino Médio",
+      "description": "Aplicação da matemática na segurança digital e criptografia",
+      "tags": ["segurança", "criptografia", "números primos", "algoritmos"],
+      "difficulty": "avançado",
+      "estimatedTime": 55,
+      "popularity": 74
+    },
+    {
+      "id": 33,
+      "text": "Causas da Independência do Brasil",
+      "category": "História",
+      "level": "8º ano",
+      "description": "Fatores que levaram à independência brasileira em 1822",
+      "tags": ["independência", "Brasil", "século XIX", "D. Pedro I"],
+      "difficulty": "intermediário",
+      "estimatedTime": 45,
+      "popularity": 91
+    },
+    {
+      "id": 34,
+      "text": "Como funciona a reciclagem?",
+      "category": "Química",
+      "level": "7º ano",
+      "description": "Processos químicos e físicos da reciclagem de materiais",
+      "tags": ["reciclagem", "sustentabilidade", "materiais", "meio ambiente"],
+      "difficulty": "básico",
+      "estimatedTime": 35,
+      "popularity": 95
+    },
+    {
+      "id": 35,
+      "text": "Física dos terremotos",
+      "category": "Física",
+      "level": "9º ano",
+      "description": "Causas físicas e mecânicas dos terremotos e ondas sísmicas",
+      "tags": ["terremotos", "ondas", "placas tectônicas", "energia"],
+      "difficulty": "avançado",
+      "estimatedTime": 50,
+      "popularity": 78
+    },
+    {
+      "id": 36,
+      "text": "Como funciona a democracia?",
+      "category": "História",
+      "level": "9º ano",
+      "description": "Princípios e funcionamento dos sistemas democráticos",
+      "tags": ["democracia", "política", "cidadania", "eleições"],
+      "difficulty": "intermediário",
+      "estimatedTime": 45,
+      "popularity": 87
+    },
+    {
+      "id": 37,
+      "text": "Matemática da música",
+      "category": "Matemática",
+      "level": "8º ano",
+      "description": "Relação entre matemática e música: frequências, escalas e ritmos",
+      "tags": ["música", "frequência", "ritmo", "harmonia"],
+      "difficulty": "intermediário",
+      "estimatedTime": 45,
+      "popularity": 82
+    },
+    {
+      "id": 38,
+      "text": "Como funciona o sistema circulatório?",
+      "category": "Biologia",
+      "level": "8º ano",
+      "description": "Funcionamento do coração, vasos sanguíneos e circulação",
+      "tags": ["coração", "sangue", "circulação", "vasos"],
+      "difficulty": "intermediário",
+      "estimatedTime": 45,
+      "popularity": 89
+    },
+    {
+      "id": 39,
+      "text": "Geografia da Amazônia",
+      "category": "Geografia",
+      "level": "8º ano",
+      "description": "Características físicas, biodiversidade e importância da Amazônia",
+      "tags": ["Amazônia", "biodiversidade", "floresta", "clima"],
+      "difficulty": "intermediário",
+      "estimatedTime": 50,
+      "popularity": 94
+    },
+    {
+      "id": 40,
+      "text": "Como funciona a inteligência artificial?",
+      "category": "Tecnologia",
+      "level": "Ensino Médio",
+      "description": "Fundamentos da IA, machine learning e suas aplicações",
+      "tags": ["IA", "algoritmos", "machine learning", "tecnologia"],
+      "difficulty": "avançado",
+      "estimatedTime": 55,
+      "popularity": 96
+    }
+  ],
+  "metadata": {
+    "total": 40,
+    "categories": [
+      "Biologia", "Matemática", "História", "Física", "Geografia", 
+      "Química", "Tecnologia", "Literatura", "Arte", "Astronomia"
+    ],
+    "levels": [
+      "6º ano", "7º ano", "8º ano", "9º ano", "Ensino Médio"
+    ],
+    "difficulties": [
+      "básico", "intermediário", "avançado"
+    ],
+    "createdAt": "2024-12-19T10:00:00Z",
+    "version": "2.0",
+    "description": "Banco de sugestões melhorado com filtros, dificuldade e popularidade"
+  }
+}

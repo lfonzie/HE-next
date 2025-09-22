@@ -530,7 +530,7 @@ export function useChat(onStreamingStart?: () => void) {
       const token = localStorage.getItem("token")
       if (!token) return
 
-      const response = await fetch('/api/conversations', {
+      const response = await fetch('/api/chat/conversations', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -761,11 +761,11 @@ export function useChat(onStreamingStart?: () => void) {
         const newConversation: Conversation = {
           id: data.id,
           title: data.title || 'Nova Conversa',
-          module: 'ATENDIMENTO',
-          messages: [],
-          tokenCount: 0,
-          createdAt: new Date(),
-          updatedAt: new Date()
+          module: data.module || 'ATENDIMENTO',
+          messages: data.messages || [],
+          tokenCount: data.tokenCount || 0,
+          createdAt: new Date(data.createdAt),
+          updatedAt: new Date(data.updatedAt)
         }
         
         setConversations(prev => [newConversation, ...prev])

@@ -6,293 +6,394 @@ import {
   Bot, Zap, Rocket, Shield, Heart, Phone, Mail, MapPin, Target, TrendingUp, 
   BookOpen, Lightbulb, LogIn, ChevronDown, Brain, Award, Globe, 
   GraduationCap, Trophy, Users2, BarChart3, Settings, Calendar, FileText, 
-  MessageCircle, Search, Filter, Download, Share2 
+  MessageCircle, Search, Filter, Download, Share2, ExternalLink, X
 } from 'lucide-react';
-import Image from 'next/image';
-import { motion } from 'framer-motion';
-import { debounce } from 'lodash';
+
+// TypeScript interfaces
+interface SectionTitleProps {
+  children: React.ReactNode;
+  subtitle?: string;
+  className?: string;
+}
+
+interface FeatureCardProps {
+  feature: {
+    icon: string;
+    title: string;
+    description: string;
+    stats?: string;
+  };
+  index?: number;
+}
+
+interface ModuleCardProps {
+  module: {
+    title?: string;
+    name?: string;
+    description: string;
+    icon: string;
+    features?: string[];
+    cta?: string;
+    color?: string;
+  };
+  index?: number;
+  onClick?: () => void;
+}
+
+interface ModuleModalProps {
+  module: {
+    name: string;
+    description: string;
+    icon: string;
+    features?: string[];
+    benefits: string;
+    color: string;
+  } | null;
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+interface TestimonialCardProps {
+  testimonial: {
+    name: string;
+    role: string;
+    content: string;
+  };
+  index?: number;
+}
+
+interface FAQItemProps {
+  item: {
+    question: string;
+    answer: string;
+  };
+  index: number;
+  isOpen: boolean;
+  onToggle: (index: number) => void;
+}
 
 // Lazy-loaded modals
 const PrivacyPolicyModal = lazy(() => import('../../components/modals/PrivacyPolicyModal'));
 const TermsOfUseModal = lazy(() => import('../../components/modals/TermsOfUseModal'));
 const LGPDModal = lazy(() => import('../../components/modals/LGPDModal'));
 
-// Constants
+// Enhanced Constants
 const BRAND = {
   name: 'HubEdu.ia',
   tagline: 'A Educação do Futuro',
-  description: 'Plataforma educacional completa com aulas geradas por IA, simulador ENEM, correção automática de redações e chat inteligente, alinhada à BNCC e LGPD.'
+  description: 'Primeira plataforma brasileira de IA educacional com aulas BNCC, simulador ENEM e compliance LGPD completo.',
+  features: ['100% BNCC', 'Compliance LGPD', 'Simulador ENEM', '10 Módulos de IA']
 };
 
+// Performance optimization: Reduced array size
 const CHAT_MODULES = [
-  { name: 'Professor IA', description: 'Tire dúvidas pedagógicas instantaneamente', icon: '👩‍🏫', features: ['Dúvidas sobre BNCC', 'Sugestões de atividades', 'Planejamento de aulas', 'Avaliação de alunos', 'Metodologias ativas'], benefits: 'Suporte pedagógico 24/7' },
-  { name: 'Suporte T.I.', description: 'Suporte técnico para funcionários', icon: '💻', features: ['Problemas de sistema', 'Configuração de equipamentos', 'Treinamento digital', 'Manutenção preventiva', 'Soluções rápidas'], benefits: 'Resolução técnica imediata' },
-  { name: 'Atendimento', description: 'Atendimento personalizado para pais e visitantes', icon: '👨‍👩‍👧‍👦', features: ['Informações escolares', 'Agendamento de reuniões', 'Dúvidas sobre matrícula', 'Comunicação com professores', 'Eventos da escola'], benefits: 'Atendimento humanizado e eficiente' },
-  { name: 'Bem-estar', description: 'Suporte emocional para a comunidade escolar', icon: '💚', features: ['Suporte psicológico', 'Mediação de conflitos', 'Orientação familiar', 'Prevenção ao bullying', 'Cuidados emocionais'], benefits: 'Ambiente escolar saudável' },
-  { name: 'Social Media', description: 'Gestão de redes sociais da escola', icon: '📱', features: ['Posts automáticos', 'Gestão de conteúdo', 'Interação com comunidade', 'Relatórios de engajamento', 'Cronograma de publicações'], benefits: 'Presença digital profissional' },
-  { name: 'Coordenação', description: 'Ferramentas para coordenação pedagógica', icon: '👨‍💼', features: ['Planejamento curricular', 'Acompanhamento pedagógico', 'Reuniões de equipe', 'Formação continuada', 'Gestão de projetos'], benefits: 'Coordenação eficiente' },
-  { name: 'Secretaria', description: 'Automação de processos administrativos', icon: '📋', features: ['Documentação digital', 'Controle de frequência', 'Emissão de certificados', 'Arquivo de documentos', 'Processos burocráticos'], benefits: 'Administração moderna' },
-  { name: 'RH', description: 'Gestão de recursos humanos', icon: '👥', features: ['Controle de ponto', 'Avaliação de desempenho', 'Treinamentos', 'Folha de pagamento', 'Benefícios funcionais'], benefits: 'Gestão completa de RH' },
-  { name: 'Financeiro', description: 'Controle financeiro e pagamentos', icon: '💰', features: ['Controle de mensalidades', 'Relatórios financeiros', 'Gestão de inadimplência', 'Orçamento escolar', 'Contas a pagar'], benefits: 'Controle financeiro transparente' },
-  { name: 'Gestão', description: 'Relatórios e analytics educacionais', icon: '📊', features: ['Dashboard executivo', 'Métricas de aprendizado', 'Relatórios de performance', 'Análise de dados', 'Tomada de decisões'], benefits: 'Gestão baseada em dados' },
+  { name: 'Professor IA', description: 'Suporte pedagógico 24/7', icon: '👩‍🏫', features: ['Dúvidas BNCC', 'Planejamento de aulas', 'Metodologias ativas'], benefits: 'Suporte pedagógico instantâneo', color: 'from-blue-500 to-blue-600' },
+  { name: 'Suporte T.I.', description: 'Resolução técnica imediata', icon: '💻', features: ['Problemas de sistema', 'Configuração equipamentos', 'Treinamento digital'], benefits: 'Suporte técnico 24/7', color: 'from-green-500 to-green-600' },
+  { name: 'Atendimento', description: 'Atendimento humanizado para pais', icon: '👨‍👩‍👧‍👦', features: ['Informações escolares', 'Agendamento reuniões', 'Comunicação professores'], benefits: 'Atendimento eficiente', color: 'from-purple-500 to-purple-600' },
+  { name: 'Bem-estar', description: 'Suporte emocional completo', icon: '💚', features: ['Suporte psicológico', 'Mediação conflitos', 'Prevenção bullying'], benefits: 'Ambiente escolar saudável', color: 'from-pink-500 to-pink-600' },
+  { name: 'Social Media', description: 'Gestão profissional de redes', icon: '📱', features: ['Posts automáticos', 'Gestão conteúdo', 'Relatórios engajamento'], benefits: 'Presença digital profissional', color: 'from-indigo-500 to-indigo-600' },
+  { name: 'Gestão', description: 'Analytics educacionais avançados', icon: '📊', features: ['Dashboard executivo', 'Métricas aprendizado', 'Análise de dados'], benefits: 'Gestão baseada em dados', color: 'from-orange-500 to-orange-600' },
 ];
 
+// Simplified competitor data
 const COMPETITORS = [
-  { name: 'ChatGPT', price: 'US$ 20/mês por usuário (~R$ 106/mês)', restrictions: ['Conteúdo não adaptado para idade escolar', 'Sem conteúdo específico para escolas', 'Não baseado na BNCC', 'Sem compliance LGPD'], icon: '🤖' },
-  { name: 'Grok', price: 'US$ 30/mês por usuário (~R$ 159/mês)', restrictions: ['Conteúdo não adaptado para idade escolar', 'Sem simulador ENEM', 'Não baseado na BNCC', 'Sem compliance LGPD'], icon: '⚡' },
-  { name: 'Gemini', price: 'US$ 20/mês por usuário (~R$ 106/mês)', restrictions: ['Conteúdo não adaptado para idade escolar', 'Sem conteúdo específico para escolas', 'Não baseado na BNCC', 'Sem compliance LGPD'], icon: '💎' },
-];
-
-const ADVANTAGES = [
-  'Disponível para todas as idades (incluindo menores)',
-  'Conteúdo específico para escolas brasileiras',
-  '100% baseado na BNCC',
-  'Compliance total com LGPD',
-  'Conversas temporárias (apagadas automaticamente)',
-  'Infraestrutura global de ponta',
-  'Simulador ENEM com +3000 questões oficiais',
-  'Suporte nacional especializado',
-  'Plataforma pioneira para educação brasileira',
+  { name: 'ChatGPT', price: 'R$ 106/mês', restrictions: ['Não adaptado para escolas', 'Sem BNCC', 'Sem LGPD'], icon: '🤖' },
+  { name: 'Gemini', price: 'R$ 106/mês', restrictions: ['Conteúdo não escolar', 'Sem simulador ENEM', 'Sem compliance LGPD'], icon: '💎' },
 ];
 
 const HERO_MODULES = [
-  { title: 'Aulas Interativas', description: 'Slides dinâmicos baseados na BNCC com imagens, quizzes e gamificação.', icon: '🎮', features: ['100% baseado na BNCC', '14 slides estruturados', 'Atividades dinâmicas', 'Quizzes interativos', 'Gamificação completa'], cta: 'Explorar Aula' },
-  { title: 'Simulador ENEM', description: 'Mais de 3000 questões oficiais + infinitas geradas por IA alinhadas com BNCC.', icon: '📚', features: ['3000+ questões oficiais', 'Questões infinitas por IA', 'Modos personalizados', 'Análise detalhada', 'Alinhado com BNCC'], cta: 'Fazer Simulado' },
-  { title: 'Redação ENEM', description: 'Correção automática com temas oficiais e tendências atuais baseadas na BNCC.', icon: '✍️', features: ['Correção automática', 'Temas oficiais ENEM', 'Tendências 2025', 'Feedback detalhado', 'Critérios BNCC'], cta: 'Testar Redação' },
-  { title: 'Chat Inteligente', description: 'Sistema completo de IA com 10 módulos customizados e compliance LGPD.', icon: '💬', features: ['Professor IA', 'Suporte T.I.', 'Atendimento Pais', 'Bem-estar', 'Social Media', 'Coordenação', 'Secretaria', 'RH', 'Financeiro', 'Gestão', 'Conversas temporárias LGPD'], cta: 'Explorar Módulos' },
+  { 
+    title: 'Aulas Interativas', 
+    description: 'Slides dinâmicos baseados na BNCC com gamificação completa.', 
+    icon: '🎮', 
+    features: ['100% BNCC', '14 slides estruturados', 'Quizzes interativos'], 
+    cta: 'Explorar Aulas',
+    color: 'from-blue-500 to-blue-600'
+  },
+  { 
+    title: 'Simulador ENEM', 
+    description: '3000+ questões oficiais + infinitas geradas por IA.', 
+    icon: '📚', 
+    features: ['3000+ questões', 'Modos personalizados', 'Análise detalhada'], 
+    cta: 'Testar Simulado',
+    color: 'from-green-500 to-green-600'
+  },
+  { 
+    title: 'Redação ENEM', 
+    description: 'Correção automática com critérios oficiais.', 
+    icon: '✍️', 
+    features: ['Correção automática', 'Temas oficiais', 'Feedback detalhado'], 
+    cta: 'Corrigir Redação',
+    color: 'from-purple-500 to-purple-600'
+  },
+  { 
+    title: 'Chat Inteligente', 
+    description: '6 módulos especializados para toda escola.', 
+    icon: '💬', 
+    features: ['Professor IA', 'Suporte T.I.', 'Atendimento'], 
+    cta: 'Ver Módulos',
+    color: 'from-yellow-500 to-yellow-600'
+  },
 ];
 
-const FEATURES = {
-  lessons: [
-    { title: 'Baseadas na BNCC', description: 'Aulas rigorosamente alinhadas à Base Nacional Comum Curricular.', icon: '📚' },
-    { title: 'Interatividade Total', description: 'Quizzes com feedback instantâneo, atividades colaborativas e gamificação.', icon: '🎮' },
-    { title: 'Duração Otimizada', description: 'Aulas assíncronas de 30-40 minutos, permitindo flexibilidade no ritmo do aluno.', icon: '⏱️' },
-    { title: 'Qualquer Tema', description: 'Cobre educação, negócios, tecnologia, saúde, arte e mais, em qualquer nível.', icon: '🌍' },
-  ],
-  school: [
-    { title: 'Personalização de Conteúdo', description: 'Conteúdo adaptado ao currículo e metodologia da escola.', icon: '📚', stats: 'Conteúdo Customizado' },
-    { title: 'Ferramentas de IA para Todos', description: 'Ferramentas específicas para professores, coordenadores, gestores, alunos e pais.', icon: '🤖', stats: '5 Perfis de Usuário' },
-    { title: 'Conteúdo Personalizado', description: 'Aulas adaptadas para diferentes níveis e necessidades de cada turma.', icon: '🎯', stats: 'Adaptação Inteligente' },
-  ],
-  enem: [
-    { title: 'Banco de Questões Gigante', description: 'Mais de 3000 questões oficiais (2009-2024) + infinitas geradas por IA.', icon: '📚', stats: '3000+ Questões Oficiais' },
-    { title: 'Modos de Estudo Inteligentes', description: 'Modo rápido, personalizado por dificuldade e oficial com cronômetro.', icon: '⚡', stats: '3 Modos Disponíveis' },
-    { title: 'Correção Automática de Redação', description: 'Correção por IA com critérios oficiais do ENEM, aceitando PDFs ou imagens.', icon: '✍️', stats: 'Correção Instantânea' },
-    { title: 'Temas e Tendências 2025', description: 'Temas oficiais de redação e análise de tendências para o ENEM.', icon: '🎯', stats: 'Tendências Atualizadas' },
-  ],
-};
-
-const TESTIMONIALS = [
-  { name: 'Maria Santos', role: 'Professora, Escola Nova Era', content: 'As aulas interativas são incríveis! Os alunos adoram os quizzes e rankings. A correção automática de redação economiza horas.', rating: 5 },
-  { name: 'Carlos Mendes', role: 'Coordenador, Instituto Esperança', content: 'O simulador ENEM aumentou significativamente o desempenho dos alunos. O chat omni-channel é um diferencial para os pais.', rating: 5 },
-  { name: 'Ana Silva', role: 'Diretora, Colégio Crescer', content: 'A gestão escolar ficou mais eficiente com as ferramentas de IA. O chat inteligente é revolucionário para a comunidade escolar.', rating: 5 },
-];
-
+// Streamlined FAQ
 const FAQ_ITEMS = [
-  { question: 'Como são criadas as aulas?', answer: 'A IA gera aulas assíncronas de 30-40 minutos baseadas na BNCC, com slides, atividades e quizzes sobre qualquer tema.' },
-  { question: 'As aulas seguem a BNCC?', answer: 'Sim, todas as aulas são rigorosamente alinhadas à Base Nacional Comum Curricular.' },
-  { question: 'Quantos módulos tem o chat inteligente?', answer: '10 módulos: Professor IA, Suporte T.I., Atendimento Pais, Bem-estar, Social Media, Coordenação, Secretaria, RH, Financeiro e Gestão.' },
-  { question: 'O simulador ENEM tem quantas questões?', answer: 'Mais de 3000 questões oficiais (2009-2024) + infinitas geradas por IA.' },
-  { question: 'Como funciona a correção de redação?', answer: 'Correção automática com temas oficiais ENEM e análise de tendências 2025.' },
-  { question: 'O chat é seguro para alunos?', answer: 'Sim, módulos são seguros por faixa etária e função escolar.' },
-  { question: 'Os pais têm acesso?', answer: 'Sim, via chat omni-channel (WhatsApp, site e redes sociais).' },
-  { question: 'É compatível com LGPD?', answer: 'Sim, com chats efêmeros e dados protegidos em servidores brasileiros.' },
-  { question: 'Menores de 18 anos podem usar?', answer: 'Sim, a plataforma é acessível para todas as idades.' },
-  { question: 'Quando estará disponível?', answer: 'Em breve, com suporte completo para escolas brasileiras.' },
+  { question: 'Como funciona o HubEdu.ia?', answer: 'Plataforma completa com 4 módulos principais: Aulas IA, Simulador ENEM, Correção de Redações e Chat Inteligente, tudo baseado na BNCC.' },
+  { question: 'É seguro para menores de 18 anos?', answer: 'Sim, única plataforma com compliance LGPD total, chats temporários e conteúdo adequado para todas as idades.' },
+  { question: 'Quantas questões tem o simulador?', answer: 'Mais de 3000 questões oficiais do ENEM (2009-2024) + infinitas questões geradas por IA.' },
+  { question: 'As aulas seguem a BNCC?', answer: 'Sim, 100% das aulas são rigorosamente alinhadas à Base Nacional Comum Curricular.' },
+  { question: 'Quando estará disponível?', answer: 'Em breve. Cadastre-se para receber acesso prioritário e condições especiais.' },
 ];
 
-// Reusable Components
-const SectionTitle = ({ children, subtitle }) => (
-  <div className="text-center mb-12">
-    <h2 className="text-4xl lg:text-5xl font-black mb-4">{children}</h2>
-    {subtitle && <p className="text-lg text-gray-600 max-w-3xl mx-auto">{subtitle}</p>}
+// Enhanced components with better performance and mobile-first design
+const SectionTitle = memo(({ children, subtitle, className = '' }: SectionTitleProps) => (
+  <div className={`text-center mb-8 sm:mb-12 ${className}`}>
+    <h2 className="type-h2 font-black mb-3 sm:mb-4 leading-tight">{children}</h2>
+    {subtitle && <p className="type-body-lg text-gray-600 max-w-[65ch] mx-auto">{subtitle}</p>}
   </div>
-);
+));
 
-const FeatureCard = ({ feature, gradient = 'from-yellow-50 to-white', border = 'border-yellow-200 hover:border-yellow-400' }) => (
-  <div className={`bg-gradient-to-br ${gradient} border-2 ${border} rounded-2xl p-6 hover:shadow-xl transition-all duration-300 transform hover:scale-105`}>
+const FeatureCard = memo(({ feature, index = 0 }: FeatureCardProps) => (
+  <div 
+    className="group bg-white border-2 border-gray-200 hover:border-yellow-400 rounded-xl sm:rounded-2xl p-4 sm:p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+    style={{ animationDelay: `${index * 100}ms` }}
+  >
     <div className="text-center">
-      <div className="text-4xl mb-4">{feature.icon}</div>
-      <h3 className="text-lg font-bold text-yellow-600 mb-3">{feature.title}</h3>
-      <p className="text-gray-600 text-sm leading-relaxed">{feature.description}</p>
+      <div className="text-3xl sm:text-4xl mb-3 sm:mb-4 group-hover:scale-110 transition-transform duration-300">{feature.icon}</div>
+      <h3 className="type-h4 font-bold text-gray-900 mb-2 sm:mb-3">{feature.title}</h3>
+      <p className="type-small text-gray-600 leading-relaxed">{feature.description}</p>
       {feature.stats && (
-        <div className="mt-4">
-          <span className="text-sm font-bold text-black bg-yellow-400 px-3 py-1 rounded-full">{feature.stats}</span>
+        <div className="mt-3 sm:mt-4">
+          <span className="type-caption font-bold text-white bg-yellow-500 px-3 py-1 rounded-full">{feature.stats}</span>
         </div>
       )}
     </div>
   </div>
-);
+));
 
-const ModuleCard = ({ module, disabled = true }) => (
-  <div className="bg-white/95 backdrop-blur-sm p-6 rounded-3xl border-2 border-yellow-300 hover:border-yellow-500 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105">
-    <div className="text-center mb-6">
-      <div className="text-4xl mb-4">{module.icon}</div>
-      <h3 className="text-lg font-bold text-gray-800 mb-3">{module.title}</h3>
-      <p className="text-sm text-gray-600 mb-4">{module.description}</p>
+const ModuleCard = memo(({ module, index = 0, onClick }: ModuleCardProps) => (
+  <div 
+    className="group bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border-2 border-gray-200 hover:border-yellow-400 transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1 cursor-pointer"
+    style={{ animationDelay: `${index * 100}ms` }}
+    onClick={onClick}
+  >
+    <div className="text-center mb-4 sm:mb-6">
+      <div className={`text-3xl sm:text-4xl mb-3 sm:mb-4 p-2 sm:p-3 rounded-lg sm:rounded-xl bg-gradient-to-r ${module.color || 'from-yellow-500 to-yellow-600'} text-white inline-block group-hover:scale-110 transition-transform duration-300`}>
+        {module.icon}
+      </div>
+      <h3 className="type-h4 font-bold text-gray-900 mb-2 sm:mb-3">{module.title || module.name}</h3>
+      <p className="type-small text-gray-600 mb-3 sm:mb-4">{module.description}</p>
     </div>
-    <div className="space-y-2 mb-6">
-      {module.features.slice(0, 3).map((feature, idx) => (
-        <div key={idx} className="flex items-center gap-3 text-sm text-gray-600">
-          <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+    <div className="space-y-2 mb-4 sm:mb-6">
+      {(module.features || []).slice(0, 3).map((feature, idx) => (
+        <div key={idx} className="flex items-center gap-2 type-small text-gray-600">
+          <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full flex-shrink-0"></div>
           <span>{feature}</span>
         </div>
       ))}
-      {module.features.length > 3 && (
-        <div className="text-sm text-gray-500 text-center font-medium">+{module.features.length - 3} mais</div>
-      )}
     </div>
-    <button 
-      className="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-bold rounded-2xl transition-all duration-300 cursor-not-allowed"
-      disabled={disabled}
-    >
-      {module.cta}
+    <button className="w-full min-h-11 px-4 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-bold rounded-xl transition-all duration-300 type-body">
+      {module.cta || 'Saber Mais'}
     </button>
   </div>
-);
+));
 
-const ModuleModal = ({ module, isOpen, onClose }) => {
+// Enhanced modal with better UX and mobile-first design
+const ModuleModal = memo(({ module, isOpen, onClose }: ModuleModalProps) => {
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
   if (!isOpen || !module) return null;
+
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-8">
-        <div className="flex justify-between items-start mb-6">
-          <div className="flex items-center gap-4">
-            <div className="text-5xl">{module.icon}</div>
-            <div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">{module.name}</h3>
-              <p className="text-gray-600">{module.description}</p>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+      <div className="bg-white rounded-xl sm:rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom duration-300">
+        <div className="p-4 sm:p-8">
+          <div className="flex justify-between items-start mb-4 sm:mb-6">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className={`text-3xl sm:text-4xl p-2 sm:p-3 rounded-lg sm:rounded-xl bg-gradient-to-r ${module.color} text-white`}>{module.icon}</div>
+              <div className="min-w-0">
+                <h3 className="type-h3 font-bold text-gray-900 mb-1 sm:mb-2">{module.name}</h3>
+                <p className="type-small text-gray-600">{module.description}</p>
+              </div>
+            </div>
+            <button 
+              onClick={onClose} 
+              className="p-2 hover:bg-gray-100 rounded-xl transition-colors min-h-11 min-w-11 flex items-center justify-center"
+              aria-label="Fechar modal"
+            >
+              <X className="w-5 h-5 text-gray-500" />
+            </button>
+          </div>
+          
+          <div className="mb-4 sm:mb-6">
+            <h4 className="type-h4 font-bold text-gray-900 mb-2 sm:mb-3 flex items-center gap-2">
+              <Target className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500 flex-shrink-0" />
+              Funcionalidades:
+            </h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {(module.features || []).map((feature, index) => (
+                <div key={index} className="flex items-center gap-2 type-small text-gray-700 p-2 hover:bg-gray-50 rounded-lg transition-colors">
+                  <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                  <span>{feature}</span>
+                </div>
+              ))}
             </div>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl font-bold">×</button>
-        </div>
-        <div className="mb-6">
-          <h4 className="text-lg font-bold text-gray-900 mb-3">🎯 Funcionalidades:</h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            {module.features.map((feature, index) => (
-              <div key={index} className="flex items-center gap-2 text-sm text-gray-700">
-                <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                <span>{feature}</span>
-              </div>
-            ))}
+          
+          <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 p-4 sm:p-6 rounded-xl border border-yellow-200">
+            <h4 className="type-h4 font-bold text-gray-900 mb-2 flex items-center gap-2">
+              <Star className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500 flex-shrink-0" />
+              Benefício Principal:
+            </h4>
+            <p className="type-body text-gray-700">{module.benefits}</p>
           </div>
-        </div>
-        <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 p-4 rounded-xl">
-          <h4 className="text-lg font-bold text-gray-900 mb-2">✨ Benefício Principal:</h4>
-          <p className="text-gray-700">{module.benefits}</p>
-        </div>
-        <div className="mt-6 flex justify-end">
-          <button onClick={onClose} className="px-8 py-4 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-bold rounded-2xl transition-all duration-300 shadow-lg">
-            Fechar
-          </button>
         </div>
       </div>
     </div>
   );
-};
+});
 
-const ChatModulesGrid = () => {
+// Optimized chat modules grid with mobile-first design
+const ChatModulesGrid = memo(() => {
   const [selectedModule, setSelectedModule] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleModuleClick = (module) => {
+  const handleModuleClick = useCallback((module) => {
     setSelectedModule(module);
-    setIsModalOpen(true);
-  };
+  }, []);
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
+  const handleCloseModal = useCallback(() => {
     setSelectedModule(null);
-  };
+  }, []);
 
   return (
     <>
-      <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-black p-10 rounded-3xl shadow-2xl">
-        <h3 className="text-4xl font-black mb-6 text-center">💬 10 Módulos de Chat IA</h3>
-        <p className="text-2xl font-semibold mb-10 text-center">Soluções de IA para toda a comunidade escolar</p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 sm:gap-6">
+      <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-black p-4 sm:p-8 rounded-2xl sm:rounded-3xl shadow-2xl">
+        <div className="text-center mb-6 sm:mb-8">
+          <h3 className="type-h2 font-black mb-3 sm:mb-4">💬 6 Módulos de Chat IA</h3>
+          <p className="type-body-lg font-semibold">Soluções especializadas para toda comunidade escolar</p>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
           {CHAT_MODULES.map((module, index) => (
             <div 
               key={index} 
-              className="text-center bg-white/20 p-4 sm:p-6 rounded-2xl cursor-pointer hover:bg-white/30 transition-all duration-300 transform hover:scale-105"
+              className="text-center bg-white/20 hover:bg-white/30 p-3 sm:p-4 rounded-xl sm:rounded-2xl cursor-pointer transition-all duration-300 hover:scale-105 min-h-11"
               onClick={() => handleModuleClick(module)}
             >
-              <div className="text-3xl sm:text-4xl mb-2 sm:mb-3">{module.icon}</div>
-              <div className="font-bold text-sm sm:text-base">{module.name}</div>
-              <div className="text-xs sm:text-sm">{module.description}</div>
-              <div className="text-xs sm:text-sm mt-2 sm:mt-3 text-yellow-800 font-semibold">Clique para saber mais</div>
+              <div className="text-2xl sm:text-3xl mb-1 sm:mb-2">{module.icon}</div>
+              <div className="font-bold type-small mb-1">{module.name}</div>
+              <div className="type-caption opacity-90 mb-1 sm:mb-2">{module.description}</div>
+              <div className="type-caption text-yellow-800 font-semibold">Clique para detalhes</div>
             </div>
           ))}
         </div>
       </div>
-      <ModuleModal module={selectedModule} isOpen={isModalOpen} onClose={handleCloseModal} />
+      <ModuleModal 
+        module={selectedModule} 
+        isOpen={!!selectedModule} 
+        onClose={handleCloseModal} 
+      />
     </>
   );
-};
+});
 
-const TestimonialCard = ({ testimonial }) => (
-  <div className="bg-white/10 backdrop-blur-sm p-8 rounded-2xl border border-white/20 hover:border-yellow-400 transition-all duration-300">
-    <div className="flex mb-4">
-      {[...Array(testimonial.rating)].map((_, i) => (
-        <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
+// Simplified testimonial component with mobile-first design
+const TestimonialCard = memo(({ testimonial, index = 0 }: TestimonialCardProps) => (
+  <div 
+    className="bg-white/10 backdrop-blur-sm p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-white/20 hover:border-yellow-400 transition-all duration-300"
+    style={{ animationDelay: `${index * 200}ms` }}
+  >
+    <div className="flex mb-3 sm:mb-4">
+      {[...Array(5)].map((_, i) => (
+        <Star key={i} className="w-3 h-3 sm:w-4 sm:h-4 text-yellow-400 fill-current" />
       ))}
     </div>
-    <blockquote className="text-lg mb-6 leading-relaxed">&ldquo;{testimonial.content}&rdquo;</blockquote>
+    <blockquote className="type-body mb-3 sm:mb-4 leading-relaxed">&ldquo;{testimonial.content}&rdquo;</blockquote>
     <footer>
-      <div className="font-bold">{testimonial.name}</div>
-      <div className="text-gray-300">{testimonial.role}</div>
+      <div className="font-bold text-yellow-400 type-body">{testimonial.name}</div>
+      <div className="text-gray-300 type-small">{testimonial.role}</div>
     </footer>
   </div>
-);
+));
 
-const CompetitorCard = ({ competitor, isSpecial = false }) => (
-  <div className={`${isSpecial ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 border-yellow-500' : 'bg-white border-gray-200'} border-2 rounded-2xl p-6 shadow-lg ${isSpecial ? 'relative shadow-2xl' : ''}`}>
-    {isSpecial && (
-      <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-        <span className="bg-yellow-500 text-black px-4 py-2 rounded-full text-sm font-bold">🏆 MELHOR ESCOLHA</span>
-      </div>
-    )}
-    <div className={`text-center mb-6 ${isSpecial ? 'mt-4' : ''}`}>
-      <div className="text-4xl mb-3">{competitor.icon}</div>
-      <h3 className={`text-2xl font-bold mb-2 ${isSpecial ? 'text-black' : 'text-gray-800'}`}>{competitor.name}</h3>
-      <div className={`text-3xl font-black mb-4 ${isSpecial ? 'text-black' : 'text-red-500'}`}>{competitor.price || 'Preço Especial'}</div>
-    </div>
-    <div className="space-y-3">
-      <h4 className={`font-bold mb-3 ${isSpecial ? 'text-black' : 'text-gray-700'}`}>{isSpecial ? '✅ Vantagens:' : '❌ Limitações:'}</h4>
-      {(competitor.restrictions || ADVANTAGES.slice(0, 5)).map((item, idx) => (
-        <div key={idx} className={`flex items-start gap-2 text-sm ${isSpecial ? 'text-black' : 'text-gray-600'}`}>
-          <span className={`mt-1 ${isSpecial ? 'text-green-600' : 'text-red-500'}`}>•</span>
-          <span>{item}</span>
-        </div>
-      ))}
-    </div>
-  </div>
-);
-
-const FAQItem = ({ item, index, isOpen, onToggle }) => (
-  <div className="border border-gray-200 rounded-2xl overflow-hidden">
+const FAQItem = memo(({ item, index, isOpen, onToggle }: FAQItemProps) => (
+  <div className="border border-gray-200 rounded-xl overflow-hidden">
     <button
-      className="w-full p-6 text-left hover:bg-yellow-50 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-400"
+      className="w-full p-4 sm:p-6 text-left hover:bg-yellow-50 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-inset min-h-11"
       onClick={() => onToggle(index)}
       aria-expanded={isOpen}
-      aria-controls={`faq-answer-${index}`}
     >
       <div className="flex items-center justify-between">
-        <h3 className="text-xl font-bold text-gray-900">{item.question}</h3>
-        <ChevronDown className={`w-5 h-5 text-gray-500 transform transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <h3 className="type-body font-bold text-gray-900 pr-3 sm:pr-4">{item.question}</h3>
+        <ChevronDown className={`w-4 h-4 sm:w-5 sm:h-5 text-gray-500 transition-transform duration-200 flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`} />
       </div>
     </button>
     {isOpen && (
-      <div id={`faq-answer-${index}`} className="px-6 pb-6" role="region">
-        <p className="text-gray-700 leading-relaxed">{item.answer}</p>
+      <div className="px-4 sm:px-6 pb-4 sm:pb-6">
+        <p className="type-body text-gray-700 leading-relaxed">{item.answer}</p>
       </div>
     )}
   </div>
-);
+));
+
+// Early access form component
+const EarlyAccessForm = memo(() => {
+  const [email, setEmail] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleSubmit = useCallback((e) => {
+    e.preventDefault();
+    if (email) {
+      setSubmitted(true);
+      // Here you would typically send the email to your backend
+      setTimeout(() => setSubmitted(false), 3000);
+    }
+  }, [email]);
+
+  return (
+    <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-black p-8 rounded-3xl shadow-2xl">
+      <div className="text-center mb-6">
+        <h3 className="text-2xl font-black mb-2">🚀 Acesso Prioritário</h3>
+        <p className="text-lg font-semibold">Seja um dos primeiros a usar o HubEdu.ia</p>
+      </div>
+      
+      {!submitted ? (
+        <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+          <input
+            type="email"
+            placeholder="seu@email.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="flex-1 px-4 py-3 rounded-xl border-2 border-yellow-300 focus:border-yellow-600 focus:outline-none"
+            required
+          />
+          <button
+            type="submit"
+            className="px-6 py-3 bg-black text-yellow-400 font-bold rounded-xl hover:bg-gray-800 transition-colors whitespace-nowrap"
+          >
+            Cadastrar
+          </button>
+        </form>
+      ) : (
+        <div className="text-center">
+          <CheckCircle className="w-8 h-8 text-green-600 mx-auto mb-2" />
+          <p className="font-bold text-green-700">Email cadastrado com sucesso!</p>
+        </div>
+      )}
+    </div>
+  );
+});
 
 // Main Component
 const HubEduLanding = () => {
-  const [isVisible, setIsVisible] = useState(false);
   const [scrollY, setScrollY] = useState(0);
   const [isClient, setIsClient] = useState(false);
   const [openFAQs, setOpenFAQs] = useState(new Set());
@@ -312,370 +413,294 @@ const HubEduLanding = () => {
 
   useEffect(() => {
     setIsClient(true);
-    setIsVisible(true);
-    setScrollY(window.scrollY);
     const handleScroll = () => setScrollY(window.scrollY);
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const headerClasses = useMemo(() => 
-    `fixed top-0 w-full z-50 transition-all duration-300 ${isClient && scrollY > 50 ? 'bg-white/95 backdrop-blur-md shadow-xl' : 'bg-white/90 backdrop-blur-sm'} border-b-2 border-yellow-300`,
+    `fixed top-0 w-full z-50 transition-all duration-300 ${
+      isClient && scrollY > 50 
+        ? 'bg-white/95 backdrop-blur-md shadow-xl' 
+        : 'bg-white/90 backdrop-blur-sm'
+    } border-b border-yellow-300`,
     [scrollY, isClient]
   );
 
   return (
     <div className="min-h-screen w-full overflow-x-hidden">
-      {/* Launch Banner */}
-      <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-black text-center py-3 font-bold text-lg">
-        🚀 EM BREVE - Aulas por IA + Simulador ENEM + Chat Inteligente
+      {/* Improved Launch Banner */}
+      <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-black text-center py-2 font-bold animate-pulse">
+        🚀 EM BREVE - Primeira plataforma brasileira com IA + BNCC + LGPD
       </div>
 
-      {/* Header */}
+      {/* Optimized Header */}
       <header className={headerClasses}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <Image src="/assets/Logo_HubEdu.ia.svg" alt="HubEdu.ia Logo" width={40} height={40} className="h-10 w-auto" />
+            <div className="w-8 h-8 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-lg flex items-center justify-center text-white font-bold">
+              H
+            </div>
             <div className="text-xl font-bold">
               <span className="text-black">Hub</span><span className="text-yellow-500">Edu</span><span className="text-black">.ia</span>
             </div>
           </div>
-          <button disabled className="px-8 py-4 bg-gradient-to-r from-yellow-500 to-yellow-600 text-black font-bold rounded-2xl shadow-lg flex items-center gap-2 cursor-not-allowed">
-            <LogIn className="w-5 h-5" /> EM BREVE <ArrowRight className="w-5 h-5" />
+          <button 
+            disabled 
+            className="px-6 py-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-black font-bold rounded-xl cursor-not-allowed opacity-75"
+          >
+            Em Breve
           </button>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="min-h-screen bg-gradient-to-br from-slate-50 via-yellow-50 to-orange-100 text-black pt-24 pb-16 relative overflow-hidden">
+      {/* Enhanced Hero Section */}
+      <section className="min-h-screen bg-gradient-to-br from-slate-50 via-yellow-50 to-orange-100 pt-20 pb-16 relative overflow-hidden">
+        {/* Animated background elements */}
         <div className="absolute inset-0 opacity-20">
-          <div className="absolute top-10 left-10 w-96 h-96 bg-gradient-to-r from-yellow-400/30 to-yellow-600/30 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-10 right-10 w-80 h-80 bg-gradient-to-r from-yellow-500/30 to-yellow-700/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '3s' }} />
+          <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-gradient-to-r from-yellow-400/30 to-yellow-600/30 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-gradient-to-r from-yellow-500/30 to-yellow-700/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
         </div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-black px-8 py-4 rounded-2xl text-lg font-bold mb-8 shadow-xl">
-              <Rocket className="w-6 h-6" /> 🚀 EM BREVE - Educação Brasileira do Futuro
+        
+        <div className="max-w-7xl mx-auto px-4 relative z-10">
+          <div className="text-center mb-16">
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-black px-6 py-3 rounded-2xl text-base font-bold mb-8 shadow-lg">
+              <Rocket className="w-5 h-5" />
+              Primeira plataforma brasileira com IA + BNCC + LGPD
             </div>
-            <div className="flex justify-center mb-6">
-              <Image src="/assets/Logo_HubEdu.ia.svg" alt="HubEdu.ia Logo" width={120} height={120} className="h-20 w-auto" />
+
+            {/* Logo */}
+            <div className="w-16 h-16 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-2xl flex items-center justify-center text-white font-black text-2xl mx-auto mb-6">
+              H
             </div>
-            <h1 className="text-6xl lg:text-8xl font-black mb-8 leading-tight text-black">
-              <span className="bg-gradient-to-r from-yellow-500 to-yellow-700 bg-clip-text text-transparent">{BRAND.name}</span><br />
-              <span className="text-4xl lg:text-6xl font-bold text-gray-800">{BRAND.tagline}</span>
+
+            {/* Main heading */}
+            <h1 className="text-5xl lg:text-7xl font-black mb-6 leading-tight">
+              <span className="bg-gradient-to-r from-yellow-500 to-yellow-700 bg-clip-text text-transparent">{BRAND.name}</span>
+              <br />
+              <span className="text-3xl lg:text-5xl font-bold text-gray-800">{BRAND.tagline}</span>
             </h1>
-            <p className="text-xl lg:text-2xl mb-8 text-gray-700 leading-relaxed max-w-4xl mx-auto font-medium">{BRAND.description}</p>
-            <div className="flex flex-col sm:flex-row gap-6 justify-center mb-16">
-              <button className="px-10 py-5 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-black text-xl shadow-2xl rounded-2xl flex items-center justify-center gap-3 cursor-not-allowed" disabled>
-                <Play className="w-6 h-6" /> Em Breve
-              </button>
-              <button className="px-10 py-5 border-2 border-yellow-500 hover:bg-yellow-500 hover:text-black text-yellow-700 font-bold text-xl rounded-2xl flex items-center justify-center gap-3 cursor-not-allowed" disabled>
-                <Phone className="w-6 h-6" /> Ver Demonstração <ArrowRight className="w-6 h-6" />
-              </button>
+
+            {/* Description */}
+            <p className="text-xl lg:text-2xl mb-8 text-gray-700 max-w-4xl mx-auto font-medium">
+              {BRAND.description}
+            </p>
+
+            {/* Feature badges */}
+            <div className="flex flex-wrap justify-center gap-4 mb-12">
+              {BRAND.features.map((feature, index) => (
+                <span 
+                  key={index} 
+                  className="px-4 py-2 bg-white border border-yellow-300 rounded-full text-sm font-semibold text-gray-700 shadow-sm"
+                >
+                  {feature}
+                </span>
+              ))}
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {HERO_MODULES.map((module, index) => <ModuleCard key={index} module={module} />)}
+
+            {/* CTA buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+              <EarlyAccessForm />
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* Innovation Section */}
-      <section className="py-16 bg-gradient-to-r from-purple-50 to-pink-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <SectionTitle subtitle="Tecnologia avançada combinada com pedagogia brasileira para a melhor experiência educacional do país">
-            🚀 <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Inovação em Educação</span>
-          </SectionTitle>
-          <div className="grid md:grid-cols-3 gap-8 mb-16">
-            {[
-              { icon: '🧠', title: 'IA Generativa Avançada', description: 'Algoritmos que criam conteúdo educacional personalizado em tempo real.' },
-              { icon: '🤖', title: 'Correção Automática', description: 'IA corrige redações e simulados instantaneamente, seguindo critérios do ENEM e BNCC.' },
-              { icon: '📚', title: 'Aulas Estruturadas', description: 'Slides com introdução, desenvolvimento e conclusão, incluindo quizzes interativos.' },
-            ].map((feature, index) => (
-              <div key={index} className="bg-white p-8 rounded-2xl border-2 border-purple-200 hover:border-purple-400 transition-all duration-300 shadow-lg hover:shadow-xl">
-                <div className="text-center">
-                  <div className="text-6xl mb-4">{feature.icon}</div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
-                  <p className="text-gray-600 text-sm leading-relaxed">{feature.description}</p>
-                </div>
-              </div>
+          {/* Module cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {HERO_MODULES.map((module, index) => (
+              <ModuleCard key={index} module={module} index={index} />
             ))}
           </div>
-          <div className="bg-gradient-to-r from-purple-500 to-pink-600 text-white p-8 rounded-3xl shadow-2xl">
-            <h3 className="text-3xl font-black mb-6 text-center">🌟 Por que HubEdu.ia é Revolucionário?</h3>
-            <div className="grid md:grid-cols-2 gap-8">
-              <div className="bg-white/10 p-6 rounded-2xl">
-                <h4 className="text-xl font-bold mb-4 text-purple-300">🔬 Tecnologia de Ponta:</h4>
-                <ul className="space-y-3 text-sm">
-                  {['IA Multimodal: Processa texto, imagem e áudio', 'IA Avançada: Tecnologia OpenAI e Google', 'Conteúdo Estruturado: Aulas organizadas', 'Cloud Native: Arquitetura escalável'].map((item, idx) => (
-                    <li key={idx} className="flex items-start gap-2"><span className="text-purple-400 mt-1">•</span><span>{item}</span></li>
-                  ))}
-                </ul>
-              </div>
-              <div className="bg-white/10 p-6 rounded-2xl">
-                <h4 className="text-xl font-bold mb-4 text-pink-300">🎓 Pedagogia Brasileira:</h4>
-                <ul className="space-y-3 text-sm">
-                  {['BNCC Integrada: Alinhada com competências', 'Metodologias Ativas: Aprendizado interativo', 'Gamificação: Engajamento via jogos', 'Inclusão Digital: Acessível para todos'].map((item, idx) => (
-                    <li key={idx} className="flex items-start gap-2"><span className="text-pink-400 mt-1">•</span><span>{item}</span></li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 
-      {/* Features Overview */}
-      <section className="py-16 bg-gradient-to-br from-yellow-50 via-white to-yellow-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <SectionTitle subtitle="4 módulos principais + 10 módulos de chat para transformar sua escola">
-            🎮 <span className="bg-gradient-to-r from-yellow-500 to-yellow-700 bg-clip-text text-transparent">Como Funciona</span>
+      {/* Streamlined Features Section */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4">
+          <SectionTitle subtitle="Recursos desenvolvidos especificamente para educação brasileira">
+            ⚡ <span className="bg-gradient-to-r from-yellow-500 to-yellow-700 bg-clip-text text-transparent">Recursos Principais</span>
           </SectionTitle>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
-            {FEATURES.lessons.map((feature, index) => <FeatureCard key={index} feature={feature} />)}
+          
+          <div className="grid md:grid-cols-3 gap-8 mb-16">
+            {[
+              { icon: '📚', title: '100% BNCC', description: 'Todo conteúdo rigorosamente alinhado à Base Nacional Comum Curricular.' },
+              { icon: '🛡️', title: 'Total LGPD', description: 'Chats temporários, dados protegidos e compliance completo com LGPD.' },
+              { icon: '🎯', title: 'Simulador ENEM', description: '3000+ questões oficiais + infinitas geradas por IA avançada.' },
+            ].map((feature, index) => (
+              <FeatureCard key={index} feature={feature} index={index} />
+            ))}
           </div>
+
           <ChatModulesGrid />
         </div>
       </section>
 
-      {/* ENEM Section */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <SectionTitle subtitle="A melhor plataforma para preparação ao ENEM, 100% alinhada à BNCC">
-            🎓 <span className="bg-gradient-to-r from-yellow-500 to-yellow-700 bg-clip-text text-transparent">Preparação para o ENEM</span>
+      {/* Simplified Comparison Section */}
+      <section className="py-16 bg-gradient-to-br from-yellow-50 to-orange-50">
+        <div className="max-w-7xl mx-auto px-4">
+          <SectionTitle subtitle="Compare com outras plataformas de IA">
+            🏆 <span className="bg-gradient-to-r from-yellow-500 to-yellow-700 bg-clip-text text-transparent">Por que HubEdu.ia?</span>
           </SectionTitle>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
-            {FEATURES.enem.map((feature, index) => <FeatureCard key={index} feature={feature} />)}
-          </div>
-          <div className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black p-8 rounded-3xl shadow-2xl text-center">
-            <h3 className="text-3xl font-black mb-4">🏆 Por que Escolher Nosso Simulador?</h3>
-            <div className="grid md:grid-cols-3 gap-6">
-              {[
-                { icon: '📈', title: 'Resultados Comprovados', description: 'Estudantes aumentam 45% no desempenho' },
-                { icon: '🎯', title: 'Foco no ENEM', description: 'Desenvolvido para o exame brasileiro' },
-                { icon: '⚡', title: 'Tecnologia Avançada', description: 'IA que gera questões personalizadas' },
-              ].map((item, index) => (
-                <div key={index} className="text-center">
-                  <div className="text-4xl mb-3">{item.icon}</div>
-                  <h4 className="font-bold text-lg mb-2">{item.title}</h4>
-                  <p className="text-sm">{item.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Schools Section */}
-      <section className="py-16 bg-gradient-to-b from-gray-900 to-black text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <SectionTitle subtitle="Soluções completas para escolas brasileiras, alinhadas à BNCC e LGPD">
-            🏫 <span className="bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">Soluções para Escolas</span>
-          </SectionTitle>
-          <div className="grid md:grid-cols-3 gap-8 mb-16">
-            {FEATURES.school.map((feature, index) => (
-              <FeatureCard key={index} feature={feature} gradient="from-gray-800 to-gray-900" border="border-yellow-400 hover:border-yellow-300" />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* LGPD Compliance Section */}
-      <section className="py-16 bg-gradient-to-r from-green-50 to-blue-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <SectionTitle subtitle="Compatível com a LGPD, garantindo privacidade e segurança">
-            🛡️ <span className="bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">Compliance com LGPD</span>
-          </SectionTitle>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
-            {[
-              { icon: '🗑️', title: 'Conversas Temporárias', description: 'Conversas descartadas automaticamente após cada sessão.' },
-              { icon: '🌐', title: 'Infraestrutura Global', description: 'Nuvem global para máxima performance e disponibilidade.' },
-              { icon: '🔒', title: 'Criptografia Total', description: 'Dados protegidos com criptografia de ponta a ponta.' },
-              { icon: '👶', title: 'Todas as Idades', description: 'Plataforma segura e adequada para o contexto educacional.' },
-            ].map((feature, index) => (
-              <div key={index} className="bg-white p-8 rounded-2xl border-2 border-green-200 hover:border-green-400 transition-all duration-300 shadow-lg hover:shadow-xl">
-                <div className="text-center">
-                  <div className="text-6xl mb-4">{feature.icon}</div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
-                  <p className="text-gray-600 text-sm leading-relaxed">{feature.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* BNCC Compliance Section */}
-      <section className="py-16 bg-gradient-to-r from-blue-50 to-purple-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <SectionTitle subtitle="Conteúdos rigorosamente alinhados à Base Nacional Comum Curricular">
-            📚 <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">100% BNCC</span>
-          </SectionTitle>
-          <div className="grid md:grid-cols-3 gap-8 mb-16">
-            {[
-              { icon: '🎯', title: 'Competências BNCC', description: 'Desenvolvimento das 10 competências gerais da BNCC.' },
-              { icon: '📋', title: 'Objetivos de Aprendizagem', description: 'Aulas alinhadas aos objetivos da BNCC por ano e disciplina.' },
-              { icon: '🔄', title: 'Atualizações Automáticas', description: 'Conteúdo atualizado conforme mudanças na BNCC.' },
-            ].map((feature, index) => (
-              <div key={index} className="bg-white p-8 rounded-2xl border-2 border-blue-200 hover:border-blue-400 transition-all duration-300 shadow-lg hover:shadow-xl">
-                <div className="text-center">
-                  <div className="text-6xl mb-4">{feature.icon}</div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
-                  <p className="text-gray-600 text-sm leading-relaxed">{feature.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-8 rounded-3xl shadow-2xl">
-            <h3 className="text-3xl font-black mb-6 text-center">🎓 Por que a BNCC é Fundamental?</h3>
-            <div className="grid md:grid-cols-2 gap-8">
-              <div className="bg-white/10 p-6 rounded-2xl">
-                <h4 className="text-xl font-bold mb-4 text-blue-300">📖 Base Nacional Comum Curricular:</h4>
-                <ul className="space-y-3 text-sm">
-                  {['Padronização: Conteúdo unificado nacionalmente', 'Competências: Habilidades do século XXI', 'Flexibilidade: Adaptação às realidades locais', 'Qualidade: Educação de excelência'].map((item, idx) => (
-                    <li key={idx} className="flex items-start gap-2"><span className="text-blue-400 mt-1">•</span><span>{item}</span></li>
-                  ))}
-                </ul>
-              </div>
-              <div className="bg-white/10 p-6 rounded-2xl">
-                <h4 className="text-xl font-bold mb-4 text-purple-300">🚀 HubEdu.ia + BNCC:</h4>
-                <ul className="space-y-3 text-sm">
-                  {['IA Alinhada: Conteúdo gerado com base na BNCC', 'Conteúdo Personalizado: Aulas sob medida', 'Avaliação BNCC: Questões alinhadas', 'Relatórios BNCC: Acompanhamento de competências'].map((item, idx) => (
-                    <li key={idx} className="flex items-start gap-2"><span className="text-purple-400 mt-1">•</span><span>{item}</span></li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials Section */}
-      <section className="py-16 bg-gradient-to-b from-gray-900 to-black text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <SectionTitle subtitle="Depoimentos de educadores que já conhecem nossa plataforma">💬 O que dizem <span className="text-yellow-400">sobre nós</span></SectionTitle>
+          
           <div className="grid md:grid-cols-3 gap-8">
-            {TESTIMONIALS.map((testimonial, index) => <TestimonialCard key={index} testimonial={testimonial} />)}
+            {COMPETITORS.map((competitor, index) => (
+              <div key={index} className="bg-white border-2 border-gray-200 rounded-2xl p-6 shadow-lg">
+                <div className="text-center mb-6">
+                  <div className="text-4xl mb-3">{competitor.icon}</div>
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">{competitor.name}</h3>
+                  <div className="text-2xl font-bold text-red-500 mb-4">{competitor.price}</div>
+                </div>
+                <div className="space-y-2">
+                  <h4 className="font-bold text-gray-700 mb-3">❌ Limitações:</h4>
+                  {competitor.restrictions.map((item, idx) => (
+                    <div key={idx} className="flex items-center gap-2 text-sm text-gray-600">
+                      <span className="text-red-500">•</span>
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+            
+            {/* HubEdu.ia advantage card */}
+            <div className="bg-gradient-to-br from-yellow-400 to-yellow-600 border-2 border-yellow-500 rounded-2xl p-6 shadow-2xl relative">
+              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                <span className="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-bold">MELHOR ESCOLHA</span>
+              </div>
+              <div className="text-center mb-6 mt-2">
+                <div className="text-4xl mb-3">🎓</div>
+                <h3 className="text-xl font-bold text-black mb-2">HubEdu.ia</h3>
+                <div className="text-2xl font-bold text-black mb-4">Preço Especial</div>
+              </div>
+              <div className="space-y-2">
+                <h4 className="font-bold text-black mb-3">✅ Vantagens Exclusivas:</h4>
+                {['Todas as idades', '100% BNCC', 'Total LGPD', 'Simulador ENEM', '6 módulos IA'].map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-2 text-sm text-black">
+                    <CheckCircle className="w-4 h-4 text-green-600" />
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* FAQ Section */}
+      {/* Enhanced Testimonials */}
+      <section className="py-16 bg-gradient-to-b from-gray-900 to-black text-white">
+        <div className="max-w-7xl mx-auto px-4">
+          <SectionTitle subtitle="Depoimentos de educadores que conhecem nossa proposta">
+            💬 O que dizem <span className="text-yellow-400">sobre nós</span>
+          </SectionTitle>
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              { name: 'Maria Santos', role: 'Professora, Escola Nova Era', content: 'Finalmente uma plataforma pensada para a realidade brasileira. A integração com BNCC faz toda diferença.' },
+              { name: 'Carlos Mendes', role: 'Coordenador, Instituto Esperança', content: 'O compliance com LGPD nos dá segurança para usar com todos os alunos, incluindo menores.' },
+              { name: 'Ana Silva', role: 'Diretora, Colégio Crescer', content: 'Os 6 módulos de IA cobrem todas as necessidades da escola. Aguardando ansiosamente o lançamento.' },
+            ].map((testimonial, index) => (
+              <TestimonialCard key={index} testimonial={testimonial} index={index} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Optimized FAQ Section */}
       <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <SectionTitle subtitle="Tire suas dúvidas sobre o HubEdu.ia">❓ Perguntas <span className="text-yellow-500">Frequentes</span></SectionTitle>
+        <div className="max-w-4xl mx-auto px-4">
+          <SectionTitle subtitle="Respostas para suas principais dúvidas">
+            ❓ Perguntas <span className="text-yellow-500">Frequentes</span>
+          </SectionTitle>
           <div className="space-y-4">
             {FAQ_ITEMS.map((item, index) => (
-              <FAQItem key={index} item={item} index={index} isOpen={openFAQs.has(index)} onToggle={toggleFAQ} />
+              <FAQItem 
+                key={index} 
+                item={item} 
+                index={index} 
+                isOpen={openFAQs.has(index)} 
+                onToggle={toggleFAQ} 
+              />
             ))}
           </div>
         </div>
       </section>
 
-      {/* Pricing Comparison Section */}
-      <section className="py-16 bg-gradient-to-br from-yellow-50 via-white to-yellow-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <SectionTitle subtitle="Comparativo com plataformas de IA - Única com BNCC e LGPD">
-            💰 <span className="bg-gradient-to-r from-yellow-500 to-yellow-700 bg-clip-text text-transparent">Por que Escolher HubEdu.ia?</span>
-          </SectionTitle>
-          <div className="grid md:grid-cols-3 gap-8 mb-12">
-            {COMPETITORS.map((competitor, index) => <CompetitorCard key={index} competitor={competitor} />)}
-            <CompetitorCard competitor={{ name: 'HubEdu.ia', icon: '🎓', price: 'Preço Especial' }} isSpecial />
-          </div>
-          <div className="text-center bg-gradient-to-r from-yellow-400 to-yellow-600 text-black p-8 rounded-3xl shadow-2xl">
-            <h3 className="text-3xl font-black mb-4">🎯 Por que HubEdu.ia é Superior?</h3>
-            <p className="text-lg mb-6 font-medium">Diferentemente de outras plataformas, oferecemos uma solução completa para escolas brasileiras.</p>
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="text-left">
-                <h4 className="font-bold text-lg mb-3">🚫 Limitações de ChatGPT, Grok e Gemini:</h4>
-                <ul className="space-y-2 text-sm">
-                  {['Restrição de idade: Menores de 18 anos não podem usar', 'Preço alto: US$ 20-30/mês (~R$ 106-159)', 'Conteúdo não adaptado para escolas', 'Sem BNCC', 'Sem LGPD: Conversas salvas permanentemente', 'Sem simulador ENEM', 'Sem gestão escolar'].map((item, idx) => (
-                    <li key={idx}>• {item}</li>
-                  ))}
-                </ul>
-              </div>
-              <div className="text-left">
-                <h4 className="font-bold text-lg mb-3">✅ Vantagens do HubEdu.ia:</h4>
-                <ul className="space-y-2 text-sm">
-                  {['Todas as idades: Crianças, adolescentes e adultos', 'Preço especial para escolas', 'Conteúdo adaptado para educação brasileira', '100% BNCC', 'Total LGPD: Chats temporários', 'Simulador ENEM com +3000 questões', 'Gestão completa: IA + Automação + Analytics'].map((item, idx) => (
-                    <li key={idx}>• {item}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Final CTA Section */}
+      {/* Enhanced CTA Section */}
       <section className="bg-gradient-to-b from-neutral-950 to-neutral-900 text-white py-16 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-yellow-400 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-yellow-400 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-1/3 left-1/3 w-96 h-96 bg-yellow-400 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-1/3 right-1/3 w-96 h-96 bg-yellow-400 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
         </div>
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <h2 className="text-4xl sm:text-5xl font-extrabold text-white mb-6">A Educação do Futuro Chega Em Breve</h2>
-          <p className="text-xl mb-8 text-gray-300 max-w-3xl mx-auto leading-relaxed">Prepare sua escola para uma nova era com BNCC, LGPD e IA.</p>
-          <div className="bg-gradient-to-r from-gray-800 to-gray-900 p-8 rounded-2xl mb-12 border border-gray-700">
-            <h3 className="text-2xl font-bold mb-6 text-yellow-400">🎯 4 Módulos Principais:</h3>
-            <div className="grid md:grid-cols-2 gap-6 mb-6">
-              {[
-                { title: 'Aulas Interativas', desc: 'Aulas assíncronas de 30-40 min geradas por IA', icon: '🎮', color: 'from-blue-500 to-blue-600' },
-                { title: 'Simulador ENEM', desc: '+3000 questões oficiais + infinitas por IA', icon: '📚', color: 'from-green-500 to-green-600' },
-                { title: 'Redação ENEM', desc: 'Correção automática com temas oficiais', icon: '✍️', color: 'from-purple-500 to-purple-600' },
-                { title: 'Chat Inteligente', desc: '10 módulos para toda a escola', icon: '💬', color: 'from-yellow-500 to-yellow-600' },
-              ].map((feature, index) => (
-                <div key={index} className="flex items-center gap-4 p-4 bg-gray-700/50 rounded-xl border border-gray-600">
-                  <div className={`text-3xl p-3 rounded-xl bg-gradient-to-r ${feature.color} text-white shadow-lg`}>{feature.icon}</div>
-                  <div>
-                    <div className="text-gray-300 font-bold text-lg">{feature.title}</div>
-                    <div className="text-gray-400 text-sm">{feature.desc}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="flex items-center justify-center gap-3 p-3 bg-gray-700/50 rounded-xl">
-              <CheckCircle className="w-6 h-6 text-yellow-400 flex-shrink-0" />
-              <span className="text-gray-300 font-medium">Suporte nacional e configuração rápida</span>
-            </div>
+        
+        <div className="max-w-5xl mx-auto px-4 text-center relative z-10">
+          <h2 className="text-4xl lg:text-5xl font-black mb-6">A Educação do Futuro Chega Em Breve</h2>
+          <p className="text-xl mb-12 text-gray-300 max-w-3xl mx-auto">
+            Seja uma das primeiras escolas a transformar a educação com IA, BNCC e LGPD.
+          </p>
+
+          {/* Key benefits grid */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            {[
+              { icon: '🎮', title: 'Aulas IA', desc: 'Conteúdo personalizado' },
+              { icon: '📚', title: 'ENEM 2025', desc: '3000+ questões' },
+              { icon: '✍️', title: 'Redação IA', desc: 'Correção automática' },
+              { icon: '💬', title: 'Chat 6 em 1', desc: 'Módulos especializados' },
+            ].map((feature, index) => (
+              <div 
+                key={index} 
+                className="bg-gray-800/50 p-6 rounded-2xl border border-gray-700 hover:border-yellow-400 transition-all duration-300"
+              >
+                <div className="text-4xl mb-3">{feature.icon}</div>
+                <h3 className="font-bold text-lg text-yellow-400 mb-2">{feature.title}</h3>
+                <p className="text-gray-400 text-sm">{feature.desc}</p>
+              </div>
+            ))}
           </div>
-          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-            <button className="px-8 py-4 bg-gray-400 text-white font-bold text-lg rounded-xl shadow-lg flex items-center justify-center gap-2 cursor-not-allowed" disabled>
-              <Play className="w-5 h-5" /> Em Breve
-            </button>
-            <button className="px-8 py-4 border-2 border-gray-400 text-gray-400 font-semibold rounded-xl flex items-center justify-center gap-2 cursor-not-allowed" disabled>
-              <MessageSquare className="w-5 h-5" /> Agendar Demonstração
-            </button>
+
+          {/* Final CTA */}
+          <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-black p-8 rounded-3xl">
+            <h3 className="text-2xl font-bold mb-4">🚀 Cadastre-se para Acesso Prioritário</h3>
+            <p className="mb-6">Receba em primeira mão quando estivermos prontos + condições especiais de lançamento</p>
+            <EarlyAccessForm />
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gradient-to-b from-gray-900 to-black text-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <div className="flex justify-center items-center gap-3 mb-6">
-              <Image src="/assets/Logo_HubEdu.ia.svg" alt="HubEdu.ia Logo" width={60} height={60} className="h-15 w-auto" />
-              <div className="text-3xl font-bold">
+      {/* Streamlined Footer */}
+      <footer className="bg-gradient-to-b from-gray-900 to-black text-white py-12">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="text-center mb-8">
+            <div className="flex justify-center items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl flex items-center justify-center text-white font-bold text-xl">
+                H
+              </div>
+              <div className="text-2xl font-bold">
                 <span className="text-white">Hub</span><span className="text-yellow-400">Edu</span><span className="text-white">.ia</span>
               </div>
             </div>
-            <div className="flex justify-center items-center gap-3 mb-6">
-              <Mail className="w-6 h-6 text-yellow-400" />
-              <a href="mailto:contato@hubedu.ia.br" className="text-xl font-semibold text-white hover:text-yellow-400 transition-colors">contato@hubedu.ia.br</a>
+            <p className="text-gray-400 mb-4">Transformando a educação brasileira com IA</p>
+            <div className="flex justify-center items-center gap-2 text-yellow-400">
+              <Mail className="w-5 h-5" />
+              <a href="mailto:contato@hubedu.ia" className="hover:text-yellow-300 transition-colors">
+                contato@hubedu.ia
+              </a>
             </div>
           </div>
-          <div className="border-t border-gray-800 pt-8">
+          
+          <div className="border-t border-gray-800 pt-6">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-              <p className="text-gray-500 text-sm">© 2025 HubEdu.ia - Transformando a educação</p>
-              <div className="flex gap-6 text-sm text-gray-500">
-                {['privacy', 'terms', 'lgpd'].map((modal) => (
+              <p className="text-gray-500 text-sm">© 2025 HubEdu.ia - A educação do futuro</p>
+              <div className="flex gap-4 text-sm">
+                {[
+                  { key: 'privacy', label: 'Privacidade' },
+                  { key: 'terms', label: 'Termos' },
+                  { key: 'lgpd', label: 'LGPD' },
+                ].map((modal) => (
                   <button
-                    key={modal}
-                    onClick={() => toggleModal(modal)}
-                    className="hover:text-yellow-400 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-400 rounded px-3 py-1 border border-gray-600 hover:border-yellow-400"
+                    key={modal.key}
+                    onClick={() => toggleModal(modal.key)}
+                    className="text-gray-400 hover:text-yellow-400 transition-colors px-3 py-1 border border-gray-700 hover:border-yellow-400 rounded-lg"
                   >
-                    {modal.charAt(0).toUpperCase() + modal.slice(1)}
+                    {modal.label}
                   </button>
                 ))}
               </div>
@@ -686,12 +711,82 @@ const HubEduLanding = () => {
 
       {/* Modals */}
       <Suspense fallback={null}>
-        {modalsState.privacy && <PrivacyPolicyModal isOpen={modalsState.privacy} onClose={() => toggleModal('privacy')} />}
-        {modalsState.terms && <TermsOfUseModal isOpen={modalsState.terms} onClose={() => toggleModal('terms')} />}
-        {modalsState.lgpd && <LGPDModal isOpen={modalsState.lgpd} onClose={() => toggleModal('lgpd')} />}
+        {modalsState.privacy && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-8">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold">Política de Privacidade</h2>
+                <button onClick={() => toggleModal('privacy')} className="p-2 hover:bg-gray-100 rounded-xl">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="text-gray-700 space-y-4">
+                <p>O HubEdu.ia está comprometido com sua privacidade e segurança de dados.</p>
+                <h3 className="font-bold">Coleta de Dados</h3>
+                <p>Coletamos apenas dados necessários para o funcionamento da plataforma educacional.</p>
+                <h3 className="font-bold">Uso dos Dados</h3>
+                <p>Seus dados são usados exclusivamente para personalizar sua experiência educacional.</p>
+                <h3 className="font-bold">Proteção</h3>
+                <p>Utilizamos criptografia de ponta e servidores seguros para proteger suas informações.</p>
+              </div>
+            </div>
+          </div>
+        )}
+        {modalsState.terms && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-8">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold">Termos de Uso</h2>
+                <button onClick={() => toggleModal('terms')} className="p-2 hover:bg-gray-100 rounded-xl">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="text-gray-700 space-y-4">
+                <p>Bem-vindo ao HubEdu.ia. Estes termos regem o uso de nossa plataforma.</p>
+                <h3 className="font-bold">Uso Permitido</h3>
+                <p>A plataforma destina-se exclusivamente para fins educacionais.</p>
+                <h3 className="font-bold">Responsabilidades</h3>
+                <p>Os usuários devem usar a plataforma de forma ética e responsável.</p>
+                <h3 className="font-bold">Propriedade Intelectual</h3>
+                <p>Todo conteúdo gerado é protegido por direitos autorais.</p>
+              </div>
+            </div>
+          </div>
+        )}
+        {modalsState.lgpd && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-8">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold">Compliance LGPD</h2>
+                <button onClick={() => toggleModal('lgpd')} className="p-2 hover:bg-gray-100 rounded-xl">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="text-gray-700 space-y-4">
+                <p>O HubEdu.ia está em total conformidade com a Lei Geral de Proteção de Dados.</p>
+                <h3 className="font-bold">Conversas Temporárias</h3>
+                <p>Todas as conversas são automaticamente apagadas após cada sessão.</p>
+                <h3 className="font-bold">Direitos do Usuário</h3>
+                <p>Você tem direito de acessar, corrigir ou excluir seus dados a qualquer momento.</p>
+                <h3 className="font-bold">Segurança</h3>
+                <p>Implementamos as melhores práticas de segurança para proteger menores de idade.</p>
+              </div>
+            </div>
+          </div>
+        )}
       </Suspense>
     </div>
   );
 };
+
+// Add display name for better debugging
+SectionTitle.displayName = 'SectionTitle';
+FeatureCard.displayName = 'FeatureCard';
+ModuleCard.displayName = 'ModuleCard';
+ModuleModal.displayName = 'ModuleModal';
+ChatModulesGrid.displayName = 'ChatModulesGrid';
+TestimonialCard.displayName = 'TestimonialCard';
+FAQItem.displayName = 'FAQItem';
+EarlyAccessForm.displayName = 'EarlyAccessForm';
 
 export default memo(HubEduLanding);

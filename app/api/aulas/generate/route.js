@@ -201,6 +201,68 @@ function expandImageQuery(originalQuery, topic) {
 }
 
 /**
+ * Finds a topic-specific educational image as last resort.
+ * @param {string} topic - The lesson topic.
+ * @param {string} imageQuery - The image query.
+ * @returns {Object|null} Image object or null.
+ */
+async function findTopicSpecificImage(topic, imageQuery) {
+  try {
+    // Mapear tópicos para imagens educacionais específicas
+    const topicImages = {
+      'matemática': 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=1350&h=1080&fit=crop&auto=format',
+      'matematica': 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=1350&h=1080&fit=crop&auto=format',
+      'física': 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=1350&h=1080&fit=crop&auto=format',
+      'fisica': 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=1350&h=1080&fit=crop&auto=format',
+      'química': 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=1350&h=1080&fit=crop&auto=format',
+      'quimica': 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=1350&h=1080&fit=crop&auto=format',
+      'biologia': 'https://images.unsplash.com/photo-1530026405186-ed1f139313f8?w=1350&h=1080&fit=crop&auto=format',
+      'história': 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=1350&h=1080&fit=crop&auto=format',
+      'historia': 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=1350&h=1080&fit=crop&auto=format',
+      'geografia': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1350&h=1080&fit=crop&auto=format',
+      'português': 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=1350&h=1080&fit=crop&auto=format',
+      'portugues': 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=1350&h=1080&fit=crop&auto=format'
+    };
+    
+    const topicLower = topic.toLowerCase().trim();
+    
+    // Procurar por correspondência exata
+    if (topicImages[topicLower]) {
+      return {
+        url: topicImages[topicLower],
+        source: 'topic-specific',
+        title: `Imagem educacional sobre ${topic}`,
+        description: `Imagem específica para o tópico ${topic}`
+      };
+    }
+    
+    // Procurar por correspondência parcial
+    for (const [key, url] of Object.entries(topicImages)) {
+      if (topicLower.includes(key) || key.includes(topicLower)) {
+        return {
+          url: url,
+          source: 'topic-specific',
+          title: `Imagem educacional sobre ${topic}`,
+          description: `Imagem específica para o tópico ${topic}`
+        };
+      }
+    }
+    
+    // Se não encontrou correspondência específica, usar uma imagem educacional geral de alta qualidade
+    return {
+      url: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1350&h=1080&fit=crop&auto=format',
+      source: 'educational-general',
+      title: 'Imagem educacional geral',
+      description: 'Imagem educacional de alta qualidade'
+    };
+    
+  } catch (error) {
+    console.error('Erro ao buscar imagem específica do tópico:', error);
+    return null;
+  }
+}
+
+/**
  * Generates a lesson prompt template.
  * @param {string} topic - The lesson topic.
  * @param {string} [systemPrompt=''] - Custom system prompt.
@@ -216,6 +278,7 @@ REGRAS CRÍTICAS:
 - Use linguagem clara e didática em português brasileiro.
 - Use \\n\\n para quebras de linha entre parágrafos.
 - Para quizzes, inclua "correct" (0-3) e "options" com 4 strings sem prefixos (A, B, etc.).
+- Para quizzes: EXATAMENTE 3 questões por quiz, cada uma com 4 alternativas.
 - Crie títulos específicos e únicos para cada slide, evitando termos genéricos.
 
 CONTEÚDO OBRIGATÓRIO POR SLIDE:
@@ -229,9 +292,9 @@ CONTEÚDO OBRIGATÓRIO POR SLIDE:
 ESTRUTURA:
 1. Abertura: [Título introdutório]
 2-6. [Títulos sobre conceitos, desenvolvimento, aplicações, variações, conexões]
-7. Quiz: [Título sobre conceitos básicos]
+7. Quiz: [Título sobre conceitos básicos] - EXATAMENTE 3 questões
 8-11. [Títulos sobre aprofundamento, exemplos, análise crítica, síntese]
-12. Quiz: [Título sobre análise situacional]
+12. Quiz: [Título sobre análise situacional] - EXATAMENTE 3 questões
 13-14. [Títulos sobre aplicações futuras e síntese final]
 
 FORMATO JSON:
@@ -256,9 +319,21 @@ FORMATO JSON:
       "points": 0,
       "questions": [
         {
-          "q": "Pergunta clara que exige aplicação dos conceitos aprendidos?",
+          "q": "Primeira pergunta clara que exige aplicação dos conceitos aprendidos?",
           "options": ["Alternativa A com explicação do porquê está incorreta", "Alternativa B com explicação do porquê está incorreta", "Alternativa C com explicação do porquê está incorreta", "Alternativa D com explicação do porquê está correta"],
           "correct": 3,
+          "explanation": "Explicação detalhada da resposta correta com justificativa completa e conexão com os conceitos anteriores"
+        },
+        {
+          "q": "Segunda pergunta clara que exige aplicação dos conceitos aprendidos?",
+          "options": ["Alternativa A com explicação do porquê está incorreta", "Alternativa B com explicação do porquê está incorreta", "Alternativa C com explicação do porquê está incorreta", "Alternativa D com explicação do porquê está correta"],
+          "correct": 2,
+          "explanation": "Explicação detalhada da resposta correta com justificativa completa e conexão com os conceitos anteriores"
+        },
+        {
+          "q": "Terceira pergunta clara que exige aplicação dos conceitos aprendidos?",
+          "options": ["Alternativa A com explicação do porquê está incorreta", "Alternativa B com explicação do porquê está incorreta", "Alternativa C com explicação do porquê está incorreta", "Alternativa D com explicação do porquê está correta"],
+          "correct": 1,
           "explanation": "Explicação detalhada da resposta correta com justificativa completa e conexão com os conceitos anteriores"
         }
       ]
@@ -564,47 +639,95 @@ export async function POST(request) {
           let imageSource = 'fallback';
 
           try {
-            const wikiResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/wikimedia/search`, {
+            // Usar a nova API de busca inteligente que busca nos 3 melhores provedores
+            const smartSearchResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/images/smart-search`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ query: imageQuery, subject: topic, count: 3 }),
+              body: JSON.stringify({ 
+                query: imageQuery, 
+                subject: topic, 
+                count: 3 
+              }),
             });
-            if (wikiResponse.ok) {
-              const wikiData = await wikiResponse.json();
-              if (wikiData.success && wikiData.photos?.length > 0) {
-                imageUrl = wikiData.photos[0].urls?.regular || wikiData.photos[0].url;
-                imageSource = 'wikimedia';
-                log.info('Wikimedia image selected', { slideNumber: slide.number, imageUrl });
+            
+            if (smartSearchResponse.ok) {
+              const smartSearchData = await smartSearchResponse.json();
+              if (smartSearchData.success && smartSearchData.images?.length > 0) {
+                // Selecionar a melhor imagem baseada no score de relevância
+                const bestImage = smartSearchData.images[0];
+                imageUrl = bestImage.url;
+                imageSource = bestImage.source;
+                log.info('Smart search image selected', { 
+                  slideNumber: slide.number, 
+                  imageUrl, 
+                  source: imageSource,
+                  relevanceScore: bestImage.relevanceScore,
+                  sourcesUsed: smartSearchData.sourcesUsed
+                });
               }
             }
           } catch (error) {
-            log.warn('Failed to fetch Wikimedia image', { slideNumber: slide.number, error: error.message });
+            log.warn('Failed to fetch smart search image', { slideNumber: slide.number, error: error.message });
           }
 
+          // Se ainda não encontrou imagem, tentar busca específica no Wikimedia como fallback
           if (!imageUrl) {
-            const expandedQuery = expandImageQuery(imageQuery, topic);
             try {
               const wikiResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/wikimedia/search`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query: expandedQuery, subject: topic, count: 3 }),
+                body: JSON.stringify({ query: imageQuery, subject: topic, count: 1 }),
               });
               if (wikiResponse.ok) {
                 const wikiData = await wikiResponse.json();
                 if (wikiData.success && wikiData.photos?.length > 0) {
                   imageUrl = wikiData.photos[0].urls?.regular || wikiData.photos[0].url;
-                  imageSource = 'wikimedia';
-                  log.info('Wikimedia expanded image selected', { slideNumber: slide.number, imageUrl });
+                  imageSource = 'wikimedia-fallback';
+                  log.info('Wikimedia fallback image selected', { slideNumber: slide.number, imageUrl });
                 }
               }
             } catch (error) {
-              log.warn('Failed to fetch expanded Wikimedia image', { slideNumber: slide.number, error: error.message });
+              log.warn('Failed to fetch Wikimedia fallback image', { slideNumber: slide.number, error: error.message });
             }
           }
 
+          // Último recurso: buscar imagem específica do tópico no Unsplash
           if (!imageUrl) {
-            imageUrl = 'https://commons.wikimedia.org/wiki/Special:FilePath/Education%20-%20The%20Noun%20Project.svg?width=800&height=400';
-            log.info('Using Wikimedia placeholder', { slideNumber: slide.number });
+            try {
+              const unsplashResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/illustrations/search`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                  query: imageQuery, 
+                  category: topic.toLowerCase().includes('biologia') ? 'biology' : 
+                           topic.toLowerCase().includes('química') ? 'chemistry' :
+                           topic.toLowerCase().includes('física') ? 'physics' :
+                           topic.toLowerCase().includes('matemática') ? 'math' : 'general',
+                  limit: 1 
+                }),
+              });
+              if (unsplashResponse.ok) {
+                const unsplashData = await unsplashResponse.json();
+                if (unsplashData.success && unsplashData.images?.length > 0) {
+                  imageUrl = unsplashData.images[0].url;
+                  imageSource = 'unsplash-specific';
+                  log.info('Unsplash specific image selected', { slideNumber: slide.number, imageUrl });
+                }
+              }
+            } catch (error) {
+              log.warn('Failed to fetch Unsplash specific image', { slideNumber: slide.number, error: error.message });
+            }
+          }
+
+          // Se ainda não encontrou imagem, usar uma imagem educacional específica do tópico
+          if (!imageUrl) {
+            // Buscar uma imagem educacional específica baseada no tópico
+            const topicSpecificImage = await findTopicSpecificImage(topic, imageQuery);
+            if (topicSpecificImage) {
+              imageUrl = topicSpecificImage.url;
+              imageSource = 'topic-specific';
+              log.info('Topic specific image selected', { slideNumber: slide.number, imageUrl });
+            }
           }
 
           return { ...slide, imageQuery, imageUrl, imageSource, subject: topic };

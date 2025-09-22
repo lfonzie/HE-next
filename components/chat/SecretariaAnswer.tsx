@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react";
+import { Headphones } from 'lucide-react';
 import { MessageRenderer } from "./MessageRenderer";
 
 interface SecretariaAnswerProps {
@@ -14,7 +14,7 @@ export const SecretariaAnswer: React.FC<SecretariaAnswerProps> = ({ question, an
       <div className="bg-gradient-to-r from-red-50 to-red-100 border border-red-200 rounded-lg p-4 mb-4">
         <div className="flex items-center gap-3 mb-3">
           <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
-            <i className="fas fa-headset text-white text-sm"></i>
+            <Headphones className="text-white text-sm w-4 h-4" />
           </div>
           <div>
             <h3 className="text-lg font-semibold text-red-900">Atendimento</h3>

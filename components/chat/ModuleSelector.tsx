@@ -1,4 +1,5 @@
 import React, { startTransition } from "react";
+import { Spinner, AlertTriangle } from 'lucide-react';
 import { useAuth } from "../../hooks/useAuth";
 import { useModuleNavigation } from "../../hooks/useModuleNavigation";
 import { hasModulePermission, getAvailableModules, ALL_MODULES } from "../../utils/modulePermissions";
@@ -53,7 +54,7 @@ export function ModuleSelector({ selectedModule, onSelectModule, isCollapsed = f
     return (
       <div className="flex flex-wrap gap-2 p-4">
         <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-secondary text-secondary-foreground opacity-50">
-          <i className="fas fa-spinner fa-spin"></i>
+          <Spinner className="animate-spin" />
           <span>Carregando módulos...</span>
         </div>
       </div>
@@ -149,7 +150,7 @@ export function ModuleSelector({ selectedModule, onSelectModule, isCollapsed = f
       
       {availableModules.length === 0 && (
         <div className="text-center py-4 text-gray-500 dark:text-gray-400">
-          <i className="fas fa-exclamation-triangle text-lg mb-2"></i>
+          <AlertTriangle className="text-lg mb-2" />
           <p className="text-sm">Nenhum módulo disponível para seu perfil.</p>
         </div>
       )}

@@ -4,7 +4,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { ModuleSelector } from "../chat/ModuleSelector";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
-import { X, Menu } from "lucide-react";
+import { X, Menu, Shield, School, UserShield, SignOutAlt } from 'lucide-react';
 import { ASSETS } from "../../constants/assets";
 import { useModuleNavigation } from "../../hooks/useModuleNavigation";
 import { Link } from "wouter";
@@ -152,7 +152,7 @@ export function Sidebar({ selectedModule, onSelectModule }: SidebarProps) {
                       className="w-full text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-900/20"
                       data-testid="button-system-admin-sidebar"
                     >
-                      <i className="fas fa-shield-alt mr-2"></i>
+                      <Shield className="mr-2" />
                       System Admin
                     </Button>
                   </Link>
@@ -162,7 +162,7 @@ export function Sidebar({ selectedModule, onSelectModule }: SidebarProps) {
                       className="w-full text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/20"
                       data-testid="button-admin-escola-sidebar"
                     >
-                      <i className="fas fa-school mr-2"></i>
+                      <School className="mr-2" />
                       Admin Escola
                     </Button>
                   </Link>
@@ -175,7 +175,7 @@ export function Sidebar({ selectedModule, onSelectModule }: SidebarProps) {
                     className="w-full text-green-600 border-green-200 hover:bg-green-50 dark:text-green-400 dark:border-green-800 dark:hover:bg-green-900/20"
                     data-testid="button-admin-sidebar"
                   >
-                    <i className="fas fa-user-shield mr-2"></i>
+                    <UserShield className="mr-2" />
                     Admin
                   </Button>
                 </Link>
@@ -190,7 +190,7 @@ export function Sidebar({ selectedModule, onSelectModule }: SidebarProps) {
             className="w-full text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-900/20"
             data-testid="button-logout-sidebar"
           >
-            <i className="fas fa-sign-out-alt mr-2"></i>
+            <SignOutAlt className="mr-2" />
             Sair
           </Button>
         </div>

@@ -15,7 +15,7 @@ export const MODULES: Record<ModuleId, { label: string; color: string; icon: str
     label: "Professor", 
     color: "bg-gradient-to-br from-blue-500 to-blue-700 shadow-lg",
     icon: "fas fa-chalkboard-teacher",
-    description: "Assistente de estudos focado no aluno"
+    description: "Assistente de estudos para alunos"
   },
   AULA_EXPANDIDA: { 
     label: "Aula Expandida", 

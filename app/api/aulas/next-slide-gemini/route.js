@@ -121,7 +121,7 @@ ${slideNumber}. ${slideTitle} (${slideType === 'quiz' ? 'Avaliação, 0 pontos' 
   "title": "${slideTitle}",
   "content": "Conteúdo educativo detalhado com quebras de linha usando \n para parágrafos\n\nExemplo de segundo parágrafo com mais informações detalhadas.\n\nTerceiro parágrafo com exemplos práticos e aplicações reais.",
   "type": "content",
-  "imageQuery": ${hasImage ? '"eletricidade corrente introdução conceito"' : 'null'},
+  "imageQuery": ${hasImage ? '"electricity current introduction concept"' : 'null'},
   "tokenEstimate": 500
 }`;
   }
