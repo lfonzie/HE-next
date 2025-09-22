@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import AdminTelemetryWrapper from '@/components/admin/AdminTelemetryWrapper';
 
 interface AdminStats {
   totalSchools: number;
@@ -88,7 +89,8 @@ export default function AdminDashboard() {
   const COLORS = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4', '#84cc16', '#f97316'];
 
   return (
-    <div className="space-y-6">
+    <AdminTelemetryWrapper pageName="admin-dashboard">
+      <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Dashboard Administrativo</h1>
         <p className="mt-1 text-sm text-gray-500">
@@ -321,6 +323,7 @@ export default function AdminDashboard() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </AdminTelemetryWrapper>
   );
 }

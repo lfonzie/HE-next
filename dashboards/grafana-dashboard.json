@@ -1,0 +1,171 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "HE-Next Advanced Monitoring",
+    "tags": ["he-next", "opentelemetry", "monitoring"],
+    "style": "dark",
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "System Overview",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(rate(traces_total[5m]))",
+            "legendFormat": "Traces/sec"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 10},
+                {"color": "red", "value": 50}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "P95 Latency by Route",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(traces_duration_seconds_bucket[5m])) by (le, http_route))",
+            "legendFormat": "{{http_route}}"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Latency (ms)",
+            "unit": "ms"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+      },
+      {
+        "id": 3,
+        "title": "Error Rate by Route",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "sum(rate(traces_total{status_code!=\"OK\"}[5m])) by (http_route) / sum(rate(traces_total[5m])) by (http_route) * 100",
+            "legendFormat": "{{http_route}}"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Error Rate (%)",
+            "unit": "percent"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+      },
+      {
+        "id": 4,
+        "title": "AI Provider Performance",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "sum(rate(ai_requests_total{success=\"true\"}[5m])) by (provider) / sum(rate(ai_requests_total[5m])) by (provider) * 100",
+            "legendFormat": "{{provider}} Success Rate"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Success Rate (%)",
+            "unit": "percent"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+      },
+      {
+        "id": 5,
+        "title": "Lesson Generation Metrics",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "avg(lesson_generation_time_seconds) by (subject)",
+            "legendFormat": "{{subject}}"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Generation Time (s)",
+            "unit": "s"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16}
+      },
+      {
+        "id": 6,
+        "title": "User Engagement",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "sum(rate(events_total[5m])) by (module)",
+            "legendFormat": "{{module}}"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Events/sec",
+            "unit": "short"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16}
+      },
+      {
+        "id": 7,
+        "title": "Database Performance",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "avg(database_query_duration_seconds) by (query_type)",
+            "legendFormat": "{{query_type}}"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Query Duration (s)",
+            "unit": "s"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24}
+      },
+      {
+        "id": 8,
+        "title": "Cost Analysis",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "sum(rate(ai_requests_cost_brl[5m])) by (provider)",
+            "legendFormat": "{{provider}} Cost (BRL)"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Cost (BRL)",
+            "unit": "currencyBRL"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24}
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "refresh": "30s",
+    "schemaVersion": 27,
+    "version": 1,
+    "links": []
+  }
+}

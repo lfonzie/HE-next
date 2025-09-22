@@ -876,6 +876,7 @@ export default function LessonPage() {
           </div>
         </div>
       </div>
+      </div>
 
       {/* Summary and Next Steps - Desktop Only */}
       {lessonData && (lessonData.summary || lessonData.nextSteps) && (

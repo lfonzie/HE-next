@@ -1000,3 +1000,61 @@ model enem_exam_template {
   created_at  DateTime @default(now()) @db.Timestamp(6)
   updated_at  DateTime @default(now()) @db.Timestamp(6)
 }
+
+// ===== OPENTELEMETRY TELEMETRY MODELS =====
+
+model TraceSpan {
+  id             String   @id @default(cuid())
+  traceId        String   @db.VarChar(64)
+  spanId         String   @db.VarChar(32)
+  parentSpanId   String?  @db.VarChar(32)
+  name           String
+  kind           String    // SERVER, CLIENT, INTERNAL etc
+  startTime      DateTime  @db.Timestamptz(6)
+  endTime        DateTime  @db.Timestamptz(6)
+  durationMs     Int
+  statusCode     String    // UNSET, OK, ERROR
+  statusMessage  String?
+  attributes     Json
+  resource       Json      // service.name, deployment.env, etc
+  scope          Json?     // instrumentation scope
+  createdAt      DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([traceId])
+  @@index([name])
+  @@index([startTime])
+  @@index([statusCode])
+  @@index([kind])
+}
+
+model MetricPoint {
+  id         String   @id @default(cuid())
+  name       String
+  time       DateTime @db.Timestamptz(6)
+  value      Float
+  unit       String?
+  attr       Json      // attributes do datapoint (ex.: route="/api/aulas")
+  resource   Json
+  type       String    // COUNTER, HISTOGRAM, GAUGE
+  createdAt  DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([name, time])
+  @@index([time])
+  @@index([type])
+}
+
+model LogRecord {
+  id         String   @id @default(cuid())
+  time       DateTime @db.Timestamptz(6)
+  severity   String?
+  body       String
+  attr       Json
+  resource   Json
+  spanId     String?  @db.VarChar(32)
+  traceId    String?  @db.VarChar(64)
+  createdAt  DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([time])
+  @@index([traceId])
+  @@index([severity])
+}

@@ -3,27 +3,30 @@
 
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { withAdminTracing, withDatabaseTracing, updateEntityCounts } from '@/lib/admin-telemetry';
 
 const prisma = new PrismaClient();
 
 export async function GET() {
-  try {
+  return withAdminTracing('admin.stats.enhanced.get', async () => {
     // Estatísticas básicas existentes
     const [
       totalUsers,
       totalLessons,
       totalChats
     ] = await Promise.all([
-      prisma.user.count(),
-      prisma.lesson_meta.count(),
-      prisma.conversations.count()
+      withDatabaseTracing('count', 'user', () => prisma.user.count()),
+      withDatabaseTracing('count', 'lesson_meta', () => prisma.lesson_meta.count()),
+      withDatabaseTracing('count', 'conversations', () => prisma.conversations.count())
     ]);
 
     // Buscar aulas recentes
-    const recentLessons = await prisma.lesson_meta.findMany({
-      take: 10,
-      orderBy: { updated_at: 'desc' }
-    });
+    const recentLessons = await withDatabaseTracing('findMany', 'lesson_meta', () => 
+      prisma.lesson_meta.findMany({
+        take: 10,
+        orderBy: { updated_at: 'desc' }
+      })
+    );
 
     // Estatísticas de uso por período
     const now = new Date();
@@ -31,13 +34,23 @@ export async function GET() {
     const lastMonth = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
     const [lessonsLastWeek, lessonsLastMonth] = await Promise.all([
-      prisma.lesson_meta.count({
-        where: { updated_at: { gte: lastWeek } }
-      }),
-      prisma.lesson_meta.count({
-        where: { updated_at: { gte: lastMonth } }
-      })
+      withDatabaseTracing('count', 'lesson_meta', () => 
+        prisma.lesson_meta.count({
+          where: { updated_at: { gte: lastWeek } }
+        })
+      ),
+      withDatabaseTracing('count', 'lesson_meta', () => 
+        prisma.lesson_meta.count({
+          where: { updated_at: { gte: lastMonth } }
+        })
+      )
     ]);
+
+    // Update entity counts for metrics
+    updateEntityCounts({
+      users: totalUsers,
+      conversations: totalChats,
+    });
 
     return NextResponse.json({
       success: true,
@@ -86,12 +99,8 @@ export async function GET() {
         }))
       }
     });
-
-  } catch (error) {
-    console.error('Erro ao buscar estatísticas:', error);
-    return NextResponse.json({ 
-      error: 'Erro interno do servidor',
-      details: error.message 
-    }, { status: 500 });
-  }
+  }, {
+    'admin.endpoint': '/api/admin/stats-enhanced',
+    'admin.method': 'GET',
+  });
 }

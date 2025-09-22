@@ -1026,6 +1026,141 @@ registerModule({
   }
 })
 
+// pesquisa_tempo_real module - usa Perplexity AI SDK para pesquisas em tempo real
+registerModule({
+  id: 'pesquisa_tempo_real',
+  name: 'Pesquisa em Tempo Real',
+  version: '1.0.0',
+  permissions: { requires_auth: false },
+  cost_estimate: { tokens: 1500, latency_ms: 3000 },
+  async detect({ text, context }): Promise<DetectedIntent> {
+    // Detectar se é uma pergunta que requer pesquisa em tempo real
+    const lowerText = text.toLowerCase()
+    
+    // Palavras-chave que indicam necessidade de pesquisa em tempo real
+    const realTimeKeywords = [
+      'notícias', 'atual', 'hoje', 'agora', 'recente', 'últimas', 'atualidade',
+      'tendências', 'mercado', 'economia', 'política', 'tecnologia', 'ciência',
+      'eventos', 'acontecimentos', 'situação atual', 'estado atual', 'como está',
+      'o que está acontecendo', 'novidades', 'desenvolvimentos', 'atualização',
+      'dados atuais', 'informações recentes', 'última hora', 'breaking news'
+    ]
+    
+    const hasRealTimeKeywords = realTimeKeywords.some(keyword => 
+      lowerText.includes(keyword)
+    )
+    
+    // Perguntas que claramente precisam de dados atuais
+    const realTimeQuestions = [
+      'qual é a situação atual', 'como está', 'o que está acontecendo',
+      'quais são as últimas', 'me fale sobre as tendências atuais',
+      'dados mais recentes', 'informações atualizadas', 'estado atual do',
+      'desenvolvimentos recentes', 'novidades sobre', 'atualização sobre'
+    ]
+    
+    const hasRealTimeQuestions = realTimeQuestions.some(question => 
+      lowerText.includes(question)
+    )
+    
+    if (hasRealTimeKeywords || hasRealTimeQuestions) {
+      return { 
+        intent: 'real_time_research', 
+        module: 'pesquisa_tempo_real', 
+        confidence: 0.9, 
+        slots: { query: text } 
+      }
+    }
+    
+    // Sempre usar OpenAI para detecção - maior certeza
+    try {
+      const response = await fetch(getClassifyUrl(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          userMessage: text,
+          history: context?.history || [],
+          currentModule: context?.module || 'auto'
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.classification?.module === 'PESQUISA_TEMPO_REAL') {
+          return { 
+            intent: 'real_time_research', 
+            module: 'pesquisa_tempo_real', 
+            confidence: data.classification.confidence || 0.8, 
+            slots: { query: text } 
+          };
+        }
+      }
+    } catch (error) {
+      console.error('Erro na detecção OpenAI:', error);
+    }
+
+    // Fallback simples apenas em caso de erro
+    return { intent: 'real_time_research', module: 'pesquisa_tempo_real', confidence: 0.3, slots: { query: text } }
+  },
+  async execute({ slots, context }): Promise<OrchestratorResponse> {
+    const query = slots.query || context?.text || ''
+    
+    try {
+      // Construir URL absoluta para server-side requests
+      let baseUrl: string;
+      
+      if (typeof window !== 'undefined') {
+        // Client-side: usar window.location.origin
+        baseUrl = window.location.origin;
+      } else {
+        // Server-side: usar variáveis de ambiente ou localhost
+        baseUrl = process.env.NEXTAUTH_URL || 
+                  process.env.NEXT_PUBLIC_APP_URL || 
+                  'http://localhost:3000';
+      }
+      
+      // Fazer chamada para o endpoint de teste do Perplexity (sem autenticação)
+      const response = await fetch(`${baseUrl}/api/test-perplexity`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        return {
+          text: `🔍 **Pesquisa em Tempo Real**\n\n${data.response || 'Desculpe, não consegui encontrar informações atualizadas.'}\n\n*Informações pesquisadas em tempo real usando Perplexity AI*`,
+          blocks: [
+            { 
+              type: 'notice', 
+              title: '📡 Pesquisa em Tempo Real', 
+              body: 'Esta resposta foi gerada com base em informações atuais e em tempo real.' 
+            }
+          ],
+          actions: [
+            { type: 'cta', label: 'Nova pesquisa', module: 'pesquisa_tempo_real', args: {} },
+            { type: 'cta', label: 'Criar aula sobre o tema', module: 'aula_interativa', args: { tema: query } }
+          ],
+          trace: { module: 'pesquisa_tempo_real', confidence: 0.9 }
+        }
+      } else {
+        throw new Error(`HTTP ${response.status}`)
+      }
+    } catch (error) {
+      console.error('Erro na pesquisa com Perplexity:', error)
+      return {
+        text: 'Desculpe, não consegui realizar a pesquisa em tempo real no momento. Posso te ajudar de outra forma?',
+        blocks: [],
+        actions: [
+          { type: 'cta', label: 'Tentar pesquisa novamente', module: 'pesquisa_tempo_real', args: {} },
+          { type: 'cta', label: 'Criar aula interativa', module: 'aula_interativa', args: {} }
+        ],
+        trace: { module: 'pesquisa_tempo_real', confidence: 0.3, errors: ['perplexity_error'] }
+      }
+    }
+  }
+})
+
 // atendimento module (fallback)
 registerModule({
   id: 'atendimento',

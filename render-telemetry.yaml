@@ -1,0 +1,65 @@
+# Render configuration for OpenTelemetry setup
+# This file defines the services needed for the telemetry architecture
+
+services:
+  # Main Next.js Web Service
+  - type: web
+    name: he-next-web
+    env: node
+    plan: starter
+    buildCommand: npm install && npx prisma generate && npx prisma migrate deploy && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: he-next-db
+          property: connectionString
+      - key: INTAKE_SECRET
+        generateValue: true
+      - key: OTEL_COLLECTOR_URL
+        value: http://he-next-collector:4318
+      - key: NEXT_PUBLIC_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
+        value: /api/otel/v1/traces
+      - key: OTEL_SERVICE_NAME
+        value: he-next
+      - key: OTEL_DEPLOYMENT_ENVIRONMENT
+        value: production
+      - key: OTEL_TRACES_SAMPLER
+        value: traceidratio
+      - key: OTEL_TRACES_SAMPLER_ARG
+        value: "0.1"
+
+  # OTel Collector Private Service
+  - type: worker
+    name: he-next-collector
+    env: docker
+    plan: starter
+    dockerfilePath: ./collector/Dockerfile
+    envVars:
+      - key: NEXT_APP_URL
+        fromService:
+          type: web
+          name: he-next-web
+          property: host
+      - key: INTAKE_SECRET
+        fromService:
+          type: web
+          name: he-next-web
+          envVarKey: INTAKE_SECRET
+      - key: OTEL_COLLECTOR_URL
+        value: http://localhost:4318
+
+  # PostgreSQL Database
+  - type: pserv
+    name: he-next-db
+    plan: starter
+    databaseName: henext
+    user: henext_user
+
+databases:
+  - name: he-next-db
+    plan: starter
+    databaseName: henext
+    user: henext_user

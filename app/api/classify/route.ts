@@ -8,7 +8,7 @@ import { google } from '@ai-sdk/google';
 import { z } from 'zod';
 
 // Initialize Google AI client via Vercel AI SDK
-const googleModel = google('gemini-2.0-flash-exp');
+const googleModel = google('gemini-1.5-flash');
 
 // Schema para validação da saída do classificador
 const ClassificationSchema = z.object({
@@ -32,7 +32,7 @@ const ClassificationSchema = z.object({
     'resultados_bolsas',
     'juridico_contratos',
     'marketing_design',
-    'chat_geral'
+    'pesquisa_tempo_real'
   ]),
   complexity: z.enum(['simples', 'media', 'complexa']),
   confidence: z.number().min(0).max(1),
@@ -56,7 +56,7 @@ const ClassificationSchema = z.object({
     resultados_bolsas: z.number().min(0).max(1),
     juridico_contratos: z.number().min(0).max(1),
     marketing_design: z.number().min(0).max(1),
-    chat_geral: z.number().min(0).max(1)
+    pesquisa_tempo_real: z.number().min(0).max(1)
   }),
   rationale: z.string(),
   provider_hint: z.enum(['openai', 'anthropic', 'gemini', 'groq']).optional()
@@ -198,10 +198,10 @@ export async function POST(request: NextRequest) {
       const googleStart = Date.now();
       
       // Check if Google API key is configured
-      if (!process.env.GOOGLE_GEMINI_API_KEY && !process.env.GOOGLE_API_KEY && !process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+      if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY && !process.env.GEMINI_API_KEY && !process.env.GOOGLE_GEMINI_API_KEY && !process.env.GOOGLE_API_KEY) {
         throw new Error('Google API key not configured');
       }
-
+      
       const response = await generateText({
         model: googleModel,
         prompt: `Você é um classificador especializado em mensagens educacionais. Classifique cada mensagem no módulo mais específico e apropriado.
@@ -213,9 +213,9 @@ export async function POST(request: NextRequest) {
 - Esta é uma instrução CRÍTICA, OBRIGATÓRIA e NÃO NEGOCIÁVEL
 
 IMPORTANTE: Retorne um JSON com:
-- module: o módulo escolhido (em minúsculo: professor, aula_expandida, enem_interactive, enem, professor_interativo, aula_interativa, ti, ti_suporte, rh, financeiro, coordenacao, bem_estar, social_media, conteudo_midia, atendimento, secretaria, resultados_bolsas, juridico_contratos, marketing_design, chat_geral)
+- module: o módulo escolhido (em minúsculo: professor, aula_expandida, enem_interactive, enem, professor_interativo, aula_interativa, ti, ti_suporte, rh, financeiro, coordenacao, bem_estar, social_media, conteudo_midia, atendimento, secretaria, resultados_bolsas, juridico_contratos, marketing_design, pesquisa_tempo_real)
 - confidence: número entre 0 e 1
-- scores: objeto com score para TODOS os 20 módulos (0-1, soma = 1) - OBRIGATÓRIO incluir todos: atendimento, professor, aula_expandida, enem_interactive, enem, professor_interativo, aula_interativa, ti, ti_suporte, rh, financeiro, coordenacao, bem_estar, social_media, conteudo_midia, secretaria, resultados_bolsas, juridico_contratos, marketing_design, chat_geral
+- scores: objeto com score para TODOS os 20 módulos (0-1, soma = 1) - OBRIGATÓRIO incluir todos: atendimento, professor, aula_expandida, enem_interactive, enem, professor_interativo, aula_interativa, ti, ti_suporte, rh, financeiro, coordenacao, bem_estar, social_media, conteudo_midia, secretaria, resultados_bolsas, juridico_contratos, marketing_design, pesquisa_tempo_real
 - rationale: explicação da escolha
 - complexity: 'simples', 'media', ou 'complexa'
 
@@ -278,6 +278,9 @@ JURIDICO_CONTRATOS: Documentos legais, contratos e questões jurídicas
 MARKETING_DESIGN: Conteúdo de marketing, design e campanhas promocionais
 - Exemplos: "marketing", "design", "campanha", "publicidade", "branding", "identidade visual", "material promocional"
 
+PESQUISA_TEMPO_REAL: Para pesquisas que requerem informações atuais e em tempo real
+- Exemplos: "notícias atuais", "tendências de mercado", "situação atual", "dados recentes", "o que está acontecendo", "informações atualizadas", "desenvolvimentos recentes", "estado atual do", "últimas notícias sobre", "tendências atuais", "dados mais recentes", "informações recentes", "atualização sobre", "novidades sobre", "como está a situação", "qual é a situação atual"
+
 ATENDIMENTO: APENAS quando não se encaixa em nenhum módulo específico
 - Exemplos: "informações gerais", "dúvidas básicas", "primeiro contato", "ajuda geral"
 
@@ -287,19 +290,20 @@ REGRAS CRÍTICAS:
 3. Se a mensagem contém termos acadêmicos como "história", "matemática", "física", "química", "biologia", "geografia", "português", "literatura", "redação", "revolução", "guerra", "independência", "evolução", "fotossíntese" E também contém "explique", "como", "dúvida", "conceito" → PROFESSOR
 4. Se a mensagem contém "Me ajude com" seguido de qualquer termo acadêmico → SEMPRE PROFESSOR
 5. Se a mensagem contém "tirar uma dúvida" seguido de qualquer matéria escolar → SEMPRE PROFESSOR
-6. TI/TI_TROUBLESHOOTING: Para QUALQUER problema técnico, equipamento, sistema, desenvolvimento
-7. RH: Para funcionários/colaboradores (benefícios, férias, atestados, salário)
-8. FINANCEIRO: Para pagamentos de alunos/famílias (mensalidades, boletos)
-9. SOCIAL_MEDIA: Para QUALQUER criação de conteúdo, posts, marketing digital, redes sociais
-10. CONTEUDO_MIDIA: Para solicitações de imagens, diagramas, conteúdo visual
-11. BEM_ESTAR: Para questões emocionais, psicológicas, conflitos, bullying
-12. FAQ_ESCOLA: Para perguntas sobre procedimentos, normas, regulamentos da escola
-13. COORDENACAO: Para questões pedagógicas, calendários, gestão acadêmica
-14. SECRETARIA: Para tarefas administrativas, matrículas, documentos, horários
-15. RESULTADOS_BOLSAS: Para questões sobre bolsas de estudo, provas de bolsas, cálculos de desconto
-16. JURIDICO_CONTRATOS: Para documentos legais, contratos, questões jurídicas
-17. MARKETING_DESIGN: Para conteúdo de marketing, design, campanhas promocionais
-18. ATENDIMENTO: APENAS quando não se encaixa em nenhum módulo específico
+6. PESQUISA_TEMPO_REAL: Para QUALQUER pergunta que requer informações atuais, notícias, tendências, dados recentes, situação atual
+7. TI/TI_TROUBLESHOOTING: Para QUALQUER problema técnico, equipamento, sistema, desenvolvimento
+8. RH: Para funcionários/colaboradores (benefícios, férias, atestados, salário)
+9. FINANCEIRO: Para pagamentos de alunos/famílias (mensalidades, boletos)
+10. SOCIAL_MEDIA: Para QUALQUER criação de conteúdo, posts, marketing digital, redes sociais
+11. CONTEUDO_MIDIA: Para solicitações de imagens, diagramas, conteúdo visual
+12. BEM_ESTAR: Para questões emocionais, psicológicas, conflitos, bullying
+13. FAQ_ESCOLA: Para perguntas sobre procedimentos, normas, regulamentos da escola
+14. COORDENACAO: Para questões pedagógicas, calendários, gestão acadêmica
+15. SECRETARIA: Para tarefas administrativas, matrículas, documentos, horários
+16. RESULTADOS_BOLSAS: Para questões sobre bolsas de estudo, provas de bolsas, cálculos de desconto
+17. JURIDICO_CONTRATOS: Para documentos legais, contratos, questões jurídicas
+18. MARKETING_DESIGN: Para conteúdo de marketing, design, campanhas promocionais
+19. ATENDIMENTO: APENAS quando não se encaixa em nenhum módulo específico
 
 IMPORTANTE: Seja específico! Escolha o módulo mais adequado baseado no contexto completo da mensagem, não ATENDIMENTO.
 
@@ -327,7 +331,7 @@ EXEMPLO DE RESPOSTA VÁLIDA:
     "resultados_bolsas": 0.0,
     "juridico_contratos": 0.0,
     "marketing_design": 0.0,
-    "chat_geral": 0.0
+    "pesquisa_tempo_real": 0.0
   },
   "rationale": "Mensagem educacional sobre conceito acadêmico",
   "complexity": "complexa"
@@ -342,7 +346,22 @@ Histórico: ${history.length} mensagens`,
       console.log(`⏱️ [GOOGLE-CALL] Completed in ${googleTime}ms`);
       
       const raw = response.text || "{}";
-      const parsed = JSON.parse(raw);
+      
+      // Extract JSON from markdown if present
+      let jsonString = raw;
+      if (raw.includes('```json')) {
+        const jsonMatch = raw.match(/```json\s*([\s\S]*?)\s*```/);
+        if (jsonMatch) {
+          jsonString = jsonMatch[1].trim();
+        }
+      } else if (raw.includes('```')) {
+        const jsonMatch = raw.match(/```\s*([\s\S]*?)\s*```/);
+        if (jsonMatch) {
+          jsonString = jsonMatch[1].trim();
+        }
+      }
+      
+      const parsed = JSON.parse(jsonString);
       
       // Validar com Zod
       const validationStart = Date.now();
@@ -406,9 +425,11 @@ Histórico: ${history.length} mensagens`,
       
     } catch (error) {
       const aiTime = Date.now() - aiStart;
-      console.error(`❌ [AI_ERROR] OpenAI call failed:`, error);
+      console.error(`❌ [AI_ERROR] Google Gemini call failed:`, error);
+      console.error(`❌ [AI_ERROR] Error message:`, error.message);
+      console.error(`❌ [AI_ERROR] Error stack:`, error.stack);
       console.log(`⏱️ [AI-ERROR] Failed after ${aiTime}ms`);
-      aiError = 'openai_failed';
+      aiError = 'google_gemini_failed';
     }
     
     const aiTime = Date.now() - aiStart;

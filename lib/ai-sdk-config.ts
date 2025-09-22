@@ -1,4 +1,5 @@
 import { openai } from '@ai-sdk/openai'
+import { perplexity } from '@ai-sdk/perplexity'
 import { getLanguageInstructions } from './system-prompts/language-config'
 import { generateBNCCPrompt, getCompetenciasByDisciplina } from './system-prompts/bncc-config'
 import { createBNCCClassifier } from './ai/bncc-classifier'
@@ -7,7 +8,11 @@ export const aiConfig = {
   openai: openai({
     apiKey: process.env.OPENAI_API_KEY!,
   }),
+  perplexity: perplexity(process.env.PERPLEXITY_MODEL_SELECTION || 'sonar', {
+    apiKey: process.env.PERPLEXITY_API_KEY!,
+  }),
   model: 'gpt-4o-mini',
+  perplexityModel: process.env.PERPLEXITY_MODEL_SELECTION || 'sonar',
   maxTokens: 2048,
   temperature: 0.7,
 }

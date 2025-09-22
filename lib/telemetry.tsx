@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Component } from 'react';
 
 interface TelemetryEvent {
   event: string
@@ -312,7 +312,7 @@ export class QualityScorer {
 }
 
 // Error boundary for React components
-export class TelemetryErrorBoundary extends React.Component<
+export class TelemetryErrorBoundary extends Component<
   { children: React.ReactNode },
   { hasError: boolean }
 > {

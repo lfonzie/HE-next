@@ -4,13 +4,14 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 import { getSchoolsData } from '@/lib/admin-utils';
+import { withAdminTracing } from '@/lib/admin-telemetry';
 
 export async function GET() {
-  try {
+  return withAdminTracing('admin.schools.get', async () => {
     const schools = await getSchoolsData();
     return NextResponse.json(schools);
-  } catch (error) {
-    console.error('Error fetching schools:', error);
-    return NextResponse.json({ error: 'Failed to fetch schools' }, { status: 500 });
-  }
+  }, {
+    'admin.endpoint': '/api/admin/schools',
+    'admin.method': 'GET',
+  });
 }

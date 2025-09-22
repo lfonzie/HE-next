@@ -117,6 +117,7 @@ export async function classifyIntent(input: { text: string; context?: Record<str
           'BEM_ESTAR': 'bem-estar',
           'SOCIAL_MEDIA': 'social-media',
           'CONTEUDO_MIDIA': 'conteudo_midia',
+          'PESQUISA_TEMPO_REAL': 'pesquisa_tempo_real',
           'ATENDIMENTO': 'atendimento'
         };
 
@@ -171,6 +172,7 @@ export function decideModules(det: DetectedIntent): OrchestratorPolicyDecision {
   const id = det.module
   
   // Política de decisão com ordem de preferência
+  if (id === 'pesquisa_tempo_real' && conf >= 0.7) return { primary: { id: 'pesquisa_tempo_real', slots: det.slots } }
   if (id === 'aula-expandida' && conf >= 0.5) return { primary: { id: 'aula-expandida', slots: det.slots } }
   if (id === 'enem-interativo' && conf >= 0.5) return { primary: { id: 'enem-interativo', slots: det.slots } }
   if (id === 'aula_interativa' && conf >= 0.5) return { primary: { id: 'aula_interativa', slots: det.slots } }

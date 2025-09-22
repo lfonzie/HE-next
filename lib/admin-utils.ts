@@ -25,7 +25,7 @@ export async function getAdminStats() {
       prisma.system_messages.count(),
       prisma.lessons.count(),
       prisma.enemQuestion.count(),
-      prisma.enemSession.count(),
+      prisma.enem_session.count(),
       prisma.analytics.findMany({
         take: 100,
         orderBy: { date: 'desc' },

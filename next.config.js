@@ -206,6 +206,13 @@ const nextConfig = {
     config.externals = config.externals || []
     config.externals.push('canvg')
     
+    // Fix webpack optimization issues that can cause "Cannot read properties of undefined (reading 'call')" error
+    config.optimization = {
+      ...config.optimization,
+      sideEffects: false,
+      concatenateModules: false,
+    }
+    
     return config
   }
 }

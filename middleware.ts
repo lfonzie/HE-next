@@ -51,9 +51,14 @@ export async function middleware(request: NextRequest) {
     '/lessons',
     '/enem-public',
     '/debug-auth',
+    '/perplexity-demo', // Add perplexity demo to public routes
     '/aulas', // Temporarily make aulas public for debugging
     '/enem', // Temporarily make enem public for debugging
-    '/redacao' // Temporarily make redacao public for debugging
+    '/redacao', // Temporarily make redacao public for debugging
+    '/status', // Status dashboard
+    '/status-public', // Public status page
+    '/analytics', // Analytics dashboard
+    '/insights' // SQL insights
   ]
 
   // Check if current route is public

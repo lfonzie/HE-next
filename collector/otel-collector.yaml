@@ -1,0 +1,66 @@
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+      grpc:
+        endpoint: 0.0.0.0:4317
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+  memory_limiter:
+    limit_mib: 512
+  resource:
+    attributes:
+      - key: collector.name
+        value: he-next-collector
+        action: upsert
+      - key: collector.version
+        value: 0.88.0
+        action: upsert
+
+exporters:
+  logging:
+    loglevel: info
+    sampling_initial: 5
+    sampling_thereafter: 200
+
+  # Exporter HTTP -> envia JSON para sua rota Next
+  http/intake:
+    endpoint: ${NEXT_APP_URL}/api/telemetry-intake
+    headers:
+      x-intake-secret: ${INTAKE_SECRET}
+      content-type: application/json
+    timeout: 30s
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 300s
+
+  # (Opcional) Se quiser enviar para vendor externo também
+  # otlphttp/vendor:
+  #   endpoint: https://api.honeycomb.io/v1/traces
+  #   headers:
+  #     x-honeycomb-team: ${HONEYCOMB_API_KEY}
+  #   tls:
+  #     insecure: false
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [logging, http/intake]
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [logging, http/intake]
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [logging, http/intake]
+
+  extensions: []
