@@ -488,18 +488,69 @@ function parseGeminiContent(content) {
     
     // Try to find JSON object
     if (cleanContent.startsWith('{')) {
-      const parsed = JSON.parse(cleanContent);
-      if (parsed.slides && Array.isArray(parsed.slides)) {
-        return { slides: parsed.slides }; // Validação de qualidade desabilitada
+      try {
+        const parsed = JSON.parse(cleanContent);
+        if (parsed.slides && Array.isArray(parsed.slides)) {
+          return { slides: parsed.slides };
+        }
+      } catch (parseError) {
+        log.warn('Failed to parse full JSON, trying to fix common issues', { 
+          error: (parseError as Error).message,
+          contentLength: cleanContent.length 
+        });
+        
+        // Try to fix common JSON issues
+        let fixedContent = cleanContent;
+        
+        // Fix trailing commas
+        fixedContent = fixedContent.replace(/,(\s*[}\]])/g, '$1');
+        
+        // Fix unescaped quotes in strings
+        fixedContent = fixedContent.replace(/"([^"]*)"([^"]*)"([^"]*)":/g, '"$1\\"$2\\"$3":');
+        
+        // Try parsing the fixed content
+        try {
+          const parsed = JSON.parse(fixedContent);
+          if (parsed.slides && Array.isArray(parsed.slides)) {
+            return { slides: parsed.slides };
+          }
+        } catch (secondError) {
+          log.warn('Failed to parse even after fixes', { 
+            error: (secondError as Error).message 
+          });
+        }
       }
     }
 
-    // Try to extract JSON from the content
+    // Try to extract JSON from the content using a more robust approach
     const jsonMatch = cleanContent.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0]);
-      if (parsed.slides && Array.isArray(parsed.slides)) {
-        return { slides: parsed.slides }; // Validação de qualidade desabilitada
+      try {
+        const parsed = JSON.parse(jsonMatch[0]);
+        if (parsed.slides && Array.isArray(parsed.slides)) {
+          return { slides: parsed.slides };
+        }
+      } catch (parseError) {
+        log.warn('Failed to parse extracted JSON', { 
+          error: (parseError as Error).message,
+          jsonLength: jsonMatch[0].length 
+        });
+        
+        // Try to fix the extracted JSON
+        let fixedJson = jsonMatch[0];
+        fixedJson = fixedJson.replace(/,(\s*[}\]])/g, '$1');
+        fixedJson = fixedJson.replace(/"([^"]*)"([^"]*)"([^"]*)":/g, '"$1\\"$2\\"$3":');
+        
+        try {
+          const parsed = JSON.parse(fixedJson);
+          if (parsed.slides && Array.isArray(parsed.slides)) {
+            return { slides: parsed.slides };
+          }
+        } catch (thirdError) {
+          log.warn('Failed to parse even after JSON fixes', { 
+            error: (thirdError as Error).message 
+          });
+        }
       }
     }
 

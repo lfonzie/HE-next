@@ -1,5 +1,5 @@
 import React, { startTransition } from "react";
-import { Spinner, AlertTriangle } from 'lucide-react';
+import { Loader2, AlertTriangle } from 'lucide-react';
 import { useAuth } from "../../hooks/useAuth";
 import { useModuleNavigation } from "../../hooks/useModuleNavigation";
 import { hasModulePermission, getAvailableModules, ALL_MODULES } from "../../utils/modulePermissions";
@@ -54,7 +54,7 @@ export function ModuleSelector({ selectedModule, onSelectModule, isCollapsed = f
     return (
       <div className="flex flex-wrap gap-2 p-4">
         <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-secondary text-secondary-foreground opacity-50">
-          <Spinner className="animate-spin" />
+          <Loader2 className="animate-spin" />
           <span>Carregando módulos...</span>
         </div>
       </div>
