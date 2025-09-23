@@ -1,10 +1,10 @@
 "use client";
 
-import { useAsyncLoader, useLoading } from "@/components/ui/SplashScreen";
+import { useAsyncLoader, useLoading, LoadingProvider } from "@/components/ui/SplashScreen";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-export default function LoadingDemoPage() {
+function LoadingDemoContent() {
   const { withLoading } = useAsyncLoader();
   const { startLoading, stopLoading, updateProgress } = useLoading();
 
@@ -292,5 +292,13 @@ stopLoading();`}
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function LoadingDemoPage() {
+  return (
+    <LoadingProvider>
+      <LoadingDemoContent />
+    </LoadingProvider>
   );
 }

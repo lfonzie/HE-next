@@ -153,10 +153,37 @@ export default function ProgressiveLessonComponent({
         console.warn('Enhanced image search failed, will fallback:', e);
       }
 
-      // 2) Fallback para imagem educacional genérica se a busca melhorada falhar
+      // 2) Fallback para imagem específica do tema se a busca melhorada falhar
       if (!selectedUrl) {
-        selectedUrl = 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1350&h=1080&fit=crop&auto=format';
-        console.log(`⚠️ Usando imagem de fallback educacional`);
+        // Tentar buscar uma imagem mais específica baseada no tema
+        try {
+          const fallbackRes = await fetch('/api/images/smart-search', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              query: skeleton?.theme || query, 
+              subject: skeleton?.subject || 'Geral', 
+              count: 1 
+            })
+          });
+          
+          if (fallbackRes.ok) {
+            const fallbackData = await fallbackRes.json();
+            if (fallbackData.success && fallbackData.images && fallbackData.images.length > 0) {
+              selectedUrl = fallbackData.images[0].url;
+              console.log(`✅ Imagem de fallback específica encontrada:`, selectedUrl);
+            }
+          }
+        } catch (e) {
+          console.warn('Fallback search failed:', e);
+        }
+        
+        // Último recurso: imagem específica do tema em vez de genérica
+        if (!selectedUrl) {
+          const themeWords = (skeleton?.theme || query).toLowerCase().split(' ').slice(0, 2).join(' ');
+          selectedUrl = `https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1350&h=1080&fit=crop&auto=format&q=80&text=${encodeURIComponent(themeWords)}`;
+          console.log(`⚠️ Usando imagem específica do tema: ${themeWords}`);
+        }
       }
 
       // 4) Final fallback

@@ -169,23 +169,29 @@ function generateImageQuery(topic, slideNumber, slideType) {
     .map(word => TRANSLATIONS[word] || word)
     .join(' ');
 
-  const mainKeyword = englishTopic
+  // Extrair palavras-chave mais específicas e relevantes
+  const keywords = englishTopic
     .split(' ')
-    .filter(word => word.length > 2 && !['about', 'for', 'how', 'when', 'where', 'why', 'what', 'a', 'an', 'the', 'of', 'in', 'on', 'at', 'to', 'from'].includes(word))
-    .shift() || englishTopic.split(' ')[0];
+    .filter(word => word.length > 2 && !['about', 'for', 'how', 'when', 'where', 'why', 'what', 'a', 'an', 'the', 'of', 'in', 'on', 'at', 'to', 'from', 'concept', 'introduction', 'summary', 'conclusion'].includes(word));
+
+  // Usar múltiplas palavras-chave para maior especificidade
+  const mainKeywords = keywords.slice(0, 3).join(' ');
 
   let query;
   if (slideNumber === 1) {
-    query = `${mainKeyword} concept introduction`;
+    // Para o primeiro slide, focar no conceito principal sem termos genéricos
+    query = mainKeywords || englishTopic.split(' ')[0];
   } else if (slideNumber === 8) {
-    query = `${mainKeyword} diagram illustration`;
+    // Para slide do meio, adicionar contexto visual específico
+    query = `${mainKeywords} visual diagram`;
   } else if (slideNumber === 14) {
-    query = `${mainKeyword} summary conclusion`;
+    // Para slide final, manter foco no tema
+    query = mainKeywords || englishTopic.split(' ')[0];
   } else {
-    query = mainKeyword;
+    query = mainKeywords || englishTopic.split(' ')[0];
   }
 
-  log.debug('Generated image query', { slideNumber, query });
+  log.debug('Generated image query', { slideNumber, query, originalTopic: topic });
   return query;
 }
 
@@ -197,7 +203,16 @@ function generateImageQuery(topic, slideNumber, slideType) {
  */
 function expandImageQuery(originalQuery, topic) {
   const words = originalQuery.split(' ');
-  return words.length > 2 ? words[0] : `${originalQuery} education`;
+  // Se a query já tem palavras suficientes, manter como está
+  if (words.length > 2) {
+    return originalQuery;
+  }
+  
+  // Adicionar palavras específicas do tópico em vez de termos genéricos
+  const topicWords = topic.toLowerCase().split(' ').filter(word => word.length > 2);
+  const additionalWords = topicWords.slice(0, 2).join(' ');
+  
+  return additionalWords ? `${originalQuery} ${additionalWords}` : originalQuery;
 }
 
 /**
@@ -248,13 +263,9 @@ async function findTopicSpecificImage(topic, imageQuery) {
       }
     }
     
-    // Se não encontrou correspondência específica, usar uma imagem educacional geral de alta qualidade
-    return {
-      url: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1350&h=1080&fit=crop&auto=format',
-      source: 'educational-general',
-      title: 'Imagem educacional geral',
-      description: 'Imagem educacional de alta qualidade'
-    };
+    // Se não encontrou correspondência específica, retornar null em vez de imagem genérica
+    // Isso força o sistema a usar outras APIs de busca específicas
+    return null;
     
   } catch (error) {
     console.error('Erro ao buscar imagem específica do tópico:', error);

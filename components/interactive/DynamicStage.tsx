@@ -233,16 +233,8 @@ export default function DynamicStage({
       case 'QuizComponent':
         // Use the memoized processed questions to prevent re-processing on re-renders
         if (!processedQuizQuestions) {
-          return (
-            <Card className="w-full max-w-2xl mx-auto">
-              <CardContent className="text-center py-8">
-                <div className="text-gray-500">
-                  <p className="text-lg mb-2">Nenhuma questão disponível</p>
-                  <p className="text-sm">Este quiz não possui questões para exibir.</p>
-                </div>
-              </CardContent>
-            </Card>
-          )
+          console.log('QuizComponent: Nenhuma questão processada disponível, retornando null')
+          return null
         }
         
         return (
@@ -304,6 +296,7 @@ export default function DynamicStage({
       case 'MixedQuiz':
         // Verificar se há questões válidas antes de renderizar
         if (!activity.questions || activity.questions.length === 0) {
+          console.log('MixedQuiz: Nenhuma questão válida encontrada, retornando null')
           return null
         }
         return (
@@ -362,6 +355,11 @@ export default function DynamicStage({
         )
 
       default:
+        // Verificar se há conteúdo válido antes de renderizar
+        if (!activity.content || activity.content.trim() === '') {
+          console.log('Default case: Nenhum conteúdo válido encontrado, retornando null')
+          return null
+        }
         return (
           <Card className="w-full max-w-2xl mx-auto">
             <CardContent className="p-6">
@@ -458,9 +456,11 @@ export default function DynamicStage({
       )}
 
       {/* Activity Content */}
-      <div className="mb-6">
-        {renderActivity()}
-      </div>
+      {renderActivity() && (
+        <div className="mb-6">
+          {renderActivity()}
+        </div>
+      )}
 
       {/* Stage Info - apenas informações, sem botões de navegação */}
       <Card>

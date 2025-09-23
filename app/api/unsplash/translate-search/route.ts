@@ -111,34 +111,37 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      // Último fallback: imagens educacionais genéricas
-      let educationResults;
+      // Último fallback: imagens específicas do tema em vez de genéricas
+      let specificResults;
       try {
-        educationResults = await unsplashService.getEducationPhotos(1, count);
+        // Tentar buscar imagens específicas do tema em vez de genéricas
+        const specificQuery = themeInfo.theme || query;
+        specificResults = await unsplashService.searchPhotos(specificQuery, 1, count);
       } catch (error) {
-        console.error('❌ Erro na busca educacional:', error);
+        console.error('❌ Erro na busca específica:', error);
         return getFallbackResponse(query, count);
       }
       
-      return NextResponse.json({
-        success: true,
-        photos: educationResults.results.map(photo => ({
-          id: photo.id,
-          urls: photo.urls,
-          alt_description: photo.alt_description,
-          description: photo.description,
-          user: photo.user,
-          width: photo.width,
-          height: photo.height,
-          color: photo.color,
-          likes: photo.likes
-        })),
-        query: '',
-        theme: themeInfo.theme || query,
-        englishTheme: '',
-        fallback: true,
-        generic: true
-      });
+      if (specificResults.results && specificResults.results.length > 0) {
+        return NextResponse.json({
+          success: true,
+          photos: specificResults.results.map(photo => ({
+            id: photo.id,
+            urls: photo.urls,
+            alt_description: photo.alt_description,
+            description: photo.description,
+            user: photo.user,
+            width: photo.width,
+            height: photo.height,
+            color: photo.color,
+            likes: photo.likes
+          })),
+          query: themeInfo.theme || query,
+          theme: themeInfo.theme || query,
+          englishTheme: themeInfo.theme || query,
+          fallback: true
+        });
+      }
     }
 
     // 4. Selecionar a melhor imagem

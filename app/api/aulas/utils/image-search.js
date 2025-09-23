@@ -166,13 +166,9 @@ async function findTopicSpecificImage(topic, imageQuery) {
       }
     }
     
-    // Se não encontrou correspondência específica, usar uma imagem educacional geral de alta qualidade
-    return {
-      url: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1350&h=1080&fit=crop&auto=format',
-      source: 'educational-general',
-      title: 'Imagem educacional geral',
-      description: 'Imagem educacional de alta qualidade'
-    };
+    // Se não encontrou correspondência específica, retornar null em vez de imagem genérica
+    // Isso força o sistema a usar outras APIs de busca específicas
+    return null;
     
   } catch (error) {
     console.error('Erro ao buscar imagem específica do tópico:', error);

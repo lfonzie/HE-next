@@ -2,6 +2,54 @@ import { openai } from '@ai-sdk/openai';
 import { generateObject } from 'ai';
 import { z } from 'zod';
 
+// Verificar se a API Key está disponível
+const isOpenAIAvailable = () => {
+  return process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY.trim() !== '';
+};
+
+/**
+ * Validação local sem uso de IA (fallback)
+ */
+function validateQuizLocally(
+  questions: Question[],
+  userAnswers: Record<string, UserAnswer>
+): QuizValidationResult {
+  const unansweredQuestions: number[] = [];
+  const incompleteAnswers: Array<{ questionIndex: number; reason: string }> = [];
+  
+  questions.forEach((question, index) => {
+    const answer = userAnswers[question.id];
+    
+    if (!answer) {
+      unansweredQuestions.push(index);
+    } else if (question.type === 'open-ended' && answer.answer.toString().length < 10) {
+      incompleteAnswers.push({
+        questionIndex: index,
+        reason: 'Resposta muito curta para questão aberta'
+      });
+    } else if (question.type === 'multiple-choice') {
+      const answerValue = answer.answer;
+      if (typeof answerValue === 'number' && (answerValue < 0 || answerValue >= (question.options?.length || 4))) {
+        incompleteAnswers.push({
+          questionIndex: index,
+          reason: 'Resposta de múltipla escolha inválida'
+        });
+      }
+    }
+  });
+
+  return {
+    allQuestionsAnswered: unansweredQuestions.length === 0,
+    unansweredQuestions,
+    incompleteAnswers,
+    canProceed: unansweredQuestions.length === 0 && incompleteAnswers.length === 0,
+    recommendations: [
+      ...(unansweredQuestions.length > 0 ? ['Responda todas as questões obrigatórias'] : []),
+      ...(incompleteAnswers.length > 0 ? ['Forneça respostas mais detalhadas e válidas'] : [])
+    ]
+  };
+}
+
 export interface ValidatedQuizQuestion {
   q: string;
   options: string[];
@@ -88,6 +136,12 @@ export async function validateQuizCompletion(
     timeLimit?: number;
   }
 ): Promise<QuizValidationResult> {
+  // Se a API Key não estiver disponível, usar validação local
+  if (!isOpenAIAvailable()) {
+    console.warn('OpenAI API Key não disponível, usando validação local');
+    return validateQuizLocally(questions, userAnswers);
+  }
+
   try {
     // Preparar dados para análise
     const questionsData = questions.map((q, index) => ({
@@ -216,23 +270,36 @@ Responda em formato JSON:
   "suggestions": ["string"]
 }`;
 
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: 'Você é um tutor educacional especializado em avaliação de respostas. Seja construtivo e específico.' },
-        { role: 'user', content: prompt }
-      ],
-      temperature: 0.3,
-      max_tokens: 300,
+    // Usar uma abordagem mais simples para evitar problemas de configuração
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: 'Você é um tutor educacional especializado em avaliação de respostas. Seja construtivo e específico.' },
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.3,
+        max_tokens: 300,
+      }),
     });
 
-    const response = completion.choices[0]?.message?.content;
-    if (!response) {
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const completion = data.choices[0]?.message?.content;
+    if (!completion) {
       throw new Error('Resposta vazia da OpenAI');
     }
 
     // Limpar possível formatação markdown
-    let cleanedResponse = response.trim();
+    let cleanedResponse = completion.trim();
     if (cleanedResponse.startsWith('```json')) {
       cleanedResponse = cleanedResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '');
     }

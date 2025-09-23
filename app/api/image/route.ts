@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
     }
 
     try {
-      // Search for educational images on Unsplash
+      // Search for specific images on Unsplash
       const searchResult = await unsplashService.searchPhotos(cleanPrompt, 1, 1);
       
       if (searchResult.results && searchResult.results.length > 0) {
@@ -50,11 +50,11 @@ export async function GET(request: NextRequest) {
         // Return the image URL directly
         return NextResponse.redirect(image.urls.regular);
       } else {
-        // Fallback to education photos if no specific results
-        const educationResult = await unsplashService.getEducationPhotos(1, 1);
+        // Fallback to science/nature photos instead of generic education photos
+        const scienceResult = await unsplashService.searchPhotos('science nature', 1, 1);
         
-        if (educationResult.results && educationResult.results.length > 0) {
-          const image = educationResult.results[0];
+        if (scienceResult.results && scienceResult.results.length > 0) {
+          const image = scienceResult.results[0];
           return NextResponse.redirect(image.urls.regular);
         }
       }

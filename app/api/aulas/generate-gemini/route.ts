@@ -197,13 +197,13 @@ function generateEducationalImageQuery(topic, slideNumber, slideType, slideConte
     .filter(word => word.length > 3 && !['para', 'com', 'que', 'uma', 'dos', 'das', 'pelo', 'pela', 'sobre', 'como', 'quando', 'onde', 'porque'].includes(word))
     .slice(0, 3);
 
-  // Construir query educacional em PT-BR
+  // Construir query educacional em PT-BR - REMOVIDO termos genéricos
   const baseQuery = cleanTopic;
   const contextKeywords = educationalKeywords[context] || educationalKeywords.content;
   const selectedContextKeyword = contextKeywords[Math.floor(Math.random() * contextKeywords.length)];
   
-  // Combinar tópico, contexto educacional e palavras do conteúdo
-  const educationalQuery = `${baseQuery} ${selectedContextKeyword} ${contentKeywords.join(' ')} educação aprendizado`.trim();
+  // Combinar tópico, contexto educacional e palavras do conteúdo - SEM termos genéricos
+  const educationalQuery = `${baseQuery} ${selectedContextKeyword} ${contentKeywords.join(' ')}`.trim();
   
   log.debug('Generated educational image query', { 
     slideNumber, 

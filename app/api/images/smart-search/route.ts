@@ -74,7 +74,7 @@ const EDUCATIONAL_KEYWORDS = {
 function optimizeQueryForEducation(query: string, subject?: string): string {
   const cleanQuery = query.toLowerCase().trim();
   
-  // Se já contém palavras educacionais, manter como está
+  // Se já contém palavras educacionais específicas, manter como está
   const hasEducationalTerms = Object.values(EDUCATIONAL_KEYWORDS).some(keywords => 
     keywords.some(keyword => cleanQuery.includes(keyword))
   );
@@ -83,22 +83,24 @@ function optimizeQueryForEducation(query: string, subject?: string): string {
     return query;
   }
   
-  // Adicionar contexto educacional baseado no assunto
-  let educationalContext = '';
+  // Adicionar contexto específico baseado no assunto, evitando termos genéricos
+  let specificContext = '';
   if (subject) {
     const subjectKey = subject.toLowerCase().replace(/[^a-z]/g, '');
     if (EDUCATIONAL_KEYWORDS[subjectKey as keyof typeof EDUCATIONAL_KEYWORDS]) {
       const keywords = EDUCATIONAL_KEYWORDS[subjectKey as keyof typeof EDUCATIONAL_KEYWORDS];
-      educationalContext = ` ${keywords[0]} ${keywords[1]}`;
+      // Usar apenas o primeiro termo específico, não genérico
+      specificContext = ` ${keywords[0]}`;
     }
   }
   
-  // Adicionar termos educacionais gerais se não especificado
-  if (!educationalContext) {
-    educationalContext = ' education learning';
+  // Se não há contexto específico, retornar a query original sem adicionar termos genéricos
+  // Isso evita imagens genéricas sobre educação
+  if (!specificContext) {
+    return query;
   }
   
-  return `${query}${educationalContext}`.trim();
+  return `${query}${specificContext}`.trim();
 }
 
 // Função para calcular score de relevância educacional
@@ -107,20 +109,48 @@ function calculateEducationalScore(image: any, query: string, subject?: string):
   
   // Score baseado no título e descrição
   const text = `${image.title || ''} ${image.description || ''}`.toLowerCase();
-  const queryWords = query.toLowerCase().split(' ');
+  const queryWords = query.toLowerCase().split(' ').filter(word => word.length > 2);
   
-  // Contar palavras-chave da query presentes
-  const matchingWords = queryWords.filter(word => 
-    word.length > 2 && text.includes(word)
-  );
-  score += matchingWords.length * 10;
+  // Priorizar correspondências exatas com as palavras da query
+  queryWords.forEach(word => {
+    if (text.includes(word)) {
+      score += 20; // Score alto para correspondências exatas
+    }
+  });
   
-  // Bonus para termos educacionais
-  const educationalTerms = Object.values(EDUCATIONAL_KEYWORDS).flat();
-  const educationalMatches = educationalTerms.filter(term => 
-    text.includes(term.toLowerCase())
-  );
-  score += educationalMatches.length * 5;
+  // Penalizar termos genéricos de educação que não são específicos do tema
+  const genericTerms = ['education', 'learning', 'study', 'academic', 'school', 'university', 'teaching'];
+  const hasGenericTerms = genericTerms.some(term => text.includes(term));
+  const hasSpecificTerms = queryWords.some(word => text.includes(word));
+  
+  // Se tem termos genéricos mas não específicos, reduzir score
+  if (hasGenericTerms && !hasSpecificTerms) {
+    score -= 15;
+  }
+  
+  // Bonus para termos específicos do assunto
+  if (subject) {
+    const subjectKey = subject.toLowerCase().replace(/[^a-z]/g, '');
+    if (EDUCATIONAL_KEYWORDS[subjectKey as keyof typeof EDUCATIONAL_KEYWORDS]) {
+      const keywords = EDUCATIONAL_KEYWORDS[subjectKey as keyof typeof EDUCATIONAL_KEYWORDS];
+      keywords.forEach(keyword => {
+        if (text.includes(keyword)) {
+          score += 10;
+        }
+      });
+    }
+  }
+  
+  // Bonus para tags relevantes
+  if (image.tags) {
+    const tags = Array.isArray(image.tags) ? image.tags : image.tags.split(', ');
+    tags.forEach((tag: string) => {
+      const tagLower = tag.toLowerCase();
+      if (queryWords.some(word => tagLower.includes(word))) {
+        score += 5;
+      }
+    });
+  }
   
   // Bonus para qualidade da imagem
   if (image.width && image.height) {
@@ -136,7 +166,7 @@ function calculateEducationalScore(image: any, query: string, subject?: string):
   if (image.source === 'unsplash') score += 8;
   if (image.source === 'pixabay') score += 6;
   
-  return Math.min(score, 100); // Cap em 100
+  return Math.max(0, Math.min(100, score)); // Cap em 100
 }
 
 // Buscar no Unsplash
