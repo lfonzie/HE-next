@@ -67,7 +67,8 @@ REGRAS CRÍTICAS:
 - Responda APENAS com JSON válido, sem texto adicional, markdown ou formatação
 - Cada slide deve ter conteúdo educativo direto e objetivo
 - Use linguagem clara e didática em português brasileiro
-- Use \n para quebras de linha entre parágrafos (formato markdown)
+- OBRIGATÓRIO: Use \n para quebras de linha entre parágrafos (formato markdown)
+- OBRIGATÓRIO: Cada parágrafo deve ser separado por \n para melhor legibilidade
 - CADA SLIDE DEVE TER MÍNIMO 500 TOKENS DE CONTEÚDO
 - Para imageQuery, use termos específicos do tema traduzidos para inglês
 

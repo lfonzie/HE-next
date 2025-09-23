@@ -1,254 +1,289 @@
-// lib/quiz-validation.ts - Validação e correção de questões de quiz
-
-export interface QuizQuestion {
-  q?: string;
-  question?: string;
-  options: string[] | Record<string, string>;
-  correct: number | string;
-  explanation?: string;
-}
+import { openai } from '@ai-sdk/openai';
+import { generateObject } from 'ai';
+import { z } from 'zod';
 
 export interface ValidatedQuizQuestion {
   q: string;
   options: string[];
-  correct: string; // Sempre 'A', 'B', 'C', ou 'D'
+  correct: number;
   explanation: string;
-  isValid: boolean;
-  errors: string[];
 }
 
-export function validateAndFixQuizQuestion(question: QuizQuestion): ValidatedQuizQuestion {
-  console.log('🔍 DEBUG validateAndFixQuizQuestion - Input question:', question);
-  
-  const errors: string[] = [];
-  let fixedQuestion: ValidatedQuizQuestion = {
-    q: '',
-    options: [],
-    correct: 'A',
-    explanation: '',
-    isValid: false,
-    errors: []
-  };
-
-  // 1. Validar e corrigir pergunta
-  const questionText = question.q || question.question || '';
-  if (!questionText || questionText.trim().length === 0) {
-    errors.push('Pergunta está em branco');
-    fixedQuestion.q = 'Pergunta não disponível - erro na geração';
-  } else if (questionText.trim().length < 10) {
-    errors.push('Pergunta muito curta');
-    fixedQuestion.q = questionText.trim();
-  } else {
-    fixedQuestion.q = questionText.trim();
-  }
-
-  // 2. Validar e corrigir opções
-  let options: string[] = [];
-  
-  if (Array.isArray(question.options)) {
-    // Formato: ["A) Opção A", "B) Opção B", ...]
-    options = question.options.map(opt => {
-      if (typeof opt === 'string') {
-        // Remover prefixos A), B), C), D) se existirem
-        return opt.replace(/^[A-D]\)\s*/, '').trim();
-      }
-      return String(opt).trim();
-    });
-  } else if (typeof question.options === 'object' && question.options !== null) {
-    // Formato: { "a": "Opção A", "b": "Opção B", ... }
-    const optionKeys = Object.keys(question.options).sort();
-    options = optionKeys.map(key => String(question.options[key]).trim());
-  }
-
-  // Garantir que temos exatamente 4 opções
-  if (options.length < 4) {
-    errors.push(`Apenas ${options.length} opções encontradas, necessário 4`);
-    // Adicionar opções padrão se necessário
-    while (options.length < 4) {
-      options.push(`Opção ${String.fromCharCode(65 + options.length)}`);
-    }
-  } else if (options.length > 4) {
-    errors.push(`${options.length} opções encontradas, limitando a 4`);
-    options = options.slice(0, 4);
-  }
-
-  // Garantir que todas as opções tenham conteúdo
-  options = options.map((opt, index) => {
-    if (!opt || opt.trim().length === 0) {
-      errors.push(`Opção ${String.fromCharCode(65 + index)} está vazia`);
-      return `Opção ${String.fromCharCode(65 + index)}`;
-    }
-    return opt.trim();
-  });
-
-  fixedQuestion.options = options;
-
-  // 3. Validar e corrigir resposta correta
-  let correctAnswer = question.correct;
-  
-  if (typeof correctAnswer === 'number') {
-    // Converter índice numérico para letra
-    if (correctAnswer >= 0 && correctAnswer < 4) {
-      fixedQuestion.correct = String.fromCharCode(65 + correctAnswer); // A, B, C, D
-    } else {
-      errors.push(`Índice de resposta inválido: ${correctAnswer}`);
-      fixedQuestion.correct = 'A';
-    }
-  } else if (typeof correctAnswer === 'string') {
-    const normalizedAnswer = correctAnswer.toLowerCase().trim();
-    if (['a', 'b', 'c', 'd'].includes(normalizedAnswer)) {
-      fixedQuestion.correct = normalizedAnswer.toUpperCase();
-    } else if (['0', '1', '2', '3'].includes(normalizedAnswer)) {
-      fixedQuestion.correct = String.fromCharCode(65 + parseInt(normalizedAnswer));
-    } else {
-      errors.push(`Resposta correta inválida: ${correctAnswer}`);
-      fixedQuestion.correct = 'A';
-    }
-  } else {
-    errors.push('Resposta correta não especificada');
-    fixedQuestion.correct = 'A';
-  }
-
-  // 4. Validar explicação
-  const explanation = question.explanation || '';
-  if (!explanation || explanation.trim().length === 0) {
-    errors.push('Explicação está em branco');
-    fixedQuestion.explanation = 'Explicação não disponível';
-  } else if (explanation.trim().length < 20) {
-    errors.push('Explicação muito curta');
-    fixedQuestion.explanation = explanation.trim();
-  } else {
-    fixedQuestion.explanation = explanation.trim();
-  }
-
-  // 5. Determinar se a questão é válida
-  fixedQuestion.isValid = errors.length === 0;
-  fixedQuestion.errors = errors;
-
-  return fixedQuestion;
-}
-
-export function validateQuizQuestions(questions: QuizQuestion[]): ValidatedQuizQuestion[] {
-  return questions.map((question, index) => {
-    const validated = validateAndFixQuizQuestion(question);
-    
-    if (!validated.isValid) {
-      console.warn(`⚠️ Questão ${index + 1} tem problemas:`, validated.errors);
-    }
-    
-    return validated;
-  });
-}
-
-export function generateFallbackQuizQuestion(topic: string): ValidatedQuizQuestion {
-  return {
-    q: `Qual é a característica principal relacionada a ${topic}?`,
-    options: [
-      'Característica fundamental',
-      'Aplicação prática',
-      'Exemplo específico',
-      'Definição técnica'
-    ],
-    correct: 'A',
-    explanation: `A característica principal de ${topic} é fundamental para compreender o conceito básico. As outras opções são importantes, mas não representam a característica principal.`,
-    isValid: true,
-    errors: []
-  };
-}
-
+/**
+ * Ensures quiz questions are in the correct format
+ */
 export function ensureQuizFormat(questions: any[]): ValidatedQuizQuestion[] {
-  console.log('🔍 DEBUG ensureQuizFormat - Input questions:', questions);
-  
-  if (!Array.isArray(questions) || questions.length === 0) {
-    console.warn('⚠️ Nenhuma questão encontrada, gerando questão de fallback');
-    return [generateFallbackQuizQuestion('o tópico')];
+  if (!Array.isArray(questions)) {
+    return [];
   }
 
-  const validatedQuestions = validateQuizQuestions(questions);
-  console.log('🔍 DEBUG ensureQuizFormat - Validated questions:', validatedQuestions);
-  
-  // Se todas as questões são inválidas, gerar uma questão de fallback
-  if (validatedQuestions.every(q => !q.isValid)) {
-    console.warn('⚠️ Todas as questões são inválidas, gerando questão de fallback');
-    return [generateFallbackQuizQuestion('o tópico')];
-  }
+  return questions.map((question, index) => {
+    // Ensure all required fields exist
+    const validatedQuestion: ValidatedQuizQuestion = {
+      q: question.q || question.question || `Pergunta ${index + 1}`,
+      options: Array.isArray(question.options) ? question.options : [
+        'Opção A',
+        'Opção B', 
+        'Opção C',
+        'Opção D'
+      ],
+      correct: typeof question.correct === 'number' && question.correct >= 0 && question.correct <= 3 
+        ? question.correct 
+        : 0,
+      explanation: question.explanation || 'Explicação não disponível'
+    };
 
-  // Randomizar as alternativas de cada questão válida
-  const randomizedQuestions = validatedQuestions.map(question => {
-    if (!question.isValid) return question;
-    
-    return randomizeQuizQuestion(question);
+    // Ensure options array has exactly 4 items
+    if (validatedQuestion.options.length !== 4) {
+      validatedQuestion.options = [
+        'Opção A',
+        'Opção B',
+        'Opção C', 
+        'Opção D'
+      ];
+    }
+
+    return validatedQuestion;
   });
+}
 
-  console.log('🔍 DEBUG ensureQuizFormat - Final randomized questions:', randomizedQuestions);
-  return randomizedQuestions;
+// Schema para validação de respostas do quiz
+const QuizValidationSchema = z.object({
+  allQuestionsAnswered: z.boolean().describe('Se todas as questões foram respondidas'),
+  unansweredQuestions: z.array(z.number()).describe('Índices das questões não respondidas'),
+  incompleteAnswers: z.array(z.object({
+    questionIndex: z.number(),
+    reason: z.string()
+  })).describe('Questões com respostas incompletas ou inadequadas'),
+  canProceed: z.boolean().describe('Se o usuário pode prosseguir para o próximo slide'),
+  recommendations: z.array(z.string()).describe('Recomendações para melhorar as respostas')
+});
+
+export type QuizValidationResult = z.infer<typeof QuizValidationSchema>;
+
+interface Question {
+  id: string;
+  question: string;
+  type: 'multiple-choice' | 'open-ended' | 'true-false';
+  options?: string[];
+  correctAnswer?: string | number;
+  required?: boolean;
+}
+
+interface UserAnswer {
+  questionId: string;
+  answer: string | number;
+  timestamp: number;
 }
 
 /**
- * Randomizes the order of quiz question options while maintaining the correct answer
- * @param question - The original quiz question
- * @returns A new question with randomized options and updated correct answer index
+ * Valida se todas as questões do quiz foram respondidas adequadamente usando AI SDK
  */
-function randomizeQuizQuestion(question: ValidatedQuizQuestion): ValidatedQuizQuestion {
-  console.log('🔍 DEBUG randomizeQuizQuestion - Input question:', question);
-  
-  // Create a copy of the options array
-  const options = [...question.options];
-  
-  // Find the original correct answer index
-  let originalCorrectIndex: number;
-  if (typeof question.correct === 'string') {
-    const normalizedCorrect = question.correct.toLowerCase();
-    if (normalizedCorrect === 'a') originalCorrectIndex = 0;
-    else if (normalizedCorrect === 'b') originalCorrectIndex = 1;
-    else if (normalizedCorrect === 'c') originalCorrectIndex = 2;
-    else if (normalizedCorrect === 'd') originalCorrectIndex = 3;
-    else originalCorrectIndex = normalizedCorrect.charCodeAt(0) - 97;
-  } else {
-    originalCorrectIndex = parseInt(question.correct.toString());
+export async function validateQuizCompletion(
+  questions: Question[],
+  userAnswers: Record<string, UserAnswer>,
+  context?: {
+    subject?: string;
+    difficulty?: string;
+    timeLimit?: number;
   }
-  
-  console.log('🔍 DEBUG randomizeQuizQuestion - Original correct index:', originalCorrectIndex);
-  
-  // Store the correct answer text
-  const correctAnswerText = options[originalCorrectIndex];
-  
-  // Create array of indices and shuffle them
-  const indices = [0, 1, 2, 3];
-  const shuffledIndices = shuffleArray(indices);
-  
-  // Create new options array with shuffled order
-  const shuffledOptions = shuffledIndices.map(index => options[index]);
-  
-  // Find the new index of the correct answer
-  const newCorrectIndex = shuffledOptions.findIndex(option => option === correctAnswerText);
-  
-  const result = {
-    ...question,
-    options: shuffledOptions,
-    correct: String.fromCharCode(65 + newCorrectIndex), // Convert back to letter (A, B, C, D)
-    isValid: true,
-    errors: []
+): Promise<QuizValidationResult> {
+  try {
+    // Preparar dados para análise
+    const questionsData = questions.map((q, index) => ({
+      index,
+      id: q.id,
+      question: q.question,
+      type: q.type,
+      required: q.required !== false, // Padrão é obrigatório
+      hasAnswer: !!userAnswers[q.id],
+      answer: userAnswers[q.id]?.answer || null,
+      answerLength: userAnswers[q.id]?.answer?.toString().length || 0
+    }));
+
+    const prompt = `Analise as respostas do quiz educacional e determine se o usuário pode prosseguir.
+
+CONTEXTO:
+- Disciplina: ${context?.subject || 'Não especificada'}
+- Dificuldade: ${context?.difficulty || 'Média'}
+- Limite de tempo: ${context?.timeLimit ? `${context.timeLimit} minutos` : 'Não especificado'}
+
+QUESTÕES E RESPOSTAS:
+${questionsData.map(q => `
+Questão ${q.index + 1} (${q.type}):
+"${q.question}"
+Obrigatória: ${q.required ? 'Sim' : 'Não'}
+Resposta fornecida: ${q.hasAnswer ? `"${q.answer}"` : 'Não respondida'}
+Tamanho da resposta: ${q.answerLength} caracteres
+`).join('\n')}
+
+CRITÉRIOS DE VALIDAÇÃO:
+1. Todas as questões obrigatórias devem ter respostas
+2. Respostas de múltipla escolha devem ser válidas (índice numérico)
+3. Respostas abertas devem ter pelo menos 10 caracteres
+4. Respostas verdadeiro/falso devem ser "true" ou "false"
+5. Respostas muito curtas ou genéricas podem ser consideradas inadequadas
+
+INSTRUÇÕES:
+- Se alguma questão obrigatória não foi respondida, canProceed deve ser false
+- Se respostas são muito curtas ou inadequadas, marque como incompleteAnswers
+- Forneça recomendações específicas para melhorar as respostas
+- Seja rigoroso mas justo na avaliação`;
+
+    const result = await generateObject({
+      model: openai('gpt-4o-mini'),
+      schema: QuizValidationSchema,
+      prompt,
+      temperature: 0.1, // Baixa temperatura para consistência
+    });
+
+    return result.object;
+  } catch (error) {
+    console.error('Erro na validação do quiz:', error);
+    
+    // Fallback: validação simples sem AI
+    const unansweredQuestions: number[] = [];
+    const incompleteAnswers: Array<{ questionIndex: number; reason: string }> = [];
+    
+    questions.forEach((question, index) => {
+      const answer = userAnswers[question.id];
+      
+      if (!answer) {
+        unansweredQuestions.push(index);
+      } else if (question.type === 'open-ended' && answer.answer.toString().length < 10) {
+        incompleteAnswers.push({
+          questionIndex: index,
+          reason: 'Resposta muito curta para questão aberta'
+        });
+      }
+    });
+
+    return {
+      allQuestionsAnswered: unansweredQuestions.length === 0,
+      unansweredQuestions,
+      incompleteAnswers,
+      canProceed: unansweredQuestions.length === 0 && incompleteAnswers.length === 0,
+      recommendations: [
+        'Responda todas as questões obrigatórias',
+        'Forneça respostas mais detalhadas para questões abertas'
+      ]
+    };
+  }
+}
+
+/**
+ * Valida uma resposta específica usando AI SDK
+ */
+export async function validateSingleAnswer(
+  question: Question,
+  answer: string | number,
+  context?: {
+    subject?: string;
+    expectedLength?: number;
+  }
+): Promise<{
+  isValid: boolean;
+  isComplete: boolean;
+  feedback: string;
+  suggestions: string[];
+}> {
+  try {
+    const prompt = `Analise a resposta fornecida para a questão educacional:
+
+QUESTÃO:
+"${question.question}"
+Tipo: ${question.type}
+${question.options ? `Opções: ${question.options.join(', ')}` : ''}
+
+RESPOSTA FORNECIDA:
+"${answer}"
+
+CONTEXTO:
+- Disciplina: ${context?.subject || 'Não especificada'}
+- Comprimento esperado: ${context?.expectedLength || 'Adequado ao tipo de questão'}
+
+AVALIE:
+1. Se a resposta é válida para o tipo de questão
+2. Se a resposta está completa e adequada
+3. Forneça feedback construtivo
+4. Sugira melhorias se necessário
+
+Responda em formato JSON:
+{
+  "isValid": boolean,
+  "isComplete": boolean,
+  "feedback": "string",
+  "suggestions": ["string"]
+}`;
+
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: 'Você é um tutor educacional especializado em avaliação de respostas. Seja construtivo e específico.' },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.3,
+      max_tokens: 300,
+    });
+
+    const response = completion.choices[0]?.message?.content;
+    if (!response) {
+      throw new Error('Resposta vazia da OpenAI');
+    }
+
+    // Limpar possível formatação markdown
+    let cleanedResponse = response.trim();
+    if (cleanedResponse.startsWith('```json')) {
+      cleanedResponse = cleanedResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    }
+
+    return JSON.parse(cleanedResponse);
+  } catch (error) {
+    console.error('Erro na validação da resposta:', error);
+    
+    // Fallback: validação simples
+    const isValid = question.type === 'open-ended' ? 
+      answer.toString().length >= 5 : 
+      answer !== null && answer !== undefined;
+    
+    return {
+      isValid,
+      isComplete: answer.toString().length >= 10,
+      feedback: isValid ? 'Resposta válida' : 'Resposta inválida ou muito curta',
+      suggestions: isValid ? [] : ['Forneça uma resposta mais detalhada']
+    };
+  }
+}
+
+/**
+ * Hook para usar a validação de quiz em componentes React
+ */
+export function useQuizValidation() {
+  const validateQuiz = async (
+    questions: Question[],
+    userAnswers: Record<string, UserAnswer>,
+    context?: {
+      subject?: string;
+      difficulty?: string;
+      timeLimit?: number;
+    }
+  ) => {
+    return await validateQuizCompletion(questions, userAnswers, context);
   };
-  
-  console.log('🔍 DEBUG randomizeQuizQuestion - Result:', result);
-  return result;
-}
 
-/**
- * Shuffles an array using Fisher-Yates algorithm
- * @param array - Array to shuffle
- * @returns New shuffled array
- */
-function shuffleArray<T>(array: T[]): T[] {
-  console.log('🔍 DEBUG shuffleArray - Input array:', array);
-  
-  const shuffled = [...array];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  
-  console.log('🔍 DEBUG shuffleArray - Output array:', shuffled);
-  return shuffled;
+  const validateAnswer = async (
+    question: Question,
+    answer: string | number,
+    context?: {
+      subject?: string;
+      expectedLength?: number;
+    }
+  ) => {
+    return await validateSingleAnswer(question, answer, context);
+  };
+
+  return {
+    validateQuiz,
+    validateAnswer
+  };
 }

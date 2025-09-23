@@ -26,7 +26,7 @@ interface ModuleWelcomeProps {
 
 const moduleWelcomeData = {
   PROFESSOR: {
-    title: "Professor Particular Digital",
+    title: "Estudos Personalizados",
     subtitle: "Seu assistente de estudos personalizado",
     description: "Aqui você pode tirar dúvidas, criar aulas interativas e receber explicações detalhadas sobre qualquer matéria.",
     icon: BookOpen,

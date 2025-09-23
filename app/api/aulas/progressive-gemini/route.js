@@ -163,7 +163,8 @@ REGRAS CRÍTICAS:
 - Responda APENAS com JSON válido, sem texto adicional, markdown ou formatação
 - Cada slide deve ter conteúdo educativo direto e objetivo
 - Use linguagem clara e didática em português brasileiro
-- Use \n para quebras de linha entre parágrafos (formato markdown)
+- OBRIGATÓRIO: Use \n para quebras de linha entre parágrafos (formato markdown)
+- OBRIGATÓRIO: Cada parágrafo deve ser separado por \n para melhor legibilidade
 - CADA SLIDE DEVE TER MÍNIMO 500 TOKENS DE CONTEÚDO
 - Para imageQuery, use termos específicos do tema traduzidos para inglês
 
@@ -177,7 +178,7 @@ FORMATO JSON OBRIGATÓRIO:
     {
       "number": 1,
       "title": "Abertura: Tema e Objetivos",
-      "content": "Conteúdo educativo detalhado com quebras de linha usando \n para parágrafos\n\nExemplo de segundo parágrafo com mais informações detalhadas.\n\nTerceiro parágrafo com exemplos práticos e aplicações reais.",
+      "content": "Conteúdo educativo detalhado com quebras de linha usando \n para parágrafos\n\nExemplo de segundo parágrafo com mais informações detalhadas.\n\nTerceiro parágrafo com exemplos práticos e aplicações reais.\n\nCada seção deve ser claramente separada para facilitar a compreensão.",
       "type": "content",
       "imageQuery": "electricity current introduction concept",
       "tokenEstimate": 500

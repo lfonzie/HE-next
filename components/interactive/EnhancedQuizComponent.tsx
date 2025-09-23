@@ -5,9 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
-import { CheckCircle, XCircle, Clock, Trophy, Star, RotateCcw, ArrowRight, ArrowLeft } from 'lucide-react'
+import { CheckCircle, XCircle, Clock, Trophy, Star, RotateCcw, ArrowRight, ArrowLeft, AlertCircle } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import MarkdownRenderer from '@/components/ui/MarkdownRenderer'
+import { useQuizValidation, type QuizValidationResult } from '@/lib/quiz-validation'
 
 interface QuizQuestion {
   id?: string
@@ -89,6 +90,12 @@ export default function EnhancedQuizComponent({
   const [questionStartTime, setQuestionStartTime] = useState(Date.now())
   const [showHint, setShowHint] = useState(false)
   const [quizResults, setQuizResults] = useState<QuizResult[]>([])
+  const [isAnswerConfirmed, setIsAnswerConfirmed] = useState(false)
+  
+  // AI Validation state
+  const [validationResult, setValidationResult] = useState<QuizValidationResult | null>(null)
+  const [isValidating, setIsValidating] = useState(false)
+  const { validateQuiz } = useQuizValidation()
 
   // Get current question
   const currentQuestion = questions[currentQuestionIndex]
@@ -169,13 +176,25 @@ export default function EnhancedQuizComponent({
     console.log('🔍 DEBUG EnhancedQuizComponent - currentQuestion:', currentQuestion)
     
     setSelectedAnswer(answer)
-    setShowResult(true)
+    // Don't show result immediately - wait for confirmation
+    setShowResult(false)
+    setIsAnswerConfirmed(false)
     
     // Update answers array
     const newAnswers = [...answers]
     newAnswers[currentQuestionIndex] = answer
     setAnswers(newAnswers)
+  }, [isCompleted, currentQuestionIndex, answers])
 
+  // Handle answer confirmation
+  const handleConfirmAnswer = useCallback(() => {
+    if (!selectedAnswer) return
+    
+    console.log('🔍 DEBUG EnhancedQuizComponent - handleConfirmAnswer called')
+    
+    setShowResult(true)
+    setIsAnswerConfirmed(true)
+    
     // Calculate time spent on this question
     const timeSpent = Math.round((Date.now() - questionStartTime) / 1000)
     
@@ -183,11 +202,11 @@ export default function EnhancedQuizComponent({
     const result: QuizResult = {
       questionIndex: currentQuestionIndex,
       question: currentQuestion,
-      selectedAnswer: answer,
+      selectedAnswer: selectedAnswer,
       correctAnswer: currentQuestion.correctAnswer,
-      isCorrect: answer === currentQuestion.correctAnswer,
+      isCorrect: selectedAnswer === currentQuestion.correctAnswer,
       timeSpent,
-      pointsEarned: answer === currentQuestion.correctAnswer ? (currentQuestion.points || 10) : 0
+      pointsEarned: selectedAnswer === currentQuestion.correctAnswer ? (currentQuestion.points || 10) : 0
     }
 
     console.log('🔍 DEBUG EnhancedQuizComponent - created result:', result)
@@ -196,33 +215,92 @@ export default function EnhancedQuizComponent({
       const updated = [...prev]
       updated[currentQuestionIndex] = result
       console.log('🔍 DEBUG EnhancedQuizComponent - updated quizResults:', updated)
-      
-      // Don't auto-complete quiz here - let user navigate manually
-      // The quiz will be completed only when user clicks "Finalizar Quiz" or reaches the end
-      
       return updated
     })
-  }, [isCompleted, currentQuestionIndex, answers, currentQuestion, questionStartTime, questions.length, calculateStats, onComplete])
+  }, [selectedAnswer, currentQuestionIndex, currentQuestion, questionStartTime])
 
-  // Handle next question
-  const handleNext = useCallback(() => {
+  // Validate quiz completion using AI SDK
+  const validateQuizCompletion = useCallback(async () => {
+    setIsValidating(true);
+    try {
+      // Convert answers to the format expected by validation
+      const userAnswers: Record<string, { questionId: string; answer: string | number; timestamp: number }> = {};
+      
+      answers.forEach((answer, index) => {
+        if (answer !== null) {
+          const questionId = questions[index].id || `question_${index}`;
+          userAnswers[questionId] = {
+            questionId,
+            answer,
+            timestamp: Date.now()
+          };
+        }
+      });
+
+      // Convert questions to validation format
+      const validationQuestions = questions.map(q => ({
+        id: q.id || `question_${questions.indexOf(q)}`,
+        question: q.question,
+        type: 'multiple-choice' as const,
+        options: Object.values(q.options),
+        correctAnswer: q.correctAnswer,
+        required: true
+      }));
+
+      const result = await validateQuiz(validationQuestions, userAnswers, {
+        subject: 'Educacional',
+        difficulty: 'Média'
+      });
+
+      setValidationResult(result);
+      return result;
+    } catch (error) {
+      console.error('Erro na validação do quiz:', error);
+      // Fallback: validação simples
+      const unansweredCount = answers.filter(a => a === null).length;
+      const result: QuizValidationResult = {
+        allQuestionsAnswered: unansweredCount === 0,
+        unansweredQuestions: answers.map((a, i) => a === null ? i : -1).filter(i => i !== -1),
+        incompleteAnswers: [],
+        canProceed: unansweredCount === 0,
+        recommendations: unansweredCount > 0 ? ['Responda todas as questões antes de prosseguir'] : []
+      };
+      setValidationResult(result);
+      return result;
+    } finally {
+      setIsValidating(false);
+    }
+  }, [answers, questions, validateQuiz]);
+
+  // Handle next question with validation
+  const handleNext = useCallback(async () => {
     console.log('🔍 DEBUG EnhancedQuizComponent - handleNext called')
     console.log('🔍 DEBUG EnhancedQuizComponent - currentQuestionIndex:', currentQuestionIndex)
     console.log('🔍 DEBUG EnhancedQuizComponent - questions.length:', questions.length)
     console.log('🔍 DEBUG EnhancedQuizComponent - selectedAnswer:', selectedAnswer)
     
+    // Se não é a última questão, permitir navegação normal
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1)
       setSelectedAnswer(null) // Reset selected answer for next question
       setShowResult(false) // Reset result display
       setShowHint(false) // Reset hint display
+      setIsAnswerConfirmed(false) // Reset confirmation state
       setQuestionStartTime(Date.now()) // Reset timer for next question
     } else {
-      // Only complete if we're on the last question and user explicitly wants to finish
-      console.log('🔍 DEBUG EnhancedQuizComponent - Reached last question, showing completion option')
-      // Don't auto-complete here - let user decide when to finish
+      // Na última questão, validar se pode prosseguir
+      console.log('🔍 DEBUG EnhancedQuizComponent - Reached last question, validating completion')
+      const validation = await validateQuizCompletion();
+      
+      if (validation.canProceed) {
+        console.log('🔍 DEBUG EnhancedQuizComponent - Validation passed, completing quiz')
+        handleCompleteQuiz();
+      } else {
+        console.log('🔍 DEBUG EnhancedQuizComponent - Validation failed, showing feedback')
+        // Mostrar feedback de validação
+      }
     }
-  }, [currentQuestionIndex, questions.length, selectedAnswer])
+  }, [currentQuestionIndex, questions.length, selectedAnswer, validateQuizCompletion])
 
   // Handle previous question
   const handlePrevious = useCallback(() => {
@@ -231,6 +309,7 @@ export default function EnhancedQuizComponent({
       setSelectedAnswer(null) // Reset selected answer for previous question
       setShowResult(false) // Reset result display
       setShowHint(false) // Reset hint display
+      setIsAnswerConfirmed(false) // Reset confirmation state
       setQuestionStartTime(Date.now()) // Reset timer for previous question
     }
   }, [currentQuestionIndex])
@@ -255,6 +334,7 @@ export default function EnhancedQuizComponent({
     setAnswers(new Array(questions.length).fill(null))
     setShowResult(false)
     setIsCompleted(false)
+    setIsAnswerConfirmed(false)
     setTimeLeft(timeLimit)
     setQuizResults([])
     setShowHint(false)
@@ -579,26 +659,52 @@ export default function EnhancedQuizComponent({
           </div>
         )}
 
-        {/* Explanation */}
-        {showResult && showExplanations && (
+        {/* Immediate Feedback */}
+        {showResult && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="p-4 bg-gray-50 border border-gray-200 rounded-lg"
+            className={`p-4 rounded-lg border-2 ${
+              selectedAnswer === currentQuestion.correctAnswer
+                ? 'bg-green-50 border-green-200'
+                : 'bg-red-50 border-red-200'
+            }`}
           >
-            <h4 className="font-medium text-gray-800 mb-2">Explicação:</h4>
-            <MarkdownRenderer content={currentQuestion.explanation} />
+            <div className="flex items-center gap-3 mb-3">
+              {selectedAnswer === currentQuestion.correctAnswer ? (
+                <CheckCircle className="h-6 w-6 text-green-600" />
+              ) : (
+                <XCircle className="h-6 w-6 text-red-600" />
+              )}
+              <h4 className={`font-medium text-lg ${
+                selectedAnswer === currentQuestion.correctAnswer
+                  ? 'text-green-800'
+                  : 'text-red-800'
+              }`}>
+                {selectedAnswer === currentQuestion.correctAnswer ? 'Correto! 🎉' : 'Incorreto 😔'}
+              </h4>
+            </div>
+            
+            {showExplanations && (
+              <div>
+                <h5 className="font-medium text-gray-800 mb-2">Explicação:</h5>
+                <MarkdownRenderer content={currentQuestion.explanation} />
+              </div>
+            )}
           </motion.div>
         )}
 
         {/* Question Navigation Dots */}
-        <div className="flex justify-center gap-2">
+        <div className="flex justify-center gap-2 mb-4">
           {questions.map((_, index) => (
             <button
               key={index}
               onClick={() => {
                 console.log('🔍 DEBUG EnhancedQuizComponent - navigation dot clicked:', index)
-                setCurrentQuestionIndex(index)
+                // Only allow navigation if current question is confirmed or if going to a question that's already answered
+                if (isAnswerConfirmed || answers[index] !== null || index === currentQuestionIndex) {
+                  setCurrentQuestionIndex(index)
+                }
               }}
               className={`w-8 h-8 rounded-full text-sm font-medium transition-colors ${
                 index === currentQuestionIndex
@@ -606,11 +712,95 @@ export default function EnhancedQuizComponent({
                   : answers[index]
                   ? 'bg-green-500 text-white'
                   : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
+              } ${!isAnswerConfirmed && index !== currentQuestionIndex && answers[index] === null ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
             >
               {index + 1}
             </button>
           ))}
+        </div>
+
+        {/* Navigation and Completion Buttons */}
+        <div className="flex items-center justify-between">
+          <Button
+            onClick={() => {
+              console.log('🔍 DEBUG EnhancedQuizComponent - previous button clicked')
+              handlePrevious()
+            }}
+            disabled={currentQuestionIndex === 0 || !isAnswerConfirmed}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Anterior
+          </Button>
+
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">
+              {answers.filter(answer => answer !== null).length} de {questions.length} respondidas
+            </span>
+          </div>
+
+          {/* Show OK button when answer is selected but not confirmed */}
+          {selectedAnswer && !isAnswerConfirmed ? (
+            <Button
+              onClick={() => {
+                console.log('🔍 DEBUG EnhancedQuizComponent - OK button clicked')
+                handleConfirmAnswer()
+              }}
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+            >
+              <CheckCircle className="h-4 w-4" />
+              OK
+            </Button>
+          ) : currentQuestionIndex === questions.length - 1 ? (
+            <div className="flex flex-col items-end gap-2">
+              {/* Validation feedback */}
+              {validationResult && !validationResult.canProceed && (
+                <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">
+                  <AlertCircle className="h-4 w-4" />
+                  <span>
+                    {validationResult.unansweredQuestions.length > 0 
+                      ? `${validationResult.unansweredQuestions.length} questão(ões) não respondida(s)`
+                      : 'Algumas respostas precisam ser melhoradas'
+                    }
+                  </span>
+                </div>
+              )}
+              
+              <Button
+                onClick={() => {
+                  console.log('🔍 DEBUG EnhancedQuizComponent - next button clicked (last question)')
+                  handleNext()
+                }}
+                disabled={!isAnswerConfirmed || isValidating}
+                className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+              >
+                {isValidating ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Validando...
+                  </>
+                ) : (
+                  <>
+                    <Trophy className="h-4 w-4" />
+                    Finalizar Quiz
+                  </>
+                )}
+              </Button>
+            </div>
+          ) : (
+            <Button
+              onClick={() => {
+                console.log('🔍 DEBUG EnhancedQuizComponent - next button clicked')
+                handleNext()
+              }}
+              disabled={!isAnswerConfirmed}
+              className="flex items-center gap-2"
+            >
+              Próxima
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>

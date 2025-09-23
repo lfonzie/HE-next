@@ -20,6 +20,8 @@ import { Input } from "@/components/ui/input";
 import { useChatContext } from "@/components/providers/ChatContext";
 import { useQuota } from "@/components/providers/QuotaProvider";
 import { SupportModal } from "@/components/modals/SupportModal";
+import { WeatherModal } from "@/components/chat/WeatherModal";
+import { detectIntent } from "@/lib/intent-detection";
 import { useGlobalLoading } from "@/hooks/useGlobalLoading";
 import { useNavigationLoading } from "@/hooks/useNavigationLoading";
 import { Card, CardContent } from "@/components/ui/card";
@@ -81,6 +83,8 @@ export default function ChatComponent() {
 
   // UI state
   const [showSupportModal, setShowSupportModal] = useState(false);
+  const [showWeatherModal, setShowWeatherModal] = useState(false);
+  const [weatherCity, setWeatherCity] = useState('');
   const [isCreatingConversation, setIsCreatingConversation] = useState(false);
   const [isDeletingConversation, setIsDeletingConversation] = useState<string | null>(null);
   const [showModuleWelcome, setShowModuleWelcome] = useState(false);
@@ -128,6 +132,14 @@ export default function ChatComponent() {
     }
   ) => {
     if (!message.trim()) return;
+    
+    // Detect weather intent before sending message
+    const intent = detectIntent(message);
+    if (intent.type === 'weather' && intent.city) {
+      setWeatherCity(intent.city);
+      setShowWeatherModal(true);
+      return; // Don't send to chat, show weather modal instead
+    }
     
     if (isLimitReached) {
       toast({
@@ -591,6 +603,13 @@ export default function ChatComponent() {
       <SupportModal
         isOpen={showSupportModal}
         onClose={() => setShowSupportModal(false)}
+      />
+
+      {/* Weather Modal */}
+      <WeatherModal
+        isOpen={showWeatherModal}
+        onClose={() => setShowWeatherModal(false)}
+        city={weatherCity}
       />
     </div>
   );

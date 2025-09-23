@@ -2,10 +2,10 @@
 
 import { useMemo } from 'react';
 import { DetectedIntent } from '../../lib/intent-detection';
-import { BookOpen, ClipboardList, FileText, Lightbulb } from 'lucide-react';
+import { BookOpen, ClipboardList, FileText, Lightbulb, Cloud } from 'lucide-react';
 
 interface SmartSuggestion {
-  type: 'aula' | 'enem' | 'redacao';
+  type: 'aula' | 'enem' | 'redacao' | 'weather';
   title: string;
   description: string;
   action: () => void;
@@ -20,6 +20,7 @@ interface Props {
   onAulaClick: (topic: string) => void;
   onEnemClick: () => void;
   onRedacaoClick: () => void;
+  onWeatherClick: (city: string) => void;
   className?: string;
 }
 
@@ -29,13 +30,24 @@ export function SmartSuggestions({
   onAulaClick, 
   onEnemClick, 
   onRedacaoClick,
+  onWeatherClick,
   className = ''
 }: Props) {
   const suggestions = useMemo(() => {
     const intent = detectIntent(message);
     const suggestions: SmartSuggestion[] = [];
 
-    if (intent.type === 'aula' && intent.topic) {
+    if (intent.type === 'weather' && intent.city) {
+      suggestions.push({
+        type: 'weather',
+        title: `Clima em ${intent.city}`,
+        description: 'Veja informações detalhadas sobre temperatura, umidade, vento e condições atuais.',
+        action: () => onWeatherClick(intent.city!),
+        icon: <Cloud className="w-6 h-6" />,
+        color: 'text-cyan-600',
+        bgColor: 'bg-cyan-50 hover:bg-cyan-100'
+      });
+    } else if (intent.type === 'aula' && intent.topic) {
       suggestions.push({
         type: 'aula',
         title: `Aula sobre ${intent.topic}`,

@@ -159,10 +159,12 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 5,
+  maximumScale: 3,
   userScalable: true,
   themeColor: '#ffd233',
   colorScheme: 'light',
+  // Prevent excessive zoom
+  viewportFit: 'cover',
 }
 
 export default function RootLayout({ children }: { children: ReactNode }) {

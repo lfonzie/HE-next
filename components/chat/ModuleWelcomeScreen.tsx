@@ -33,7 +33,7 @@ interface ModuleWelcomeScreenProps {
 
 const moduleWelcomeData = {
   PROFESSOR: {
-    title: "Professor",
+    title: "Estudos",
     subtitle: "Assistente de estudos focado no aluno",
     icon: BookOpen,
     color: "bg-gradient-to-br from-blue-500 to-blue-700",

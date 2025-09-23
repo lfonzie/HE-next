@@ -68,22 +68,11 @@ export async function getSchoolsData() {
   try {
     const schools = await prisma.schools.findMany({
       include: {
-        analytics: {
-          select: {
-            tokens_used: true,
-            response_time: true
-          }
-        },
         school_prompts: {
           select: {
             id: true,
             module: true,
             is_active: true
-          }
-        },
-        _count: {
-          select: {
-            analytics: true
           }
         }
       },
@@ -92,22 +81,59 @@ export async function getSchoolsData() {
       }
     });
 
-    return schools.map(school => ({
-      id: school.id,
-      name: school.name,
-      domain: school.domain,
-      plan: school.plan,
-      city: school.city,
-      state: school.state,
-      created_at: school.created_at,
-      totalUsers: school._count.analytics,
-      totalPrompts: school.school_prompts.length,
-      activePrompts: school.school_prompts.filter(p => p.is_active).length,
-      totalTokensUsed: school.analytics.reduce((sum, a) => sum + a.tokens_used, 0),
-      avgResponseTime: school.analytics.length > 0 
-        ? Math.round(school.analytics.reduce((sum, a) => sum + (a.response_time || 0), 0) / school.analytics.length)
-        : 0
-    }));
+    // Get analytics data for each school separately
+    const schoolsWithAnalytics = await Promise.all(
+      schools.map(async (school) => {
+        try {
+          // Get analytics for this school
+          const analytics = await prisma.analytics.findMany({
+            where: { school_id: school.id },
+            select: {
+              tokens_used: true,
+              response_time: true
+            }
+          });
+
+          // Get user count for this school
+          const userCount = await prisma.user.count({
+            where: { school_id: school.id }
+          });
+
+          return {
+            id: school.id,
+            name: school.name,
+            email: school.email,
+            phone: school.phone,
+            address: school.address,
+            created_at: school.created_at,
+            totalUsers: userCount,
+            totalPrompts: school.school_prompts.length,
+            activePrompts: school.school_prompts.filter(p => p.is_active).length,
+            totalTokensUsed: analytics.reduce((sum, a) => sum + a.tokens_used, 0),
+            avgResponseTime: analytics.length > 0 
+              ? Math.round(analytics.reduce((sum, a) => sum + (a.response_time || 0), 0) / analytics.length)
+              : 0
+          };
+        } catch (schoolError) {
+          console.error(`Error processing school ${school.id}:`, schoolError);
+          return {
+            id: school.id,
+            name: school.name,
+            email: school.email,
+            phone: school.phone,
+            address: school.address,
+            created_at: school.created_at,
+            totalUsers: 0,
+            totalPrompts: school.school_prompts.length,
+            activePrompts: school.school_prompts.filter(p => p.is_active).length,
+            totalTokensUsed: 0,
+            avgResponseTime: 0
+          };
+        }
+      })
+    );
+
+    return schoolsWithAnalytics;
   } catch (error) {
     console.error('Error fetching schools data:', error);
     throw error;
@@ -193,13 +219,6 @@ export async function getUsersData() {
 export async function getConversationsData() {
   try {
     const conversations = await prisma.conversations.findMany({
-      include: {
-        message_votes: {
-          select: {
-            is_upvoted: true
-          }
-        }
-      },
       orderBy: {
         created_at: 'desc'
       },
@@ -236,11 +255,30 @@ export async function getConversationsData() {
       }
     });
 
+    // Get message votes for conversations
+    const conversationIds = conversations.map(conv => conv.id);
+    const messageVotes = await prisma.message_votes.findMany({
+      where: {
+        conversation_id: {
+          in: conversationIds
+        }
+      }
+    });
+
     const userMap = new Map(users.map(user => [user.id, user]));
     const schoolMap = new Map(schools.map(school => [school.id, school.name]));
+    const votesMap = new Map();
+    
+    messageVotes.forEach(vote => {
+      if (!votesMap.has(vote.conversation_id)) {
+        votesMap.set(vote.conversation_id, []);
+      }
+      votesMap.get(vote.conversation_id).push(vote);
+    });
 
     return conversations.map(conv => {
       const user = userMap.get(conv.user_id);
+      const votes = votesMap.get(conv.id) || [];
       return {
         id: conv.id,
         userId: conv.user_id,
@@ -253,8 +291,8 @@ export async function getConversationsData() {
         model: conv.model,
         tokenCount: conv.token_count,
         messageCount: Array.isArray(conv.messages) ? conv.messages.length : 0,
-        upvotes: conv.message_votes.filter(v => v.is_upvoted).length,
-        downvotes: conv.message_votes.filter(v => !v.is_upvoted).length,
+        upvotes: votes.filter(v => v.is_upvoted).length,
+        downvotes: votes.filter(v => !v.is_upvoted).length,
         created_at: conv.created_at,
         updated_at: conv.updated_at
       };
@@ -328,7 +366,7 @@ export async function getPromptsData() {
           schools: {
             select: {
               name: true,
-              domain: true
+              email: true
             }
           }
         },

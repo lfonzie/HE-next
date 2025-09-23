@@ -5,9 +5,10 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, ArrowLeft, ArrowRight, CheckCircle, XCircle, Lightbulb, Download, Printer, RotateCcw, Plus, Keyboard } from 'lucide-react';
+import { Loader2, ArrowLeft, ArrowRight, CheckCircle, XCircle, Lightbulb, Download, Printer, RotateCcw, Plus, Keyboard, AlertCircle } from 'lucide-react';
 import { MarkdownRenderer } from '@/components/chat/MarkdownRenderer';
 import { useProgressiveLesson } from '@/hooks/useProgressiveLesson';
+import { useQuizValidation, type QuizValidationResult } from '@/lib/quiz-validation';
 
 interface ProgressiveLessonComponentProps {
   initialQuery?: string;
@@ -28,6 +29,11 @@ export default function ProgressiveLessonComponent({
   const [showAnswer, setShowAnswer] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [showClosingOptions, setShowClosingOptions] = useState(false);
+  
+  // AI Validation state
+  const [validationResult, setValidationResult] = useState<QuizValidationResult | null>(null);
+  const [isValidating, setIsValidating] = useState(false);
+  const { validateQuiz } = useQuizValidation();
   
   // Navegação pelo teclado
   useEffect(() => {
@@ -173,7 +179,7 @@ export default function ProgressiveLessonComponent({
     }
   };
 
-  const handleNextSlide = () => {
+  const handleNextSlide = async () => {
     if (isQuestionSlide() && !showAnswer) {
       // Se é uma pergunta e não foi respondida, não permitir avançar
       if (!selectedAnswer) {
@@ -183,8 +189,52 @@ export default function ProgressiveLessonComponent({
       return;
     }
     
+    // Se é uma questão e foi respondida, validar antes de prosseguir
+    if (isQuestionSlide() && showAnswer && selectedAnswer) {
+      setIsValidating(true);
+      try {
+        // Simular validação da resposta usando AI SDK
+        const validationQuestions = [{
+          id: 'current_question',
+          question: currentSlideData?.question || 'Questão atual',
+          type: 'multiple-choice' as const,
+          options: currentSlideData?.options || [],
+          correctAnswer: currentSlideData?.correctAnswer,
+          required: true
+        }];
+
+        const userAnswers = {
+          'current_question': {
+            questionId: 'current_question',
+            answer: selectedAnswer,
+            timestamp: Date.now()
+          }
+        };
+
+        const result = await validateQuiz(validationQuestions, userAnswers, {
+          subject: subject || 'Educacional',
+          difficulty: 'Média'
+        });
+
+        setValidationResult(result);
+        
+        if (!result.canProceed) {
+          // Mostrar feedback de validação
+          console.log('Validação falhou:', result.recommendations);
+          setIsValidating(false);
+          return;
+        }
+      } catch (error) {
+        console.error('Erro na validação:', error);
+        // Continuar mesmo com erro na validação
+      } finally {
+        setIsValidating(false);
+      }
+    }
+    
     setSelectedAnswer(null);
     setShowAnswer(false);
+    setValidationResult(null);
     goToNextSlide();
   };
 
@@ -821,23 +871,42 @@ export default function ProgressiveLessonComponent({
             </div>
           </div>
         ) : (
-          <Button
-            onClick={handleNextSlide}
-            disabled={!canGoNext() || (isQuestionSlide() && !showAnswer && !selectedAnswer)}
-            className={`flex items-center space-x-2 ${
-              isQuestionSlide() && !showAnswer && !selectedAnswer 
-                ? 'bg-gray-400 hover:bg-gray-400 cursor-not-allowed' 
-                : ''
-            }`}
-          >
-            <span>
-              {isQuestionSlide() && !showAnswer && !selectedAnswer 
-                ? 'Selecione uma resposta' 
-                : 'Próximo'
-              }
-            </span>
-            <ArrowRight className="w-4 h-4" />
-          </Button>
+          <div className="flex flex-col items-end gap-2">
+            {/* Validation feedback */}
+            {validationResult && !validationResult.canProceed && (
+              <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">
+                <AlertCircle className="h-4 w-4" />
+                <span>
+                  {validationResult.recommendations[0] || 'Resposta precisa ser melhorada'}
+                </span>
+              </div>
+            )}
+            
+            <Button
+              onClick={handleNextSlide}
+              disabled={!canGoNext() || (isQuestionSlide() && !showAnswer && !selectedAnswer) || isValidating}
+              className={`flex items-center space-x-2 ${
+                isQuestionSlide() && !showAnswer && !selectedAnswer 
+                  ? 'bg-gray-400 hover:bg-gray-400 cursor-not-allowed' 
+                  : ''
+              }`}
+            >
+              <span>
+                {isValidating ? (
+                  'Validando...'
+                ) : isQuestionSlide() && !showAnswer && !selectedAnswer ? (
+                  'Selecione uma resposta'
+                ) : (
+                  'Próximo'
+                )}
+              </span>
+              {isValidating ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              ) : (
+                <ArrowRight className="w-4 h-4" />
+              )}
+            </Button>
+          </div>
         )}
       </div>
 

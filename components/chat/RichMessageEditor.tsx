@@ -318,7 +318,7 @@ export function RichMessageEditor({
       if (hashIndex !== -1) {
         const query = text.slice(hashIndex + 1, cursorPosition).toLowerCase()
         const modules = [
-          { text: 'professor', description: 'Módulo Professor' },
+          { text: 'professor', description: 'Módulo Estudos' },
           { text: 'ti', description: 'Módulo TI' },
           { text: 'rh', description: 'Módulo RH' },
           { text: 'financeiro', description: 'Módulo Financeiro' }

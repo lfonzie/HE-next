@@ -4,6 +4,18 @@ import { prisma } from '@/lib/prisma';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+// Helper function to convert BigInt to Number safely
+function convertBigIntToNumber(value: any): number {
+  if (typeof value === 'bigint') {
+    return Number(value);
+  }
+  if (typeof value === 'string') {
+    const parsed = parseInt(value, 10);
+    return isNaN(parsed) ? 0 : parsed;
+  }
+  return Number(value) || 0;
+}
+
 export async function GET() {
   try {
     const since = new Date(Date.now() - 15 * 60 * 1000); // últimos 15 minutos
@@ -53,9 +65,10 @@ export async function GET() {
         date_trunc('minute', "startTime") as minute, 
         count(*)::int as hits
       from "TraceSpan"
-      where "startTime" > $1 and kind='SERVER'
-      group by 1
-      order by 1 asc;
+      where "startTime" > $1 and kind = 'SERVER'
+      group by minute
+      order by minute desc
+      limit 15;
     `, since);
 
     // Métricas de sistema
@@ -77,7 +90,7 @@ export async function GET() {
     const errorLogs = await prisma.logRecord.findMany({
       where: {
         time: { gte: since },
-        severity: { in: ['ERROR', 'FATAL', 'error', 'fatal'] }
+        severity: { in: ['ERROR', 'FATAL'] }
       },
       orderBy: { time: 'desc' },
       take: 10,
@@ -131,19 +144,52 @@ export async function GET() {
       limit 10;
     `, since);
 
+    // Convert all BigInt values to numbers
+    const processedSystemStatus = systemStatus.reduce((acc, item) => {
+      acc[item.metric] = convertBigIntToNumber(item.value);
+      return acc;
+    }, {} as Record<string, any>);
+
+    const processedP95 = p95.map(item => ({
+      route: item.route,
+      p95_ms: convertBigIntToNumber(item.p95_ms)
+    }));
+
+    const processedErrorRate = errorRate.map(item => ({
+      route: item.route,
+      error_rate: convertBigIntToNumber(item.error_rate)
+    }));
+
+    const processedRps = rps.map(item => ({
+      minute: item.minute,
+      hits: convertBigIntToNumber(item.hits)
+    }));
+
+    const processedSystemMetrics = systemMetrics.map(item => ({
+      name: item.name,
+      avg_value: convertBigIntToNumber(item.avg_value),
+      max_value: convertBigIntToNumber(item.max_value),
+      min_value: convertBigIntToNumber(item.min_value),
+      data_points: convertBigIntToNumber(item.data_points)
+    }));
+
+    const processedTopRoutes = topRoutes.map(item => ({
+      route: item.route,
+      requests: convertBigIntToNumber(item.requests),
+      avg_latency: convertBigIntToNumber(item.avg_latency),
+      max_latency: convertBigIntToNumber(item.max_latency)
+    }));
+
     return NextResponse.json({
       timestamp: new Date().toISOString(),
       period: '15m',
-      p95,
-      errorRate,
-      rps,
-      systemMetrics,
+      p95: processedP95,
+      errorRate: processedErrorRate,
+      rps: processedRps,
+      systemMetrics: processedSystemMetrics,
       errorLogs,
-      systemStatus: systemStatus.reduce((acc, item) => {
-        acc[item.metric] = item.value;
-        return acc;
-      }, {} as Record<string, any>),
-      topRoutes
+      systemStatus: processedSystemStatus,
+      topRoutes: processedTopRoutes
     });
 
   } catch (error) {

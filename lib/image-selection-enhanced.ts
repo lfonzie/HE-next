@@ -24,7 +24,7 @@ export interface ProviderSearchResult {
 }
 
 /**
- * Constrói query focada apenas no tema, sem termos educacionais
+ * Constrói query focada APENAS no tema específico em inglês, sem termos educacionais genéricos
  */
 export function buildTopicOnlyQuery(topic: string): string {
   const base = topic
@@ -33,52 +33,101 @@ export function buildTopicOnlyQuery(topic: string): string {
     .replace(/\s+/g, ' ')
     .trim();
 
-  // Sinônimos do próprio tema (não educacionais)
-  const synonyms: Record<string, string[]> = {
-    'inteligência artificial': ['ia', 'machine learning', 'redes neurais', 'algoritmos', 'deep learning'],
-    'inteligencia artificial': ['ia', 'machine learning', 'redes neurais', 'algoritmos', 'deep learning'],
-    'física': ['physics', 'mecânica', 'termodinâmica', 'eletromagnetismo'],
-    'química': ['chemistry', 'moléculas', 'reações', 'compostos'],
-    'biologia': ['biology', 'células', 'genética', 'evolução'],
-    'matemática': ['mathematics', 'álgebra', 'geometria', 'cálculo'],
-    'história': ['history', 'histórico', 'passado', 'eventos'],
-    'geografia': ['geography', 'território', 'clima', 'relevo'],
-    'literatura': ['literature', 'livros', 'textos', 'escritores'],
-    'português': ['portuguese', 'gramática', 'linguagem', 'comunicação'],
-    'filosofia': ['philosophy', 'pensamento', 'ética', 'lógica'],
-    'sociologia': ['sociology', 'sociedade', 'comportamento', 'cultura'],
-    'arte': ['art', 'criatividade', 'expressão', 'visual'],
-    'música': ['music', 'som', 'ritmo', 'melodia'],
-    'educação física': ['physical education', 'esporte', 'exercício', 'saúde'],
-    'redação': ['writing', 'texto', 'composição', 'escrita']
+  // Traduzir termos específicos para inglês
+  const translations: Record<string, string> = {
+    'matemática': 'mathematics',
+    'matematica': 'mathematics',
+    'álgebra': 'algebra',
+    'algebra': 'algebra',
+    'geometria': 'geometry',
+    'trigonometria': 'trigonometry',
+    'cálculo': 'calculus',
+    'calculo': 'calculus',
+    'estatística': 'statistics',
+    'estatistica': 'statistics',
+    'probabilidade': 'probability',
+    'física': 'physics',
+    'fisica': 'physics',
+    'química': 'chemistry',
+    'quimica': 'chemistry',
+    'biologia': 'biology',
+    'história': 'history',
+    'historia': 'history',
+    'geografia': 'geography',
+    'literatura': 'literature',
+    'português': 'portuguese',
+    'portugues': 'portuguese',
+    'filosofia': 'philosophy',
+    'sociologia': 'sociology',
+    'arte': 'art',
+    'música': 'music',
+    'musica': 'music',
+    'educação': 'education',
+    'educacao': 'education',
+    'eletricidade': 'electricity',
+    'corrente': 'current',
+    'voltagem': 'voltage',
+    'resistência': 'resistance',
+    'resistencia': 'resistance',
+    'circuito': 'circuit',
+    'fotossíntese': 'photosynthesis',
+    'fotossintese': 'photosynthesis',
+    'célula': 'cell',
+    'celula': 'cell',
+    'dna': 'dna',
+    'genética': 'genetics',
+    'genetica': 'genetics',
+    'evolução': 'evolution',
+    'evolucao': 'evolution',
+    'clima': 'climate',
+    'relevo': 'relief',
+    'gramática': 'grammar',
+    'gramatica': 'grammar',
+    'redação': 'writing',
+    'redacao': 'writing'
   };
 
-  // Encontrar sinônimos para o tema base
-  const extra = synonyms[base] ?? [];
+  // Traduzir palavras individuais
+  const words = base.split(' ');
+  const translatedWords = words.map(word => translations[word] || word);
   
-  // Combinar tema base com sinônimos (máximo 3 termos para não poluir)
-  const allTerms = [base, ...extra].slice(0, 3);
-  
-  return allTerms.join(' ');
+  // Retornar apenas o tema traduzido, sem termos educacionais genéricos
+  return translatedWords.join(' ');
 }
 
 /**
- * Busca imagens em todos os provedores separadamente
+ * Busca imagens em todos os provedores separadamente com timeout
  */
 export async function searchAllProviders(query: string): Promise<ProviderSearchResult> {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
   
   try {
-    const [wikimediaResults, unsplashResults, pixabayResults] = await Promise.all([
-      searchWikimedia(query, baseUrl),
-      searchUnsplash(query, baseUrl),
-      searchPixabay(query, baseUrl)
+    // Usar Promise.allSettled para não falhar se um provedor estiver lento
+    const [wikimediaResult, unsplashResult, pixabayResult] = await Promise.allSettled([
+      Promise.race([
+        searchWikimedia(query, baseUrl),
+        new Promise<ImageResult[]>((_, reject) => 
+          setTimeout(() => reject(new Error('Wikimedia timeout')), 3000)
+        )
+      ]),
+      Promise.race([
+        searchUnsplash(query, baseUrl),
+        new Promise<ImageResult[]>((_, reject) => 
+          setTimeout(() => reject(new Error('Unsplash timeout')), 3000)
+        )
+      ]),
+      Promise.race([
+        searchPixabay(query, baseUrl),
+        new Promise<ImageResult[]>((_, reject) => 
+          setTimeout(() => reject(new Error('Pixabay timeout')), 3000)
+        )
+      ])
     ]);
 
     return {
-      wikimedia: wikimediaResults,
-      unsplash: unsplashResults,
-      pixabay: pixabayResults
+      wikimedia: wikimediaResult.status === 'fulfilled' ? wikimediaResult.value : [],
+      unsplash: unsplashResult.status === 'fulfilled' ? unsplashResult.value : [],
+      pixabay: pixabayResult.status === 'fulfilled' ? pixabayResult.value : []
     };
   } catch (error) {
     console.error('Erro ao buscar em todos os provedores:', error);
@@ -100,7 +149,7 @@ async function searchWikimedia(query: string, baseUrl: string): Promise<ImageRes
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
         query, 
-        count: 5, // Mais opções para melhor seleção
+        count: 3, // Reduzido para ser mais rápido
         safe: true 
       }),
     });
@@ -139,7 +188,7 @@ async function searchUnsplash(query: string, baseUrl: string): Promise<ImageResu
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
         query, 
-        count: 5,
+        count: 3, // Reduzido para ser mais rápido
         orientation: 'landscape',
         safe: true 
       }),
@@ -180,8 +229,8 @@ async function searchPixabay(query: string, baseUrl: string): Promise<ImageResul
       body: JSON.stringify({ 
         action: 'search',
         query, 
-        perPage: 5,
-        category: 'education',
+        perPage: 3, // Reduzido para ser mais rápido
+        // Remover categoria educacional genérica para focar no tema específico
         type: 'images'
       }),
     });
@@ -211,7 +260,7 @@ async function searchPixabay(query: string, baseUrl: string): Promise<ImageResul
 }
 
 /**
- * Re-ranking sem viés educacional - focado no tema
+ * Re-ranking focado APENAS no tema específico - sem viés educacional
  */
 export function rerankImages(images: ImageResult[], queryTerms: string[], usedGlobal: Set<string>): ImageResult[] {
   const hasTerm = (text: string, term: string) => text.toLowerCase().includes(term.toLowerCase());
@@ -220,10 +269,10 @@ export function rerankImages(images: ImageResult[], queryTerms: string[], usedGl
     let score = img.score || 0;
     const text = `${img.title || ''} ${img.description || ''}`.toLowerCase();
     
-    // Boost por termos do tema
+    // Boost APENAS por termos do tema específico
     for (const term of queryTerms) {
       if (hasTerm(text, term)) {
-        score += 0.05;
+        score += 0.1; // Boost maior para termos específicos do tema
       }
     }
     
@@ -232,11 +281,11 @@ export function rerankImages(images: ImageResult[], queryTerms: string[], usedGl
       score -= 0.3;
     }
     
-    // Boost leve para imagens com termos específicos do tema
-    const themeTerms = ['neural', 'algorithm', 'model', 'data', 'system', 'process', 'structure'];
-    for (const term of themeTerms) {
+    // Penalidade para termos genéricos educacionais
+    const genericTerms = ['education', 'learning', 'teaching', 'school', 'classroom', 'student', 'teacher', 'study', 'book', 'academic'];
+    for (const term of genericTerms) {
       if (hasTerm(text, term)) {
-        score += 0.02;
+        score -= 0.05; // Penalidade para termos genéricos
       }
     }
     

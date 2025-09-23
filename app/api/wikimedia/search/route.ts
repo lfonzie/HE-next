@@ -494,6 +494,7 @@ async function translateToEnglish(query: string, subject?: string): Promise<stri
 
 // Função para melhorar a query para busca no Wikimedia Commons
 function enhanceQueryForWikimedia(query: string, subject?: string): string {
-  // Retornar apenas a query original, sem adicionar termos educacionais
+  // Retornar APENAS a query original, sem adicionar termos educacionais
+  // Isso garante que a busca seja específica para o tema
   return query;
 }

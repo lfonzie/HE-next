@@ -21,7 +21,8 @@ export const MarkdownRendererNew: React.FC<MarkdownRendererProps> = ({
   // Processar Unicode e normalizar conteúdo
   const processedContent = processMessageForDisplay(content);
   const mathProcessedContent = forceConvertMathToUnicode(processedContent);
-  const normalizedContent = mathProcessedContent.replace(/\n{2,}/g, '\n').trim();
+  // Preservar quebras de linha duplas para separação de parágrafos
+  const normalizedContent = mathProcessedContent.replace(/\n{3,}/g, '\n\n').trim();
   
   return (
     <div className={`markdown-content ${className}`}>

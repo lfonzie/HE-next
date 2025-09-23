@@ -23,7 +23,8 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
   const processedContent = processMessageForDisplay(content);
   const latexNormalizedContent = normalizeFormulas(processedContent);
   const mathProcessedContent = forceConvertMathToUnicode(latexNormalizedContent);
-  const normalizedContent = mathProcessedContent.replace(/\n{2,}/g, '\n').trim();
+  // Preservar quebras de linha duplas para separação de parágrafos
+  const normalizedContent = mathProcessedContent.replace(/\n{3,}/g, '\n\n').trim();
   
   return (
     <div className={`markdown-content ${className}`}>

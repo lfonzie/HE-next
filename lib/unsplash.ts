@@ -97,9 +97,10 @@ class UnsplashService {
   }
 
   /**
-   * Busca imagens por categoria/tópico
+   * Busca imagens por categoria/tópico - APENAS o tema específico
    */
   async getPhotosByTopic(topic: string, page: number = 1, perPage: number = 20): Promise<UnsplashSearchResponse> {
+    // Usar APENAS o tema específico, sem termos educacionais
     const params = {
       query: topic,
       page: page.toString(),
@@ -139,26 +140,11 @@ class UnsplashService {
   }
 
   /**
-   * Busca imagens por disciplina específica
+   * Busca imagens por disciplina específica - APENAS o tema específico
    */
   async getSubjectPhotos(subject: string, page: number = 1, perPage: number = 20): Promise<UnsplashSearchResponse> {
-    const subjectTerms: Record<string, string[]> = {
-      'matematica': ['mathematics', 'math', 'numbers', 'geometry', 'algebra'],
-      'portugues': ['literature', 'books', 'reading', 'writing', 'language'],
-      'historia': ['history', 'ancient', 'historical', 'museum', 'heritage'],
-      'geografia': ['geography', 'world', 'map', 'landscape', 'nature'],
-      'ciencias': ['science', 'laboratory', 'experiment', 'chemistry', 'biology'],
-      'fisica': ['physics', 'science', 'experiment', 'laboratory', 'technology'],
-      'quimica': ['chemistry', 'laboratory', 'science', 'molecules', 'experiment'],
-      'biologia': ['biology', 'nature', 'plants', 'animals', 'microscope'],
-      'artes': ['art', 'painting', 'drawing', 'creative', 'artistic'],
-      'educacao-fisica': ['sports', 'fitness', 'exercise', 'athletics', 'gym'],
-    };
-
-    const terms = subjectTerms[subject.toLowerCase()] || [subject];
-    const randomTerm = terms[Math.floor(Math.random() * terms.length)];
-    
-    return this.searchPhotos(randomTerm, page, perPage);
+    // Usar APENAS o tema específico, sem termos educacionais genéricos
+    return this.searchPhotos(subject, page, perPage);
   }
 
   /**

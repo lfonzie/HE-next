@@ -246,7 +246,7 @@ BEM_ESTAR: Apoio emocional, ansiedade, conflitos, saúde mental
 - Exemplos: "estou ansioso", "conflito com colega", "apoio emocional", "estresse"
 
 TI: Suporte técnico educacional
-- Exemplos: "projetor não funciona", "internet lenta", "login não funciona", "problema técnico"
+- Exemplos: "projetor não funciona", "internet lenta", "login não funciona", "problema técnico", "problema no wifi", "wifi não funciona", "sem internet", "conectividade", "rede não funciona", "problema de conexão", "internet caiu", "wifi instável"
 
 TI_SUPORTE: Suporte técnico específico (bugs, builds, deployments)
 - Exemplos: "build falhou", "deploy error", "bug no sistema", "problema de API"
@@ -290,20 +290,21 @@ REGRAS CRÍTICAS:
 3. Se a mensagem contém termos acadêmicos como "história", "matemática", "física", "química", "biologia", "geografia", "português", "literatura", "redação", "revolução", "guerra", "independência", "evolução", "fotossíntese" E também contém "explique", "como", "dúvida", "conceito" → PROFESSOR
 4. Se a mensagem contém "Me ajude com" seguido de qualquer termo acadêmico → SEMPRE PROFESSOR
 5. Se a mensagem contém "tirar uma dúvida" seguido de qualquer matéria escolar → SEMPRE PROFESSOR
-6. PESQUISA_TEMPO_REAL: Para QUALQUER pergunta que requer informações atuais, notícias, tendências, dados recentes, situação atual
-7. TI/TI_TROUBLESHOOTING: Para QUALQUER problema técnico, equipamento, sistema, desenvolvimento
-8. RH: Para funcionários/colaboradores (benefícios, férias, atestados, salário)
-9. FINANCEIRO: Para pagamentos de alunos/famílias (mensalidades, boletos)
-10. SOCIAL_MEDIA: Para QUALQUER criação de conteúdo, posts, marketing digital, redes sociais
-11. CONTEUDO_MIDIA: Para solicitações de imagens, diagramas, conteúdo visual
-12. BEM_ESTAR: Para questões emocionais, psicológicas, conflitos, bullying
-13. FAQ_ESCOLA: Para perguntas sobre procedimentos, normas, regulamentos da escola
-14. COORDENACAO: Para questões pedagógicas, calendários, gestão acadêmica
-15. SECRETARIA: Para tarefas administrativas, matrículas, documentos, horários
-16. RESULTADOS_BOLSAS: Para questões sobre bolsas de estudo, provas de bolsas, cálculos de desconto
-17. JURIDICO_CONTRATOS: Para documentos legais, contratos, questões jurídicas
-18. MARKETING_DESIGN: Para conteúdo de marketing, design, campanhas promocionais
-19. ATENDIMENTO: APENAS quando não se encaixa em nenhum módulo específico
+6. Se a mensagem contém palavras como "wifi", "internet", "conectividade", "rede", "conexão", "problema técnico", "equipamento", "sistema" → SEMPRE TI
+7. PESQUISA_TEMPO_REAL: Para QUALQUER pergunta que requer informações atuais, notícias, tendências, dados recentes, situação atual
+8. TI/TI_TROUBLESHOOTING: Para QUALQUER problema técnico, equipamento, sistema, desenvolvimento, internet, wifi, conectividade, rede
+9. RH: Para funcionários/colaboradores (benefícios, férias, atestados, salário)
+10. FINANCEIRO: Para pagamentos de alunos/famílias (mensalidades, boletos)
+11. SOCIAL_MEDIA: Para QUALQUER criação de conteúdo, posts, marketing digital, redes sociais
+12. CONTEUDO_MIDIA: Para solicitações de imagens, diagramas, conteúdo visual
+13. BEM_ESTAR: Para questões emocionais, psicológicas, conflitos, bullying
+14. FAQ_ESCOLA: Para perguntas sobre procedimentos, normas, regulamentos da escola
+15. COORDENACAO: Para questões pedagógicas, calendários, gestão acadêmica
+16. SECRETARIA: Para tarefas administrativas, matrículas, documentos, horários
+17. RESULTADOS_BOLSAS: Para questões sobre bolsas de estudo, provas de bolsas, cálculos de desconto
+18. JURIDICO_CONTRATOS: Para documentos legais, contratos, questões jurídicas
+19. MARKETING_DESIGN: Para conteúdo de marketing, design, campanhas promocionais
+20. ATENDIMENTO: APENAS quando não se encaixa em nenhum módulo específico
 
 IMPORTANTE: Seja específico! Escolha o módulo mais adequado baseado no contexto completo da mensagem, não ATENDIMENTO.
 

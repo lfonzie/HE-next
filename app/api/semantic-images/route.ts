@@ -170,6 +170,118 @@ async function semanticRerank(query: string, items: ImageItem[], topK: number): 
 
 /* ---------------- Utils ---------------- */
 
+// Função para extrair termos principais de consultas educacionais
+function extractMainTerms(query: string): { mainTerm: string; contextTerms: string[] } {
+  const lowerQuery = query.toLowerCase().trim();
+  
+  // Padrões comuns em consultas educacionais
+  const educationalPatterns = [
+    // Padrão: "matéria de [termo]" ou "física de [termo]" - PRIORIDADE ALTA
+    // Captura o termo após "de" (grupo 1)
+    /^(?:física|química|biologia|história|geografia|matemática|português|literatura|filosofia|sociologia|educação física|artes)\s+de\s+(.+)$/,
+    // Padrão: "matéria do [termo]" ou "física do [termo]" - PRIORIDADE ALTA
+    // Captura o termo após "do" (grupo 1)
+    /^(?:física|química|biologia|história|geografia|matemática|português|literatura|filosofia|sociologia|educação física|artes)\s+do\s+(.+)$/,
+    // Padrão: "matéria da [termo]" ou "física da [termo]" - PRIORIDADE ALTA  
+    // Captura o termo após "da" (grupo 1)
+    /^(?:física|química|biologia|história|geografia|matemática|português|literatura|filosofia|sociologia|educação física|artes)\s+da\s+(.+)$/,
+    // Padrão: "[termo] em física" ou "[termo] na biologia"
+    // Captura o termo antes da disciplina (grupo 1)
+    /^(.+?)\s+(?:em|na|no)\s+(?:física|química|biologia|história|geografia|matemática|português|literatura|filosofia|sociologia|educação física|artes)$/,
+    // Padrão: "estudo de [termo]" ou "análise de [termo]"
+    // Captura o termo após "de" (grupo 1)
+    /^(?:estudo|análise|pesquisa|investigação)\s+de\s+(.+)$/,
+    // Padrão: "[termo] - conceitos" ou "[termo] - teoria"
+    // Captura o termo antes do hífen (grupo 1)
+    /^(.+?)\s*[-–]\s*(?:conceitos|teoria|fundamentos|princípios|básicos)$/,
+  ];
+
+  // Tentar encontrar padrões educacionais
+  for (const pattern of educationalPatterns) {
+    const match = lowerQuery.match(pattern);
+    if (match) {
+      const mainTerm = match[1].trim();
+      const contextTerms = lowerQuery.split(/\s+/).filter(term => 
+        term !== mainTerm && term.length > 2
+      );
+      return { mainTerm, contextTerms };
+    }
+  }
+
+  // Se não encontrar padrão específico, usar heurística simples
+  const words = lowerQuery.split(/\s+/);
+  
+  // Remover palavras muito comuns que não são termos principais
+  const commonWords = new Set([
+    'de', 'da', 'do', 'das', 'dos', 'em', 'na', 'no', 'nas', 'nos',
+    'para', 'por', 'com', 'sem', 'sobre', 'entre', 'durante',
+    'o', 'a', 'os', 'as', 'um', 'uma', 'uns', 'umas',
+    'que', 'qual', 'quais', 'como', 'quando', 'onde', 'porque',
+    'estudo', 'análise', 'pesquisa', 'investigação', 'conceitos',
+    'teoria', 'fundamentos', 'princípios', 'básicos'
+  ]);
+
+  // Filtrar palavras comuns e muito curtas
+  const meaningfulWords = words.filter(word => 
+    word.length > 2 && !commonWords.has(word)
+  );
+
+  if (meaningfulWords.length === 0) {
+    return { mainTerm: lowerQuery, contextTerms: [] };
+  }
+
+  // O primeiro termo significativo é geralmente o principal
+  const mainTerm = meaningfulWords[0];
+  const contextTerms = meaningfulWords.slice(1);
+
+  return { mainTerm, contextTerms };
+}
+
+// Função para criar consultas otimizadas para busca de imagens
+function createOptimizedQueries(originalQuery: string): string[] {
+  const { mainTerm, contextTerms } = extractMainTerms(originalQuery);
+  
+  const queries = [
+    mainTerm, // Termo principal isolado
+  ];
+
+  // Adicionar variações do termo principal
+  if (mainTerm.includes(' ')) {
+    // Se o termo principal tem múltiplas palavras, adicionar versão simplificada
+    const firstWord = mainTerm.split(' ')[0];
+    if (firstWord.length > 3) {
+      queries.push(firstWord);
+    }
+  }
+
+  // Adicionar contexto se relevante
+  if (contextTerms.length > 0) {
+    const contextQuery = `${mainTerm} ${contextTerms.slice(0, 2).join(' ')}`;
+    queries.push(contextQuery);
+  }
+
+  // Adicionar termos relacionados educacionais
+  const educationalSynonyms: Record<string, string[]> = {
+    'terremoto': ['earthquake', 'sismo', 'tremor'],
+    'vulcão': ['volcano', 'erupção'],
+    'fotossíntese': ['photosynthesis', 'clorofila'],
+    'mitose': ['mitosis', 'divisão celular'],
+    'evolução': ['evolution', 'darwin'],
+    'gravidade': ['gravity', 'gravitational'],
+    'eletricidade': ['electricity', 'electrical'],
+    'magnetismo': ['magnetism', 'magnetic'],
+    'atomo': ['atom', 'atomic'],
+    'molécula': ['molecule', 'molecular'],
+  };
+
+  const synonyms = educationalSynonyms[mainTerm.toLowerCase()];
+  if (synonyms) {
+    queries.push(...synonyms.slice(0, 2));
+  }
+
+  return [...new Set(queries)]; // Remove duplicatas
+}
+
 function dedupByUrl(items: ImageItem[]): ImageItem[] {
   const seen = new Set<string>();
   const out: ImageItem[] = [];
@@ -187,8 +299,12 @@ function dedupByUrl(items: ImageItem[]): ImageItem[] {
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const q = (searchParams.get("q") || "").trim();
-    if (!q) return NextResponse.json({ error: "Parâmetro 'q' é obrigatório." }, { status: 400 });
+    const originalQuery = (searchParams.get("q") || "").trim();
+    if (!originalQuery) return NextResponse.json({ error: "Parâmetro 'q' é obrigatório." }, { status: 400 });
+
+    // Criar consultas otimizadas para busca mais precisa
+    const optimizedQueries = createOptimizedQueries(originalQuery);
+    const { mainTerm } = extractMainTerms(originalQuery);
 
     // Recall antes do rerank (pode ajustar)
     const perProvider = clamp(parseInt(searchParams.get("perProvider") || "12", 10), 3, 50);
@@ -196,29 +312,40 @@ export async function GET(req: Request) {
     const orientation = searchParams.get("orientation") || undefined; // Unsplash/Pixabay
     const safe = (searchParams.get("safe") ?? "true") !== "false";
 
-    // Busca concorrente nos 3 provedores
-    const [u, p, w] = await Promise.allSettled([
-      fetchUnsplash(q, page, perProvider, orientation),
-      fetchPixabay(q, page, perProvider, orientation, safe),
-      fetchWikimedia(q, page, perProvider),
-    ]);
+    // Buscar com múltiplas consultas otimizadas
+    const allResults: ImageItem[] = [];
+    
+    for (const query of optimizedQueries.slice(0, 3)) { // Limitar a 3 consultas para performance
+      const [u, p, w] = await Promise.allSettled([
+        fetchUnsplash(query, page, Math.ceil(perProvider / 3), orientation),
+        fetchPixabay(query, page, Math.ceil(perProvider / 3), orientation, safe),
+        fetchWikimedia(query, page, Math.ceil(perProvider / 3)),
+      ]);
 
-    const merged = dedupByUrl([
-      ...(u.status === "fulfilled" ? u.value : []),
-      ...(p.status === "fulfilled" ? p.value : []),
-      ...(w.status === "fulfilled" ? w.value : []),
-    ]);
+      const queryResults = dedupByUrl([
+        ...(u.status === "fulfilled" ? u.value : []),
+        ...(p.status === "fulfilled" ? p.value : []),
+        ...(w.status === "fulfilled" ? w.value : []),
+      ]);
 
-    // Rerank obrigatório + Top-3
-    const top3 = await semanticRerank(q, merged, 3);
+      allResults.push(...queryResults);
+    }
+
+    // Remover duplicatas de todas as consultas
+    const merged = dedupByUrl(allResults);
+
+    // Rerank semântico usando o termo principal para maior precisão
+    const topResults = await semanticRerank(mainTerm, merged, 6); // Aumentar para 6 resultados
 
     return NextResponse.json({
-      query: q,
-      count: top3.length,
-      topK: 3,
+      query: originalQuery,
+      mainTerm,
+      optimizedQueries,
+      count: topResults.length,
+      topK: 6,
       page,
       perProvider,
-      items: top3, // cada item já inclui score
+      items: topResults, // cada item já inclui score
     }, { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120" } });
 
   } catch (e: any) {

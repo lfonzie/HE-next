@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
 
     const { area, numQuestions, durationMs, questions, answers, score } = await request.json()
 
-    const enemSession = await prisma.enemSession.create({
+    const enemSession = await prisma.enem_session.create({
       data: {
         userId: session.user.id,
         area,
@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const sessions = await prisma.enemSession.findMany({
+    const sessions = await prisma.enem_session.findMany({
       where: { userId: session.user.id },
       orderBy: { created_at: 'desc' },
       take: 10

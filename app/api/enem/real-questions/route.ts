@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
 
     try {
       // Buscar questões do servidor local ENEM
-      const response = await fetch(`http://localhost:3001/v1/exams/${targetYear}/questions?limit=${count}&offset=0`)
+      const response = await fetch(`http://localhost:3000/v1/exams/${targetYear}/questions?limit=${count}&offset=0`)
       
       if (!response.ok) {
         throw new Error(`ENEM API error: ${response.status}`)

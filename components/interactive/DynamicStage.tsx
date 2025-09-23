@@ -298,33 +298,14 @@ export default function DynamicStage({
         )
 
       case 'OpenQuestion':
-        return (
-          <Card className="w-full max-w-2xl mx-auto">
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold mb-4">{activity.prompt}</h3>
-              <div className="space-y-4">
-                <textarea
-                  className="w-full p-3 border rounded-lg resize-none"
-                  rows={4}
-                  placeholder="Digite sua resposta aqui..."
-                  onChange={(e) => {
-                    if (e.target.value.trim()) {
-                      handleStageComplete({ 
-                        answer: e.target.value, 
-                        type: 'open_question' 
-                      })
-                    }
-                  }}
-                />
-                <div className="text-sm text-gray-500">
-                  💡 Sua resposta será salva automaticamente conforme você digita
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )
+        // Campo removido conforme solicitado - box branco desnecessário
+        return null
 
       case 'MixedQuiz':
+        // Verificar se há questões válidas antes de renderizar
+        if (!activity.questions || activity.questions.length === 0) {
+          return null
+        }
         return (
           <Card className="w-full max-w-2xl mx-auto">
             <CardContent className="p-6">
@@ -553,8 +534,8 @@ export default function DynamicStage({
         </motion.div>
       )}
 
-      {/* Navigation Buttons */}
-      <div className="flex items-center justify-between mt-6">
+      {/* Navigation Buttons - Desktop Only */}
+      <div className="hidden lg:flex items-center justify-between mt-6">
         <Button
           onClick={onPrevious}
           disabled={!canGoPrevious}

@@ -38,8 +38,8 @@ import { authOptions } from '@/lib/auth';
 const TOTAL_SLIDES = 14;
 const QUIZ_SLIDE_NUMBERS = [7, 12];
 const IMAGE_SLIDE_NUMBERS = [1, 8, 14];
-const MIN_TOKENS_PER_SLIDE = 130; // Reduced from 500 to 130 for more realistic content generation
-const GEMINI_MODEL = 'gemini-2.0-flash-exp';
+const MIN_TOKENS_PER_SLIDE = 300; // Increased to 300-600 tokens for richer content
+const GEMINI_MODEL = 'gemini-1.5-flash'; // Changed from gemini-2.0-flash-exp to more stable model
 const MAX_TOKENS = 8000;
 const TEMPERATURE = 0.7;
 
@@ -287,6 +287,7 @@ function selectBestEducationalImage(images, slideNumber, slideType, usedImageUrl
 
 /**
  * Generates an image query for a specific slide based on the topic and slide type.
+ * Uses only specific topic terms in English, avoiding generic educational terms.
  * @param {string} topic - The lesson topic.
  * @param {number} slideNumber - The slide number.
  * @param {string} slideType - The slide type ('content' or 'quiz').
@@ -299,28 +300,112 @@ function generateImageQuery(topic, slideNumber, slideType) {
     .replace(/\s+/g, ' ')
     .trim();
 
+  // Translation dictionary for specific terms only
+  const TRANSLATIONS = {
+    matemática: 'mathematics',
+    matematica: 'mathematics',
+    álgebra: 'algebra',
+    algebra: 'algebra',
+    geometria: 'geometry',
+    trigonometria: 'trigonometry',
+    cálculo: 'calculus',
+    calculo: 'calculus',
+    estatística: 'statistics',
+    estatistica: 'statistics',
+    probabilidade: 'probability',
+    física: 'physics',
+    fisica: 'physics',
+    química: 'chemistry',
+    quimica: 'chemistry',
+    biologia: 'biology',
+    história: 'history',
+    historia: 'history',
+    geografia: 'geography',
+    literatura: 'literature',
+    português: 'portuguese',
+    portugues: 'portuguese',
+    filosofia: 'philosophy',
+    sociologia: 'sociology',
+    arte: 'art',
+    música: 'music',
+    musica: 'music',
+    eletricidade: 'electricity',
+    corrente: 'current',
+    voltagem: 'voltage',
+    resistência: 'resistance',
+    resistencia: 'resistance',
+    circuito: 'circuit',
+    fotossíntese: 'photosynthesis',
+    fotossintese: 'photosynthesis',
+    célula: 'cell',
+    celula: 'cell',
+    dna: 'dna',
+    genética: 'genetics',
+    genetica: 'genetics',
+    evolução: 'evolution',
+    evolucao: 'evolution',
+    clima: 'climate',
+    relevo: 'relief',
+    gramática: 'grammar',
+    gramatica: 'grammar',
+    redação: 'writing',
+    redacao: 'writing',
+    criptografia: 'cryptography',
+    segurança: 'security',
+    seguranca: 'security',
+    algoritmo: 'algorithm',
+    programação: 'programming',
+    programacao: 'programming',
+    tecnologia: 'technology',
+    computação: 'computing',
+    computacao: 'computing',
+    inteligência: 'intelligence',
+    inteligencia: 'intelligence',
+    artificial: 'artificial',
+    dados: 'data',
+    informação: 'information',
+    informacao: 'information',
+    sistema: 'system',
+    rede: 'network',
+    internet: 'internet',
+    software: 'software',
+    hardware: 'hardware'
+  };
+
+  // Translate topic to English
   const englishTopic = cleanTopic
     .split(' ')
     .map(word => TRANSLATIONS[word] || word)
     .join(' ');
 
+  // Extract main keyword
   const mainKeyword = englishTopic
     .split(' ')
     .filter(word => word.length > 2 && !['about', 'for', 'how', 'when', 'where', 'why', 'what', 'a', 'an', 'the', 'of', 'in', 'on', 'at', 'to', 'from'].includes(word))
     .shift() || englishTopic.split(' ')[0];
 
+  // Generate specific queries based on slide context with better fallbacks
   let query;
   if (slideNumber === 1) {
-    query = `${mainKeyword} concept introduction`;
+    // Para slide 1, usar termos mais amplos e educacionais
+    query = `${mainKeyword} education concept`;
   } else if (slideNumber === 8) {
+    // Para slide 8, usar termos visuais e diagramas
     query = `${mainKeyword} diagram illustration`;
   } else if (slideNumber === 14) {
-    query = `${mainKeyword} summary conclusion`;
+    // Para slide 14, usar termos de resumo e conclusão
+    query = `${mainKeyword} summary overview`;
   } else {
-    query = mainKeyword;
+    // Para outros slides, usar o termo principal com contexto educacional
+    query = `${mainKeyword} education`;
   }
 
-  log.debug('Generated image query', { slideNumber, query });
+  // Se a query for muito específica (apenas 1 palavra), adicionar contexto educacional
+  if (query.split(' ').length === 1) {
+    query = `${query} education`;
+  }
+
+  log.debug('Generated specific image query', { slideNumber, query, originalTopic: topic });
   return query;
 }
 
@@ -331,93 +416,100 @@ function generateImageQuery(topic, slideNumber, slideType) {
  * @returns {string} The formatted prompt.
  */
 function getGeminiLessonPromptTemplate(topic, systemPrompt = '') {
-  return `Você é um professor especialista em ${topic}. Crie uma aula completa e envolvente estruturada em exatamente ${TOTAL_SLIDES} slides usando Google Gemini.
+  return `Crie uma aula completa e detalhada sobre "${topic}" com exatamente 14 slides em JSON.
 
-REGRAS CRÍTICAS:
-- Responda APENAS com JSON válido, sem texto adicional, markdown ou formatação
-- Cada slide deve ter conteúdo educativo direto, com mínimo ${MIN_TOKENS_PER_SLIDE} tokens
-- Use linguagem clara e didática em português brasileiro
-- Use \\n\\n para quebras de linha entre parágrafos
-- Para quizzes, inclua "correct" (0-3) e "options" com 4 strings sem prefixos (A, B, etc.)
-- EMBARALHE as alternativas dos quizzes para variar a posição da resposta correta
-- Use diferentes posições para a resposta correta (0, 1, 2 ou 3) em cada quiz
-- Crie títulos específicos e únicos para cada slide, evitando termos genéricos
-- Para imageQuery, use termos específicos do tema traduzidos para inglês
+REGRAS CRÍTICAS PARA JSON VÁLIDO:
+- Responda APENAS com JSON válido, sem texto adicional
+- NÃO use caracteres de controle ou especiais
+- Use apenas aspas duplas para strings
+- Escape corretamente todas as aspas dentro das strings usando \\"
+- Use \\n para quebras de linha dentro das strings
+- NÃO use vírgulas finais antes de } ou ]
+- Certifique-se de que todas as chaves e colchetes estão balanceados
 
-ESTRUTURA OBRIGATÓRIA:
-1. Abertura: [Título introdutório específico]
-2-6. [Títulos sobre conceitos, desenvolvimento, aplicações, variações, conexões]
-7. Quiz: [Título sobre conceitos básicos]
-8-11. [Títulos sobre aprofundamento, exemplos, análise crítica, síntese]
-12. Quiz: [Título sobre análise situacional]
-13-14. [Títulos sobre aplicações futuras e síntese final]
+REGRAS DE CONTEÚDO:
+- Use português brasileiro claro e didático
+- Cada slide deve ter CONTEÚDO RICO com 300-600 tokens
+- Slides 7 e 12 são quizzes com 3 perguntas cada
+- OBRIGATÓRIO: Use \\n\\n para quebras de linha entre parágrafos em TODOS os slides
+- OBRIGATÓRIO: Cada parágrafo deve ser separado por \\n\\n para melhor legibilidade
+- Para imageQuery, use APENAS termos específicos do tópico em inglês
+- Evite termos genéricos como "education", "learning", "teaching"
 
-FORMATO JSON ESTRITO:
+ESTRUTURA DETALHADA:
+- Slide 1: Introdução completa com contexto histórico e importância
+- Slides 2-6: Desenvolvimento progressivo dos conceitos fundamentais
+- Slide 7: Quiz sobre conceitos básicos aprendidos
+- Slides 8-11: Aplicações práticas, exemplos reais e aprofundamento
+- Slide 12: Quiz sobre aplicações e análise crítica
+- Slides 13-14: Síntese, conclusões e perspectivas futuras
+
+FORMATO JSON:
 {
   "slides": [
     {
       "number": 1,
-      "title": "[Título específico e único]",
-      "content": "Conteúdo detalhado\n\nParágrafo 2\n\nParágrafo 3",
+      "title": "Introdução Completa ao ${topic}",
+      "content": "Conteúdo detalhado e rico sobre ${topic} com contexto histórico, definições precisas, importância no mundo atual e objetivos da aula.\\n\\nDesenvolva parágrafos explicativos sobre os fundamentos, aplicações práticas e relevância do tema.\\n\\nInclua exemplos concretos e conexões com o cotidiano dos estudantes.\\n\\nCada seção deve ser claramente separada para facilitar a compreensão.",
       "type": "content",
-      "imageQuery": "[query específica em inglês ou null]",
-      "tokenEstimate": ${MIN_TOKENS_PER_SLIDE}
+      "imageQuery": "${topic}",
+      "tokenEstimate": 450
     },
     {
       "number": 7,
-      "title": "Quiz: [Título específico sobre conceitos básicos]",
-      "content": "Contexto detalhado do quiz com cenário prático.\\n\\nExplicação do que será avaliado e por que é importante.\\n\\nConecte com os conceitos aprendidos nos slides anteriores.",
+      "title": "Quiz: Conceitos Fundamentais de ${topic}",
+      "content": "Avalie seus conhecimentos sobre os conceitos fundamentais de ${topic} apresentados nos slides anteriores.\\n\\nEste quiz testará sua compreensão dos princípios básicos e definições essenciais.\\n\\nLeia cada pergunta com atenção e escolha a resposta mais adequada.\\n\\nBoa sorte!",
       "type": "quiz",
       "imageQuery": null,
-      "tokenEstimate": ${MIN_TOKENS_PER_SLIDE},
+      "tokenEstimate": 350,
       "points": 0,
       "questions": [
         {
-          "q": "Primeira pergunta clara que exige aplicação dos conceitos aprendidos?",
-          "options": ["Primeira alternativa", "Segunda alternativa", "Terceira alternativa", "Quarta alternativa"],
+          "q": "Qual é a definição mais precisa de ${topic}?",
+          "options": ["Definição técnica correta e específica", "Definição parcialmente correta mas incompleta", "Definição relacionada mas incorreta", "Definição completamente errada"],
           "correct": 0,
-          "explanation": "Explicação detalhada da resposta correta com justificativa completa e conexão com os conceitos anteriores"
+          "explanation": "Explicação detalhada da resposta correta com justificativa técnica e exemplos práticos"
         },
         {
-          "q": "Segunda pergunta clara que exige aplicação dos conceitos aprendidos?",
-          "options": ["Primeira alternativa", "Segunda alternativa", "Terceira alternativa", "Quarta alternativa"],
-          "correct": 2,
-          "explanation": "Explicação detalhada da resposta correta com justificativa completa e conexão com os conceitos anteriores"
-        },
-        {
-          "q": "Terceira pergunta clara que exige aplicação dos conceitos aprendidos?",
-          "options": ["Primeira alternativa", "Segunda alternativa", "Terceira alternativa", "Quarta alternativa"],
+          "q": "Qual característica é fundamental para ${topic}?",
+          "options": ["Característica incorreta mas relacionada", "Característica fundamental correta", "Característica secundária", "Característica irrelevante"],
           "correct": 1,
-          "explanation": "Explicação detalhada da resposta correta com justificativa completa e conexão com os conceitos anteriores"
+          "explanation": "Explicação detalhada da resposta correta com justificativa técnica e exemplos práticos"
+        },
+        {
+          "q": "Como ${topic} se relaciona com outras áreas?",
+          "options": ["Relação incorreta", "Relação secundária", "Relação principal correta", "Relação irrelevante"],
+          "correct": 2,
+          "explanation": "Explicação detalhada da resposta correta com justificativa técnica e exemplos práticos"
         }
       ]
     },
     {
       "number": 12,
-      "title": "Quiz: [Título específico sobre análise situacional]",
-      "content": "Contexto detalhado do segundo quiz com cenário prático.\\n\\nExplicação do que será avaliado e por que é importante.\\n\\nConecte com os conceitos aprendidos nos slides anteriores.",
+      "title": "Quiz: Aplicações Práticas de ${topic}",
+      "content": "Teste seus conhecimentos sobre as aplicações práticas e casos reais de ${topic}.\\n\\nEste quiz avalia sua capacidade de aplicar os conceitos aprendidos em situações concretas.\\n\\nAnalise cada cenário e escolha a melhor solução baseada nos conhecimentos adquiridos.",
       "type": "quiz",
       "imageQuery": null,
-      "tokenEstimate": ${MIN_TOKENS_PER_SLIDE},
+      "tokenEstimate": 350,
       "points": 0,
       "questions": [
         {
-          "q": "Primeira pergunta do segundo quiz que exige análise crítica?",
-          "options": ["Primeira alternativa", "Segunda alternativa", "Terceira alternativa", "Quarta alternativa"],
+          "q": "Em qual situação ${topic} seria mais aplicável?",
+          "options": ["Situação incorreta", "Situação parcialmente correta", "Situação irrelevante", "Situação ideal correta"],
           "correct": 3,
-          "explanation": "Explicação detalhada da resposta correta com justificativa completa e conexão com os conceitos anteriores"
+          "explanation": "Explicação detalhada da resposta correta com justificativa técnica e exemplos práticos"
         },
         {
-          "q": "Segunda pergunta do segundo quiz que exige análise crítica?",
-          "options": ["Primeira alternativa", "Segunda alternativa", "Terceira alternativa", "Quarta alternativa"],
+          "q": "Qual seria o resultado esperado ao aplicar ${topic}?",
+          "options": ["Resultado esperado correto", "Resultado parcialmente correto", "Resultado incorreto", "Resultado irrelevante"],
           "correct": 0,
-          "explanation": "Explicação detalhada da resposta correta com justificativa completa e conexão com os conceitos anteriores"
+          "explanation": "Explicação detalhada da resposta correta com justificativa técnica e exemplos práticos"
         },
         {
-          "q": "Terceira pergunta do segundo quiz que exige análise crítica?",
-          "options": ["Primeira alternativa", "Segunda alternativa", "Terceira alternativa", "Quarta alternativa"],
+          "q": "Qual limitação deve ser considerada ao usar ${topic}?",
+          "options": ["Limitação secundária", "Limitação irrelevante", "Limitação principal correta", "Limitação incorreta"],
           "correct": 2,
-          "explanation": "Explicação detalhada da resposta correta com justificativa completa e conexão com os conceitos anteriores"
+          "explanation": "Explicação detalhada da resposta correta com justificativa técnica e exemplos práticos"
         }
       ]
     }
@@ -425,16 +517,14 @@ FORMATO JSON ESTRITO:
 }
 
 Tópico: ${topic}
-${systemPrompt ? `[Custom Prompt: ${systemPrompt}]` : ''}
+${systemPrompt ? `[Custom: ${systemPrompt}]` : ''}
 
 IMPORTANTE: 
-- Use \\n\\n para quebras de linha no conteúdo
-- EMBARALHE as alternativas dos quizzes para variar a posição da resposta correta
-- Use diferentes posições para a resposta correta (0, 1, 2 ou 3) em cada quiz
-- Para o Quiz 1 (slide 7): use posições variadas (0, 1, 2, 3) para as 3 perguntas
-- Para o Quiz 2 (slide 12): use posições variadas (0, 1, 2, 3) para as 3 perguntas
-- Cada quiz deve ter EXATAMENTE 3 perguntas
-- Responda APENAS com JSON válido. Não inclua texto adicional, explicações ou formatação markdown.`;
+- Cada slide deve ter conteúdo rico e detalhado (300-600 tokens)
+- Use apenas termos específicos do tópico em inglês para imageQuery
+- Evite termos genéricos educacionais
+- Desenvolva parágrafos explicativos completos
+- Responda APENAS com JSON válido.`;
 }
 
 /**
@@ -486,6 +576,20 @@ function parseGeminiContent(content) {
       cleanContent = cleanContent.replace(/```\n?/g, '').replace(/```\n?/g, '');
     }
     
+    // Remove control characters that cause JSON parsing issues
+    cleanContent = cleanContent.replace(/[\x00-\x1F\x7F]/g, '');
+    
+    // Additional JSON validation before parsing
+    const hasBalancedBraces = (cleanContent.match(/\{/g) || []).length === (cleanContent.match(/\}/g) || []).length;
+    const hasBalancedBrackets = (cleanContent.match(/\[/g) || []).length === (cleanContent.match(/\]/g) || []).length;
+    
+    if (!hasBalancedBraces || !hasBalancedBrackets) {
+      log.warn('JSON structure appears unbalanced, attempting to fix', { 
+        balancedBraces: hasBalancedBraces, 
+        balancedBrackets: hasBalancedBrackets 
+      });
+    }
+    
     // Try to find JSON object
     if (cleanContent.startsWith('{')) {
       try {
@@ -505,13 +609,27 @@ function parseGeminiContent(content) {
         // Fix trailing commas
         fixedContent = fixedContent.replace(/,(\s*[}\]])/g, '$1');
         
-        // Fix unescaped quotes in strings
+        // Fix unescaped quotes in strings - improved regex
         fixedContent = fixedContent.replace(/"([^"]*)"([^"]*)"([^"]*)":/g, '"$1\\"$2\\"$3":');
+        
+        // Fix control characters in strings
+        fixedContent = fixedContent.replace(/"([^"]*[\x00-\x1F\x7F][^"]*)":/g, (match, content) => {
+          const cleaned = content.replace(/[\x00-\x1F\x7F]/g, '');
+          return `"${cleaned}":`;
+        });
+        
+        // Fix incomplete JSON (missing closing braces)
+        const openBraces = (fixedContent.match(/\{/g) || []).length;
+        const closeBraces = (fixedContent.match(/\}/g) || []).length;
+        if (openBraces > closeBraces) {
+          fixedContent += '}'.repeat(openBraces - closeBraces);
+        }
         
         // Try parsing the fixed content
         try {
           const parsed = JSON.parse(fixedContent);
           if (parsed.slides && Array.isArray(parsed.slides)) {
+            log.info('Successfully parsed JSON after fixes');
             return { slides: parsed.slides };
           }
         } catch (secondError) {
@@ -536,34 +654,109 @@ function parseGeminiContent(content) {
           jsonLength: jsonMatch[0].length 
         });
         
-        // Try to fix the extracted JSON
+        // Try to fix the extracted JSON with comprehensive fixes
         let fixedJson = jsonMatch[0];
+        
+        // Remove control characters
+        fixedJson = fixedJson.replace(/[\x00-\x1F\x7F]/g, '');
+        
+        // Fix trailing commas
         fixedJson = fixedJson.replace(/,(\s*[}\]])/g, '$1');
+        
+        // Fix unescaped quotes in strings
         fixedJson = fixedJson.replace(/"([^"]*)"([^"]*)"([^"]*)":/g, '"$1\\"$2\\"$3":');
+        
+        // Fix incomplete JSON
+        const openBraces = (fixedJson.match(/\{/g) || []).length;
+        const closeBraces = (fixedJson.match(/\}/g) || []).length;
+        if (openBraces > closeBraces) {
+          fixedJson += '}'.repeat(openBraces - closeBraces);
+        }
+        
+        // Fix incomplete arrays
+        const openBrackets = (fixedJson.match(/\[/g) || []).length;
+        const closeBrackets = (fixedJson.match(/\]/g) || []).length;
+        if (openBrackets > closeBrackets) {
+          fixedJson += ']'.repeat(openBrackets - closeBrackets);
+        }
         
         try {
           const parsed = JSON.parse(fixedJson);
           if (parsed.slides && Array.isArray(parsed.slides)) {
+            log.info('Successfully parsed extracted JSON after comprehensive fixes');
             return { slides: parsed.slides };
           }
         } catch (thirdError) {
-          log.warn('Failed to parse even after JSON fixes', { 
+          log.warn('Failed to parse even after comprehensive JSON fixes', { 
             error: (thirdError as Error).message 
           });
         }
       }
     }
 
-    log.warn('Failed to parse Gemini content, using fallback');
-    return {
-      slides: Array.from({ length: TOTAL_SLIDES }, (_, i) => ({
-        number: i + 1,
-        title: `Slide ${i + 1}`,
-        content: `Conteúdo do slide ${i + 1}`,
-        type: QUIZ_SLIDE_NUMBERS.includes(i + 1) ? 'quiz' : i + 1 === TOTAL_SLIDES ? 'closing' : 'content',
-        imageQuery: IMAGE_SLIDE_NUMBERS.includes(i + 1) ? 'placeholder' : null,
+    // Last resort: try to extract slides from malformed content
+    log.warn('All JSON parsing attempts failed, attempting content extraction');
+    
+    // Try to extract slide content using regex patterns
+    const slidePattern = /"number":\s*(\d+)[^}]*"title":\s*"([^"]*)"[^}]*"content":\s*"([^"]*(?:\\.[^"]*)*)"[^}]*"type":\s*"([^"]*)"/g;
+    const slides = [];
+    let match;
+    
+    while ((match = slidePattern.exec(cleanContent)) !== null) {
+      const [, number, title, content, type] = match;
+      slides.push({
+        number: parseInt(number),
+        title: title.replace(/\\n/g, '\n'),
+        content: content.replace(/\\n/g, '\n').replace(/\\"/g, '"'),
+        type: type,
+        imageQuery: IMAGE_SLIDE_NUMBERS.includes(parseInt(number)) ? 'placeholder' : null,
         tokenEstimate: MIN_TOKENS_PER_SLIDE,
-      })),
+      });
+    }
+    
+    if (slides.length > 0) {
+      log.info('Successfully extracted slides using regex pattern', { slideCount: slides.length });
+      return { slides };
+    }
+
+    log.error('Failed to parse Gemini content completely, using intelligent fallback');
+    
+    // Try to extract any meaningful content from the original response
+    const topicKeywords = topic.toLowerCase().split(' ').filter(word => word.length > 2);
+    const hasTopicContent = cleanContent.toLowerCase().includes(topic.toLowerCase());
+    
+    return {
+      slides: Array.from({ length: TOTAL_SLIDES }, (_, i) => {
+        const slideNumber = i + 1;
+        const isQuiz = QUIZ_SLIDE_NUMBERS.includes(slideNumber);
+        const isClosing = slideNumber === TOTAL_SLIDES;
+        
+        // Generate more meaningful fallback content based on topic
+        let title, content;
+        
+        if (slideNumber === 1) {
+          title = `Introdução: ${topic}`;
+          content = `Bem-vindos à aula sobre ${topic}!\\n\\nNesta introdução, vamos explorar os conceitos fundamentais e a importância deste tema.\\n\\nVamos começar nossa jornada de aprendizado juntos.`;
+        } else if (isQuiz) {
+          title = `Quiz: ${topic}`;
+          content = `Teste seus conhecimentos sobre ${topic}!\\n\\nEste quiz irá avaliar sua compreensão dos conceitos apresentados.\\n\\nLeia cada pergunta com atenção e escolha a melhor resposta.`;
+        } else if (isClosing) {
+          title = `Conclusão: ${topic}`;
+          content = `Parabéns por completar a aula sobre ${topic}!\\n\\nVocê aprendeu conceitos importantes e desenvolveu novas habilidades.\\n\\nContinue explorando e aplicando esses conhecimentos em sua vida.`;
+        } else {
+          title = `Conceitos de ${topic}`;
+          content = `Neste slide, vamos aprofundar nossos conhecimentos sobre ${topic}.\\n\\nExplore os conceitos apresentados e conecte-os com situações do seu cotidiano.\\n\\nReflita sobre como aplicar esses conhecimentos na prática.`;
+        }
+        
+        return {
+          number: slideNumber,
+          title,
+          content,
+          type: isQuiz ? 'quiz' : isClosing ? 'closing' : 'content',
+          imageQuery: IMAGE_SLIDE_NUMBERS.includes(slideNumber) ? topicKeywords[0] || 'placeholder' : null,
+          tokenEstimate: MIN_TOKENS_PER_SLIDE,
+        };
+      }),
     };
   } catch (error) {
     log.error('Error parsing Gemini content', { error: (error as Error).message });
@@ -693,6 +886,7 @@ export async function POST(request) {
         model: geminiModel,
         prompt: generationPrompt,
         temperature: TEMPERATURE,
+        maxTokens: 6000, // Increased to allow richer content
       });
       
       const geminiDuration = Math.round((Date.now() - geminiStartTime) / 1000);
@@ -736,7 +930,13 @@ export async function POST(request) {
       // Sistema avançado de seleção de imagens - 3 imagens distintas, 1 por provedor
       let selectedImages = [];
       try {
-        selectedImages = await selectThreeDistinctImages(topic);
+        // Adicionar timeout mais curto para seleção de imagens
+        selectedImages = await Promise.race([
+          selectThreeDistinctImages(topic),
+          new Promise<ImageResult[]>((_, reject) => 
+            setTimeout(() => reject(new Error('Image selection timeout')), 3000)
+          )
+        ]);
         
         // Validar seleção
         const validation = validateImageSelection(selectedImages);
@@ -780,66 +980,75 @@ export async function POST(request) {
                 sourceUrl: selectedImage.sourceUrl
               };
               
-              log.info('Using enhanced image selection', { 
-                slideNumber: validatedSlide.number, 
-                imageUrl, 
-                source: imageSource,
-                provider: selectedImage.provider,
-                title: selectedImage.title?.slice(0, 50)
-              });
+              // Validar URL da imagem
+              if (!imageUrl || !imageUrl.startsWith('http')) {
+                log.warn('Invalid image URL generated', { 
+                  slideNumber: validatedSlide.number, 
+                  imageUrl, 
+                  provider: selectedImage.provider,
+                  title: selectedImage.title?.slice(0, 50)
+                });
+                imageUrl = null; // Reset para tentar fallback
+              } else {
+                log.info('Using enhanced image selection', { 
+                  slideNumber: validatedSlide.number, 
+                  imageUrl, 
+                  source: imageSource,
+                  provider: selectedImage.provider,
+                  title: selectedImage.title?.slice(0, 50)
+                });
+              }
               
               imageIndex++;
             }
 
-            // Se ainda não encontrou imagem, tentar busca específica no Wikimedia como fallback
+            // Se não encontrou imagem específica, usar a API smart-search que busca em 3 provedores
             if (!imageUrl) {
               try {
                 const imageQuery = generateImageQuery(topic, validatedSlide.number, validatedSlide.type);
-                const wikiResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/wikimedia/search`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ query: imageQuery, subject: topic, count: 1 }),
-                });
-                if (wikiResponse.ok) {
-                  const wikiData = await wikiResponse.json();
-                  if (wikiData.success && wikiData.photos?.length > 0) {
-                    imageUrl = wikiData.photos[0].urls?.regular || wikiData.photos[0].url;
-                    imageSource = 'wikimedia-fallback';
-                    log.info('Wikimedia fallback image selected', { slideNumber: validatedSlide.number, imageUrl });
-                  }
-                }
-              } catch (error) {
-                log.warn('Failed to fetch Wikimedia fallback image', { slideNumber: validatedSlide.number, error: (error as Error).message });
-              }
-            }
-
-            // Último recurso: buscar imagem específica do tópico no Unsplash
-            if (!imageUrl) {
-              try {
-                const imageQuery = generateImageQuery(topic, validatedSlide.number, validatedSlide.type);
-                const unsplashResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/illustrations/search`, {
+                log.info('Attempting smart search with 3 providers', { slideNumber: validatedSlide.number, imageQuery });
+                
+                // Usar a API smart-search que busca em Unsplash, Pixabay e Wikimedia
+                const smartSearchResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/images/smart-search`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ 
                     query: imageQuery, 
-                    category: topic.toLowerCase().includes('biologia') ? 'biology' : 
-                             topic.toLowerCase().includes('química') ? 'chemistry' :
-                             topic.toLowerCase().includes('física') ? 'physics' :
-                             topic.toLowerCase().includes('matemática') ? 'math' : 'general',
-                    limit: 1 
+                    subject: topic, 
+                    count: 3 
                   }),
                 });
-                if (unsplashResponse.ok) {
-                  const unsplashData = await unsplashResponse.json();
-                  if (unsplashData.success && unsplashData.images?.length > 0) {
-                    imageUrl = unsplashData.images[0].url;
-                    imageSource = 'unsplash-specific';
-                    log.info('Unsplash specific image selected', { slideNumber: validatedSlide.number, imageUrl });
+                
+                if (smartSearchResponse.ok) {
+                  const smartSearchData = await smartSearchResponse.json();
+                  if (smartSearchData.success && smartSearchData.images?.length > 0) {
+                    // Selecionar a melhor imagem baseada no score de relevância
+                    const bestImage = smartSearchData.images[0];
+                    imageUrl = bestImage.url;
+                    imageSource = `smart-${bestImage.source}`;
+                    imageMetadata = {
+                      provider: bestImage.source,
+                      relevanceScore: bestImage.relevanceScore,
+                      sourcesUsed: smartSearchData.sourcesUsed,
+                      totalFound: smartSearchData.totalFound
+                    };
+                    log.info('Found image via smart search', { 
+                      slideNumber: validatedSlide.number, 
+                      imageUrl, 
+                      source: imageSource,
+                      relevanceScore: bestImage.relevanceScore,
+                      sourcesUsed: smartSearchData.sourcesUsed
+                    });
                   }
                 }
               } catch (error) {
-                log.warn('Failed to fetch Unsplash specific image', { slideNumber: validatedSlide.number, error: (error as Error).message });
+                log.warn('Failed smart search', { slideNumber: validatedSlide.number, error: (error as Error).message });
               }
+            }
+
+            // Se ainda não encontrou imagem, deixar sem imagem ao invés de usar genérica
+            if (!imageUrl) {
+              log.info('No image found via smart search, leaving slide without image', { slideNumber: validatedSlide.number, topic });
             }
 
             return { 

@@ -1,29 +1,72 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { SemanticImageGrid, SemanticImageItem } from '@/components/semantic-images';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Search, Plus, Check } from 'lucide-react';
+import { Search, Plus, Check, Lightbulb } from 'lucide-react';
 
 interface ImageSelectorProps {
   onImageSelect: (image: SemanticImageItem) => void;
   selectedImages?: SemanticImageItem[];
   maxImages?: number;
   className?: string;
+  subject?: string; // Matéria/disciplina para sugestões contextuais
 }
+
+// Sugestões de busca por disciplina
+const EDUCATIONAL_SUGGESTIONS = {
+  física: [
+    'terremoto', 'vulcão', 'gravidade', 'eletricidade', 'magnetismo',
+    'ondas', 'energia', 'movimento', 'força', 'pressão', 'temperatura',
+    'luz', 'som', 'atomo', 'molécula', 'sistema solar'
+  ],
+  química: [
+    'tabela periódica', 'reação química', 'ácido', 'base', 'molécula',
+    'átomo', 'elemento', 'composto', 'laboratório', 'experimento',
+    'cristal', 'mineral', 'petróleo', 'plástico', 'metal'
+  ],
+  biologia: [
+    'célula', 'DNA', 'fotossíntese', 'respiração', 'mitose', 'meiose',
+    'evolução', 'ecossistema', 'biodiversidade', 'genética', 'organismo',
+    'planta', 'animal', 'bactéria', 'vírus', 'habitat'
+  ],
+  história: [
+    'império romano', 'renascimento', 'revolução francesa', 'guerra mundial',
+    'independência', 'colonização', 'civilização', 'cultura', 'arte',
+    'arquitetura', 'monumento', 'documento', 'mapa histórico'
+  ],
+  geografia: [
+    'continente', 'oceano', 'montanha', 'rio', 'floresta', 'deserto',
+    'clima', 'vegetação', 'relevo', 'população', 'cidade', 'país',
+    'capital', 'fronteira', 'recursos naturais'
+  ],
+  matemática: [
+    'geometria', 'álgebra', 'cálculo', 'estatística', 'gráfico',
+    'função', 'equação', 'triângulo', 'círculo', 'número',
+    'fração', 'porcentagem', 'probabilidade', 'medida'
+  ]
+};
 
 export function ImageSelector({ 
   onImageSelect, 
   selectedImages = [], 
   maxImages = 5,
-  className = '' 
+  className = '',
+  subject
 }: ImageSelectorProps) {
   const [query, setQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
+
+  // Obter sugestões baseadas na disciplina
+  const contextualSuggestions = useMemo(() => {
+    if (!subject) return [];
+    const subjectKey = subject.toLowerCase() as keyof typeof EDUCATIONAL_SUGGESTIONS;
+    return EDUCATIONAL_SUGGESTIONS[subjectKey] || [];
+  }, [subject]);
 
   const handleImageSelect = (image: SemanticImageItem) => {
     if (selectedImages.length < maxImages) {
@@ -73,6 +116,52 @@ export function ImageSelector({
               </Button>
             </div>
 
+            {/* Sugestões contextuais */}
+            {!query.trim() && contextualSuggestions.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Lightbulb className="h-4 w-4" />
+                  <span>Sugestões para {subject}:</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {contextualSuggestions.slice(0, 8).map((suggestion) => (
+                    <Button
+                      key={suggestion}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setQuery(suggestion)}
+                      className="text-xs"
+                    >
+                      {suggestion}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Sugestões gerais quando não há disciplina específica */}
+            {!query.trim() && contextualSuggestions.length === 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Lightbulb className="h-4 w-4" />
+                  <span>Sugestões populares:</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {['terremoto', 'vulcão', 'fotossíntese', 'sistema solar', 'célula', 'DNA', 'evolução', 'gravidade'].map((suggestion) => (
+                    <Button
+                      key={suggestion}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setQuery(suggestion)}
+                      className="text-xs"
+                    >
+                      {suggestion}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {query.trim() && (
               <div className="max-h-[60vh] overflow-y-auto">
                 <SemanticImageGrid
@@ -84,7 +173,12 @@ export function ImageSelector({
 
             {!query.trim() && (
               <div className="text-center py-8 text-muted-foreground">
-                Digite uma busca para encontrar imagens educacionais
+                <div className="space-y-2">
+                  <p>Digite uma busca ou clique em uma sugestão acima</p>
+                  <p className="text-xs">
+                    💡 Dica: Para "física do terremoto", busque apenas "terremoto" para resultados mais precisos
+                  </p>
+                </div>
               </div>
             )}
           </div>

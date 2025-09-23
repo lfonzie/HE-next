@@ -8,6 +8,7 @@ import { SmartSuggestions } from './SmartSuggestions';
 import { AulaModal } from './AulaModal';
 import { EnemSuggestion } from './EnemSuggestion';
 import { RedacaoSuggestion } from './RedacaoSuggestion';
+import { WeatherModal } from './WeatherModal';
 import { useChat } from '../../hooks/useChat';
 import { useToast } from '../../hooks/use-toast';
 
@@ -15,6 +16,7 @@ interface ModalState {
   aula: { isOpen: boolean; topic: string };
   enem: boolean;
   redacao: boolean;
+  weather: { isOpen: boolean; city: string };
 }
 
 interface ChatInterfaceRefactoredProps {
@@ -33,6 +35,7 @@ export function ChatInterfaceRefactored({ className = '' }: ChatInterfaceRefacto
     aula: { isOpen: false, topic: '' },
     enem: false,
     redacao: false,
+    weather: { isOpen: false, city: '' },
   });
 
   // Refs
@@ -138,6 +141,13 @@ export function ChatInterfaceRefactored({ className = '' }: ChatInterfaceRefacto
     setModalState(prev => ({ ...prev, redacao: true }));
   };
 
+  const handleWeatherClick = (city: string) => {
+    setModalState(prev => ({ 
+      ...prev, 
+      weather: { isOpen: true, city } 
+    }));
+  };
+
   const handleStartSimulator = (type: 'quick' | 'full') => {
     router.push(`/enem?mode=${type}`);
     setModalState(prev => ({ ...prev, enem: false }));
@@ -162,6 +172,13 @@ export function ChatInterfaceRefactored({ className = '' }: ChatInterfaceRefacto
 
   const closeRedacaoModal = () => {
     setModalState(prev => ({ ...prev, redacao: false }));
+  };
+
+  const closeWeatherModal = () => {
+    setModalState(prev => ({ 
+      ...prev, 
+      weather: { ...prev.weather, isOpen: false } 
+    }));
   };
 
   // Clear suggestions
@@ -254,6 +271,7 @@ export function ChatInterfaceRefactored({ className = '' }: ChatInterfaceRefacto
               onAulaClick={handleAulaClick}
               onEnemClick={handleEnemClick}
               onRedacaoClick={handleRedacaoClick}
+              onWeatherClick={handleWeatherClick}
             />
             
             <button
@@ -361,6 +379,13 @@ export function ChatInterfaceRefactored({ className = '' }: ChatInterfaceRefacto
           </div>
         </div>
       )}
+
+      {/* Weather Modal */}
+      <WeatherModal
+        isOpen={modalState.weather.isOpen}
+        onClose={closeWeatherModal}
+        city={modalState.weather.city}
+      />
     </div>
   );
 }

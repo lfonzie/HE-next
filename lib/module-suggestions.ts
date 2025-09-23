@@ -19,7 +19,7 @@ export const MODULE_SUGGESTIONS: Record<ModuleId, ModuleSuggestion[]> = {
       id: 'prof-2',
       text: 'Preciso de ajuda com exercícios de física',
       category: 'Exercícios',
-      icon: '🧮'
+      icon: '⚗️'
     },
     {
       id: 'prof-3',

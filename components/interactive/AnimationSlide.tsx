@@ -85,8 +85,12 @@ export default function AnimationSlide({
                       objectFit: 'cover'
                     }}
                     onError={(e) => {
+                      console.warn('Erro ao carregar imagem da API:', imageUrl);
                       // Fallback para imagem genérica se a dinâmica falhar
                       e.currentTarget.src = `https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1350&h=1080&fit=crop&auto=format`
+                    }}
+                    onLoad={() => {
+                      console.log('Imagem carregada com sucesso:', imageUrl);
                     }}
                   />
                 ) : (

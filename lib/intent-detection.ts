@@ -1,7 +1,8 @@
 export interface DetectedIntent {
-  type: 'aula' | 'enem' | 'redacao' | 'general';
+  type: 'aula' | 'enem' | 'redacao' | 'weather' | 'general';
   confidence: number;
   topic?: string;
+  city?: string;
   context?: string;
   metadata?: Record<string, any>;
 }
@@ -9,6 +10,24 @@ export interface DetectedIntent {
 export function detectIntent(message: string): DetectedIntent {
   const lowerMessage = message.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); // Normalize accents
   const intents = [
+    {
+      type: 'weather',
+      patterns: [
+        /clima em (.+)/i,
+        /tempo em (.+)/i,
+        /previsão do tempo em (.+)/i,
+        /como está o clima em (.+)/i,
+        /temperatura em (.+)/i,
+        /clima de (.+)/i,
+        /tempo de (.+)/i,
+        /previsão em (.+)/i,
+        /como está o tempo em (.+)/i,
+        /temperatura de (.+)/i,
+        /previsão (.+)/i
+      ],
+      confidence: 0.95,
+      extractCity: true,
+    },
     {
       type: 'aula',
       patterns: [
@@ -97,7 +116,8 @@ export function detectIntent(message: string): DetectedIntent {
           type: intent.type,
           confidence: intent.confidence,
           topic: intent.extractTopic ? extractTopic(message) : undefined,
-          context: intent.type === 'aula' ? 'educational' : intent.type === 'enem' ? 'exam' : 'writing',
+          city: intent.extractCity ? extractCity(message) : undefined,
+          context: intent.type === 'aula' ? 'educational' : intent.type === 'enem' ? 'exam' : intent.type === 'weather' ? 'weather' : 'writing',
           metadata: { source: 'pattern_match' },
         };
       }
@@ -109,6 +129,28 @@ export function detectIntent(message: string): DetectedIntent {
     confidence: 0.5,
     metadata: { source: 'fallback' },
   };
+}
+
+function extractCity(message: string): string {
+  const patterns = [
+    /clima em (.+)/i,
+    /tempo em (.+)/i,
+    /previsão do tempo em (.+)/i,
+    /como está o clima em (.+)/i,
+    /temperatura em (.+)/i,
+    /clima de (.+)/i,
+    /tempo de (.+)/i,
+    /previsão em (.+)/i,
+    /como está o tempo em (.+)/i,
+    /temperatura de (.+)/i
+  ];
+
+  for (const pattern of patterns) {
+    const match = message.match(pattern);
+    if (match) return match[1].trim();
+  }
+
+  return 'cidade não identificada';
 }
 
 function extractTopic(message: string): string {
@@ -148,6 +190,7 @@ export function detectIntentAdvanced(message: string): DetectedIntent {
   const lowerMessage = message.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   
   const intentScores = {
+    weather: 0,
     aula: 0,
     enem: 0,
     redacao: 0,
@@ -156,6 +199,21 @@ export function detectIntentAdvanced(message: string): DetectedIntent {
 
   // Educational keywords with weights
   const educationalKeywords = {
+    weather: [
+      { word: 'clima', weight: 4 },
+      { word: 'tempo', weight: 4 },
+      { word: 'previsão', weight: 3 },
+      { word: 'temperatura', weight: 3 },
+      { word: 'chuva', weight: 2 },
+      { word: 'sol', weight: 2 },
+      { word: 'nublado', weight: 2 },
+      { word: 'vento', weight: 2 },
+      { word: 'umidade', weight: 2 },
+      { word: 'pressão', weight: 1 },
+      { word: 'visibilidade', weight: 1 },
+      { word: 'uv', weight: 1 },
+      { word: 'meteorologia', weight: 1 }
+    ],
     aula: [
       { word: 'aula', weight: 3 },
       { word: 'explicar', weight: 2 },
@@ -241,7 +299,8 @@ export function detectIntentAdvanced(message: string): DetectedIntent {
     type: bestIntent === 'general' ? 'general' : bestIntent,
     confidence,
     topic: bestIntent === 'aula' ? extractTopic(message) : undefined,
-    context: bestIntent === 'aula' ? 'educational' : bestIntent === 'enem' ? 'exam' : bestIntent === 'redacao' ? 'writing' : 'general',
+    city: bestIntent === 'weather' ? extractCity(message) : undefined,
+    context: bestIntent === 'aula' ? 'educational' : bestIntent === 'enem' ? 'exam' : bestIntent === 'weather' ? 'weather' : bestIntent === 'redacao' ? 'writing' : 'general',
     metadata: { source: 'weighted_scoring', scores: intentScores },
   };
 }

@@ -455,16 +455,44 @@ function parseGeneratedContent(content) {
       }
     }
 
-    log.warn('Failed to parse AI content, using fallback');
+    log.warn('Failed to parse AI content, using intelligent fallback');
+    
+    // Try to extract any meaningful content from the original response
+    const topicKeywords = content.toLowerCase().split(' ').filter(word => word.length > 2);
+    const hasTopicContent = cleanContent.toLowerCase().includes('topic') || cleanContent.toLowerCase().includes('aula');
+    
     return {
-      slides: Array.from({ length: TOTAL_SLIDES }, (_, i) => ({
-        number: i + 1,
-        title: `Slide ${i + 1}`,
-        content: `Conteúdo do slide ${i + 1}`,
-        type: QUIZ_SLIDE_NUMBERS.includes(i + 1) ? 'quiz' : i + 1 === TOTAL_SLIDES ? 'closing' : 'content',
-        imageQuery: IMAGE_SLIDE_NUMBERS.includes(i + 1) ? 'placeholder' : null,
-        tokenEstimate: MIN_TOKENS_PER_SLIDE,
-      })),
+      slides: Array.from({ length: TOTAL_SLIDES }, (_, i) => {
+        const slideNumber = i + 1;
+        const isQuiz = QUIZ_SLIDE_NUMBERS.includes(slideNumber);
+        const isClosing = slideNumber === TOTAL_SLIDES;
+        
+        // Generate more meaningful fallback content
+        let title, content;
+        
+        if (slideNumber === 1) {
+          title = `Introdução`;
+          content = `Bem-vindos à nossa aula!\\n\\nNesta introdução, vamos explorar os conceitos fundamentais e a importância deste tema.\\n\\nVamos começar nossa jornada de aprendizado juntos.`;
+        } else if (isQuiz) {
+          title = `Quiz de Avaliação`;
+          content = `Teste seus conhecimentos!\\n\\nEste quiz irá avaliar sua compreensão dos conceitos apresentados.\\n\\nLeia cada pergunta com atenção e escolha a melhor resposta.`;
+        } else if (isClosing) {
+          title = `Conclusão`;
+          content = `Parabéns por completar a aula!\\n\\nVocê aprendeu conceitos importantes e desenvolveu novas habilidades.\\n\\nContinue explorando e aplicando esses conhecimentos em sua vida.`;
+        } else {
+          title = `Conceitos Fundamentais`;
+          content = `Neste slide, vamos aprofundar nossos conhecimentos.\\n\\nExplore os conceitos apresentados e conecte-os com situações do seu cotidiano.\\n\\nReflita sobre como aplicar esses conhecimentos na prática.`;
+        }
+        
+        return {
+          number: slideNumber,
+          title,
+          content,
+          type: isQuiz ? 'quiz' : isClosing ? 'closing' : 'content',
+          imageQuery: IMAGE_SLIDE_NUMBERS.includes(slideNumber) ? 'education' : null,
+          tokenEstimate: MIN_TOKENS_PER_SLIDE,
+        };
+      }),
     };
   } catch (error) {
     log.error('Error parsing AI content', { 

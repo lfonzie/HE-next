@@ -246,14 +246,14 @@ export const GeneralWelcome: React.FC<GeneralWelcomeProps> = ({
           </div>
         </div>
 
-        {/* Seção "Sugestões para Professor" */}
+        {/* Seção "Sugestões para Estudos" */}
         <div className="max-w-6xl mx-auto mb-16">
           <div className="text-center mb-8">
             <h3 className="text-3xl font-bold text-gray-800 mb-4 flex items-center justify-center gap-3">
               <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
                 <BookOpen className="h-4 w-4 text-white" />
               </div>
-              Sugestões para Professor
+              Sugestões para Estudos
             </h3>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               Clique em qualquer sugestão para começar uma conversa
@@ -293,7 +293,7 @@ export const GeneralWelcome: React.FC<GeneralWelcomeProps> = ({
                 </div>
                 <div className="flex gap-2">
                   <Badge variant="secondary" className="text-xs px-3 py-1 bg-yellow-100 text-yellow-800 border border-yellow-200">
-                    Professor
+                    Estudos
                   </Badge>
                   <Badge variant="outline" className="text-xs px-3 py-1 border-orange-200 text-orange-700">
                     Sugestão
@@ -325,7 +325,7 @@ export const GeneralWelcome: React.FC<GeneralWelcomeProps> = ({
                 </div>
                 <div className="flex gap-2">
                   <Badge variant="secondary" className="text-xs px-3 py-1 bg-yellow-100 text-yellow-800 border border-yellow-200">
-                    Professor
+                    Estudos
                   </Badge>
                   <Badge variant="outline" className="text-xs px-3 py-1 border-orange-200 text-orange-700">
                     Sugestão
@@ -357,7 +357,7 @@ export const GeneralWelcome: React.FC<GeneralWelcomeProps> = ({
                 </div>
                 <div className="flex gap-2">
                   <Badge variant="secondary" className="text-xs px-3 py-1 bg-yellow-100 text-yellow-800 border border-yellow-200">
-                    Professor
+                    Estudos
                   </Badge>
                   <Badge variant="outline" className="text-xs px-3 py-1 border-orange-200 text-orange-700">
                     Sugestão

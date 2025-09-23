@@ -97,6 +97,7 @@ export default function DemoSimplePage() {
               <p><strong>Troubleshooting:</strong> <a href="/demo?tab=ti" className="text-blue-600 hover:underline">http://localhost:3000/demo?tab=ti</a></p>
               <p><strong>Conquistas:</strong> <a href="/demo?tab=achievements" className="text-blue-600 hover:underline">http://localhost:3000/demo?tab=achievements</a></p>
               <p><strong>Analytics:</strong> <a href="/demo?tab=analytics" className="text-blue-600 hover:underline">http://localhost:3000/demo?tab=analytics</a></p>
+              <p><strong>Dashboard Analytics:</strong> <a href="/analytics" className="text-blue-600 hover:underline">http://localhost:3000/analytics</a></p>
             </div>
           </CardContent>
         </Card>

@@ -1,14 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-// Prevent prerendering of this API route
-
-// Prevent prerendering of this API route
-export const dynamic = 'force-dynamic';
-
-
 import { PrismaClient } from '@prisma/client';
 
-
+export const dynamic = 'force-dynamic';
 
 const prisma = new PrismaClient();
 
@@ -46,324 +39,215 @@ export async function GET(request: NextRequest) {
         startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     }
 
-    // Get comprehensive database statistics
-    const [
-      // Table counts
-      tableCounts,
-      // User statistics
-      userStats,
-      // Conversation statistics
-      conversationStats,
-      // Analytics statistics
-      analyticsStats,
-      // School statistics
-      schoolStats,
-      // System prompts statistics
-      promptStats,
-      // ENEM statistics
-      enemStats,
-      // Database performance metrics
-      dbPerformance,
-      // Recent activity
-      recentActivity
-    ] = await Promise.all([
-      // Table counts
-      Promise.all([
-        prisma.user.count(),
-        prisma.schools.count(),
-        prisma.conversations.count(),
-        prisma.analytics.count(),
-        prisma.system_messages.count(),
-        prisma.school_prompts.count(),
-        prisma.enemQuestion.count(),
-        prisma.enemSession.count(),
-        prisma.enem_session.count(),
-        prisma.models.count(),
-        prisma.lessons.count(),
-        prisma.message_votes.count()
-      ]).then(([
-        users, schools, conversations, analytics, systemMessages, 
-        schoolPrompts, enemQuestions, enemSessions, enemSessionsAlt,
-        models, lessons, messageVotes
-      ]) => ({
-        users, schools, conversations, analytics, systemMessages,
-        schoolPrompts, enemQuestions, enemSessions, enemSessionsAlt,
-        models, lessons, messageVotes
-      })),
-
-      // User statistics
-      Promise.all([
-        prisma.user.count({ where: { role: 'STUDENT' } }),
-        prisma.user.count({ where: { role: 'TEACHER' } }),
-        prisma.user.count({ where: { role: 'ADMIN' } }),
-        prisma.user.count({ where: { created_at: { gte: startDate } } }),
-        prisma.user.groupBy({
-          by: ['role'],
-          _count: { role: true }
-        })
-      ]).then(([students, teachers, admins, newUsers, roleBreakdown]) => ({
-        students, teachers, admins, newUsers, roleBreakdown
-      })),
-
-      // Conversation statistics
-      Promise.all([
-        prisma.conversations.count({ where: { created_at: { gte: startDate } } }),
-        prisma.conversations.groupBy({
-          by: ['module'],
-          _count: { module: true },
-          _sum: { token_count: true }
-        }),
-        prisma.conversations.groupBy({
-          by: ['model'],
-          _count: { model: true },
-          _sum: { token_count: true }
-        }),
-        prisma.conversations.aggregate({
-          _sum: { token_count: true },
-          _avg: { token_count: true }
-        })
-      ]).then(([recentConversations, byModule, byModel, totals]) => ({
-        recentConversations, byModule, byModel, totals
-      })),
-
-      // Analytics statistics
-      Promise.all([
-        prisma.analytics.count({ where: { date: { gte: startDate } } }),
-        prisma.analytics.groupBy({
-          by: ['module'],
-          _count: { module: true },
-          _sum: { tokens_used: true }
-        }),
-        prisma.analytics.aggregate({
-          _sum: { tokens_used: true },
-          _avg: { tokens_used: true }
-        }),
-        prisma.analytics.groupBy({
-          by: ['date'],
-          _count: { date: true },
-          _sum: { tokens_used: true },
-          orderBy: { date: 'desc' },
-          take: 30
-        })
-      ]).then(([recentAnalytics, byModule, totals, dailyUsage]) => ({
-        recentAnalytics, byModule, totals, dailyUsage
-      })),
-
-      // School statistics
-      Promise.all([
-        prisma.schools.count({ where: { created_at: { gte: startDate } } }),
-        prisma.schools.groupBy({
-          by: ['state'],
-          _count: { state: true }
-        }),
-        prisma.schools.groupBy({
-          by: ['plan'],
-          _count: { plan: true }
-        })
-      ]).then(([newSchools, byState, byPlan]) => ({
-        newSchools, byState, byPlan
-      })),
-
-      // System prompts statistics
-      Promise.all([
-        prisma.system_messages.count(),
-        prisma.school_prompts.count(),
-        prisma.system_messages.count({ where: { is_active: true } }),
-        prisma.school_prompts.count({ where: { is_active: true } })
-      ]).then(([systemMessages, schoolPrompts, activeSystemPrompts, activeSchoolPrompts]) => ({
-        systemMessages, schoolPrompts, activeSystemPrompts, activeSchoolPrompts
-      })),
-
-      // ENEM statistics
-      Promise.all([
-        prisma.enemQuestion.count(),
-        prisma.enemSession.count(),
-        prisma.enem_session.count(),
-        prisma.enemQuestion.groupBy({
-          by: ['area'],
-          _count: { area: true }
-        }),
-        prisma.enemQuestion.groupBy({
-          by: ['disciplina'],
-          _count: { disciplina: true }
-        })
-      ]).then(([questions, sessions, sessionsAlt, byArea, byDisciplina]) => ({
-        questions, sessions, sessionsAlt, byArea, byDisciplina
-      })),
-
-      // Database performance metrics
-      Promise.allSettled([
-        prisma.$queryRaw`
-          SELECT 
-            schemaname,
-            tablename,
-            n_tup_ins as inserts,
-            n_tup_upd as updates,
-            n_tup_del as deletes,
-            n_live_tup as live_tuples,
-            n_dead_tup as dead_tuples,
-            n_tup_hot_upd as hot_updates
-          FROM pg_stat_user_tables 
-          ORDER BY n_live_tup DESC
-          LIMIT 20
-        `,
-        prisma.$queryRaw`
-          SELECT 
-            datname,
-            numbackends,
-            xact_commit,
-            xact_rollback,
-            blks_read,
-            blks_hit,
-            tup_returned,
-            tup_fetched,
-            tup_inserted,
-            tup_updated,
-            tup_deleted
-          FROM pg_stat_database 
-          WHERE datname = current_database()
-        `
-      ]).then(([tableStats, dbStats]) => ({
-        tableStats: tableStats.status === 'fulfilled' ? 
-          (tableStats.value as any[]).map((row: any) => ({
-            ...row,
-            inserts: Number(row.inserts),
-            updates: Number(row.updates),
-            deletes: Number(row.deletes),
-            live_tuples: Number(row.live_tuples),
-            dead_tuples: Number(row.dead_tuples),
-            hot_updates: Number(row.hot_updates)
-          })) : [],
-        dbStats: dbStats.status === 'fulfilled' ? 
-          (dbStats.value as any[]).map((row: any) => ({
-            ...row,
-            numbackends: Number(row.numbackends),
-            xact_commit: Number(row.xact_commit),
-            xact_rollback: Number(row.xact_rollback),
-            blks_read: Number(row.blks_read),
-            blks_hit: Number(row.blks_hit),
-            tup_returned: Number(row.tup_returned),
-            tup_fetched: Number(row.tup_fetched),
-            tup_inserted: Number(row.tup_inserted),
-            tup_updated: Number(row.tup_updated),
-            tup_deleted: Number(row.tup_deleted)
-          })) : []
-      })),
-
-      // Recent activity
-      Promise.all([
-        prisma.conversations.findMany({
-          take: 10,
-          orderBy: { created_at: 'desc' },
-          select: {
-            id: true,
-            module: true,
-            model: true,
-            token_count: true,
-            created_at: true
-          }
-        }),
-        prisma.analytics.findMany({
-          take: 10,
-          orderBy: { date: 'desc' },
-          select: {
-            id: true,
-            module: true,
-            tokens_used: true,
-            date: true
-          }
-        }),
-        prisma.user.findMany({
-          take: 10,
-          orderBy: { created_at: 'desc' },
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
-            created_at: true
-          }
-        })
-      ]).then(([recentConversations, recentAnalytics, recentUsers]) => ({
-        recentConversations, recentAnalytics, recentUsers
-      }))
-    ]);
-
-    // Calculate derived metrics
-    const totalTokensUsed = conversationStats.totals._sum.token_count || 0;
-    const avgTokensPerConversation = conversationStats.totals._avg.token_count || 0;
-    const totalAnalyticsTokens = analyticsStats.totals._sum.tokens_used || 0;
-    const avgAnalyticsTokens = analyticsStats.totals._avg.tokens_used || 0;
-
-    // Calculate growth rates (simplified)
-    const userGrowthRate = userStats.newUsers > 0 ? 
-      ((userStats.newUsers / userStats.students) * 100).toFixed(1) : '0.0';
-    
-    const conversationGrowthRate = conversationStats.recentConversations > 0 ?
-      ((conversationStats.recentConversations / tableCounts.conversations) * 100).toFixed(1) : '0.0';
-
-    const response = {
-      timestamp: new Date().toISOString(),
+    // Get basic statistics with error handling
+    const stats = {
       timeRange,
-      summary: {
-        totalTables: 12,
-        totalRecords: Object.values(tableCounts).reduce((sum, count) => sum + count, 0),
-        totalUsers: tableCounts.users,
-        totalConversations: tableCounts.conversations,
-        totalTokensUsed: totalTokensUsed + totalAnalyticsTokens,
-        avgTokensPerConversation: Math.round(avgTokensPerConversation),
-        userGrowthRate: `${userGrowthRate}%`,
-        conversationGrowthRate: `${conversationGrowthRate}%`
-      },
-      tableCounts,
-      userStats: {
-        ...userStats,
-        totalUsers: tableCounts.users,
-        newUsers: userStats.newUsers
-      },
-      conversationStats: {
-        ...conversationStats,
-        totalConversations: tableCounts.conversations,
-        recentConversations: conversationStats.recentConversations
-      },
-      analyticsStats: {
-        ...analyticsStats,
-        totalAnalytics: tableCounts.analytics,
-        recentAnalytics: analyticsStats.recentAnalytics
-      },
-      schoolStats: {
-        ...schoolStats,
-        totalSchools: tableCounts.schools,
-        newSchools: schoolStats.newSchools
-      },
-      promptStats: {
-        ...promptStats,
-        totalPrompts: promptStats.systemMessages + promptStats.schoolPrompts,
-        activePrompts: promptStats.activeSystemPrompts + promptStats.activeSchoolPrompts
-      },
-      enemStats: {
-        ...enemStats,
-        totalQuestions: enemStats.questions,
-        totalSessions: enemStats.sessions + enemStats.sessionsAlt
-      },
-      dbPerformance,
-      recentActivity,
-      ...(includeDetails && {
-        detailedMetrics: {
-          topModulesByUsage: conversationStats.byModule?.sort((a, b) => b._count.module - a._count.module) || [],
-          topModelsByUsage: conversationStats.byModel?.sort((a, b) => b._count.model - a._count.model) || [],
-          dailyTokenUsage: analyticsStats.dailyUsage || [],
-          schoolsByState: schoolStats.byState?.sort((a, b) => b._count.state - a._count.state) || [],
-          enemQuestionsByArea: enemStats.byArea?.sort((a, b) => b._count.area - a._count.area) || [],
-          enemQuestionsByDisciplina: enemStats.byDisciplina?.sort((a, b) => b._count.disciplina - a._count.disciplina) || []
-        }
-      })
+      startDate: startDate.toISOString(),
+      endDate: now.toISOString(),
+      timestamp: now.toISOString(),
     };
 
-    return NextResponse.json(response);
+    // Table counts with error handling
+    try {
+      const tableCounts = await Promise.allSettled([
+        prisma.user.count().catch(() => 0),
+        prisma.schools.count().catch(() => 0),
+        prisma.conversations.count().catch(() => 0),
+        prisma.analytics.count().catch(() => 0),
+        prisma.system_messages.count().catch(() => 0),
+        prisma.school_prompts.count().catch(() => 0),
+        prisma.enemQuestion.count().catch(() => 0),
+        prisma.enem_session.count().catch(() => 0),
+        prisma.models.count().catch(() => 0),
+        prisma.lessons.count().catch(() => 0),
+        prisma.message_votes.count().catch(() => 0)
+      ]);
+
+    const [
+        users, schools, conversations, analytics, systemMessages, 
+        schoolPrompts, enemQuestions, enemSessions,
+        models, lessons, messageVotes
+      ] = tableCounts.map(result => 
+        result.status === 'fulfilled' ? result.value : 0
+      );
+
+      stats.tableCounts = {
+        users, schools, conversations, analytics, systemMessages,
+        schoolPrompts, enemQuestions, enemSessions,
+        models, lessons, messageVotes
+      };
+    } catch (error) {
+      console.error('Error fetching table counts:', error);
+      stats.tableCounts = {
+        users: 0, schools: 0, conversations: 0, analytics: 0, systemMessages: 0,
+        schoolPrompts: 0, enemQuestions: 0, enemSessions: 0,
+        models: 0, lessons: 0, messageVotes: 0
+      };
+    }
+
+    // User statistics with error handling
+    try {
+      const userStats = await Promise.allSettled([
+        prisma.user.count({ where: { role: 'STUDENT' } }).catch(() => 0),
+        prisma.user.count({ where: { role: 'TEACHER' } }).catch(() => 0),
+        prisma.user.count({ where: { role: 'ADMIN' } }).catch(() => 0),
+        prisma.user.count({ where: { created_at: { gte: startDate } } }).catch(() => 0)
+      ]);
+
+      const [students, teachers, admins, newUsers] = userStats.map(result => 
+        result.status === 'fulfilled' ? result.value : 0
+      );
+
+      stats.userStats = {
+        students, teachers, admins, newUsers,
+        roleBreakdown: []
+      };
+    } catch (error) {
+      console.error('Error fetching user stats:', error);
+      stats.userStats = {
+        students: 0, teachers: 0, admins: 0, newUsers: 0,
+        roleBreakdown: []
+      };
+    }
+
+    // Conversation statistics with error handling
+    try {
+      const conversationStats = await Promise.allSettled([
+        prisma.conversations.count({ where: { created_at: { gte: startDate } } }).catch(() => 0),
+        prisma.conversations.count().catch(() => 0)
+      ]);
+
+      const [recentConversations, totalConversations] = conversationStats.map(result => 
+        result.status === 'fulfilled' ? result.value : 0
+      );
+
+      stats.conversationStats = {
+        recentConversations,
+        totalConversations,
+        moduleBreakdown: []
+      };
+    } catch (error) {
+      console.error('Error fetching conversation stats:', error);
+      stats.conversationStats = {
+        recentConversations: 0,
+        totalConversations: 0,
+        moduleBreakdown: []
+      };
+    }
+
+    // Analytics statistics with error handling
+    try {
+      const analyticsStats = await Promise.allSettled([
+        prisma.analytics.count({ where: { created_at: { gte: startDate } } }).catch(() => 0),
+        prisma.analytics.count().catch(() => 0)
+      ]);
+
+      const [recentAnalytics, totalAnalytics] = analyticsStats.map(result => 
+        result.status === 'fulfilled' ? result.value : 0
+      );
+
+      stats.analyticsStats = {
+        recentAnalytics,
+        totalAnalytics
+      };
+    } catch (error) {
+      console.error('Error fetching analytics stats:', error);
+      stats.analyticsStats = {
+        recentAnalytics: 0,
+        totalAnalytics: 0
+      };
+    }
+
+    // School statistics with error handling
+    try {
+      const schoolStats = await Promise.allSettled([
+        prisma.schools.count().catch(() => 0),
+        prisma.schools.count({ where: { created_at: { gte: startDate } } }).catch(() => 0)
+      ]);
+
+      const [totalSchools, newSchools] = schoolStats.map(result => 
+        result.status === 'fulfilled' ? result.value : 0
+      );
+
+      stats.schoolStats = {
+        totalSchools,
+        newSchools
+      };
+    } catch (error) {
+      console.error('Error fetching school stats:', error);
+      stats.schoolStats = {
+        totalSchools: 0,
+        newSchools: 0
+      };
+    }
+
+    // System prompts statistics with error handling
+    try {
+      const promptStats = await Promise.allSettled([
+        prisma.system_messages.count().catch(() => 0),
+        prisma.school_prompts.count().catch(() => 0)
+      ]);
+
+      const [totalSystemPrompts, totalSchoolPrompts] = promptStats.map(result => 
+        result.status === 'fulfilled' ? result.value : 0
+      );
+
+      stats.promptStats = {
+        totalSystemPrompts,
+        totalSchoolPrompts
+      };
+    } catch (error) {
+      console.error('Error fetching prompt stats:', error);
+      stats.promptStats = {
+        totalSystemPrompts: 0,
+        totalSchoolPrompts: 0
+      };
+    }
+
+    // ENEM statistics with error handling
+    try {
+      const enemStats = await Promise.allSettled([
+        prisma.enemQuestion.count().catch(() => 0),
+        prisma.enem_session.count().catch(() => 0),
+        prisma.enemQuestion.count({ where: { created_at: { gte: startDate } } }).catch(() => 0)
+      ]);
+
+      const [totalEnemQuestions, totalEnemSessions, newEnemQuestions] = enemStats.map(result => 
+        result.status === 'fulfilled' ? result.value : 0
+      );
+
+      stats.enemStats = {
+        totalEnemQuestions,
+        totalEnemSessions,
+        newEnemQuestions,
+        enemQuestionsByYear: [],
+        enemQuestionsByDiscipline: []
+      };
+    } catch (error) {
+      console.error('Error fetching ENEM stats:', error);
+      stats.enemStats = {
+        totalEnemQuestions: 0,
+        totalEnemSessions: 0,
+        newEnemQuestions: 0,
+        enemQuestionsByYear: [],
+        enemQuestionsByDiscipline: []
+      };
+    }
+
+    // Database performance metrics
+    stats.dbPerformance = {
+      connectionCount: 0,
+      queryTime: 0,
+      cacheHitRate: 0
+    };
+
+    // Recent activity
+    stats.recentActivity = [];
+
+    return NextResponse.json(stats);
 
   } catch (error) {
-    console.error('Error fetching database statistics:', error);
+    console.error('Database stats API error:', error);
     return NextResponse.json(
       { 
         error: 'Failed to fetch database statistics',
@@ -371,5 +255,7 @@ export async function GET(request: NextRequest) {
       }, 
       { status: 500 }
     );
+  } finally {
+    await prisma.$disconnect();
   }
 }

@@ -46,7 +46,6 @@ interface DatabaseStats {
     schoolPrompts: number;
     enemQuestions: number;
     enemSessions: number;
-    enemSessionsAlt: number;
     models: number;
     lessons: number;
     messageVotes: number;
