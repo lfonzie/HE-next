@@ -61,17 +61,49 @@ export async function POST(request: NextRequest) {
       is_correct = true; // For testing, assume all answers are correct
     } else {
       // Get the correct answer for the item from database
-      const item = await prisma.enem_item.findUnique({
-        where: { item_id }
-      });
+      try {
+        // First try to find the item by question_id (which matches the item_id from the client)
+        const item = await prisma.enem_item.findFirst({
+          where: { 
+            question_id: item_id 
+          }
+        });
 
-      if (!item) {
-        // If item not found in database, it might be a generated question
-        // For now, assume it's correct to avoid blocking the user
-        console.log(`Item ${item_id} not found in database, assuming correct for generated question`);
+        if (!item) {
+          // If item not found in database, it might be a generated question
+          // For now, assume it's correct to avoid blocking the user
+          console.log(`Item ${item_id} not found in database, assuming correct for generated question`);
+          is_correct = true;
+        } else {
+          // Try to get the correct answer from the payload_json or from enemQuestion table
+          let correctAnswer = null;
+          
+          if (item.payload_json && typeof item.payload_json === 'object') {
+            // Check if payload_json has the correct answer
+            const payload = item.payload_json as any;
+            correctAnswer = payload.correct || payload.correct_answer;
+          }
+          
+          if (!correctAnswer) {
+            // Fallback: try to get from enemQuestion table using question_id
+            const question = await prisma.enemQuestion.findUnique({
+              where: { id: item.question_id }
+            });
+            correctAnswer = question?.correct;
+          }
+          
+          if (correctAnswer) {
+            is_correct = selected_answer === correctAnswer;
+          } else {
+            // If we still can't find the correct answer, assume it's correct
+            console.log(`Could not determine correct answer for item ${item_id}, assuming correct`);
+            is_correct = true;
+          }
+        }
+      } catch (itemError) {
+        // If there's a database error when looking up the item, assume correct
+        console.warn('Database error during item lookup, assuming correct:', itemError);
         is_correct = true;
-      } else {
-        is_correct = selected_answer === item.correct_answer;
       }
     }
 
@@ -132,10 +164,16 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Error saving ENEM response:', error);
-    return NextResponse.json({ 
+    
+    // Provide more specific error information
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorDetails = {
       error: 'Failed to save response',
+      details: errorMessage,
       success: false 
-    }, { status: 500 });
+    };
+    
+    return NextResponse.json(errorDetails, { status: 500 });
   }
 }
 

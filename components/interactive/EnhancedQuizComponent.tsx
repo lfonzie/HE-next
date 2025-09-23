@@ -694,29 +694,90 @@ export default function EnhancedQuizComponent({
           </motion.div>
         )}
 
-        {/* Question Navigation Dots */}
-        <div className="flex justify-center gap-2 mb-4">
-          {questions.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => {
-                console.log('🔍 DEBUG EnhancedQuizComponent - navigation dot clicked:', index)
-                // Only allow navigation if current question is confirmed or if going to a question that's already answered
-                if (isAnswerConfirmed || answers[index] !== null || index === currentQuestionIndex) {
-                  setCurrentQuestionIndex(index)
-                }
-              }}
-              className={`w-8 h-8 rounded-full text-sm font-medium transition-colors ${
-                index === currentQuestionIndex
-                  ? 'bg-blue-500 text-white'
-                  : answers[index]
-                  ? 'bg-green-500 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              } ${!isAnswerConfirmed && index !== currentQuestionIndex && answers[index] === null ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-            >
-              {index + 1}
-            </button>
-          ))}
+        {/* Question Navigation Dots - Responsive Mobile Layout */}
+        <div className="mb-4">
+          {/* Desktop: Single row */}
+          <div className="hidden md:flex justify-center gap-2">
+            {questions.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => {
+                  console.log('🔍 DEBUG EnhancedQuizComponent - navigation dot clicked:', index)
+                  // Only allow navigation if current question is confirmed or if going to a question that's already answered
+                  if (isAnswerConfirmed || answers[index] !== null || index === currentQuestionIndex) {
+                    setCurrentQuestionIndex(index)
+                  }
+                }}
+                className={`w-8 h-8 rounded-full text-sm font-medium transition-colors ${
+                  index === currentQuestionIndex
+                    ? 'bg-blue-500 text-white'
+                    : answers[index]
+                    ? 'bg-green-500 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                } ${!isAnswerConfirmed && index !== currentQuestionIndex && answers[index] === null ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+              >
+                {index + 1}
+              </button>
+            ))}
+          </div>
+
+          {/* Mobile: Two rows when needed */}
+          <div className="md:hidden">
+            {/* First row of dots */}
+            <div className="flex justify-center gap-1 mb-1">
+              {questions.slice(0, Math.ceil(questions.length / 2)).map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => {
+                    console.log('🔍 DEBUG EnhancedQuizComponent - navigation dot clicked:', index)
+                    // Only allow navigation if current question is confirmed or if going to a question that's already answered
+                    if (isAnswerConfirmed || answers[index] !== null || index === currentQuestionIndex) {
+                      setCurrentQuestionIndex(index)
+                    }
+                  }}
+                  className={`w-6 h-6 rounded-full text-xs font-medium transition-colors ${
+                    index === currentQuestionIndex
+                      ? 'bg-blue-500 text-white'
+                      : answers[index]
+                      ? 'bg-green-500 text-white'
+                      : 'bg-gray-200 text-gray-700'
+                  } ${!isAnswerConfirmed && index !== currentQuestionIndex && answers[index] === null ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                >
+                  {index + 1}
+                </button>
+              ))}
+            </div>
+            
+            {/* Second row of dots (only if there are more than half the questions) */}
+            {questions.length > Math.ceil(questions.length / 2) && (
+              <div className="flex justify-center gap-1">
+                {questions.slice(Math.ceil(questions.length / 2)).map((_, index) => {
+                  const actualIndex = index + Math.ceil(questions.length / 2);
+                  return (
+                    <button
+                      key={actualIndex}
+                      onClick={() => {
+                        console.log('🔍 DEBUG EnhancedQuizComponent - navigation dot clicked:', actualIndex)
+                        // Only allow navigation if current question is confirmed or if going to a question that's already answered
+                        if (isAnswerConfirmed || answers[actualIndex] !== null || actualIndex === currentQuestionIndex) {
+                          setCurrentQuestionIndex(actualIndex)
+                        }
+                      }}
+                      className={`w-6 h-6 rounded-full text-xs font-medium transition-colors ${
+                        actualIndex === currentQuestionIndex
+                          ? 'bg-blue-500 text-white'
+                          : answers[actualIndex]
+                          ? 'bg-green-500 text-white'
+                          : 'bg-gray-200 text-gray-700'
+                      } ${!isAnswerConfirmed && actualIndex !== currentQuestionIndex && answers[actualIndex] === null ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                    >
+                      {actualIndex + 1}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Navigation and Completion Buttons */}

@@ -883,73 +883,105 @@ export async function POST(request) {
     const geminiTimer = log.aulaTimer('gemini-generation');
     const geminiStartTime = Date.now();
     
-    try {
-      const response = await generateText({
-        model: geminiModel,
-        prompt: generationPrompt,
-        temperature: TEMPERATURE,
-        maxTokens: 6000, // Increased to allow richer content
-      });
-      
-      const geminiDuration = Math.round((Date.now() - geminiStartTime) / 1000);
-      log.aulaTimerEnd(geminiTimer, 'gemini-generation');
-
-      log.info('Gemini response', {
-        duration: geminiDuration,
-        usage: response.usage,
-        finishReason: response.finishReason,
-        contentLength: response.text?.length || 0,
-      });
-
-      // Log token usage
-      const totalTokens = response.usage?.totalTokens || 0;
-      if (session?.user?.id && totalTokens > 0) {
-        await logTokens({
-          userId: session.user.id,
-          moduleGroup: 'Aulas',
-          model: GEMINI_MODEL,
-          totalTokens,
-          subject: topic,
-          messages: { requestId, mode, provider: 'gemini' },
-        });
-      }
-
-      const parsingTimer = log.aulaTimer('content-parsing');
-      const parsedContent = parseGeminiContent(response.text);
-      log.aulaTimerEnd(parsingTimer, 'content-parsing');
-
-      // Validação de qualidade desabilitada - slides já estão bons
-      // const validationTimer = log.aulaTimer('structure-validation');
-      // const validation = validateLessonStructure(parsedContent);
-      // log.aulaTimerEnd(validationTimer, 'structure-validation');
-
-      // if (!validation.isValid) {
-      //   log.error('Structure validation failed', { issues: validation.issues });
-      // }
-
-      const imageTimer = log.aulaTimer('image-preparation');
-      
-      // Sistema avançado de seleção de imagens - 3 imagens distintas, 1 por provedor
-      let selectedImages = [];
+    // Retry mechanism for Gemini API calls
+    const maxRetries = 3;
+    let response: any = null;
+    let lastError: Error | null = null;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        // Adicionar timeout mais curto para seleção de imagens
-        selectedImages = await Promise.race([
-          selectThreeDistinctImages(topic),
-          new Promise<ImageResult[]>((_, reject) => 
-            setTimeout(() => reject(new Error('Image selection timeout')), 3000)
-          )
-        ]);
+        log.info(`Gemini API attempt ${attempt}/${maxRetries}`, { requestId });
         
-        // Validar seleção
-        const validation = validateImageSelection(selectedImages);
-        if (!validation.isValid) {
-          log.warn('Image selection validation failed', { issues: validation.issues });
+        response = await generateText({
+          model: geminiModel,
+          prompt: generationPrompt,
+          temperature: TEMPERATURE,
+          maxTokens: 6000, // Increased to allow richer content
+        });
+        
+        // Success - break out of retry loop
+        break;
+        
+      } catch (attemptError) {
+        lastError = attemptError as Error;
+        log.warn(`Gemini API attempt ${attempt} failed`, { 
+          error: lastError.message, 
+          attempt, 
+          maxRetries 
+        });
+        
+        // If this is the last attempt, throw the error
+        if (attempt === maxRetries) {
+          throw new Error(`Failed after ${maxRetries} attempts. Last error: ${lastError.message}`);
         }
         
-        log.info('Selected distinct images', {
-          totalImages: selectedImages.length,
-          providers: [...new Set(selectedImages.map(img => img.provider))],
-          validation: validation.metrics
+        // Wait before retrying (exponential backoff)
+        const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+        log.info(`Waiting ${delay}ms before retry attempt ${attempt + 1}`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+    
+    // Process the successful response
+    const geminiDuration = Math.round((Date.now() - geminiStartTime) / 1000);
+    log.aulaTimerEnd(geminiTimer, 'gemini-generation');
+
+    log.info('Gemini response', {
+      duration: geminiDuration,
+      usage: response.usage,
+      finishReason: response.finishReason,
+      contentLength: response.text?.length || 0,
+    });
+
+    // Log token usage
+    const totalTokens = response.usage?.totalTokens || 0;
+    if (session?.user?.id && totalTokens > 0) {
+      await logTokens({
+        userId: session.user.id,
+        moduleGroup: 'Aulas',
+        model: GEMINI_MODEL,
+        totalTokens,
+        subject: topic,
+        messages: { requestId, mode, provider: 'gemini' },
+      });
+    }
+
+    const parsingTimer = log.aulaTimer('content-parsing');
+    const parsedContent = parseGeminiContent(response.text);
+    log.aulaTimerEnd(parsingTimer, 'content-parsing');
+
+    // Validação de qualidade desabilitada - slides já estão bons
+    // const validationTimer = log.aulaTimer('structure-validation');
+    // const validation = validateLessonStructure(parsedContent);
+    // log.aulaTimerEnd(validationTimer, 'structure-validation');
+
+    // if (!validation.isValid) {
+    //   log.error('Structure validation failed', { issues: validation.issues });
+    // }
+
+    const imageTimer = log.aulaTimer('image-preparation');
+    
+    // Sistema avançado de seleção de imagens - 3 imagens distintas, 1 por provedor
+    let selectedImages = [];
+    try {
+      // Adicionar timeout mais curto para seleção de imagens
+      selectedImages = await Promise.race([
+        selectThreeDistinctImages(topic),
+        new Promise<ImageResult[]>((_, reject) => 
+          setTimeout(() => reject(new Error('Image selection timeout')), 3000)
+        )
+      ]);
+      
+      // Validar seleção
+      const validation = validateImageSelection(selectedImages);
+      if (!validation.isValid) {
+        log.warn('Image selection validation failed', { issues: validation.issues });
+      }
+      
+      log.info('Selected distinct images', {
+        totalImages: selectedImages.length,
+        providers: [...new Set(selectedImages.map(img => img.provider))],
+        validation: validation.metrics
         });
         
       } catch (error) {
@@ -1170,32 +1202,48 @@ export async function POST(request) {
 
       return NextResponse.json(responseData);
 
-    } catch (geminiError) {
-      log.error('Gemini API error', { error: (geminiError as Error).message });
-      throw new Error(`Gemini API error: ${(geminiError as Error).message}`);
-    }
-
   } catch (error) {
     const totalDuration = Math.round((Date.now() - startTime) / 1000);
     log.error('Gemini lesson generation failed', { error: (error as Error).message, duration: totalDuration });
 
     let statusCode = 500;
-    let friendlyError = 'Internal server error';
+    let friendlyError = 'Erro interno do servidor';
 
-    if ((error as Error).message.includes('API key')) {
-      friendlyError = 'Invalid Gemini API key configuration';
+    const errorMessage = (error as Error).message;
+
+    if (errorMessage.includes('sobrecarregado') || errorMessage.includes('overloaded')) {
+      friendlyError = 'O modelo Gemini está temporariamente sobrecarregado. Por favor, tente novamente em alguns minutos.';
+      statusCode = 503; // Service Unavailable
+    } else if (errorMessage.includes('rate limit') || errorMessage.includes('quota')) {
+      friendlyError = 'Limite de requisições excedido. Por favor, tente novamente mais tarde.';
+      statusCode = 429; // Too Many Requests
+    } else if (errorMessage.includes('API key') || errorMessage.includes('authentication')) {
+      friendlyError = 'Erro de configuração da API Gemini.';
       statusCode = 500;
-    } else if ((error as Error).message.includes('rate limit')) {
-      friendlyError = 'Gemini rate limit exceeded. Please try again later.';
-      statusCode = 429;
-    } else if ((error as Error).message.includes('Topic')) {
-      friendlyError = (error as Error).message;
-      statusCode = 400;
+    } else if (errorMessage.includes('timeout') || errorMessage.includes('network')) {
+      friendlyError = 'Timeout na conexão. Verifique sua internet e tente novamente.';
+      statusCode = 408; // Request Timeout
+    } else if (errorMessage.includes('Topic')) {
+      friendlyError = errorMessage;
+      statusCode = 400; // Bad Request
+    } else if (errorMessage.includes('Failed after 3 attempts')) {
+      friendlyError = 'O serviço está temporariamente indisponível. Tente novamente em alguns minutos.';
+      statusCode = 503; // Service Unavailable
     }
 
     return NextResponse.json(
-      { error: friendlyError, details: (error as Error).message, timestamp: new Date().toISOString() },
-      { status: statusCode }
+      { 
+        error: friendlyError, 
+        details: errorMessage, 
+        timestamp: new Date().toISOString(),
+        retryAfter: statusCode === 503 || statusCode === 429 ? 300 : undefined // Suggest retry after 5 minutes
+      },
+      { 
+        status: statusCode,
+        headers: statusCode === 503 || statusCode === 429 ? {
+          'Retry-After': '300' // 5 minutes
+        } : undefined
+      }
     );
   }
 }

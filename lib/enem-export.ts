@@ -61,7 +61,7 @@ export class EnemExportService {
     // Get items
     const itemIds = responses.map(r => r.item_id);
     const items = await prisma.enem_item.findMany({
-      where: { item_id: { in: itemIds } }
+      where: { question_id: { in: itemIds } }
     });
 
     return {

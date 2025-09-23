@@ -51,12 +51,12 @@ function createSafeLessonData(lessonData: any) {
     stages: lessonData.stages || [],
     summary: lessonData.summary || '',
     nextSteps: lessonData.nextSteps || [],
-    metadata: lessonData.metadata || {
-      subject: 'Não especificado',
-      grade: 'Não especificado', 
-      duration: 'Não especificado',
-      difficulty: 'Não especificado',
-      tags: []
+    metadata: {
+      subject: lessonData.metadata?.subject || lessonData.subject || 'Não especificado',
+      grade: lessonData.metadata?.grade || lessonData.level || 'Não especificado',
+      duration: lessonData.metadata?.duration || `${lessonData.estimatedDuration || 45} minutos`,
+      difficulty: lessonData.metadata?.difficulty || lessonData.difficulty || 'Não especificado',
+      tags: lessonData.metadata?.tags || []
     }
   }
 }
@@ -535,6 +535,8 @@ export function printLessonImproved(lessonData: {
               <span class="metadata-item">🎓 ${safeLessonData.metadata.grade}</span>
               <span class="metadata-item">⏱️ ${safeLessonData.metadata.duration}</span>
               <span class="metadata-item">📊 ${safeLessonData.metadata.difficulty}</span>
+              ${safeLessonData.metadata.tags && safeLessonData.metadata.tags.length > 0 ? 
+                `<span class="metadata-item">🏷️ ${safeLessonData.metadata.tags.slice(0, 3).join(', ')}</span>` : ''}
             </div>
           </div>
         </div>

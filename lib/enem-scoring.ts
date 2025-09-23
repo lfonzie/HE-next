@@ -53,10 +53,10 @@ export class EnemScoringEngine {
     // Get items for responses
     const itemIds = responses.map(r => r.item_id);
     const items = await prisma.enem_item.findMany({
-      where: { item_id: { in: itemIds } }
+      where: { question_id: { in: itemIds } }
     });
 
-    const itemMap = new Map(items.map(item => [item.item_id, item]));
+    const itemMap = new Map(items.map(item => [item.question_id, item]));
 
     // Calculate area scores
     const areaScores = this.calculateAreaScores(responses, itemMap);
