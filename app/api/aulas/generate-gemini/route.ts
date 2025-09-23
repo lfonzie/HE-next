@@ -378,31 +378,33 @@ function generateImageQuery(topic, slideNumber, slideType) {
     .map(word => TRANSLATIONS[word] || word)
     .join(' ');
 
-  // Extract main keyword
-  const mainKeyword = englishTopic
+  // Extract main keywords (múltiplas palavras-chave relevantes)
+  const relevantWords = englishTopic
     .split(' ')
-    .filter(word => word.length > 2 && !['about', 'for', 'how', 'when', 'where', 'why', 'what', 'a', 'an', 'the', 'of', 'in', 'on', 'at', 'to', 'from'].includes(word))
-    .shift() || englishTopic.split(' ')[0];
+    .filter(word => word.length > 2 && !['about', 'for', 'how', 'when', 'where', 'why', 'what', 'a', 'an', 'the', 'of', 'in', 'on', 'at', 'to', 'from', 'como', 'como'].includes(word))
+    .slice(0, 3); // Pegar até 3 palavras relevantes
+
+  const mainKeywords = relevantWords.join(' ') || englishTopic.split(' ')[0];
 
   // Generate specific queries based on slide context with better fallbacks
   let query;
   if (slideNumber === 1) {
-    // Para slide 1, usar termos mais amplos e educacionais
-    query = `${mainKeyword} education concept`;
+    // Para slide 1, focar no tema principal sem termos genéricos
+    query = mainKeywords;
   } else if (slideNumber === 8) {
     // Para slide 8, usar termos visuais e diagramas
-    query = `${mainKeyword} diagram illustration`;
+    query = `${mainKeywords} diagram illustration`;
   } else if (slideNumber === 14) {
     // Para slide 14, usar termos de resumo e conclusão
-    query = `${mainKeyword} summary overview`;
+    query = `${mainKeywords} summary overview`;
   } else {
-    // Para outros slides, usar o termo principal com contexto educacional
-    query = `${mainKeyword} education`;
+    // Para outros slides, usar o tema principal
+    query = mainKeywords;
   }
 
-  // Se a query for muito específica (apenas 1 palavra), adicionar contexto educacional
-  if (query.split(' ').length === 1) {
-    query = `${query} education`;
+  // Se a query for muito genérica ou vazia, usar o tema original
+  if (!query || query.length < 3) {
+    query = cleanTopic;
   }
 
   log.debug('Generated specific image query', { slideNumber, query, originalTopic: topic });

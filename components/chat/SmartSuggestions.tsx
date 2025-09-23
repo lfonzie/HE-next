@@ -2,10 +2,10 @@
 
 import { useMemo } from 'react';
 import { DetectedIntent } from '../../lib/intent-detection';
-import { BookOpen, ClipboardList, FileText, Lightbulb, Cloud } from 'lucide-react';
+import { BookOpen, ClipboardList, FileText, Lightbulb, Cloud, Search, Newspaper, Calculator, Globe, Image, BarChart3, Languages, Timer, Calendar, Target, PenTool } from 'lucide-react';
 
 interface SmartSuggestion {
-  type: 'aula' | 'enem' | 'redacao' | 'weather';
+  type: 'aula' | 'enem' | 'redacao' | 'weather' | 'openlibrary' | 'newsapi' | 'numbersapi' | 'currentsapi' | 'giphy' | 'worldbank' | 'calculator' | 'translator' | 'timer' | 'calendar' | 'imagesearch' | 'enemModal' | 'redacaoModal' | 'aulasModal';
   title: string;
   description: string;
   action: () => void;
@@ -21,6 +21,20 @@ interface Props {
   onEnemClick: () => void;
   onRedacaoClick: () => void;
   onWeatherClick: (city: string) => void;
+  onOpenLibraryClick: (searchQuery: string) => void;
+  onNewsAPIClick: (searchQuery: string) => void;
+  onNumbersAPIClick: (searchQuery: string) => void;
+  onCurrentsAPIClick: (searchQuery: string) => void;
+  onGiphyClick: (searchQuery: string) => void;
+  onWorldBankClick: (searchQuery: string) => void;
+  onCalculatorClick: (expression?: string) => void;
+  onTranslatorClick: (text?: string) => void;
+  onTimerClick: (minutes?: number) => void;
+  onCalendarClick: (date?: Date) => void;
+  onImageSearchClick: (query?: string) => void;
+  onEnemModalClick: () => void;
+  onRedacaoModalClick: () => void;
+  onAulasModalClick: (topic?: string) => void;
   className?: string;
 }
 
@@ -31,6 +45,20 @@ export function SmartSuggestions({
   onEnemClick, 
   onRedacaoClick,
   onWeatherClick,
+  onOpenLibraryClick,
+  onNewsAPIClick,
+  onNumbersAPIClick,
+  onCurrentsAPIClick,
+  onGiphyClick,
+  onWorldBankClick,
+  onCalculatorClick,
+  onTranslatorClick,
+  onTimerClick,
+  onCalendarClick,
+  onImageSearchClick,
+  onEnemModalClick,
+  onRedacaoModalClick,
+  onAulasModalClick,
   className = ''
 }: Props) {
   const suggestions = useMemo(() => {
@@ -77,6 +105,116 @@ export function SmartSuggestions({
         color: 'text-purple-600',
         bgColor: 'bg-purple-50 hover:bg-purple-100'
       });
+    } else if (intent.type === 'openlibrary' && intent.searchQuery) {
+      suggestions.push({
+        type: 'openlibrary',
+        title: `Buscar Livros: ${intent.searchQuery}`,
+        description: 'Encontre livros na biblioteca digital mundial com informações detalhadas.',
+        action: () => onOpenLibraryClick(intent.searchQuery!),
+        icon: <Search className="w-6 h-6" />,
+        color: 'text-blue-600',
+        bgColor: 'bg-blue-50 hover:bg-blue-100'
+      });
+    } else if (intent.type === 'newsapi' && intent.searchQuery) {
+      suggestions.push({
+        type: 'newsapi',
+        title: `Notícias: ${intent.searchQuery}`,
+        description: 'Acompanhe as últimas notícias e mantenha-se informado sobre os acontecimentos.',
+        action: () => onNewsAPIClick(intent.searchQuery!),
+        icon: <Newspaper className="w-6 h-6" />,
+        color: 'text-red-600',
+        bgColor: 'bg-red-50 hover:bg-red-100'
+      });
+    } else if (intent.type === 'numbersapi' && intent.searchQuery) {
+      suggestions.push({
+        type: 'numbersapi',
+        title: `Curiosidade: ${intent.searchQuery}`,
+        description: 'Descubra fatos interessantes sobre números, datas e matemática.',
+        action: () => onNumbersAPIClick(intent.searchQuery!),
+        icon: <Calculator className="w-6 h-6" />,
+        color: 'text-green-600',
+        bgColor: 'bg-green-50 hover:bg-green-100'
+      });
+    } else if (intent.type === 'currentsapi' && intent.searchQuery) {
+      suggestions.push({
+        type: 'currentsapi',
+        title: `Notícias Globais: ${intent.searchQuery}`,
+        description: 'Explore notícias mundiais e tendências em tempo real.',
+        action: () => onCurrentsAPIClick(intent.searchQuery!),
+        icon: <Globe className="w-6 h-6" />,
+        color: 'text-purple-600',
+        bgColor: 'bg-purple-50 hover:bg-purple-100'
+      });
+    } else if (intent.type === 'giphy' && intent.searchQuery) {
+      suggestions.push({
+        type: 'giphy',
+        title: `GIFs: ${intent.searchQuery}`,
+        description: 'Encontre GIFs animados perfeitos para suas aulas e apresentações.',
+        action: () => onGiphyClick(intent.searchQuery!),
+        icon: <Image className="w-6 h-6" />,
+        color: 'text-pink-600',
+        bgColor: 'bg-pink-50 hover:bg-pink-100'
+      });
+    } else if (intent.type === 'worldbank' && intent.searchQuery) {
+      suggestions.push({
+        type: 'worldbank',
+        title: `Dados Mundiais: ${intent.searchQuery}`,
+        description: 'Explore indicadores socioeconômicos globais e dados oficiais.',
+        action: () => onWorldBankClick(intent.searchQuery!),
+        icon: <BarChart3 className="w-6 h-6" />,
+        color: 'text-indigo-600',
+        bgColor: 'bg-indigo-50 hover:bg-indigo-100'
+      });
+    } else if (intent.type === 'calculator') {
+      suggestions.push({
+        type: 'calculator',
+        title: 'Calculadora',
+        description: 'Abrir calculadora para realizar cálculos matemáticos',
+        action: () => onCalculatorClick(),
+        icon: <Calculator className="w-6 h-6" />,
+        color: 'text-blue-600',
+        bgColor: 'bg-blue-50 hover:bg-blue-100'
+      });
+    } else if (intent.type === 'translator') {
+      suggestions.push({
+        type: 'translator',
+        title: 'Tradutor',
+        description: 'Traduzir texto entre diferentes idiomas',
+        action: () => onTranslatorClick(),
+        icon: <Languages className="w-6 h-6" />,
+        color: 'text-green-600',
+        bgColor: 'bg-green-50 hover:bg-green-100'
+      });
+    } else if (intent.type === 'timer') {
+      suggestions.push({
+        type: 'timer',
+        title: 'Cronômetro',
+        description: 'Abrir cronômetro para gerenciar tempo de estudo',
+        action: () => onTimerClick(),
+        icon: <Timer className="w-6 h-6" />,
+        color: 'text-orange-600',
+        bgColor: 'bg-orange-50 hover:bg-orange-100'
+      });
+    } else if (intent.type === 'calendar') {
+      suggestions.push({
+        type: 'calendar',
+        title: 'Calendário',
+        description: 'Abrir calendário para datas e eventos',
+        action: () => onCalendarClick(),
+        icon: <Calendar className="w-6 h-6" />,
+        color: 'text-purple-600',
+        bgColor: 'bg-purple-50 hover:bg-purple-100'
+      });
+    } else if (intent.type === 'imagesearch') {
+      suggestions.push({
+        type: 'imagesearch',
+        title: 'Busca de Imagens',
+        description: 'Buscar imagens educacionais relacionadas ao tópico',
+        action: () => onImageSearchClick(),
+        icon: <Image className="w-6 h-6" />,
+        color: 'text-pink-600',
+        bgColor: 'bg-pink-50 hover:bg-pink-100'
+      });
     }
 
     // Add general suggestions if no specific intent detected
@@ -101,6 +239,15 @@ export function SmartSuggestions({
           bgColor: 'bg-green-50 hover:bg-green-100'
         },
         {
+          type: 'enemModal',
+          title: 'Simulador ENEM Completo',
+          description: 'Abrir simulador completo com cronômetro e análise de performance.',
+          action: onEnemModalClick,
+          icon: <Target className="w-6 h-6" />,
+          color: 'text-green-600',
+          bgColor: 'bg-green-50 hover:bg-green-100'
+        },
+        {
           type: 'redacao',
           title: 'Correção de Redação',
           description: 'Avalie sua redação com critérios oficiais do ENEM.',
@@ -108,12 +255,21 @@ export function SmartSuggestions({
           icon: <FileText className="w-6 h-6" />,
           color: 'text-purple-600',
           bgColor: 'bg-purple-50 hover:bg-purple-100'
+        },
+        {
+          type: 'redacaoModal',
+          title: 'Editor de Redação',
+          description: 'Abrir editor completo com avaliação automática e feedback.',
+          action: onRedacaoModalClick,
+          icon: <PenTool className="w-6 h-6" />,
+          color: 'text-purple-600',
+          bgColor: 'bg-purple-50 hover:bg-purple-100'
         }
       );
     }
 
     return suggestions.slice(0, 3); // Limit to 3 suggestions
-  }, [message, context, onAulaClick, onEnemClick, onRedacaoClick]);
+  }, [message, context, onAulaClick, onEnemClick, onRedacaoClick, onWeatherClick, onOpenLibraryClick, onNewsAPIClick, onNumbersAPIClick, onCurrentsAPIClick, onGiphyClick, onWorldBankClick, onCalculatorClick, onTranslatorClick, onTimerClick, onCalendarClick, onImageSearchClick, onEnemModalClick, onRedacaoModalClick, onAulasModalClick]);
 
   if (suggestions.length === 0) return null;
 

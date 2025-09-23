@@ -186,13 +186,41 @@ export default function ProgressiveLessonComponent({
         }
       }
 
-      // 4) Final fallback
-      setImageUrl(
-        selectedUrl || 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1350&h=1080&fit=crop&auto=format'
-      );
+      // 4) Final fallback com imagem específica por matéria
+      if (!selectedUrl) {
+        const subject = skeleton?.subject || 'Geral';
+        const subjectImages: Record<string, string> = {
+          'Matemática': 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=1350&h=1080&fit=crop&auto=format&q=80',
+          'Ciências': 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=1350&h=1080&fit=crop&auto=format&q=80',
+          'História': 'https://images.unsplash.com/photo-1481277542470-605612bd2d61?w=1350&h=1080&fit=crop&auto=format&q=80',
+          'Geografia': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1350&h=1080&fit=crop&auto=format&q=80',
+          'Português': 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=1350&h=1080&fit=crop&auto=format&q=80',
+          'Física': 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=1350&h=1080&fit=crop&auto=format&q=80',
+          'Química': 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=1350&h=1080&fit=crop&auto=format&q=80',
+          'Biologia': 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=1350&h=1080&fit=crop&auto=format&q=80',
+          'Geral': 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1350&h=1080&fit=crop&auto=format&q=80'
+        };
+        selectedUrl = subjectImages[subject] || subjectImages['Geral'];
+        console.log(`⚠️ Usando imagem específica da matéria ${subject}`);
+      }
+      
+      setImageUrl(selectedUrl);
     } catch (error) {
       console.error('❌ Erro ao carregar imagem:', error);
-      setImageUrl('https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1350&h=1080&fit=crop&auto=format');
+      // Fallback de erro também específico por matéria
+      const subject = skeleton?.subject || 'Geral';
+      const subjectImages: Record<string, string> = {
+        'Matemática': 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=1350&h=1080&fit=crop&auto=format&q=80',
+        'Ciências': 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=1350&h=1080&fit=crop&auto=format&q=80',
+        'História': 'https://images.unsplash.com/photo-1481277542470-605612bd2d61?w=1350&h=1080&fit=crop&auto=format&q=80',
+        'Geografia': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1350&h=1080&fit=crop&auto=format&q=80',
+        'Português': 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=1350&h=1080&fit=crop&auto=format&q=80',
+        'Física': 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=1350&h=1080&fit=crop&auto=format&q=80',
+        'Química': 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=1350&h=1080&fit=crop&auto=format&q=80',
+        'Biologia': 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=1350&h=1080&fit=crop&auto=format&q=80',
+        'Geral': 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1350&h=1080&fit=crop&auto=format&q=80'
+      };
+      setImageUrl(subjectImages[subject] || subjectImages['Geral']);
     }
   };
 

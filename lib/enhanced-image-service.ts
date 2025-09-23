@@ -2,6 +2,7 @@
 
 import { unsplashService } from './unsplash';
 import { detectTheme, translateThemeToEnglish } from './themeDetection';
+import { googleImageAlternativesService } from './services/google-image-alternatives';
 
 export interface ImageSearchResult {
   id: string;
@@ -59,7 +60,8 @@ class EnhancedImageService {
     query: string, 
     subject?: string, 
     count: number = 1,
-    forceRefresh: boolean = false
+    forceRefresh: boolean = false,
+    useGoogleAlternatives: boolean = true
   ): Promise<ImageSearchResponse> {
     const startTime = Date.now();
     
@@ -73,6 +75,70 @@ class EnhancedImageService {
             searchTime: Date.now() - startTime,
             cacheHit: true
           };
+        }
+      }
+
+      // Try Google alternatives first if enabled
+      if (useGoogleAlternatives) {
+        try {
+          const googleResults = await googleImageAlternativesService.searchImages({
+            query,
+            subject,
+            count,
+            safeSearch: true,
+            imageType: 'photo',
+            color: 'color',
+            size: 'large',
+            aspectRatio: 'wide',
+            orientation: 'horizontal'
+          });
+
+          if (googleResults.success && googleResults.images.length > 0) {
+            console.log('✅ Google alternatives found results:', googleResults.images.length);
+            
+            // Convert to our format
+            const convertedResults = googleResults.images.map(img => ({
+              id: img.id,
+              urls: {
+                raw: img.url,
+                full: img.url,
+                regular: img.url,
+                small: img.thumbnail || img.url,
+                thumb: img.thumbnail || img.url
+              },
+              alt_description: img.title,
+              description: img.description,
+              user: {
+                name: img.author,
+                username: img.author.toLowerCase().replace(/\s+/g, '')
+              },
+              width: img.width,
+              height: img.height,
+              color: '#4F46E5',
+              likes: 0,
+              relevanceScore: img.relevanceScore,
+              tags: img.tags
+            }));
+
+            // Cache the results
+            this.cacheResult(query, subject, convertedResults, { 
+              theme: query, 
+              englishTheme: query, 
+              confidence: 0.8 
+            });
+
+            return {
+              success: true,
+              photos: convertedResults,
+              query: query,
+              theme: query,
+              englishTheme: query,
+              fallback: false,
+              searchTime: Date.now() - startTime
+            };
+          }
+        } catch (error) {
+          console.warn('⚠️ Google alternatives failed, falling back to original method:', error);
         }
       }
 
@@ -434,31 +500,87 @@ class EnhancedImageService {
   }
 
   /**
-   * Enhanced fallback response
+   * Enhanced fallback response with educational images by subject
    */
   private getFallbackResponse(query: string, count: number, searchTime: number): ImageSearchResponse {
-    const fallbackImages = Array.from({ length: count }, (_, index) => ({
-      id: `fallback-${Date.now()}-${index}`,
-      urls: {
-        raw: `https://picsum.photos/800/400?random=${Date.now() + index}`,
-        full: `https://picsum.photos/800/400?random=${Date.now() + index}`,
-        regular: `https://picsum.photos/800/400?random=${Date.now() + index}`,
-        small: `https://picsum.photos/400/200?random=${Date.now() + index}`,
-        thumb: `https://picsum.photos/200/100?random=${Date.now() + index}`
-      },
-      alt_description: `Educational image for: ${query}`,
-      description: `Fallback image for educational content: ${query}`,
-      user: {
-        name: 'Educational Content',
-        username: 'education'
-      },
-      width: 800,
-      height: 400,
-      color: '#4F46E5',
-      likes: 0,
-      relevanceScore: 0.1,
-      tags: []
-    }));
+    // Detectar matéria baseada na query
+    const subject = this.detectSubjectFromQuery(query);
+    
+    // Imagens educacionais específicas por matéria
+    const educationalImages: Record<string, string[]> = {
+      'matemática': [
+        'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800&h=400&fit=crop&auto=format&q=80',
+        'https://images.unsplash.com/photo-1509228468518-180dd4864904?w=800&h=400&fit=crop&auto=format&q=80',
+        'https://images.unsplash.com/photo-1596495578065-6e0763fa1178?w=800&h=400&fit=crop&auto=format&q=80'
+      ],
+      'ciências': [
+        'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=800&h=400&fit=crop&auto=format&q=80',
+        'https://images.unsplash.com/photo-1535378917042-10a22c95931a?w=800&h=400&fit=crop&auto=format&q=80',
+        'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=800&h=400&fit=crop&auto=format&q=80'
+      ],
+      'história': [
+        'https://images.unsplash.com/photo-1481277542470-605612bd2d61?w=800&h=400&fit=crop&auto=format&q=80',
+        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=400&fit=crop&auto=format&q=80',
+        'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=800&h=400&fit=crop&auto=format&q=80'
+      ],
+      'geografia': [
+        'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=400&fit=crop&auto=format&q=80',
+        'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800&h=400&fit=crop&auto=format&q=80',
+        'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=800&h=400&fit=crop&auto=format&q=80'
+      ],
+      'português': [
+        'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=800&h=400&fit=crop&auto=format&q=80',
+        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=400&fit=crop&auto=format&q=80',
+        'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=800&h=400&fit=crop&auto=format&q=80'
+      ],
+      'física': [
+        'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800&h=400&fit=crop&auto=format&q=80',
+        'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=800&h=400&fit=crop&auto=format&q=80',
+        'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=800&h=400&fit=crop&auto=format&q=80'
+      ],
+      'química': [
+        'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=800&h=400&fit=crop&auto=format&q=80',
+        'https://images.unsplash.com/photo-1535378917042-10a22c95931a?w=800&h=400&fit=crop&auto=format&q=80',
+        'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=800&h=400&fit=crop&auto=format&q=80'
+      ],
+      'biologia': [
+        'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=800&h=400&fit=crop&auto=format&q=80',
+        'https://images.unsplash.com/photo-1535378917042-10a22c95931a?w=800&h=400&fit=crop&auto=format&q=80',
+        'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=800&h=400&fit=crop&auto=format&q=80'
+      ],
+      'geral': [
+        'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&h=400&fit=crop&auto=format&q=80',
+        'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=800&h=400&fit=crop&auto=format&q=80',
+        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=400&fit=crop&auto=format&q=80'
+      ]
+    };
+
+    const subjectImages = educationalImages[subject] || educationalImages['geral'];
+    const fallbackImages = Array.from({ length: count }, (_, index) => {
+      const imageUrl = subjectImages[index % subjectImages.length];
+      return {
+        id: `fallback-${subject}-${Date.now()}-${index}`,
+        urls: {
+          raw: imageUrl,
+          full: imageUrl,
+          regular: imageUrl,
+          small: imageUrl.replace('w=800&h=400', 'w=400&h=200'),
+          thumb: imageUrl.replace('w=800&h=400', 'w=200&h=100')
+        },
+        alt_description: `Educational image for ${subject}: ${query}`,
+        description: `Educational content image for ${subject}: ${query}`,
+        user: {
+          name: 'Educational Content',
+          username: 'education'
+        },
+        width: 800,
+        height: 400,
+        color: '#4F46E5',
+        likes: 0,
+        relevanceScore: 0.2,
+        tags: [subject, 'education']
+      };
+    });
 
     return {
       success: true,
@@ -467,9 +589,64 @@ class EnhancedImageService {
       theme: query,
       englishTheme: query,
       fallback: true,
-      error: 'Enhanced image service unavailable, using fallback images',
+      error: `Enhanced image service unavailable, using educational fallback images for ${subject}`,
       searchTime
     };
+  }
+
+  /**
+   * Detecta a matéria baseada na query
+   */
+  private detectSubjectFromQuery(query: string): string {
+    const queryLower = query.toLowerCase();
+    
+    if (queryLower.includes('matemática') || queryLower.includes('matematica') || 
+        queryLower.includes('algebra') || queryLower.includes('geometria') || 
+        queryLower.includes('calculo') || queryLower.includes('estatistica')) {
+      return 'matemática';
+    }
+    
+    if (queryLower.includes('física') || queryLower.includes('fisica') || 
+        queryLower.includes('physics') || queryLower.includes('mecanica')) {
+      return 'física';
+    }
+    
+    if (queryLower.includes('química') || queryLower.includes('quimica') || 
+        queryLower.includes('chemistry') || queryLower.includes('molecula')) {
+      return 'química';
+    }
+    
+    if (queryLower.includes('biologia') || queryLower.includes('biology') || 
+        queryLower.includes('celula') || queryLower.includes('dna') || 
+        queryLower.includes('genetica') || queryLower.includes('evolucao')) {
+      return 'biologia';
+    }
+    
+    if (queryLower.includes('história') || queryLower.includes('historia') || 
+        queryLower.includes('history') || queryLower.includes('antiga') || 
+        queryLower.includes('medieval') || queryLower.includes('moderna')) {
+      return 'história';
+    }
+    
+    if (queryLower.includes('geografia') || queryLower.includes('geography') || 
+        queryLower.includes('clima') || queryLower.includes('relevo') || 
+        queryLower.includes('paisagem') || queryLower.includes('continente')) {
+      return 'geografia';
+    }
+    
+    if (queryLower.includes('português') || queryLower.includes('portugues') || 
+        queryLower.includes('literatura') || queryLower.includes('gramatica') || 
+        queryLower.includes('redacao') || queryLower.includes('texto')) {
+      return 'português';
+    }
+    
+    if (queryLower.includes('ciências') || queryLower.includes('ciencias') || 
+        queryLower.includes('science') || queryLower.includes('experimento') || 
+        queryLower.includes('laboratorio') || queryLower.includes('pesquisa')) {
+      return 'ciências';
+    }
+    
+    return 'geral';
   }
 
   /**

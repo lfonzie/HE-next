@@ -21,16 +21,6 @@ interface ImageResult {
   downloadUrl?: string;
 }
 
-interface SearchResult {
-  success: boolean;
-  images: ImageResult[];
-  totalFound: number;
-  sourcesUsed: string[];
-  query: string;
-  optimizedQuery: string;
-  fallbackUsed: boolean;
-}
-
 // Configurações dos provedores
 const PROVIDERS = {
   unsplash: {
@@ -75,126 +65,44 @@ const PROVIDERS = {
   }
 };
 
-// Palavras-chave educacionais para otimizar buscas
-const EDUCATIONAL_KEYWORDS = {
-  biology: ['biology', 'science', 'laboratory', 'research', 'microscope', 'cell', 'organism', 'nature', 'ecosystem'],
-  chemistry: ['chemistry', 'laboratory', 'experiment', 'molecule', 'atom', 'reaction', 'chemical', 'science'],
-  physics: ['physics', 'experiment', 'laboratory', 'science', 'energy', 'force', 'motion', 'wave', 'particle'],
-  math: ['mathematics', 'math', 'equation', 'formula', 'graph', 'chart', 'calculation', 'geometry', 'algebra'],
-  history: ['history', 'historical', 'ancient', 'medieval', 'renaissance', 'civilization', 'culture', 'heritage'],
-  geography: ['geography', 'landscape', 'nature', 'environment', 'climate', 'terrain', 'geological', 'earth'],
-  general: ['education', 'learning', 'study', 'academic', 'school', 'university', 'knowledge', 'teaching']
-};
-
-// Função para otimizar query para educação
-function optimizeQueryForEducation(query: string, subject?: string): string {
-  const cleanQuery = query.toLowerCase().trim();
-  
-  // Se já contém palavras educacionais específicas, manter como está
-  const hasEducationalTerms = Object.values(EDUCATIONAL_KEYWORDS).some(keywords => 
-    keywords.some(keyword => cleanQuery.includes(keyword))
-  );
-  
-  if (hasEducationalTerms) {
-    return query;
-  }
-  
-  // Adicionar contexto específico baseado no assunto, evitando termos genéricos
-  let specificContext = '';
-  if (subject) {
-    const subjectKey = subject.toLowerCase().replace(/[^a-z]/g, '');
-    if (EDUCATIONAL_KEYWORDS[subjectKey as keyof typeof EDUCATIONAL_KEYWORDS]) {
-      const keywords = EDUCATIONAL_KEYWORDS[subjectKey as keyof typeof EDUCATIONAL_KEYWORDS];
-      // Usar apenas o primeiro termo específico, não genérico
-      specificContext = ` ${keywords[0]}`;
-    }
-  }
-  
-  // Se não há contexto específico, retornar a query original sem adicionar termos genéricos
-  // Isso evita imagens genéricas sobre educação
-  if (!specificContext) {
-    return query;
-  }
-  
-  return `${query}${specificContext}`.trim();
-}
-
 // Função para calcular score de relevância educacional
 function calculateEducationalScore(image: any, query: string, subject?: string): number {
   let score = 0;
   
-  // Score baseado no título e descrição
   const text = `${image.title || ''} ${image.description || ''}`.toLowerCase();
   const queryWords = query.toLowerCase().split(' ').filter(word => word.length > 2);
   
-  // Priorizar correspondências exatas com as palavras da query
   queryWords.forEach(word => {
     if (text.includes(word)) {
-      score += 20; // Score alto para correspondências exatas
+      score += 20;
     }
   });
   
-  // Penalizar termos genéricos de educação que não são específicos do tema
-  const genericTerms = ['education', 'learning', 'study', 'academic', 'school', 'university', 'teaching'];
-  const hasGenericTerms = genericTerms.some(term => text.includes(term));
-  const hasSpecificTerms = queryWords.some(word => text.includes(word));
-  
-  // Se tem termos genéricos mas não específicos, reduzir score
-  if (hasGenericTerms && !hasSpecificTerms) {
-    score -= 15;
-  }
-  
-  // Bonus para termos específicos do assunto
-  if (subject) {
-    const subjectKey = subject.toLowerCase().replace(/[^a-z]/g, '');
-    if (EDUCATIONAL_KEYWORDS[subjectKey as keyof typeof EDUCATIONAL_KEYWORDS]) {
-      const keywords = EDUCATIONAL_KEYWORDS[subjectKey as keyof typeof EDUCATIONAL_KEYWORDS];
-      keywords.forEach(keyword => {
-        if (text.includes(keyword)) {
-          score += 10;
-        }
-      });
-    }
-  }
-  
-  // Bonus para tags relevantes
-  if (image.tags) {
-    const tags = Array.isArray(image.tags) ? image.tags : image.tags.split(', ');
-    tags.forEach((tag: string) => {
-      const tagLower = tag.toLowerCase();
-      if (queryWords.some(word => tagLower.includes(word))) {
-        score += 5;
-      }
-    });
-  }
-  
-  // Bonus para qualidade da imagem
   if (image.width && image.height) {
     const aspectRatio = image.width / image.height;
-    // Preferir imagens com proporção adequada para slides
     if (aspectRatio >= 1.2 && aspectRatio <= 2.0) {
       score += 5;
     }
   }
   
-  // Bonus por fonte confiável
   if (image.source === 'wikimedia') score += 10;
   if (image.source === 'unsplash') score += 8;
   if (image.source === 'pixabay') score += 6;
   if (image.source === 'bing') score += 7;
   if (image.source === 'pexels') score += 9;
   
-  return Math.max(0, Math.min(100, score)); // Cap em 100
+  return Math.max(0, Math.min(100, score));
 }
 
 // Buscar no Unsplash
 async function searchUnsplash(query: string, subject: string, limit: number): Promise<ImageResult[]> {
-  if (!PROVIDERS.unsplash.apiKey) return [];
+  if (!PROVIDERS.unsplash.apiKey) {
+    throw new Error('UNSPLASH_ACCESS_KEY não configurada');
+  }
   
   try {
-    const optimizedQuery = optimizeQueryForEducation(query, subject);
     const params = new URLSearchParams({
-      query: optimizedQuery,
+      query,
       per_page: Math.min(limit, 30).toString(),
       orientation: 'landscape',
       content_filter: 'high',
@@ -211,7 +119,9 @@ async function searchUnsplash(query: string, subject: string, limit: number): Pr
       }
     );
     
-    if (!response.ok) return [];
+    if (!response.ok) {
+      throw new Error(`Unsplash API error: ${response.status}`);
+    }
     
     const data = await response.json();
     return data.results.map((photo: any) => ({
@@ -233,19 +143,20 @@ async function searchUnsplash(query: string, subject: string, limit: number): Pr
     }));
   } catch (error) {
     console.error('Erro ao buscar Unsplash:', error);
-    return [];
+    throw error;
   }
 }
 
 // Buscar no Pixabay
 async function searchPixabay(query: string, subject: string, limit: number): Promise<ImageResult[]> {
-  if (!PROVIDERS.pixabay.apiKey) return [];
+  if (!PROVIDERS.pixabay.apiKey) {
+    throw new Error('PIXABAY_API_KEY não configurada');
+  }
   
   try {
-    const optimizedQuery = optimizeQueryForEducation(query, subject);
     const params = new URLSearchParams({
       key: PROVIDERS.pixabay.apiKey,
-      q: optimizedQuery,
+      q: query,
       image_type: 'photo',
       orientation: 'horizontal',
       category: 'education,science',
@@ -258,7 +169,9 @@ async function searchPixabay(query: string, subject: string, limit: number): Pro
     
     const response = await fetch(`${PROVIDERS.pixabay.baseUrl}${PROVIDERS.pixabay.endpoint}?${params}`);
     
-    if (!response.ok) return [];
+    if (!response.ok) {
+      throw new Error(`Pixabay API error: ${response.status}`);
+    }
     
     const data = await response.json();
     return data.hits.map((photo: any) => ({
@@ -278,21 +191,20 @@ async function searchPixabay(query: string, subject: string, limit: number): Pro
     }));
   } catch (error) {
     console.error('Erro ao buscar Pixabay:', error);
-    return [];
+    throw error;
   }
 }
 
 // Buscar no Wikimedia Commons
 async function searchWikimedia(query: string, subject: string, limit: number): Promise<ImageResult[]> {
   try {
-    const optimizedQuery = optimizeQueryForEducation(query, subject);
-    
-    // Buscar no Wikimedia Commons - excluir PDFs e focar em imagens
-    const searchQuery = `${optimizedQuery} -filetype:pdf -filetype:doc -filetype:docx filetype:jpg OR filetype:png OR filetype:gif OR filetype:svg OR filetype:webp`;
+    const searchQuery = `${query} -filetype:pdf -filetype:doc -filetype:docx filetype:jpg OR filetype:png OR filetype:gif OR filetype:svg OR filetype:webp`;
     const searchUrl = `https://commons.wikimedia.org/w/api.php?action=query&format=json&list=search&srsearch=${encodeURIComponent(searchQuery)}&srnamespace=6&srlimit=${Math.min(limit, 50)}&srprop=size&origin=*`;
     
     const response = await fetch(searchUrl);
-    if (!response.ok) return [];
+    if (!response.ok) {
+      throw new Error(`Wikimedia API error: ${response.status}`);
+    }
     
     const data = await response.json();
     
@@ -300,12 +212,13 @@ async function searchWikimedia(query: string, subject: string, limit: number): P
       return [];
     }
     
-    // Buscar informações detalhadas das imagens
     const imageTitles = data.query.search.map((item: any) => item.title);
     const imageInfoUrl = `https://commons.wikimedia.org/w/api.php?action=query&format=json&titles=${imageTitles.join('|')}&prop=imageinfo&iiprop=url|size|mime&origin=*`;
     
     const imageInfoResponse = await fetch(imageInfoUrl);
-    if (!imageInfoResponse.ok) return [];
+    if (!imageInfoResponse.ok) {
+      throw new Error(`Wikimedia Image Info API error: ${imageInfoResponse.status}`);
+    }
     
     const imageInfoData = await imageInfoResponse.json();
     
@@ -317,7 +230,6 @@ async function searchWikimedia(query: string, subject: string, limit: number): P
       if (page.imageinfo && page.imageinfo.length > 0) {
         const imageInfo = page.imageinfo[0];
         
-        // Filtrar apenas arquivos de imagem válidos
         const isValidImage = imageInfo.mime && (
           imageInfo.mime.startsWith('image/') ||
           imageInfo.mime === 'image/jpeg' ||
@@ -360,19 +272,20 @@ async function searchWikimedia(query: string, subject: string, limit: number): P
     
     return results;
   } catch (error) {
-    console.error('Erro ao buscar no Wikimedia:', error);
-    return [];
+    console.error('Erro ao buscar Wikimedia:', error);
+    throw error;
   }
 }
 
 // Buscar no Bing Images
 async function searchBing(query: string, subject: string, limit: number): Promise<ImageResult[]> {
-  if (!PROVIDERS.bing.apiKey) return [];
+  if (!PROVIDERS.bing.apiKey) {
+    throw new Error('BING_SEARCH_API_KEY não configurada');
+  }
   
   try {
-    const optimizedQuery = optimizeQueryForEducation(query, subject);
     const params = new URLSearchParams({
-      q: optimizedQuery,
+      q: query,
       count: Math.min(limit, 150).toString(),
       offset: '0',
       mkt: 'pt-BR',
@@ -389,7 +302,9 @@ async function searchBing(query: string, subject: string, limit: number): Promis
       }
     });
     
-    if (!response.ok) return [];
+    if (!response.ok) {
+      throw new Error(`Bing API error: ${response.status}`);
+    }
     
     const data = await response.json();
     return data.value.map((image: any) => ({
@@ -410,18 +325,19 @@ async function searchBing(query: string, subject: string, limit: number): Promis
     }));
   } catch (error) {
     console.error('Erro ao buscar Bing:', error);
-    return [];
+    throw error;
   }
 }
 
 // Buscar no Pexels
 async function searchPexels(query: string, subject: string, limit: number): Promise<ImageResult[]> {
-  if (!PROVIDERS.pexels.apiKey) return [];
+  if (!PROVIDERS.pexels.apiKey) {
+    throw new Error('PEXELS_API_KEY não configurada');
+  }
   
   try {
-    const optimizedQuery = optimizeQueryForEducation(query, subject);
     const params = new URLSearchParams({
-      query: optimizedQuery,
+      query,
       per_page: Math.min(limit, 80).toString(),
       orientation: 'landscape',
       size: 'large'
@@ -433,7 +349,9 @@ async function searchPexels(query: string, subject: string, limit: number): Prom
       }
     });
     
-    if (!response.ok) return [];
+    if (!response.ok) {
+      throw new Error(`Pexels API error: ${response.status}`);
+    }
     
     const data = await response.json();
     return data.photos.map((photo: any) => ({
@@ -455,107 +373,71 @@ async function searchPexels(query: string, subject: string, limit: number): Prom
     }));
   } catch (error) {
     console.error('Erro ao buscar Pexels:', error);
-    return [];
-  }
-}
-
-// Função principal de busca inteligente
-async function smartImageSearch(query: string, subject?: string, count: number = 3): Promise<SearchResult> {
-  console.log(`🔍 Busca inteligente de imagens para: "${query}" (assunto: ${subject || 'geral'})`);
-  
-  const optimizedQuery = optimizeQueryForEducation(query, subject);
-  const sourcesUsed: string[] = [];
-  let allImages: ImageResult[] = [];
-  
-  // Buscar em paralelo nos 5 provedores
-  const searchPromises = [
-    searchUnsplash(query, subject || 'general', count),
-    searchPixabay(query, subject || 'general', count),
-    searchWikimedia(query, subject || 'general', count),
-    searchBing(query, subject || 'general', count),
-    searchPexels(query, subject || 'general', count)
-  ];
-  
-  try {
-    const results = await Promise.allSettled(searchPromises);
-    
-    results.forEach((result, index) => {
-      const providerNames = ['unsplash', 'pixabay', 'wikimedia', 'bing', 'pexels'];
-      const providerName = providerNames[index];
-      
-      if (result.status === 'fulfilled' && result.value.length > 0) {
-        allImages = allImages.concat(result.value);
-        sourcesUsed.push(providerName);
-        console.log(`✅ ${providerName}: ${result.value.length} imagens encontradas`);
-      } else {
-        console.log(`❌ ${providerName}: falha na busca`);
-      }
-    });
-    
-    // Ordenar por relevância educacional
-    allImages.sort((a, b) => b.relevanceScore - a.relevanceScore);
-    
-    // Remover duplicatas baseadas na URL
-    const uniqueImages = allImages.filter((image, index, self) => 
-      index === self.findIndex(img => img.url === image.url)
-    );
-    
-    // Selecionar as melhores imagens
-    const bestImages = uniqueImages.slice(0, count);
-    
-    console.log(`🎯 Total de imagens únicas encontradas: ${uniqueImages.length}`);
-    console.log(`🏆 Melhores ${bestImages.length} imagens selecionadas`);
-    
-    return {
-      success: bestImages.length > 0,
-      images: bestImages,
-      totalFound: uniqueImages.length,
-      sourcesUsed,
-      query,
-      optimizedQuery,
-      fallbackUsed: false
-    };
-    
-  } catch (error) {
-    console.error('Erro na busca inteligente:', error);
-    return {
-      success: false,
-      images: [],
-      totalFound: 0,
-      sourcesUsed: [],
-      query,
-      optimizedQuery,
-      fallbackUsed: true
-    };
+    throw error;
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { query, subject, count = 3 } = body;
+    const { provider, query, subject, count = 3 } = body;
     
-    if (!query || typeof query !== 'string') {
+    if (!provider || !query) {
       return NextResponse.json(
-        { error: 'Query é obrigatória e deve ser uma string' },
+        { error: 'Provider e query são obrigatórios' },
         { status: 400 }
       );
     }
     
-    const result = await smartImageSearch(query, subject, Math.min(count, 10));
+    if (!PROVIDERS[provider as keyof typeof PROVIDERS]) {
+      return NextResponse.json(
+        { error: `Provedor '${provider}' não encontrado` },
+        { status: 400 }
+      );
+    }
     
-    return NextResponse.json(result);
+    let images: ImageResult[] = [];
+    
+    switch (provider) {
+      case 'unsplash':
+        images = await searchUnsplash(query, subject || 'general', count);
+        break;
+      case 'pixabay':
+        images = await searchPixabay(query, subject || 'general', count);
+        break;
+      case 'wikimedia':
+        images = await searchWikimedia(query, subject || 'general', count);
+        break;
+      case 'bing':
+        images = await searchBing(query, subject || 'general', count);
+        break;
+      case 'pexels':
+        images = await searchPexels(query, subject || 'general', count);
+        break;
+      default:
+        return NextResponse.json(
+          { error: `Provedor '${provider}' não implementado` },
+          { status: 400 }
+        );
+    }
+    
+    return NextResponse.json({
+      success: true,
+      provider,
+      images,
+      count: images.length,
+      query,
+      subject: subject || 'general'
+    });
     
   } catch (error: any) {
-    console.error('Erro na API de busca inteligente:', error);
+    console.error('Erro na API de teste de provedor:', error);
     return NextResponse.json(
       { 
         success: false,
         error: error.message,
         images: [],
-        totalFound: 0,
-        sourcesUsed: [],
-        fallbackUsed: true
+        count: 0
       },
       { status: 500 }
     );

@@ -9,6 +9,20 @@ import { AulaModal } from './AulaModal';
 import { EnemSuggestion } from './EnemSuggestion';
 import { RedacaoSuggestion } from './RedacaoSuggestion';
 import { WeatherModal } from './WeatherModal';
+import { OpenLibraryModal } from './OpenLibraryModal';
+import { NewsModal } from './NewsModal';
+import { NumbersAPIModal } from './NumbersAPIModal';
+import { CurrentsAPIModal } from './CurrentsAPIModal';
+import { GiphyModal } from './GiphyModal';
+import { WorldBankModal } from './WorldBankModal';
+import { CalculatorModal } from './CalculatorModal';
+import { TranslatorModal } from './TranslatorModal';
+import { TimerModal } from './TimerModal';
+import { CalendarModal } from './CalendarModal';
+import { ImageSearchModal } from './ImageSearchModal';
+import { EnemModal } from './EnemModal';
+import { RedacaoModal } from './RedacaoModal';
+import { AulasModal } from './AulasModal';
 import { useChat } from '../../hooks/useChat';
 import { useToast } from '../../hooks/use-toast';
 
@@ -17,6 +31,20 @@ interface ModalState {
   enem: boolean;
   redacao: boolean;
   weather: { isOpen: boolean; city: string };
+  openLibrary: { isOpen: boolean; searchQuery: string };
+  newsAPI: { isOpen: boolean; searchQuery: string };
+  numbersAPI: { isOpen: boolean; searchQuery: string };
+  currentsAPI: { isOpen: boolean; searchQuery: string };
+  giphy: { isOpen: boolean; searchQuery: string };
+  worldBank: { isOpen: boolean; searchQuery: string };
+  calculator: { isOpen: boolean; expression?: string };
+  translator: { isOpen: boolean; text?: string };
+  timer: { isOpen: boolean; minutes?: number };
+  calendar: { isOpen: boolean; date?: Date };
+  imageSearch: { isOpen: boolean; query?: string };
+  enemModal: boolean;
+  redacaoModal: boolean;
+  aulasModal: { isOpen: boolean; topic?: string };
 }
 
 interface ChatInterfaceRefactoredProps {
@@ -36,6 +64,20 @@ export function ChatInterfaceRefactored({ className = '' }: ChatInterfaceRefacto
     enem: false,
     redacao: false,
     weather: { isOpen: false, city: '' },
+    openLibrary: { isOpen: false, searchQuery: '' },
+    newsAPI: { isOpen: false, searchQuery: '' },
+    numbersAPI: { isOpen: false, searchQuery: '' },
+    currentsAPI: { isOpen: false, searchQuery: '' },
+    giphy: { isOpen: false, searchQuery: '' },
+    worldBank: { isOpen: false, searchQuery: '' },
+    calculator: { isOpen: false },
+    translator: { isOpen: false },
+    timer: { isOpen: false },
+    calendar: { isOpen: false },
+    imageSearch: { isOpen: false },
+    enemModal: false,
+    redacaoModal: false,
+    aulasModal: { isOpen: false },
   });
 
   // Refs
@@ -77,6 +119,27 @@ export function ChatInterfaceRefactored({ className = '' }: ChatInterfaceRefacto
       const intent = detectIntent(message);
       if (intent.type !== 'general') {
         setShowSuggestions(true);
+        
+        // Auto-open modals based on intent
+        if (intent.type === 'enem') {
+          handleEnemModalClick();
+        } else if (intent.type === 'redacao') {
+          handleRedacaoModalClick();
+        } else if (intent.type === 'aula' && intent.topic) {
+          handleAulasModalClick(intent.topic);
+        } else if (intent.type === 'calculator') {
+          handleCalculatorClick();
+        } else if (intent.type === 'translator') {
+          handleTranslatorClick();
+        } else if (intent.type === 'timer') {
+          handleTimerClick();
+        } else if (intent.type === 'calendar') {
+          handleCalendarClick();
+        } else if (intent.type === 'imagesearch') {
+          handleImageSearchClick();
+        } else if (intent.type === 'newsapi') {
+          handleNewsAPIClick(intent.searchQuery || '');
+        }
       }
 
     } catch (error) {
@@ -148,6 +211,99 @@ export function ChatInterfaceRefactored({ className = '' }: ChatInterfaceRefacto
     }));
   };
 
+  const handleOpenLibraryClick = (searchQuery: string) => {
+    setModalState(prev => ({ 
+      ...prev, 
+      openLibrary: { isOpen: true, searchQuery } 
+    }));
+  };
+
+  const handleNewsAPIClick = (searchQuery: string) => {
+    setModalState(prev => ({ 
+      ...prev, 
+      newsAPI: { isOpen: true, searchQuery } 
+    }));
+  };
+
+  const handleNumbersAPIClick = (searchQuery: string) => {
+    setModalState(prev => ({ 
+      ...prev, 
+      numbersAPI: { isOpen: true, searchQuery } 
+    }));
+  };
+
+  const handleCurrentsAPIClick = (searchQuery: string) => {
+    setModalState(prev => ({ 
+      ...prev, 
+      currentsAPI: { isOpen: true, searchQuery } 
+    }));
+  };
+
+  const handleGiphyClick = (searchQuery: string) => {
+    setModalState(prev => ({ 
+      ...prev, 
+      giphy: { isOpen: true, searchQuery } 
+    }));
+  };
+
+  const handleWorldBankClick = (searchQuery: string) => {
+    setModalState(prev => ({ 
+      ...prev, 
+      worldBank: { isOpen: true, searchQuery } 
+    }));
+  };
+
+  // New modal handlers
+  const handleCalculatorClick = (expression?: string) => {
+    setModalState(prev => ({ 
+      ...prev, 
+      calculator: { isOpen: true, expression } 
+    }));
+  };
+
+  const handleTranslatorClick = (text?: string) => {
+    setModalState(prev => ({ 
+      ...prev, 
+      translator: { isOpen: true, text } 
+    }));
+  };
+
+  const handleTimerClick = (minutes?: number) => {
+    setModalState(prev => ({ 
+      ...prev, 
+      timer: { isOpen: true, minutes } 
+    }));
+  };
+
+  const handleCalendarClick = (date?: Date) => {
+    setModalState(prev => ({ 
+      ...prev, 
+      calendar: { isOpen: true, date } 
+    }));
+  };
+
+  const handleImageSearchClick = (query?: string) => {
+    setModalState(prev => ({ 
+      ...prev, 
+      imageSearch: { isOpen: true, query } 
+    }));
+  };
+
+  const handleEnemModalClick = () => {
+    setModalState(prev => ({ ...prev, enemModal: true }));
+  };
+
+  const handleRedacaoModalClick = () => {
+    setModalState(prev => ({ ...prev, redacaoModal: true }));
+  };
+
+  const handleAulasModalClick = (topic?: string) => {
+    setModalState(prev => ({ 
+      ...prev, 
+      aulasModal: { isOpen: true, topic } 
+    }));
+  };
+
   const handleStartSimulator = (type: 'quick' | 'full') => {
     router.push(`/enem?mode=${type}`);
     setModalState(prev => ({ ...prev, enem: false }));
@@ -178,6 +334,99 @@ export function ChatInterfaceRefactored({ className = '' }: ChatInterfaceRefacto
     setModalState(prev => ({ 
       ...prev, 
       weather: { ...prev.weather, isOpen: false } 
+    }));
+  };
+
+  const closeOpenLibraryModal = () => {
+    setModalState(prev => ({ 
+      ...prev, 
+      openLibrary: { ...prev.openLibrary, isOpen: false } 
+    }));
+  };
+
+  const closeNewsAPIModal = () => {
+    setModalState(prev => ({ 
+      ...prev, 
+      newsAPI: { ...prev.newsAPI, isOpen: false } 
+    }));
+  };
+
+  const closeNumbersAPIModal = () => {
+    setModalState(prev => ({ 
+      ...prev, 
+      numbersAPI: { ...prev.numbersAPI, isOpen: false } 
+    }));
+  };
+
+  const closeCurrentsAPIModal = () => {
+    setModalState(prev => ({ 
+      ...prev, 
+      currentsAPI: { ...prev.currentsAPI, isOpen: false } 
+    }));
+  };
+
+  const closeGiphyModal = () => {
+    setModalState(prev => ({ 
+      ...prev, 
+      giphy: { ...prev.giphy, isOpen: false } 
+    }));
+  };
+
+  const closeWorldBankModal = () => {
+    setModalState(prev => ({ 
+      ...prev, 
+      worldBank: { ...prev.worldBank, isOpen: false } 
+    }));
+  };
+
+  // New modal close handlers
+  const closeCalculatorModal = () => {
+    setModalState(prev => ({ 
+      ...prev, 
+      calculator: { ...prev.calculator, isOpen: false } 
+    }));
+  };
+
+  const closeTranslatorModal = () => {
+    setModalState(prev => ({ 
+      ...prev, 
+      translator: { ...prev.translator, isOpen: false } 
+    }));
+  };
+
+  const closeTimerModal = () => {
+    setModalState(prev => ({ 
+      ...prev, 
+      timer: { ...prev.timer, isOpen: false } 
+    }));
+  };
+
+  const closeCalendarModal = () => {
+    setModalState(prev => ({ 
+      ...prev, 
+      calendar: { ...prev.calendar, isOpen: false } 
+    }));
+  };
+
+  const closeImageSearchModal = () => {
+    setModalState(prev => ({ 
+      ...prev, 
+      imageSearch: { ...prev.imageSearch, isOpen: false } 
+    }));
+  };
+
+  const closeEnemModal = () => {
+    setModalState(prev => ({ ...prev, enemModal: false }));
+  };
+
+  const closeRedacaoModal = () => {
+    setModalState(prev => ({ ...prev, redacaoModal: false }));
+  };
+
+  const closeAulasModal = () => {
+    setModalState(prev => ({ 
+      ...prev, 
+      aulasModal: { ...prev.aulasModal, isOpen: false } 
     }));
   };
 
@@ -272,6 +521,20 @@ export function ChatInterfaceRefactored({ className = '' }: ChatInterfaceRefacto
               onEnemClick={handleEnemClick}
               onRedacaoClick={handleRedacaoClick}
               onWeatherClick={handleWeatherClick}
+              onOpenLibraryClick={handleOpenLibraryClick}
+              onNewsAPIClick={handleNewsAPIClick}
+              onNumbersAPIClick={handleNumbersAPIClick}
+              onCurrentsAPIClick={handleCurrentsAPIClick}
+              onGiphyClick={handleGiphyClick}
+              onWorldBankClick={handleWorldBankClick}
+              onCalculatorClick={handleCalculatorClick}
+              onTranslatorClick={handleTranslatorClick}
+              onTimerClick={handleTimerClick}
+              onCalendarClick={handleCalendarClick}
+              onImageSearchClick={handleImageSearchClick}
+              onEnemModalClick={handleEnemModalClick}
+              onRedacaoModalClick={handleRedacaoModalClick}
+              onAulasModalClick={handleAulasModalClick}
             />
             
             <button
@@ -385,6 +648,96 @@ export function ChatInterfaceRefactored({ className = '' }: ChatInterfaceRefacto
         isOpen={modalState.weather.isOpen}
         onClose={closeWeatherModal}
         city={modalState.weather.city}
+      />
+
+      {/* OpenLibrary Modal */}
+      <OpenLibraryModal
+        isOpen={modalState.openLibrary.isOpen}
+        onClose={closeOpenLibraryModal}
+        searchQuery={modalState.openLibrary.searchQuery}
+      />
+
+      {/* News Modal */}
+      <NewsModal
+        isOpen={modalState.newsAPI.isOpen}
+        onClose={closeNewsAPIModal}
+        searchQuery={modalState.newsAPI.searchQuery}
+      />
+
+      {/* NumbersAPI Modal */}
+      <NumbersAPIModal
+        isOpen={modalState.numbersAPI.isOpen}
+        onClose={closeNumbersAPIModal}
+        searchQuery={modalState.numbersAPI.searchQuery}
+      />
+
+      {/* CurrentsAPI Modal */}
+      <CurrentsAPIModal
+        isOpen={modalState.currentsAPI.isOpen}
+        onClose={closeCurrentsAPIModal}
+        searchQuery={modalState.currentsAPI.searchQuery}
+      />
+
+      {/* Giphy Modal */}
+      <GiphyModal
+        isOpen={modalState.giphy.isOpen}
+        onClose={closeGiphyModal}
+        searchQuery={modalState.giphy.searchQuery}
+      />
+
+      {/* WorldBank Modal */}
+      <WorldBankModal
+        isOpen={modalState.worldBank.isOpen}
+        onClose={closeWorldBankModal}
+        searchQuery={modalState.worldBank.searchQuery}
+      />
+
+      {/* New Modals */}
+      <CalculatorModal
+        isOpen={modalState.calculator.isOpen}
+        onClose={closeCalculatorModal}
+        initialExpression={modalState.calculator.expression}
+      />
+
+      <TranslatorModal
+        isOpen={modalState.translator.isOpen}
+        onClose={closeTranslatorModal}
+        initialText={modalState.translator.text}
+      />
+
+      <TimerModal
+        isOpen={modalState.timer.isOpen}
+        onClose={closeTimerModal}
+        initialMinutes={modalState.timer.minutes}
+      />
+
+      <CalendarModal
+        isOpen={modalState.calendar.isOpen}
+        onClose={closeCalendarModal}
+        initialDate={modalState.calendar.date}
+      />
+
+      <ImageSearchModal
+        isOpen={modalState.imageSearch.isOpen}
+        onClose={closeImageSearchModal}
+        initialQuery={modalState.imageSearch.query}
+      />
+
+      {/* Enhanced Modals */}
+      <EnemModal
+        isOpen={modalState.enemModal}
+        onClose={closeEnemModal}
+      />
+
+      <RedacaoModal
+        isOpen={modalState.redacaoModal}
+        onClose={closeRedacaoModal}
+      />
+
+      <AulasModal
+        isOpen={modalState.aulasModal.isOpen}
+        onClose={closeAulasModal}
+        initialTopic={modalState.aulasModal.topic}
       />
     </div>
   );

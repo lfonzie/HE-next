@@ -316,7 +316,7 @@ class PixabayService {
   formatImageResult(image: PixabayImage): any {
     return {
       id: `pixabay_${image.id}`,
-      url: image.webformatURL,
+      url: image.webformatURL || image.largeImageURL || image.previewURL || image.pageURL,
       thumbnail: image.previewURL,
       largeUrl: image.largeImageURL,
       fullHdUrl: image.fullHDURL,
@@ -325,8 +325,8 @@ class PixabayService {
       authorUrl: `https://pixabay.com/users/${image.user}-${image.user_id}/`,
       source: 'pixabay',
       downloadUrl: image.pageURL,
-      width: image.webformatWidth,
-      height: image.webformatHeight,
+      width: image.webformatWidth || image.imageWidth,
+      height: image.webformatHeight || image.imageHeight,
       tags: image.tags.split(', '),
       quality: 'good',
       educational: true,
@@ -334,7 +334,12 @@ class PixabayService {
       downloads: image.downloads,
       likes: image.likes,
       comments: image.comments,
-      userImage: image.userImageURL
+      userImage: image.userImageURL,
+      // Campos adicionais para compatibilidade
+      webformatURL: image.webformatURL,
+      largeImageURL: image.largeImageURL,
+      previewURL: image.previewURL,
+      pageURL: image.pageURL
     };
   }
 

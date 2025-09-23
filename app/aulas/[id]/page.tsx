@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import DynamicStage from '@/components/interactive/DynamicStage'
-import { ArrowLeft, BookOpen, Trophy, Loader2, Keyboard, Star, Target, ArrowRight, RotateCcw } from 'lucide-react'
+import { ArrowLeft, BookOpen, Trophy, Loader2, Keyboard, Star, Target, ArrowRight, RotateCcw, Printer, Plus } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
 import { useProgressiveLoading } from '@/lib/progressive-lesson-loader'
@@ -637,22 +637,48 @@ export default function LessonPage() {
             </div>
             
             {/* Mobile Stage Navigation */}
-            <div className="flex items-center gap-2">
-              {stagesToUse.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentStage(index)}
-                  className={`w-8 h-8 rounded-full text-xs font-medium transition-colors ${
-                    index === currentStage
-                      ? 'bg-yellow-500 text-white'
-                      : stageResults.find(sr => sr.stageIndex === index)
-                      ? 'bg-green-500 text-white'
-                      : 'bg-gray-200 text-gray-700'
-                  }`}
-                >
-                  {stageResults.find(sr => sr.stageIndex === index) ? '✓' : index + 1}
-                </button>
-              ))}
+            <div className="flex flex-col gap-1">
+              {/* First row of dots */}
+              <div className="flex items-center gap-2">
+                {stagesToUse.slice(0, Math.ceil(stagesToUse.length / 2)).map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentStage(index)}
+                    className={`w-8 h-8 rounded-full text-xs font-medium transition-colors ${
+                      index === currentStage
+                        ? 'bg-yellow-500 text-white'
+                        : stageResults.find(sr => sr.stageIndex === index)
+                        ? 'bg-green-500 text-white'
+                        : 'bg-gray-200 text-gray-700'
+                    }`}
+                  >
+                    {stageResults.find(sr => sr.stageIndex === index) ? '✓' : index + 1}
+                  </button>
+                ))}
+              </div>
+              {/* Second row of dots */}
+              {stagesToUse.length > Math.ceil(stagesToUse.length / 2) && (
+                <div className="flex items-center gap-2">
+                  {stagesToUse.slice(Math.ceil(stagesToUse.length / 2)).map((_, index) => {
+                    const actualIndex = index + Math.ceil(stagesToUse.length / 2);
+                    return (
+                      <button
+                        key={actualIndex}
+                        onClick={() => setCurrentStage(actualIndex)}
+                        className={`w-8 h-8 rounded-full text-xs font-medium transition-colors ${
+                          actualIndex === currentStage
+                            ? 'bg-yellow-500 text-white'
+                            : stageResults.find(sr => sr.stageIndex === actualIndex)
+                            ? 'bg-green-500 text-white'
+                            : 'bg-gray-200 text-gray-700'
+                        }`}
+                      >
+                        {stageResults.find(sr => sr.stageIndex === actualIndex) ? '✓' : actualIndex + 1}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -713,23 +739,23 @@ export default function LessonPage() {
             
             <div className="flex items-center gap-2">
               <Button
+                onClick={handlePrintLesson}
+                variant="ghost"
+                size="sm"
+                className="p-2"
+                title="Imprimir aula"
+              >
+                <Printer className="h-4 w-4" />
+              </Button>
+              <Button
                 onClick={handleRestart}
                 variant="ghost"
                 size="sm"
                 className="p-2"
+                title="Recomeçar nova aula"
               >
-                <RotateCcw className="h-4 w-4" />
+                <Plus className="h-4 w-4" />
               </Button>
-              {isCompleted && (
-                <Button
-                  onClick={() => router.push('/aulas')}
-                  size="sm"
-                  className="flex items-center gap-2"
-                >
-                  <Trophy className="h-4 w-4" />
-                  Certificado
-                </Button>
-              )}
             </div>
             
             <Button

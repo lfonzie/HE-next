@@ -2,6 +2,7 @@
 // API melhorada para busca de imagens usando os 3 provedores com dimensões específicas
 
 import { NextRequest, NextResponse } from 'next/server';
+import { googleImageAlternativesService } from '@/lib/services/google-image-alternatives';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,6 +30,7 @@ interface EnhancedSearchRequest {
     height: number;
   };
   sources?: string[];
+  useGoogleAlternatives?: boolean;
 }
 
 const EDUCATIONAL_KEYWORDS = {
@@ -53,7 +55,8 @@ export async function POST(request: NextRequest) {
       grade = '5',
       count = 3,
       preferredDimensions = { width: 1350, height: 1080 },
-      sources = ['unsplash', 'pixabay', 'wikimedia']
+      sources = ['unsplash', 'pixabay', 'wikimedia'],
+      useGoogleAlternatives = true
     } = body;
 
     if (!query) {
@@ -64,6 +67,54 @@ export async function POST(request: NextRequest) {
     }
 
     console.log(`🔍 Enhanced image search for: "${query}" (${subject})`);
+
+    // Try Google alternatives first if enabled
+    if (useGoogleAlternatives) {
+      try {
+        const googleResults = await googleImageAlternativesService.searchImages({
+          query,
+          subject,
+          count,
+          safeSearch: true,
+          imageType: 'photo',
+          color: 'color',
+          size: 'large',
+          aspectRatio: 'wide',
+          orientation: 'horizontal'
+        });
+
+        if (googleResults.success && googleResults.images.length > 0) {
+          console.log('✅ Google alternatives found results:', googleResults.images.length);
+          
+          // Convert to our format
+          const convertedResults = googleResults.images.map(img => ({
+            url: img.url,
+            source: img.source,
+            title: img.title,
+            description: img.description,
+            author: img.author,
+            width: img.width,
+            height: img.height,
+            tags: img.tags,
+            relevanceScore: img.relevanceScore,
+            educationalSuitability: img.educationalSuitability,
+            resizedUrl: resizeImageUrl(img.url, preferredDimensions.width, preferredDimensions.height)
+          }));
+
+          return NextResponse.json({
+            success: true,
+            images: convertedResults,
+            query,
+            subject,
+            totalFound: convertedResults.length,
+            sources: [{ source: 'google-alternatives', status: 'searched' }],
+            googleAlternativesUsed: true
+          });
+        }
+      } catch (error) {
+        console.warn('⚠️ Google alternatives failed, falling back to original method:', error);
+      }
+    }
 
     // Buscar em múltiplas fontes em paralelo
     const searchPromises = sources.map(source => 
