@@ -85,7 +85,13 @@ function escapeHtml(str: string): string {
 }
 
 function sanitizeMaybe(str?: string) {
-  return typeof str === "string" ? escapeHtml(str) : "";
+  if (typeof str !== "string") return "";
+  
+  // Primeiro escapa HTML, depois converte quebras de linha para <br>
+  return escapeHtml(str)
+    .replace(/\n/g, "<br>")
+    .replace(/\r\n/g, "<br>")
+    .replace(/\r/g, "<br>");
 }
 
 // =========================
@@ -223,7 +229,7 @@ function renderQuizQuestions(stage: LessonStage): string {
               </ul>
               ${q.explanation ? `
                 <div class="quiz-explanation">
-                  <strong>Explicação:</strong> ${escapeHtml(q.explanation)}
+                  <strong>Explicação:</strong> ${sanitizeMaybe(q.explanation)}
                 </div>
               ` : ""}
             </div>
@@ -319,7 +325,7 @@ function buildPrintHtml(safe: ReturnType<typeof createSafeLessonData>, opts: Req
   <div class="section">
     <h2 class="section-title">Objetivos de Aprendizagem</h2>
     <ul class="objectives">
-      ${safe.objectives.map((obj) => `<li>${escapeHtml(obj)}</li>`).join("")}
+      ${safe.objectives.map((obj) => `<li>${sanitizeMaybe(obj)}</li>`).join("")}
     </ul>
   </div>
 
@@ -357,7 +363,7 @@ function buildPrintHtml(safe: ReturnType<typeof createSafeLessonData>, opts: Req
   ${safe.nextSteps && safe.nextSteps.length > 0 ? `
     <div class="section">
       <h2 class="section-title">Próximos Passos</h2>
-      <div class="next-steps"><ul>${safe.nextSteps.map((s) => `<li>${escapeHtml(s)}</li>`).join("")}</ul></div>
+      <div class="next-steps"><ul>${safe.nextSteps.map((s) => `<li>${sanitizeMaybe(s)}</li>`).join("")}</ul></div>
     </div>
   ` : ""}
 

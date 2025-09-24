@@ -5,7 +5,13 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { MessageSquare, Wrench, AlertCircle, CheckCircle, Clock, Send } from 'lucide-react'
 import { Input } from '@/components/ui/input'
-import { useChat } from '@ai-sdk/react'
+
+interface Message {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  timestamp: Date
+}
 
 interface GuidedChatProps {
   sessionId?: string
@@ -19,37 +25,66 @@ export default function GuidedChat({
   deviceLabel
 }: GuidedChatProps) {
   const [currentSessionId, setCurrentSessionId] = useState(sessionId)
-
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
-    api: '/api/ti/assist',
-    body: {
-      sessionId: currentSessionId,
-      issue,
-      deviceLabel
-    },
-    onFinish: (message) => {
-      // Update session ID if provided in the response
-      if (message.data?.sessionId) {
-        setCurrentSessionId(message.data.sessionId)
-      }
-    }
-  })
+  const [messages, setMessages] = useState<Message[]>([])
+  const [input, setInput] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
 
   const sendMessage = async (message: string) => {
-    if (!message.trim()) return
+    if (!message.trim() || isLoading) return
     
-    // Use the useChat hook's handleSubmit
-    const formData = new FormData()
-    formData.append('message', message)
-    const event = new Event('submit') as any
-    event.preventDefault = () => {}
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: message,
+      timestamp: new Date()
+    }
     
-    handleSubmit(event)
+    setMessages(prev => [...prev, userMessage])
+    setInput('')
+    setIsLoading(true)
+    
+    try {
+      const response = await fetch('/api/ti/assist', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message,
+          sessionId: currentSessionId,
+          issue,
+          deviceLabel
+        })
+      })
+      
+      const data = await response.json()
+      
+      if (data.success) {
+        const assistantMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: data.message,
+          timestamp: new Date()
+        }
+        
+        setMessages(prev => [...prev, assistantMessage])
+        
+        if (data.sessionId) {
+          setCurrentSessionId(data.sessionId)
+        }
+      } else {
+        console.error('API Error:', data.error)
+      }
+    } catch (error) {
+      console.error('Network Error:', error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (input.trim()) {
+    if (input?.trim()) {
       sendMessage(input)
     }
   }
@@ -135,12 +170,12 @@ export default function GuidedChat({
           <form onSubmit={handleFormSubmit} className="flex gap-2">
             <Input
               value={input}
-              onChange={handleInputChange}
+              onChange={(e) => setInput(e.target.value)}
               placeholder="Descreva seu problema de TI..."
               disabled={isLoading}
               className="flex-1"
             />
-            <Button type="submit" disabled={isLoading || !input.trim()}>
+            <Button type="submit" disabled={isLoading || !input?.trim()}>
               {isLoading ? (
                 <Clock className="h-4 w-4 animate-spin" />
               ) : (

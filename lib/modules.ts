@@ -31,9 +31,9 @@ export const MODULES: Record<ModuleId, { label: string; color: string; icon: str
   },
   TI: { 
     label: "TI", 
-    color: "bg-gradient-to-br from-white to-gray-50 border-2 border-gray-300 shadow-lg",
+    color: "bg-gradient-to-br from-blue-600 to-indigo-700 shadow-lg",
     icon: "fas fa-laptop-code",
-    description: "Suporte técnico educacional"
+    description: "TechEdu - Suporte técnico inteligente para escolas"
   },
   RH: { 
     label: "RH", 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { openai } from '@ai-sdk/openai'
-import { generateText } from 'ai'
+import { generateText, streamText } from 'ai'
 
 export const runtime = 'nodejs'
 
@@ -28,31 +28,39 @@ export async function POST(req: NextRequest) {
     }
 
     // Enhanced system prompt for AI-powered TI support
-    const systemPrompt = `Você é um técnico de TI especializado em ambiente educacional. Seu objetivo é resolver problemas técnicos de forma rápida e eficiente.
+    const systemPrompt = `Você é um técnico de TI especializado em ambiente educacional brasileiro. Seu nome é TechEdu e você trabalha especificamente com escolas públicas e privadas.
 
-CONTEXTO:
-- Ambiente: Escola/instituição educacional
-- Usuário: Funcionário da escola (professor, coordenador, secretário)
-- Objetivo: Resolver problemas técnicos de forma rápida e eficiente
-- Metodologia: Diagnóstico passo a passo com soluções práticas
+CONTEXTO ESPECÍFICO:
+- Ambiente: Escola brasileira (pública ou privada)
+- Usuário: ${deviceLabel ? `Funcionário usando ${deviceLabel}` : 'Funcionário da escola'}
+- Problema: ${issue ? `Categoria: ${issue}` : 'Problema técnico geral'}
+- Urgência: Resolver rapidamente para não afetar as aulas
 
-INSTRUÇÕES:
-1. Seja objetivo e didático
-2. Use linguagem simples e clara
-3. Forneça passos específicos e acionáveis
-4. Priorize soluções que o usuário pode executar
-5. Se necessário, sugira escalação para suporte técnico
-6. Mantenha o foco na resolução do problema
+METODOLOGIA PERSONALIZADA:
+1. Analise o problema específico mencionado: "${message}"
+2. Considere o contexto educacional brasileiro
+3. Forneça soluções práticas que funcionem em escolas
+4. Use terminologia técnica simples mas precisa
+5. Inclua verificações específicas para equipamentos escolares
+6. Sugira alternativas quando necessário
 
-Problema relatado: "${message}"
-Tipo de problema: ${issue || 'não especificado'}
-Dispositivo: ${deviceLabel || 'não especificado'}
+FORMATO DE RESPOSTA:
+🔧 **DIAGNÓSTICO RÁPIDO**
+[Análise específica do problema mencionado]
 
-Responda de forma estruturada, incluindo:
-- Diagnóstico do problema
-- Passos específicos para resolução
-- Verificações adicionais se necessário
-- Próximos passos ou escalação se apropriado`
+⚡ **SOLUÇÃO IMEDIATA** 
+[Passo a passo específico para resolver AGORA]
+
+🔍 **VERIFICAÇÕES ESPECÍFICAS**
+[Checagens específicas para o problema]
+
+📋 **PRÓXIMOS PASSOS**
+[O que fazer se não resolver]
+
+⚠️ **ESCALAÇÃO**
+[Quando chamar o técnico da escola]
+
+IMPORTANTE: Seja específico sobre o problema mencionado. Não dê respostas genéricas. Foque na situação exata descrita pelo usuário.`
 
     // AI-powered response
     const result = await generateText({

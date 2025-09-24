@@ -268,15 +268,45 @@ registerModule({
   }
 })
 
-// ti_troubleshooting module
+// ti_troubleshooting module - Enhanced with TechEdu AI
 registerModule({
   id: 'ti_troubleshooting',
   name: 'TI Troubleshooting',
-  version: '1.0.0',
+  version: '2.0.0',
   permissions: { requires_auth: false },
-  cost_estimate: { tokens: 600, latency_ms: 800 },
+  cost_estimate: { tokens: 800, latency_ms: 1200 },
   async detect({ text, context }): Promise<DetectedIntent> {
-    // Sempre usar OpenAI para detecção - maior certeza
+    // Detecção melhorada com palavras-chave específicas de TI
+    const tiKeywords = [
+      'impressora', 'printer', 'não imprime', 'sem tinta', 'driver',
+      'wi-fi', 'wifi', 'internet', 'conexão', 'rede', 'roteador',
+      'computador', 'pc', 'lento', 'travando', 'não liga',
+      'mouse', 'teclado', 'monitor', 'tela', 'som', 'áudio',
+      'vírus', 'antivírus', 'malware', 'segurança',
+      'software', 'programa', 'aplicativo', 'instalar', 'desinstalar',
+      'email', 'outlook', 'gmail', 'não recebe',
+      'projetor', 'câmera', 'webcam', 'microfone',
+      'celular', 'tablet', 'mobile', 'app',
+      'técnico', 'suporte', 'problema técnico', 'erro', 'bug',
+      'escola', 'laboratório', 'sala de aula', 'equipamento'
+    ];
+
+    const textLower = text.toLowerCase();
+    const hasTiKeywords = tiKeywords.some(keyword => textLower.includes(keyword));
+    
+    if (hasTiKeywords) {
+      return { 
+        intent: 'ti_support', 
+        module: 'ti_troubleshooting', 
+        confidence: 0.9, 
+        slots: { 
+          problemType: extractProblemType(text),
+          urgency: extractUrgency(text)
+        } 
+      };
+    }
+
+    // Fallback com OpenAI se disponível
     try {
       const response = await fetch(getClassifyUrl(), {
         method: 'POST',
@@ -295,7 +325,10 @@ registerModule({
             intent: 'ti_support', 
             module: 'ti_troubleshooting', 
             confidence: data.classification.confidence || 0.8, 
-            slots: {} 
+            slots: { 
+              problemType: extractProblemType(text),
+              urgency: extractUrgency(text)
+            } 
           };
         }
       }
@@ -303,31 +336,178 @@ registerModule({
       console.error('Erro na detecção OpenAI:', error);
     }
 
-    // Fallback simples apenas em caso de erro
     return { intent: 'ti_support', module: 'ti_troubleshooting', confidence: 0.3, slots: {} }
   },
-  async execute({ slots }): Promise<OrchestratorResponse> {
+  async execute({ slots, context }): Promise<OrchestratorResponse> {
+    const problemText = context?.text || '';
+    const problemType = slots?.problemType || 'geral';
+    const urgency = slots?.urgency || 'normal';
+
+    // Usar a mesma lógica da API /ti/assist melhorada
+    const systemPrompt = `Você é um técnico de TI especializado em ambiente educacional brasileiro. Seu nome é TechEdu e você trabalha especificamente com escolas públicas e privadas.
+
+CONTEXTO ESPECÍFICO:
+- Ambiente: Escola brasileira (pública ou privada)
+- Usuário: Funcionário da escola
+- Problema: ${problemType}
+- Urgência: ${urgency}
+- Problema específico: "${problemText}"
+
+METODOLOGIA PERSONALIZADA:
+1. Analise o problema específico mencionado: "${problemText}"
+2. Considere o contexto educacional brasileiro
+3. Forneça soluções práticas que funcionem em escolas
+4. Use terminologia técnica simples mas precisa
+5. Inclua verificações específicas para equipamentos escolares
+6. Sugira alternativas quando necessário
+
+FORMATO DE RESPOSTA:
+🔧 **DIAGNÓSTICO RÁPIDO**
+[Análise específica do problema mencionado]
+
+⚡ **SOLUÇÃO IMEDIATA** 
+[Passo a passo específico para resolver AGORA]
+
+🔍 **VERIFICAÇÕES ESPECÍFICAS**
+[Checagens específicas para o problema]
+
+📋 **PRÓXIMOS PASSOS**
+[O que fazer se não resolver]
+
+⚠️ **ESCALAÇÃO**
+[Quando chamar o técnico da escola]
+
+IMPORTANTE: Seja específico sobre o problema mencionado. Não dê respostas genéricas. Foque na situação exata descrita pelo usuário.`;
+
+    try {
+      // Usar OpenAI para resposta inteligente
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: problemText }
+          ],
+          max_tokens: 1000,
+          temperature: 0.7
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const aiResponse = data.choices?.[0]?.message?.content || 'Vou te ajudar com esse problema técnico.';
+        
+        return {
+          text: aiResponse,
+          blocks: [
+            { 
+              type: 'info', 
+              title: 'TechEdu - Suporte TI Inteligente',
+              content: 'Sistema especializado em problemas técnicos de escolas brasileiras',
+              meta: { 
+                category: 'ti_support',
+                problemType,
+                urgency,
+                aiPowered: true
+              }
+            }
+          ],
+          actions: [
+            { type: 'cta', label: 'Continuar diagnóstico', module: 'ti_troubleshooting', args: { step: 'next' } },
+            { type: 'cta', label: 'Problema resolvido', module: 'ti_troubleshooting', args: { step: 'resolved' } },
+            { type: 'link', label: 'Manual técnico completo', href: '/ti' }
+          ],
+          trace: {
+            module: 'ti_troubleshooting',
+            confidence: 0.9,
+            intent: 'ti_support',
+            slots,
+            latencyMs: 0
+          }
+        };
+      }
+    } catch (error) {
+      console.error('Erro na API OpenAI:', error);
+    }
+
+    // Fallback se OpenAI falhar
     return {
-      text: 'Vou te ajudar com esse problema técnico. Vamos resolver passo a passo.',
+      text: `🔧 **DIAGNÓSTICO RÁPIDO**
+Identifiquei que você está enfrentando um problema técnico. Vou te guiar pela solução mais adequada.
+
+⚡ **SOLUÇÃO IMEDIATA** 
+1. Descreva o problema específico que está acontecendo
+2. Informe quando o problema começou
+3. Liste os equipamentos envolvidos
+
+🔍 **VERIFICAÇÕES ESPECÍFICAS**
+- Verifique se todos os cabos estão conectados
+- Confirme se os equipamentos estão ligados
+- Teste se outros dispositivos funcionam normalmente
+
+📋 **PRÓXIMOS PASSOS**
+Se o problema persistir, vou te dar instruções específicas baseadas na sua situação.
+
+⚠️ **ESCALAÇÃO**
+Para problemas complexos, posso criar um ticket para nossa equipe técnica.`,
       blocks: [
         { 
           type: 'checklist', 
+          title: 'Passos Iniciais de Diagnóstico',
           items: [
-            { text: 'Verificar conexão de rede', done: false },
-            { text: 'Reiniciar o equipamento', done: false },
-            { text: 'Verificar configurações', done: false },
-            { text: 'Contatar suporte técnico se necessário', done: false }
+            { text: 'Descrever o problema específico', done: false },
+            { text: 'Verificar conexões físicas', done: false },
+            { text: 'Testar equipamentos básicos', done: false },
+            { text: 'Documentar mensagens de erro', done: false }
           ],
-          meta: { category: 'troubleshooting' }
+          meta: { category: 'troubleshooting', step: 'initial' }
         }
       ],
       actions: [
         { type: 'cta', label: 'Continuar diagnóstico', module: 'ti_troubleshooting', args: { step: 'next' } },
-        { type: 'link', label: 'Manual técnico', href: '/docs/ti-troubleshooting' }
-      ]
+        { type: 'link', label: 'Manual técnico', href: '/ti' }
+      ],
+      trace: {
+        module: 'ti_troubleshooting',
+        confidence: 0.7,
+        intent: 'ti_support',
+        slots,
+        latencyMs: 0
+      }
     }
   }
 })
+
+// Funções auxiliares para extrair informações do problema
+function extractProblemType(text: string): string {
+  const textLower = text.toLowerCase();
+  
+  if (textLower.includes('impressora') || textLower.includes('printer')) return 'impressora';
+  if (textLower.includes('wi-fi') || textLower.includes('wifi') || textLower.includes('internet')) return 'rede';
+  if (textLower.includes('computador') || textLower.includes('pc') || textLower.includes('lento')) return 'computador';
+  if (textLower.includes('mouse') || textLower.includes('teclado') || textLower.includes('monitor')) return 'hardware';
+  if (textLower.includes('vírus') || textLower.includes('antivírus') || textLower.includes('malware')) return 'segurança';
+  if (textLower.includes('software') || textLower.includes('programa') || textLower.includes('aplicativo')) return 'software';
+  if (textLower.includes('email') || textLower.includes('outlook') || textLower.includes('gmail')) return 'email';
+  if (textLower.includes('projetor') || textLower.includes('câmera') || textLower.includes('webcam')) return 'multimídia';
+  if (textLower.includes('celular') || textLower.includes('tablet') || textLower.includes('mobile')) return 'mobile';
+  
+  return 'geral';
+}
+
+function extractUrgency(text: string): string {
+  const textLower = text.toLowerCase();
+  
+  if (textLower.includes('urgente') || textLower.includes('emergência') || textLower.includes('aula')) return 'alta';
+  if (textLower.includes('importante') || textLower.includes('preciso') || textLower.includes('hoje')) return 'média';
+  
+  return 'normal';
+}
 
 // faq_escola module
 registerModule({

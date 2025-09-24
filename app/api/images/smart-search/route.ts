@@ -169,6 +169,20 @@ const SEMANTIC_THEME_MAPPING: Record<string, {
     visualConcepts: ['medical', 'healthcare', 'clinical', 'sterile', 'professional'],
     educationalContext: ['public health', 'medical education', 'healthcare training', 'immunology'],
     relatedSubjects: ['medicine', 'health', 'biology', 'public health']
+  },
+  'aquecimento global': {
+    primaryTerms: ['global warming', 'climate change', 'aquecimento global'],
+    contextualTerms: ['greenhouse effect', 'carbon emissions', 'temperature rise', 'climate crisis', 'environmental impact'],
+    visualConcepts: ['environmental', 'climate', 'temperature', 'ice melting', 'polar regions'],
+    educationalContext: ['environmental science', 'climate education', 'sustainability', 'ecology'],
+    relatedSubjects: ['environment', 'geography', 'science', 'ecology']
+  },
+  'causas do aquecimento global': {
+    primaryTerms: ['global warming causes', 'climate change causes', 'causas do aquecimento global'],
+    contextualTerms: ['greenhouse gases', 'carbon emissions', 'fossil fuels', 'deforestation', 'industrial pollution'],
+    visualConcepts: ['industrial', 'emissions', 'pollution', 'deforestation', 'fossil fuels'],
+    educationalContext: ['environmental science', 'climate education', 'sustainability', 'ecology'],
+    relatedSubjects: ['environment', 'geography', 'science', 'ecology']
   }
 };
 
@@ -197,7 +211,11 @@ function analyzeSemanticTheme(topic: string, subject?: string): {
     'historia': 'history',
     'geografia': 'geography',
     'literatura': 'literature',
-    'metallica': 'metallica'
+    'metallica': 'metallica',
+    'aquecimento global': 'global warming',
+    'causas do aquecimento global': 'global warming causes',
+    'mudanças climáticas': 'climate change',
+    'mudancas climaticas': 'climate change'
   };
   
   // Traduzir o tema para inglês se necessário
@@ -375,17 +393,53 @@ function isInappropriateImage(text: string, query: string): boolean {
     return false; // Se tem relevância médica, não é inadequada
   }
   
+  // Para temas ambientais/aquecimento global, ser mais específico
+  if (queryLower.includes('aquecimento') || queryLower.includes('global') || queryLower.includes('climate') || queryLower.includes('warming')) {
+    const environmentalRelevantTerms = [
+      'climate', 'global warming', 'greenhouse', 'carbon', 'emission', 'temperature',
+      'ice', 'glacier', 'polar', 'arctic', 'antarctic', 'sea level', 'ocean',
+      'environment', 'pollution', 'fossil fuel', 'renewable', 'solar', 'wind',
+      'deforestation', 'ecosystem', 'biodiversity', 'sustainability', 'co2',
+      'aquecimento', 'global', 'clima', 'temperatura', 'gelo', 'oceano',
+      'poluição', 'meio ambiente', 'sustentabilidade'
+    ];
+    
+    const hasEnvironmentalRelevance = environmentalRelevantTerms.some(term => textLower.includes(term));
+    
+    if (!hasEnvironmentalRelevance) {
+      console.log(`🚫 Conteúdo irrelevante ao tema ambiental detectado: "${text.slice(0, 50)}..."`);
+      return true;
+    }
+    
+    return false; // Se tem relevância ambiental, não é inadequada
+  }
+  
   // Para outros temas, verificar se é completamente irrelevante
   const irrelevantContexts = [
     'books', 'library', 'literature', 'reading', 'study', 'academic',
-    'classroom', 'school', 'education', 'learning', 'knowledge'
+    'classroom', 'school', 'education', 'learning', 'knowledge',
+    'laptop', 'computer', 'technology', 'internet', 'digital', 'online',
+    'business', 'office', 'work', 'meeting', 'conference', 'presentation',
+    'woman', 'man', 'person', 'people', 'smiling', 'casual', 'clothing'
   ];
   
-  // Se contém apenas contextos genéricos de educação sem relação ao tema específico
-  const hasOnlyGenericEducation = irrelevantContexts.some(context => textLower.includes(context));
+  // Se contém apenas contextos genéricos sem relação ao tema específico
+  const hasOnlyGenericContext = irrelevantContexts.some(context => textLower.includes(context));
   const hasSpecificTopic = textLower.includes(queryLower);
   
-  if (hasOnlyGenericEducation && !hasSpecificTopic) {
+  // Verificar se é uma imagem muito genérica (ex: pessoa trabalhando, tecnologia genérica)
+  const isGenericImage = (
+    (textLower.includes('woman') || textLower.includes('man') || textLower.includes('person')) &&
+    (textLower.includes('laptop') || textLower.includes('computer') || textLower.includes('work')) &&
+    !hasSpecificTopic
+  );
+  
+  if (isGenericImage) {
+    console.log(`🚫 Imagem genérica irrelevante detectada: "${text.slice(0, 50)}..."`);
+    return true;
+  }
+  
+  if (hasOnlyGenericContext && !hasSpecificTopic) {
     console.log(`🚫 Conteúdo genérico irrelevante detectado: "${text.slice(0, 50)}..."`);
     return true;
   }
@@ -454,14 +508,14 @@ function calculateEducationalScore(image: any, query: string, subject?: string):
     
     // PRIORIDADE MÁXIMA: Correspondência exata com o termo completo
     if (text.includes(exactQuery)) {
-      score += 50; // Score muito alto para correspondência exata
+      score += 60; // Score muito alto para correspondência exata
       console.log(`🎯 Correspondência exata encontrada para "${exactQuery}"`);
     }
     
     // PRIORIDADE ALTA: Correspondências com palavras individuais
     queryWords.forEach(word => {
       if (text.includes(word)) {
-        score += 25; // Score alto para correspondências de palavras
+        score += 20; // Score alto para correspondências de palavras
       }
     });
     
@@ -485,15 +539,59 @@ function calculateEducationalScore(image: any, query: string, subject?: string):
       }
     }
     
+    // BONUS ESPECIAL: Para temas ambientais/aquecimento global
+    if (exactQuery.includes('aquecimento') || exactQuery.includes('global') || exactQuery.includes('climate') || exactQuery.includes('warming')) {
+      const environmentalTerms = [
+        'climate', 'global warming', 'greenhouse', 'carbon', 'emission', 'temperature',
+        'ice', 'glacier', 'polar', 'arctic', 'antarctic', 'sea level', 'ocean',
+        'environment', 'pollution', 'fossil fuel', 'renewable', 'solar', 'wind',
+        'deforestation', 'ecosystem', 'biodiversity', 'sustainability', 'co2',
+        'aquecimento', 'global', 'clima', 'temperatura', 'gelo', 'oceano',
+        'poluição', 'meio ambiente', 'sustentabilidade'
+      ];
+      
+      const hasEnvironmentalContext = environmentalTerms.some(term => text.includes(term));
+      
+      if (hasEnvironmentalContext) {
+        score += 35; // Bonus alto para contexto ambiental
+        console.log(`🌍 Contexto ambiental positivo detectado`);
+      }
+      
+      // Penalizar imagens genéricas de tecnologia/pessoas
+      const genericTerms = ['laptop', 'computer', 'woman', 'man', 'person', 'work', 'office', 'business'];
+      const hasGenericContext = genericTerms.some(term => text.includes(term));
+      
+      if (hasGenericContext && !hasEnvironmentalContext) {
+        score -= 40; // Penalização para contexto genérico sem relevância ambiental
+        console.log(`⚠️ Contexto genérico detectado - penalização aplicada`);
+      }
+    }
+    
+    // PENALIZAÇÃO: Para imagens muito genéricas sem relação ao tema
+    const genericImagePatterns = [
+      'woman in casual clothing works on her laptop',
+      'man working on computer',
+      'person using laptop',
+      'business meeting',
+      'office work',
+      'technology internet globalization'
+    ];
+    
+    const isGenericImage = genericImagePatterns.some(pattern => text.includes(pattern));
+    if (isGenericImage && !text.includes(exactQuery)) {
+      score -= 50; // Penalização severa para imagens genéricas
+      console.log(`⚠️ Imagem genérica detectada - penalização severa aplicada`);
+    }
+    
     // Bonus para tags relevantes
     if (image.tags) {
       const tags = Array.isArray(image.tags) ? image.tags : image.tags.split(', ');
       tags.forEach((tag: string) => {
         const tagLower = tag.toLowerCase();
         if (tagLower.includes(exactQuery)) {
-          score += 30; // Bonus alto para tags que contêm o termo exato
+          score += 25; // Bonus alto para tags que contêm o termo exato
         } else if (queryWords.some(word => tagLower.includes(word))) {
-          score += 10; // Bonus menor para correspondências parciais
+          score += 8; // Bonus menor para correspondências parciais
         }
       });
     }
@@ -923,11 +1021,31 @@ async function smartImageSearch(query: string, subject?: string, count: number =
       image.relevanceScore += semanticAnalysis.semanticScore / 10;
     });
     
+    // Filtrar imagens inadequadas ou irrelevantes também na busca semântica
+    const filteredImages = allImages.filter(image => {
+      const text = `${image.title || ''} ${image.description || ''}`.toLowerCase();
+      const exactQuery = query.toLowerCase().trim();
+      
+      // Verificar se não é inadequada ou irrelevante
+      const isAppropriate = !isInappropriateImage(text, exactQuery);
+      
+      // Verificar se não é um falso positivo
+      const isRelevant = !isFalsePositive(text, exactQuery);
+      
+      if (isAppropriate && isRelevant) {
+        console.log(`✅ Imagem semântica relevante e adequada: "${image.title?.slice(0, 50)}..."`);
+      } else {
+        console.log(`❌ Imagem semântica inadequada/irrelevante descartada: "${image.title?.slice(0, 50)}..."`);
+      }
+      
+      return isAppropriate && isRelevant;
+    });
+    
     // Ordenar por relevância
-    allImages.sort((a, b) => b.relevanceScore - a.relevanceScore);
+    filteredImages.sort((a, b) => b.relevanceScore - a.relevanceScore);
     
     // Remover duplicatas
-    const uniqueImages = allImages.filter((image, index, self) => 
+    const uniqueImages = filteredImages.filter((image, index, self) => 
       index === self.findIndex(img => img.url === image.url)
     );
     
