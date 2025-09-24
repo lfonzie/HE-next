@@ -292,9 +292,9 @@ export function useMessageComposer(config: MessageComposerConfig = {
         id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         role: 'user',
         content: messageContent,
-        timestamp: Date.now(),
-        conversationId: currentConversation.id,
+        timestamp: new Date(),
         attachments: state.attachments.map(file => ({
+          id: `att-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           name: file.name,
           type: file.type,
           size: file.size,

@@ -9,6 +9,7 @@ import { Loader2, ArrowLeft, ArrowRight, CheckCircle, XCircle, Lightbulb, Downlo
 import { MarkdownRenderer } from '@/components/chat/MarkdownRenderer';
 import { useProgressiveLesson } from '@/hooks/useProgressiveLesson';
 import { useQuizValidation, type QuizValidationResult } from '@/lib/quiz-validation';
+import { useSlideValidation } from '@/hooks/useSlideValidation';
 import QuizSlideComponent from '@/components/interactive/QuizSlideComponent';
 
 interface ProgressiveLessonComponentProps {
@@ -35,6 +36,9 @@ export default function ProgressiveLessonComponent({
   const [validationResult, setValidationResult] = useState<QuizValidationResult | null>(null);
   const [isValidating, setIsValidating] = useState(false);
   const { validateQuiz } = useQuizValidation();
+  
+  // Slide validation hook
+  const { validateSlide, canAdvanceToNext, getValidationMessage, validationState } = useSlideValidation();
   
   // Navegação pelo teclado
   useEffect(() => {
@@ -236,8 +240,28 @@ export default function ProgressiveLessonComponent({
   };
 
   const handleNextSlide = async () => {
+    const currentSlide = getCurrentSlide();
+    const questions = currentSlide?.questions || [];
+    
+    // Validar se pode avançar usando o hook de validação
+    const validationOptions = {
+      currentSlide,
+      userAnswers: selectedAnswer ? { 'current_question': selectedAnswer } : {},
+      questions,
+      requireAllQuestionsAnswered: true
+    };
+
+    const canAdvance = canAdvanceToNext(validationOptions);
+    
+    if (!canAdvance) {
+      const message = getValidationMessage(validationOptions);
+      console.log('Não é possível avançar:', message);
+      // Aqui você pode mostrar um toast ou alerta para o usuário
+      return;
+    }
+
+    // Se é uma pergunta e não foi respondida, não permitir avançar
     if (isQuestionSlide() && !showAnswer) {
-      // Se é uma pergunta e não foi respondida, não permitir avançar
       if (!selectedAnswer) {
         return; // Não fazer nada se não há resposta selecionada
       }

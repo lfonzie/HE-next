@@ -59,7 +59,8 @@ export async function middleware(request: NextRequest) {
                 '/status-public', // Public status page
                 '/status-simple', // Simple status page
                 '/analytics', // Analytics (both business and dashboard)
-                '/insights' // SQL insights
+                '/insights', // SQL insights
+                '/ti' // TI Support module
   ]
 
   // Check if current route is public

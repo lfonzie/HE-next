@@ -279,6 +279,12 @@ export default function EnhancedQuizComponent({
     console.log('🔍 DEBUG EnhancedQuizComponent - questions.length:', questions.length)
     console.log('🔍 DEBUG EnhancedQuizComponent - selectedAnswer:', selectedAnswer)
     
+    // Verificar se a pergunta atual foi respondida antes de avançar
+    if (!isAnswerConfirmed) {
+      console.log('🔍 DEBUG EnhancedQuizComponent - Current question not answered, cannot advance')
+      return; // Não permitir avançar sem responder a pergunta atual
+    }
+    
     // Se não é a última questão, permitir navegação normal
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1)
@@ -300,7 +306,7 @@ export default function EnhancedQuizComponent({
         // Mostrar feedback de validação
       }
     }
-  }, [currentQuestionIndex, questions.length, selectedAnswer, validateQuizCompletion])
+  }, [currentQuestionIndex, questions.length, selectedAnswer, validateQuizCompletion, isAnswerConfirmed])
 
   // Handle previous question
   const handlePrevious = useCallback(() => {

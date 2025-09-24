@@ -1,0 +1,151 @@
+issue: software_not_working
+metadata:
+  title: "Software não abre ou apresenta erro"
+  tags: ["software", "application", "error", "crash"]
+entry:
+  say: |
+    Vamos diagnosticar o problema com o software. Vou te guiar pelos passos mais comuns para resolver problemas de aplicativos.
+  checklist: [check_error_message, check_permissions, check_space]
+
+steps:
+  check_error_message:
+    title: Verificar mensagem de erro
+    ask: "Qual mensagem de erro aparece quando você tenta abrir o software?"
+    options:
+      - "Não abre nada": check_task_manager
+      - "Erro de permissão": check_permissions
+      - "Erro de arquivo não encontrado": check_installation
+      - "Outro erro": check_error_details
+
+  check_task_manager:
+    title: Verificar processos em execução
+    say: "Abra o Gerenciador de Tarefas (Ctrl+Shift+Esc) e procure pelo nome do software. Se estiver rodando, termine o processo."
+    ask: "O software estava rodando em segundo plano?"
+    on_yes: { next: restart_software }
+    on_no: { next: check_permissions }
+
+  restart_software:
+    title: Reiniciar software
+    say: "Agora tente abrir o software novamente."
+    ask: "O software abriu normalmente?"
+    on_yes: { next: resolve }
+    on_no: { next: check_permissions }
+
+  check_permissions:
+    title: Verificar permissões
+    ask: "Você tem permissão de administrador neste computador?"
+    on_yes: { next: run_as_admin }
+    on_no: { next: check_space }
+
+  run_as_admin:
+    title: Executar como administrador
+    say: "Clique com botão direito no ícone do software e selecione 'Executar como administrador'."
+    ask: "Conseguiu abrir como administrador?"
+    on_yes: { next: resolve }
+    on_no: { next: check_space }
+
+  check_space:
+    title: Verificar espaço em disco
+    say: "Verifique se há espaço suficiente no disco rígido (pelo menos 1GB livre)."
+    ask: "Há espaço suficiente no disco?"
+    on_yes: { next: check_installation }
+    on_no: { next: free_space }
+
+  free_space:
+    title: Liberar espaço em disco
+    say: "Delete arquivos desnecessários, esvazie a lixeira e limpe downloads antigos."
+    ask: "Conseguiu liberar espaço?"
+    on_yes: { next: check_installation }
+    on_no: { next: escalate_p3 }
+
+  check_installation:
+    title: Verificar instalação
+    ask: "O software estava funcionando antes ou é uma instalação nova?"
+    options:
+      - "Funcionava antes": check_updates
+      - "Instalação nova": check_requirements
+      - "Não sei": check_requirements
+
+  check_updates:
+    title: Verificar atualizações
+    say: "Verifique se há atualizações disponíveis para o software ou para o Windows."
+    ask: "Há atualizações pendentes?"
+    on_yes: { next: install_updates }
+    on_no: { next: check_requirements }
+
+  install_updates:
+    title: Instalar atualizações
+    say: "Instale as atualizações disponíveis e reinicie o computador se necessário."
+    ask: "Após atualizar, o software funciona?"
+    on_yes: { next: resolve }
+    on_no: { next: check_requirements }
+
+  check_requirements:
+    title: Verificar requisitos do sistema
+    say: "Verifique se seu computador atende aos requisitos mínimos do software (RAM, processador, sistema operacional)."
+    ask: "O computador atende aos requisitos?"
+    on_yes: { next: check_antivirus }
+    on_no: { next: escalate_p2 }
+
+  check_antivirus:
+    title: Verificar antivírus
+    say: "O antivírus pode estar bloqueando o software. Adicione o programa às exceções do antivírus."
+    ask: "O antivírus estava bloqueando?"
+    on_yes: { next: test_software }
+    on_no: { next: check_dependencies }
+
+  test_software:
+    title: Testar software
+    say: "Agora tente abrir o software novamente."
+    ask: "O software abriu normalmente?"
+    on_yes: { next: resolve }
+    on_no: { next: check_dependencies }
+
+  check_dependencies:
+    title: Verificar dependências
+    say: "Alguns softwares precisam de componentes adicionais (Visual C++, .NET Framework, Java). Verifique se estão instalados."
+    ask: "As dependências estão instaladas?"
+    on_yes: { next: reinstall_software }
+    on_no: { next: install_dependencies }
+
+  install_dependencies:
+    title: Instalar dependências
+    say: "Instale as dependências necessárias e reinicie o computador."
+    ask: "Após instalar dependências, o software funciona?"
+    on_yes: { next: resolve }
+    on_no: { next: reinstall_software }
+
+  reinstall_software:
+    title: Reinstalar software
+    say: "Desinstale o software completamente e reinstale com uma versão atualizada."
+    ask: "Após reinstalar, o software funciona?"
+    on_yes: { next: resolve }
+    on_no: { next: escalate_p2 }
+
+  check_error_details:
+    title: Analisar erro específico
+    say: "Anote a mensagem de erro exata e pesquise no Google por 'nome do software + mensagem de erro'."
+    ask: "Encontrou solução na pesquisa?"
+    on_yes: { next: apply_solution }
+    on_no: { next: escalate_p3 }
+
+  apply_solution:
+    title: Aplicar solução encontrada
+    say: "Siga as instruções encontradas na pesquisa."
+    ask: "A solução funcionou?"
+    on_yes: { next: resolve }
+    on_no: { next: escalate_p3 }
+
+  resolve:
+    resolution: "software_issue_resolved"
+    close: true
+
+  escalate_p1:
+    severity: P1
+    handoff: true
+  escalate_p2:
+    severity: P2
+    handoff: true
+  escalate_p3:
+    severity: P3
+    handoff: true

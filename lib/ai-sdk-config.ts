@@ -5,12 +5,12 @@ import { generateBNCCPrompt, getCompetenciasByDisciplina } from './system-prompt
 import { createBNCCClassifier } from './ai/bncc-classifier'
 
 export const aiConfig = {
-  openai: openai({
-    apiKey: process.env.OPENAI_API_KEY!,
-  }),
-  perplexity: perplexity(process.env.PERPLEXITY_MODEL_SELECTION || 'sonar', {
-    apiKey: process.env.PERPLEXITY_API_KEY!,
-  }),
+  openai: process.env.OPENAI_API_KEY ? openai({
+    apiKey: process.env.OPENAI_API_KEY,
+  }) : null,
+  perplexity: process.env.PERPLEXITY_API_KEY ? perplexity(process.env.PERPLEXITY_MODEL_SELECTION || 'sonar', {
+    apiKey: process.env.PERPLEXITY_API_KEY,
+  }) : null,
   model: 'gpt-4o-mini',
   perplexityModel: process.env.PERPLEXITY_MODEL_SELECTION || 'sonar',
   maxTokens: 2048,
@@ -61,6 +61,11 @@ ${baseInstructions}`,
 // Função para validar alinhamento BNCC
 export async function validateBNCCAlignment(content: string, subject: string): Promise<boolean> {
   try {
+    if (!aiConfig.openai) {
+      console.warn('OpenAI não disponível para validação BNCC');
+      return false;
+    }
+    
     const bnccClassifier = createBNCCClassifier(aiConfig.openai);
     const competencias = getCompetenciasByDisciplina(subject);
     const expectedCompetencies = competencias.map(comp => comp.id);
@@ -75,6 +80,11 @@ export async function validateBNCCAlignment(content: string, subject: string): P
 // Função para gerar conteúdo alinhado à BNCC
 export async function generateBNCCAlignedContent(content: string, subject: string, level: string): Promise<string> {
   try {
+    if (!aiConfig.openai) {
+      console.warn('OpenAI não disponível para geração de conteúdo BNCC');
+      return content;
+    }
+    
     const bnccClassifier = createBNCCClassifier(aiConfig.openai);
     return await bnccClassifier.generateBNCCAlignedContent(content, subject, level);
   } catch (error) {

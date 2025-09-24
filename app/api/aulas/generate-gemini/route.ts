@@ -964,11 +964,11 @@ export async function POST(request) {
     // Sistema avançado de seleção de imagens - 3 imagens distintas, 1 por provedor
     let selectedImages = [];
     try {
-      // Adicionar timeout mais curto para seleção de imagens
+      // Adicionar timeout adequado para seleção de imagens
       selectedImages = await Promise.race([
         selectThreeDistinctImages(topic),
         new Promise<ImageResult[]>((_, reject) => 
-          setTimeout(() => reject(new Error('Image selection timeout')), 3000)
+          setTimeout(() => reject(new Error('Image selection timeout')), 10000)
         )
       ]);
       

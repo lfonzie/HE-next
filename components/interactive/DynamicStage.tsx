@@ -462,28 +462,6 @@ export default function DynamicStage({
         </div>
       )}
 
-      {/* Stage Info - apenas informações, sem botões de navegação */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex justify-center items-center">
-            <div className="flex items-center gap-2">
-              {stage.activity.time && (
-                <Badge variant="outline" className="flex items-center gap-1">
-                  <Clock className="h-3 w-3" />
-                  {stage.activity.time}min
-                </Badge>
-              )}
-              {stage.activity.points && (
-                <Badge variant="outline" className="flex items-center gap-1">
-                  <Trophy className="h-3 w-3" />
-                  {stage.activity.points}pts
-                </Badge>
-              )}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Feedback */}
       {isCompleted && stage.activity.feedback && (
         <motion.div
@@ -551,70 +529,41 @@ export default function DynamicStage({
             {stageIndex + 1} de {totalStages}
           </span>
           
-          {/* Botões especiais para o último slide */}
-          {stageIndex === totalStages - 1 ? (
-            <div className="flex items-center gap-3">
-              {onPrint && (
-                <Button
-                  onClick={onPrint}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2 text-xs"
-                >
-                  <Printer className="h-4 w-4" />
-                  Imprimir
-                </Button>
-              )}
-              
-              {onRestart && (
-                <Button
-                  onClick={onRestart}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2 text-xs"
-                >
-                  <RotateCcw className="h-4 w-4" />
-                  Recomeçar
-                </Button>
-              )}
-              
-              {onNewLesson && (
-                <Button
-                  onClick={onNewLesson}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2 text-xs"
-                >
-                  <Plus className="h-4 w-4" />
-                  Nova Aula
-                </Button>
-              )}
-            </div>
-          ) : (
-            /* Botões normais para slides intermediários */
-            <>
-              {onRestart && (
-                <Button
-                  onClick={onRestart}
-                  variant="outline"
-                  size="sm"
-                  className="text-xs"
-                >
-                  Reiniciar
-                </Button>
-              )}
-              
-              {onNewLesson && (
-                <Button
-                  onClick={onNewLesson}
-                  variant="outline"
-                  size="sm"
-                  className="text-xs"
-                >
-                  Nova Aula
-                </Button>
-              )}
-            </>
+          {/* Botões disponíveis desde o slide 1 */}
+          {onPrint && (
+            <Button
+              onClick={onPrint}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2 text-xs"
+            >
+              <Printer className="h-4 w-4" />
+              Imprimir
+            </Button>
+          )}
+
+          {onRestart && (
+            <Button
+              onClick={onRestart}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2 text-xs"
+            >
+              <RotateCcw className="h-4 w-4" />
+              Recomeçar
+            </Button>
+          )}
+
+          {onNewLesson && (
+            <Button
+              onClick={onNewLesson}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2 text-xs"
+            >
+              <Plus className="h-4 w-4" />
+              Nova Aula
+            </Button>
           )}
         </div>
 

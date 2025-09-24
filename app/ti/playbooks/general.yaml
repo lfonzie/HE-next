@@ -1,0 +1,253 @@
+issue: general_ti_support
+metadata:
+  title: "Suporte TI Geral - Qualquer Problema"
+  tags: ["general", "ti", "suporte", "universal"]
+entry:
+  say: |
+    Vou te ajudar com qualquer problema de TI! Descreva o que está acontecendo e eu vou te guiar pelos passos mais adequados para resolver.
+  checklist: [understand_problem, gather_info, basic_troubleshooting]
+
+steps:
+  understand_problem:
+    title: Entender o problema
+    ask: "Descreva melhor o que está acontecendo. Quando começou? O que você estava fazendo?"
+    say: "Vou analisar sua descrição para identificar a melhor abordagem."
+
+  gather_info:
+    title: Coletar informações básicas
+    ask: "Qual sistema operacional você está usando? (Windows, Mac, Linux)"
+    options:
+      - Windows: check_windows_info
+      - Mac: check_mac_info
+      - Linux: check_linux_info
+      - Não sei: check_system_info
+
+  check_windows_info:
+    title: Informações do Windows
+    ask: "Qual versão do Windows? (Windows 10, 11, etc.)"
+    next: check_error_details
+
+  check_mac_info:
+    title: Informações do Mac
+    ask: "Qual versão do macOS você está usando?"
+    next: check_error_details
+
+  check_linux_info:
+    title: Informações do Linux
+    ask: "Qual distribuição Linux? (Ubuntu, CentOS, etc.)"
+    next: check_error_details
+
+  check_system_info:
+    title: Identificar sistema
+    say: "Vamos identificar seu sistema automaticamente."
+    next: check_error_details
+
+  check_error_details:
+    title: Detalhes do erro
+    ask: "Você está vendo alguma mensagem de erro específica? Se sim, copie e cole aqui."
+    options:
+      - "Sim, há mensagem de erro": analyze_error
+      - "Não há mensagem de erro": check_when_occurs
+      - "Não sei": check_when_occurs
+
+  analyze_error:
+    title: Analisar erro
+    say: "Vou analisar a mensagem de erro para identificar a causa raiz."
+    ask: "O erro acontece sempre ou apenas às vezes?"
+    options:
+      - "Sempre": check_system_restart
+      - "Às vezes": check_patterns
+      - "Primeira vez": check_recent_changes
+
+  check_when_occurs:
+    title: Quando ocorre o problema
+    ask: "O problema acontece sempre ou apenas em situações específicas?"
+    options:
+      - "Sempre": check_system_restart
+      - "Situações específicas": check_patterns
+      - "Primeira vez": check_recent_changes
+
+  check_patterns:
+    title: Identificar padrões
+    ask: "Você consegue identificar algum padrão? (horário, programa específico, ação específica)"
+    next: check_recent_changes
+
+  check_recent_changes:
+    title: Mudanças recentes
+    ask: "Você instalou algum software novo, atualizou algo ou mudou configurações recentemente?"
+    options:
+      - "Sim, instalei algo": check_new_software
+      - "Sim, atualizei algo": check_updates
+      - "Sim, mudei configurações": check_config_changes
+      - "Não": check_basic_troubleshooting
+
+  check_new_software:
+    title: Software novo instalado
+    ask: "Qual software você instalou? Isso pode estar causando conflito."
+    next: check_basic_troubleshooting
+
+  check_updates:
+    title: Atualizações recentes
+    ask: "O que foi atualizado? Sistema operacional, programas ou drivers?"
+    next: check_basic_troubleshooting
+
+  check_config_changes:
+    title: Mudanças de configuração
+    ask: "Que configurações você mudou? Isso pode ter causado o problema."
+    next: check_basic_troubleshooting
+
+  check_system_restart:
+    title: Reiniciar sistema
+    say: "Vamos começar com o básico. Reinicie seu computador completamente."
+    ask: "Após reiniciar, o problema ainda persiste?"
+    on_yes: { next: check_basic_troubleshooting }
+    on_no: { next: resolve }
+
+  check_basic_troubleshooting:
+    title: Solução de problemas básica
+    ask: "Vamos tentar algumas soluções básicas. Qual dessas opções se aplica ao seu problema?"
+    options:
+      - "Programa não abre": troubleshoot_software
+      - "Internet não funciona": troubleshoot_network
+      - "Computador lento": troubleshoot_performance
+      - "Arquivo não abre": troubleshoot_files
+      - "Som não funciona": troubleshoot_audio
+      - "Outro problema": troubleshoot_general
+
+  troubleshoot_software:
+    title: Solução de problemas de software
+    say: "Vamos diagnosticar problemas de software."
+    ask: "O programa estava funcionando antes?"
+    on_yes: { next: check_software_updates }
+    on_no: { next: check_software_requirements }
+
+  troubleshoot_network:
+    title: Solução de problemas de rede
+    say: "Vamos diagnosticar problemas de conectividade."
+    ask: "Outros dispositivos conseguem acessar a internet?"
+    on_yes: { next: check_device_network }
+    on_no: { next: check_router }
+
+  troubleshoot_performance:
+    title: Solução de problemas de performance
+    say: "Vamos diagnosticar problemas de velocidade."
+    ask: "O computador está lento em tudo ou apenas em programas específicos?"
+    options:
+      - "Em tudo": check_system_resources
+      - "Programas específicos": check_program_performance
+      - "Não sei": check_system_resources
+
+  troubleshoot_files:
+    title: Solução de problemas de arquivos
+    say: "Vamos diagnosticar problemas com arquivos."
+    ask: "O arquivo não abre ou abre com erro?"
+    options:
+      - "Não abre": check_file_corruption
+      - "Abre com erro": check_file_format
+      - "Não sei": check_file_corruption
+
+  troubleshoot_audio:
+    title: Solução de problemas de áudio
+    say: "Vamos diagnosticar problemas de som."
+    ask: "Não há som nenhum ou apenas em programas específicos?"
+    options:
+      - "Nenhum som": check_audio_drivers
+      - "Programas específicos": check_program_audio
+      - "Não sei": check_audio_drivers
+
+  troubleshoot_general:
+    title: Solução geral
+    say: "Vamos tentar uma abordagem geral de solução de problemas."
+    ask: "Você tem antivírus instalado?"
+    on_yes: { next: check_antivirus_conflicts }
+    on_no: { next: check_system_scan }
+
+  check_software_updates:
+    title: Verificar atualizações do software
+    say: "Verifique se há atualizações disponíveis para o programa."
+    ask: "Há atualizações disponíveis?"
+    on_yes: { next: install_software_updates }
+    on_no: { next: check_software_reinstall }
+
+  check_software_requirements:
+    title: Verificar requisitos do software
+    say: "Verifique se seu sistema atende aos requisitos mínimos do programa."
+    ask: "O sistema atende aos requisitos?"
+    on_yes: { next: check_software_permissions }
+    on_no: { next: escalate_p2 }
+
+  check_device_network:
+    title: Verificar rede do dispositivo
+    say: "O problema está específico do seu dispositivo. Vamos verificar as configurações de rede."
+    ask: "Consegue acessar outros sites?"
+    on_yes: { next: check_dns_settings }
+    on_no: { next: check_network_adapter }
+
+  check_router:
+    title: Verificar roteador
+    say: "O problema pode estar no roteador. Reinicie o roteador e aguarde 2 minutos."
+    ask: "Após reiniciar o roteador, a internet voltou?"
+    on_yes: { next: resolve }
+    on_no: { next: escalate_p2 }
+
+  check_system_resources:
+    title: Verificar recursos do sistema
+    say: "Vamos verificar se há recursos suficientes (RAM, CPU, disco)."
+    ask: "Há espaço livre no disco rígido?"
+    on_yes: { next: check_memory_usage }
+    on_no: { next: free_disk_space }
+
+  check_program_performance:
+    title: Verificar performance de programa específico
+    say: "O problema está em programa específico. Vamos otimizar."
+    ask: "Qual programa está lento?"
+    next: check_program_settings
+
+  check_file_corruption:
+    title: Verificar corrupção de arquivo
+    say: "O arquivo pode estar corrompido. Tente abrir outro arquivo do mesmo tipo."
+    ask: "Outros arquivos do mesmo tipo abrem normalmente?"
+    on_yes: { next: check_file_recovery }
+    on_no: { next: check_program_reinstall }
+
+  check_file_format:
+    title: Verificar formato do arquivo
+    say: "O arquivo pode estar em formato incompatível. Verifique a extensão."
+    ask: "A extensão do arquivo está correta?"
+    on_yes: { next: check_program_version }
+    on_no: { next: check_file_conversion }
+
+  check_audio_drivers:
+    title: Verificar drivers de áudio
+    say: "Vamos verificar os drivers de áudio."
+    ask: "O volume está no máximo e não está mutado?"
+    on_yes: { next: check_audio_settings }
+    on_no: { next: adjust_audio_settings }
+
+  check_antivirus_conflicts:
+    title: Verificar conflitos com antivírus
+    say: "O antivírus pode estar bloqueando algo. Adicione exceções se necessário."
+    ask: "O antivírus estava bloqueando algo?"
+    on_yes: { next: configure_antivirus_exceptions }
+    on_no: { next: check_system_scan }
+
+  check_system_scan:
+    title: Verificar sistema
+    say: "Vamos fazer uma verificação básica do sistema."
+    ask: "Execute uma verificação de disco e memória."
+    next: check_system_logs
+
+  # Resolução e escalação
+  resolve:
+    resolution: "problem_resolved_generic"
+    close: true
+
+  escalate_p1:
+    severity: P1
+    handoff: true
+  escalate_p2:
+    severity: P2
+    handoff: true
+  escalate_p3:
+    severity: P3
+    handoff: true

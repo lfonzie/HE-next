@@ -1,0 +1,125 @@
+issue: wifi_slow_connection
+metadata:
+  title: "Wi-Fi lento ou sem conexão"
+  tags: ["wifi", "network", "internet", "connection"]
+entry:
+  say: |
+    Vamos diagnosticar sua conexão Wi-Fi. Vou te guiar pelos passos mais comuns para resolver problemas de rede.
+  checklist: [check_signal, check_password, check_router]
+
+steps:
+  check_signal:
+    title: Verificar intensidade do sinal
+    ask: "Quantas barras de Wi-Fi você está vendo no seu dispositivo?"
+    options:
+      - "1-2 barras (fraco)": check_distance
+      - "3-4 barras (bom)": check_password
+      - "Sem sinal": check_router_power
+
+  check_distance:
+    title: Verificar distância do roteador
+    say: "Você está muito longe do roteador. Tente se aproximar ou mover o dispositivo para um local mais próximo."
+    ask: "Conseguiu melhorar o sinal se aproximando?"
+    on_yes: { next: check_password }
+    on_no: { next: check_router_position }
+
+  check_router_position:
+    title: Posição do roteador
+    say: "O roteador deve estar em local elevado, sem obstáculos (paredes, móveis). Evite colocar próximo a microondas ou telefones sem fio."
+    ask: "O roteador está bem posicionado?"
+    on_yes: { next: check_password }
+    on_no: { next: escalate_p3 }
+
+  check_password:
+    title: Verificar senha do Wi-Fi
+    ask: "Você está conseguindo conectar ao Wi-Fi ou está pedindo senha?"
+    options:
+      - "Conectado mas lento": check_bandwidth
+      - "Pedindo senha": check_password_correct
+      - "Não conecta": check_router_power
+
+  check_password_correct:
+    title: Senha correta
+    ask: "A senha que você está digitando está correta?"
+    on_yes: { next: check_bandwidth }
+    on_no: { next: reset_password }
+
+  reset_password:
+    title: Resetar senha
+    say: "Peça para o responsável pela TI resetar a senha do Wi-Fi ou verificar se houve mudança recente."
+    next: escalate_p2
+
+  check_router_power:
+    title: Verificar energia do roteador
+    ask: "O roteador está ligado? Você vê as luzes LED acesas?"
+    on_yes: { next: check_router_reset }
+    on_no: { next: power_router }
+
+  power_router:
+    title: Ligar roteador
+    say: "Ligue o roteador na tomada e aguarde 2-3 minutos para ele inicializar completamente."
+    ask: "O roteador ligou e as luzes estão acesas?"
+    on_yes: { next: check_password }
+    on_no: { next: escalate_p1 }
+
+  check_router_reset:
+    title: Reiniciar roteador
+    say: "Desligue o roteador por 30 segundos e ligue novamente. Aguarde 2-3 minutos."
+    ask: "Após reiniciar, conseguiu conectar?"
+    on_yes: { next: check_bandwidth }
+    on_no: { next: check_router_config }
+
+  check_router_config:
+    title: Configuração do roteador
+    say: "Pode haver problema na configuração do roteador. Verifique se outros dispositivos conseguem conectar."
+    ask: "Outros dispositivos também estão com problema?"
+    on_yes: { next: escalate_p1 }
+    on_no: { next: check_device_issue }
+
+  check_device_issue:
+    title: Problema no dispositivo
+    say: "Se apenas seu dispositivo tem problema, pode ser configuração específica. Tente esquecer a rede e conectar novamente."
+    ask: "Conseguiu resolver esquecendo e reconectando?"
+    on_yes: { next: resolve }
+    on_no: { next: escalate_p3 }
+
+  check_bandwidth:
+    title: Verificar largura de banda
+    ask: "A conexão está lenta mesmo com bom sinal?"
+    on_yes: { next: check_usage }
+    on_no: { next: resolve }
+
+  check_usage:
+    title: Verificar uso da rede
+    say: "Muitos dispositivos conectados podem deixar a rede lenta. Verifique quantos dispositivos estão usando o Wi-Fi."
+    ask: "Há muitos dispositivos conectados?"
+    on_yes: { next: optimize_usage }
+    on_no: { next: check_isp }
+
+  optimize_usage:
+    title: Otimizar uso da rede
+    say: "Desconecte dispositivos desnecessários ou pause downloads/vídeos em outros aparelhos."
+    ask: "Melhorou após otimizar o uso?"
+    on_yes: { next: resolve }
+    on_no: { next: check_isp }
+
+  check_isp:
+    title: Verificar provedor de internet
+    say: "O problema pode estar no provedor de internet. Teste a velocidade em speedtest.net"
+    ask: "A velocidade está muito abaixo do contratado?"
+    on_yes: { next: escalate_p2 }
+    on_no: { next: resolve }
+
+  resolve:
+    resolution: "wifi_connection_fixed"
+    close: true
+
+  escalate_p1:
+    severity: P1
+    handoff: true
+  escalate_p2:
+    severity: P2
+    handoff: true
+  escalate_p3:
+    severity: P3
+    handoff: true

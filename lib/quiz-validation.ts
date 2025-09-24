@@ -4,7 +4,19 @@ import { z } from 'zod';
 
 // Verificar se a API Key está disponível
 const isOpenAIAvailable = () => {
-  return process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY.trim() !== '';
+  const apiKey = process.env.OPENAI_API_KEY;
+  return apiKey && 
+         apiKey.trim() !== '' && 
+         apiKey !== 'your-openai-api-key-here' &&
+         apiKey.startsWith('sk-'); // Valid OpenAI key format
+};
+
+// Criar cliente OpenAI apenas quando necessário
+const getOpenAIClient = () => {
+  if (!isOpenAIAvailable()) {
+    return null;
+  }
+  return openai('gpt-4o-mini');
 };
 
 /**
@@ -47,6 +59,67 @@ function validateQuizLocally(
       ...(unansweredQuestions.length > 0 ? ['Responda todas as questões obrigatórias'] : []),
       ...(incompleteAnswers.length > 0 ? ['Forneça respostas mais detalhadas e válidas'] : [])
     ]
+  };
+}
+
+/**
+ * Validação local para uma resposta específica (fallback)
+ */
+function validateAnswerLocally(
+  question: Question,
+  answer: string | number
+): {
+  isValid: boolean;
+  isComplete: boolean;
+  feedback: string;
+  suggestions: string[];
+} {
+  const answerStr = answer.toString();
+  
+  // Validação básica baseada no tipo de questão
+  let isValid = true;
+  let isComplete = true;
+  let feedback = 'Resposta válida';
+  let suggestions: string[] = [];
+
+  if (question.type === 'open-ended') {
+    if (answerStr.length < 5) {
+      isValid = false;
+      isComplete = false;
+      feedback = 'Resposta muito curta para uma questão aberta';
+      suggestions = ['Forneça uma resposta mais detalhada'];
+    } else if (answerStr.length < 10) {
+      isValid = true;
+      isComplete = false;
+      feedback = 'Resposta adequada, mas poderia ser mais detalhada';
+      suggestions = ['Considere adicionar mais detalhes à sua resposta'];
+    }
+  } else if (question.type === 'multiple-choice') {
+    if (typeof answer === 'number') {
+      const maxOptions = question.options?.length || 4;
+      if (answer < 0 || answer >= maxOptions) {
+        isValid = false;
+        feedback = 'Resposta de múltipla escolha inválida';
+        suggestions = ['Selecione uma opção válida'];
+      }
+    } else {
+      isValid = false;
+      feedback = 'Resposta deve ser um número para múltipla escolha';
+      suggestions = ['Selecione uma das opções disponíveis'];
+    }
+  } else if (question.type === 'true-false') {
+    if (answerStr.toLowerCase() !== 'true' && answerStr.toLowerCase() !== 'false') {
+      isValid = false;
+      feedback = 'Resposta deve ser verdadeiro ou falso';
+      suggestions = ['Responda com "verdadeiro" ou "falso"'];
+    }
+  }
+
+  return {
+    isValid,
+    isComplete,
+    feedback,
+    suggestions
   };
 }
 
@@ -136,13 +209,17 @@ export async function validateQuizCompletion(
     timeLimit?: number;
   }
 ): Promise<QuizValidationResult> {
+  // Obter cliente OpenAI
+  const openaiClient = getOpenAIClient();
+  
   // Se a API Key não estiver disponível, usar validação local
-  if (!isOpenAIAvailable()) {
+  if (!openaiClient) {
     console.warn('OpenAI API Key não disponível, usando validação local');
     return validateQuizLocally(questions, userAnswers);
   }
 
   try {
+    console.log('Usando validação com OpenAI API');
     // Preparar dados para análise
     const questionsData = questions.map((q, index) => ({
       index,
@@ -185,7 +262,7 @@ INSTRUÇÕES:
 - Seja rigoroso mas justo na avaliação`;
 
     const result = await generateObject({
-      model: openai('gpt-4o-mini'),
+      model: openaiClient,
       schema: QuizValidationSchema,
       prompt,
       temperature: 0.1, // Baixa temperatura para consistência
@@ -195,33 +272,15 @@ INSTRUÇÕES:
   } catch (error) {
     console.error('Erro na validação do quiz:', error);
     
-    // Fallback: validação simples sem AI
-    const unansweredQuestions: number[] = [];
-    const incompleteAnswers: Array<{ questionIndex: number; reason: string }> = [];
+    // Verificar se é erro de API Key
+    if (error instanceof Error && error.message.includes('API key')) {
+      console.warn('Erro de API Key detectado, usando validação local');
+    } else {
+      console.warn('Erro na API OpenAI, usando validação local como fallback');
+    }
     
-    questions.forEach((question, index) => {
-      const answer = userAnswers[question.id];
-      
-      if (!answer) {
-        unansweredQuestions.push(index);
-      } else if (question.type === 'open-ended' && answer.answer.toString().length < 10) {
-        incompleteAnswers.push({
-          questionIndex: index,
-          reason: 'Resposta muito curta para questão aberta'
-        });
-      }
-    });
-
-    return {
-      allQuestionsAnswered: unansweredQuestions.length === 0,
-      unansweredQuestions,
-      incompleteAnswers,
-      canProceed: unansweredQuestions.length === 0 && incompleteAnswers.length === 0,
-      recommendations: [
-        'Responda todas as questões obrigatórias',
-        'Forneça respostas mais detalhadas para questões abertas'
-      ]
-    };
+    // Fallback: usar validação local quando há erro na API
+    return validateQuizLocally(questions, userAnswers);
   }
 }
 
@@ -241,7 +300,17 @@ export async function validateSingleAnswer(
   feedback: string;
   suggestions: string[];
 }> {
+  // Obter cliente OpenAI
+  const openaiClient = getOpenAIClient();
+  
+  // Se a API Key não estiver disponível, usar validação local
+  if (!openaiClient) {
+    console.warn('OpenAI API Key não disponível, usando validação local para resposta individual');
+    return validateAnswerLocally(question, answer);
+  }
+
   try {
+    console.log('Usando validação individual com OpenAI API');
     const prompt = `Analise a resposta fornecida para a questão educacional:
 
 QUESTÃO:
@@ -308,17 +377,15 @@ Responda em formato JSON:
   } catch (error) {
     console.error('Erro na validação da resposta:', error);
     
-    // Fallback: validação simples
-    const isValid = question.type === 'open-ended' ? 
-      answer.toString().length >= 5 : 
-      answer !== null && answer !== undefined;
+    // Verificar se é erro de API Key
+    if (error instanceof Error && error.message.includes('API key')) {
+      console.warn('Erro de API Key detectado na validação individual, usando validação local');
+    } else {
+      console.warn('Erro na API OpenAI para validação individual, usando validação local como fallback');
+    }
     
-    return {
-      isValid,
-      isComplete: answer.toString().length >= 10,
-      feedback: isValid ? 'Resposta válida' : 'Resposta inválida ou muito curta',
-      suggestions: isValid ? [] : ['Forneça uma resposta mais detalhada']
-    };
+    // Fallback: usar validação local quando há erro na API
+    return validateAnswerLocally(question, answer);
   }
 }
 

@@ -1,0 +1,125 @@
+issue: printer_not_printing
+metadata:
+  title: "Impressora não está imprimindo"
+  tags: ["printer", "office", "hp", "epson"]
+entry:
+  say: |
+    Vamos resolver sua impressora rapidinho. Vou sugerir passos. Basta ir clicando no que concluir,
+    e eu ajusto o caminho conforme suas respostas.
+  checklist: [check_power, check_connection]
+
+steps:
+  check_power:
+    title: Verificar cabo de força e energia
+    ask: "A impressora está ligada e o LED de energia aceso?"
+    actions:
+      - tool: detectPrinterPower
+    on_yes:
+      next: check_connection
+    on_no:
+      say: "Conecte corretamente o cabo e ligue na tomada. Teste outra tomada se possível."
+      next: check_power_retry
+      
+  check_power_retry:
+    title: Repetir teste de energia
+    ask: "Agora o LED está aceso?"
+    on_yes: { next: check_connection }
+    on_no: { next: escalate_p1 }
+
+  check_connection:
+    title: Verificar conexão com o computador/rede
+    ask: "A impressora é USB ou rede (Wi‑Fi/Ethernet)?"
+    options:
+      - USB: check_usb
+      - Rede: check_network
+
+  check_usb:
+    title: Teste USB
+    actions:
+      - tool: listUsbPrinters
+      - tool: reinstallUsbDriver
+    ask: "Você consegue ver a impressora na lista do sistema?"
+    on_yes: { next: try_test_page }
+    on_no:  { say: "Troque a porta USB/cabo e tente novamente.", next: try_detect_again }
+    
+  try_detect_again:
+    title: Detectar novamente
+    actions:
+      - tool: listUsbPrinters
+    on_found: { next: try_test_page }
+    on_missing: { next: driver_install }
+
+  driver_install:
+    title: Baixar/instalar driver
+    actions:
+      - tool: openDriverPage
+    ask: "Conseguiu instalar o driver?"
+    on_yes: { next: try_test_page }
+    on_no:  { next: escalate_p2 }
+
+  check_network:
+    title: Teste de rede
+    actions:
+      - tool: pingHost
+      - tool: fetchPrinterStatus
+    ask: "A impressora responde ao ping/status?"
+    on_yes: { next: try_test_page }
+    on_no:
+      say: "Reinicie a impressora e o roteador/switch do setor. Verifique se o Wi‑Fi está conectado."
+      next: check_network_retry
+      
+  check_network_retry:
+    title: Repetir teste de rede
+    actions:
+      - tool: pingHost
+    on_yes: { next: try_test_page }
+    on_no:  { next: escalate_p2 }
+
+  try_test_page:
+    title: Imprimir página de teste
+    actions:
+      - tool: printTestPage
+      - tool: readInkLevels
+    ask: "A página de teste saiu?"
+    on_yes:
+      say: "Perfeito! Problema resolvido."
+      next: resolve
+    on_no:
+      say: "Vamos checar níveis de tinta/tambor e fila de impressão."
+      next: check_queue_and_ink
+
+  check_queue_and_ink:
+    title: Fila de impressão e tinta
+    actions:
+      - tool: clearPrintQueue
+      - tool: readInkLevels
+    ask: "Fila limpa e tinta ok?"
+    on_yes: { next: firmware_check }
+    on_no:  { next: supply_or_service }
+
+  firmware_check:
+    title: Atualização de firmware (opcional)
+    actions:
+      - tool: checkFirmware
+    ask: "Atualizou?"
+    on_yes: { next: try_test_page }
+    on_no:  { next: resolve }
+
+  supply_or_service:
+    title: Suprimento ou assistência técnica
+    say: "Pode haver peça gasta (cilindro/tambor) ou tinta no fim. Recomendo assistência."
+    next: escalate_p3
+
+  resolve:
+    resolution: "printer_fixed"
+    close: true
+
+  escalate_p1:
+    severity: P1
+    handoff: true
+  escalate_p2:
+    severity: P2
+    handoff: true
+  escalate_p3:
+    severity: P3
+    handoff: true

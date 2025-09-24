@@ -58,7 +58,7 @@ export interface Attachment {
 export interface SlashCommand {
   command: string
   description: string
-  action: (editor: RichMessageEditor) => void
+  action: (editor: typeof RichMessageEditor) => void
   icon?: string
 }
 

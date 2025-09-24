@@ -1046,3 +1046,39 @@ enum enem_session_status {
   COMPLETED
   ABANDONED
 }
+
+model TiSession {
+  id           String   @id @default(cuid())
+  userId       String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  status       String   @default("active") // active | resolved | escalated
+  issueType    String?  // ex: "printer", "wifi", "software"
+  deviceLabel  String?  // ex: "HP 3635 – Secretaria"
+  steps        TiStep[]
+  transcript   Json?    // log condensado do chat
+  resolution   String?
+}
+
+model TiStep {
+  id         String   @id @default(cuid())
+  sessionId  String
+  session    TiSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  key        String    // ex: "check_power_cable"
+  title      String
+  status     String    @default("pending") // pending | done | skipped | failed
+  notes      String?
+  evidenceUrl String?
+  createdAt  DateTime  @default(now())
+}
+
+model TiTicket {
+  id          String   @id @default(cuid())
+  sessionId   String
+  createdAt   DateTime @default(now())
+  priority    String   @default("P3") // P1-P4
+  summary     String
+  details     String
+  assignedTo  String?  // opcional
+  externalRef String?  // id do seu sistema de chamados (se houver)
+}

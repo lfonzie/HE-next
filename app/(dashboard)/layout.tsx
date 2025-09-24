@@ -34,7 +34,7 @@ function SidebarWrapper({ children }: { children: ReactNode }) {
         {/* Main content - ajusta automaticamente ao sidebar */}
         <div className="flex-1 flex flex-col overflow-y-auto main-content-with-sidebar">
           {/* Page Content */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto compact-padding">
             {children}
           </div>
         </div>

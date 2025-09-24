@@ -280,7 +280,7 @@ export function UnifiedSidebar({ selectedModule, onSelectModule }: UnifiedSideba
           position: 'fixed',
           top: '0',
           left: '0',
-          width: isOpen ? (isTablet ? '280px' : '320px') : '80px',
+          width: isOpen ? (isTablet ? '240px' : '256px') : '80px',
           height: '100vh',
           backgroundColor: '#ffffff',
           borderRight: '2px solid #e5e7eb',

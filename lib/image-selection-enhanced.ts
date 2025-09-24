@@ -136,19 +136,19 @@ export async function searchAllProviders(query: string): Promise<ProviderSearchR
       Promise.race([
         searchWikimedia(query, baseUrl),
         new Promise<ImageResult[]>((_, reject) => 
-          setTimeout(() => reject(new Error('Wikimedia timeout')), 3000)
+          setTimeout(() => reject(new Error('Wikimedia timeout')), 8000)
         )
       ]),
       Promise.race([
         searchUnsplash(query, baseUrl),
         new Promise<ImageResult[]>((_, reject) => 
-          setTimeout(() => reject(new Error('Unsplash timeout')), 3000)
+          setTimeout(() => reject(new Error('Unsplash timeout')), 8000)
         )
       ]),
       Promise.race([
         searchPixabay(query, baseUrl),
         new Promise<ImageResult[]>((_, reject) => 
-          setTimeout(() => reject(new Error('Pixabay timeout')), 3000)
+          setTimeout(() => reject(new Error('Pixabay timeout')), 8000)
         )
       ])
     ]);

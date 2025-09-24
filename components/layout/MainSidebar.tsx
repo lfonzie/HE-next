@@ -254,10 +254,10 @@ export const MainSidebar: React.FC<MainSidebarProps> = ({ selectedModule, onSele
 
   // Em tablet e desktop, renderizar sidebar fixa com tipografia fluida
   return (
-    <div className={`fixed top-0 left-0 h-screen bg-white border-r-2 border-gray-200 z-[1000] flex flex-col overflow-y-auto overflow-x-hidden shadow-lg min-h-0 ${isTablet ? 'w-70' : 'w-80'} safe-top`}>
+    <div className={`fixed top-0 left-0 h-screen bg-white border-r-2 border-gray-200 z-[1000] flex flex-col overflow-y-auto overflow-x-hidden shadow-lg min-h-0 ${isTablet ? 'w-60' : 'w-64'} safe-top`}>
       {/* Header */}
-      <div className="flex items-center justify-between p-4 sm:p-6 border-b-2 border-gray-200 flex-shrink-0">
-        <div className="flex items-center gap-3 sm:gap-4">
+      <div className="flex items-center justify-between p-3 sm:p-4 border-b-2 border-gray-200 flex-shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3">
           <Image 
             src={ASSETS.logoIcon} 
             alt="HubEdu.ia Logo" 
@@ -276,7 +276,7 @@ export const MainSidebar: React.FC<MainSidebarProps> = ({ selectedModule, onSele
       </div>
 
       {/* Módulos com espaçamento fluido */}
-      <div className="flex-1 p-4 sm:p-6 flex flex-col gap-4 sm:gap-6 min-h-0 overflow-y-auto overflow-x-hidden">
+      <div className="flex-1 p-3 sm:p-4 flex flex-col gap-3 sm:gap-4 min-h-0 overflow-y-auto overflow-x-hidden">
         <ModuleSelector
           selectedModule={selectedModule}
           onSelectModule={handleModuleSelect}
