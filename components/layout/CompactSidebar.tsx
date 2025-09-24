@@ -74,9 +74,12 @@ function CompactSidebarContent({ className, showHome = true }: CompactSidebarPro
 
   // Initialize body classes on mount
   useEffect(() => {
-    // Set initial state
+    // Set initial state - ensure sidebar starts collapsed
     document.body.classList.add('sidebar-collapsed')
     document.body.classList.remove('sidebar-expanded')
+    
+    // Force initial state to be collapsed
+    setIsExpanded(false)
   }, [])
 
   // Update body class for content adjustment

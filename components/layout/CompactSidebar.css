@@ -198,12 +198,26 @@ body {
   margin-left: 64px !important; /* Default collapsed state */
   width: calc(100vw - 64px) !important;
   overflow-x: hidden !important;
+  min-height: 100vh !important; /* Ensure content is always visible */
 }
 
 /* When sidebar is expanded */
 body.sidebar-expanded .main-content-with-sidebar {
   margin-left: 288px !important;
   width: calc(100vw - 288px) !important;
+}
+
+/* Ensure content is always visible - fallback rules */
+body.sidebar-collapsed .main-content-with-sidebar {
+  margin-left: 64px !important;
+  width: calc(100vw - 64px) !important;
+}
+
+/* Force visibility for all states */
+.main-content-with-sidebar {
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: block !important;
 }
 
 /* Mobile responsive - sidebar hidden by default, opens from left when triggered by header */
