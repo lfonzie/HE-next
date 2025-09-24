@@ -11,8 +11,15 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
-  // Handle prerendering - return children without session checks
-  if (typeof window === 'undefined') {
+  const [mounted, setMounted] = useState(false)
+  
+  // Handle prerendering and hydration
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // During prerendering or before hydration, return children
+  if (!mounted) {
     return <>{children}</>
   }
 

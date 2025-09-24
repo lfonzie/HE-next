@@ -54,24 +54,24 @@ export function GlobalLayout({ children }: GlobalLayoutProps) {
     )
   }
 
-  // Páginas com sidebar (desktop) e header (mobile)
+  // Páginas com sidebar (desktop e tablet) e header (mobile)
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-yellow-50 to-orange-100">
-      {/* Desktop: Sidebar */}
-      <div className="hidden lg:block">
+      {/* Desktop e Tablet: Sidebar */}
+      <div className="hidden md:block">
         <CompactSidebar />
       </div>
       
       {/* Mobile: Header */}
-      <div className="lg:hidden">
+      <div className="md:hidden">
         <ModernHeader showNavigation={true} showUserProfile={true} />
       </div>
       
       {/* Main Content */}
       <main className={cn(
         "main-content-with-sidebar",
-        "lg:main-content-with-sidebar", // Desktop com sidebar
-        "pt-0 lg:pt-0" // Mobile com header
+        "md:main-content-with-sidebar", // Desktop e tablet com sidebar
+        "pt-0 md:pt-0" // Mobile com header
       )}>
         {children}
       </main>

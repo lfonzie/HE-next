@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 import OpenAI from 'openai';
 
 
-import { promptManager, PromptRequest, getUnifiedSystemPrompt } from '@/lib/system-prompts';
+import { PromptRequest, getUnifiedSystemPrompt } from '@/lib/system-prompts';
 
 
 

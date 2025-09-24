@@ -31,7 +31,31 @@ export function UserProfile({
   const { data: session, status } = useSession()
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
+  const [actualDirection, setActualDirection] = useState(dropdownDirection)
   const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // Detect best direction for dropdown based on viewport
+  useEffect(() => {
+    const detectDirection = () => {
+      if (dropdownRef.current) {
+        const rect = dropdownRef.current.getBoundingClientRect()
+        const viewportHeight = window.innerHeight
+        const spaceBelow = viewportHeight - rect.bottom
+        const spaceAbove = rect.top
+        
+        // In mobile, prefer opening downward unless there's not enough space
+        if (window.innerWidth < 1024) { // Mobile
+          setActualDirection(spaceBelow < 200 && spaceAbove > spaceBelow ? 'up' : 'down')
+        } else {
+          setActualDirection(dropdownDirection)
+        }
+      }
+    }
+
+    if (isOpen) {
+      detectDirection()
+    }
+  }, [isOpen, dropdownDirection])
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -180,10 +204,13 @@ export function UserProfile({
       {isOpen && (
         <div className={cn(
           'absolute w-64 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50',
-          dropdownDirection === 'up' && 'bottom-full mb-2 left-0 user-profile-dropdown',
-          dropdownDirection === 'down' && 'top-full mt-2 right-0',
-          dropdownDirection === 'left' && 'right-full mr-2 top-0',
-          dropdownDirection === 'right' && 'left-full ml-2 top-0'
+          actualDirection === 'up' && 'bottom-full mb-2 left-0 user-profile-dropdown',
+          actualDirection === 'down' && 'top-full mt-2 right-0',
+          actualDirection === 'left' && 'right-full mr-2 top-0',
+          actualDirection === 'right' && 'left-full ml-2 top-0',
+          // Mobile specific positioning
+          'md:right-0', // Desktop/tablet: alinhado à direita
+          'max-md:right-auto max-md:left-0 max-md:w-80' // Mobile: alinhado à esquerda e mais largo
         )}>
           {/* User Info */}
           <div className="px-4 py-3 border-b border-gray-100">

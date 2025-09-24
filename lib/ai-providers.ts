@@ -54,3 +54,15 @@ export const PROVIDER_METRICS = {
     costPerToken: 0.000005
   }
 } as const;
+
+// Função para obter provedores disponíveis
+export function getAvailableProviders(): AIProvider[] {
+  return Object.keys(AI_PROVIDERS) as AIProvider[];
+}
+
+// Configuração de modelos por provedor
+export const PROVIDER_MODELS = {
+  gemini: ['gemini-2.0-flash-exp', 'gemini-1.5-pro'],
+  'gpt-4o-mini': ['gpt-4o-mini', 'gpt-4o'],
+  'gpt-5': ['gpt-5', 'gpt-4-turbo']
+} as const;

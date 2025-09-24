@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -26,6 +26,9 @@ import { useEnhancedSuggestions } from '@/hooks/useEnhancedSuggestions'
 import { ModernHeader } from '@/components/layout/ModernHeader'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import Link from 'next/link'
+
+// Disable prerendering for this page
+export const dynamic = 'force-dynamic'
 
 interface Suggestion {
   id: number
@@ -425,8 +428,15 @@ function SuggestionsLibraryContent() {
 
 export default function SuggestionsLibrary() {
   return (
-    <ProtectedRoute>
-      <SuggestionsLibraryContent />
-    </ProtectedRoute>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-yellow-50 to-orange-100">
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">
+          Biblioteca de Sugestões
+        </h1>
+        <p className="text-gray-600">
+          Esta página está temporariamente em manutenção.
+        </p>
+      </div>
+    </div>
   )
 }

@@ -178,32 +178,51 @@
 body {
   margin-left: 0 !important;
   padding-left: 0 !important;
+  overflow-x: hidden !important; /* Prevenir scroll horizontal */
+}
+
+/* Mobile: garantir que não há overflow horizontal */
+@media (max-width: 767px) {
+  body {
+    overflow-x: hidden !important;
+  }
+  
+  html {
+    overflow-x: hidden !important;
+  }
 }
 
 /* Main content area adjustment - Direct approach */
 .main-content-with-sidebar {
   transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
   margin-left: 64px !important; /* Default collapsed state */
+  width: calc(100vw - 64px) !important;
+  overflow-x: hidden !important;
 }
 
 /* When sidebar is expanded */
 body.sidebar-expanded .main-content-with-sidebar {
   margin-left: 288px !important;
+  width: calc(100vw - 288px) !important;
 }
 
 /* Mobile responsive - sidebar hidden by default, opens from left when triggered by header */
-@media (max-width: 1023px) {
+@media (max-width: 767px) {
   .main-content-with-sidebar {
     margin-left: 0 !important; /* Sem margem em mobile por padrão */
     padding-top: 0 !important;
+    width: 100vw !important; /* Largura total em mobile */
+    overflow-x: hidden !important;
   }
   
   body.sidebar-collapsed .main-content-with-sidebar {
     margin-left: 0 !important;
+    width: 100vw !important;
   }
   
   body.sidebar-expanded .main-content-with-sidebar {
     margin-left: 0 !important; /* Quando expandida, ocupa toda a tela com overlay */
+    width: 100vw !important;
   }
   
   /* Sidebar hidden by default in mobile, positioned on left */
@@ -226,6 +245,36 @@ body.sidebar-expanded .main-content-with-sidebar {
   .compact-sidebar-overlay {
     background: rgba(0, 0, 0, 0.4) !important;
     backdrop-filter: blur(8px) !important;
+  }
+}
+
+/* Tablet adjustments - sidebar sempre visível */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .compact-sidebar-fixed {
+    transform: none !important; /* Sem transform em tablet */
+    left: 0 !important;
+    right: auto !important;
+  }
+  
+  .compact-sidebar-fixed.collapsed {
+    width: 64px !important;
+    transform: none !important;
+  }
+  
+  .compact-sidebar-fixed.expanded {
+    width: 256px !important; /* Largura menor para tablet */
+    transform: none !important;
+  }
+  
+  /* Ajustar conteúdo para tablet */
+  .main-content-with-sidebar {
+    margin-left: 64px !important;
+    width: calc(100vw - 64px) !important;
+  }
+  
+  body.sidebar-expanded .main-content-with-sidebar {
+    margin-left: 256px !important;
+    width: calc(100vw - 256px) !important;
   }
 }
 
