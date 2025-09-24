@@ -1,27 +1,15 @@
 import { NextRequest } from 'next/server'
 
 // Prevent prerendering of this API route
-
-// Prevent prerendering of this API route
 export const dynamic = 'force-dynamic';
 
-
 import { streamText, generateText } from 'ai'
-
-
 import { openai } from '@ai-sdk/openai'
-
-
 import { google } from '@ai-sdk/google'
-
-
 import { fastClassify } from '@/lib/fast-classifier'
-
-
 import { classifyComplexityAsync, getProviderConfig } from '@/lib/complexity-classifier'
-
-
 import { generateCacheKey, responseCache } from '@/lib/aggressive-cache'
+import { createSafeModel, validateOpenAIKey } from '@/lib/ai-sdk-production-config'
 
 
 
@@ -139,12 +127,51 @@ export async function POST(request: NextRequest) {
 
     console.log(`🎯 [PROVIDER-SELECTION] ${selectedProvider}:${selectedModel} (reason: ${providerReason})`)
 
-    // 5. Configurar modelo baseado na seleção
+    // 5. Configurar modelo baseado na seleção com tratamento robusto
     let modelInstance
-    if (selectedProvider === 'google') {
-      modelInstance = google(selectedModel)
-    } else {
-      modelInstance = openai(selectedModel)
+    try {
+      if (selectedProvider === 'google') {
+        modelInstance = createSafeModel('google', complexityResult.classification)
+      } else {
+        // Verificar se a API key está válida antes de criar o modelo
+        if (!validateOpenAIKey()) {
+          console.warn('⚠️ [MODEL] OpenAI API key invalid, falling back to Google')
+          selectedProvider = 'google'
+          modelInstance = createSafeModel('google', complexityResult.classification)
+        } else {
+          modelInstance = createSafeModel('openai', complexityResult.classification)
+        }
+      }
+    } catch (modelError: any) {
+      console.error(`❌ [MODEL] Error creating ${selectedProvider} model:`, modelError.message)
+      
+      // Fallback para Google se OpenAI falhar
+      if (selectedProvider === 'openai') {
+        console.warn('🔄 [FALLBACK] Switching to Google due to OpenAI error')
+        selectedProvider = 'google'
+        try {
+          modelInstance = createSafeModel('google', complexityResult.classification)
+        } catch (fallbackError) {
+          console.error('❌ [FALLBACK] Google also failed:', fallbackError.message)
+          return Response.json(
+            { 
+              error: 'All AI providers unavailable', 
+              details: `OpenAI: ${modelError.message}, Google: ${fallbackError.message}`,
+              latency: Date.now() - startTime 
+            }, 
+            { status: 503 }
+          )
+        }
+      } else {
+        return Response.json(
+          { 
+            error: 'AI provider unavailable', 
+            details: modelError.message,
+            latency: Date.now() - startTime 
+          }, 
+          { status: 503 }
+        )
+      }
     }
 
     // 6. Preparar mensagens otimizadas

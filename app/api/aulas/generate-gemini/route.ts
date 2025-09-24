@@ -964,30 +964,88 @@ export async function POST(request) {
     // Sistema avançado de seleção de imagens - 3 imagens distintas, 1 por provedor
     let selectedImages = [];
     try {
-      // Adicionar timeout adequado para seleção de imagens
-      selectedImages = await Promise.race([
-        selectThreeDistinctImages(topic),
-        new Promise<ImageResult[]>((_, reject) => 
-          setTimeout(() => reject(new Error('Image selection timeout')), 10000)
-        )
-      ]);
+      // PRIMEIRO: Tentar usar o sistema smart-search melhorado
+      log.info('Attempting smart search for lesson images', { topic });
       
-      // Validar seleção
-      const validation = validateImageSelection(selectedImages);
-      if (!validation.isValid) {
-        log.warn('Image selection validation failed', { issues: validation.issues });
-      }
+      const smartSearchResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/images/smart-search`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          query: topic, 
+          subject: topic, 
+          count: 3 
+        }),
+      });
       
-      log.info('Selected distinct images', {
-        totalImages: selectedImages.length,
-        providers: [...new Set(selectedImages.map(img => img.provider))],
-        validation: validation.metrics
+      if (smartSearchResponse.ok) {
+        const smartSearchData = await smartSearchResponse.json();
+        log.info('Smart search response received', { 
+          success: smartSearchData.success, 
+          imagesCount: smartSearchData.images?.length || 0,
+          searchMethod: smartSearchData.searchMethod
         });
         
-      } catch (error) {
-        log.error('Failed to select distinct images', { error: (error as Error).message });
-        selectedImages = [];
+        if (smartSearchData.success && smartSearchData.images?.length > 0) {
+          // Converter formato smart-search para formato esperado
+          selectedImages = smartSearchData.images.map(img => ({
+            url: img.url,
+            title: img.title,
+            description: img.description,
+            provider: img.source,
+            attribution: img.attribution || '',
+            license: img.license || '',
+            author: img.author || '',
+            sourceUrl: img.sourceUrl || '',
+            score: img.relevanceScore || 0
+          }));
+          
+          log.info('Smart search images selected for lesson', {
+            totalImages: selectedImages.length,
+            providers: [...new Set(selectedImages.map(img => img.provider))],
+            searchMethod: smartSearchData.searchMethod,
+            sourcesUsed: smartSearchData.sourcesUsed
+          });
+        } else {
+          log.warn('Smart search returned no images', { 
+            success: smartSearchData.success, 
+            imagesCount: smartSearchData.images?.length || 0 
+          });
+        }
+      } else {
+        log.warn('Smart search request failed', { 
+          status: smartSearchResponse.status,
+          statusText: smartSearchResponse.statusText 
+        });
       }
+      
+      // FALLBACK: Se smart-search não funcionou, usar sistema antigo
+      if (selectedImages.length === 0) {
+        log.info('Smart search failed, falling back to enhanced selection', { topic });
+        
+        selectedImages = await Promise.race([
+          selectThreeDistinctImages(topic),
+          new Promise<ImageResult[]>((_, reject) => 
+            setTimeout(() => reject(new Error('Image selection timeout')), 10000)
+          )
+        ]);
+        
+        // Validar seleção
+        const validation = validateImageSelection(selectedImages);
+        if (!validation.isValid) {
+          log.warn('Image selection validation failed', { issues: validation.issues });
+        }
+        
+        log.info('Enhanced image selection completed', {
+          totalImages: selectedImages.length,
+          providers: [...new Set(selectedImages.map(img => img.provider))],
+          validation: validation.metrics
+        });
+      }
+      
+    } catch (error) {
+      log.error('Failed to select images', { error: (error as Error).message });
+      selectedImages = [];
+    }
       
       // Mapear imagens para slides
       let imageIndex = 0;

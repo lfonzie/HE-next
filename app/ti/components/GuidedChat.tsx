@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { MessageSquare, Wrench, AlertCircle, CheckCircle, Clock, Send } from 'lucide-react'
 import { Input } from '@/components/ui/input'
+import { useChat } from '@ai-sdk/react'
 
 interface GuidedChatProps {
   sessionId?: string
@@ -12,90 +13,45 @@ interface GuidedChatProps {
   deviceLabel?: string
 }
 
-interface ApiResponse {
-  success: boolean
-  message: string
-  sessionId: string
-  issue: string
-  deviceLabel: string
-  timestamp: string
-  nextSteps: string[]
-  note: string
-}
-
 export default function GuidedChat({ 
   sessionId, 
   issue = 'printer', 
   deviceLabel
 }: GuidedChatProps) {
-  const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant', content: string, timestamp: string }>>([])
-  const [input, setInput] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
   const [currentSessionId, setCurrentSessionId] = useState(sessionId)
+
+  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
+    api: '/api/ti/assist',
+    body: {
+      sessionId: currentSessionId,
+      issue,
+      deviceLabel
+    },
+    onFinish: (message) => {
+      // Update session ID if provided in the response
+      if (message.data?.sessionId) {
+        setCurrentSessionId(message.data.sessionId)
+      }
+    }
+  })
 
   const sendMessage = async (message: string) => {
     if (!message.trim()) return
-
-    setIsLoading(true)
     
-    // Add user message
-    const userMessage = {
-      role: 'user' as const,
-      content: message,
-      timestamp: new Date().toISOString()
-    }
-    setMessages(prev => [...prev, userMessage])
-
-    try {
-      const response = await fetch('/api/ti/assist', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message,
-          sessionId: currentSessionId,
-          issue,
-          deviceLabel
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const data: ApiResponse = await response.json()
-      
-      // Update session ID if provided
-      if (data.sessionId) {
-        setCurrentSessionId(data.sessionId)
-      }
-
-      // Add assistant response
-      const assistantMessage = {
-        role: 'assistant' as const,
-        content: `${data.message}\n\nPróximos passos sugeridos:\n${data.nextSteps.map((step, i) => `${i + 1}. ${step}`).join('\n')}\n\n${data.note}`,
-        timestamp: data.timestamp
-      }
-      setMessages(prev => [...prev, assistantMessage])
-
-    } catch (error) {
-      console.error('Error sending message:', error)
-      const errorMessage = {
-        role: 'assistant' as const,
-        content: `Erro ao processar sua mensagem: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
-        timestamp: new Date().toISOString()
-      }
-      setMessages(prev => [...prev, errorMessage])
-    } finally {
-      setIsLoading(false)
-      setInput('')
-    }
+    // Use the useChat hook's handleSubmit
+    const formData = new FormData()
+    formData.append('message', message)
+    const event = new Event('submit') as any
+    event.preventDefault = () => {}
+    
+    handleSubmit(event)
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    sendMessage(input)
+    if (input.trim()) {
+      sendMessage(input)
+    }
   }
 
   const getStatusIcon = (role: 'user' | 'assistant') => {
@@ -115,7 +71,7 @@ export default function GuidedChat({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Wrench className="h-5 w-5" />
-            Suporte TI - Chat Guiado
+            Suporte TI - Chat Guiado com IA
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -123,6 +79,7 @@ export default function GuidedChat({
             <Badge variant="outline">Sessão: {currentSessionId || 'Nova'}</Badge>
             <Badge variant="outline">Problema: {issue}</Badge>
             {deviceLabel && <Badge variant="outline">Dispositivo: {deviceLabel}</Badge>}
+            <Badge variant="default" className="bg-green-500">IA Ativa</Badge>
           </div>
         </CardContent>
       </Card>
@@ -136,6 +93,7 @@ export default function GuidedChat({
                 <div className="text-center">
                   <MessageSquare className="h-12 w-12 mx-auto mb-2 opacity-50" />
                   <p>Descreva seu problema de TI para começar</p>
+                  <p className="text-sm mt-1">A IA irá gerar um playbook personalizado para você</p>
                 </div>
               </div>
             ) : (
@@ -148,7 +106,7 @@ export default function GuidedChat({
                     <div className={`rounded-lg p-3 ${message.role === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-100'}`}>
                       <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                       <p className="text-xs opacity-70 mt-1">
-                        {new Date(message.timestamp).toLocaleTimeString()}
+                        {new Date(message.createdAt || Date.now()).toLocaleTimeString()}
                       </p>
                     </div>
                   </div>
@@ -162,7 +120,7 @@ export default function GuidedChat({
                     <Clock className="h-4 w-4 animate-spin" />
                   </div>
                   <div className="bg-gray-100 rounded-lg p-3">
-                    <p className="text-sm">Processando sua mensagem...</p>
+                    <p className="text-sm">IA está processando sua mensagem...</p>
                   </div>
                 </div>
               </div>
@@ -174,10 +132,10 @@ export default function GuidedChat({
       {/* Input */}
       <Card>
         <CardContent className="p-4">
-          <form onSubmit={handleSubmit} className="flex gap-2">
+          <form onSubmit={handleFormSubmit} className="flex gap-2">
             <Input
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={handleInputChange}
               placeholder="Descreva seu problema de TI..."
               disabled={isLoading}
               className="flex-1"

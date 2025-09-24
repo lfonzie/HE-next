@@ -155,6 +155,20 @@ const SEMANTIC_THEME_MAPPING: Record<string, {
     visualConcepts: ['topographical', 'environmental', 'spatial', 'diverse'],
     educationalContext: ['spatial analysis', 'environmental awareness', 'cultural geography'],
     relatedSubjects: ['environment', 'economics', 'politics', 'sociology']
+  },
+  'vacinação': {
+    primaryTerms: ['vaccination', 'vaccine', 'immunization', 'medical vaccination'],
+    contextualTerms: ['vaccine injection', 'medical procedure', 'healthcare', 'immunity', 'prevention'],
+    visualConcepts: ['medical', 'healthcare', 'clinical', 'sterile', 'professional'],
+    educationalContext: ['public health', 'medical education', 'healthcare training', 'immunology'],
+    relatedSubjects: ['medicine', 'health', 'biology', 'public health']
+  },
+  'vaccination': {
+    primaryTerms: ['vaccination', 'vaccine', 'immunization', 'medical vaccination'],
+    contextualTerms: ['vaccine injection', 'medical procedure', 'healthcare', 'immunity', 'prevention'],
+    visualConcepts: ['medical', 'healthcare', 'clinical', 'sterile', 'professional'],
+    educationalContext: ['public health', 'medical education', 'healthcare training', 'immunology'],
+    relatedSubjects: ['medicine', 'health', 'biology', 'public health']
   }
 };
 
@@ -168,12 +182,34 @@ function analyzeSemanticTheme(topic: string, subject?: string): {
 } {
   const normalizedTopic = topic.toLowerCase().trim();
   
+  // Traduzir termos comuns do português para inglês
+  const translations: Record<string, string> = {
+    'vacinação': 'vaccination',
+    'vacina': 'vaccine',
+    'matemática': 'mathematics',
+    'matematica': 'mathematics',
+    'biologia': 'biology',
+    'física': 'physics',
+    'fisica': 'physics',
+    'química': 'chemistry',
+    'quimica': 'chemistry',
+    'história': 'history',
+    'historia': 'history',
+    'geografia': 'geography',
+    'literatura': 'literature',
+    'metallica': 'metallica'
+  };
+  
+  // Traduzir o tema para inglês se necessário
+  const englishTopic = translations[normalizedTopic] || normalizedTopic;
+  
   // Buscar mapeamento semântico direto
-  let semanticMapping = SEMANTIC_THEME_MAPPING[normalizedTopic];
+  let semanticMapping = SEMANTIC_THEME_MAPPING[englishTopic] || SEMANTIC_THEME_MAPPING[normalizedTopic];
   
   // Se não encontrar mapeamento direto, buscar por similaridade
   if (!semanticMapping) {
     const similarTheme = Object.keys(SEMANTIC_THEME_MAPPING).find(key => 
+      englishTopic.includes(key) || key.includes(englishTopic) ||
       normalizedTopic.includes(key) || key.includes(normalizedTopic)
     );
     if (similarTheme) {
@@ -181,18 +217,18 @@ function analyzeSemanticTheme(topic: string, subject?: string): {
     }
   }
   
-  // Se ainda não encontrar, criar mapeamento genérico baseado no tema
+  // Se ainda não encontrar, criar mapeamento genérico baseado no tema em inglês
   if (!semanticMapping) {
     semanticMapping = {
-      primaryTerms: [normalizedTopic],
-      contextualTerms: [normalizedTopic + ' concept', normalizedTopic + ' study'],
+      primaryTerms: [englishTopic],
+      contextualTerms: [englishTopic + ' concept', englishTopic + ' study'],
       visualConcepts: ['educational', 'informative', 'illustrative'],
       educationalContext: ['learning', 'education', 'academic'],
       relatedSubjects: [subject || 'general']
     };
   }
   
-  // Gerar queries semânticas
+  // Gerar queries semânticas sempre em inglês
   const primaryQuery = semanticMapping.primaryTerms[0];
   const contextualQueries = semanticMapping.contextualTerms.slice(0, 3);
   const visualQueries = semanticMapping.visualConcepts.slice(0, 2);
@@ -201,7 +237,7 @@ function analyzeSemanticTheme(topic: string, subject?: string): {
   // Calcular score semântico baseado na especificidade
   const semanticScore = semanticMapping.primaryTerms.length > 1 ? 85 : 70;
   
-  console.log(`🧠 Análise semântica para "${topic}":`, {
+  console.log(`🧠 Análise semântica para "${topic}" (traduzido: "${englishTopic}"):`, {
     primaryQuery,
     contextualQueries,
     visualQueries,
@@ -300,6 +336,63 @@ function selectDiverseImages(images: ImageResult[], count: number): ImageResult[
   return selected;
 }
 
+// Função para detectar imagens inadequadas ou irrelevantes
+function isInappropriateImage(text: string, query: string): boolean {
+  const textLower = text.toLowerCase();
+  const queryLower = query.toLowerCase();
+  
+  // Lista de termos que indicam conteúdo inadequado para educação
+  const inappropriateTerms = [
+    'anti', 'against', 'opposition', 'protest', 'demonstration', 'controversy',
+    'debate', 'dispute', 'conflict', 'war', 'violence', 'aggressive',
+    'negative', 'criticism', 'complaint', 'rejection', 'refusal'
+  ];
+  
+  // Verificar se contém termos inadequados
+  const hasInappropriateContent = inappropriateTerms.some(term => textLower.includes(term));
+  
+  if (hasInappropriateContent) {
+    console.log(`🚫 Conteúdo inadequado detectado: "${text.slice(0, 50)}..."`);
+    return true;
+  }
+  
+  // Para temas médicos/vacinação, ser mais específico na detecção de irrelevância
+  if (queryLower.includes('vaccination') || queryLower.includes('vaccine')) {
+    // Verificar se é completamente irrelevante ao tema médico
+    const medicalRelevantTerms = [
+      'vaccine', 'vaccination', 'injection', 'syringe', 'medical', 'healthcare',
+      'doctor', 'nurse', 'clinic', 'hospital', 'immunization', 'prevention',
+      'certificate', 'card', 'patient', 'treatment', 'medicine', 'pharmaceutical'
+    ];
+    
+    const hasMedicalRelevance = medicalRelevantTerms.some(term => textLower.includes(term));
+    
+    if (!hasMedicalRelevance) {
+      console.log(`🚫 Conteúdo irrelevante ao tema médico detectado: "${text.slice(0, 50)}..."`);
+      return true;
+    }
+    
+    return false; // Se tem relevância médica, não é inadequada
+  }
+  
+  // Para outros temas, verificar se é completamente irrelevante
+  const irrelevantContexts = [
+    'books', 'library', 'literature', 'reading', 'study', 'academic',
+    'classroom', 'school', 'education', 'learning', 'knowledge'
+  ];
+  
+  // Se contém apenas contextos genéricos de educação sem relação ao tema específico
+  const hasOnlyGenericEducation = irrelevantContexts.some(context => textLower.includes(context));
+  const hasSpecificTopic = textLower.includes(queryLower);
+  
+  if (hasOnlyGenericEducation && !hasSpecificTopic) {
+    console.log(`🚫 Conteúdo genérico irrelevante detectado: "${text.slice(0, 50)}..."`);
+    return true;
+  }
+  
+  return false;
+}
+
 // Função para detectar falsos positivos na busca
 function isFalsePositive(text: string, query: string): boolean {
   const queryLower = query.toLowerCase();
@@ -371,37 +464,57 @@ function calculateEducationalScore(image: any, query: string, subject?: string):
         score += 25; // Score alto para correspondências de palavras
       }
     });
-  
-  // Bonus para tags relevantes
-  if (image.tags) {
-    const tags = Array.isArray(image.tags) ? image.tags : image.tags.split(', ');
-    tags.forEach((tag: string) => {
-      const tagLower = tag.toLowerCase();
+    
+    // BONUS ESPECIAL: Para temas médicos/educacionais positivos
+    if (exactQuery.includes('vaccination') || exactQuery.includes('vaccine')) {
+      const positiveMedicalTerms = ['injection', 'syringe', 'medical', 'healthcare', 'doctor', 'nurse', 'clinic', 'hospital', 'immunization', 'prevention'];
+      const hasPositiveMedicalContext = positiveMedicalTerms.some(term => text.includes(term));
+      
+      if (hasPositiveMedicalContext) {
+        score += 30; // Bonus alto para contexto médico positivo
+        console.log(`🏥 Contexto médico positivo detectado`);
+      }
+      
+      // Penalizar conteúdo anti-vacinação
+      const negativeTerms = ['anti', 'against', 'opposition', 'protest', 'refusal'];
+      const hasNegativeContext = negativeTerms.some(term => text.includes(term));
+      
+      if (hasNegativeContext) {
+        score -= 50; // Penalização severa para conteúdo negativo
+        console.log(`⚠️ Conteúdo negativo detectado - penalização aplicada`);
+      }
+    }
+    
+    // Bonus para tags relevantes
+    if (image.tags) {
+      const tags = Array.isArray(image.tags) ? image.tags : image.tags.split(', ');
+      tags.forEach((tag: string) => {
+        const tagLower = tag.toLowerCase();
         if (tagLower.includes(exactQuery)) {
           score += 30; // Bonus alto para tags que contêm o termo exato
         } else if (queryWords.some(word => tagLower.includes(word))) {
           score += 10; // Bonus menor para correspondências parciais
-      }
-    });
-  }
-  
-  // Bonus para qualidade da imagem
-  if (image.width && image.height) {
-    const aspectRatio = image.width / image.height;
-    // Preferir imagens com proporção adequada para slides
-    if (aspectRatio >= 1.2 && aspectRatio <= 2.0) {
-      score += 5;
+        }
+      });
     }
-  }
-  
-  // Bonus por fonte confiável
+    
+    // Bonus para qualidade da imagem
+    if (image.width && image.height) {
+      const aspectRatio = image.width / image.height;
+      // Preferir imagens com proporção adequada para slides
+      if (aspectRatio >= 1.2 && aspectRatio <= 2.0) {
+        score += 5;
+      }
+    }
+    
+    // Bonus por fonte confiável
     if (image.source === 'wikimedia') score += 15;
-  if (image.source === 'unsplash') score += 8;
-  if (image.source === 'pixabay') score += 6;
-  if (image.source === 'bing') score += 7;
-  if (image.source === 'pexels') score += 9;
-  
-  return Math.max(0, Math.min(100, score)); // Cap em 100
+    if (image.source === 'unsplash') score += 8;
+    if (image.source === 'pixabay') score += 6;
+    if (image.source === 'bing') score += 7;
+    if (image.source === 'pexels') score += 9;
+    
+    return Math.max(0, Math.min(100, score)); // Cap em 100
   } catch (error) {
     console.error('Erro no cálculo de score:', error);
     return 50; // Score padrão em caso de erro
@@ -731,13 +844,16 @@ async function smartImageSearch(query: string, subject?: string, count: number =
       // Verificar se não é um falso positivo (ex: "metallica" em "aporonisu metallica" - um pássaro)
       const isRelevant = hasExactMatch && !isFalsePositive(text, exactQuery);
       
-      if (isRelevant) {
-        console.log(`✅ Imagem relevante encontrada: "${image.title?.slice(0, 50)}..."`);
+      // Verificar se não é inadequada ou irrelevante
+      const isAppropriate = !isInappropriateImage(text, exactQuery);
+      
+      if (isRelevant && isAppropriate) {
+        console.log(`✅ Imagem relevante e adequada encontrada: "${image.title?.slice(0, 50)}..."`);
       } else {
-        console.log(`❌ Imagem irrelevante descartada: "${image.title?.slice(0, 50)}..."`);
+        console.log(`❌ Imagem inadequada/irrelevante descartada: "${image.title?.slice(0, 50)}..."`);
       }
       
-      return isRelevant;
+      return isRelevant && isAppropriate;
     });
     
     console.log(`📊 Resultados da busca exata: ${uniqueExactImages.length} imagens únicas, ${relevantImages.length} relevantes`);

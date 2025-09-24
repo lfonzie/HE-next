@@ -9,6 +9,8 @@ const nextConfig = {
   // Next.js 15+ features enabled
   experimental: {
     optimizePackageImports: ['@radix-ui/react-icons', 'lucide-react'],
+    // Explicitly disable Turbopack to use Webpack
+    turbo: false,
   },
   // Fix multiple lockfiles warning
   outputFileTracingRoot: __dirname,
@@ -176,7 +178,7 @@ const nextConfig = {
     NEXTAUTH_URL: process.env.NEXTAUTH_URL,
     OPENAI_API_KEY: process.env.OPENAI_API_KEY
   },
-  // Turbopack configuration removed due to macOS permission issues
+  // Use Webpack instead of Turbopack to avoid configuration conflicts
   webpack: (config, { dev, isServer }) => {
     if (dev && !isServer) {
       config.resolve.fallback = {
