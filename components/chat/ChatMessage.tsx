@@ -23,7 +23,7 @@ import { ModelChip, ModelDetails } from "./ModelChip";
 import { MODULES, convertToOldModuleId } from "@/lib/modules";
 import { getModuleIcon } from "@/lib/moduleIcons";
 import { getModuleIconKey, getModuleColor, debugIconMapping } from "@/lib/iconMapping";
-import { Copy, Play, File, GraduationCap } from 'lucide-react';
+import { Copy, Play, File, GraduationCap, Users } from 'lucide-react';
 // import { useAutoClassification } from "@/hooks/useAutoClassification"; // REMOVED: Duplicate classification
 import { isWeatherQuery } from "@/utils/weatherApi";
 
@@ -143,49 +143,69 @@ export const ChatMessage = memo(function ChatMessage({
       aria-atomic="false"
       role="group"
     >
-      {/* Avatar do assistente - ícone específico do módulo */}
-      {!isUser && (
-        <div className={`flex flex-col items-center ${isUser ? 'order-last' : 'order-first'}`}>
-          <div 
-            className="w-10 h-10 rounded-full border-2 shadow-md flex items-center justify-center transition-all duration-200 hover:scale-105 cursor-help"
-            style={{
-              backgroundColor: moduleColor,
-              color: "#ffffff",
-              boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
-              borderColor: `${moduleColor}60`
-            }}
-            title={`Módulo: ${moduleInfo?.name || 'Assistente'}\nID: ${effectiveModuleId || 'N/A'}\nÍcone: ${moduleIconKey}`}
-            data-module-id={effectiveModuleId}
-            data-icon-key={moduleIconKey}
-          >
+      {/* Avatar - ícone específico do módulo para ambas as mensagens */}
+      <div className={`flex flex-col items-center ${isUser ? 'order-last' : 'order-first'}`}>
+        <div 
+          className="w-10 h-10 rounded-full border-2 shadow-md flex items-center justify-center transition-all duration-200 hover:scale-105 cursor-help"
+          style={{
+            backgroundColor: isUser ? '#f59e0b' : moduleColor, // Amarelo para usuário, cor do módulo para assistente
+            color: "#ffffff",
+            boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
+            borderColor: isUser ? '#f59e0b60' : `${moduleColor}60`
+          }}
+          title={isUser 
+            ? `Usuário\nMódulo detectado: ${moduleInfo?.name || 'N/A'}\nID: ${effectiveModuleId || 'N/A'}` 
+            : `Módulo: ${moduleInfo?.name || 'Assistente'}\nID: ${effectiveModuleId || 'N/A'}\nÍcone: ${moduleIconKey}`
+          }
+          data-module-id={effectiveModuleId}
+          data-icon-key={moduleIconKey}
+        >
+          {isUser ? (
+            // Ícone do usuário (pessoa) quando é mensagem do usuário
+            <Users className="w-5 h-5 text-white" />
+          ) : (
+            // Ícone específico do módulo quando é mensagem do assistente
             <ModuleIcon className="w-5 h-5 text-white" />
-          </div>
-          {/* Chip do modelo usado */}
-          {!isUser && (
-            <div className="mt-1">
-              <ModelChip 
-                model={message.model}
-                provider={message.provider}
-                complexity={message.complexity}
-                tier={message.tier}
-                className="scale-90"
-              />
-            </div>
-          )}
-          
-          {/* Descrição do módulo */}
-          {moduleInfo && (
-            <div className="mt-2 text-xs text-center max-w-24">
-              <div className="font-semibold text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-800 px-2 py-1 rounded-md shadow-sm border border-gray-200 dark:border-gray-600">
-                {moduleInfo.name}
-              </div>
-              <div className="text-xs text-gray-600 dark:text-gray-400 mt-1 truncate">
-                {moduleInfo.description}
-              </div>
-            </div>
           )}
         </div>
-      )}
+        
+        {/* Chip do modelo usado - apenas para assistente */}
+        {!isUser && (
+          <div className="mt-1">
+            <ModelChip 
+              model={message.model}
+              provider={message.provider}
+              complexity={message.complexity}
+              tier={message.tier}
+              className="scale-90"
+            />
+          </div>
+        )}
+        
+        {/* Descrição do módulo - apenas para assistente */}
+        {!isUser && moduleInfo && (
+          <div className="mt-2 text-xs text-center max-w-24">
+            <div className="font-semibold text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-800 px-2 py-1 rounded-md shadow-sm border border-gray-200 dark:border-gray-600">
+              {moduleInfo.name}
+            </div>
+            <div className="text-xs text-gray-600 dark:text-gray-400 mt-1 truncate">
+              {moduleInfo.description}
+            </div>
+          </div>
+        )}
+        
+        {/* Indicador do módulo detectado para mensagens do usuário */}
+        {isUser && effectiveModuleId && (
+          <div className="mt-2 text-xs text-center max-w-24">
+            <div className="font-semibold text-gray-800 dark:text-gray-200 bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded-md shadow-sm border border-blue-200 dark:border-blue-700">
+              {moduleInfo?.name || effectiveModuleId}
+            </div>
+            <div className="text-xs text-gray-600 dark:text-gray-400 mt-1 truncate">
+              Módulo detectado
+            </div>
+          </div>
+        )}
+      </div>
 
       <div className={`${isUser ? 'order-first' : 'order-last'}`}>
         <article

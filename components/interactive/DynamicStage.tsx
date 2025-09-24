@@ -64,6 +64,12 @@ interface DynamicStageProps {
   onRestart?: () => void
   onNewLesson?: () => void
   onPrint?: () => void
+  ttsConfig?: {
+    enabled: boolean
+    voice: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer'
+    model: 'tts-1' | 'tts-1-hd'
+    autoPlay: boolean
+  }
 }
 
 export default function DynamicStage({
@@ -81,7 +87,8 @@ export default function DynamicStage({
   lessonData,
   onRestart,
   onNewLesson,
-  onPrint
+  onPrint,
+  ttsConfig
 }: DynamicStageProps) {
   const [isCompleted, setIsCompleted] = useState(false)
   const [stageResult, setStageResult] = useState<any>(null)

@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ModernNavigation } from './ModernNavigation'
+import { UserProfile } from './UserProfile'
 import { cn } from '@/lib/utils'
 
 interface ModernHeaderProps {
@@ -12,6 +13,7 @@ interface ModernHeaderProps {
   showNavigation?: boolean
   showHome?: boolean
   transparent?: boolean
+  showUserProfile?: boolean
 }
 
 export function ModernHeader({ 
@@ -19,7 +21,8 @@ export function ModernHeader({
   showLoginButton = false, 
   showNavigation = true,
   showHome = true,
-  transparent = false
+  transparent = false,
+  showUserProfile = true
 }: ModernHeaderProps) {
   const [isClient, setIsClient] = useState(false)
   const [scrollY, setScrollY] = useState(0)
@@ -49,39 +52,80 @@ export function ModernHeader({
     <header className={headerClasses}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 overflow-visible">
         <div className="flex justify-between items-center overflow-visible">
-          {/* Logo */}
-          <Link 
-            href="/" 
-            className="flex items-center gap-3 hover:opacity-80 transition-opacity"
-          >
-            <Image 
-              src="/assets/Logo_HubEdu.ia.svg" 
-              alt="HubEdu.ia Logo" 
-              width={40}
-              height={40}
-              className="h-10 w-auto"
-            />
-            <div className="text-xl font-bold">
-              <span className="text-black">Hub</span>
-              <span className="text-yellow-500">Edu</span>
-              <span className="text-black">.ia</span>
-            </div>
-          </Link>
-          
-          {/* Navigation */}
-          {showNavigation && (
-            <ModernNavigation showHome={showHome} />
-          )}
-          
-          {/* Login Button */}
-          {showLoginButton && (
-            <Link
-              href="/login"
-              className="hidden sm:flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
+          {/* Left side - Logo + Nome + Navigation + User Profile */}
+          <div className="flex items-center gap-4">
+            {/* Mobile Navigation (Hamburger) - Primeiro */}
+            {showNavigation && (
+              <div className="lg:hidden">
+                <ModernNavigation showHome={showHome} />
+              </div>
+            )}
+            
+            {/* Mobile Logo + Nome - Segundo */}
+            <Link 
+              href="/" 
+              className="lg:hidden flex items-center gap-3 hover:opacity-80 transition-opacity"
             >
-              Entrar
+              <Image 
+                src="/assets/Logo_HubEdu.ia.svg" 
+                alt="HubEdu.ia Logo" 
+                width={32}
+                height={32}
+                className="h-8 w-auto"
+              />
+              <div className="text-lg font-bold">
+                <span className="text-black">Hub</span>
+                <span className="text-yellow-500">Edu</span>
+                <span className="text-black">.ia</span>
+              </div>
             </Link>
-          )}
+            
+            {/* Desktop Logo */}
+            <Link 
+              href="/" 
+              className="hidden lg:flex items-center gap-3 hover:opacity-80 transition-opacity"
+            >
+              <Image 
+                src="/assets/Logo_HubEdu.ia.svg" 
+                alt="HubEdu.ia Logo" 
+                width={40}
+                height={40}
+                className="h-10 w-auto"
+              />
+              <div className="text-xl font-bold">
+                <span className="text-black">Hub</span>
+                <span className="text-yellow-500">Edu</span>
+                <span className="text-black">.ia</span>
+              </div>
+            </Link>
+            
+            {/* Desktop Navigation */}
+            {showNavigation && (
+              <div className="hidden lg:block">
+                <ModernNavigation showHome={showHome} />
+              </div>
+            )}
+          </div>
+          
+          {/* Right side - User Profile + Login Button */}
+          <div className="flex items-center gap-4">
+            {/* User Profile - Only on desktop */}
+            {showUserProfile && (
+              <div className="hidden lg:block">
+                <UserProfile size="md" />
+              </div>
+            )}
+            
+            {/* Login Button */}
+            {showLoginButton && (
+              <Link
+                href="/login"
+                className="hidden sm:flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
+              >
+                Entrar
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     </header>

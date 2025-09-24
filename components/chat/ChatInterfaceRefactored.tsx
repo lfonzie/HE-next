@@ -25,6 +25,7 @@ import { RedacaoModal } from './RedacaoModal';
 import { AulasModal } from './AulasModal';
 import { useChat } from '../../hooks/useChat';
 import { useToast } from '../../hooks/use-toast';
+import { ChatMessage } from './ChatMessage';
 
 interface ModalState {
   aula: { isOpen: boolean; topic: string };
@@ -487,27 +488,17 @@ export function ChatInterfaceRefactored({ className = '' }: ChatInterfaceRefacto
           </div>
         ) : (
           messages.map((message, index) => (
-            <div
+            <ChatMessage
               key={index}
-              className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`max-w-[80%] p-3 rounded-lg ${
-                  message.type === 'user'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-900'
-                }`}
-              >
-                <p className="text-sm">{message.content}</p>
-                {message.timestamp && (
-                  <p className={`text-xs mt-1 ${
-                    message.type === 'user' ? 'text-blue-100' : 'text-gray-500'
-                  }`}>
-                    {new Date(message.timestamp).toLocaleTimeString()}
-                  </p>
-                )}
-              </div>
-            </div>
+              message={{
+                id: `msg-${index}`,
+                content: message.content,
+                role: message.type === 'user' ? 'user' : 'assistant',
+                timestamp: message.timestamp ? new Date(message.timestamp) : new Date(),
+                module: message.module || undefined
+              }}
+              isUser={message.type === 'user'}
+            />
           ))
         )}
 

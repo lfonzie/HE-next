@@ -6,10 +6,10 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2, Sparkles, BookOpen, Target, Users, Send, Lightbulb, TrendingUp, AlertCircle, CheckCircle, Clock, RefreshCw, Timer, BarChart3, FileText, AlertTriangle, Mic, Volume2, Accessibility, Coffee, Brain, Zap, Star, Heart, Rocket, Image as ImageIcon } from 'lucide-react'
+import { Loader2, Sparkles, BookOpen, Target, Users, Send, Lightbulb, TrendingUp, AlertCircle, CheckCircle, Clock, RefreshCw, Timer, BarChart3, FileText, AlertTriangle, Mic, Volume2, VolumeX, Accessibility, Coffee, Brain, Zap, Star, Heart, Rocket, Image as ImageIcon } from 'lucide-react'
 import { useEnhancedSuggestions } from '@/hooks/useEnhancedSuggestions'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
-import { ModernHeader } from '@/components/layout/ModernHeader'
+import StreamingAudioPlayer from '@/components/audio/StreamingAudioPlayer'
 // Removido: seleção manual de imagens - agora é automática
 import Link from 'next/link'
 
@@ -17,6 +17,56 @@ import Link from 'next/link'
 const toast = {
   success: (msg: string) => console.log('Success:', msg),
   error: (msg: string) => console.log('Error:', msg)
+}
+
+// Function to clean old lessons from localStorage
+const cleanOldLessons = (aggressive = false) => {
+  try {
+    const keys = Object.keys(localStorage)
+    const lessonKeys = keys.filter(key => key.startsWith('demo_lesson_'))
+    
+    if (lessonKeys.length === 0) return
+    
+    // Sort by key (which includes timestamp) to get oldest first
+    lessonKeys.sort()
+    
+    // Calculate how many to remove
+    const maxLessons = aggressive ? 3 : 5 // Keep only 3-5 most recent lessons
+    const toRemove = lessonKeys.slice(0, Math.max(0, lessonKeys.length - maxLessons))
+    
+    console.log(`🧹 Limpando ${toRemove.length} aulas antigas do localStorage`)
+    
+    // Remove old lessons
+    toRemove.forEach(key => {
+      localStorage.removeItem(key)
+      console.log(`🗑️ Removido: ${key}`)
+    })
+    
+    // Also clean other large items if aggressive
+    if (aggressive) {
+      const otherKeys = keys.filter(key => 
+        key.startsWith('tts_') || 
+        key.startsWith('lesson_cache') ||
+        key.startsWith('audio_cache')
+      )
+      
+      otherKeys.forEach(key => {
+        try {
+          const item = localStorage.getItem(key)
+          if (item && item.length > 100000) { // Remove items > 100KB
+            localStorage.removeItem(key)
+            console.log(`🗑️ Removido item grande: ${key}`)
+          }
+        } catch (e) {
+          localStorage.removeItem(key)
+        }
+      })
+    }
+    
+    console.log(`✅ Limpeza concluída. Restam ${lessonKeys.length - toRemove.length} aulas`)
+  } catch (error) {
+    console.warn('Erro durante limpeza do localStorage:', error)
+  }
 }
 
 interface LessonProgressProps {
@@ -331,6 +381,10 @@ function AulasPageContent() {
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [startTime, setStartTime] = useState<number | null>(null)
   const [elapsedTime, setElapsedTime] = useState(0)
+  
+  // Streaming audio state
+  const [streamingText, setStreamingText] = useState('')
+  const [isAudioEnabled, setIsAudioEnabled] = useState(true)
 
   // Debug log para verificar estado inicial
   console.log('AulasPageContent render - isGenerating:', isGenerating, 'generatedLesson:', !!generatedLesson)
@@ -338,17 +392,39 @@ function AulasPageContent() {
   // Verificar se há aula salva no localStorage que pode estar causando problemas
   useEffect(() => {
     const checkLocalStorage = () => {
-      const keys = Object.keys(localStorage).filter(key => key.startsWith('demo_lesson_'))
-      console.log('Aulas salvas no localStorage:', keys)
-      
-      // Se há aulas salvas mas não há generatedLesson, pode ser um problema
-      if (keys.length > 0 && !generatedLesson) {
-        console.log('Possível problema: há aulas no localStorage mas não há generatedLesson no estado')
+      try {
+        // Clean old lessons on component mount to prevent quota issues
+        cleanOldLessons()
+        
+        const keys = Object.keys(localStorage)
+        const lessonKeys = keys.filter(key => key.startsWith('demo_lesson_'))
+        
+        if (lessonKeys.length > 0) {
+          console.log(`📚 Encontradas ${lessonKeys.length} aulas salvas no localStorage`)
+          
+          // Check if any lesson is too large
+          lessonKeys.forEach(key => {
+            try {
+              const lesson = localStorage.getItem(key)
+              if (lesson && lesson.length > 5 * 1024 * 1024) { // 5MB
+                console.warn(`⚠️ Aula muito grande encontrada: ${key} (${Math.round(lesson.length / 1024 / 1024)}MB)`)
+                // Remove oversized lessons
+                localStorage.removeItem(key)
+                console.log(`🗑️ Removida aula muito grande: ${key}`)
+              }
+            } catch (e) {
+              console.warn(`Erro ao verificar aula ${key}:`, e)
+              localStorage.removeItem(key)
+            }
+          })
+        }
+      } catch (error) {
+        console.warn('Erro ao verificar localStorage:', error)
       }
     }
     
     checkLocalStorage()
-  }, [generatedLesson])
+  }, [])
 
   // Função para limpar estado e localStorage (debug)
   const clearAllState = useCallback(() => {
@@ -457,11 +533,14 @@ function AulasPageContent() {
     setGenerationStatus(STATUS_MESSAGES[0].message)
     setGeneratedLesson(null)
     setStartTime(Date.now())
+    
+    // Initialize streaming text for audio
+    setStreamingText(`Vou criar uma aula personalizada sobre: ${topic}`)
 
     const generationStartTime = Date.now()
     const estimatedDuration = 90000 // 90 seconds (1 minute and 30 seconds) for realistic timing
 
-    // Enhanced progress simulation
+    // Enhanced progress simulation with streaming text updates
     const progressInterval = setInterval(() => {
       const elapsed = Date.now() - generationStartTime
       const progress = Math.min((elapsed / estimatedDuration) * 95, 95)
@@ -471,6 +550,27 @@ function AulasPageContent() {
         (status) => progress >= status.progress
       ) || STATUS_MESSAGES[STATUS_MESSAGES.length - 1]
       setGenerationStatus(currentStatus.message)
+
+      // Update streaming text for audio based on progress
+      if (isAudioEnabled) {
+        const audioTexts = [
+          `Vou criar uma aula personalizada sobre: ${topic}`,
+          `Analisando o contexto educacional do tópico: ${topic}`,
+          `Identificando o nível de dificuldade ideal para este conteúdo`,
+          `Criando objetivos de aprendizagem específicos e mensuráveis`,
+          `Desenvolvendo atividades interativas e exercícios práticos`,
+          `Implementando elementos de gamificação para engajamento`,
+          `Selecionando imagens educacionais relevantes automaticamente`,
+          `Otimizando o pacing e sequência didática da aula`,
+          `Aplicando metodologias pedagógicas avançadas`,
+          `Finalizando sua aula personalizada sobre: ${topic}`
+        ]
+        
+        const textIndex = Math.floor((progress / 100) * audioTexts.length)
+        if (textIndex < audioTexts.length) {
+          setStreamingText(audioTexts[textIndex])
+        }
+      }
 
       if (progress >= 95) {
         clearInterval(progressInterval)
@@ -569,13 +669,59 @@ function AulasPageContent() {
         setPacingWarnings(result.warnings)
       }
 
-      // Store in localStorage for demo mode
+      // Store in localStorage for demo mode with quota management
       console.log('Salvando aula no localStorage:', generatedLesson.id, generatedLesson)
-      localStorage.setItem(`demo_lesson_${(generatedLesson as any)?.id || ""}`, JSON.stringify(generatedLesson))
-      
-      // Verificar se foi salvo corretamente
-      const saved = localStorage.getItem(`demo_lesson_${(generatedLesson as any)?.id || ""}`)
-      console.log('Aula salva no localStorage:', saved ? 'SIM' : 'NÃO')
+      try {
+        // Clean old lessons before saving new one
+        cleanOldLessons()
+        
+        // Try to save the lesson
+        const lessonKey = `demo_lesson_${(generatedLesson as any)?.id || ""}`
+        const lessonData = JSON.stringify(generatedLesson)
+        
+        // Check if data is too large
+        if (lessonData.length > 2 * 1024 * 1024) { // 2MB limit
+          console.warn('Aula muito grande para localStorage, salvando versão compacta')
+          const compactLesson = {
+            id: generatedLesson.id,
+            title: generatedLesson.title,
+            subject: generatedLesson.subject,
+            grade: (generatedLesson as any).grade,
+            objectives: (generatedLesson as any).objectives,
+            stages: (generatedLesson as any).stages?.slice(0, 3), // Keep only first 3 stages
+            slides: (generatedLesson as any).slides?.slice(0, 5), // Keep only first 5 slides
+            metadata: { ...(generatedLesson as any).metadata, compact: true }
+          }
+          localStorage.setItem(lessonKey, JSON.stringify(compactLesson))
+        } else {
+          localStorage.setItem(lessonKey, lessonData)
+        }
+        
+        // Verificar se foi salvo corretamente
+        const saved = localStorage.getItem(lessonKey)
+        console.log('Aula salva no localStorage:', saved ? 'SIM' : 'NÃO')
+      } catch (error) {
+        console.warn('Erro ao salvar no localStorage:', error)
+        // Try to clean more aggressively and retry
+        cleanOldLessons(true)
+        try {
+          const lessonKey = `demo_lesson_${(generatedLesson as any)?.id || ""}`
+          const compactLesson = {
+            id: generatedLesson.id,
+            title: generatedLesson.title,
+            subject: generatedLesson.subject,
+            grade: (generatedLesson as any).grade,
+            objectives: (generatedLesson as any).objectives?.slice(0, 3),
+            stages: (generatedLesson as any).stages?.slice(0, 2),
+            slides: (generatedLesson as any).slides?.slice(0, 3),
+            metadata: { ...(generatedLesson as any).metadata, compact: true }
+          }
+          localStorage.setItem(lessonKey, JSON.stringify(compactLesson))
+          console.log('Aula salva em versão compacta após limpeza')
+        } catch (retryError) {
+          console.error('Falha ao salvar mesmo após limpeza:', retryError)
+        }
+      }
       
       toast.success(`Aula gerada com sucesso usando ${result.provider}!`)
     } catch (error) {
@@ -644,10 +790,56 @@ function AulasPageContent() {
     console.log('Iniciando aula com ID:', generatedLesson.id)
     console.log('Dados da aula:', generatedLesson)
     
-    // Salvar aula no localStorage para modo demo
+    // Salvar aula no localStorage para modo demo with quota management
     if (generatedLesson.demoMode) {
-      localStorage.setItem(`demo_lesson_${(generatedLesson as any)?.id || ""}`, JSON.stringify(generatedLesson))
-      console.log('Aula salva no localStorage para modo demo')
+      try {
+        // Clean old lessons before saving
+        cleanOldLessons()
+        
+        const lessonKey = `demo_lesson_${(generatedLesson as any)?.id || ""}`
+        const lessonData = JSON.stringify(generatedLesson)
+        
+        // Check if data is too large
+        if (lessonData.length > 2 * 1024 * 1024) { // 2MB limit
+          console.warn('Aula muito grande para localStorage, salvando versão compacta')
+          const compactLesson = {
+            id: generatedLesson.id,
+            title: generatedLesson.title,
+            subject: generatedLesson.subject,
+            grade: (generatedLesson as any).grade,
+            objectives: (generatedLesson as any).objectives,
+            stages: (generatedLesson as any).stages?.slice(0, 3),
+            slides: (generatedLesson as any).slides?.slice(0, 5),
+            metadata: { ...(generatedLesson as any).metadata, compact: true }
+          }
+          localStorage.setItem(lessonKey, JSON.stringify(compactLesson))
+        } else {
+          localStorage.setItem(lessonKey, lessonData)
+        }
+        
+        console.log('Aula salva no localStorage para modo demo')
+      } catch (error) {
+        console.warn('Erro ao salvar no localStorage:', error)
+        // Try to clean more aggressively and retry
+        cleanOldLessons(true)
+        try {
+          const lessonKey = `demo_lesson_${(generatedLesson as any)?.id || ""}`
+          const compactLesson = {
+            id: generatedLesson.id,
+            title: generatedLesson.title,
+            subject: generatedLesson.subject,
+            grade: (generatedLesson as any).grade,
+            objectives: (generatedLesson as any).objectives?.slice(0, 3),
+            stages: (generatedLesson as any).stages?.slice(0, 2),
+            slides: (generatedLesson as any).slides?.slice(0, 3),
+            metadata: { ...(generatedLesson as any).metadata, compact: true }
+          }
+          localStorage.setItem(lessonKey, JSON.stringify(compactLesson))
+          console.log('Aula salva em versão compacta após limpeza')
+        } catch (retryError) {
+          console.error('Falha ao salvar mesmo após limpeza:', retryError)
+        }
+      }
     }
     
     // Navegar para a página da aula
@@ -667,9 +859,7 @@ function AulasPageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-yellow-50 to-orange-100">
-      <ModernHeader showNavigation={true} showHome={true} />
-      <div className="container mx-auto px-4 py-8 max-w-7xl pt-24" role="main">
+    <div className="container mx-auto px-4 py-8 max-w-7xl" role="main">
         {/* Header quando aula foi gerada */}
         {generatedLesson && (
           <header className="text-center mb-12">
@@ -941,6 +1131,30 @@ function AulasPageContent() {
                 </div>
 
                 <div className="space-y-4">
+                  {/* Audio Toggle */}
+                  <div className="flex items-center justify-center gap-4 p-4 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-2xl">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                        <Volume2 className="h-4 w-4 text-white" />
+                      </div>
+                      <span className="text-sm font-medium text-gray-700">Áudio Narrado</span>
+                    </div>
+                    <Button
+                      onClick={() => setIsAudioEnabled(!isAudioEnabled)}
+                      variant={isAudioEnabled ? "default" : "outline"}
+                      size="sm"
+                      className={`flex items-center gap-2 ${
+                        isAudioEnabled 
+                          ? 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700' 
+                          : 'border-blue-300 text-blue-700 hover:bg-blue-50'
+                      }`}
+                    >
+                      {isAudioEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+                      {isAudioEnabled ? 'Ativado' : 'Desativado'}
+                    </Button>
+                    <span className="text-xs text-gray-500">Voz SHIMMER</span>
+                  </div>
+
                   <Button
                     onClick={() => handleGenerate()}
                     disabled={isGenerating || !formData.topic.trim()}
@@ -1156,6 +1370,45 @@ function AulasPageContent() {
                     </div>
                   </div>
                   
+                  {/* Streaming Audio Player */}
+                  {isAudioEnabled && streamingText && (
+                    <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-2xl p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                            <Volume2 className="h-5 w-5 text-white" />
+                          </div>
+                          <div>
+                            <h4 className="text-lg font-semibold text-gray-800">Áudio Narrado</h4>
+                            <p className="text-sm text-gray-600">Reproduzindo com voz SHIMMER</p>
+                          </div>
+                        </div>
+                        <Button
+                          onClick={() => setIsAudioEnabled(!isAudioEnabled)}
+                          variant="outline"
+                          size="sm"
+                          className="flex items-center gap-2"
+                        >
+                          {isAudioEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+                          {isAudioEnabled ? 'Desativar' : 'Ativar'} Áudio
+                        </Button>
+                      </div>
+                      <StreamingAudioPlayer
+                        text={streamingText}
+                        voice="shimmer"
+                        model="tts-1"
+                        speed={1.0}
+                        format="mp3"
+                        chunkSize={80}
+                        autoPlay={true}
+                        className="w-full"
+                        onAudioStart={() => console.log('Audio started')}
+                        onAudioEnd={() => console.log('Audio ended')}
+                        onError={(error) => console.error('Audio error:', error)}
+                      />
+                    </div>
+                  )}
+                  
                   {/* Mensagem de erro específica */}
                   {generationStatus.includes('Erro') && (
                     <div className="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -1260,7 +1513,6 @@ function AulasPageContent() {
       )}
 
       </div>
-    </div>
   )
 }
 

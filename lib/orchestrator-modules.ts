@@ -1341,6 +1341,192 @@ registerModule({
   }
 })
 
+// Módulos de Comunicação Institucional
+
+// secretaria module
+registerModule({
+  id: 'secretaria',
+  name: 'Secretaria Virtual',
+  version: '1.0.0',
+  permissions: { requires_auth: false },
+  cost_estimate: { tokens: 800, latency_ms: 1200 },
+  async detect({ text, context }): Promise<DetectedIntent> {
+    const keywords = [
+      'vaga', 'vagas', 'matrícula', 'matricula', 'documento', 'documentos',
+      'horário', 'horarios', 'funcionamento', 'calendário', 'calendario',
+      'escola', 'secretaria', 'admissão', 'admissao', 'inscrição', 'inscricao',
+      'bolsa', 'bolsas', 'desconto', 'descontos', 'mensalidade', 'valor'
+    ]
+    
+    const textLower = text.toLowerCase()
+    const hasKeywords = keywords.some(keyword => textLower.includes(keyword))
+    
+    if (hasKeywords) {
+      return { intent: 'secretaria_inquiry', module: 'secretaria', confidence: 0.8, slots: {} }
+    }
+    
+    return { intent: 'secretaria_inquiry', module: 'secretaria', confidence: 0.2, slots: {} }
+  },
+  async execute({ slots, context }): Promise<OrchestratorResponse> {
+    const message = context?.text || ''
+    return {
+      text: `🏫 **Secretaria Virtual**\n\nPosso te ajudar com:\n• 📋 Informações sobre vagas disponíveis\n• 📄 Documentos necessários para matrícula\n• ⏰ Horários de funcionamento\n• 📅 Calendário escolar\n• 💰 Informações sobre bolsas e descontos\n\nComo posso te ajudar hoje?`,
+      blocks: [
+        { 
+          type: 'notice', 
+          title: 'ℹ️ Informações Importantes', 
+          body: 'Para confirmações específicas, sempre recomendo entrar em contato diretamente com a secretaria da escola. 📞' 
+        }
+      ],
+      actions: [
+        { type: 'cta', label: 'Verificar vagas', module: 'secretaria', args: { action: 'vagas' } },
+        { type: 'cta', label: 'Documentos necessários', module: 'secretaria', args: { action: 'documentos' } },
+        { type: 'cta', label: 'Horários de funcionamento', module: 'secretaria', args: { action: 'horarios' } },
+        { type: 'cta', label: 'Calendário escolar', module: 'secretaria', args: { action: 'calendario' } }
+      ],
+      trace: { module: 'secretaria', confidence: 0.8 }
+    }
+  }
+})
+
+// financeiro module
+registerModule({
+  id: 'financeiro',
+  name: 'Financeiro Virtual',
+  version: '1.0.0',
+  permissions: { requires_auth: false },
+  cost_estimate: { tokens: 800, latency_ms: 1200 },
+  async detect({ text, context }): Promise<DetectedIntent> {
+    const keywords = [
+      'preço', 'preco', 'valor', 'valores', 'mensalidade', 'mensalidades',
+      'pagamento', 'pagamentos', 'boleto', 'cartão', 'cartao', 'pix',
+      'desconto', 'descontos', 'bolsa', 'bolsas', 'material', 'materiais',
+      'livro', 'livros', 'uniforme', 'uniforme', 'taxa', 'taxas'
+    ]
+    
+    const textLower = text.toLowerCase()
+    const hasKeywords = keywords.some(keyword => textLower.includes(keyword))
+    
+    if (hasKeywords) {
+      return { intent: 'financeiro_inquiry', module: 'financeiro', confidence: 0.8, slots: {} }
+    }
+    
+    return { intent: 'financeiro_inquiry', module: 'financeiro', confidence: 0.2, slots: {} }
+  },
+  async execute({ slots, context }): Promise<OrchestratorResponse> {
+    const message = context?.text || ''
+    return {
+      text: `💰 **Financeiro Virtual**\n\nPosso te ajudar com:\n• 💵 Valores de mensalidade por série\n• 🎯 Descontos disponíveis (família, pagamento à vista)\n• 💳 Formas de pagamento aceitas\n• 📚 Materiais escolares e valores\n• 🧮 Simulador de valores com descontos\n\nSempre destacamos os descontos já aplicados! 💡`,
+      blocks: [
+        { 
+          type: 'notice', 
+          title: '💡 Dicas Financeiras', 
+          body: 'Pagamento à vista oferece desconto adicional! Famílias com múltiplos filhos têm desconto progressivo.' 
+        }
+      ],
+      actions: [
+        { type: 'cta', label: 'Valores por série', module: 'financeiro', args: { action: 'valores' } },
+        { type: 'cta', label: 'Descontos disponíveis', module: 'financeiro', args: { action: 'descontos' } },
+        { type: 'cta', label: 'Formas de pagamento', module: 'financeiro', args: { action: 'pagamento' } },
+        { type: 'cta', label: 'Materiais escolares', module: 'financeiro', args: { action: 'materiais' } }
+      ],
+      trace: { module: 'financeiro', confidence: 0.8 }
+    }
+  }
+})
+
+// coordenacao module
+registerModule({
+  id: 'coordenacao',
+  name: 'Coordenação Pedagógica',
+  version: '1.0.0',
+  permissions: { requires_auth: false },
+  cost_estimate: { tokens: 800, latency_ms: 1200 },
+  async detect({ text, context }): Promise<DetectedIntent> {
+    const keywords = [
+      'programa', 'programas', 'integral', 'bilíngue', 'bilingue', 'liv', 'code',
+      'metodologia', 'pedagogia', 'ensino', 'aprendizado', 'uniforme', 'agenda',
+      'regra', 'regras', 'disciplina', 'comportamento', 'frequência', 'frequencia',
+      'nota', 'notas', 'avaliação', 'avaliacao', 'prova', 'provas'
+    ]
+    
+    const textLower = text.toLowerCase()
+    const hasKeywords = keywords.some(keyword => textLower.includes(keyword))
+    
+    if (hasKeywords) {
+      return { intent: 'coordenacao_inquiry', module: 'coordenacao', confidence: 0.8, slots: {} }
+    }
+    
+    return { intent: 'coordenacao_inquiry', module: 'coordenacao', confidence: 0.2, slots: {} }
+  },
+  async execute({ slots, context }): Promise<OrchestratorResponse> {
+    const message = context?.text || ''
+    return {
+      text: `👩‍🏫 **Coordenação Pedagógica**\n\nPosso te ajudar com:\n• 🎓 Programas pedagógicos (Integral, Bilíngue, LIV, CODE)\n• 📋 Regras institucionais e disciplinares\n• 👕 Uniforme e agenda escolar\n• 📊 Metodologia de ensino\n• 📅 Calendário pedagógico\n• 🎯 Orientações acadêmicas\n\nComo posso te orientar hoje?`,
+      blocks: [
+        { 
+          type: 'notice', 
+          title: '📚 Programas Disponíveis', 
+          body: 'Oferecemos programas especializados como Integral, Bilíngue, LIV (Inteligência Emocional) e CODE (Programação).' 
+        }
+      ],
+      actions: [
+        { type: 'cta', label: 'Programas pedagógicos', module: 'coordenacao', args: { action: 'programas' } },
+        { type: 'cta', label: 'Regras institucionais', module: 'coordenacao', args: { action: 'regras' } },
+        { type: 'cta', label: 'Uniforme e agenda', module: 'coordenacao', args: { action: 'uniforme' } },
+        { type: 'cta', label: 'Metodologia de ensino', module: 'coordenacao', args: { action: 'metodologia' } }
+      ],
+      trace: { module: 'coordenacao', confidence: 0.8 }
+    }
+  }
+})
+
+// rh module
+registerModule({
+  id: 'rh',
+  name: 'RH Interno',
+  version: '1.0.0',
+  permissions: { requires_auth: true }, // Requer autenticação para RH interno
+  cost_estimate: { tokens: 800, latency_ms: 1200 },
+  async detect({ text, context }): Promise<DetectedIntent> {
+    const keywords = [
+      'folha', 'pagamento', 'salário', 'salario', 'benefício', 'beneficios',
+      'férias', 'ferias', 'licença', 'licenca', 'ausência', 'ausencia',
+      'processo', 'processos', 'política', 'politica', 'manual', 'funcionário',
+      'funcionario', 'colaborador', 'equipe', 'departamento', 'recursos humanos'
+    ]
+    
+    const textLower = text.toLowerCase()
+    const hasKeywords = keywords.some(keyword => textLower.includes(keyword))
+    
+    if (hasKeywords) {
+      return { intent: 'rh_inquiry', module: 'rh', confidence: 0.8, slots: {} }
+    }
+    
+    return { intent: 'rh_inquiry', module: 'rh', confidence: 0.2, slots: {} }
+  },
+  async execute({ slots, context }): Promise<OrchestratorResponse> {
+    const message = context?.text || ''
+    return {
+      text: `👥 **RH Interno**\n\nPosso te ajudar com:\n• 💰 Folha de pagamento e benefícios\n• 📋 Processos administrativos internos\n• 📚 Políticas da empresa\n• 🏖️ Férias e licenças\n• 📞 Comunicação interna\n• 📖 Manual do funcionário\n\n*Este módulo é exclusivo para funcionários da escola.*`,
+      blocks: [
+        { 
+          type: 'notice', 
+          title: '🔒 Acesso Restrito', 
+          body: 'Este módulo é exclusivo para funcionários da escola. Informações confidenciais protegidas.' 
+        }
+      ],
+      actions: [
+        { type: 'cta', label: 'Folha de pagamento', module: 'rh', args: { action: 'folha' } },
+        { type: 'cta', label: 'Processos internos', module: 'rh', args: { action: 'processos' } },
+        { type: 'cta', label: 'Políticas da empresa', module: 'rh', args: { action: 'politicas' } },
+        { type: 'cta', label: 'Manual do funcionário', module: 'rh', args: { action: 'manual' } }
+      ],
+      trace: { module: 'rh', confidence: 0.8 }
+    }
+  }
+})
+
 // atendimento module (fallback)
 registerModule({
   id: 'atendimento',
@@ -1381,11 +1567,15 @@ registerModule({
   },
   async execute({ slots }): Promise<OrchestratorResponse> {
     return {
-      text: 'Como posso ajudar você hoje? Posso direcionar você para o setor mais adequado.',
+      text: `Olá! Como posso ajudar você hoje? 😊\n\nPosso te auxiliar com:\n• 📚 Aulas interativas\n• 🎯 Simulados ENEM\n• ✍️ Correção de redações\n• 🔍 Pesquisas em tempo real\n• 🏫 Informações da escola\n• 💰 Questões financeiras\n• 👩‍🏫 Coordenação pedagógica\n\nO que você gostaria de fazer?`,
       blocks: [],
       actions: [
-        { type: 'cta', label: 'Falar com atendimento', module: 'atendimento', args: { action: 'contact' } },
-        { type: 'link', label: 'Central de ajuda', href: '/help' }
+        { type: 'cta', label: 'Gerar aula completa', module: 'aula_interativa', args: {} },
+        { type: 'cta', label: 'Simulado rápido (5 questões)', module: 'enem', args: { quantidade_questoes: 5 } },
+        { type: 'cta', label: 'Corrigir redação', module: 'redacao', args: {} },
+        { type: 'cta', label: 'Informações da secretaria', module: 'secretaria', args: {} },
+        { type: 'cta', label: 'Questões financeiras', module: 'financeiro', args: {} },
+        { type: 'cta', label: 'Coordenação pedagógica', module: 'coordenacao', args: {} }
       ]
     }
   }

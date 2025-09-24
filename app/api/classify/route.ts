@@ -75,7 +75,7 @@ const PORTUGUESE_HEURISTICS = {
   financeiro: /\b(pagamento|boleto|mensalidade|financeiro|valor|preço|custo|desconto|parcelamento|taxa de matrícula)\b/i,
   aula_interativa: /\b(aula interativa|slides|explicação passo a passo|atividade|demonstração)\b/i,
   ti: /\b(projetor|internet|lenta|login|não funciona|configurar|impressora|bug|sistema|computador|travou|build|deploy|render|porta|log|404|405|nextauth|rota|api)\b/i,
-  rh: /\b(benefícios|férias|atestado|médico|salário|treinamento|carreira|promoção|recursos humanos|colaboradores|funcionários)\b/i,
+  rh: /\b(benefícios|férias|ferias|atestado|atestado médico|médico|salário|salario|treinamento|carreira|promoção|promocao|recursos humanos|colaboradores|funcionários|funcionarios|direitos trabalhistas|trabalhista|clt|consolidação das leis do trabalho|1\/3.*férias|1\/3.*ferias|terço.*férias|terco.*ferias|saldo.*férias|saldo.*ferias|décimo terceiro|decimo terceiro|13º|13o|terceiro|quando sai|quando pagam|pagamento do|valor do)\b/i,
   coordenacao: /\b(calendário|provas|coordenador|pedagógico|gestão|acadêmica|planejamento|pedagógico|metodologia|ensino)\b/i,
   bem_estar: /\b(ansioso|conflito|colega|apoio|emocional|estresse|depressão|bullying|conflito|familiar|saúde|mental)\b/i,
   secretaria: /\b(matrícula|matrícula|documentos|horário|horário|secretaria|whats|procedimentos|administrativos)\b/i,

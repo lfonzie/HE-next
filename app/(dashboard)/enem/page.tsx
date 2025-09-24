@@ -28,7 +28,6 @@ import { EnemResults } from '@/components/enem/EnemResults';
 import { AuthGuard } from '@/components/AuthGuard';
 import { EnemMode, EnemArea, EnemScore } from '@/types/enem';
 import { ExamGenerationLoading } from '@/components/enem/EnemLoadingStates';
-import { ModernHeader } from '@/components/layout/ModernHeader';
 
 type AppState = 'mode-selection' | 'customization' | 'simulation' | 'results';
 
@@ -315,9 +314,8 @@ function EnemSimulatorContent() {
   // Render based on current state
   if (appState === 'simulation' && sessionId && simulationConfig) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-yellow-100">
-        <ModernHeader showNavigation={true} showHome={true} />
-        <div className="bg-white shadow-sm border-b border-yellow-200 pt-20">
+      <div className="bg-gradient-to-br from-yellow-50 via-white to-yellow-100">
+        <div className="bg-white shadow-sm border-b border-yellow-200">
           <div className="max-w-7xl mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
               <div>
@@ -351,9 +349,8 @@ function EnemSimulatorContent() {
 
   if (appState === 'results' && score) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-yellow-100">
-        <ModernHeader showNavigation={true} showHome={true} />
-        <div className="bg-white shadow-sm border-b border-yellow-200 pt-20">
+      <div className="bg-gradient-to-br from-yellow-50 via-white to-yellow-100">
+        <div className="bg-white shadow-sm border-b border-yellow-200">
           <div className="max-w-7xl mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
               <div>
@@ -388,9 +385,8 @@ function EnemSimulatorContent() {
 
   if (appState === 'customization') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-white to-yellow-100">
-        <ModernHeader showNavigation={true} showHome={true} />
-        <div className="bg-white shadow-sm border-b border-yellow-200 pt-20">
+      <div className="bg-gradient-to-br from-yellow-50 via-white to-yellow-100">
+        <div className="bg-white shadow-sm border-b border-yellow-200">
           <div className="max-w-7xl mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
               <div>
@@ -418,9 +414,8 @@ function EnemSimulatorContent() {
 
   // Default: Mode Selection
   return (
-    <div className="min-h-dvh bg-gradient-to-br from-slate-50 via-yellow-50 to-orange-100">
-      <ModernHeader showNavigation={true} showHome={true} />
-      <div className="container-fluid-lg mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pt-20 sm:pt-24" role="main">
+    <div className="bg-gradient-to-br from-slate-50 via-yellow-50 to-orange-100">
+      <div className="container-fluid-lg mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8" role="main">
         {/* Header */}
         <header className="text-center mb-8 sm:mb-16">
           <div className="relative">

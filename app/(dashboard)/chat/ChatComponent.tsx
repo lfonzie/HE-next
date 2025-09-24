@@ -27,7 +27,6 @@ import { useNavigationLoading } from "@/hooks/useNavigationLoading";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ModernHeader } from "@/components/layout/ModernHeader";
 import "@/components/chat/ChatInput.css";
 
 type MinimalChatHook = {
@@ -394,11 +393,9 @@ export default function ChatComponent() {
   const isQuotaExceeded = quota.used >= quota.limit;
 
   return (
-    <div className="h-screen bg-gradient-to-br from-slate-50 via-yellow-50 to-orange-100 flex flex-col">
-      <ModernHeader showNavigation={true} showHome={true} />
-      
+    <div className="bg-gradient-to-br from-slate-50 via-yellow-50 to-orange-100 flex flex-col">
       {/* Chat Container - Fixed at bottom */}
-      <div className="flex-1 flex flex-col pt-24 pb-0" role="main">
+      <div className="flex-1 flex flex-col pb-0" role="main">
         {/* Enhanced Header - Mostrar apenas quando não há mensagens */}
         {!hasMessages && (
           <header className="text-center mb-16">

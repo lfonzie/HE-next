@@ -35,7 +35,9 @@ const FAST_PATTERNS = {
   ],
   
   rh: [
-    /\b(benefícios|férias|atestado|médico|salário|treinamento|carreira|promoção|recursos humanos|colaboradores|funcionários)\b/i
+    /\b(benefícios|férias|ferias|atestado|atestado médico|médico|salário|salario|treinamento|carreira|promoção|promocao|recursos humanos|colaboradores|funcionários|funcionarios|direitos trabalhistas|trabalhista|clt|consolidação das leis do trabalho)\b/i,
+    /\b(1\/3.*férias|1\/3.*ferias|terço.*férias|terco.*ferias|saldo.*férias|saldo.*ferias)\b/i,
+    /\b(décimo terceiro|decimo terceiro|13º|13o|terceiro|quando sai|quando pagam|pagamento do|valor do)\b/i
   ],
   
   social_media: [

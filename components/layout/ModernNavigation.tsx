@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
+import { UserProfile } from './UserProfile'
 import { 
   MessageSquare, 
   BookOpen, 
@@ -163,10 +164,7 @@ export function ModernNavigation({ className, showHome = true }: ModernNavigatio
       {/* Mobile Menu Button */}
       <button
         data-mobile-menu
-        onClick={() => {
-          console.log('Menu button clicked, current state:', isOpen)
-          setIsOpen(!isOpen)
-        }}
+        onClick={() => setIsOpen(!isOpen)}
         className={cn(
           'lg:hidden flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200 relative z-[50]',
           isScrolled 
@@ -200,7 +198,7 @@ export function ModernNavigation({ className, showHome = true }: ModernNavigatio
         </AnimatePresence>
       </button>
 
-      {/* Mobile Menu Overlay */}
+      {/* Mobile Dropdown Menu - Abre abaixo do hamburger */}
       <AnimatePresence>
         {isOpen && (
           <>
@@ -210,105 +208,100 @@ export function ModernNavigation({ className, showHome = true }: ModernNavigatio
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm lg:hidden"
-              style={{ zIndex: 999999 }}
+              className="fixed inset-0 bg-black/20 backdrop-blur-sm lg:hidden z-40"
               onClick={() => setIsOpen(false)}
             />
             
-            {/* Menu Panel */}
+            {/* Dropdown Panel */}
             <motion.div
               data-mobile-menu
-              initial={{ x: '100%', opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: '100%', opacity: 0 }}
+              initial={{ opacity: 0, y: -10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-white shadow-2xl lg:hidden overflow-y-auto"
-              style={{ zIndex: 1000000 }}
+              className="absolute top-full left-0 mt-2 w-80 max-w-[90vw] bg-white rounded-2xl shadow-2xl border border-gray-200 lg:hidden overflow-hidden z-50"
             >
-                <div className="p-6 pt-20">
-                  {/* Header */}
-                  <div className="flex items-center justify-between mb-8">
-                    <h2 className="text-xl font-bold text-gray-900">Navegação</h2>
-                    <button
+              <div className="p-4">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-100">
+                  <h2 className="text-lg font-bold text-gray-900">Navegação</h2>
+                  <button
+                    onClick={() => setIsOpen(false)}
+                    className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    <X className="h-4 w-4 text-gray-600" />
+                  </button>
+                </div>
+
+                {/* Navigation Items */}
+                <div className="space-y-1">
+                  {showHome && (
+                    <Link
+                      href="/"
                       onClick={() => setIsOpen(false)}
-                      className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                      className={cn(
+                        'flex items-center gap-3 p-3 rounded-xl transition-all duration-200',
+                        isActive('/')
+                          ? 'bg-yellow-500 text-black shadow-lg'
+                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                      )}
                     >
-                      <X className="h-5 w-5 text-gray-600" />
-                    </button>
-                  </div>
-
-                  {/* Navigation Items */}
-                  <div className="space-y-2">
-                    {showHome && (
-                      <Link
-                        href="/"
-                        onClick={() => setIsOpen(false)}
-                        className={cn(
-                          'flex items-center gap-3 p-4 rounded-xl transition-all duration-200',
-                          isActive('/')
-                            ? 'bg-yellow-500 text-black shadow-lg'
-                            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                        )}
-                      >
-                        <Home className="h-5 w-5" />
-                        <div>
-                          <div className="font-medium">Início</div>
-                          <div className="text-sm text-gray-500">Página inicial</div>
-                        </div>
-                      </Link>
-                    )}
-                    
-                    {navigationItems.map((item) => (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        onClick={() => setIsOpen(false)}
-                        className={cn(
-                          'group flex items-center gap-3 p-4 rounded-xl transition-all duration-200 relative overflow-hidden',
-                          isActive(item.href)
-                            ? 'bg-yellow-500 text-black shadow-lg'
-                            : 'text-gray-600 hover:text-white hover:shadow-lg'
-                        )}
-                      >
-                        {/* Hover effect background */}
-                        <div 
-                          className={cn(
-                            'absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200',
-                            `bg-gradient-to-r ${item.color}`
-                          )}
-                        />
-                        
-                        <div className="relative z-10 flex items-center gap-3 w-full">
-                          <item.icon className="h-5 w-5" />
-                          <div>
-                            <div className="font-medium">{item.name}</div>
-                            <div className="text-sm opacity-80">{item.description}</div>
-                          </div>
-                        </div>
-                        
-                        {/* Active indicator */}
-                        {isActive(item.href) && (
-                          <motion.div
-                            className="absolute left-0 top-0 bottom-0 w-1 bg-white rounded-r-full"
-                            layoutId="mobileActiveIndicator"
-                            transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                          />
-                        )}
-                      </Link>
-                    ))}
-                  </div>
-
-                  {/* Footer */}
-                  <div className="mt-8 pt-6 border-t border-gray-200">
-                    <div className="text-center">
-                      <div className="text-sm text-gray-500 mb-2">HubEdu.ia</div>
-                      <div className="text-xs text-gray-400">
-                        A Educação do Futuro
+                      <Home className="h-5 w-5" />
+                      <div>
+                        <div className="font-medium">Início</div>
+                        <div className="text-sm text-gray-500">Página inicial</div>
                       </div>
-                    </div>
+                    </Link>
+                  )}
+                  
+                  {navigationItems.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setIsOpen(false)}
+                      className={cn(
+                        'group flex items-center gap-3 p-3 rounded-xl transition-all duration-200 relative overflow-hidden',
+                        isActive(item.href)
+                          ? 'bg-yellow-500 text-black shadow-lg'
+                          : 'text-gray-600 hover:text-white hover:shadow-lg'
+                      )}
+                    >
+                      {/* Hover effect background */}
+                      <div 
+                        className={cn(
+                          'absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200',
+                          `bg-gradient-to-r ${item.color}`
+                        )}
+                      />
+                      
+                      <div className="relative z-10 flex items-center gap-3 w-full">
+                        <item.icon className="h-5 w-5" />
+                        <div>
+                          <div className="font-medium">{item.name}</div>
+                          <div className="text-sm opacity-80">{item.description}</div>
+                        </div>
+                      </div>
+                      
+                      {/* Active indicator */}
+                      {isActive(item.href) && (
+                        <motion.div
+                          className="absolute left-0 top-0 bottom-0 w-1 bg-white rounded-r-full"
+                          layoutId="mobileActiveIndicator"
+                          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                        />
+                      )}
+                    </Link>
+                  ))}
+                </div>
+
+                {/* User Profile Section */}
+                <div className="mt-4 pt-4 border-t border-gray-100">
+                  <div className="flex items-center justify-center">
+                    <UserProfile size="sm" showName={true} />
                   </div>
                 </div>
-              </motion.div>
+              </div>
+            </motion.div>
           </>
         )}
       </AnimatePresence>

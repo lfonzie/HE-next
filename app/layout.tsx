@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import type { ReactNode } from 'react'
 import { Inter } from 'next/font/google'
 import { ClientProviders } from '@/components/providers/ClientProviders'
+import { GlobalLayout } from '@/components/layout/GlobalLayout'
 import './globals.css'
 
 const inter = Inter({
@@ -256,7 +257,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       </head>
       <body className="min-h-dvh bg-background font-sans text-foreground antialiased">
         <ClientProviders>
-          {children}
+          <GlobalLayout>
+            {children}
+          </GlobalLayout>
         </ClientProviders>
       </body>
     </html>

@@ -48,7 +48,7 @@ FINANCEIRO: Pagamentos de alunos/famílias
 
 RH: Questões de funcionários/colaboradores
 - Benefícios, férias, atestados, treinamentos, salário, carreira, recursos humanos
-- Exemplos: "benefícios disponíveis", "saldo de férias", "atestado médico", "salário", "treinamento", "carreira", "promoção"
+- Exemplos: "benefícios disponíveis", "saldo de férias", "1/3 de férias", "terço de férias", "décimo terceiro", "quando sai o décimo terceiro", "atestado médico", "salário", "treinamento", "carreira", "promoção", "direitos trabalhistas", "CLT"
 
 COORDENACAO: Gestão pedagógica, calendário escolar
 - Exemplos: "calendário de provas", "coordenador pedagógico", "gestão acadêmica", "planejamento pedagógico", "metodologia de ensino"

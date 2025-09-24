@@ -49,6 +49,8 @@ export class LessonCache {
   }
 
   private loadFromLocalStorage(): void {
+    if (typeof window === 'undefined') return;
+    
     try {
       const cached = localStorage.getItem('lesson_cache');
       if (cached) {
@@ -63,6 +65,8 @@ export class LessonCache {
   }
 
   private saveToLocalStorage(): void {
+    if (typeof window === 'undefined') return;
+    
     try {
       const data = {
         cache: Array.from(this.cache.entries()),

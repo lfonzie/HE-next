@@ -20,6 +20,7 @@ import {
   X,
   MessageCircle
 } from "lucide-react";
+import { ChatMessage } from "@/components/chat/ChatMessage";
 import { useToast } from "@/hooks/use-toast";
 
 interface FAQItem {
@@ -286,25 +287,17 @@ export function SupportModal({ isOpen, onClose }: SupportModalProps) {
                   </div>
                 ) : (
                   chatMessages.map((message) => (
-                    <div
+                    <ChatMessage
                       key={message.id}
-                      className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                    >
-                      <div
-                        className={`max-w-[80%] p-3 rounded-lg ${
-                          message.role === 'user'
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-gray-100 text-gray-900'
-                        }`}
-                      >
-                        <p className="text-sm">{message.content}</p>
-                        <p className={`text-xs mt-1 ${
-                          message.role === 'user' ? 'text-blue-100' : 'text-gray-500'
-                        }`}>
-                          {message.timestamp.toLocaleTimeString()}
-                        </p>
-                      </div>
-                    </div>
+                      message={{
+                        id: message.id,
+                        content: message.content,
+                        role: message.role,
+                        timestamp: message.timestamp,
+                        module: message.module || undefined
+                      }}
+                      isUser={message.role === 'user'}
+                    />
                   ))
                 )}
                 {isLoading && (

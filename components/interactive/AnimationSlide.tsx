@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 // Removed framer-motion animations
 import ContentProcessor from './ContentProcessor'
 import { useUnsplashImage } from '@/hooks/useUnsplashImage'
+import AudioPlayer from '@/components/audio/AudioPlayer'
 
 interface AnimationSlideProps {
   title: string
@@ -53,10 +54,10 @@ export default function AnimationSlide({
     shouldFetchImage
   )
 
-  // Removed animation effects - call onComplete immediately
-  useEffect(() => {
-    onComplete?.()
-  }, []) // Empty dependency array to run only once on mount
+  // Removed animation effects - no automatic completion
+  // useEffect(() => {
+  //   onComplete?.()
+  // }, []) // Empty dependency array to run only once on mount
 
   // Removed animation control functions
 
@@ -123,11 +124,21 @@ export default function AnimationSlide({
             </div>
           )}
           
-            <ContentProcessor 
-              content={content} 
-              subject={lessonTheme}
-              className="text-lg"
-            />
+          {/* Text-to-Speech Player */}
+          {content && (
+            <div className="mb-6">
+              <AudioPlayer
+                text={content}
+                className="border-orange-200 bg-orange-50"
+              />
+            </div>
+          )}
+          
+          <ContentProcessor 
+            content={content} 
+            subject={lessonTheme}
+            className="text-lg"
+          />
         </div>
 
         {/* Media Display */}

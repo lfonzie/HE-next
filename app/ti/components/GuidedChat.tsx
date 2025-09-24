@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { MessageSquare, Wrench, AlertCircle, CheckCircle, Clock, Send } from 'lucide-react'
 import { Input } from '@/components/ui/input'
+import { ChatMessage } from '@/components/chat/ChatMessage'
 
 interface Message {
   id: string
@@ -133,19 +134,17 @@ export default function GuidedChat({
               </div>
             ) : (
               messages.map((message, index) => (
-                <div key={index} className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`flex gap-2 max-w-[80%] ${message.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-                    <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${getStatusColor(message.role)}`}>
-                      {getStatusIcon(message.role)}
-                    </div>
-                    <div className={`rounded-lg p-3 ${message.role === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-100'}`}>
-                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                      <p className="text-xs opacity-70 mt-1">
-                        {new Date(message.createdAt || Date.now()).toLocaleTimeString()}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                <ChatMessage
+                  key={index}
+                  message={{
+                    id: `msg-${index}`,
+                    content: message.content,
+                    role: message.role,
+                    timestamp: new Date(message.createdAt || Date.now()),
+                    module: 'ti' // Este componente é específico para TI
+                  }}
+                  isUser={message.role === 'user'}
+                />
               ))
             )}
             {isLoading && (

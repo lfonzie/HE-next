@@ -13,7 +13,6 @@ import { useNotifications } from '@/components/providers/NotificationProvider'
 import { useRouter } from 'next/navigation'
 import { FileUpload } from '@/components/redacao/FileUpload'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
-import { ModernHeader } from '@/components/layout/ModernHeader'
 
 interface EnemTheme {
   id: string
@@ -239,8 +238,7 @@ function RedacaoPageContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-yellow-50 to-orange-100">
-      <ModernHeader showNavigation={true} showHome={true} />
-      <div className="container mx-auto px-4 py-8 max-w-7xl pt-24" role="main">
+      <div className="container mx-auto px-4 py-8 max-w-7xl" role="main">
         {/* Header */}
         <header className="text-center mb-16">
           <div className="relative">

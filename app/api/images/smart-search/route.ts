@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { analyzeTopicRelevance } from './generic-relevance';
 
 // Prevent prerendering of this API route
 export const dynamic = 'force-dynamic';
@@ -354,7 +355,7 @@ function selectDiverseImages(images: ImageResult[], count: number): ImageResult[
   return selected;
 }
 
-// Função para detectar imagens inadequadas ou irrelevantes
+// Função para detectar imagens inadequadas ou irrelevantes - VERSÃO GENÉRICA
 function isInappropriateImage(text: string, query: string): boolean {
   const textLower = text.toLowerCase();
   const queryLower = query.toLowerCase();
@@ -374,73 +375,16 @@ function isInappropriateImage(text: string, query: string): boolean {
     return true;
   }
   
-  // Para temas médicos/vacinação, ser mais específico na detecção de irrelevância
-  if (queryLower.includes('vaccination') || queryLower.includes('vaccine')) {
-    // Verificar se é completamente irrelevante ao tema médico
-    const medicalRelevantTerms = [
-      'vaccine', 'vaccination', 'injection', 'syringe', 'medical', 'healthcare',
-      'doctor', 'nurse', 'clinic', 'hospital', 'immunization', 'prevention',
-      'certificate', 'card', 'patient', 'treatment', 'medicine', 'pharmaceutical'
-    ];
-    
-    const hasMedicalRelevance = medicalRelevantTerms.some(term => textLower.includes(term));
-    
-    if (!hasMedicalRelevance) {
-      console.log(`🚫 Conteúdo irrelevante ao tema médico detectado: "${text.slice(0, 50)}..."`);
-      return true;
-    }
-    
-    return false; // Se tem relevância médica, não é inadequada
-  }
+  // Análise semântica genérica do tema para detectar relevância
+  const themeAnalysis = analyzeTopicRelevance(queryLower, textLower);
   
-  // Para temas ambientais/aquecimento global, ser mais específico
-  if (queryLower.includes('aquecimento') || queryLower.includes('global') || queryLower.includes('climate') || queryLower.includes('warming')) {
-    const environmentalRelevantTerms = [
-      'climate', 'global warming', 'greenhouse', 'carbon', 'emission', 'temperature',
-      'ice', 'glacier', 'polar', 'arctic', 'antarctic', 'sea level', 'ocean',
-      'environment', 'pollution', 'fossil fuel', 'renewable', 'solar', 'wind',
-      'deforestation', 'ecosystem', 'biodiversity', 'sustainability', 'co2',
-      'aquecimento', 'global', 'clima', 'temperatura', 'gelo', 'oceano',
-      'poluição', 'meio ambiente', 'sustentabilidade'
-    ];
-    
-    const hasEnvironmentalRelevance = environmentalRelevantTerms.some(term => textLower.includes(term));
-    
-    if (!hasEnvironmentalRelevance) {
-      console.log(`🚫 Conteúdo irrelevante ao tema ambiental detectado: "${text.slice(0, 50)}..."`);
-      return true;
-    }
-    
-    return false; // Se tem relevância ambiental, não é inadequada
-  }
-  
-  // Para outros temas, verificar se é completamente irrelevante
-  const irrelevantContexts = [
-    'books', 'library', 'literature', 'reading', 'study', 'academic',
-    'classroom', 'school', 'education', 'learning', 'knowledge',
-    'laptop', 'computer', 'technology', 'internet', 'digital', 'online',
-    'business', 'office', 'work', 'meeting', 'conference', 'presentation',
-    'woman', 'man', 'person', 'people', 'smiling', 'casual', 'clothing'
-  ];
-  
-  // Se contém apenas contextos genéricos sem relação ao tema específico
-  const hasOnlyGenericContext = irrelevantContexts.some(context => textLower.includes(context));
-  const hasSpecificTopic = textLower.includes(queryLower);
-  
-  // Verificar se é uma imagem muito genérica (ex: pessoa trabalhando, tecnologia genérica)
-  const isGenericImage = (
-    (textLower.includes('woman') || textLower.includes('man') || textLower.includes('person')) &&
-    (textLower.includes('laptop') || textLower.includes('computer') || textLower.includes('work')) &&
-    !hasSpecificTopic
-  );
-  
-  if (isGenericImage) {
-    console.log(`🚫 Imagem genérica irrelevante detectada: "${text.slice(0, 50)}..."`);
+  if (!themeAnalysis.isRelevant) {
+    console.log(`🚫 Conteúdo irrelevante ao tema "${query}" detectado: "${text.slice(0, 50)}..."`);
     return true;
   }
   
-  if (hasOnlyGenericContext && !hasSpecificTopic) {
-    console.log(`🚫 Conteúdo genérico irrelevante detectado: "${text.slice(0, 50)}..."`);
+  if (themeAnalysis.hasFalsePositive) {
+    console.log(`🚫 Falso positivo detectado para "${query}": ${themeAnalysis.falsePositiveReason}`);
     return true;
   }
   
@@ -469,6 +413,27 @@ function isFalsePositive(text: string, query: string): boolean {
     ],
     'tiger': [
       'cat', 'gato', 'animal', 'wildlife', 'zoo', 'jungle', 'selva', 'stripes', 'listras'
+    ],
+    'como': [
+      'lake como', 'como italy', 'como lake', 'varenna', 'italy', 'italian', 'italiano',
+      'landscape', 'paisagem', 'mountain', 'montanha', 'nature', 'natureza', 'forest', 'floresta',
+      'city', 'cidade', 'building', 'edifício', 'architecture', 'arquitetura', 'travel', 'viagem',
+      'vacation', 'férias', 'tourism', 'turismo', 'hotel', 'restaurant', 'restaurante',
+      'swan', 'cisne', 'moonlight', 'luar', 'lake', 'lago', 'villa', 'vila', 'ballaster'
+    ],
+    'sistema solar': [
+      'lake como', 'como italy', 'como lake', 'varenna', 'italy', 'italian', 'italiano',
+      'landscape', 'paisagem', 'mountain', 'montanha', 'nature', 'natureza', 'forest', 'floresta',
+      'city', 'cidade', 'building', 'edifício', 'architecture', 'arquitetura', 'travel', 'viagem',
+      'vacation', 'férias', 'tourism', 'turismo', 'hotel', 'restaurant', 'restaurante',
+      'swan', 'cisne', 'moonlight', 'luar', 'lake', 'lago', 'villa', 'vila', 'ballaster'
+    ],
+    'solar system': [
+      'lake como', 'como italy', 'como lake', 'varenna', 'italy', 'italian', 'italiano',
+      'landscape', 'paisagem', 'mountain', 'montanha', 'nature', 'natureza', 'forest', 'floresta',
+      'city', 'cidade', 'building', 'edifício', 'architecture', 'arquitetura', 'travel', 'viagem',
+      'vacation', 'férias', 'tourism', 'turismo', 'hotel', 'restaurant', 'restaurante',
+      'swan', 'cisne', 'moonlight', 'luar', 'lake', 'lago', 'villa', 'vila', 'ballaster'
     ]
   };
   
@@ -479,7 +444,7 @@ function isFalsePositive(text: string, query: string): boolean {
     );
     
     if (hasFalsePositiveContext) {
-      console.log(`🚫 Falso positivo detectado para "${query}": contexto biológico/natural`);
+      console.log(`🚫 Falso positivo geográfico detectado para "${query}": contexto geográfico/turístico`);
       return true;
     }
   }
@@ -519,51 +484,35 @@ function calculateEducationalScore(image: any, query: string, subject?: string):
       }
     });
     
-    // BONUS ESPECIAL: Para temas médicos/educacionais positivos
-    if (exactQuery.includes('vaccination') || exactQuery.includes('vaccine')) {
-      const positiveMedicalTerms = ['injection', 'syringe', 'medical', 'healthcare', 'doctor', 'nurse', 'clinic', 'hospital', 'immunization', 'prevention'];
-      const hasPositiveMedicalContext = positiveMedicalTerms.some(term => text.includes(term));
-      
-      if (hasPositiveMedicalContext) {
-        score += 30; // Bonus alto para contexto médico positivo
-        console.log(`🏥 Contexto médico positivo detectado`);
-      }
-      
-      // Penalizar conteúdo anti-vacinação
-      const negativeTerms = ['anti', 'against', 'opposition', 'protest', 'refusal'];
-      const hasNegativeContext = negativeTerms.some(term => text.includes(term));
-      
-      if (hasNegativeContext) {
-        score -= 50; // Penalização severa para conteúdo negativo
-        console.log(`⚠️ Conteúdo negativo detectado - penalização aplicada`);
-      }
-    }
+    // BONUS ESPECIAL: Sistema genérico de análise por categoria
+    const themeAnalysis = analyzeTopicRelevance(exactQuery, text);
     
-    // BONUS ESPECIAL: Para temas ambientais/aquecimento global
-    if (exactQuery.includes('aquecimento') || exactQuery.includes('global') || exactQuery.includes('climate') || exactQuery.includes('warming')) {
-      const environmentalTerms = [
-        'climate', 'global warming', 'greenhouse', 'carbon', 'emission', 'temperature',
-        'ice', 'glacier', 'polar', 'arctic', 'antarctic', 'sea level', 'ocean',
-        'environment', 'pollution', 'fossil fuel', 'renewable', 'solar', 'wind',
-        'deforestation', 'ecosystem', 'biodiversity', 'sustainability', 'co2',
-        'aquecimento', 'global', 'clima', 'temperatura', 'gelo', 'oceano',
-        'poluição', 'meio ambiente', 'sustentabilidade'
-      ];
+    if (themeAnalysis.category && themeAnalysis.category !== 'general') {
+      // Bonus baseado na categoria detectada
+      const categoryBonuses: Record<string, number> = {
+        'astronomy': 40,
+        'medicine': 35,
+        'environment': 35,
+        'history': 30,
+        'geography': 30,
+        'mathematics': 30,
+        'physics': 30,
+        'chemistry': 30,
+        'biology': 30,
+        'literature': 30,
+        'technology': 30,
+        'art': 30,
+        'education': 25
+      };
       
-      const hasEnvironmentalContext = environmentalTerms.some(term => text.includes(term));
+      const bonus = categoryBonuses[themeAnalysis.category] || 20;
+      score += bonus;
+      console.log(`🎯 Contexto ${themeAnalysis.category} positivo detectado (+${bonus})`);
       
-      if (hasEnvironmentalContext) {
-        score += 35; // Bonus alto para contexto ambiental
-        console.log(`🌍 Contexto ambiental positivo detectado`);
-      }
-      
-      // Penalizar imagens genéricas de tecnologia/pessoas
-      const genericTerms = ['laptop', 'computer', 'woman', 'man', 'person', 'work', 'office', 'business'];
-      const hasGenericContext = genericTerms.some(term => text.includes(term));
-      
-      if (hasGenericContext && !hasEnvironmentalContext) {
-        score -= 40; // Penalização para contexto genérico sem relevância ambiental
-        console.log(`⚠️ Contexto genérico detectado - penalização aplicada`);
+      // Penalização para falsos positivos específicos da categoria
+      if (themeAnalysis.hasFalsePositive) {
+        score -= 50; // Penalização severa para falsos positivos
+        console.log(`⚠️ Falso positivo ${themeAnalysis.falsePositiveReason} detectado - penalização severa aplicada`);
       }
     }
     

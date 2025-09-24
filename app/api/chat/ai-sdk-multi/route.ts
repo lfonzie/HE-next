@@ -96,10 +96,45 @@ export async function POST(request: NextRequest) {
 
     // 2. Classificação rápida de módulo
     let targetModule = module
+    let classificationConfidence = 1.0
+    let classificationSource = 'client_override'
+    
     if (module === 'auto') {
       const classification = fastClassify(message, history.length)
       targetModule = classification.module
+      classificationConfidence = classification.confidence
+      classificationSource = 'fast_local'
       console.log(`🎯 [FAST-CLASSIFY] ${targetModule} (confidence: ${classification.confidence})`)
+      
+      // Se a confiança do fast-classifier for baixa (< 0.7), usar AI SDK para classificação
+      if (classification.confidence < 0.7) {
+        console.log(`🔄 [AI-CLASSIFY] Low confidence (${classification.confidence}), using AI SDK classification...`)
+        try {
+          const aiClassifyStart = Date.now()
+          const classifyResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/classify`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userMessage: message,
+              history: history.slice(-5), // Últimas 5 mensagens
+              currentModule: 'auto'
+            })
+          })
+          
+          if (classifyResponse.ok) {
+            const classifyData = await classifyResponse.json()
+            if (classifyData.success && classifyData.classification) {
+              targetModule = classifyData.classification.module.toLowerCase()
+              classificationConfidence = classifyData.classification.confidence
+              classificationSource = 'ai_sdk'
+              const aiClassifyTime = Date.now() - aiClassifyStart
+              console.log(`🎯 [AI-CLASSIFY] ${targetModule} (confidence: ${classificationConfidence}) - ${aiClassifyTime}ms`)
+            }
+          }
+        } catch (error) {
+          console.warn('⚠️ [AI-CLASSIFY] Failed, keeping fast-classifier result:', error)
+        }
+      }
     }
 
     // 3. Classificação de complexidade com IA

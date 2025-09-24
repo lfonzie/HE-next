@@ -1,0 +1,360 @@
+// Sistema genérico de análise de relevância de imagens para qualquer tópico
+// Este arquivo contém funções para detectar imagens relevantes e irrelevantes de forma genérica
+
+// Função para análise genérica de relevância de temas
+export function analyzeTopicRelevance(query: string, text: string): {
+  isRelevant: boolean;
+  hasFalsePositive: boolean;
+  falsePositiveReason?: string;
+  category?: string;
+} {
+  // Detectar categoria do tema baseado na query
+  const themeCategory = detectThemeCategory(query);
+  
+  // Obter termos relevantes e falsos positivos para a categoria
+  const categoryTerms = getCategoryTerms(themeCategory);
+  
+  // Verificar relevância
+  const hasRelevantTerms = categoryTerms.relevant.some(term => text.includes(term));
+  const hasFalsePositiveTerms = categoryTerms.falsePositives.some(term => text.includes(term));
+  
+  // Se tem falsos positivos mas não tem termos relevantes, é irrelevante
+  if (hasFalsePositiveTerms && !hasRelevantTerms) {
+    return {
+      isRelevant: false,
+      hasFalsePositive: true,
+      falsePositiveReason: `contexto ${themeCategory.falsePositiveType}`,
+      category: themeCategory.name
+    };
+  }
+  
+  // Se não tem termos relevantes, é irrelevante
+  if (!hasRelevantTerms) {
+    return {
+      isRelevant: false,
+      hasFalsePositive: false,
+      category: themeCategory.name
+    };
+  }
+  
+  return {
+    isRelevant: true,
+    hasFalsePositive: false,
+    category: themeCategory.name
+  };
+}
+
+// Função para detectar categoria do tema
+export function detectThemeCategory(query: string): {
+  name: string;
+  falsePositiveType: string;
+} {
+  // Astronomia e espaço
+  if (query.includes('sistema solar') || query.includes('solar system') || 
+      query.includes('planeta') || query.includes('planet') ||
+      query.includes('astronomia') || query.includes('astronomy') ||
+      query.includes('espaço') || query.includes('space') ||
+      query.includes('galáxia') || query.includes('galaxy') ||
+      query.includes('estrela') || query.includes('star')) {
+    return { name: 'astronomy', falsePositiveType: 'geográfico/turístico' };
+  }
+  
+  // Medicina e saúde
+  if (query.includes('vacinação') || query.includes('vaccination') || 
+      query.includes('vacina') || query.includes('vaccine') ||
+      query.includes('medicina') || query.includes('medicine') ||
+      query.includes('saúde') || query.includes('health') ||
+      query.includes('hospital') || query.includes('clínica') || query.includes('clinic')) {
+    return { name: 'medicine', falsePositiveType: 'genérico/não-médico' };
+  }
+  
+  // Meio ambiente e clima
+  if (query.includes('aquecimento') || query.includes('global') || 
+      query.includes('climate') || query.includes('warming') ||
+      query.includes('meio ambiente') || query.includes('environment') ||
+      query.includes('poluição') || query.includes('pollution') ||
+      query.includes('sustentabilidade') || query.includes('sustainability')) {
+    return { name: 'environment', falsePositiveType: 'tecnológico/genérico' };
+  }
+  
+  // História
+  if (query.includes('história') || query.includes('history') ||
+      query.includes('histórico') || query.includes('historical') ||
+      query.includes('antigo') || query.includes('ancient') ||
+      query.includes('medieval') || query.includes('renascimento') || query.includes('renaissance')) {
+    return { name: 'history', falsePositiveType: 'moderno/contemporâneo' };
+  }
+  
+  // Geografia
+  if (query.includes('geografia') || query.includes('geography') ||
+      query.includes('país') || query.includes('country') ||
+      query.includes('continente') || query.includes('continent') ||
+      query.includes('capital') || query.includes('região') || query.includes('region')) {
+    return { name: 'geography', falsePositiveType: 'genérico/não-geográfico' };
+  }
+  
+  // Matemática
+  if (query.includes('matemática') || query.includes('mathematics') ||
+      query.includes('matematica') || query.includes('math') ||
+      query.includes('cálculo') || query.includes('calculation') ||
+      query.includes('equação') || query.includes('equation') ||
+      query.includes('geometria') || query.includes('geometry')) {
+    return { name: 'mathematics', falsePositiveType: 'genérico/não-matemático' };
+  }
+  
+  // Física
+  if (query.includes('física') || query.includes('physics') ||
+      query.includes('fisica') || query.includes('energia') || query.includes('energy') ||
+      query.includes('força') || query.includes('force') ||
+      query.includes('movimento') || query.includes('motion')) {
+    return { name: 'physics', falsePositiveType: 'genérico/não-físico' };
+  }
+  
+  // Química
+  if (query.includes('química') || query.includes('chemistry') ||
+      query.includes('quimica') || query.includes('molécula') || query.includes('molecule') ||
+      query.includes('átomo') || query.includes('atom') ||
+      query.includes('reação') || query.includes('reaction')) {
+    return { name: 'chemistry', falsePositiveType: 'genérico/não-químico' };
+  }
+  
+  // Biologia
+  if (query.includes('biologia') || query.includes('biology') ||
+      query.includes('célula') || query.includes('cell') ||
+      query.includes('dna') || query.includes('genética') || query.includes('genetics') ||
+      query.includes('evolução') || query.includes('evolution')) {
+    return { name: 'biology', falsePositiveType: 'genérico/não-biológico' };
+  }
+  
+  // Literatura
+  if (query.includes('literatura') || query.includes('literature') ||
+      query.includes('livro') || query.includes('book') ||
+      query.includes('poesia') || query.includes('poetry') ||
+      query.includes('romance') || query.includes('novel')) {
+    return { name: 'literature', falsePositiveType: 'genérico/não-literário' };
+  }
+  
+  // Tecnologia
+  if (query.includes('tecnologia') || query.includes('technology') ||
+      query.includes('computador') || query.includes('computer') ||
+      query.includes('programação') || query.includes('programming') ||
+      query.includes('software') || query.includes('hardware')) {
+    return { name: 'technology', falsePositiveType: 'genérico/não-tecnológico' };
+  }
+  
+  // Arte
+  if (query.includes('arte') || query.includes('art') ||
+      query.includes('pintura') || query.includes('painting') ||
+      query.includes('escultura') || query.includes('sculpture') ||
+      query.includes('música') || query.includes('music')) {
+    return { name: 'art', falsePositiveType: 'genérico/não-artístico' };
+  }
+  
+  // Educação geral
+  if (query.includes('educação') || query.includes('education') ||
+      query.includes('escola') || query.includes('school') ||
+      query.includes('aprender') || query.includes('learning') ||
+      query.includes('estudar') || query.includes('study')) {
+    return { name: 'education', falsePositiveType: 'genérico/não-educacional' };
+  }
+  
+  // Categoria genérica para temas não identificados
+  return { name: 'general', falsePositiveType: 'genérico' };
+}
+
+// Função para obter termos relevantes e falsos positivos por categoria
+export function getCategoryTerms(category: { name: string; falsePositiveType: string }): {
+  relevant: string[];
+  falsePositives: string[];
+} {
+  const categoryTerms: Record<string, { relevant: string[]; falsePositives: string[] }> = {
+    astronomy: {
+      relevant: [
+        'solar system', 'sistema solar', 'planet', 'planeta', 'sun', 'sol', 'moon', 'lua',
+        'mars', 'marte', 'earth', 'terra', 'jupiter', 'saturn', 'saturno', 'venus', 'vênus',
+        'mercury', 'mercúrio', 'neptune', 'netuno', 'uranus', 'urano', 'pluto', 'plutão',
+        'asteroid', 'asteroide', 'comet', 'cometa', 'galaxy', 'galáxia', 'star', 'estrela',
+        'orbit', 'órbita', 'space', 'espaço', 'astronomy', 'astronomia', 'cosmos', 'universo',
+        'universe', 'nebula', 'nebulosa', 'constellation', 'constelação', 'telescope', 'telescópio',
+        'satellite', 'satélite', 'spacecraft', 'nave espacial', 'rocket', 'foguete', 'nasa',
+        'solar', 'solar wind', 'vento solar', 'eclipse', 'eclípse', 'meteor', 'meteoro'
+      ],
+      falsePositives: [
+        'lake como', 'como italy', 'como lake', 'varenna', 'italy', 'italian', 'italiano',
+        'landscape', 'paisagem', 'mountain', 'montanha', 'nature', 'natureza', 'forest', 'floresta',
+        'city', 'cidade', 'building', 'edifício', 'architecture', 'arquitetura', 'travel', 'viagem',
+        'vacation', 'férias', 'tourism', 'turismo', 'hotel', 'restaurant', 'restaurante',
+        'swan', 'cisne', 'moonlight', 'luar', 'lake', 'lago', 'villa', 'vila', 'ballaster'
+      ]
+    },
+    medicine: {
+      relevant: [
+        'vaccine', 'vaccination', 'vacina', 'vacinação', 'injection', 'injeção', 'syringe', 'seringa',
+        'medical', 'médico', 'healthcare', 'saúde', 'doctor', 'médico', 'nurse', 'enfermeiro',
+        'clinic', 'clínica', 'hospital', 'immunization', 'imunização', 'prevention', 'prevenção',
+        'certificate', 'certificado', 'card', 'cartão', 'patient', 'paciente', 'treatment', 'tratamento',
+        'medicine', 'medicamento', 'pharmaceutical', 'farmacêutico', 'surgery', 'cirurgia'
+      ],
+      falsePositives: [
+        'woman', 'mulher', 'man', 'homem', 'person', 'pessoa', 'smiling', 'sorrindo', 'casual', 'casual',
+        'clothing', 'roupa', 'fashion', 'moda', 'beauty', 'beleza', 'lifestyle', 'estilo de vida',
+        'business', 'negócio', 'office', 'escritório', 'work', 'trabalho', 'meeting', 'reunião'
+      ]
+    },
+    environment: {
+      relevant: [
+        'climate', 'clima', 'global warming', 'aquecimento global', 'greenhouse', 'efeito estufa',
+        'carbon', 'carbono', 'emission', 'emissão', 'temperature', 'temperatura', 'ice', 'gelo',
+        'glacier', 'geleira', 'polar', 'polar', 'arctic', 'ártico', 'antarctic', 'antártico',
+        'sea level', 'nível do mar', 'ocean', 'oceano', 'environment', 'meio ambiente',
+        'pollution', 'poluição', 'fossil fuel', 'combustível fóssil', 'renewable', 'renovável',
+        'solar', 'solar', 'wind', 'vento', 'deforestation', 'desmatamento', 'ecosystem', 'ecossistema',
+        'biodiversity', 'biodiversidade', 'sustainability', 'sustentabilidade', 'co2'
+      ],
+      falsePositives: [
+        'laptop', 'computador', 'woman', 'mulher', 'man', 'homem', 'person', 'pessoa', 'work', 'trabalho',
+        'office', 'escritório', 'business', 'negócio', 'technology', 'tecnologia', 'internet', 'digital'
+      ]
+    },
+    history: {
+      relevant: [
+        'history', 'história', 'historical', 'histórico', 'ancient', 'antigo', 'medieval', 'medieval',
+        'renaissance', 'renascimento', 'revolution', 'revolução', 'war', 'guerra', 'civilization', 'civilização',
+        'empire', 'império', 'kingdom', 'reino', 'dynasty', 'dinastia', 'monument', 'monumento',
+        'archaeological', 'arqueológico', 'artifact', 'artefato', 'museum', 'museu', 'heritage', 'patrimônio'
+      ],
+      falsePositives: [
+        'modern', 'moderno', 'contemporary', 'contemporâneo', 'technology', 'tecnologia', 'computer', 'computador',
+        'smartphone', 'celular', 'internet', 'digital', 'social media', 'rede social', 'app', 'aplicativo'
+      ]
+    },
+    geography: {
+      relevant: [
+        'geography', 'geografia', 'country', 'país', 'continent', 'continente', 'capital', 'capital',
+        'region', 'região', 'landscape', 'paisagem', 'terrain', 'terreno', 'climate', 'clima',
+        'population', 'população', 'culture', 'cultura', 'language', 'idioma', 'currency', 'moeda',
+        'border', 'fronteira', 'mountain', 'montanha', 'river', 'rio', 'lake', 'lago', 'ocean', 'oceano'
+      ],
+      falsePositives: [
+        'woman', 'mulher', 'man', 'homem', 'person', 'pessoa', 'smiling', 'sorrindo', 'casual', 'casual',
+        'business', 'negócio', 'office', 'escritório', 'work', 'trabalho', 'meeting', 'reunião',
+        'technology', 'tecnologia', 'computer', 'computador', 'laptop', 'notebook'
+      ]
+    },
+    mathematics: {
+      relevant: [
+        'mathematics', 'matemática', 'math', 'cálculo', 'calculation', 'equation', 'equação',
+        'formula', 'fórmula', 'geometry', 'geometria', 'algebra', 'álgebra', 'calculus', 'cálculo',
+        'statistics', 'estatística', 'probability', 'probabilidade', 'number', 'número',
+        'graph', 'gráfico', 'chart', 'gráfico', 'function', 'função', 'variable', 'variável'
+      ],
+      falsePositives: [
+        'woman', 'mulher', 'man', 'homem', 'person', 'pessoa', 'smiling', 'sorrindo', 'casual', 'casual',
+        'business', 'negócio', 'office', 'escritório', 'work', 'trabalho', 'meeting', 'reunião',
+        'technology', 'tecnologia', 'computer', 'computador', 'laptop', 'notebook', 'internet'
+      ]
+    },
+    physics: {
+      relevant: [
+        'physics', 'física', 'energy', 'energia', 'force', 'força', 'motion', 'movimento',
+        'wave', 'onda', 'particle', 'partícula', 'quantum', 'quântico', 'relativity', 'relatividade',
+        'gravity', 'gravidade', 'magnetism', 'magnetismo', 'electricity', 'eletricidade',
+        'experiment', 'experimento', 'laboratory', 'laboratório', 'measurement', 'medição'
+      ],
+      falsePositives: [
+        'woman', 'mulher', 'man', 'homem', 'person', 'pessoa', 'smiling', 'sorrindo', 'casual', 'casual',
+        'business', 'negócio', 'office', 'escritório', 'work', 'trabalho', 'meeting', 'reunião',
+        'technology', 'tecnologia', 'computer', 'computador', 'laptop', 'notebook', 'internet'
+      ]
+    },
+    chemistry: {
+      relevant: [
+        'chemistry', 'química', 'molecule', 'molécula', 'atom', 'átomo', 'reaction', 'reação',
+        'compound', 'composto', 'element', 'elemento', 'periodic table', 'tabela periódica',
+        'laboratory', 'laboratório', 'experiment', 'experimento', 'chemical', 'químico',
+        'bond', 'ligação', 'ion', 'íon', 'crystal', 'cristal', 'solution', 'solução'
+      ],
+      falsePositives: [
+        'woman', 'mulher', 'man', 'homem', 'person', 'pessoa', 'smiling', 'sorrindo', 'casual', 'casual',
+        'business', 'negócio', 'office', 'escritório', 'work', 'trabalho', 'meeting', 'reunião',
+        'technology', 'tecnologia', 'computer', 'computador', 'laptop', 'notebook', 'internet'
+      ]
+    },
+    biology: {
+      relevant: [
+        'biology', 'biologia', 'cell', 'célula', 'dna', 'genetics', 'genética', 'evolution', 'evolução',
+        'organism', 'organismo', 'ecosystem', 'ecossistema', 'species', 'espécie', 'habitat', 'habitat',
+        'microscope', 'microscópio', 'laboratory', 'laboratório', 'research', 'pesquisa',
+        'protein', 'proteína', 'gene', 'gene', 'chromosome', 'cromossomo', 'mutation', 'mutação'
+      ],
+      falsePositives: [
+        'woman', 'mulher', 'man', 'homem', 'person', 'pessoa', 'smiling', 'sorrindo', 'casual', 'casual',
+        'business', 'negócio', 'office', 'escritório', 'work', 'trabalho', 'meeting', 'reunião',
+        'technology', 'tecnologia', 'computer', 'computador', 'laptop', 'notebook', 'internet'
+      ]
+    },
+    literature: {
+      relevant: [
+        'literature', 'literatura', 'book', 'livro', 'poetry', 'poesia', 'novel', 'romance',
+        'author', 'autor', 'writer', 'escritor', 'poem', 'poema', 'story', 'história',
+        'character', 'personagem', 'plot', 'enredo', 'theme', 'tema', 'genre', 'gênero',
+        'classic', 'clássico', 'contemporary', 'contemporâneo', 'fiction', 'ficção'
+      ],
+      falsePositives: [
+        'woman', 'mulher', 'man', 'homem', 'person', 'pessoa', 'smiling', 'sorrindo', 'casual', 'casual',
+        'business', 'negócio', 'office', 'escritório', 'work', 'trabalho', 'meeting', 'reunião',
+        'technology', 'tecnologia', 'computer', 'computador', 'laptop', 'notebook', 'internet'
+      ]
+    },
+    technology: {
+      relevant: [
+        'technology', 'tecnologia', 'computer', 'computador', 'programming', 'programação',
+        'software', 'hardware', 'algorithm', 'algoritmo', 'code', 'código', 'data', 'dados',
+        'network', 'rede', 'internet', 'artificial intelligence', 'inteligência artificial',
+        'machine learning', 'aprendizado de máquina', 'database', 'banco de dados', 'server', 'servidor'
+      ],
+      falsePositives: [
+        'woman', 'mulher', 'man', 'homem', 'person', 'pessoa', 'smiling', 'sorrindo', 'casual', 'casual',
+        'business', 'negócio', 'office', 'escritório', 'work', 'trabalho', 'meeting', 'reunião',
+        'lifestyle', 'estilo de vida', 'fashion', 'moda', 'beauty', 'beleza'
+      ]
+    },
+    art: {
+      relevant: [
+        'art', 'arte', 'painting', 'pintura', 'sculpture', 'escultura', 'music', 'música',
+        'artist', 'artista', 'museum', 'museu', 'gallery', 'galeria', 'exhibition', 'exposição',
+        'creative', 'criativo', 'aesthetic', 'estético', 'design', 'design', 'color', 'cor',
+        'brush', 'pincel', 'canvas', 'tela', 'palette', 'paleta', 'technique', 'técnica'
+      ],
+      falsePositives: [
+        'woman', 'mulher', 'man', 'homem', 'person', 'pessoa', 'smiling', 'sorrindo', 'casual', 'casual',
+        'business', 'negócio', 'office', 'escritório', 'work', 'trabalho', 'meeting', 'reunião',
+        'technology', 'tecnologia', 'computer', 'computador', 'laptop', 'notebook', 'internet'
+      ]
+    },
+    education: {
+      relevant: [
+        'education', 'educação', 'school', 'escola', 'learning', 'aprendizado', 'study', 'estudo',
+        'teacher', 'professor', 'student', 'estudante', 'classroom', 'sala de aula', 'university', 'universidade',
+        'knowledge', 'conhecimento', 'teaching', 'ensino', 'academic', 'acadêmico', 'curriculum', 'currículo',
+        'lesson', 'lição', 'course', 'curso', 'training', 'treinamento', 'skill', 'habilidade'
+      ],
+      falsePositives: [
+        'woman', 'mulher', 'man', 'homem', 'person', 'pessoa', 'smiling', 'sorrindo', 'casual', 'casual',
+        'business', 'negócio', 'office', 'escritório', 'work', 'trabalho', 'meeting', 'reunião',
+        'technology', 'tecnologia', 'computer', 'computador', 'laptop', 'notebook', 'internet'
+      ]
+    },
+    general: {
+      relevant: [],
+      falsePositives: [
+        'woman', 'mulher', 'man', 'homem', 'person', 'pessoa', 'smiling', 'sorrindo', 'casual', 'casual',
+        'business', 'negócio', 'office', 'escritório', 'work', 'trabalho', 'meeting', 'reunião',
+        'technology', 'tecnologia', 'computer', 'computador', 'laptop', 'notebook', 'internet',
+        'lifestyle', 'estilo de vida', 'fashion', 'moda', 'beauty', 'beleza'
+      ]
+    }
+  };
+  
+  return categoryTerms[category.name] || categoryTerms.general;
+}
