@@ -12,25 +12,24 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
   const [mounted, setMounted] = useState(false)
+  const [isClient, setIsClient] = useState(false)
+  const { data: session, status } = useSession()
+  const router = useRouter()
   
   // Handle prerendering and hydration
   useEffect(() => {
     setMounted(true)
   }, [])
 
-  // During prerendering or before hydration, return children
-  if (!mounted) {
-    return <>{children}</>
-  }
-
-  const { data: session, status } = useSession()
-  const router = useRouter()
-  const [isClient, setIsClient] = useState(false)
-
   // Ensure we're on the client side before accessing window
   useEffect(() => {
     setIsClient(true)
   }, [])
+
+  // During prerendering or before hydration, return children
+  if (!mounted) {
+    return <>{children}</>
+  }
 
   useEffect(() => {
     if (status === 'loading') return // Still loading
