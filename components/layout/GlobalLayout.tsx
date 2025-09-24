@@ -12,6 +12,7 @@ interface GlobalLayoutProps {
 
 // Páginas que NÃO devem ter o sidebar
 const PAGES_WITHOUT_SIDEBAR = [
+  '/', // Página principal
   '/login',
   '/register',
   '/auth',
