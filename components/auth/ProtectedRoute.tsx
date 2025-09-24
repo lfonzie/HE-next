@@ -26,20 +26,23 @@ export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
     setIsClient(true)
   }, [])
 
-  // During prerendering or before hydration, return children
-  if (!mounted) {
-    return <>{children}</>
-  }
-
+  // Handle authentication logic
   useEffect(() => {
+    if (!mounted || !isClient) return // Wait for client-side hydration
+    
     if (status === 'loading') return // Still loading
 
-    if (!session && isClient) {
+    if (!session) {
       // Redirect to login with callback URL
       const currentPath = window.location.pathname
       router.push(`/login?callbackUrl=${encodeURIComponent(currentPath)}`)
     }
-  }, [session, status, router, isClient])
+  }, [session, status, router, isClient, mounted])
+
+  // During prerendering or before hydration, return children
+  if (!mounted) {
+    return <>{children}</>
+  }
 
   // During SSR and initial hydration, always render the children
   // This prevents hydration mismatch
