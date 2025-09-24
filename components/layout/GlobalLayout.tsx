@@ -72,7 +72,11 @@ export function GlobalLayout({ children }: GlobalLayoutProps) {
       <main className={cn(
         "main-content-with-sidebar",
         "md:main-content-with-sidebar", // Desktop e tablet com sidebar
-        "pt-0 md:pt-0" // Mobile com header
+        "pt-0 md:pt-0", // Mobile com header
+        "min-h-screen", // Ensure minimum height
+        "bg-transparent", // Transparent background
+        "relative", // Relative positioning
+        "z-10" // Higher z-index than sidebar
       )}>
         {children}
       </main>
