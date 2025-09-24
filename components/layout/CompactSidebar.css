@@ -213,6 +213,16 @@ body.sidebar-collapsed .main-content-with-sidebar {
   width: calc(100vw - 64px) !important;
   min-height: 100vh !important;
   background: transparent !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: block !important;
+}
+
+/* Force all content to be visible when sidebar is collapsed */
+body.sidebar-collapsed .main-content-with-sidebar * {
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: inherit !important;
 }
 
 /* Force visibility for all states */
@@ -230,6 +240,50 @@ body.sidebar-collapsed .main-content-with-sidebar {
   opacity: 1 !important;
   visibility: visible !important;
   display: block !important;
+}
+
+/* Specific fixes for chat and enem pages */
+.main-content-with-sidebar .bg-gradient-to-br {
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: flex !important;
+  min-height: 100vh !important;
+}
+
+.main-content-with-sidebar .flex-1 {
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: flex !important;
+}
+
+/* Force visibility for all divs inside main content */
+.main-content-with-sidebar div {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Specific fix for chat component structure */
+.main-content-with-sidebar .bg-gradient-to-br.from-slate-50 {
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: flex !important;
+  min-height: 100vh !important;
+  width: 100% !important;
+}
+
+/* Ensure flex containers are visible */
+.main-content-with-sidebar .flex {
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: flex !important;
+}
+
+/* Ensure flex-1 containers are visible */
+.main-content-with-sidebar .flex-1 {
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: flex !important;
+  flex: 1 !important;
 }
 
 /* Mobile responsive - sidebar hidden by default, opens from left when triggered by header */
