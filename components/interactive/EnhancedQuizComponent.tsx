@@ -320,17 +320,57 @@ export default function EnhancedQuizComponent({
     }
   }, [currentQuestionIndex])
 
+  // Save quiz progress to database
+  const saveQuizProgress = useCallback(async (lessonId: string, userId: string, stageIndex: number) => {
+    try {
+      const stats = calculateStats();
+      const quizResultsData = quizResults.reduce((acc, result, index) => {
+        acc[`question_${index}`] = {
+          questionId: result.question.id,
+          selectedAnswer: result.selectedAnswer,
+          correctAnswer: result.correctAnswer,
+          isCorrect: result.isCorrect,
+          timeSpent: result.timeSpent,
+          pointsEarned: result.pointsEarned
+        };
+        return acc;
+      }, {} as any);
+
+      await fetch('/api/lessons/progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          lessonId,
+          stageIndex,
+          completed: true,
+          quizResults: quizResultsData,
+          timeSpent: stats.totalTimeSpent
+        })
+      });
+    } catch (error) {
+      console.error('Erro ao salvar progresso do quiz:', error);
+    }
+  }, [calculateStats, quizResults]);
+
   // Handle manual quiz completion
-  const handleCompleteQuiz = useCallback(() => {
+  const handleCompleteQuiz = useCallback(async () => {
     console.log('🔍 DEBUG EnhancedQuizComponent - handleCompleteQuiz called')
     setIsCompleted(true)
     // Calculate final statistics
     const stats = calculateStats()
     console.log('🔍 DEBUG EnhancedQuizComponent - calculated stats:', stats)
     
+    // Save quiz progress if lessonId and userId are available
+    const lessonId = (window as any).currentLessonId;
+    const userId = (window as any).currentUserId;
+    if (lessonId && userId) {
+      await saveQuizProgress(lessonId, userId, (window as any).currentStageIndex || 0);
+    }
+    
     // Call completion callback
     onComplete(stats.totalScore, stats.totalQuestions, quizResults)
-  }, [calculateStats, onComplete, quizResults])
+  }, [calculateStats, onComplete, quizResults, saveQuizProgress])
 
   // Handle retry
   const handleRetry = useCallback(() => {

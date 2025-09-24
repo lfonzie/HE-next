@@ -121,6 +121,7 @@
     "dotenv": "^17.2.2",
     "framer-motion": "^11.18.2",
     "html2canvas": "^1.4.1",
+    "install": "^0.13.0",
     "js-yaml": "^4.1.0",
     "jspdf": "^3.0.3",
     "lodash": "^4.17.21",

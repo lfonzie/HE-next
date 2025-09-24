@@ -43,7 +43,9 @@ const FAST_PATTERNS = {
   ],
   
   bem_estar: [
-    /\b(ansioso|conflito|colega|apoio|emocional|estresse|depressão|bullying|conflito|familiar|saúde|mental)\b/i
+    /\b(ansioso|ansiosa|conflito|colega|apoio|emocional|estresse|depressão|depressao|bullying|conflito|familiar|saúde|saude|mental|psicólogo|psicologo|psicóloga|psicologa|terapia|apoio emocional)\b/i,
+    /\b(me sinto|estou|sinto|preciso de ajuda|quero ajuda|preciso falar)\b[\s\S]*\b(triste|ansioso|ansiosa|deprimido|deprimida|angustiado|angustiada|sobrecarregado|sobrecarregada|com medo|em pânico|em panico|sem esperança|desmotivado|desmotivada|cansado|cansada)\b/i,
+    /\b(ansiedade|depressão|depressao|crise de pânico|crise de panico|saúde mental|saude mental)\b/i
   ],
   
   coordenacao: [
@@ -106,6 +108,14 @@ export function fastClassify(message: string, historyLength: number = 0): FastCl
     bestMatch = { module: 'enem', confidence: 0.7, rationale: 'Keyword: simulado/enem' };
   } else if (messageLower.includes('problema') && messageLower.includes('técnico')) {
     bestMatch = { module: 'ti', confidence: 0.7, rationale: 'Keyword: problema técnico' };
+  } else if (messageLower.includes('me sinto') || messageLower.includes('estou') || messageLower.includes('sinto')) {
+    // Detectar mensagens de bem-estar mesmo sem palavras específicas
+    if (messageLower.includes('triste') || messageLower.includes('ansioso') || messageLower.includes('ansiosa') || 
+        messageLower.includes('deprimido') || messageLower.includes('deprimida') || messageLower.includes('cansado') || 
+        messageLower.includes('cansada') || messageLower.includes('mal') || messageLower.includes('não') || 
+        messageLower.includes('nao') || messageLower.includes('problema') || messageLower.includes('dificuldade')) {
+      bestMatch = { module: 'bem_estar', confidence: 0.8, rationale: 'Keyword: estado emocional detectado' };
+    }
   }
   
   // Cache o resultado
@@ -118,4 +128,9 @@ export function fastClassify(message: string, historyLength: number = 0): FastCl
 export function clearFastClassificationCache() {
   classificationCache.clear();
   console.log('🧹 [FAST-CLASSIFIER] Cache limpo');
+}
+
+// Função para testar classificação (útil para debug)
+export function testFastClassification(message: string): FastClassificationResult {
+  return fastClassify(message, 0);
 }

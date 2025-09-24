@@ -276,17 +276,6 @@ model lesson_meta {
   updated_at DateTime      @default(now()) @db.Timestamp(6)
 }
 
-model lesson_progress {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id    String   @db.Uuid
-  lesson_id  String   @db.VarChar(50)
-  card_id    String   @db.VarChar(50)
-  completed  Boolean  @default(false)
-  progress   Json?
-  created_at DateTime @default(now()) @db.Timestamp(6)
-  updated_at DateTime @default(now()) @db.Timestamp(6)
-}
-
 model lessons {
   id            String   @id @db.VarChar(50)
   title         String   @db.VarChar(255)
@@ -522,6 +511,46 @@ model enem_score {
   session       enem_session @relation(fields: [session_id], references: [session_id], onDelete: Cascade)
 
   @@index([session_id], map: "idx_enem_scores_session")
+}
+
+model lesson_progress {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id           String   @db.Uuid
+  lesson_id         String   @db.VarChar(50)
+  current_stage     Int      @default(0)
+  completed_stages  Int[]    @default([])
+  quiz_results      Json     @default("{}")
+  total_time_spent  Int      @default(0) // em segundos
+  is_completed      Boolean  @default(false)
+  completion_date   DateTime? @db.Timestamp(6)
+  created_at        DateTime @default(now()) @db.Timestamp(6)
+  updated_at        DateTime @default(now()) @db.Timestamp(6)
+
+  @@unique([user_id, lesson_id], map: "idx_lesson_progress_user_lesson")
+  @@index([user_id], map: "idx_lesson_progress_user")
+  @@index([lesson_id], map: "idx_lesson_progress_lesson")
+  @@index([is_completed], map: "idx_lesson_progress_completed")
+}
+
+model lesson_certificates {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id           String   @db.Uuid
+  lesson_id         String   @db.VarChar(50)
+  lesson_title      String   @db.VarChar(200)
+  completion_date   DateTime @default(now()) @db.Timestamp(6)
+  duration_minutes  Int
+  total_questions   Int
+  correct_answers   Int
+  accuracy_percent  Float
+  quiz_results      Json
+  certificate_data  Json
+  unique_id         String   @unique @db.VarChar(50)
+  created_at        DateTime @default(now()) @db.Timestamp(6)
+  updated_at        DateTime @default(now()) @db.Timestamp(6)
+
+  @@index([user_id], map: "idx_lesson_certificates_user")
+  @@index([lesson_id], map: "idx_lesson_certificates_lesson")
+  @@index([completion_date], map: "idx_lesson_certificates_date")
 }
 
 model user_achievements {

@@ -49,9 +49,9 @@ export function classifyComplexityLocal(message: string, module?: string): Compl
   ];
 
   // Detecção de bem-estar/saúde mental e suporte emocional
-  const wellbeingRegex = /\b(me sinto|estou|sinto|preciso de ajuda|quero ajuda|apoio|preciso falar)\b[\s\S]*\b(triste|ansioso|ansiosa|deprimido|deprimida|angustiado|angustiada|sobrecarregado|sobrecarregada|com medo|em p[aâ]nico|sem esperança|desmotivado|desmotivada|cansado|cansada)\b|ansiedade|depress[aã]o|crise de p[aâ]nico|sa[úu]de mental|psic[oó]logo|psic[oó]loga|terapia|apoio emocional/i;
+  const wellbeingRegex = /\b(me sinto|estou|sinto|preciso de ajuda|quero ajuda|apoio|preciso falar)\b[\s\S]*\b(triste|ansioso|ansiosa|deprimido|deprimida|angustiado|angustiada|sobrecarregado|sobrecarregada|com medo|em p[aâ]nico|sem esperança|desmotivado|desmotivada|cansado|cansada|mal|não|nao|problema|dificuldade)\b|ansiedade|depress[aã]o|crise de p[aâ]nico|sa[úu]de mental|psic[oó]logo|psic[oó]loga|terapia|apoio emocional/i;
   const isWellbeingConcern = wellbeingRegex.test(lowerMessage);
-  const isWellbeingModule = module === 'bem-estar' || module === 'atendimento';
+  const isWellbeingModule = module === 'bem_estar' || module === 'bem-estar' || module === 'atendimento';
 
   // Sinalizar mensagens de bem-estar como complexas para assegurar tratamento adequado
   if (isWellbeingConcern || (isWellbeingModule && /\b(me sinto|estou|sinto)\b/.test(lowerMessage))) {

@@ -98,6 +98,8 @@ export default function LessonPage() {
   const [error, setError] = useState<string | null>(null)
   const [retryCount, setRetryCount] = useState(0)
   const [loadingMessage, setLoadingMessage] = useState('Preparando sua aula personalizada...')
+  const [lessonProgress, setLessonProgress] = useState<any>(null)
+  const [allQuizzesCompleted, setAllQuizzesCompleted] = useState(false)
 
   // Progressive loading system
   const { loadingState, isLoading: progressiveLoading, progress, startLoading } = useProgressiveLoading(lessonId)
@@ -292,7 +294,7 @@ export default function LessonPage() {
     }
   }, [currentStage, stageResults, totalPoints, totalTimeSpent, isCompleted, lessonData, lessonId])
 
-  const handleStageComplete = (stageIndex: number, result: any) => {
+  const handleStageComplete = async (stageIndex: number, result: any) => {
     const pointsEarned = result.points || 0
     const timeSpent = result.timeSpent || 0
 
@@ -312,11 +314,23 @@ export default function LessonPage() {
     setTotalPoints(prev => prev + pointsEarned)
     setTotalTimeSpent(prev => prev + timeSpent)
 
+    // Salvar progresso da etapa
+    await saveLessonProgress(stageIndex, true, result);
+
     // Check if lesson is completed
     const totalStages = lessonData?.stages?.length || 0
     if (stageIndex === totalStages - 1) {
       setIsCompleted(true)
-      toast.success('🎉 Parabéns! Você completou a aula!')
+      
+      // Verificar se todos os quizzes foram completados
+      const quizzesCompleted = checkAllQuizzesCompleted();
+      setAllQuizzesCompleted(quizzesCompleted);
+      
+      if (quizzesCompleted) {
+        toast.success('🎉 Parabéns! Você completou a aula e todos os quizzes!')
+      } else {
+        toast.success('🎉 Parabéns! Você completou a aula! Complete todos os quizzes para obter o certificado.')
+      }
     }
   }
 
@@ -382,6 +396,9 @@ export default function LessonPage() {
     if (lessonData && lessonData.stages && lessonData.stages.length > 0) {
       console.log('[DEBUG] Lesson data loaded, showing lesson immediately')
       setIsLoading(false)
+      
+      // Carregar progresso da aula
+      loadLessonProgress();
     }
   }, [lessonData])
 
@@ -392,9 +409,118 @@ export default function LessonPage() {
     setTotalPoints(0)
     setTotalTimeSpent(0)
     setIsCompleted(false)
+    setAllQuizzesCompleted(false)
+    setLessonProgress(null)
     localStorage.removeItem(`lesson_progress_${lessonId}`)
     toast.success('Aula reiniciada!')
   }
+
+  // Load lesson progress
+  const loadLessonProgress = async () => {
+    try {
+      const userId = 'demo-user'; // Em produção, usar o ID do usuário logado
+      const response = await fetch(`/api/lessons/progress?userId=${userId}&lessonId=${lessonId}`);
+      const data = await response.json();
+      
+      if (data.success && data.progress.length > 0) {
+        const progress = data.progress[0];
+        setLessonProgress(progress);
+        setIsCompleted(progress.isCompleted);
+        
+        // Verificar se todos os quizzes foram completados
+        const quizStages = lessonData?.stages?.filter(stage => stage.type === 'Avaliação') || [];
+        const completedQuizStages = quizStages.filter((_, index) => 
+          progress.completedStages.includes(index)
+        );
+        setAllQuizzesCompleted(completedQuizStages.length === quizStages.length);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar progresso da aula:', error);
+    }
+  };
+
+  // Save lesson progress
+  const saveLessonProgress = async (stageIndex: number, completed: boolean, quizResults: any = {}) => {
+    try {
+      const userId = 'demo-user'; // Em produção, usar o ID do usuário logado
+      await fetch('/api/lessons/progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          lessonId,
+          stageIndex,
+          completed,
+          quizResults,
+          timeSpent: 0 // Será calculado pelo componente
+        })
+      });
+    } catch (error) {
+      console.error('Erro ao salvar progresso da aula:', error);
+    }
+  };
+
+  // Generate certificate
+  const generateCertificate = async () => {
+    try {
+      const userId = 'demo-user'; // Em produção, usar o ID do usuário logado
+      const durationMinutes = Math.round(totalTimeSpent / 60);
+      
+      // Coletar todos os resultados de quiz
+      const allQuizResults = {};
+      stageResults.forEach((result, index) => {
+        if (lessonData?.stages?.[index]?.type === 'Avaliação') {
+          allQuizResults[`stage_${index}`] = result;
+        }
+      });
+
+      const response = await fetch('/api/certificates/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          lessonId,
+          lessonTitle: lessonData?.title || 'Aula',
+          durationMinutes,
+          quizResults: allQuizResults
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        return data.certificate;
+      }
+    } catch (error) {
+      console.error('Erro ao gerar certificado:', error);
+      toast.error('Erro ao gerar certificado');
+    }
+    return null;
+  };
+
+  // Handle view certificate
+  const handleViewCertificate = async () => {
+    try {
+      const certificate = await generateCertificate();
+      if (certificate) {
+        router.push(`/certificates/${certificate.uniqueId}`);
+      }
+    } catch (error) {
+      console.error('Erro ao visualizar certificado:', error);
+      toast.error('Erro ao visualizar certificado');
+    }
+  };
+
+  // Check if all quizzes are completed
+  const checkAllQuizzesCompleted = () => {
+    if (!lessonData?.stages) return false;
+    
+    const quizStages = lessonData.stages.filter(stage => stage.type === 'Avaliação');
+    const completedQuizStages = stageResults.filter((result, index) => 
+      lessonData.stages?.[index]?.type === 'Avaliação' && result.result === 'completed'
+    );
+    
+    return completedQuizStages.length === quizStages.length;
+  };
 
   const handlePrintLesson = () => {
     if (lessonData) {
@@ -846,15 +972,20 @@ export default function LessonPage() {
                   >
                     Reiniciar Aula
                   </Button>
-                  {isCompleted && (
+                  {isCompleted && allQuizzesCompleted && (
                     <Button
-                      onClick={() => router.push('/aulas')}
+                      onClick={handleViewCertificate}
                       size="sm"
-                      className="w-full"
+                      className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
                     >
                       <Trophy className="h-4 w-4 mr-2" />
                       Ver Certificado
                     </Button>
+                  )}
+                  {isCompleted && !allQuizzesCompleted && (
+                    <div className="text-center text-sm text-gray-500 p-2">
+                      Complete todos os quizzes para obter o certificado
+                    </div>
                   )}
                 </div>
               </CardContent>

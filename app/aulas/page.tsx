@@ -332,6 +332,44 @@ function AulasPageContent() {
   const [startTime, setStartTime] = useState<number | null>(null)
   const [elapsedTime, setElapsedTime] = useState(0)
 
+  // Debug log para verificar estado inicial
+  console.log('AulasPageContent render - isGenerating:', isGenerating, 'generatedLesson:', !!generatedLesson)
+
+  // Verificar se há aula salva no localStorage que pode estar causando problemas
+  useEffect(() => {
+    const checkLocalStorage = () => {
+      const keys = Object.keys(localStorage).filter(key => key.startsWith('demo_lesson_'))
+      console.log('Aulas salvas no localStorage:', keys)
+      
+      // Se há aulas salvas mas não há generatedLesson, pode ser um problema
+      if (keys.length > 0 && !generatedLesson) {
+        console.log('Possível problema: há aulas no localStorage mas não há generatedLesson no estado')
+      }
+    }
+    
+    checkLocalStorage()
+  }, [generatedLesson])
+
+  // Função para limpar estado e localStorage (debug)
+  const clearAllState = useCallback(() => {
+    console.log('Limpando todo o estado e localStorage')
+    setIsGenerating(false)
+    setGeneratedLesson(null)
+    setPacingMetrics(null)
+    setPacingWarnings([])
+    setGenerationProgress(0)
+    setGenerationStatus('')
+    setFormData({ topic: '' })
+    setFormErrors({})
+    setStartTime(null)
+    setElapsedTime(0)
+    
+    // Limpar localStorage
+    const keys = Object.keys(localStorage).filter(key => key.startsWith('demo_lesson_'))
+    keys.forEach(key => localStorage.removeItem(key))
+    console.log('localStorage limpo')
+  }, [])
+
   // Usar sugestões melhoradas
   const { suggestions, loading: suggestionsLoading, error: suggestionsError, refreshSuggestions } = useEnhancedSuggestions({
     limit: 6, // Mostrar apenas 6 sugestões na página principal
@@ -440,10 +478,13 @@ function AulasPageContent() {
     }, 300)
 
     try {
-      // Chamar API do Gemini para gerar aula
-      console.log('Chamando API do Gemini para gerar aula:', { topic })
+      // Chamar API com AI SDK (fallback automático)
+      console.log('Chamando API com AI SDK para gerar aula:', { topic })
       
-      const response = await fetch('/api/aulas/generate-gemini', {
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 120000) // 2 minutos timeout
+      
+      const response = await fetch('/api/aulas/generate-ai-sdk', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -454,17 +495,31 @@ function AulasPageContent() {
           schoolId: '',
           customPrompt: ''
         }),
+        signal: controller.signal
       })
+
+      clearTimeout(timeoutId)
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.error || 'Erro ao gerar aula')
+        console.error('Erro da API:', errorData)
+        
+        // Tratar diferentes tipos de erro
+        if (response.status === 429 || errorData.error?.includes('overloaded')) {
+          throw new Error('A API está sobrecarregada. O sistema tentará automaticamente outro provedor.')
+        } else if (response.status === 500) {
+          throw new Error('Erro interno do servidor. O sistema tentará automaticamente outro provedor.')
+        } else {
+          throw new Error(errorData.error || 'Erro ao gerar aula')
+        }
       }
 
       const result = await response.json()
       console.log('Resposta da API:', result)
       console.log('result.success:', result.success)
       console.log('result.lesson:', result.lesson)
+      console.log('result.provider:', result.provider)
+      console.log('result.generationTime:', result.generationTime)
       console.log('typeof result.lesson:', typeof result.lesson)
       
       if (!result.success || !result.lesson) {
@@ -503,7 +558,7 @@ function AulasPageContent() {
       }
 
       setGenerationProgress(100)
-      setGenerationStatus('Aula gerada com sucesso!')
+      setGenerationStatus(`Aula gerada com sucesso usando ${result.provider}!`)
       setGeneratedLesson(generatedLesson)
       
       // Capturar métricas de pacing profissional
@@ -522,21 +577,37 @@ function AulasPageContent() {
       const saved = localStorage.getItem(`demo_lesson_${(generatedLesson as any)?.id || ""}`)
       console.log('Aula salva no localStorage:', saved ? 'SIM' : 'NÃO')
       
-      toast.success('Aula gerada com sucesso!')
+      toast.success(`Aula gerada com sucesso usando ${result.provider}!`)
     } catch (error) {
       console.error('Generation error:', error)
-      setGenerationStatus('Erro na geração da aula')
-      toast.error(error instanceof Error ? error.message : 'Erro ao gerar aula. Tente novamente.')
+      
+      // Determinar mensagem de erro específica
+      let errorMessage = 'Erro ao gerar aula. Tente novamente.'
+      
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          errorMessage = 'Timeout: A geração da aula demorou muito. Tente novamente.'
+        } else if (error.message.includes('sobrecarregada')) {
+          errorMessage = 'Todos os provedores estão sobrecarregados. Tente novamente em alguns minutos.'
+        } else if (error.message.includes('servidor')) {
+          errorMessage = 'Erro interno em todos os provedores. Tente novamente em alguns minutos.'
+        } else if (error.message.includes('Todos os provedores falharam')) {
+          errorMessage = 'Todos os provedores de IA falharam. Tente novamente em alguns minutos.'
+        } else {
+          errorMessage = error.message
+        }
+      }
+      
+      setGenerationStatus(`Erro: ${errorMessage}`)
+      toast.error(errorMessage)
     } finally {
       clearInterval(progressInterval)
       setIsGenerating(false)
       
       // Clear progress after delay
       setTimeout(() => {
-        if (!isGenerating) {
-          setGenerationProgress(0)
-          setGenerationStatus('')
-        }
+        setGenerationProgress(0)
+        setGenerationStatus('')
       }, 2000)
     }
   }, [formData.topic, validateForm, isGenerating])
@@ -869,24 +940,48 @@ function AulasPageContent() {
                   </div>
                 </div>
 
-                <Button
-                  onClick={() => handleGenerate()}
-                  disabled={isGenerating || !formData.topic.trim()}
-                  className="w-full h-16 text-xl font-semibold bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 shadow-lg hover:shadow-xl transition-all duration-200 rounded-2xl"
-                  size="lg"
-                >
-                  {isGenerating ? (
-                    <>
-                      <div className="mr-4 h-6 w-6 animate-spin rounded-full border-3 border-white border-t-transparent" />
-                      Gerando sua aula personalizada...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="mr-4 h-6 w-6" />
-                      Gerar Aula Interativa
-                    </>
+                <div className="space-y-4">
+                  <Button
+                    onClick={() => handleGenerate()}
+                    disabled={isGenerating || !formData.topic.trim()}
+                    className="w-full h-16 text-xl font-semibold bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 shadow-lg hover:shadow-xl transition-all duration-200 rounded-2xl"
+                    size="lg"
+                  >
+                    {isGenerating ? (
+                      <>
+                        <div className="mr-4 h-6 w-6 animate-spin rounded-full border-3 border-white border-t-transparent" />
+                        Gerando sua aula personalizada...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="mr-4 h-6 w-6" />
+                        Gerar Aula Interativa
+                      </>
+                    )}
+                  </Button>
+                  
+                  {/* Botão de debug para limpar estado */}
+                  <Button
+                    onClick={clearAllState}
+                    variant="outline"
+                    size="sm"
+                    className="w-full text-gray-500 hover:text-gray-700"
+                  >
+                    🔧 Limpar Estado (Debug)
+                  </Button>
+                  
+                  {/* Botão para tentar novamente quando há erro */}
+                  {generationStatus.includes('Erro') && (
+                    <Button
+                      onClick={() => handleGenerate()}
+                      variant="outline"
+                      size="sm"
+                      className="w-full text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
+                    >
+                      🔄 Tentar Novamente
+                    </Button>
                   )}
-                </Button>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -1051,13 +1146,32 @@ function AulasPageContent() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       {isGenerating && <Loader2 className="h-5 w-5 animate-spin text-yellow-600" />}
-                      <span className="text-lg font-medium text-gray-700">{generationStatus}</span>
+                      <span className={`text-lg font-medium ${generationStatus.includes('Erro') ? 'text-red-600' : 'text-gray-700'}`}>
+                        {generationStatus}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2 text-lg text-yellow-600 font-semibold">
                       <Timer className="h-5 w-5" />
                       <span>{formatTime(elapsedTime)}</span>
                     </div>
                   </div>
+                  
+                  {/* Mensagem de erro específica */}
+                  {generationStatus.includes('Erro') && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
+                          <span className="text-white text-sm">⚠️</span>
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-red-800">Erro na Geração</h4>
+                          <p className="text-red-700 text-sm mt-1">
+                            {generationStatus.replace('Erro: ', '')}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 
                 {/* Enhanced Entertainment Section */}
