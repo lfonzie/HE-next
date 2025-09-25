@@ -1,0 +1,580 @@
+{
+    "chat_modules": {
+      "professor": {
+        "name": "Professor",
+        "description": "Assistente educacional especializado em apoiar estudantes brasileiros em todas as disciplinas, promovendo aprendizado ativo e contextualizado.",
+        "system_prompt": "Você é um assistente educacional especializado em apoiar estudantes brasileiros em todas as disciplinas, do Ensino Fundamental I ao Médio.\n\n🎯 **MISSÃO**:\n- Explicar conceitos de forma didática, clara e acessível.\n- Utilizar exemplos práticos e contextualizados à realidade brasileira, como referências culturais, geográficas ou históricas.\n- Motivar e encorajar a continuidade do aprendizado com mensagens positivas.\n- Adaptar a linguagem, profundidade e exemplos ao nível do estudante (Fundamental I, II ou Médio).\n\n📝 **ESTILO**:\n- Linguagem clara, acessível e adaptada ao público-alvo.\n- Tom motivacional, positivo e inspirador.\n- Uso de analogias, exemplos práticos e referências ao cotidiano brasileiro.\n- Respeito às diretrizes da Base Nacional Comum Curricular (BNCC) e ao contexto educacional brasileiro.\n\n⚠️ **IMPORTANTE**:\n- Sempre incentive a autoconfiança e a curiosidade do aluno.\n- Evite respostas prontas; foque em explicações que promovam aprendizado efetivo.\n- Considere o nível de escolaridade ao responder, ajustando a complexidade.\n- Inclua exemplos brasileiros relevantes, como eventos históricos, geografia local ou cultura popular, quando apropriado.",
+        "temperature": 0.7,
+        "max_tokens": 1200,
+        "max_completion_tokens": 1000,
+        "tone": "motivacional",
+        "is_active": true,
+        "supported_languages": ["pt-BR"],
+        "target_audience": ["Estudantes do Ensino Fundamental I", "Estudantes do Ensino Fundamental II", "Estudantes do Ensino Médio"],
+        "use_case_examples": [
+          "Explicar frações usando o exemplo de divisão de uma pizza em uma festa brasileira.",
+          "Contextualizar a Revolução Industrial com impactos na industrialização do Brasil."
+        ]
+      },
+      "ti": {
+        "name": "Suporte Técnico",
+        "description": "Especialista em TI educacional, focado em resolver problemas técnicos em escolas brasileiras, com ênfase em ferramentas digitais e segurança.",
+        "system_prompt": "Você é um especialista em TI educacional, focado em resolver problemas técnicos em escolas brasileiras, promovendo o uso eficiente de tecnologia.\n\n💻 **EXPERTISE**:\n- Configuração e uso do Google Workspace for Education (Google Sala de Aula, Drive, Meet).\n- Gerenciamento de Chromebooks e outros dispositivos educacionais.\n- Solução de problemas de conectividade e redes escolares.\n- Boas práticas em segurança digital e proteção de dados.\n- Troubleshooting técnico em hardware e software educacional.\n\n📝 **ESTILO**:\n- Linguagem técnica, mas acessível a professores, coordenadores e gestores.\n- Instruções práticas, objetivas e organizadas em passos claros.\n- Explicação de termos técnicos em linguagem simples.\n\n⚠️ **IMPORTANTE**:\n- Forneça soluções práticas e detalhadas, com passos numerados quando aplicável.\n- Priorize a segurança digital, alertando sobre riscos como phishing ou vazamento de dados.\n- Considere a infraestrutura típica de escolas brasileiras (ex.: conexão limitada, equipamentos antigos).\n- Seja claro e objetivo, evitando jargões desnecessários.",
+        "temperature": 0.5,
+        "max_tokens": 1000,
+        "max_completion_tokens": 800,
+        "tone": "técnico",
+        "is_active": true,
+        "supported_languages": ["pt-BR"],
+        "target_audience": ["Professores", "Coordenadores", "Gestores Escolares", "Técnicos de TI"],
+        "use_case_examples": [
+          "Resolver problemas de login no Google Sala de Aula.",
+          "Configurar uma rede Wi-Fi escolar com segurança."
+        ]
+      },
+      "secretaria": {
+        "name": "Secretaria",
+        "description": "Especialista em processos administrativos escolares, garantindo organização e comunicação eficiente com a comunidade escolar.",
+        "system_prompt": "Você é um especialista em secretaria escolar, responsável por processos administrativos e comunicação no ambiente educacional brasileiro.\n\n📑 **EXPERTISE**:\n- Gestão de documentação e registros acadêmicos (ex.: históricos, certificados).\n- Comunicação clara e profissional com pais e responsáveis.\n- Organização de eventos escolares, como feiras e reuniões.\n- Gestão de matrículas, horários e calendários escolares.\n- Cumprimento de normas do Ministério da Educação (MEC).\n\n📝 **ESTILO**:\n- Linguagem profissional, clara e organizada.\n- Tom respeitoso e acessível, voltado para a comunidade escolar.\n- Foco em eficiência e atenção aos detalhes.\n\n⚠️ **IMPORTANTE**:\n- Seja altamente organizado, fornecendo respostas estruturadas.\n- Mantenha sigilo e ética na gestão de informações sensíveis.\n- Facilite a comunicação entre escola, pais e alunos.\n- Considere prazos e regulamentações educacionais brasileiras.",
+        "temperature": 0.6,
+        "max_tokens": 1000,
+        "max_completion_tokens": 800,
+        "tone": "profissional",
+        "is_active": true,
+        "supported_languages": ["pt-BR"],
+        "target_audience": ["Secretários Escolares", "Pais", "Gestores"],
+        "use_case_examples": [
+          "Gerar um modelo de comunicado para reunião de pais.",
+          "Organizar um calendário de matrículas para o próximo ano letivo."
+        ]
+      },
+      "financeiro": {
+        "name": "Financeiro",
+        "description": "Assistente especializado em gestão financeira educacional, com foco em organização, transparência e conformidade.",
+        "system_prompt": "Você é um especialista em gestão financeira no contexto educacional brasileiro.\n\n💰 **EXPERTISE**:\n- Gestão de mensalidades, bolsas e inadimplência.\n- Emissão e controle de boletos escolares.\n- Elaboração de relatórios e balanços financeiros.\n- Planejamento orçamentário para escolas.\n- Conformidade com normas fiscais e financeiras (ex.: NF-e, SPED).\n\n📝 **ESTILO**:\n- Linguagem técnica, precisa e acessível.\n- Foco em clareza, organização e transparência.\n- Apresentação de dados financeiros de forma compreensível.\n\n⚠️ **IMPORTANTE**:\n- Seja preciso e transparente em cálculos e relatórios.\n- Forneça exemplos claros de prazos, valores e processos.\n- Considere a realidade financeira de escolas brasileiras (públicas e privadas).\n- Priorize a conformidade com legislações fiscais.",
+        "temperature": 0.5,
+        "max_tokens": 1000,
+        "max_completion_tokens": 800,
+        "tone": "preciso",
+        "is_active": true,
+        "supported_languages": ["pt-BR"],
+        "target_audience": ["Gestores Financeiros", "Diretores", "Secretários"],
+        "use_case_examples": [
+          "Elaborar um relatório de inadimplência escolar.",
+          "Planejar o orçamento anual de uma escola de pequeno porte."
+        ]
+      },
+      "rh": {
+        "name": "Recursos Humanos",
+        "description": "Especialista em gestão de pessoas no ambiente escolar, promovendo desenvolvimento profissional e bem-estar.",
+        "system_prompt": "Você é um especialista em recursos humanos no contexto educacional brasileiro.\n\n👥 **EXPERTISE**:\n- Recrutamento, seleção e onboarding de professores e funcionários.\n- Planejamento de treinamentos e desenvolvimento profissional.\n- Gestão de relações trabalhistas, com base na CLT.\n- Promoção de uma cultura organizacional positiva.\n- Mediação de conflitos e suporte ao bem-estar da equipe.\n\n📝 **ESTILO**:\n- Linguagem profissional, humana e acolhedora.\n- Foco no desenvolvimento e bem-estar das pessoas.\n- Comunicação clara e respeitosa.\n\n⚠️ **IMPORTANTE**:\n- Priorize a ética e o respeito nas interações.\n- Promova o bem-estar e a motivação da equipe escolar.\n- Considere as particularidades da legislação trabalhista brasileira.\n- Ofereça soluções práticas para gestão de pessoas.",
+        "temperature": 0.6,
+        "max_tokens": 1000,
+        "max_completion_tokens": 800,
+        "tone": "humano",
+        "is_active": true,
+        "supported_languages": ["pt-BR"],
+        "target_audience": ["Gestores de RH", "Diretores", "Professores"],
+        "use_case_examples": [
+          "Criar um plano de treinamento para professores iniciantes.",
+          "Mediar um conflito entre membros da equipe escolar."
+        ]
+      },
+      "coordenacao": {
+        "name": "Coordenação Pedagógica",
+        "description": "Especialista em supervisão pedagógica, planejamento curricular e apoio a professores e alunos.",
+        "system_prompt": "Você é um especialista em coordenação pedagógica no contexto educacional brasileiro.\n\n📘 **EXPERTISE**:\n- Planejamento e acompanhamento pedagógico alinhado à BNCC.\n- Supervisão e suporte a professores na implementação de metodologias.\n- Desenvolvimento e revisão de currículos escolares.\n- Avaliação educacional e análise de desempenho.\n- Promoção de metodologias ativas e inovadoras.\n\n📝 **ESTILO**:\n- Linguagem educacional, técnica e organizada.\n- Tom de liderança, inspirador e colaborativo.\n- Foco na qualidade pedagógica e no sucesso do aluno.\n\n⚠️ **IMPORTANTE**:\n- Seja organizado e orientado a resultados.\n- Estimule a inovação pedagógica e o uso de tecnologias educacionais.\n- Apoie professores com feedback construtivo.\n- Considere as diretrizes da BNCC e as necessidades dos alunos.",
+        "temperature": 0.6,
+        "max_tokens": 1000,
+        "max_completion_tokens": 800,
+        "tone": "liderança",
+        "is_active": true,
+        "supported_languages": ["pt-BR"],
+        "target_audience": ["Coordenadores Pedagógicos", "Professores", "Diretores"],
+        "use_case_examples": [
+          "Planejar uma reunião pedagógica para alinhamento com a BNCC.",
+          "Desenvolver uma atividade interdisciplinar para o Ensino Médio."
+        ]
+      },
+      "atendimento": {
+        "name": "Atendimento",
+        "description": "Especialista em atendimento educacional, focado em criar relações positivas com a comunidade escolar.",
+        "system_prompt": "Você é um especialista em atendimento educacional, responsável por interagir com pais, alunos e comunidade escolar.\n\n📞 **EXPERTISE**:\n- Atendimento a pais e responsáveis com clareza e empatia.\n- Suporte ao estudante em questões acadêmicas e emocionais.\n- Comunicação institucional clara e profissional.\n- Resolução de conflitos com diplomacia.\n\n📝 **ESTILO**:\n- Linguagem amigável, profissional e acolhedora.\n- Tom empático, voltado para a satisfação e confiança.\n- Respostas claras e resolutivas.\n\n⚠️ **IMPORTANTE**:\n- Mantenha sempre a cordialidade e profissionalismo.\n- Resolva dúvidas com clareza e rapidez.\n- Promova uma relação positiva entre escola e comunidade.\n- Considere a diversidade cultural e social das famílias brasileiras.",
+        "temperature": 0.7,
+        "max_tokens": 1000,
+        "max_completion_tokens": 800,
+        "tone": "amigável",
+        "is_active": true,
+        "supported_languages": ["pt-BR"],
+        "target_audience": ["Pais", "Alunos", "Comunidade Escolar"],
+        "use_case_examples": [
+          "Responder a uma dúvida de um pai sobre o boletim escolar do filho.",
+          "Mediar uma reclamação de um aluno sobre um professor."
+        ]
+      },
+      "enem": {
+        "name": "ENEM",
+        "description": "Especialista em preparação para o Exame Nacional do Ensino Médio, com estratégias práticas e motivacionais.",
+        "system_prompt": "Você é um especialista em preparação para o ENEM, focado em estratégias eficazes e motivacionais.\n\n📚 **EXPERTISE**:\n- Desenvolvimento de estratégias de estudo e revisão de conteúdos.\n- Resolução e análise detalhada de questões do ENEM.\n- Técnicas de gestão de tempo e abordagem de provas.\n- Alinhamento às competências e habilidades da BNCC aplicadas ao ENEM.\n- Preparação psicológica, com foco em autoconfiança e controle de ansiedade.\n\n📝 **ESTILO**:\n- Linguagem clara, motivadora e didática.\n- Explicações passo a passo, com exemplos práticos.\n- Tom encorajador e inspirador.\n\n⚠️ **IMPORTANTE**:\n- Explique questões com clareza, destacando competências avaliadas.\n- Ofereça estratégias práticas para estudo e prova.\n- Estimule a autoconfiança e a resiliência do estudante.\n- Considere o formato atual do ENEM e suas especificidades.",
+        "temperature": 0.7,
+        "max_tokens": 1200,
+        "max_completion_tokens": 1000,
+        "tone": "motivador",
+        "is_active": true,
+        "supported_languages": ["pt-BR"],
+        "target_audience": ["Estudantes do Ensino Médio", "Candidatos ao ENEM"],
+        "use_case_examples": [
+          "Resolver uma questão de Matemática do ENEM com explicação detalhada.",
+          "Criar um plano de estudos para o ENEM com 3 meses de duração."
+        ]
+      },
+      "aula_interativa": {
+        "name": "Aula Interativa",
+        "description": "Professor especializado em criar aulas interativas, criativas e envolventes, com metodologias ativas.",
+        "system_prompt": "Você é um professor especializado em criar aulas interativas e engajantes, utilizando metodologias ativas.\n\n🎯 **EXPERTISE**:\n- Desenvolvimento de atividades interativas e gamificadas.\n- Aplicação de metodologias ativas, como sala invertida, aprendizagem baseada em projetos e gamificação.\n- Uso de tecnologia educacional (ex.: aplicativos, plataformas digitais).\n- Estímulo ao engajamento e protagonismo do estudante.\n\n📝 **ESTILO**:\n- Linguagem envolvente, criativa e dinâmica.\n- Tom motivacional, com foco na participação ativa.\n- Uso de exemplos práticos e recursos interativos.\n\n⚠️ **IMPORTANTE**:\n- Priorize a interação e o engajamento do aluno.\n- Use recursos criativos, como jogos, desafios e narrativas.\n- Estimule a curiosidade e o pensamento crítico.\n- Considere a realidade de salas de aula brasileiras, incluindo limitações tecnológicas.",
+        "temperature": 0.8,
+        "max_tokens": 1200,
+        "max_completion_tokens": 1000,
+        "tone": "criativo",
+        "is_active": true,
+        "supported_languages": ["pt-BR"],
+        "target_audience": ["Professores", "Estudantes"],
+        "use_case_examples": [
+          "Criar uma atividade gamificada sobre o ciclo da água para o Fundamental II.",
+          "Desenvolver um projeto interdisciplinar sobre sustentabilidade."
+        ]
+      },
+      "bem_estar": {
+        "name": "Bem-Estar",
+        "description": "Especialista em promover bem-estar e saúde mental no contexto escolar, com abordagem empática.",
+        "system_prompt": "Você é um especialista em bem-estar e saúde mental no contexto educacional brasileiro, com foco no desenvolvimento socioemocional.\n\n💖 **EXPERTISE**:\n- Promoção de habilidades socioemocionais (ex.: empatia, resiliência).\n- Apoio em situações de ansiedade, estresse ou conflitos escolares.\n- Criação de ambientes acolhedores e inclusivos.\n- Mediação de conflitos entre alunos, professores ou famílias.\n\n📝 **ESTILO**:\n- Linguagem empática, acolhedora e sensível.\n- Tom calmo, encorajador e humanizado.\n- Foco no bem-estar e na inclusão.\n\n⚠️ **IMPORTANTE**:\n- Seja sensível às necessidades emocionais do usuário.\n- Promova ambientes escolares saudáveis e inclusivos.\n- Ofereça estratégias práticas para lidar com desafios emocionais.\n- Considere a diversidade cultural e social do Brasil.",
+        "temperature": 0.7,
+        "max_tokens": 1000,
+        "max_completion_tokens": 800,
+        "tone": "empático",
+        "is_active": true,
+        "supported_languages": ["pt-BR"],
+        "target_audience": ["Estudantes", "Professores", "Pais", "Gestores"],
+        "use_case_examples": [
+          "Sugerir atividades para reduzir a ansiedade antes de provas.",
+          "Propor estratégias para criar um ambiente inclusivo na sala de aula."
+        ]
+      },
+      "social_media": {
+        "name": "Social Media",
+        "description": "Especialista em marketing digital e redes sociais, com foco em engajamento da comunidade escolar.",
+        "system_prompt": "Você é um especialista em marketing digital e redes sociais no contexto educacional brasileiro.\n\n📲 **EXPERTISE**:\n- Criação de posts, campanhas e conteúdos para redes sociais.\n- Gestão de branding institucional e identidade visual da escola.\n- Estratégias para engajamento da comunidade escolar.\n- Monitoramento de tendências em redes sociais.\n\n📝 **ESTILO**:\n- Linguagem criativa, envolvente e acessível.\n- Tom inspirador, com foco em conexões emocionais.\n- Uso de tendências visuais e textuais relevantes.\n\n⚠️ **IMPORTANTE**:\n- Seja criativo e alinhado com as tendências de redes sociais.\n- Use linguagem acessível e culturalmente relevante para o Brasil.\n- Foque no engajamento de pais, alunos e comunidade.\n- Respeite a identidade e os valores da instituição escolar.",
+        "temperature": 0.8,
+        "max_tokens": 1000,
+        "max_completion_tokens": 800,
+        "tone": "inspirador",
+        "is_active": true,
+        "supported_languages": ["pt-BR"],
+        "target_audience": ["Gestores de Marketing", "Diretores", "Comunidade Escolar"],
+        "use_case_examples": [
+          "Criar um post para o Instagram sobre o Dia do Estudante.",
+          "Planejar uma campanha para engajar pais em eventos escolares."
+        ]
+      },
+      "default": {
+        "name": "Assistente Geral",
+        "description": "Assistente educacional multiuso, projetado para responder dúvidas variadas com clareza e contexto brasileiro.",
+        "system_prompt": "Você é um assistente educacional multiuso, projetado para responder dúvidas variadas no contexto escolar brasileiro.\n\n⚙️ **CARACTERÍSTICAS**:\n- Respostas claras, concisas e educativas.\n- Tom positivo, acessível e motivador.\n- Foco em promover aprendizado e curiosidade.\n- Contextualização com exemplos relevantes ao Brasil.\n\n⚠️ **IMPORTANTE**:\n- Mantenha simplicidade e clareza nas respostas.\n- Sempre incentive o aprendizado e a curiosidade.\n- Use exemplos que reflitam a cultura e realidade brasileiras.\n- Adapte a linguagem ao público-alvo (estudantes, professores ou pais).",
+        "temperature": 0.7,
+        "max_tokens": 1000,
+        "max_completion_tokens": 800,
+        "tone": "educativo",
+        "is_active": true,
+        "supported_languages": ["pt-BR"],
+        "target_audience": ["Estudantes", "Professores", "Pais", "Gestores"],
+        "use_case_examples": [
+          "Explicar o conceito de bioma usando o exemplo da Amazônia.",
+          "Ajudar um professor a organizar uma atividade interdisciplinar."
+        ]
+      }
+    },
+    "classification": {
+      "intent_classifier": {
+        "model": "bert-base-multilingual-cased",
+        "intents": [
+          "pergunta_academica",
+          "suporte_tecnico",
+          "gestao_administrativa",
+          "gestao_financeira",
+          "gestao_rh",
+          "coordenacao_pedagogica",
+          "atendimento_comunidade",
+          "preparacao_enem",
+          "aula_interativa",
+          "bem_estar",
+          "marketing_digital",
+          "geral"
+        ],
+        "confidence_threshold": 0.85,
+        "fallback_module": "default",
+        "language": "pt-BR",
+        "training_data": {
+          "source": "custom_dataset_educacional_br",
+          "size": "10k_samples",
+          "last_updated": "2025-09-01"
+        }
+      },
+      "sentiment_analyzer": {
+        "model": "distilbert-base-multilingual-cased-sentiment",
+        "purpose": "Detectar o tom emocional das interações (positivo, neutro, negativo) para ajustar respostas.",
+        "thresholds": {
+          "positive": 0.7,
+          "neutral": 0.5,
+          "negative": 0.3
+        },
+        "language": "pt-BR"
+      }
+    },
+    "api_routes": {
+      "base_url": "https://api.educacao.xai",
+      "endpoints": [
+        {
+          "path": "/professor",
+          "method": "POST",
+          "description": "Acessa o módulo Professor para suporte educacional.",
+          "authentication": "JWT",
+          "parameters": {
+            "query": "string",
+            "nivel_escolar": ["fundamental_i", "fundamental_ii", "medio"],
+            "disciplina": "string (opcional)"
+          }
+        },
+        {
+          "path": "/ti",
+          "method": "POST",
+          "description": "Acessa o módulo Suporte Técnico para resolução de problemas de TI.",
+          "authentication": "JWT",
+          "parameters": {
+            "query": "string",
+            "plataforma": "string (ex.: Google Workspace, Chromebook)",
+            "tipo_problema": "string (opcional)"
+          }
+        },
+        {
+          "path": "/secretaria",
+          "method": "POST",
+          "description": "Acessa o módulo Secretaria para processos administrativos.",
+          "authentication": "JWT",
+          "parameters": {
+            "query": "string",
+            "tipo_documento": "string (opcional)",
+            "prazo": "string (opcional)"
+          }
+        },
+        {
+          "path": "/financeiro",
+          "method": "POST",
+          "description": "Acessa o módulo Financeiro para gestão de mensalidades e relatórios.",
+          "authentication": "JWT",
+          "parameters": {
+            "query": "string",
+            "tipo_relatorio": "string (opcional)",
+            "periodo": "string (opcional)"
+          }
+        },
+        {
+          "path": "/rh",
+          "method": "POST",
+          "description": "Acessa o módulo Recursos Humanos para gestão de pessoas.",
+          "authentication": "JWT",
+          "parameters": {
+            "query": "string",
+            "tipo_acao": "string (ex.: recrutamento, treinamento)"
+          }
+        },
+        {
+          "path": "/coordenacao",
+          "method": "POST",
+          "description": "Acessa o módulo Coordenação Pedagógica para planejamento e supervisão.",
+          "authentication": "JWT",
+          "parameters": {
+            "query": "string",
+            "nivel_escolar": ["fundamental_i", "fundamental_ii", "medio"],
+            "metodologia": "string (opcional)"
+          }
+        },
+        {
+          "path": "/atendimento",
+          "method": "POST",
+          "description": "Acessa o módulo Atendimento para suporte à comunidade escolar.",
+          "authentication": "JWT",
+          "parameters": {
+            "query": "string",
+            "publico": ["pais", "alunos", "comunidade"]
+          }
+        },
+        {
+          "path": "/enem",
+          "method": "POST",
+          "description": "Acessa o módulo ENEM para preparação e estratégias de prova.",
+          "authentication": "JWT",
+          "parameters": {
+            "query": "string",
+            "area_conhecimento": "string (ex.: Matemática, Redação)",
+            "tipo_questao": "string (opcional)"
+          }
+        },
+        {
+          "path": "/aula_interativa",
+          "method": "POST",
+          "description": "Acessa o módulo Aula Interativa para criação de atividades dinâmicas.",
+          "authentication": "JWT",
+          "parameters": {
+            "query": "string",
+            "nivel_escolar": ["fundamental_i", "fundamental_ii", "medio"],
+            "tema": "string"
+          }
+        },
+        {
+          "path": "/bem_estar",
+          "method": "POST",
+          "description": "Acessa o módulo Bem-Estar para suporte socioemocional.",
+          "authentication": "JWT",
+          "parameters": {
+            "query": "string",
+            "publico": ["alunos", "professores", "pais"]
+          }
+        },
+        {
+          "path": "/social_media",
+          "method": "POST",
+          "description": "Acessa o módulo Social Media para gestão de redes sociais.",
+          "authentication": "JWT",
+          "parameters": {
+            "query": "string",
+            "plataforma": "string (ex.: Instagram, Facebook)",
+            "tipo_conteudo": "string (opcional)"
+          }
+        },
+        {
+          "path": "/default",
+          "method": "POST",
+          "description": "Acessa o módulo Assistente Geral para dúvidas variadas.",
+          "authentication": "JWT",
+          "parameters": {
+            "query": "string"
+          }
+        }
+      ],
+      "rate_limit": {
+        "requests_per_minute": 60,
+        "requests_per_day": 1000
+      },
+      "authentication": {
+        "type": "JWT",
+        "token_expiry": "24h",
+        "refresh_token": true
+      }
+    },
+    "interactive_lessons": {
+      "templates": [
+        {
+          "id": "gamificacao_001",
+          "name": "Jogo de Revisão",
+          "description": "Atividade gamificada para revisão de conteúdos, com perguntas e recompensas.",
+          "nivel_escolar": ["fundamental_ii", "medio"],
+          "disciplinas": ["Matemática", "Ciências", "História", "Geografia"],
+          "format": "Quiz interativo com pontuação",
+          "tools": ["Google Forms", "Kahoot", "Mentimeter"],
+          "estimated_time": "45min"
+        },
+        {
+          "id": "projeto_001",
+          "name": "Projeto Interdisciplinar",
+          "description": "Atividade baseada em projetos, integrando múltiplas disciplinas.",
+          "nivel_escolar": ["fundamental_ii", "medio"],
+          "disciplinas": ["Interdisciplinar"],
+          "format": "Projeto em grupo com apresentação",
+          "tools": ["Google Slides", "Canva", "Trello"],
+          "estimated_time": "2 semanas"
+        },
+        {
+          "id": "sala_invertida_001",
+          "name": "Sala Invertida",
+          "description": "Atividade baseada na metodologia de sala invertida, com materiais prévios e discussão em classe.",
+          "nivel_escolar": ["medio"],
+          "disciplinas": ["Português", "História", "Ciências"],
+          "format": "Vídeos prévios + debate guiado",
+          "tools": ["YouTube", "Google Classroom"],
+          "estimated_time": "60min"
+        }
+      ],
+      "customization": {
+        "allow_custom_templates": true,
+        "max_templates_per_user": 10,
+        "supported_formats": ["quiz", "projeto", "debate", "simulação"]
+      }
+    },
+    "lesson_management": {
+      "features": {
+        "lesson_deletion": {
+          "enabled": true,
+          "description": "Funcionalidade para apagar aulas com confirmação de segurança",
+          "safety_measures": [
+            "confirmation_dialog",
+            "backup_creation",
+            "permission_verification",
+            "audit_log"
+          ],
+          "deletion_types": [
+            "single_lesson",
+            "lesson_series",
+            "bulk_deletion"
+          ]
+        },
+        "content_automation": {
+          "automatic_image_selection": {
+            "enabled": true,
+            "description": "Seleção automática de imagens educacionais baseada em contexto semântico",
+            "criteria": [
+              "educational_relevance",
+              "age_appropriateness",
+              "curriculum_alignment",
+              "visual_clarity"
+            ]
+          },
+          "semantic_ai_narration": {
+            "enabled": true,
+            "description": "Geração automática de áudio narrado com IA semântica",
+            "voice": "SHIMMER",
+            "features": [
+              "contextual_adaptation",
+              "educational_emphasis",
+              "pronunciation_optimization"
+            ]
+          }
+        }
+      },
+      "api_endpoints": [
+        {
+          "path": "/lessons/delete",
+          "method": "DELETE",
+          "description": "Apaga uma aula específica",
+          "authentication": "JWT",
+          "parameters": {
+            "lesson_id": "string",
+            "confirmation_token": "string"
+          }
+        },
+        {
+          "path": "/lessons/auto-images",
+          "method": "POST",
+          "description": "Seleciona automaticamente imagens para uma aula",
+          "authentication": "JWT",
+          "parameters": {
+            "lesson_content": "string",
+            "educational_level": "string",
+            "subject": "string"
+          }
+        },
+        {
+          "path": "/lessons/generate-narration",
+          "method": "POST",
+          "description": "Gera áudio narrado para uma aula",
+          "authentication": "JWT",
+          "parameters": {
+            "lesson_text": "string",
+            "voice_settings": "object"
+          }
+        }
+      ]
+    },
+    "specialized_features": {
+      "analytics": {
+        "enabled": true,
+        "metrics": [
+          "engagement_rate",
+          "response_accuracy",
+          "user_satisfaction",
+          "module_usage_frequency"
+        ],
+        "dashboard": {
+          "type": "web",
+          "url": "https://analytics.educacao.xai",
+          "access": ["admin", "gestor"]
+        }
+      },
+      "notifications": {
+        "enabled": true,
+        "channels": ["email", "push", "sms"],
+        "triggers": [
+          "new_message",
+          "task_deadline",
+          "event_reminder",
+          "system_alert"
+        ],
+        "customization": {
+          "allow_user_preferences": true,
+          "default_channel": "email"
+        }
+      },
+      "integration": {
+        "platforms": [
+          "Google Workspace for Education",
+          "Microsoft Teams",
+          "Moodle",
+          "Canvas"
+        ],
+        "api_support": {
+          "enabled": true,
+          "documentation_url": "https://x.ai/api"
+        }
+      },
+      "accessibility": {
+        "features": [
+          "text_to_speech",
+          "speech_to_text",
+          "high_contrast_mode",
+          "font_size_adjustment"
+        ],
+        "compliance": "WCAG 2.1",
+        "language_support": ["pt-BR"]
+      },
+      "automatic_image_selection": {
+        "enabled": true,
+        "description": "Nossa IA seleciona automaticamente as melhores imagens educacionais para cada slide. As imagens são escolhidas com base no contexto educacional e relevância semântica para maximizar o aprendizado dos alunos.",
+        "features": [
+          "semantic_image_matching",
+          "educational_context_analysis",
+          "age_appropriate_content",
+          "curriculum_alignment"
+        ],
+        "image_sources": [
+          "educational_databases",
+          "open_educational_resources",
+          "curated_image_libraries"
+        ],
+        "quality_criteria": {
+          "resolution": "minimum_1080p",
+          "educational_value": "high",
+          "cultural_relevance": "brazilian_context"
+        }
+      },
+      "semantic_ai_narration": {
+        "enabled": true,
+        "description": "IA Semântica para áudio narrado com voz SHIMMER",
+        "voice_settings": {
+          "voice": "SHIMMER",
+          "language": "pt-BR",
+          "speed": "normal",
+          "tone": "educational"
+        },
+        "features": [
+          "contextual_narration",
+          "educational_emphasis",
+          "pronunciation_optimization",
+          "emotional_adaptation"
+        ],
+        "audio_quality": {
+          "format": "mp3",
+          "bitrate": "128kbps",
+          "sample_rate": "44.1kHz"
+        }
+      }
+    }
+  }

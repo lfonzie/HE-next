@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { streamText, generateText } from 'ai'
 import { perplexity } from '@ai-sdk/perplexity'
-import { getSystemPrompt } from '@/lib/ai-sdk-config'
+import { getSystemPrompt } from '@/lib/system-message-loader'
 
 // Prevent prerendering of this API route
 export const dynamic = 'force-dynamic';

@@ -6,9 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2, Sparkles, BookOpen, Target, Users, Send, Lightbulb, TrendingUp, AlertCircle, CheckCircle, Clock, RefreshCw, Timer, BarChart3, FileText, AlertTriangle, Mic, Volume2, VolumeX, Accessibility, Coffee, Brain, Zap, Star, Heart, Rocket, Image as ImageIcon } from 'lucide-react'
+import { Loader2, Sparkles, BookOpen, Target, Users, Send, Lightbulb, TrendingUp, AlertCircle, CheckCircle, Clock, RefreshCw, Timer, BarChart3, FileText, AlertTriangle, Mic, Accessibility, Coffee, Brain, Zap, Star, Heart, Rocket, Image as ImageIcon } from 'lucide-react'
 import { useEnhancedSuggestions } from '@/hooks/useEnhancedSuggestions'
-import StreamingAudioPlayer from '@/components/audio/StreamingAudioPlayer'
 // Removido: seleção manual de imagens - agora é automática
 import Link from 'next/link'
 
@@ -381,9 +380,6 @@ function AulasPageContent() {
   const [startTime, setStartTime] = useState<number | null>(null)
   const [elapsedTime, setElapsedTime] = useState(0)
   
-  // Streaming audio state
-  const [streamingText, setStreamingText] = useState('')
-  const [isAudioEnabled, setIsAudioEnabled] = useState(true)
 
   // Debug log para verificar estado inicial
   console.log('AulasPageContent render - isGenerating:', isGenerating, 'generatedLesson:', !!generatedLesson)
@@ -533,8 +529,6 @@ function AulasPageContent() {
     setGeneratedLesson(null)
     setStartTime(Date.now())
     
-    // Initialize streaming text for audio
-    setStreamingText(`Vou criar uma aula personalizada sobre: ${topic}`)
 
     const generationStartTime = Date.now()
     const estimatedDuration = 90000 // 90 seconds (1 minute and 30 seconds) for realistic timing
@@ -550,26 +544,6 @@ function AulasPageContent() {
       ) || STATUS_MESSAGES[STATUS_MESSAGES.length - 1]
       setGenerationStatus(currentStatus.message)
 
-      // Update streaming text for audio based on progress
-      if (isAudioEnabled) {
-        const audioTexts = [
-          `Vou criar uma aula personalizada sobre: ${topic}`,
-          `Analisando o contexto educacional do tópico: ${topic}`,
-          `Identificando o nível de dificuldade ideal para este conteúdo`,
-          `Criando objetivos de aprendizagem específicos e mensuráveis`,
-          `Desenvolvendo atividades interativas e exercícios práticos`,
-          `Implementando elementos de gamificação para engajamento`,
-          `Selecionando imagens educacionais relevantes automaticamente`,
-          `Otimizando o pacing e sequência didática da aula`,
-          `Aplicando metodologias pedagógicas avançadas`,
-          `Finalizando sua aula personalizada sobre: ${topic}`
-        ]
-        
-        const textIndex = Math.floor((progress / 100) * audioTexts.length)
-        if (textIndex < audioTexts.length) {
-          setStreamingText(audioTexts[textIndex])
-        }
-      }
 
       if (progress >= 95) {
         clearInterval(progressInterval)
@@ -1105,54 +1079,8 @@ function AulasPageContent() {
                   </div>
                 </div>
 
-                {/* Informação sobre seleção automática de imagens */}
-                <div className="bg-gradient-to-r from-purple-50 via-blue-50 to-purple-50 border border-purple-200 rounded-2xl p-6">
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <ImageIcon className="h-6 w-6 text-white" />
-                    </div>
-                    <div>
-                      <h4 className="text-lg font-semibold text-gray-800 mb-2">
-                        🎯 Imagens Educacionais Automáticas
-                      </h4>
-                      <p className="text-gray-600 leading-relaxed">
-                        Nossa IA seleciona automaticamente as melhores imagens educacionais para cada slide. 
-                        As imagens são escolhidas com base no contexto educacional e relevância semântica para 
-                        maximizar o aprendizado dos alunos.
-                      </p>
-                      <div className="flex flex-wrap gap-2 mt-3">
-                        <Badge variant="secondary" className="bg-purple-100 text-purple-800 border border-purple-200">
-                          🧠 IA Semântica
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-                </div>
 
                 <div className="space-y-4">
-                  {/* Audio Toggle */}
-                  <div className="flex items-center justify-center gap-4 p-4 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-2xl">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                        <Volume2 className="h-4 w-4 text-white" />
-                      </div>
-                      <span className="text-sm font-medium text-gray-700">Áudio Narrado</span>
-                    </div>
-                    <Button
-                      onClick={() => setIsAudioEnabled(!isAudioEnabled)}
-                      variant={isAudioEnabled ? "default" : "outline"}
-                      size="sm"
-                      className={`flex items-center gap-2 ${
-                        isAudioEnabled 
-                          ? 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700' 
-                          : 'border-blue-300 text-blue-700 hover:bg-blue-50'
-                      }`}
-                    >
-                      {isAudioEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
-                      {isAudioEnabled ? 'Ativado' : 'Desativado'}
-                    </Button>
-                    <span className="text-xs text-gray-500">Voz SHIMMER</span>
-                  </div>
 
                   <Button
                     onClick={() => handleGenerate()}
@@ -1171,16 +1099,6 @@ function AulasPageContent() {
                         Gerar Aula Interativa
                       </>
                     )}
-                  </Button>
-                  
-                  {/* Botão de debug para limpar estado */}
-                  <Button
-                    onClick={clearAllState}
-                    variant="outline"
-                    size="sm"
-                    className="w-full text-gray-500 hover:text-gray-700"
-                  >
-                    🔧 Limpar Estado (Debug)
                   </Button>
                   
                   {/* Botão para tentar novamente quando há erro */}
@@ -1368,45 +1286,6 @@ function AulasPageContent() {
                       <span>{formatTime(elapsedTime)}</span>
                     </div>
                   </div>
-                  
-                  {/* Streaming Audio Player */}
-                  {isAudioEnabled && streamingText && (
-                    <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-2xl p-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-                            <Volume2 className="h-5 w-5 text-white" />
-                          </div>
-                          <div>
-                            <h4 className="text-lg font-semibold text-gray-800">Áudio Narrado</h4>
-                            <p className="text-sm text-gray-600">Reproduzindo com voz SHIMMER</p>
-                          </div>
-                        </div>
-                        <Button
-                          onClick={() => setIsAudioEnabled(!isAudioEnabled)}
-                          variant="outline"
-                          size="sm"
-                          className="flex items-center gap-2"
-                        >
-                          {isAudioEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
-                          {isAudioEnabled ? 'Desativar' : 'Ativar'} Áudio
-                        </Button>
-                      </div>
-                      <StreamingAudioPlayer
-                        text={streamingText}
-                        voice="shimmer"
-                        model="tts-1"
-                        speed={1.0}
-                        format="mp3"
-                        chunkSize={80}
-                        autoPlay={true}
-                        className="w-full"
-                        onAudioStart={() => console.log('Audio started')}
-                        onAudioEnd={() => console.log('Audio ended')}
-                        onError={(error) => console.error('Audio error:', error)}
-                      />
-                    </div>
-                  )}
                   
                   {/* Mensagem de erro específica */}
                   {generationStatus.includes('Erro') && (

@@ -14,6 +14,7 @@ import {
   BarChart3
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { ThemeSwitcherCompact } from '@/components/ui/theme-switcher'
 
 interface UserProfileProps {
   className?: string
@@ -265,6 +266,14 @@ export function UserProfile({
               <Settings className="h-4 w-4 text-gray-500" />
               <span>Configurações</span>
             </button>
+
+            {/* Theme Switcher */}
+            <div className="px-4 py-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Tema</span>
+                <ThemeSwitcherCompact />
+              </div>
+            </div>
 
             {/* Divider */}
             <div className="border-t border-gray-100 my-2"></div>

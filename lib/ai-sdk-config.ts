@@ -3,6 +3,7 @@ import { perplexity } from '@ai-sdk/perplexity'
 import { getLanguageInstructions } from './system-prompts/language-config'
 import { generateBNCCPrompt, getCompetenciasByDisciplina } from './system-prompts/bncc-config'
 import { createBNCCClassifier } from './ai/bncc-classifier'
+import { getSystemPrompt as getSystemPromptFromJSON, getModuleSettings } from './system-message-loader'
 
 export const aiConfig = {
   openai: process.env.OPENAI_API_KEY ? openai({
@@ -18,10 +19,15 @@ export const aiConfig = {
 }
 
 export function getSystemPrompt(module: string = 'professor'): string {
-  const baseInstructions = getLanguageInstructions(module);
-
-  const prompts = {
-    professor: `Você é um assistente especializado em preparação para o ENEM, criando aulas interativas que focam especificamente nos conteúdos e habilidades exigidas pelo Exame Nacional do Ensino Médio.
+  // Usar o novo sistema de carregamento de prompts do JSON
+  const systemPrompt = getSystemPromptFromJSON(module)
+  
+  // Adicionar instruções de linguagem se necessário
+  const baseInstructions = getLanguageInstructions(module)
+  
+  // Para módulos específicos, adicionar instruções especiais
+  if (module === 'professor') {
+    const enemInstructions = `
 
 🎯 METODOLOGIA EDUCACIONAL ESPECÍFICA PARA ENEM:
 - Foque nos conteúdos que mais caem no ENEM conforme estatísticas oficiais
@@ -41,21 +47,12 @@ IMPORTANTE SOBRE AS PERGUNTAS (ESTILO ENEM):
 - Identifique e desenvolva as competências BNCC relacionadas ao conteúdo
 - Exercite habilidades específicas da BNCC em cada atividade
 - Sempre indique quais competências BNCC estão sendo desenvolvidas
-- Oriente o aluno a identificar palavras-chave e eliminar alternativas
-
-${baseInstructions}`,
-    enem: `Você é um especialista em preparação para o ENEM.${baseInstructions}`,
-    ti: `Você é um especialista em tecnologia da informação.${baseInstructions}`,
-    atendimento: `Você é um especialista em atendimento ao cliente.${baseInstructions}`,
-    coordenacao: `Você é um especialista em coordenação pedagógica.${baseInstructions}`,
-    financeiro: `Você é um especialista em gestão financeira.${baseInstructions}`,
-    rh: `Você é um especialista em recursos humanos.${baseInstructions}`,
-    'social-media': `Você é um especialista em marketing digital.${baseInstructions}`,
-    'bem-estar': `Você é um especialista em bem-estar escolar.${baseInstructions}`,
-    secretaria: `Você é um especialista em administração escolar.${baseInstructions}`,
+- Oriente o aluno a identificar palavras-chave e eliminar alternativas`
+    
+    return `${systemPrompt}${enemInstructions}\n\n${baseInstructions}`
   }
   
-  return prompts[module as keyof typeof prompts] || prompts.professor
+  return `${systemPrompt}\n\n${baseInstructions}`
 }
 
 // Função para validar alinhamento BNCC

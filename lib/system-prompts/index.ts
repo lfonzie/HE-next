@@ -8,6 +8,9 @@ export * from './lessons';
 export * from './common';
 export * from './unified-config';
 export * from './utils';
+export * from './api-routes';
+export * from './modules';
+export * from './features';
 
 // Re-export principais para facilitar uso
 export { 
@@ -29,3 +32,20 @@ export {
   UNICODE_INSTRUCTIONS,
   DEFAULT_SYSTEM_PROMPT 
 } from './common';
+
+// Re-export das novas categorias
+export { 
+  API_ROUTE_SYSTEM_PROMPTS, 
+  getApiRouteSystemPrompt, 
+  API_ROUTE_KEYS 
+} from './api-routes';
+export { 
+  MODULE_SYSTEM_PROMPTS, 
+  getModuleSystemPrompt, 
+  MODULE_KEYS 
+} from './modules';
+export { 
+  FEATURE_SYSTEM_PROMPTS, 
+  getFeatureSystemPrompt, 
+  FEATURE_KEYS 
+} from './features';

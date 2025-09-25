@@ -213,6 +213,8 @@ const nextConfig = {
       ...config.optimization,
       sideEffects: false,
       concatenateModules: false,
+      splitChunks: false,
+      usedExports: false,
     }
     
     return config

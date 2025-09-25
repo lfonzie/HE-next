@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -8,20 +8,26 @@ import { Badge } from '@/components/ui/badge'
 import { Loader2, CheckCircle, XCircle, RefreshCw } from 'lucide-react'
 
 export default function TestAuthPage() {
-  // Handle prerendering - return loading state
-  if (typeof window === 'undefined') {
+  const { data: session, status } = useSession()
+  const [isHydrated, setIsHydrated] = useState(false)
+  const [testResult, setTestResult] = useState<any>(null)
+  const [loading, setLoading] = useState(false)
+
+  // Handle hydration
+  React.useEffect(() => {
+    setIsHydrated(true)
+  }, [])
+
+  // Show loading during hydration
+  if (!isHydrated) {
     return (
       <div className="container mx-auto p-6 max-w-4xl">
         <div className="text-center">
           <p className="text-gray-500">Carregando…</p>
         </div>
       </div>
-    );
+    )
   }
-
-  const { data: session, status } = useSession()
-  const [testResult, setTestResult] = useState<any>(null)
-  const [loading, setLoading] = useState(false)
 
   const testAuth = async () => {
     setLoading(true)
@@ -160,7 +166,7 @@ export default function TestAuthPage() {
             <h3 className="text-lg font-semibold">Informações de Debug</h3>
             <div className="text-sm text-muted-foreground space-y-1">
               <p>Ambiente: {process.env.NODE_ENV || 'development'}</p>
-              <p>URL: {typeof window !== 'undefined' ? window.location.href : 'SSR'}</p>
+              <p>URL: {isHydrated ? window.location.href : 'SSR'}</p>
               <p>Timestamp: {new Date().toISOString()}</p>
             </div>
           </div>

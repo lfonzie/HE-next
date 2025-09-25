@@ -4,6 +4,7 @@ import { ReactNode, useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { CompactSidebar } from '@/components/layout/CompactSidebar'
 import { ModernHeader } from '@/components/layout/ModernHeader'
+import { ThemeController } from '@/components/ui/ThemeController'
 import { cn } from '@/lib/utils'
 
 interface GlobalLayoutProps {
@@ -40,7 +41,8 @@ export function GlobalLayout({ children }: GlobalLayoutProps) {
   // Prevent hydration mismatch
   if (!mounted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-yellow-50 to-orange-100">
+      <div className="min-h-screen">
+        <ThemeController />
         {children}
       </div>
     )
@@ -49,7 +51,8 @@ export function GlobalLayout({ children }: GlobalLayoutProps) {
   if (!shouldShowSidebar) {
     // Páginas sem sidebar (login, erro, etc.)
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-yellow-50 to-orange-100">
+      <div className="min-h-screen">
+        <ThemeController />
         {children}
       </div>
     )
@@ -57,7 +60,8 @@ export function GlobalLayout({ children }: GlobalLayoutProps) {
 
   // Páginas com sidebar (desktop e tablet) e header (mobile)
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-yellow-50 to-orange-100">
+    <div className="min-h-screen">
+      <ThemeController />
       {/* Desktop e Tablet: Sidebar */}
       <div className="hidden md:block">
         <CompactSidebar />

@@ -23,7 +23,7 @@ const ResponsiveRadio: React.FC<ResponsiveRadioProps> = ({
             type="radio"
             className={cn(
               'peer h-5 w-5 min-h-5 min-w-5 rounded-full border border-input bg-background text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-colors',
-              'checked:bg-primary checked:border-primary'
+              'peer-checked:bg-primary peer-checked:border-primary'
             )}
             {...props}
           />

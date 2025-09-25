@@ -114,24 +114,37 @@ export async function GET(request: NextRequest) {
     try {
       const conversationStats = await Promise.allSettled([
         prisma.conversations.count({ where: { created_at: { gte: startDate } } }).catch(() => 0),
-        prisma.conversations.count().catch(() => 0)
+        prisma.conversations.count().catch(() => 0),
+        prisma.conversations.groupBy({
+          by: ['module'],
+          _count: {
+            module: true
+          },
+          orderBy: {
+            _count: {
+              module: 'desc'
+            }
+          }
+        }).catch(() => [])
       ]);
 
-      const [recentConversations, totalConversations] = conversationStats.map(result => 
-        result.status === 'fulfilled' ? result.value : 0
+      const [recentConversations, totalConversations, byModule] = conversationStats.map(result => 
+        result.status === 'fulfilled' ? result.value : (result.status === 'rejected' ? [] : 0)
       );
 
       stats.conversationStats = {
         recentConversations,
         totalConversations,
-        moduleBreakdown: []
+        moduleBreakdown: [],
+        byModule: Array.isArray(byModule) ? byModule : []
       };
     } catch (error) {
       console.error('Error fetching conversation stats:', error);
       stats.conversationStats = {
         recentConversations: 0,
         totalConversations: 0,
-        moduleBreakdown: []
+        moduleBreakdown: [],
+        byModule: []
       };
     }
 
@@ -243,6 +256,24 @@ export async function GET(request: NextRequest) {
 
     // Recent activity
     stats.recentActivity = [];
+
+    // Create summary object for frontend compatibility
+    const totalRecords = Object.values(stats.tableCounts || {}).reduce((sum: number, count: number) => sum + count, 0);
+    const totalUsers = stats.tableCounts?.users || 0;
+    const totalConversations = stats.tableCounts?.conversations || 0;
+    const totalTokensUsed = 0; // This would need to be calculated from actual usage
+    const avgTokensPerConversation = totalConversations > 0 ? Math.round(totalTokensUsed / totalConversations) : 0;
+
+    stats.summary = {
+      totalTables: Object.keys(stats.tableCounts || {}).length,
+      totalRecords,
+      totalUsers,
+      totalConversations,
+      totalTokensUsed,
+      avgTokensPerConversation,
+      userGrowthRate: stats.userStats?.newUsers ? `+${stats.userStats.newUsers}` : '0',
+      conversationGrowthRate: stats.conversationStats?.recentConversations ? `+${stats.conversationStats.recentConversations}` : '0'
+    };
 
     return NextResponse.json(stats);
 

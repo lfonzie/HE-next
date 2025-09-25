@@ -10,21 +10,27 @@ import { useToast } from "../../hooks/use-toast";
 import { signOut } from "next-auth/react";
 
 export default function Profile() {
-  // Handle prerendering - return loading state
-  if (typeof window === 'undefined') {
+  const { data: session, update } = useSession();
+  const { toast } = useToast();
+  const [isHydrated, setIsHydrated] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [name, setName] = useState(session?.user?.name || "");
+
+  // Handle hydration
+  React.useEffect(() => {
+    setIsHydrated(true)
+  }, [])
+
+  // Show loading during hydration
+  if (!isHydrated) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-500">Carregando…</p>
         </div>
       </div>
-    );
+    )
   }
-
-  const { data: session, update } = useSession();
-  const { toast } = useToast();
-  const [isEditing, setIsEditing] = useState(false);
-  const [name, setName] = useState(session?.user?.name || "");
 
   const userInitials = session?.user?.name
     ?.split(" ")

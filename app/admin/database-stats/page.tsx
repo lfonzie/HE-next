@@ -156,7 +156,8 @@ export default function DatabaseStatsPage() {
     fetchStats();
   }, [timeRange, showDetails]);
 
-  const formatNumber = (num: number) => {
+  const formatNumber = (num: number | null | undefined) => {
+    if (num === null || num === undefined || isNaN(num)) return '0';
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
     if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
     return num.toString();
@@ -204,6 +205,21 @@ export default function DatabaseStatsPage() {
           <RefreshCw className="h-4 w-4 mr-2" />
           Tentar Novamente
         </Button>
+      </div>
+    );
+  }
+
+  if (!stats || !stats.summary) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <Database className="h-8 w-8 mx-auto mb-4 text-muted-foreground" />
+          <p className="text-muted-foreground">Nenhuma estatística disponível</p>
+          <Button onClick={fetchStats} className="mt-4">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Carregar Estatísticas
+          </Button>
+        </div>
       </div>
     );
   }
@@ -399,14 +415,18 @@ export default function DatabaseStatsPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {stats.conversationStats.byModule.slice(0, 10).map((item) => (
+                      {stats.conversationStats?.byModule?.slice(0, 10).map((item) => (
                         <div key={item.module} className="flex justify-between items-center">
                           <span className="text-sm">{item.module}</span>
                           <Badge variant="secondary">
-                            {formatNumber(item._count.module)}
+                            {formatNumber(item._count?.module || 0)}
                           </Badge>
                         </div>
-                      ))}
+                      )) || (
+                        <div className="text-sm text-muted-foreground">
+                          Nenhum dado de módulo disponível
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -416,14 +436,18 @@ export default function DatabaseStatsPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {stats.conversationStats.byModel.slice(0, 10).map((item) => (
+                      {stats.conversationStats?.byModel?.slice(0, 10).map((item) => (
                         <div key={item.model} className="flex justify-between items-center">
                           <span className="text-sm">{item.model}</span>
                           <Badge variant="secondary">
-                            {formatNumber(item._count.model)}
+                            {formatNumber(item._count?.model || 0)}
                           </Badge>
                         </div>
-                      ))}
+                      )) || (
+                        <div className="text-sm text-muted-foreground">
+                          Nenhum dado de modelo disponível
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -439,14 +463,18 @@ export default function DatabaseStatsPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {stats.schoolStats.byState.slice(0, 10).map((item) => (
+                      {stats.schoolStats?.byState?.slice(0, 10).map((item) => (
                         <div key={item.state} className="flex justify-between items-center">
                           <span className="text-sm">{item.state}</span>
                           <Badge variant="secondary">
-                            {formatNumber(item._count.state)}
+                            {formatNumber(item._count?.state || 0)}
                           </Badge>
                         </div>
-                      ))}
+                      )) || (
+                        <div className="text-sm text-muted-foreground">
+                          Nenhum dado de estado disponível
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -456,14 +484,18 @@ export default function DatabaseStatsPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {stats.schoolStats.byPlan.slice(0, 10).map((item) => (
+                      {stats.schoolStats?.byPlan?.slice(0, 10).map((item) => (
                         <div key={item.plan} className="flex justify-between items-center">
                           <span className="text-sm">{item.plan}</span>
                           <Badge variant="secondary">
-                            {formatNumber(item._count.plan)}
+                            {formatNumber(item._count?.plan || 0)}
                           </Badge>
                         </div>
-                      ))}
+                      )) || (
+                        <div className="text-sm text-muted-foreground">
+                          Nenhum dado de plano disponível
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -540,14 +572,18 @@ export default function DatabaseStatsPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {stats.enemStats.byArea.slice(0, 10).map((item) => (
+                      {stats.enemStats?.byArea?.slice(0, 10).map((item) => (
                         <div key={item.area} className="flex justify-between items-center">
                           <span className="text-sm">{item.area}</span>
                           <Badge variant="secondary">
-                            {formatNumber(item._count.area)}
+                            {formatNumber(item._count?.area || 0)}
                           </Badge>
                         </div>
-                      ))}
+                      )) || (
+                        <div className="text-sm text-muted-foreground">
+                          Nenhum dado de área disponível
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -557,14 +593,18 @@ export default function DatabaseStatsPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {stats.enemStats.byDisciplina.slice(0, 10).map((item) => (
+                      {stats.enemStats?.byDisciplina?.slice(0, 10).map((item) => (
                         <div key={item.disciplina} className="flex justify-between items-center">
                           <span className="text-sm">{item.disciplina}</span>
                           <Badge variant="secondary">
-                            {formatNumber(item._count.disciplina)}
+                            {formatNumber(item._count?.disciplina || 0)}
                           </Badge>
                         </div>
-                      ))}
+                      )) || (
+                        <div className="text-sm text-muted-foreground">
+                          Nenhum dado de disciplina disponível
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -579,7 +619,7 @@ export default function DatabaseStatsPage() {
                   Métricas de performance do banco de dados PostgreSQL (Neon)
                 </AlertDescription>
               </Alert>
-              {stats.dbPerformance.tableStats.length > 0 && (
+              {stats.dbPerformance?.tableStats?.length > 0 && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-sm font-medium">Estatísticas das Tabelas</CardTitle>
@@ -597,15 +637,21 @@ export default function DatabaseStatsPage() {
                           </tr>
                         </thead>
                         <tbody>
-                          {stats.dbPerformance.tableStats.slice(0, 10).map((table: any, index) => (
+                          {stats.dbPerformance?.tableStats?.slice(0, 10).map((table: any, index) => (
                             <tr key={index} className="border-b">
                               <td className="p-2">{table.tablename}</td>
-                              <td className="text-right p-2">{formatNumber(table.live_tuples)}</td>
-                              <td className="text-right p-2">{formatNumber(table.inserts)}</td>
-                              <td className="text-right p-2">{formatNumber(table.updates)}</td>
-                              <td className="text-right p-2">{formatNumber(table.deletes)}</td>
+                              <td className="text-right p-2">{formatNumber(table.live_tuples || 0)}</td>
+                              <td className="text-right p-2">{formatNumber(table.inserts || 0)}</td>
+                              <td className="text-right p-2">{formatNumber(table.updates || 0)}</td>
+                              <td className="text-right p-2">{formatNumber(table.deletes || 0)}</td>
                             </tr>
-                          ))}
+                          )) || (
+                            <tr>
+                              <td colSpan={5} className="p-2 text-center text-muted-foreground">
+                                Nenhum dado de performance disponível
+                              </td>
+                            </tr>
+                          )}
                         </tbody>
                       </table>
                     </div>
@@ -623,7 +669,7 @@ export default function DatabaseStatsPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {stats.recentActivity.recentConversations.map((conv) => (
+                      {stats.recentActivity?.recentConversations?.map((conv) => (
                         <div key={conv.id} className="text-sm">
                           <div className="font-medium">{conv.module}</div>
                           <div className="text-muted-foreground">
@@ -643,7 +689,7 @@ export default function DatabaseStatsPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {stats.recentActivity.recentAnalytics.map((analytics) => (
+                      {stats.recentActivity?.recentAnalytics?.map((analytics) => (
                         <div key={analytics.id} className="text-sm">
                           <div className="font-medium">{analytics.module}</div>
                           <div className="text-muted-foreground">
@@ -663,7 +709,7 @@ export default function DatabaseStatsPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {stats.recentActivity.recentUsers.map((user) => (
+                      {stats.recentActivity?.recentUsers?.map((user) => (
                         <div key={user.id} className="text-sm">
                           <div className="font-medium">{user.name}</div>
                           <div className="text-muted-foreground">{user.email}</div>

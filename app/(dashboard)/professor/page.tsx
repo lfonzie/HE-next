@@ -61,18 +61,8 @@ interface Lesson {
 }
 
 export default function ProfessorPage() {
-  // Handle prerendering - return loading state
-  if (typeof window === 'undefined') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-500">Carregando…</p>
-        </div>
-      </div>
-    );
-  }
-
   const { data: session, status } = useSession()
+  const [isHydrated, setIsHydrated] = useState(false)
   const [query, setQuery] = useState("")
   const [response, setResponse] = useState("")
   const [loading, setLoading] = useState(false)
@@ -83,6 +73,22 @@ export default function ProfessorPage() {
   const [gamifiedLesson, setGamifiedLesson] = useState<Lesson | null>(null)
   const [showGamified, setShowGamified] = useState(false)
   const { toast } = useToast()
+
+  // Handle hydration
+  useEffect(() => {
+    setIsHydrated(true)
+  }, [])
+
+  // Show loading during hydration
+  if (!isHydrated) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-500">Carregando…</p>
+        </div>
+      </div>
+    )
+  }
 
   const subjects: Subject[] = [
     { id: "matematica", name: "Matemática (MT)", color: "bg-blue-500", icon: "🔢" },

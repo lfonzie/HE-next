@@ -23,6 +23,10 @@ model User {
   profile           Json?
   resetToken        String?   @db.VarChar(255)
   resetTokenExpiry  DateTime? @db.Timestamp(6)
+  
+  // Relacionamentos com quotas
+  quotas            quotas[]
+  quota_usage_logs  quota_usage_log[]
 }
 
 model DemoUser {
@@ -460,11 +464,64 @@ model quiz_items {
 model quotas {
   id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   user_id     String    @db.Uuid
-  month       String    @db.VarChar(7)
+  month       String    @db.VarChar(7) // Formato: YYYY-MM
   token_limit Int       @default(100000)
   token_used  Int       @default(0)
+  is_active   Boolean   @default(true)
   created_at  DateTime  @default(now()) @db.Timestamp(6)
   updated_at  DateTime? @default(now()) @db.Timestamp(6)
+  
+  // Relacionamentos
+  user        User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  usage_logs  quota_usage_log[]
+  
+  @@unique([user_id, month], map: "unique_user_month_quota")
+  @@index([user_id], map: "idx_quotas_user")
+  @@index([month], map: "idx_quotas_month")
+}
+
+model quota_usage_log {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  quota_id        String   @db.Uuid
+  user_id         String   @db.Uuid
+  provider        String   @db.VarChar(50) // openai, google, anthropic, etc
+  model           String   @db.VarChar(100) // gpt-4o-mini, gemini-pro, etc
+  prompt_tokens   Int      @default(0)
+  completion_tokens Int    @default(0)
+  total_tokens    Int      @default(0)
+  cost_usd        Decimal  @default(0) @db.Decimal(10, 6)
+  cost_brl        Decimal  @default(0) @db.Decimal(10, 6)
+  module          String?  @db.VarChar(50) // aulas, professor, etc
+  conversation_id String?  @db.Uuid
+  api_endpoint    String?  @db.VarChar(100)
+  success         Boolean  @default(true)
+  error_message   String?
+  created_at      DateTime @default(now()) @db.Timestamp(6)
+  
+  // Relacionamentos
+  quota           quotas   @relation(fields: [quota_id], references: [id], onDelete: Cascade)
+  user            User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  
+  @@index([quota_id], map: "idx_quota_usage_log_quota")
+  @@index([user_id], map: "idx_quota_usage_log_user")
+  @@index([created_at], map: "idx_quota_usage_log_created")
+  @@index([provider], map: "idx_quota_usage_log_provider")
+  @@index([model], map: "idx_quota_usage_log_model")
+}
+
+model quota_settings {
+  id                    String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  role                  role     @unique // STUDENT, TEACHER, ADMIN, etc
+  monthly_token_limit   Int      @default(100000)
+  daily_token_limit     Int?     // Opcional: limite diário
+  hourly_token_limit    Int?     // Opcional: limite por hora
+  cost_limit_usd       Decimal? @db.Decimal(10, 6) // Limite de custo em USD
+  cost_limit_brl       Decimal? @db.Decimal(10, 6) // Limite de custo em BRL
+  is_active             Boolean  @default(true)
+  created_at            DateTime @default(now()) @db.Timestamp(6)
+  updated_at            DateTime @default(now()) @db.Timestamp(6)
+  
+  @@index([role], map: "idx_quota_settings_role")
 }
 
 model enem_session {

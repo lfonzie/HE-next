@@ -540,7 +540,7 @@ export default function LessonPage() {
 
   if (isLoading || progressiveLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-yellow-50 to-orange-100 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="text-center space-y-6">
           <div className="flex justify-center">
             <div className="h-20 w-20 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-2xl flex items-center justify-center animate-pulse shadow-lg">
@@ -567,7 +567,7 @@ export default function LessonPage() {
 
   if (!lessonData && error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-yellow-50 to-orange-100 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="w-full max-w-md mx-4 bg-white/90 backdrop-blur-sm border-2 border-yellow-200 shadow-xl rounded-3xl">
           <CardContent className="pt-8">
             <div className="text-center space-y-6">
@@ -649,7 +649,7 @@ export default function LessonPage() {
   if (totalStages === 0) {
     console.error('[ERROR] No stages found in lesson data:', lessonData);
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="w-full max-w-md mx-4">
           <CardContent className="pt-6">
             <div className="text-center space-y-6">
@@ -691,7 +691,7 @@ export default function LessonPage() {
   if (!currentStageData) {
     console.error('[ERROR] Current stage data is undefined:', { currentStage, totalStages, stagesToUse });
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="w-full max-w-md mx-4">
           <CardContent className="pt-6">
             <div className="text-center space-y-6">
@@ -737,7 +737,7 @@ export default function LessonPage() {
   // Stage progress UI removed
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-yellow-50 to-orange-100">
+    <div className="min-h-screen bg-background">
       {/* Mobile Layout */}
       <div className="lg:hidden">
         {/* Mobile Header */}
@@ -813,13 +813,6 @@ export default function LessonPage() {
         <div className="p-4 pb-24">
           <AnimatePresence mode="wait">
             {(() => {
-              console.log('[DEBUG] Rendering DynamicStage with data:', {
-                currentStage,
-                stageData: currentStageData,
-                hasActivity: !!currentStageData?.activity,
-                activityComponent: currentStageData?.activity?.component
-              });
-              
               return (
                 <DynamicStage
                   key={currentStage}

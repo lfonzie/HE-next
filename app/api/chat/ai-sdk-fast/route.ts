@@ -1,30 +1,16 @@
 import { NextRequest } from 'next/server'
-
-// Prevent prerendering of this API route
+import { streamText, generateText } from 'ai'
+import { openai } from '@ai-sdk/openai'
+import { anthropic } from '@ai-sdk/anthropic'
+import { google } from '@ai-sdk/google'
+import { fastClassify } from '@/lib/fast-classifier'
+import { getOptimizedStreamingConfig } from '@/lib/streaming-optimizer'
+import { generateCacheKey, responseCache } from '@/lib/aggressive-cache'
+import { getSystemPrompt } from '@/lib/system-message-loader'
+import { withChatQuotaCheck } from '@/lib/quota-middleware'
 
 // Prevent prerendering of this API route
 export const dynamic = 'force-dynamic';
-
-
-import { streamText, generateText } from 'ai'
-
-
-import { openai } from '@ai-sdk/openai'
-
-
-import { anthropic } from '@ai-sdk/anthropic'
-
-
-import { google } from '@ai-sdk/google'
-
-
-import { fastClassify } from '@/lib/fast-classifier'
-
-
-import { getOptimizedStreamingConfig } from '@/lib/streaming-optimizer'
-
-
-import { generateCacheKey, responseCache } from '@/lib/aggressive-cache'
 
 
 
@@ -214,23 +200,4 @@ export async function POST(request: NextRequest) {
       timestamp: new Date().toISOString()
     }, { status: 500 })
   }
-}
-
-// System prompts otimizados por módulo
-function getSystemPrompt(module: string): string {
-  const prompts = {
-    professor: `Você é um professor especializado em educação. Responda de forma clara, didática e objetiva. Foque em explicar conceitos de forma simples e prática.`,
-    
-    enem: `Você é um especialista em ENEM. Forneça explicações concisas e diretas sobre questões e conceitos do ENEM.`,
-    
-    aula_interativa: `Você é um professor criador de aulas interativas. Crie conteúdo educativo envolvente e didático.`,
-    
-    ti: `Você é um especialista em TI. Forneça soluções técnicas práticas e diretas para problemas de tecnologia.`,
-    
-    financeiro: `Você é um especialista em questões financeiras. Responda de forma clara e objetiva sobre pagamentos e questões financeiras.`,
-    
-    default: `Você é um assistente educacional. Responda de forma clara, objetiva e útil.`
-  }
-  
-  return prompts[module as keyof typeof prompts] || prompts.default
 }

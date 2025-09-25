@@ -28,11 +28,11 @@ export function ResponsiveButton({
   };
   
   const variantClasses = {
-    primary: "bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95",
-    secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 active:scale-95",
-    outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground active:scale-95",
-    ghost: "hover:bg-accent hover:text-accent-foreground active:scale-95",
-    destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 active:scale-95"
+    primary: "bg-primary text-primary-foreground active:scale-95",
+    secondary: "bg-secondary text-secondary-foreground active:scale-95",
+    outline: "border border-input bg-background active:scale-95",
+    ghost: "active:scale-95",
+    destructive: "bg-destructive text-destructive-foreground active:scale-95"
   };
 
   return (

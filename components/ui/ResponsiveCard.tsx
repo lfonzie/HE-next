@@ -61,10 +61,10 @@ export function ExampleCard() {
         </p>
         
         <div className="flex flex-col sm:flex-row gap-3 pt-2">
-          <button className="min-h-11 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium type-body hover:bg-primary/90 transition-colors">
+          <button className="min-h-11 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium type-body transition-colors">
             Ação Principal
           </button>
-          <button className="min-h-11 px-4 py-2 border border-border text-foreground rounded-lg font-medium type-body hover:bg-accent transition-colors">
+          <button className="min-h-11 px-4 py-2 border border-border text-foreground rounded-lg font-medium type-body transition-colors">
             Ação Secundária
           </button>
         </div>

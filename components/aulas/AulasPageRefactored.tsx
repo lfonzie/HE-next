@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { CheckCircle, RefreshCw, Users, Bug, BookOpen, Sparkles, Target } from 'lucide-react'
 import { SessionGuard } from '@/components/auth/SessionGuard'
-import { LessonDebugger } from '@/components/debug/LessonDebugger'
 import { useAulaGeneration } from '@/hooks/useAulaGeneration'
 import { useAulaCache } from '@/hooks/useAulaCache'
 import { useAulaProgress } from '@/hooks/useAulaProgress'
@@ -18,7 +17,6 @@ import AulaSuggestions from './AulaSuggestions'
 
 export default function AulasPageRefactored() {
   const router = useRouter()
-  const [showDebugger, setShowDebugger] = useState(false)
   
   // Custom hooks
   const {
@@ -343,15 +341,7 @@ export default function AulasPageRefactored() {
           </div>
         )}
 
-        {/* Debugger Modal */}
-        {showDebugger && generatedLesson && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <LessonDebugger 
-              lessonId={generatedLesson.id || ""} 
-              onClose={() => setShowDebugger(false)}
-            />
-          </div>
-        )}
+        {/* Debugger Modal - Removido */}
       </div>
     </SessionGuard>
   )

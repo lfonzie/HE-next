@@ -66,7 +66,7 @@ const ComingSoonPage = () => {
 
       {/* Header */}
       <header className={`${headerClasses} safe-top`}>
-        <div className="container-fluid-xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-center items-center">
+        <div className="container-fluid-xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
             <Image 
               src="/assets/Logo_HubEdu.ia.svg" 
@@ -82,6 +82,7 @@ const ComingSoonPage = () => {
               <span className="text-black">.ia</span>
             </div>
           </div>
+          
         </div>
       </header>
 

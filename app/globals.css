@@ -13,7 +13,7 @@
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 45 93% 47%;
+    --primary: 45 93% 47%; /* Amarelo forte (#FFD700) */
     --primary-foreground: 0 0% 0%;
     --secondary: 210 40% 96%;
     --secondary-foreground: 222.2 84% 4.9%;
@@ -139,63 +139,676 @@
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 45 93% 47%;
-    --primary-foreground: 0 0% 0%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 45 93% 47%;
+    /* === PALETA MODERNA E ATRATIVA === */
+    --background: 222 84% 5%; /* Azul escuro profundo (#0A0E1A) - mais moderno que preto puro */
+    --foreground: 0 0% 98%; /* Branco quase puro para máximo contraste */
+    --card: 222 84% 8%; /* Cards em azul escuro sutil (#111827) */
+    --card-foreground: 0 0% 95%; /* Texto claro nos cards */
+    --popover: 222 84% 6%; /* Popovers em azul escuro */
+    --popover-foreground: 0 0% 95%;
     
-    /* Dark mode specific colors */
-    --success: 142 76% 36%;
-    --success-foreground: 0 0% 100%;
-    --info: 221 83% 53%;
-    --info-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 0%;
+    /* === AMARELO FORTE COMO DESTAQUE PRINCIPAL === */
+    --primary: 45 93% 47%; /* Amarelo dourado (#FFD700) - COR PRINCIPAL */
+    --primary-foreground: 222 84% 5%; /* Texto escuro no amarelo */
     
-    /* Dark mode chart colors */
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+    /* === ELEMENTOS SECUNDÁRIOS COM CONTRASTE ADEQUADO === */
+    --secondary: 222 84% 15%; /* Azul escuro mais claro para elementos secundários */
+    --secondary-foreground: 0 0% 95%; /* Branco para texto secundário - melhor contraste */
+    --muted: 222 84% 18%; /* Azul escuro médio para elementos muted */
+    --muted-foreground: 0 0% 85%; /* Cinza claro para texto muted - melhor legibilidade */
     
-    /* Dark mode sidebar */
-    --sidebar-background: 224 71.4% 4.1%;
-    --sidebar-foreground: 210 20% 98%;
-    --sidebar-primary: 210 20% 98%;
-    --sidebar-primary-foreground: 220.9 39.3% 11%;
-    --sidebar-accent: 216 12.2% 8.9%;
-    --sidebar-accent-foreground: 210 20% 98%;
-    --sidebar-border: 216 12.2% 8.9%;
-    --sidebar-ring: 216 12.2% 8.9%;
+    /* === ACENTOS E INTERAÇÕES COM CONTRASTE GARANTIDO === */
+    --accent: 222 84% 20%; /* Azul escuro para acentos - melhor contraste */
+    --accent-foreground: 0 0% 95%; /* Branco para texto de acento - máximo contraste */
+    --destructive: 0 84% 60%; /* Vermelho para ações destrutivas */
+    --destructive-foreground: 0 0% 98%;
     
-    /* Dark mode loading colors */
-    --loading-bg: #1f2937;
-    --loading-text: #f9fafb;
-    --loading-accent: #fbbf24;
-    --loading-primary: #f59e0b;
+    /* === BORDAS E INPUTS MODERNOS === */
+    --border: 222 84% 20%; /* Bordas em azul escuro sutil */
+    --input: 222 84% 12%; /* Inputs em azul escuro */
+    --ring: 45 93% 47%; /* Focus ring em amarelo forte */
     
-    /* Dark mode shadows */
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.25);
-    --shadow-base: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.3);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3);
-    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.3), 0 8px 10px -6px rgb(0 0 0 / 0.3);
+    /* === CORES ESPECÍFICAS MODERNAS === */
+    --success: 142 76% 50%; /* Verde mais vibrante */
+    --success-foreground: 0 0% 98%;
+    --info: 221 83% 60%; /* Azul mais vibrante */
+    --info-foreground: 0 0% 98%;
+    --warning: 45 93% 47%; /* Amarelo forte para warnings */
+    --warning-foreground: 222 84% 5%;
+    
+    /* === CORES DE GRÁFICOS MODERNAS === */
+    --chart-1: 45 93% 47%; /* Amarelo dourado */
+    --chart-2: 142 76% 50%; /* Verde vibrante */
+    --chart-3: 221 83% 60%; /* Azul vibrante */
+    --chart-4: 280 65% 60%; /* Roxo vibrante */
+    --chart-5: 340 75% 55%; /* Rosa vibrante */
+    
+    /* === SIDEBAR MODERNA === */
+    --sidebar-background: 222 84% 6%; /* Azul escuro consistente */
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 45 93% 47%; /* Amarelo para elementos ativos */
+    --sidebar-primary-foreground: 222 84% 5%;
+    --sidebar-accent: 222 84% 10%; /* Azul escuro para hover */
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 222 84% 20%; /* Bordas sutis */
+    --sidebar-ring: 45 93% 47%; /* Focus ring em amarelo */
+    
+    /* === LOADING MODERNO === */
+    --loading-bg: hsl(222 84% 8%); /* Azul escuro consistente */
+    --loading-text: hsl(0 0% 98%); /* Branco quase puro */
+    --loading-accent: hsl(45 93% 47%); /* Amarelo forte */
+    --loading-primary: hsl(45 93% 47%); /* Amarelo forte */
+    
+    /* === SOMBRAS MODERNAS E SUAVES === */
+    --shadow-sm: 0 1px 2px 0 hsl(222 84% 0% / 0.3);
+    --shadow-base: 0 1px 3px 0 hsl(222 84% 0% / 0.4), 0 1px 2px -1px hsl(222 84% 0% / 0.4);
+    --shadow-md: 0 4px 6px -1px hsl(222 84% 0% / 0.4), 0 2px 4px -2px hsl(222 84% 0% / 0.4);
+    --shadow-lg: 0 10px 15px -3px hsl(222 84% 0% / 0.4), 0 4px 6px -4px hsl(222 84% 0% / 0.4);
+    --shadow-xl: 0 20px 25px -5px hsl(222 84% 0% / 0.4), 0 8px 10px -6px hsl(222 84% 0% / 0.4);
+    
+    /* === GRADIENTES MODERNOS === */
+    --gradient-primary: linear-gradient(135deg, hsl(45 93% 47%) 0%, hsl(45 93% 60%) 100%);
+    --gradient-secondary: linear-gradient(135deg, hsl(222 84% 8%) 0%, hsl(222 84% 12%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(45 93% 47%) 0%, hsl(45 93% 40%) 100%);
+  }
+
+  /* === FUNDO ANIMADO MODERNO PARA DARK MODE === */
+  .dark .min-h-screen {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .dark .min-h-screen::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, hsl(222 84% 5%) 0%, hsl(222 84% 8%) 50%, hsl(222 84% 5%) 100%);
+    z-index: -2;
+  }
+
+  .dark .min-h-screen::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+      radial-gradient(circle at 20% 20%, hsl(45 93% 47% / 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, hsl(45 93% 47% / 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 40% 60%, hsl(45 93% 47% / 0.06) 0%, transparent 50%),
+      radial-gradient(circle at 60% 40%, hsl(45 93% 47% / 0.04) 0%, transparent 50%);
+    animation: darkModeGlow 8s ease-in-out infinite alternate;
+    z-index: -1;
+  }
+
+  @keyframes darkModeGlow {
+    0% {
+      opacity: 0.3;
+      transform: scale(1) rotate(0deg);
+    }
+    50% {
+      opacity: 0.6;
+      transform: scale(1.05) rotate(180deg);
+    }
+    100% {
+      opacity: 0.4;
+      transform: scale(1.1) rotate(360deg);
+    }
+  }
+
+  /* === ANIMAÇÃO DE PARTÍCULAS FLUTUANTES === */
+  .dark .floating-particles {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  .dark .floating-particles::before,
+  .dark .floating-particles::after {
+    content: '';
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: hsl(45 93% 47% / 0.6);
+    border-radius: 50%;
+    animation: floatParticles 12s linear infinite;
+  }
+
+  .dark .floating-particles::before {
+    top: 20%;
+    left: 10%;
+    animation-delay: 0s;
+    animation-duration: 15s;
+  }
+
+  .dark .floating-particles::after {
+    top: 60%;
+    right: 15%;
+    animation-delay: 5s;
+    animation-duration: 18s;
+  }
+
+  @keyframes floatParticles {
+    0% {
+      transform: translateY(0px) translateX(0px);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    90% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(-100vh) translateX(50px);
+      opacity: 0;
+    }
+  }
+
+  /* === ONDAS SUAVES === */
+  .dark .wave-animation {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100px;
+    background: linear-gradient(90deg, 
+      hsl(45 93% 47% / 0.1) 0%, 
+      hsl(45 93% 47% / 0.05) 25%, 
+      hsl(45 93% 47% / 0.1) 50%, 
+      hsl(45 93% 47% / 0.05) 75%, 
+      hsl(45 93% 47% / 0.1) 100%
+    );
+    animation: waveMotion 6s ease-in-out infinite;
+    z-index: -1;
+  }
+
+  @keyframes waveMotion {
+    0%, 100% {
+      transform: translateX(0px);
+      opacity: 0.3;
+    }
+    50% {
+      transform: translateX(20px);
+      opacity: 0.6;
+    }
+  }
+  .dark .bg-gradient-to-br,
+  .dark [class*="bg-gradient"],
+  .dark [class*="from-slate-50"],
+  .dark [class*="via-yellow-50"],
+  .dark [class*="to-orange-100"],
+  .dark [class*="from-yellow-50"],
+  .dark [class*="to-orange-50"] {
+    background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--card)) 100%) !important;
+    color: hsl(var(--foreground)) !important;
+  }
+
+  /* === GLASS EFFECT MODERNO === */
+  .dark .glass-effect,
+  .dark .backdrop-blur-sm,
+  .dark .backdrop-blur-md,
+  .dark .backdrop-blur-lg {
+    background: rgba(10, 14, 26, 0.8) !important;
+    backdrop-filter: blur(10px) !important;
+    border: 1px solid hsl(var(--border)) !important;
+    color: hsl(var(--foreground)) !important;
+  }
+
+  /* === SHADOWS MODERNAS === */
+  .dark .shadow-sm {
+    box-shadow: 0 1px 2px 0 hsl(222 84% 0% / 0.3) !important;
+  }
+  
+  .dark .shadow-md {
+    box-shadow: 0 4px 6px -1px hsl(222 84% 0% / 0.4), 0 2px 4px -2px hsl(222 84% 0% / 0.4) !important;
+  }
+  
+  .dark .shadow-lg {
+    box-shadow: 0 10px 15px -3px hsl(222 84% 0% / 0.4), 0 4px 6px -4px hsl(222 84% 0% / 0.4) !important;
+  }
+  
+  .dark .shadow-xl {
+    box-shadow: 0 20px 25px -5px hsl(222 84% 0% / 0.4), 0 8px 10px -6px hsl(222 84% 0% / 0.4) !important;
+  }
+
+  /* === TEXTOS COM GRADIENTE AMARELO === */
+  .dark .gradient-text,
+  .dark .text-gradient {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(45 93% 60%) 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+  }
+
+  /* === BORDAS MODERNAS === */
+  .dark .border-primary {
+    border-color: hsl(var(--primary)) !important;
+  }
+  
+  .dark .border-secondary {
+    border-color: hsl(var(--secondary)) !important;
+  }
+  
+  .dark .border-muted {
+    border-color: hsl(var(--muted)) !important;
+  }
+
+  /* === ELEMENTOS COM FUNDO CLARO === */
+  .dark .bg-white,
+  .dark .bg-gray-50,
+  .dark .bg-slate-50,
+  .dark .bg-yellow-50,
+  .dark .bg-orange-50,
+  .dark .bg-gray-100,
+  .dark .bg-gray-200,
+  .dark .bg-gray-300,
+  .dark .bg-slate-100,
+  .dark .bg-slate-200,
+  .dark .bg-slate-300,
+  .dark .bg-zinc-50,
+  .dark .bg-zinc-100,
+  .dark .bg-zinc-200,
+  .dark .bg-neutral-50,
+  .dark .bg-neutral-100,
+  .dark .bg-neutral-200,
+  .dark .bg-stone-50,
+  .dark .bg-stone-100,
+  .dark .bg-stone-200 {
+    background-color: hsl(var(--background)) !important;
+    background-image: none !important;
+    color: hsl(var(--foreground)) !important;
+  }
+  .dark .container,
+  .dark .max-w-7xl,
+  .dark .max-w-6xl,
+  .dark .max-w-5xl,
+  .dark .max-w-4xl,
+  .dark .max-w-3xl,
+  .dark .max-w-2xl,
+  .dark .max-w-xl,
+  .dark .max-w-lg,
+  .dark .max-w-md,
+  .dark .max-w-sm,
+  .dark .w-full,
+  .dark .h-full,
+  .dark .min-h-screen,
+  .dark .min-h-full,
+  .dark .h-screen,
+  .dark .h-full {
+    background-color: hsl(var(--background)) !important;
+    color: hsl(var(--foreground)) !important;
+  }
+
+  /* === CARDS E ELEMENTOS MODERNOS === */
+  .dark .bg-card {
+    background-color: hsl(var(--card)) !important;
+    color: hsl(var(--card-foreground)) !important;
+    border: 1px solid hsl(var(--border)) !important;
+  }
+
+  .dark .bg-primary {
+    background-color: hsl(var(--primary)) !important;
+    color: hsl(var(--primary-foreground)) !important;
+  }
+
+  /* === ELEMENTOS MODERNOS COM FUNDO CORRETO === */
+  .dark .box,
+  .dark .card,
+  .dark .panel,
+  .dark .modal,
+  .dark .dialog,
+  .dark .popover,
+  .dark .tooltip,
+  .dark .dropdown,
+  .dark .menu,
+  .dark .sidebar,
+  .dark .header,
+  .dark .footer,
+  .dark .nav,
+  .dark .navbar,
+  .dark .breadcrumb,
+  .dark .pagination,
+  .dark .table,
+  .dark .form,
+  .dark .input,
+  .dark .textarea,
+  .dark .select,
+  .dark .checkbox,
+  .dark .radio,
+  .dark .button,
+  .dark .btn,
+  .dark .link,
+  .dark .badge,
+  .dark .tag,
+  .dark .chip,
+  .dark .avatar,
+  .dark .image,
+  .dark .video,
+  .dark .audio,
+  .dark .iframe,
+  .dark .embed,
+  .dark .canvas,
+  .dark .svg,
+  .dark .icon,
+  .dark .logo,
+  .dark .brand,
+  .dark .title,
+  .dark .heading,
+  .dark .subtitle,
+  .dark .caption,
+  .dark .label,
+  .dark .text,
+  .dark .paragraph,
+  .dark .list,
+  .dark .item,
+  .dark .element,
+  .dark .component,
+  .dark .widget,
+  .dark .module,
+  .dark .section,
+  .dark .article,
+  .dark .aside,
+  .dark .main,
+  .dark .content,
+  .dark .wrapper,
+  .dark .container-fluid,
+  .dark .row,
+  .dark .col,
+  .dark .column,
+  .dark .grid,
+  .dark .flex,
+  .dark .flexbox,
+  .dark .grid-item,
+  .dark .flex-item {
+    background-color: hsl(var(--card)) !important;
+    color: hsl(var(--card-foreground)) !important;
+    border-color: hsl(var(--border)) !important;
+  }
+
+  /* CORREÇÃO GLOBAL: Textos que devem ser claros */
+  .dark .text-black,
+  .dark .text-gray-900,
+  .dark .text-gray-800,
+  .dark .text-gray-700,
+  .dark .text-gray-600,
+  .dark .text-slate-900,
+  .dark .text-slate-800,
+  .dark .text-slate-700,
+  .dark .text-zinc-900,
+  .dark .text-zinc-800,
+  .dark .text-zinc-700,
+  .dark .text-neutral-900,
+  .dark .text-neutral-800,
+  .dark .text-neutral-700,
+  .dark .text-stone-900,
+  .dark .text-stone-800,
+  .dark .text-stone-700 {
+    color: hsl(var(--foreground)) !important;
+  }
+
+  /* CORREÇÃO GLOBAL: Tema claro deve ter fundo claro */
+  .light .bg-black,
+  .light .bg-gray-900,
+  .light .bg-gray-800,
+  .light [class*="bg-gray-9"],
+  .light [class*="bg-gray-8"] {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  /* CORREÇÃO GLOBAL: Tema claro - containers claros */
+  .light .container,
+  .light .max-w-7xl,
+  .light .max-w-6xl,
+  .light .max-w-5xl,
+  .light .max-w-4xl,
+  .light .max-w-3xl,
+  .light .max-w-2xl,
+  .light .max-w-xl,
+  .light .max-w-lg,
+  .light .max-w-md,
+  .light .max-w-sm,
+  .light .w-full,
+  .light .h-full,
+  .light .min-h-screen,
+  .light .min-h-full,
+  .light .h-screen,
+  .light .h-full {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  /* CORREÇÃO: HTML claro no tema claro */
+  .light html {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  /* CORREÇÃO: Body claro no tema claro */
+  .light body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  /* === CARDS E ELEMENTOS MODERNOS === */
+  .dark .bg-card {
+    background-color: hsl(var(--card)) !important;
+    color: hsl(var(--card-foreground)) !important;
+    border: 1px solid hsl(var(--border)) !important;
+  }
+
+  .dark .bg-primary {
+    background-color: hsl(var(--primary)) !important;
+    color: hsl(var(--primary-foreground)) !important;
+  }
+
+  /* === ELEMENTOS MODERNOS COM FUNDO CORRETO === */
+  .dark .box,
+  .dark .card,
+  .dark .panel,
+  .dark .modal,
+  .dark .dialog,
+  .dark .popover,
+  .dark .tooltip,
+  .dark .dropdown,
+  .dark .menu,
+  .dark .sidebar,
+  .dark .header,
+  .dark .footer,
+  .dark .nav,
+  .dark .navbar,
+  .dark .breadcrumb,
+  .dark .pagination,
+  .dark .table,
+  .dark .form,
+  .dark .input,
+  .dark .textarea,
+  .dark .select,
+  .dark .checkbox,
+  .dark .radio,
+  .dark .button,
+  .dark .btn,
+  .dark .link,
+  .dark .badge,
+  .dark .tag,
+  .dark .chip,
+  .dark .avatar,
+  .dark .image,
+  .dark .video,
+  .dark .audio,
+  .dark .iframe,
+  .dark .embed,
+  .dark .canvas,
+  .dark .svg,
+  .dark .icon,
+  .dark .logo,
+  .dark .brand,
+  .dark .title,
+  .dark .heading,
+  .dark .subtitle,
+  .dark .caption,
+  .dark .label,
+  .dark .text,
+  .dark .paragraph,
+  .dark .list,
+  .dark .item,
+  .dark .element,
+  .dark .component,
+  .dark .widget,
+  .dark .module,
+  .dark .section,
+  .dark .article,
+  .dark .aside,
+  .dark .main,
+  .dark .content,
+  .dark .wrapper,
+  .dark .container-fluid,
+  .dark .row,
+  .dark .col,
+  .dark .column,
+  .dark .grid,
+  .dark .flex,
+  .dark .flexbox,
+  .dark .grid-item,
+  .dark .flex-item {
+    background-color: hsl(var(--card)) !important;
+    color: hsl(var(--card-foreground)) !important;
+    border-color: hsl(var(--border)) !important;
+  }
+
+  /* === TEXTOS MODERNOS === */
+  .dark .text-black,
+  .dark .text-gray-900,
+  .dark .text-gray-800,
+  .dark .text-gray-700,
+  .dark .text-gray-600,
+  .dark .text-slate-900,
+  .dark .text-slate-800,
+  .dark .text-slate-700,
+  .dark .text-zinc-900,
+  .dark .text-zinc-800,
+  .dark .text-zinc-700,
+  .dark .text-neutral-900,
+  .dark .text-neutral-800,
+  .dark .text-neutral-700,
+  .dark .text-stone-900,
+  .dark .text-stone-800,
+  .dark .text-stone-700 {
+    color: hsl(var(--foreground)) !important;
+  }
+
+  /* CORREÇÃO GLOBAL: Manter amarelo forte como destaque */
+  .dark .text-primary,
+  .dark .text-yellow-500,
+  .dark .text-yellow-400,
+  .dark .text-yellow-600,
+  .dark [class*="text-yellow"] {
+    color: hsl(var(--primary)) !important;
+  }
+
+  .dark .border-primary,
+  .dark .border-yellow-500,
+  .dark .border-yellow-400,
+  .dark .border-yellow-600,
+  .dark [class*="border-yellow"] {
+    border-color: hsl(var(--primary)) !important;
+  }
+
+  /* CORREÇÃO GLOBAL: Botões e elementos interativos em amarelo */
+  .dark .bg-primary,
+  .dark .bg-yellow-500,
+  .dark .bg-yellow-400,
+  .dark .bg-yellow-600,
+  .dark [class*="bg-yellow"] {
+    background-color: hsl(var(--primary)) !important;
+    color: hsl(var(--primary-foreground)) !important;
+  }
+  
+  /* === REMOÇÃO DE CAIXAS PRETAS === */
+  .dark [style*="background-color: rgb(0, 0, 0)"],
+  .dark [style*="background-color: #000000"],
+  .dark [style*="background-color: #000"],
+  .dark [style*="background-color: black"] {
+    background-color: hsl(var(--card)) !important;
+    color: hsl(var(--card-foreground)) !important;
+  }
+
+  /* === ELEMENTOS COM FUNDO PRETO FORÇADO === */
+  .dark .bg-black,
+  .dark .bg-gray-900,
+  .dark .bg-gray-800,
+  .dark .bg-gray-700,
+  .dark .bg-slate-900,
+  .dark .bg-slate-800,
+  .dark .bg-slate-700,
+  .dark .bg-zinc-900,
+  .dark .bg-zinc-800,
+  .dark .bg-zinc-700,
+  .dark .bg-neutral-900,
+  .dark .bg-neutral-800,
+  .dark .bg-neutral-700,
+  .dark .bg-stone-900,
+  .dark .bg-stone-800,
+  .dark .bg-stone-700 {
+    background-color: hsl(var(--card)) !important;
+    color: hsl(var(--card-foreground)) !important;
+  }
+
+  /* === CORREÇÃO DE CONTRASTE EM BOTÕES === */
+  .dark button {
+    /* Garantir contraste adequado em todos os botões */
+    color: hsl(var(--foreground)) !important;
+  }
+
+  .dark button.bg-primary,
+  .dark button[class*="bg-primary"] {
+    background-color: hsl(var(--primary)) !important;
+    color: hsl(var(--primary-foreground)) !important;
+  }
+
+  .dark button.bg-secondary,
+  .dark button[class*="bg-secondary"] {
+    background-color: hsl(var(--secondary)) !important;
+    color: hsl(var(--secondary-foreground)) !important;
+  }
+
+  .dark button.bg-accent,
+  .dark button[class*="bg-accent"] {
+    background-color: hsl(var(--accent)) !important;
+    color: hsl(var(--accent-foreground)) !important;
+  }
+
+  .dark button.bg-destructive,
+  .dark button[class*="bg-destructive"] {
+    background-color: hsl(var(--destructive)) !important;
+    color: hsl(var(--destructive-foreground)) !important;
+  }
+
+  /* === CORREÇÃO ESPECÍFICA PARA BOTÕES COM PROBLEMAS === */
+  .dark button[style*="background-color: rgb(0, 0, 0)"],
+  .dark button[style*="background-color: #000000"],
+  .dark button[style*="background-color: #000"],
+  .dark button[style*="background-color: black"] {
+    background-color: hsl(var(--primary)) !important;
+    color: hsl(var(--primary-foreground)) !important;
+    border-color: hsl(var(--primary)) !important;
+  }
+
+  /* === CORREÇÃO PARA BOTÕES COM TEXTO ESCURO EM FUNDO ESCURO === */
+  .dark button[style*="color: rgb(0, 0, 0)"],
+  .dark button[style*="color: #000000"],
+  .dark button[style*="color: #000"],
+  .dark button[style*="color: black"] {
+    color: hsl(var(--foreground)) !important;
   }
   
   /* Reduced motion preferences */
@@ -235,10 +848,22 @@
     /* Better font rendering */
     font-synthesis: none;
     text-rendering: optimizeLegibility;
+  /* CORREÇÃO: Garantir que o html também tenha o fundo correto */
+  background-color: hsl(var(--background)) !important;
+  color: hsl(var(--foreground)) !important;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* CORREÇÃO: HTML preto no tema escuro */
+.dark html {
+  background-color: #000000 !important;
+  color: #ffffff !important;
   }
   
   body {
-    @apply bg-background text-foreground;
+    /* CORREÇÃO: Usar apenas variáveis CSS para garantir que o tema funcione */
+    background-color: hsl(var(--background)) !important;
+    color: hsl(var(--foreground)) !important;
     min-height: 100dvh;
     line-height: 1.4;
     font-family: var(--font-inter), "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, 
@@ -252,6 +877,14 @@
     /* Ensure body fills the scaled container */
     width: 100%;
     height: 100%;
+    /* Transição suave para mudança de tema */
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  /* CORREÇÃO: Body preto no tema escuro */
+  .dark body {
+    background-color: #000000 !important;
+    color: #ffffff !important;
   }
   
   /* Improve focus visibility */
@@ -561,9 +1194,46 @@
   
   /* Interactive states */
   .interactive {
-    @apply transition-colors hover:bg-accent hover:text-accent-foreground
-           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
+    @apply transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
            focus-visible:ring-offset-2 active:scale-95;
+  }
+  
+  .interactive:hover {
+    @apply bg-accent text-accent-foreground;
+  }
+  
+  /* Button hover states */
+  button[class*="bg-secondary"]:hover {
+    @apply bg-secondary/80;
+  }
+  
+  /* Toast action hover state */
+  [role="button"][class*="bg-transparent"]:hover {
+    @apply bg-secondary;
+  }
+  
+  /* Badge hover states */
+  [class*="bg-secondary"]:hover {
+    @apply bg-secondary/80;
+  }
+  
+  /* Button outline and ghost hover states */
+  button[class*="bg-background"]:hover {
+    @apply bg-accent text-accent-foreground;
+  }
+  
+  button:not([class*="bg-primary"]):not([class*="bg-secondary"]):not([class*="bg-destructive"]):hover {
+    @apply bg-accent text-accent-foreground;
+  }
+  
+  /* Primary button hover states */
+  button[class*="bg-primary"]:hover {
+    @apply bg-primary/90;
+  }
+  
+  /* Destructive button hover states */
+  button[class*="bg-destructive"]:hover {
+    @apply bg-destructive/90;
   }
 }
 

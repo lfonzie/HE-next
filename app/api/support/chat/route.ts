@@ -2,8 +2,112 @@ import { NextRequest } from 'next/server'
 import { streamText } from 'ai'
 import { openai } from '@ai-sdk/openai'
 import { google } from '@ai-sdk/google'
+import { anthropic } from '@ai-sdk/anthropic'
+import { groq } from '@ai-sdk/groq'
 
 export const dynamic = 'force-dynamic'
+
+// Configurações de modelos por complexidade
+const MODEL_CONFIGS = {
+  simple: {
+    openai: 'gpt-4o-mini',
+    google: 'gemini-1.5-flash',
+    anthropic: 'claude-3-haiku-20240307',
+    groq: 'llama-3.1-8b-instant'
+  },
+  complex: {
+    openai: 'gpt-4o',
+    google: 'gemini-1.5-pro',
+    anthropic: 'claude-3-sonnet-20240229',
+    groq: 'llama-3.1-70b-versatile'
+  },
+  fast: {
+    openai: 'gpt-4o-mini',
+    google: 'gemini-1.5-flash',
+    anthropic: 'claude-3-haiku-20240307',
+    groq: 'llama-3.1-8b-instant'
+  }
+}
+
+// Função para detectar complexidade da mensagem de suporte
+function detectSupportComplexity(message: string): 'simple' | 'complex' | 'fast' {
+  const messageLower = message.toLowerCase()
+  
+  // Indicadores de complexidade alta
+  const complexIndicators = [
+    'erro', 'bug', 'problema', 'não funciona', 'falha', 'crash',
+    'configuração', 'instalação', 'integração', 'api', 'webhook',
+    'banco de dados', 'performance', 'lentidão', 'timeout',
+    'segurança', 'autenticação', 'permissão', 'acesso negado',
+    'personalização', 'customização', 'desenvolvimento', 'código'
+  ]
+  
+  // Indicadores de simplicidade
+  const simpleIndicators = [
+    'como usar', 'como funciona', 'tutorial', 'guia', 'passo a passo',
+    'primeira vez', 'iniciante', 'básico', 'simples', 'fácil',
+    'onde encontrar', 'localizar', 'encontrar', 'procurar'
+  ]
+  
+  // Indicadores de velocidade (respostas rápidas)
+  const fastIndicators = [
+    'sim', 'não', 'ok', 'obrigado', 'valeu', 'tchau', 'até logo',
+    'confirmar', 'verificar', 'status', 'funcionando', 'ok'
+  ]
+  
+  // Contar indicadores
+  const complexCount = complexIndicators.filter(indicator => 
+    messageLower.includes(indicator)
+  ).length
+  
+  const simpleCount = simpleIndicators.filter(indicator => 
+    messageLower.includes(indicator)
+  ).length
+  
+  const fastCount = fastIndicators.filter(indicator => 
+    messageLower.includes(indicator)
+  ).length
+  
+  // Classificar baseado nos indicadores
+  if (fastCount > 0 && message.length < 50) {
+    return 'fast'
+  }
+  
+  if (complexCount > simpleCount) {
+    return 'complex'
+  }
+  
+  return 'simple'
+}
+
+// Função para obter configuração do provider baseada na complexidade
+function getProviderConfig(complexity: 'simple' | 'complex' | 'fast') {
+  const availableProviders = []
+  
+  if (process.env.OPENAI_API_KEY) availableProviders.push('openai')
+  if (process.env.GOOGLE_GENERATIVE_AI_API_KEY) availableProviders.push('google')
+  if (process.env.ANTHROPIC_API_KEY) availableProviders.push('anthropic')
+  if (process.env.GROQ_API_KEY) availableProviders.push('groq')
+  
+  // Estratégia de seleção baseada na complexidade
+  const providerPriority = {
+    simple: ['openai', 'google', 'groq', 'anthropic'], // Rápido e eficiente
+    complex: ['anthropic', 'openai', 'google', 'groq'], // Melhor qualidade
+    fast: ['groq', 'openai', 'google', 'anthropic'] // Mais rápido
+  }
+  
+  // Encontrar o primeiro provider disponível na ordem de prioridade
+  const preferredProvider = providerPriority[complexity].find(provider => 
+    availableProviders.includes(provider)
+  ) || availableProviders[0]
+  
+  return {
+    provider: preferredProvider,
+    model: MODEL_CONFIGS[complexity][preferredProvider as keyof typeof MODEL_CONFIGS.simple],
+    complexity,
+    tier: complexity === 'complex' ? 'Premium' : 'Standard'
+  }
+}
 
 // System prompt específico para suporte
 const SUPPORT_SYSTEM_PROMPT = `Você é o assistente de suporte do HubEdu.ia, uma plataforma educacional completa com IA conversacional.
@@ -39,6 +143,8 @@ EXEMPLOS DE PERGUNTAS QUE VOCÊ PODE RESPONDER:
 Responda sempre de forma útil e prestativa! 🎓`
 
 export async function POST(request: NextRequest) {
+  const startTime = Date.now()
+  
   try {
     const { messages } = await request.json()
 
@@ -56,15 +162,22 @@ export async function POST(request: NextRequest) {
       messageCount: messages.length
     })
 
-    // Verificar se temos chaves de API disponíveis
-    const hasOpenAI = !!process.env.OPENAI_API_KEY
-    const hasGoogle = !!process.env.GOOGLE_GENERATIVE_AI_API_KEY
+    // 1. Detectar complexidade da mensagem
+    const complexityStart = Date.now()
+    const complexity = detectSupportComplexity(lastMessage.content)
+    const complexityTime = Date.now() - complexityStart
+    
+    console.log(`⚡ [SUPPORT COMPLEXITY] ${complexity} (${complexityTime}ms)`)
 
-    if (!hasOpenAI && !hasGoogle) {
-      return new Response('No AI provider configured', { status: 500 })
-    }
+    // 2. Selecionar melhor provider baseado na complexidade
+    const providerStart = Date.now()
+    const providerConfig = getProviderConfig(complexity)
+    const providerTime = Date.now() - providerStart
+    
+    console.log(`🎯 [SUPPORT PROVIDER] ${providerConfig.provider}:${providerConfig.model} (complexity: ${complexity}, tier: ${providerConfig.tier})`)
+    console.log(`⏱️ [SUPPORT PROVIDER-SELECTION] Completed in ${providerTime}ms`)
 
-    // Preparar mensagens para o AI SDK
+    // 3. Preparar mensagens para o AI SDK
     const aiMessages = [
       {
         role: 'system' as const,
@@ -76,29 +189,83 @@ export async function POST(request: NextRequest) {
       }))
     ]
 
-    // Escolher provider baseado na disponibilidade
-    const useGoogle = hasGoogle && !hasOpenAI
-    const model = useGoogle ? 'gemini-1.5-flash' : 'gpt-4o-mini'
-
-    console.log(`🤖 [SUPPORT CHAT] Using ${useGoogle ? 'Google' : 'OpenAI'} with model ${model}`)
-
-    // Usar streamText do AI SDK
-    const result = await streamText({
-      model: useGoogle ? google(model) : openai(model),
-      messages: aiMessages,
-      temperature: 0.7,
-      maxTokens: 1000, // Limitar para respostas concisas
-      onFinish: async (result) => {
-        console.log('✅ [SUPPORT CHAT] Stream finished:', {
-          finishReason: result.finishReason,
-          usage: result.usage,
-          provider: useGoogle ? 'google' : 'openai',
-          model: model
-        })
+    // 4. Configurar modelo baseado na seleção
+    let modelInstance
+    try {
+      switch (providerConfig.provider) {
+        case 'openai':
+          modelInstance = openai(providerConfig.model)
+          break
+        case 'google':
+          modelInstance = google(providerConfig.model)
+          break
+        case 'anthropic':
+          modelInstance = anthropic(providerConfig.model)
+          break
+        case 'groq':
+          modelInstance = groq(providerConfig.model)
+          break
+        default:
+          throw new Error(`Unsupported provider: ${providerConfig.provider}`)
       }
-    })
+    } catch (error) {
+      console.error('❌ [SUPPORT CHAT] Model configuration error:', error)
+      return new Response('Model configuration error', { status: 500 })
+    }
 
-    // Retornar como stream de texto
+    // 5. Configurar parâmetros baseados na complexidade
+    const temperature = complexity === 'complex' ? 0.3 : complexity === 'fast' ? 0.1 : 0.7
+    const maxTokens = complexity === 'complex' ? 2000 : complexity === 'fast' ? 500 : 1000
+
+    console.log(`🤖 [SUPPORT CHAT] Using ${providerConfig.provider}:${providerConfig.model} (temp: ${temperature}, tokens: ${maxTokens})`)
+
+    // 6. Usar streamText do AI SDK com fallback
+    let result
+    try {
+      result = await streamText({
+        model: modelInstance,
+        messages: aiMessages,
+        temperature,
+        maxTokens,
+        onFinish: async (result) => {
+          const totalTime = Date.now() - startTime
+          console.log('✅ [SUPPORT CHAT] Stream finished:', {
+            finishReason: result.finishReason,
+            usage: result.usage,
+            provider: providerConfig.provider,
+            model: providerConfig.model,
+            complexity: providerConfig.complexity,
+            tier: providerConfig.tier,
+            totalTime: `${totalTime}ms`
+          })
+        }
+      })
+    } catch (primaryError) {
+      console.error('❌ [SUPPORT CHAT] Primary provider failed:', primaryError)
+      
+      // Fallback para OpenAI se disponível
+      if (providerConfig.provider !== 'openai' && process.env.OPENAI_API_KEY) {
+        console.log('🔄 [SUPPORT CHAT] Falling back to OpenAI')
+        result = await streamText({
+          model: openai('gpt-4o-mini'),
+          messages: aiMessages,
+          temperature: 0.7,
+          maxTokens: 1000,
+          onFinish: async (result) => {
+            console.log('✅ [SUPPORT CHAT] Fallback completed:', {
+              finishReason: result.finishReason,
+              usage: result.usage,
+              provider: 'openai-fallback',
+              model: 'gpt-4o-mini'
+            })
+          }
+        })
+      } else {
+        throw primaryError
+      }
+    }
+
+    // 7. Retornar como stream de texto
     const stream = new ReadableStream({
       async start(controller) {
         try {
@@ -116,8 +283,10 @@ export async function POST(request: NextRequest) {
     return new Response(stream, {
       headers: {
         'Content-Type': 'text/plain; charset=utf-8',
-        'X-Model': model,
-        'X-Provider': useGoogle ? 'google' : 'openai',
+        'X-Model': providerConfig.model,
+        'X-Provider': providerConfig.provider,
+        'X-Complexity': providerConfig.complexity,
+        'X-Tier': providerConfig.tier,
         'X-Timestamp': Date.now().toString()
       }
     })
