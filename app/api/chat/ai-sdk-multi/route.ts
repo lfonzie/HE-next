@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 import { streamText, generateText } from 'ai'
 import { openai } from '@ai-sdk/openai'
 import { google } from '@ai-sdk/google'
-import { fastClassify } from '@/lib/fast-classifier'
+import { ultraFastClassify } from '@/lib/ultra-fast-classifier'
 import { classifyComplexityAsync, getProviderConfig } from '@/lib/complexity-classifier'
 import { generateCacheKey, responseCache } from '@/lib/aggressive-cache'
 import { createSafeModel, validateOpenAIKey } from '@/lib/ai-sdk-production-config'
@@ -94,54 +94,36 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 2. Classificação rápida de módulo
+    // 2. Classificação ultra-rápida de módulo
     let targetModule = module
     let classificationConfidence = 1.0
     let classificationSource = 'client_override'
     
     if (module === 'auto') {
-      const classification = fastClassify(message, history.length)
+      const classificationStart = Date.now()
+      const classification = await ultraFastClassify(message, history.length, true)
+      const classificationTime = Date.now() - classificationStart
+      
       targetModule = classification.module
       classificationConfidence = classification.confidence
-      classificationSource = 'fast_local'
-      console.log(`🎯 [FAST-CLASSIFY] ${targetModule} (confidence: ${classification.confidence})`)
-      
-      // Se a confiança do fast-classifier for baixa (< 0.7), usar AI SDK para classificação
-      if (classification.confidence < 0.7) {
-        console.log(`🔄 [AI-CLASSIFY] Low confidence (${classification.confidence}), using AI SDK classification...`)
-        try {
-          const aiClassifyStart = Date.now()
-          const classifyResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/classify`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              userMessage: message,
-              history: history.slice(-5), // Últimas 5 mensagens
-              currentModule: 'auto'
-            })
-          })
-          
-          if (classifyResponse.ok) {
-            const classifyData = await classifyResponse.json()
-            if (classifyData.success && classifyData.classification) {
-              targetModule = classifyData.classification.module.toLowerCase()
-              classificationConfidence = classifyData.classification.confidence
-              classificationSource = 'ai_sdk'
-              const aiClassifyTime = Date.now() - aiClassifyStart
-              console.log(`🎯 [AI-CLASSIFY] ${targetModule} (confidence: ${classificationConfidence}) - ${aiClassifyTime}ms`)
-            }
-          }
-        } catch (error) {
-          console.warn('⚠️ [AI-CLASSIFY] Failed, keeping fast-classifier result:', error)
-        }
-      }
+      classificationSource = classification.method
+      console.log(`🎯 [ULTRA-CLASSIFY] ${targetModule} (confidence: ${classification.confidence}, method: ${classification.method}) - ${classificationTime}ms`)
     }
 
-    // 3. Classificação de complexidade com IA
+    // 3. Classificação de complexidade ultra-rápida (local)
     const complexityStart = Date.now()
-    const complexityResult = await classifyComplexityAsync(message, targetModule)
+    let complexityLevel: 'trivial' | 'simples' | 'complexa' = 'simples'
+    
+    // Detecção local ultra-rápida
+    const lowerMessage = message.toLowerCase()
+    if (message.length < 20 || /\b(oi|olá|tudo bem|td bem|ok|sim|não|nao)\b/i.test(lowerMessage)) {
+      complexityLevel = 'trivial'
+    } else if (/\b(formulas|fórmulas|equação|equações|matemática|matematica|geometria|álgebra|algebra|trigonometria|cálculo|calculo|derivada|integral|teorema|demonstração|demonstracao|prova|análise|analise|síntese|sintese|comparar|explicar detalhadamente|processo complexo|estatística|estatistica|probabilidade|vetores|matriz|logaritmo|exponencial|limite|continuidade|conceito|matéria|materia|disciplina|assunto|tema|conteúdo|conteudo|estudo|aprendizado|ensino|educação|educacao|escola|aula|professor|professora|aluno|aluna|estudante|redação|redacao|dissertação|dissertacao|trabalho|pesquisa|projeto|monografia|tese|artigo|ensaio|texto|composição|composicao|liderança|lideranca|feminina|masculina|gênero|genero|igualdade|diversidade|inclusão|inclusao|direitos|humanos|social|sociedade|cultura|comportamento|psicologia|sociologia|filosofia|ética|etica|moral|valores|princípios|principios)\b/i.test(message) || /\b(como|por que|quando|onde|qual|quais|quem|explique|demonstre|prove|calcule|resolva|desenvolva|analise|compare|discuta|avalie|me ajude|ajuda|dúvida|duvida|dúvidas|duvidas|não entendo|nao entendo|não sei|nao sei|preciso|quero|gostaria|poderia|pode|tirar|tirar uma|fazer|entender|aprender|estudar|escrever|escreva|produzir|produza|elaborar|elabore|criar|crie|desenvolver|desenvolva|construir|construa|formular|formule|argumentar|argumente|defender|defenda|justificar|justifique|fundamentar|fundamente|sustentar|sustente|comprovar|comprove|demonstrar|demonstre|mostrar|mostre|apresentar|apresente|expor|exponha|discorrer|discorra|abordar|aborde|tratar|trate|analisar|analise|examinar|examine|investigar|investigue|pesquisar|pesquise|estudar|estude|aprender|aprenda|compreender|compreenda|entender|entenda|interpretar|interprete|explicar|explique|descrever|descreva|narrar|narre|relatar|relate|contar|conte|expor|exponha|apresentar|apresente|mostrar|mostre|demonstrar|demonstre|provar|prove|comprovar|comprove|sustentar|sustente|fundamentar|fundamente|justificar|justifique|argumentar|argumente|defender|defenda|convencer|convenca|persuadir|persuada|influenciar|influencie|motivar|motive|inspirar|inspire|estimular|estimule|incentivar|incentive|promover|promova|fomentar|fomente|desenvolver|desenvolva|cultivar|cultive|formar|forme|construir|construa|edificar|edifique|estabelecer|estabeleca|criar|crie|gerar|gere|produzir|produza|elaborar|elabore|construir|construa|desenvolver|desenvolva|formular|formule|estruturar|estruture|organizar|organize|sistematizar|sistematize|planejar|planeje|programar|programe|projetar|projete|desenhar|desenhe|esboçar|esboce|rascunhar|rascunhe|escrever|escreva|redigir|redija|compor|componha|produzir|produza|elaborar|elabore|construir|construa|desenvolver|desenvolva|formular|formule|estruturar|estruture|organizar|organize|sistematizar|sistematize|planejar|planeje|programar|programe|projetar|projete|desenhar|desenhe|esboçar|esboce|rascunhar|rascunhe)\b/i.test(message) && message.length > 30) {
+      complexityLevel = 'complexa'
+    }
+    
     const complexityTime = Date.now() - complexityStart
-    console.log(`⚡ [COMPLEXITY] ${complexityResult.classification} (${complexityResult.method}, ${complexityTime}ms)`)
+    console.log(`⚡ [COMPLEXITY] ${complexityLevel} (local, ${complexityTime}ms)`)
 
     // 4. Seleção automática de provider baseada na complexidade
     let selectedProvider: 'openai' | 'google'
@@ -150,14 +132,14 @@ export async function POST(request: NextRequest) {
 
     if (forceProvider !== 'auto') {
       selectedProvider = forceProvider as 'openai' | 'google'
-      selectedModel = MODEL_CONFIGS[complexityResult.classification][selectedProvider]
+      selectedModel = MODEL_CONFIGS[complexityLevel][selectedProvider]
       providerReason = `forced-${forceProvider}`
     } else {
       // Seleção automática baseada na complexidade
-      const providerConfig = getProviderConfig(complexityResult.classification)
+      const providerConfig = getProviderConfig(complexityLevel)
       selectedProvider = providerConfig.provider
       selectedModel = providerConfig.model
-      providerReason = `auto-${complexityResult.classification}`
+      providerReason = `auto-${complexityLevel}`
     }
 
     console.log(`🎯 [PROVIDER-SELECTION] ${selectedProvider}:${selectedModel} (reason: ${providerReason})`)
@@ -166,15 +148,15 @@ export async function POST(request: NextRequest) {
     let modelInstance
     try {
       if (selectedProvider === 'google') {
-        modelInstance = createSafeModel('google', complexityResult.classification)
+        modelInstance = createSafeModel('google', complexityLevel)
       } else {
         // Verificar se a API key está válida antes de criar o modelo
         if (!validateOpenAIKey()) {
           console.warn('⚠️ [MODEL] OpenAI API key invalid, falling back to Google')
           selectedProvider = 'google'
-          modelInstance = createSafeModel('google', complexityResult.classification)
+          modelInstance = createSafeModel('google', complexityLevel)
         } else {
-          modelInstance = createSafeModel('openai', complexityResult.classification)
+          modelInstance = createSafeModel('openai', complexityLevel)
         }
       }
     } catch (modelError: any) {
@@ -185,7 +167,7 @@ export async function POST(request: NextRequest) {
         console.warn('🔄 [FALLBACK] Switching to Google due to OpenAI error')
         selectedProvider = 'google'
         try {
-          modelInstance = createSafeModel('google', complexityResult.classification)
+          modelInstance = createSafeModel('google', complexityLevel)
         } catch (fallbackError) {
           console.error('❌ [FALLBACK] Google also failed:', fallbackError.message)
           return Response.json(
@@ -228,7 +210,7 @@ export async function POST(request: NextRequest) {
 
     // 7. Configurações de streaming otimizadas por complexidade
     const streamingConfig = {
-      temperature: complexityResult.classification === 'complexa' ? 0.7 : 0.5,
+      temperature: complexityLevel === 'complexa' ? 0.7 : 0.5,
       experimental_streamData: false, // Desabilitar para velocidade
     }
 
@@ -249,8 +231,8 @@ export async function POST(request: NextRequest) {
         'X-Provider': selectedProvider,
         'X-Model': selectedModel,
         'X-Module': targetModule,
-        'X-Complexity': complexityResult.classification,
-        'X-Classification-Method': complexityResult.method,
+        'X-Complexity': complexityLevel,
+        'X-Classification-Method': classificationSource,
         'X-Cached': 'false',
         'X-Latency': `${Date.now() - startTime}ms`,
         'X-Provider-Reason': providerReason
@@ -262,7 +244,7 @@ export async function POST(request: NextRequest) {
       // Note: Para streaming, não podemos facilmente cachear a resposta completa
       // Mas podemos cachear a classificação de complexidade
       const complexityCacheKey = `complexity:${message}:${targetModule}`
-      responseCache.set(complexityCacheKey, complexityResult.classification, 30 * 60 * 1000) // 30 min
+      responseCache.set(complexityCacheKey, complexityLevel, 30 * 60 * 1000) // 30 min
     }
 
     const totalTime = Date.now() - startTime
