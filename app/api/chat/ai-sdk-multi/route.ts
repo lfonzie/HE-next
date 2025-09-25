@@ -1,51 +1,51 @@
 import { NextRequest } from 'next/server'
-
-// Prevent prerendering of this API route
-export const dynamic = 'force-dynamic';
-
-import { streamText, generateText } from 'ai'
-import { openai } from '@ai-sdk/openai'
-import { google } from '@ai-sdk/google'
-import { ultraFastClassify } from '@/lib/ultra-fast-classifier'
-import { classifyComplexityAsync, getProviderConfig } from '@/lib/complexity-classifier'
-import { generateCacheKey, responseCache } from '@/lib/aggressive-cache'
+import { streamText } from 'ai'
 import { createSafeModel, validateOpenAIKey } from '@/lib/ai-sdk-production-config'
-import { aiFallbackManager, FallbackOptions } from '@/lib/ai-fallback-manager'
-import { withAIFallback, AIMiddlewareOptions } from '@/lib/ai-middleware'
 
+// Cache de respostas para melhorar performance
+const responseCache = new Map<string, string>()
+const CACHE_TTL = 5 * 60 * 1000 // 5 minutos
 
-
-// Schema para requisição multi-provider
-const MultiProviderRequestSchema = {
-  message: 'string',
-  module: 'string?',
-  conversationId: 'string?',
-  history: 'array?',
-  useCache: 'boolean?',
-  forceProvider: 'string?' // 'openai' | 'google' | 'auto'
+// Função para gerar chave de cache
+function generateCacheKey(message: string, module: string, historyLength: number): string {
+  return `${module}:${message.toLowerCase().trim()}:${historyLength}`
 }
 
 // Configurações de modelos por complexidade
 const MODEL_CONFIGS = {
   trivial: {
-    google: 'gemini-1.5-flash',
-    openai: 'gpt-4o-mini'
+    openai: 'gpt-4o-mini',
+    google: 'gemini-1.5-flash'
   },
   simples: {
-    google: 'gemini-1.5-flash',
-    openai: 'gpt-4o-mini'
+    openai: 'gpt-4o-mini', 
+    google: 'gemini-1.5-flash'
   },
   complexa: {
-    google: 'gemini-1.5-pro',
-    openai: 'gpt-5-chat-latest' // Usar GPT-5 para complexidade máxima
+    openai: 'gpt-4o',
+    google: 'gemini-1.5-pro'
   }
 }
 
-// System prompts otimizados por módulo
+// Função para seleção automática de provider baseada na complexidade
+function getProviderConfig(complexity: 'trivial' | 'simples' | 'complexa') {
+  switch (complexity) {
+    case 'trivial':
+      return { provider: 'google' as const, model: 'gemini-1.5-flash' }
+    case 'simples':
+      return { provider: 'openai' as const, model: 'gpt-4o-mini' }
+    case 'complexa':
+      return { provider: 'openai' as const, model: 'gpt-4o' }
+  }
+}
+
+// Prompts do sistema por módulo
 const SYSTEM_PROMPTS = {
-  professor: `Você é um professor especializado em educação. Responda de forma clara, didática e objetiva. Foque em explicar conceitos de forma simples e prática.`,
-  enem: `Você é um especialista em ENEM. Forneça explicações concisas e diretas sobre questões e conceitos do ENEM.`,
-  aula_interativa: `Você é um professor criador de aulas interativas. Crie conteúdo educativo envolvente e didático.`,
+  professor: `Você é um professor virtual especializado em educação brasileira. Responda de forma didática, clara e objetiva. Use exemplos práticos e linguagem acessível.`,
+  enem: `Você é um especialista em ENEM. Ajude com questões, estratégias de prova e preparação para o vestibular.`,
+  aula_interativa: `Você é um especialista em criar aulas interativas e dinâmicas. Foque na experiência de aprendizado do aluno.`,
+  aula_expandida: `Você é um especialista em criar conteúdo educacional completo e detalhado.`,
+  redacao: `Você é um especialista em redação e escrita. Ajude com técnicas de escrita, estrutura e correção.`,
   ti: `Você é um especialista em TI. Forneça soluções técnicas práticas e diretas para problemas de tecnologia.`,
   financeiro: `Você é um especialista em questões financeiras. Responda de forma clara e objetiva sobre pagamentos e questões financeiras.`,
   default: `Você é um assistente educacional. Responda de forma clara, objetiva e útil.`
@@ -96,21 +96,26 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 2. Classificação ultra-rápida de módulo
+    // 2. Classificação simples de módulo (sem dependências externas)
     let targetModule = module
-    let classificationConfidence = 1.0
     let classificationSource = 'client_override'
     
     if (module === 'auto') {
-      const classificationStart = Date.now()
-      const classification = await ultraFastClassify(message, history.length, true)
-      const classificationTime = Date.now() - classificationStart
-      
-      targetModule = classification.module
-      classificationConfidence = classification.confidence
-      classificationSource = classification.method
-      console.log(`🎯 [ULTRA-CLASSIFY] ${targetModule} (confidence: ${classification.confidence}, method: ${classification.method}) - ${classificationTime}ms`)
+      // Classificação local simples baseada em palavras-chave
+      const lowerMessage = message.toLowerCase()
+      if (/\b(enem|simulado|tri|prova objetiva|questões de múltipla escolha|gabarito)\b/i.test(lowerMessage)) {
+        targetModule = 'enem'
+      } else if (/\b(aula|aulas|conteúdo|matéria|disciplina|explicação|dúvida|exercício)\b/i.test(lowerMessage)) {
+        targetModule = 'professor'
+      } else if (/\b(redação|texto|dissertação|composição|escrita)\b/i.test(lowerMessage)) {
+        targetModule = 'redacao'
+      } else {
+        targetModule = 'professor' // padrão
+      }
+      classificationSource = 'local_simple'
     }
+
+    console.log(`🎯 [MODULE-CLASSIFY] ${targetModule} (method: ${classificationSource})`)
 
     // 3. Classificação de complexidade ultra-rápida (local)
     const complexityStart = Date.now()
@@ -120,7 +125,7 @@ export async function POST(request: NextRequest) {
     const lowerMessage = message.toLowerCase()
     if (message.length < 20 || /\b(oi|olá|tudo bem|td bem|ok|sim|não|nao)\b/i.test(lowerMessage)) {
       complexityLevel = 'trivial'
-    } else if (/\b(formulas|fórmulas|equação|equações|matemática|matematica|geometria|álgebra|algebra|trigonometria|cálculo|calculo|derivada|integral|teorema|demonstração|demonstracao|prova|análise|analise|síntese|sintese|comparar|explicar detalhadamente|processo complexo|estatística|estatistica|probabilidade|vetores|matriz|logaritmo|exponencial|limite|continuidade|conceito|matéria|materia|disciplina|assunto|tema|conteúdo|conteudo|estudo|aprendizado|ensino|educação|educacao|escola|aula|professor|professora|aluno|aluna|estudante|redação|redacao|dissertação|dissertacao|trabalho|pesquisa|projeto|monografia|tese|artigo|ensaio|texto|composição|composicao|liderança|lideranca|feminina|masculina|gênero|genero|igualdade|diversidade|inclusão|inclusao|direitos|humanos|social|sociedade|cultura|comportamento|psicologia|sociologia|filosofia|ética|etica|moral|valores|princípios|principios)\b/i.test(message) || /\b(como|por que|quando|onde|qual|quais|quem|explique|demonstre|prove|calcule|resolva|desenvolva|analise|compare|discuta|avalie|me ajude|ajuda|dúvida|duvida|dúvidas|duvidas|não entendo|nao entendo|não sei|nao sei|preciso|quero|gostaria|poderia|pode|tirar|tirar uma|fazer|entender|aprender|estudar|escrever|escreva|produzir|produza|elaborar|elabore|criar|crie|desenvolver|desenvolva|construir|construa|formular|formule|argumentar|argumente|defender|defenda|justificar|justifique|fundamentar|fundamente|sustentar|sustente|comprovar|comprove|demonstrar|demonstre|mostrar|mostre|apresentar|apresente|expor|exponha|discorrer|discorra|abordar|aborde|tratar|trate|analisar|analise|examinar|examine|investigar|investigue|pesquisar|pesquise|estudar|estude|aprender|aprenda|compreender|compreenda|entender|entenda|interpretar|interprete|explicar|explique|descrever|descreva|narrar|narre|relatar|relate|contar|conte|expor|exponha|apresentar|apresente|mostrar|mostre|demonstrar|demonstre|provar|prove|comprovar|comprove|sustentar|sustente|fundamentar|fundamente|justificar|justifique|argumentar|argumente|defender|defenda|convencer|convenca|persuadir|persuada|influenciar|influencie|motivar|motive|inspirar|inspire|estimular|estimule|incentivar|incentive|promover|promova|fomentar|fomente|desenvolver|desenvolva|cultivar|cultive|formar|forme|construir|construa|edificar|edifique|estabelecer|estabeleca|criar|crie|gerar|gere|produzir|produza|elaborar|elabore|construir|construa|desenvolver|desenvolva|formular|formule|estruturar|estruture|organizar|organize|sistematizar|sistematize|planejar|planeje|programar|programe|projetar|projete|desenhar|desenhe|esboçar|esboce|rascunhar|rascunhe|escrever|escreva|redigir|redija|compor|componha|produzir|produza|elaborar|elabore|construir|construa|desenvolver|desenvolva|formular|formule|estruturar|estruture|organizar|organize|sistematizar|sistematize|planejar|planeje|programar|programe|projetar|projete|desenhar|desenhe|esboçar|esboce|rascunhar|rascunhe)\b/i.test(message) && message.length > 30) {
+    } else if (/\b(formulas|fórmulas|equação|equações|matemática|matematica|geometria|álgebra|algebra|trigonometria|cálculo|calculo|derivada|integral|teorema|demonstração|demonstracao|prova|análise|analise|síntese|sintese|comparar|explicar detalhadamente|processo complexo|estatística|estatistica|probabilidade|vetores|matriz|logaritmo|exponencial|limite|continuidade)\b/i.test(message) || /\b(como|por que|quando|onde|qual|quais|quem|explique|demonstre|prove|calcule|resolva|desenvolva|analise|compare|discuta|avalie|me ajude|ajuda|dúvida|duvida|dúvidas|duvidas|não entendo|nao entendo|não sei|nao sei|preciso|quero|gostaria|poderia|pode|tirar|tirar uma|fazer|entender|aprender|estudar|escrever|escreva|produzir|produza|elaborar|elabore|criar|crie|desenvolver|desenvolva|construir|construa|formular|formule|argumentar|argumente|defender|defenda|justificar|justifique|fundamentar|fundamente|sustentar|sustente|comprovar|comprove|demonstrar|demonstre|mostrar|mostre|apresentar|apresente|expor|exponha|discorrer|discorra|abordar|aborde|tratar|trate|analisar|analise|examinar|examine|investigar|investigue|pesquisar|pesquise|estudar|estude|aprender|aprenda|compreender|compreenda|entender|entenda|interpretar|interprete|explicar|explique|descrever|descreva|narrar|narre|relatar|relate|contar|conte|expor|exponha|apresentar|apresente|mostrar|mostre|demonstrar|demonstre|provar|prove|comprovar|comprove|sustentar|sustente|fundamentar|fundamente|justificar|justifique|argumentar|argumente|defender|defenda|convencer|convenca|persuadir|persuada|influenciar|influencie|motivar|motive|inspirar|inspire|estimular|estimule|incentivar|incentive|promover|promova|fomentar|fomente|desenvolver|desenvolva|cultivar|cultive|formar|forme|construir|construa|edificar|edifique|estabelecer|estabeleca|criar|crie|gerar|gere|produzir|produza|elaborar|elabore|construir|construa|desenvolver|desenvolva|formular|formule|estruturar|estruture|organizar|organize|sistematizar|sistematize|planejar|planeje|programar|programe|projetar|projete|desenhar|desenhe|esboçar|esboce|rascunhar|rascunhe|escrever|escreva|redigir|redija|compor|componha|produzir|produza|elaborar|elabore|construir|construa|desenvolver|desenvolva|formular|formule|estruturar|estruture|organizar|organize|sistematizar|sistematize|planejar|planeje|programar|programe|projetar|projete|desenhar|desenhe|esboçar|esboce|rascunhar|rascunhe)\b/i.test(message) && message.length > 30) {
       complexityLevel = 'complexa'
     }
     
