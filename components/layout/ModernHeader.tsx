@@ -3,8 +3,11 @@
 import { useState, useEffect, useMemo } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { MessageCircle } from 'lucide-react'
 import { ModernNavigation } from './ModernNavigation'
 import { UserProfile } from './UserProfile'
+import { SupportModal } from './SupportModal'
+import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 interface ModernHeaderProps {
@@ -26,6 +29,7 @@ export function ModernHeader({
 }: ModernHeaderProps) {
   const [isClient, setIsClient] = useState(false)
   const [scrollY, setScrollY] = useState(0)
+  const [isSupportModalOpen, setIsSupportModalOpen] = useState(false)
 
   useEffect(() => {
     setIsClient(true)
@@ -107,8 +111,20 @@ export function ModernHeader({
             )}
           </div>
           
-          {/* Right side - User Profile + Login Button */}
+          {/* Right side - Support + User Profile + Login Button */}
           <div className="flex items-center gap-4">
+            {/* Support Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsSupportModalOpen(true)}
+              className="hidden lg:flex items-center gap-2 px-3 py-2 hover:bg-yellow-50 hover:text-yellow-600 transition-colors rounded-xl"
+              title="Suporte"
+            >
+              <MessageCircle className="h-5 w-5" />
+              <span className="text-sm font-medium">Suporte</span>
+            </Button>
+
             {/* User Profile - Only on desktop */}
             {showUserProfile && (
               <div className="hidden lg:block">
@@ -128,6 +144,12 @@ export function ModernHeader({
           </div>
         </div>
       </div>
+      
+      {/* Support Modal */}
+      <SupportModal 
+        isOpen={isSupportModalOpen} 
+        onClose={() => setIsSupportModalOpen(false)} 
+      />
     </header>
   )
 }

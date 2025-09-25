@@ -12,26 +12,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
 
   useEffect(() => {
     setMounted(true)
-    
-    // Handle NextAuth errors globally
-    const handleError = (event: ErrorEvent) => {
-      if (event.message?.includes('CLIENT_FETCH_ERROR') || 
-          event.message?.includes('Failed to fetch') ||
-          event.message?.includes('recentlyCreatedOwnerStacks')) {
-        console.warn('NextAuth session fetch error, this is usually temporary:', event.message)
-        // Don't show error to user for session fetch issues
-        event.preventDefault()
-      }
-    }
-
-    window.addEventListener('error', handleError)
-    return () => window.removeEventListener('error', handleError)
   }, [])
-
-  // Prevent hydration mismatch by not rendering until mounted
-  if (!mounted) {
-    return <>{children}</>
-  }
 
   return (
     <NextAuthSessionProvider

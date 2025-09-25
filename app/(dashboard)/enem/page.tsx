@@ -25,7 +25,6 @@ import { EnemModeSelector } from '@/components/enem/EnemModeSelector';
 import { EnemCustomizer } from '@/components/enem/EnemCustomizer';
 import { EnemSimulatorV2 } from '@/components/enem/EnemSimulatorV2';
 import { EnemResults } from '@/components/enem/EnemResults';
-import { AuthGuard } from '@/components/AuthGuard';
 import { EnemMode, EnemArea, EnemScore } from '@/types/enem';
 import { ExamGenerationLoading } from '@/components/enem/EnemLoadingStates';
 
@@ -582,9 +581,5 @@ function EnemSimulatorContent() {
 }
 
 export default function EnemSimulatorPage() {
-  return (
-    <AuthGuard>
-      <EnemSimulatorContent />
-    </AuthGuard>
-  );
+  return <EnemSimulatorContent />
 }

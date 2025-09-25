@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useAuth } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -12,7 +11,6 @@ import { Loader2, FileText, Send, Clock, Target, Sparkles, X, Users, Brain } fro
 import { useNotifications } from '@/components/providers/NotificationProvider'
 import { useRouter } from 'next/navigation'
 import { FileUpload } from '@/components/redacao/FileUpload'
-import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 
 interface EnemTheme {
   id: string
@@ -32,9 +30,33 @@ interface RedacaoSubmission {
 }
 
 function RedacaoPageContent() {
-  const { user, isLoading: authLoading } = useAuth()
+  const [user, setUser] = useState(null)
+  const [authLoading, setAuthLoading] = useState(true)
   const { addNotification } = useNotifications()
   const router = useRouter()
+  
+  // Check authentication
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/auth/session')
+        const data = await response.json()
+        if (data.user) {
+          setUser(data.user)
+        } else {
+          // Redirect to login if not authenticated
+          router.push('/login?callbackUrl=' + encodeURIComponent(window.location.pathname))
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error)
+        router.push('/login?callbackUrl=' + encodeURIComponent(window.location.pathname))
+      } finally {
+        setAuthLoading(false)
+      }
+    }
+    
+    checkAuth()
+  }, [router])
   
   const [content, setContent] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -605,9 +627,5 @@ function RedacaoPageContent() {
 }
 
 export default function RedacaoPage() {
-  return (
-    <ProtectedRoute>
-      <RedacaoPageContent />
-    </ProtectedRoute>
-  )
+  return <RedacaoPageContent />
 }

@@ -1,77 +1,33 @@
 "use client"
 
 import { ReactNode, useState } from 'react'
-import Image from 'next/image'
 import { useSession } from 'next-auth/react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useEffect } from 'react'
-import { MainSidebar } from '@/components/layout/MainSidebar'
-import { UnifiedSidebar } from '@/components/layout/UnifiedSidebar'
+import { ModernHeader } from '@/components/layout/ModernHeader'
 import { ChatProvider, useChatContext } from '@/components/providers/ChatContext'
 import { QuotaProvider } from '@/components/providers/QuotaProvider'
-import { ModuleType } from '@/types'
 import { LoadingCard, LoadingOverlay, LoadingProvider } from '@/components/ui/loading'
-import { MessageSquare, BookOpen, Settings, GraduationCap } from 'lucide-react'
 import '../globals.css'
 
 interface DashboardLayoutProps {
   children: ReactNode
 }
 
-// Componente wrapper para conectar o sidebar com o ChatProvider
-function SidebarWrapper({ children }: { children: ReactNode }) {
-  const { selectedModule, setSelectedModule, isModuleHighlighted } = useChatContext()
-  
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50">
-      <div className="flex h-screen">
-        {/* Sidebar - Usar UnifiedSidebar com estado do ChatProvider */}
-        <UnifiedSidebar 
-          selectedModule={selectedModule}
-          onSelectModule={(moduleId: string) => setSelectedModule(moduleId as ModuleType)}
-        />
-
-        {/* Main content - ajusta automaticamente ao sidebar */}
-        <div className="flex-1 flex flex-col overflow-y-auto main-content-with-sidebar">
-          {/* Page Content */}
-          <div className="flex-1 overflow-y-auto compact-padding">
-            {children}
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname()
   const router = useRouter()
   
-  // Check if we are on the chat page (without sidebar)
-  const isChatPage = pathname === '/chat'
-  
   // Check if we are on the presentation page
   const isApresentacaoPage = pathname === '/apresentacao'
   
-  // Check if we are on the enem page (without sidebar)
-  const isEnemPage = pathname === '/enem'
-
   // Handle prerendering - return children without session checks
   if (typeof window === 'undefined') {
     return <>{children}</>
   }
 
   // Use session hook only on client side
-  let session, status
-  try {
-    const sessionResult = useSession()
-    session = sessionResult.data
-    status = sessionResult.status
-  } catch (error) {
-    // Handle case where useSession fails during prerendering
-    session = null
-    status = 'unauthenticated'
-  }
+  const { data: session, status } = useSession()
 
   // Check authentication for protected routes
   useEffect(() => {
@@ -105,46 +61,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         <ChatProvider>
           <QuotaProvider>
             <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50">
-              {/* Layout without sidebar - content occupies full screen */}
-              <div className="w-full h-screen overflow-y-auto">
-                {children}
-              </div>
-            </div>
-            <LoadingOverlay />
-          </QuotaProvider>
-        </ChatProvider>
-      </LoadingProvider>
-    )
-  }
-
-  // For enem page, don't show sidebar
-  if (isEnemPage) {
-    return (
-      <LoadingProvider>
-        <ChatProvider>
-          <QuotaProvider>
-            <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50">
-              {/* Layout without sidebar - content occupies full screen */}
-              <div className="w-full h-screen overflow-y-auto">
-                {children}
-              </div>
-            </div>
-            <LoadingOverlay />
-          </QuotaProvider>
-        </ChatProvider>
-      </LoadingProvider>
-    )
-  }
-
-  // For chat page, don't show sidebar
-  if (isChatPage) {
-    return (
-      <LoadingProvider>
-        <ChatProvider>
-          <QuotaProvider>
-            <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50">
-              {/* Layout without sidebar - content occupies full screen */}
-              <div className="w-full h-screen overflow-y-auto">
+              {/* Layout with header only - content occupies full screen */}
+              <ModernHeader showNavigation={true} showUserProfile={false} />
+              <div className="w-full min-h-screen pt-20 overflow-y-auto">
                 {children}
               </div>
             </div>
@@ -163,9 +82,15 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     <LoadingProvider>
       <ChatProvider>
         <QuotaProvider>
-          <SidebarWrapper>
-            {children}
-          </SidebarWrapper>
+          <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50">
+            {/* Header only - no sidebar */}
+            <ModernHeader showNavigation={true} showUserProfile={true} />
+            
+            {/* Main content - full width with header padding */}
+            <div className="w-full min-h-screen pt-20 overflow-y-auto">
+              {children}
+            </div>
+          </div>
           <LoadingOverlay />
         </QuotaProvider>
       </ChatProvider>

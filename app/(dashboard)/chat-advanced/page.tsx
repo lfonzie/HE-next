@@ -1,12 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
-import { useToast } from '../../hooks/use-toast';
-import { Button } from '../../components/ui/button';
-import { Badge } from '../../components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../components/ui/tooltip';
+import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
   Menu, 
   X, 
@@ -25,10 +24,9 @@ import {
   Target,
   Users
 } from 'lucide-react';
-import { cn } from '../../lib/utils';
+import { cn } from '@/lib/utils';
 import Link from 'next/link';
-import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
-import { FixedHeader } from '../../components/layout/FixedHeader';
+import { FixedHeader } from '@/components/layout/FixedHeader';
 
 interface Module {
   id: string;
@@ -41,7 +39,6 @@ interface Module {
 }
 
 function ChatAdvancedContent() {
-  const session = useSession();
   const { toast } = useToast();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [currentModuleId, setCurrentModuleId] = useState('professor');
@@ -98,7 +95,7 @@ function ChatAdvancedContent() {
 
   // Check if user has access to current module
   const currentModule = modules.find(m => m.id === currentModuleId);
-  const hasAccess = currentModule?.isActive || session?.data?.user?.role === 'SUPER_ADMIN';
+  const hasAccess = currentModule?.isActive;
 
   // Handle mobile responsiveness
   useEffect(() => {
@@ -150,7 +147,7 @@ function ChatAdvancedContent() {
     });
   };
 
-  if (!session?.data?.user) {
+  if (!hasAccess) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
         <Card className="w-full max-w-md mx-4 bg-white/90 backdrop-blur-sm border-2 border-blue-200 shadow-xl rounded-3xl">
@@ -304,7 +301,7 @@ function ChatAdvancedContent() {
                   <Button 
                     className="w-full"
                     variant={currentModuleId === module.id ? "default" : "outline"}
-                    disabled={!module.isActive && session?.data?.user?.role !== 'SUPER_ADMIN'}
+                    disabled={!module.isActive}
                   >
                     {currentModuleId === module.id ? 'Selecionado' : 'Selecionar'}
                   </Button>
@@ -365,9 +362,5 @@ function ChatAdvancedContent() {
 }
 
 export default function ChatAdvanced() {
-  return (
-    <ProtectedRoute>
-      <ChatAdvancedContent />
-    </ProtectedRoute>
-  );
+  return <ChatAdvancedContent />
 }

@@ -52,7 +52,7 @@ const navigationItems: NavigationItem[] = [
     href: '/aulas',
     icon: BookOpen,
     description: 'Aulas interativas',
-    color: 'from-yellow-500 to-yellow-600'
+    color: 'from-orange-500 to-orange-600'
   }
 ]
 

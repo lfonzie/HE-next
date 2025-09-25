@@ -8,7 +8,6 @@ import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, Sparkles, BookOpen, Target, Users, Send, Lightbulb, TrendingUp, AlertCircle, CheckCircle, Clock, RefreshCw, Timer, BarChart3, FileText, AlertTriangle, Mic, Volume2, VolumeX, Accessibility, Coffee, Brain, Zap, Star, Heart, Rocket, Image as ImageIcon } from 'lucide-react'
 import { useEnhancedSuggestions } from '@/hooks/useEnhancedSuggestions'
-import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import StreamingAudioPlayer from '@/components/audio/StreamingAudioPlayer'
 // Removido: seleção manual de imagens - agora é automática
 import Link from 'next/link'
@@ -1517,9 +1516,5 @@ function AulasPageContent() {
 }
 
 export default function AulasPage() {
-  return (
-    <ProtectedRoute>
-      <AulasPageContent />
-    </ProtectedRoute>
-  )
+  return <AulasPageContent />
 }
