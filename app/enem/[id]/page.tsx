@@ -76,6 +76,9 @@ export default function SimulatorPage() {
   // Load session data from localStorage or API
   useEffect(() => {
     const loadSessionData = () => {
+      // Verificar se estamos no browser antes de acessar localStorage
+      if (typeof window === 'undefined') return
+      
       try {
         const stored = localStorage.getItem(`simulator_${simulatorId}`)
         if (stored) {

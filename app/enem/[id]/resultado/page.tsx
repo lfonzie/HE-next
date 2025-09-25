@@ -71,6 +71,12 @@ export default function ResultPage() {
 
   useEffect(() => {
     const loadResultData = async () => {
+      // Verificar se estamos no browser antes de acessar localStorage
+      if (typeof window === 'undefined') {
+        setIsLoading(false)
+        return
+      }
+      
       try {
         // Load from localStorage (in a real app, this would come from an API)
         const stored = localStorage.getItem(`simulator_result_${simulatorId}`)

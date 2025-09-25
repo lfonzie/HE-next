@@ -129,20 +129,22 @@ export default function LessonPage() {
           console.warn('Cache not available:', cacheError)
         }
 
-        // 2. Verificar localStorage primeiro (modo demo)
-        const demoLessonKey = `demo_lesson_${lessonId}`
-        const demoLesson = localStorage.getItem(demoLessonKey)
-        
-        if (demoLesson) {
-          console.log('🎮 Carregando aula do localStorage (modo demo):', lessonId)
-          try {
-            const parsedLesson = JSON.parse(demoLesson)
-            const transformedLesson = ensureLessonStructure(parsedLesson) as LessonData
-            setLessonData(transformedLesson)
-            setIsLoading(false)
-            return
-          } catch (parseError) {
-            console.error('Erro ao fazer parse da aula do localStorage:', parseError)
+        // 2. Verificar localStorage primeiro (modo demo) - apenas no browser
+        if (typeof window !== 'undefined') {
+          const demoLessonKey = `demo_lesson_${lessonId}`
+          const demoLesson = localStorage.getItem(demoLessonKey)
+          
+          if (demoLesson) {
+            console.log('🎮 Carregando aula do localStorage (modo demo):', lessonId)
+            try {
+              const parsedLesson = JSON.parse(demoLesson)
+              const transformedLesson = ensureLessonStructure(parsedLesson) as LessonData
+              setLessonData(transformedLesson)
+              setIsLoading(false)
+              return
+            } catch (parseError) {
+              console.error('Erro ao fazer parse da aula do localStorage:', parseError)
+            }
           }
         }
         

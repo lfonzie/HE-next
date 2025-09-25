@@ -55,20 +55,23 @@ export default function AulaPage() {
   useEffect(() => {
     const loadLesson = async () => {
       try {
-        // First, check localStorage for demo mode lessons
-        const demoLessonKey = `demo_lesson_${lessonId}`
-        const demoLesson = localStorage.getItem(demoLessonKey)
-        
-        if (demoLesson) {
-          console.log('Loading demo lesson from localStorage:', lessonId)
-          try {
-            const parsedLesson = JSON.parse(demoLesson)
-            setLessonData(parsedLesson)
-            setIsLoading(false)
-            return
-          } catch (parseError) {
-            console.error('Error parsing demo lesson from localStorage:', parseError)
-            // Continue to try database
+        // Verificar se estamos no browser antes de acessar localStorage
+        if (typeof window !== 'undefined') {
+          // First, check localStorage for demo mode lessons
+          const demoLessonKey = `demo_lesson_${lessonId}`
+          const demoLesson = localStorage.getItem(demoLessonKey)
+          
+          if (demoLesson) {
+            console.log('Loading demo lesson from localStorage:', lessonId)
+            try {
+              const parsedLesson = JSON.parse(demoLesson)
+              setLessonData(parsedLesson)
+              setIsLoading(false)
+              return
+            } catch (parseError) {
+              console.error('Error parsing demo lesson from localStorage:', parseError)
+              // Continue to try database
+            }
           }
         }
 

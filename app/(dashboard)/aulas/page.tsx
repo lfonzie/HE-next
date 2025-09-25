@@ -19,6 +19,9 @@ const toast = {
 
 // Function to clean old lessons from localStorage
 const cleanOldLessons = (aggressive = false) => {
+  // Verificar se estamos no browser antes de acessar localStorage
+  if (typeof window === 'undefined') return
+  
   try {
     const keys = Object.keys(localStorage)
     const lessonKeys = keys.filter(key => key.startsWith('demo_lesson_'))

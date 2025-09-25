@@ -222,6 +222,18 @@ export default function LessonPage() {
 
   // Use useState for localStorage with better error handling
   const [progress, setProgress] = useState<LessonProgress>(() => {
+    // Verificar se estamos no browser antes de acessar localStorage
+    if (typeof window === 'undefined') {
+      return {
+        currentStage: startStage,
+        stageResults: [],
+        totalPoints: 0,
+        totalTimeSpent: 0,
+        isCompleted: false,
+        lastAccessedAt: new Date().toISOString(),
+      }
+    }
+    
     try {
       const saved = localStorage.getItem(`lesson_progress_${lessonId}`)
       if (saved) {
@@ -242,6 +254,9 @@ export default function LessonPage() {
 
   // Sync progress with localStorage
   useEffect(() => {
+    // Verificar se estamos no browser antes de acessar localStorage
+    if (typeof window === 'undefined') return
+    
     try {
       localStorage.setItem(`lesson_progress_${lessonId}`, JSON.stringify(progress))
     } catch (error) {

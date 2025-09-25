@@ -1,5 +1,6 @@
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import webpack from 'webpack';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -8,7 +9,8 @@ const __dirname = dirname(__filename);
 const nextConfig = {
   // Next.js 15+ features enabled
   experimental: {
-    optimizePackageImports: ['@radix-ui/react-icons', 'lucide-react'],
+    // Desabilitado temporariamente para evitar problemas de SSR
+    optimizePackageImports: false,
   },
   // Fix multiple lockfiles warning
   outputFileTracingRoot: __dirname,
@@ -178,6 +180,15 @@ const nextConfig = {
   },
   // Use Webpack instead of Turbopack to avoid configuration conflicts
   webpack: (config, { dev, isServer }) => {
+    // Mitigação: define `self` no build server para libs teimosas
+    if (isServer) {
+      config.plugins.push(
+        new webpack.DefinePlugin({
+          self: 'globalThis',
+        })
+      );
+    }
+    
     if (dev && !isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
