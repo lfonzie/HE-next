@@ -1,6 +1,5 @@
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-import webpack from 'webpack';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -179,7 +178,7 @@ const nextConfig = {
     OPENAI_API_KEY: process.env.OPENAI_API_KEY
   },
   // Use Webpack instead of Turbopack to avoid configuration conflicts
-  webpack: (config, { dev, isServer }) => {
+  webpack: (config, { dev, isServer, webpack }) => {
     // Mitigação: define `self` no build server para libs teimosas
     if (isServer) {
       config.plugins.push(
