@@ -6,6 +6,8 @@ const __dirname = dirname(__filename);
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Fix multiple lockfiles warning by setting the correct root
+  outputFileTracingRoot: __dirname,
   // // Next.js 15+ features enabled
   // experimental: {
   //   // Desabilitado temporariamente para evitar problemas de SSR
