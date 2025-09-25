@@ -13,6 +13,7 @@ import { generateText } from 'ai';
 
 
 import { google } from '@ai-sdk/google';
+import { openai } from '@ai-sdk/openai';
 
 
 import { ensureQuizFormat } from '@/lib/quiz-validation';
@@ -40,11 +41,13 @@ const QUIZ_SLIDE_NUMBERS = [7, 12];
 const IMAGE_SLIDE_NUMBERS = [1, 8, 14];
 const MIN_TOKENS_PER_SLIDE = 300; // Increased to 300-600 tokens for richer content
 const GEMINI_MODEL = 'gemini-1.5-flash'; // Changed from gemini-2.0-flash-exp to more stable model
+const OPENAI_MODEL = 'gpt-4o-mini'; // Fallback model
 const MAX_TOKENS = 8000;
 const TEMPERATURE = 0.7;
 
-// Initialize Gemini client via Vercel AI SDK
+// Initialize AI models via Vercel AI SDK
 const geminiModel = google(GEMINI_MODEL);
+const openaiModel = openai(OPENAI_MODEL);
 
 // Translation dictionary for image query generation
 const TRANSLATIONS = {
@@ -412,12 +415,143 @@ function generateImageQuery(topic, slideNumber, slideType) {
 }
 
 /**
+ * Checks if the error is a quota exceeded error from Gemini.
+ * @param {Error} error - The error to check.
+ * @returns {boolean} True if it's a quota error.
+ */
+function isQuotaExceededError(error) {
+  const errorMessage = error.message.toLowerCase();
+  return errorMessage.includes('quota') || 
+         errorMessage.includes('rate limit') || 
+         errorMessage.includes('exceeded') ||
+         errorMessage.includes('limit: 50');
+}
+
+/**
  * Generates a lesson prompt template optimized for Gemini.
  * @param {string} topic - The lesson topic.
  * @param {string} [systemPrompt=''] - Custom system prompt.
  * @returns {string} The formatted prompt.
  */
 function getGeminiLessonPromptTemplate(topic, systemPrompt = '') {
+  return `Crie uma aula completa e detalhada sobre "${topic}" com exatamente 14 slides em JSON.
+
+REGRAS CRÍTICAS PARA JSON VÁLIDO:
+- Responda APENAS com JSON válido, sem texto adicional
+- NÃO use caracteres de controle ou especiais
+- Use apenas aspas duplas para strings
+- Escape corretamente todas as aspas dentro das strings usando \\"
+- Use \\n para quebras de linha dentro das strings
+- NÃO use vírgulas finais antes de } ou ]
+- Certifique-se de que todas as chaves e colchetes estão balanceados
+
+REGRAS DE CONTEÚDO:
+- Use português brasileiro claro e didático
+- Cada slide deve ter CONTEÚDO RICO com 300-600 tokens
+- Slides 7 e 12 são quizzes com 3 perguntas cada
+- OBRIGATÓRIO: Use \\n\\n para quebras de linha entre parágrafos em TODOS os slides
+- OBRIGATÓRIO: Cada parágrafo deve ser separado por \\n\\n para melhor legibilidade
+- Para imageQuery, use APENAS termos específicos do tópico em inglês
+- Evite termos genéricos como "education", "learning", "teaching"
+
+ESTRUTURA DETALHADA:
+- Slide 1: Introdução completa com contexto histórico e importância
+- Slides 2-6: Desenvolvimento progressivo dos conceitos fundamentais
+- Slide 7: Quiz sobre conceitos básicos aprendidos
+- Slides 8-11: Aplicações práticas, exemplos reais e aprofundamento
+- Slide 12: Quiz sobre aplicações e análise crítica
+- Slides 13-14: Síntese, conclusões e perspectivas futuras
+
+FORMATO JSON:
+{
+  "slides": [
+    {
+      "number": 1,
+      "title": "Introdução Completa ao ${topic}",
+      "content": "Conteúdo detalhado e rico sobre ${topic} com contexto histórico, definições precisas, importância no mundo atual e objetivos da aula.\\n\\nDesenvolva parágrafos explicativos sobre os fundamentos, aplicações práticas e relevância do tema.\\n\\nInclua exemplos concretos e conexões com o cotidiano dos estudantes.\\n\\nCada seção deve ser claramente separada para facilitar a compreensão.",
+      "type": "content",
+      "imageQuery": "${topic}",
+      "tokenEstimate": 450
+    },
+    {
+      "number": 7,
+      "title": "Quiz: Conceitos Fundamentais de ${topic}",
+      "content": "Avalie seus conhecimentos sobre os conceitos fundamentais de ${topic} apresentados nos slides anteriores.\\n\\nEste quiz testará sua compreensão dos princípios básicos e definições essenciais.\\n\\nLeia cada pergunta com atenção e escolha a resposta mais adequada.\\n\\nBoa sorte!",
+      "type": "quiz",
+      "imageQuery": null,
+      "tokenEstimate": 350,
+      "points": 0,
+      "questions": [
+        {
+          "q": "Qual é a definição mais precisa de ${topic}?",
+          "options": ["Definição técnica correta e específica", "Definição parcialmente correta mas incompleta", "Definição relacionada mas incorreta", "Definição completamente errada"],
+          "correct": 0,
+          "explanation": "Explicação detalhada da resposta correta com justificativa técnica e exemplos práticos"
+        },
+        {
+          "q": "Qual característica é fundamental para ${topic}?",
+          "options": ["Característica incorreta mas relacionada", "Característica fundamental correta", "Característica secundária", "Característica irrelevante"],
+          "correct": 1,
+          "explanation": "Explicação detalhada da resposta correta com justificativa técnica e exemplos práticos"
+        },
+        {
+          "q": "Como ${topic} se relaciona com outras áreas?",
+          "options": ["Relação incorreta", "Relação secundária", "Relação principal correta", "Relação irrelevante"],
+          "correct": 2,
+          "explanation": "Explicação detalhada da resposta correta com justificativa técnica e exemplos práticos"
+        }
+      ]
+    },
+    {
+      "number": 12,
+      "title": "Quiz: Aplicações Práticas de ${topic}",
+      "content": "Teste seus conhecimentos sobre as aplicações práticas e casos reais de ${topic}.\\n\\nEste quiz avalia sua capacidade de aplicar os conceitos aprendidos em situações concretas.\\n\\nAnalise cada cenário e escolha a melhor solução baseada nos conhecimentos adquiridos.",
+      "type": "quiz",
+      "imageQuery": null,
+      "tokenEstimate": 350,
+      "points": 0,
+      "questions": [
+        {
+          "q": "Em qual situação ${topic} seria mais aplicável?",
+          "options": ["Situação incorreta", "Situação parcialmente correta", "Situação irrelevante", "Situação ideal correta"],
+          "correct": 3,
+          "explanation": "Explicação detalhada da resposta correta com justificativa técnica e exemplos práticos"
+        },
+        {
+          "q": "Qual seria o resultado esperado ao aplicar ${topic}?",
+          "options": ["Resultado esperado correto", "Resultado parcialmente correto", "Resultado incorreto", "Resultado irrelevante"],
+          "correct": 0,
+          "explanation": "Explicação detalhada da resposta correta com justificativa técnica e exemplos práticos"
+        },
+        {
+          "q": "Qual limitação deve ser considerada ao usar ${topic}?",
+          "options": ["Limitação secundária", "Limitação irrelevante", "Limitação principal correta", "Limitação incorreta"],
+          "correct": 2,
+          "explanation": "Explicação detalhada da resposta correta com justificativa técnica e exemplos práticos"
+        }
+      ]
+    }
+  ]
+}
+
+Tópico: ${topic}
+${systemPrompt ? `[Custom: ${systemPrompt}]` : ''}
+
+IMPORTANTE: 
+- Cada slide deve ter conteúdo rico e detalhado (300-600 tokens)
+- Use apenas termos específicos do tópico em inglês para imageQuery
+- Evite termos genéricos educacionais
+- Desenvolva parágrafos explicativos completos
+- Responda APENAS com JSON válido.`;
+}
+
+/**
+ * Generates a lesson prompt template optimized for OpenAI GPT-4o mini.
+ * @param {string} topic - The lesson topic.
+ * @param {string} [systemPrompt=''] - Custom system prompt.
+ * @returns {string} The formatted prompt.
+ */
+function getOpenAILessonPromptTemplate(topic, systemPrompt = '') {
   return `Crie uma aula completa e detalhada sobre "${topic}" com exatamente 14 slides em JSON.
 
 REGRAS CRÍTICAS PARA JSON VÁLIDO:
@@ -883,10 +1017,11 @@ export async function POST(request) {
     const geminiTimer = log.aulaTimer('gemini-generation');
     const geminiStartTime = Date.now();
     
-    // Retry mechanism for Gemini API calls
+    // Retry mechanism for Gemini API calls with OpenAI fallback
     const maxRetries = 3;
     let response: any = null;
     let lastError: Error | null = null;
+    let usedProvider = 'gemini';
     
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
@@ -910,9 +1045,32 @@ export async function POST(request) {
           maxRetries 
         });
         
-        // If this is the last attempt, throw the error
+        // If this is the last attempt, try OpenAI fallback if it's a quota error
         if (attempt === maxRetries) {
-          throw new Error(`Failed after ${maxRetries} attempts. Last error: ${lastError.message}`);
+          if (isQuotaExceededError(lastError) && process.env.OPENAI_API_KEY) {
+            log.info('Gemini quota exceeded, attempting OpenAI fallback', { requestId });
+            
+            try {
+              const openaiPrompt = getOpenAILessonPromptTemplate(topic, systemPrompt);
+              response = await generateText({
+                model: openaiModel,
+                prompt: openaiPrompt,
+                temperature: TEMPERATURE,
+                maxTokens: 6000,
+              });
+              usedProvider = 'openai';
+              log.info('OpenAI fallback successful', { requestId, provider: usedProvider });
+              break;
+            } catch (openaiError) {
+              log.error('OpenAI fallback also failed', { 
+                error: (openaiError as Error).message, 
+                requestId 
+              });
+              throw new Error(`Both Gemini and OpenAI failed. Gemini error: ${lastError.message}. OpenAI error: ${(openaiError as Error).message}`);
+            }
+          } else {
+            throw new Error(`Failed after ${maxRetries} attempts. Last error: ${lastError.message}`);
+          }
         }
         
         // Wait before retrying (exponential backoff)
@@ -923,14 +1081,15 @@ export async function POST(request) {
     }
     
     // Process the successful response
-    const geminiDuration = Math.round((Date.now() - geminiStartTime) / 1000);
+    const generationDuration = Math.round((Date.now() - geminiStartTime) / 1000);
     log.aulaTimerEnd(geminiTimer, 'gemini-generation');
 
-    log.info('Gemini response', {
-      duration: geminiDuration,
+    log.info(`${usedProvider === 'openai' ? 'OpenAI' : 'Gemini'} response`, {
+      duration: generationDuration,
       usage: response.usage,
       finishReason: response.finishReason,
       contentLength: response.text?.length || 0,
+      provider: usedProvider,
     });
 
     // Log token usage
@@ -939,10 +1098,10 @@ export async function POST(request) {
       await logTokens({
         userId: session.user.id,
         moduleGroup: 'Aulas',
-        model: GEMINI_MODEL,
+        model: usedProvider === 'openai' ? OPENAI_MODEL : GEMINI_MODEL,
         totalTokens,
         subject: topic,
-        messages: { requestId, mode, provider: 'gemini' },
+        messages: { requestId, mode, provider: usedProvider },
       });
     }
 
@@ -1226,8 +1385,8 @@ export async function POST(request) {
             duration: `${metrics.duration.sync} minutos`,
             difficulty: 'Intermediário',
             tags: [topic.toLowerCase()],
-            provider: 'gemini',
-            model: GEMINI_MODEL,
+            provider: usedProvider,
+            model: usedProvider === 'openai' ? OPENAI_MODEL : GEMINI_MODEL,
           },
         },
         topic,
@@ -1243,17 +1402,22 @@ export async function POST(request) {
           promptTokens: (response.usage as any)?.promptTokens || 0,
           completionTokens: (response.usage as any)?.completionTokens || 0,
           totalTokens,
-          costEstimate: (totalTokens * 0.000075).toFixed(6), // Gemini 2.0 Flash pricing: ~$0.000075 per 1K tokens
-          pricingNote: 'Estimated cost based on Gemini 2.0 Flash pricing. Verify with current Google AI Studio pricing.',
-          provider: 'gemini',
-          model: GEMINI_MODEL,
+          costEstimate: usedProvider === 'openai' 
+            ? (totalTokens * 0.00015).toFixed(6) // GPT-4o mini pricing: ~$0.00015 per 1K tokens
+            : (totalTokens * 0.000075).toFixed(6), // Gemini 1.5 Flash pricing: ~$0.000075 per 1K tokens
+          pricingNote: usedProvider === 'openai' 
+            ? 'Estimated cost based on GPT-4o mini pricing. Verify with current OpenAI pricing.'
+            : 'Estimated cost based on Gemini 1.5 Flash pricing. Verify with current Google AI Studio pricing.',
+          provider: usedProvider,
+          model: usedProvider === 'openai' ? OPENAI_MODEL : GEMINI_MODEL,
         },
       };
 
       const totalDuration = Math.round((Date.now() - startTime) / 1000);
-      log.info('Gemini lesson generated successfully', {
+      log.info(`${usedProvider === 'openai' ? 'OpenAI' : 'Gemini'} lesson generated successfully`, {
         totalDuration,
         slides: finalSlides.length,
+        provider: usedProvider,
         // qualityScore: metrics.quality.score, // Validação de qualidade desabilitada
         costEstimate: responseData.usage.costEstimate,
       });
@@ -1262,7 +1426,7 @@ export async function POST(request) {
 
   } catch (error) {
     const totalDuration = Math.round((Date.now() - startTime) / 1000);
-    log.error('Gemini lesson generation failed', { error: (error as Error).message, duration: totalDuration });
+    log.error('Lesson generation failed', { error: (error as Error).message, duration: totalDuration });
 
     let statusCode = 500;
     let friendlyError = 'Erro interno do servidor';

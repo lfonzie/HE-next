@@ -20,9 +20,12 @@ interface SimpleAvatarPlayerProps {
   className?: string
 }
 
-// Cache key generator
+// Cache key generator - Unicode-safe encoding
 const generateCacheKey = (text: string): string => {
-  return `google_tts_${btoa(text).replace(/[^a-zA-Z0-9]/g, '')}`
+  // Encode string to UTF-8 bytes, then to base64
+  const utf8Bytes = new TextEncoder().encode(text)
+  const base64 = btoa(String.fromCharCode(...utf8Bytes))
+  return `google_tts_${base64.replace(/[^a-zA-Z0-9]/g, '')}`
 }
 
 // Cache management

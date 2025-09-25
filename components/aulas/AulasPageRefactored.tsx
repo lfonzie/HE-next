@@ -110,11 +110,11 @@ export default function AulasPageRefactored() {
         {generatedLesson && (
           <header className="text-center mb-8">
             <div className="flex items-center justify-center gap-4 mb-4">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-500 to-blue-600 rounded-2xl">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-500 to-yellow-500 rounded-2xl">
                 <CheckCircle className="h-8 w-8 text-white" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-yellow-500 bg-clip-text text-transparent">
                   Aula Gerada com Sucesso!
                 </h1>
                 <p className="text-lg text-gray-600">{generatedLesson.title || "Título da Aula"}</p>
@@ -131,7 +131,7 @@ export default function AulasPageRefactored() {
               </Button>
               <Button 
                 onClick={handleStartLesson}
-                className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 flex items-center gap-2"
+                className="bg-gradient-to-r from-green-600 to-yellow-500 hover:from-green-700 hover:to-yellow-600 flex items-center gap-2"
               >
                 <Users className="h-4 w-4" />
                 Iniciar Aula
@@ -151,10 +151,10 @@ export default function AulasPageRefactored() {
         {/* Enhanced Header - Oculto durante carregamento E quando aula foi gerada */}
         {!isGenerating && !generatedLesson && (
           <header className="text-center mb-12">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-6">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-yellow-500 to-purple-600 rounded-2xl mb-6">
               <BookOpen className="h-10 w-10 text-white" aria-hidden="true" />
             </div>
-            <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-yellow-500 to-purple-600 bg-clip-text text-transparent">
               Aulas Interativas com IA
             </h1>
             <p className="text-xl text-gray-600 mb-2 max-w-2xl mx-auto">
@@ -252,7 +252,7 @@ export default function AulasPageRefactored() {
                     </div>
                     <div className="flex justify-center gap-6 text-sm text-gray-600">
                       <span className="flex items-center gap-1">
-                        <div className="h-4 w-4 bg-blue-600 rounded flex items-center justify-center">
+                        <div className="h-4 w-4 bg-yellow-500 rounded flex items-center justify-center">
                           <span className="text-white text-xs">⏱</span>
                         </div>
                         {generatedLesson.estimatedDuration || ""} min
@@ -267,7 +267,7 @@ export default function AulasPageRefactored() {
                   {/* Objetivos de Aprendizagem */}
                   <div>
                     <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
-                      <Target className="h-5 w-5 text-blue-600" />
+                      <Target className="h-5 w-5 text-yellow-500" />
                       Objetivos de Aprendizagem
                     </h3>
                     <ul className="space-y-3">
@@ -319,7 +319,7 @@ export default function AulasPageRefactored() {
                   <div className="flex flex-col sm:flex-row gap-4 pt-6">
                     <Button 
                       onClick={handleStartLesson} 
-                      className="flex-1 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 h-12 text-lg"
+                      className="flex-1 bg-gradient-to-r from-green-600 to-yellow-500 hover:from-green-700 hover:to-yellow-600 h-12 text-lg"
                     >
                       <Users className="mr-2 h-5 w-5" />
                       Iniciar Aula Agora

@@ -7,10 +7,37 @@
   --sidebar-text: #0f172a;
   --sidebar-text-muted: #475569;
   --sidebar-hover: #f9fafb;
+}
+
+/* Dark mode moderno e sofisticado com azul escuro e gradientes sutis */
+.dark {
+  --sidebar-bg: linear-gradient(180deg, hsl(240 10% 4%) 0%, hsl(240 10% 3%) 100%);
+  --sidebar-border: hsl(240 10% 10% / 0.3);
+  --sidebar-text: hsl(0 0% 98%);
+  --sidebar-text-muted: hsl(240 5% 64.9%);
+  --sidebar-hover: hsl(240 10% 7% / 0.8);
+  
+  /* Admin Button Colors com efeitos modernos */
+  --admin-primary: linear-gradient(135deg, hsl(45 100% 60%) 0%, hsl(45 100% 50%) 100%);
+  --admin-primary-hover: linear-gradient(135deg, hsl(45 100% 70%) 0%, hsl(45 100% 60%) 100%);
+  --admin-system: linear-gradient(135deg, hsl(0 84% 60%) 0%, hsl(0 84% 50%) 100%);
+  --admin-system-hover: linear-gradient(135deg, hsl(0 84% 70%) 0%, hsl(0 84% 60%) 100%);
+  --admin-school: linear-gradient(135deg, hsl(142 76% 50%) 0%, hsl(142 76% 40%) 100%);
+  --admin-school-hover: linear-gradient(135deg, hsl(142 76% 60%) 0%, hsl(142 76% 50%) 100%);
+  
+  /* Shadows modernas */
+  --shadow-sm: 0 2px 4px hsl(0 0% 0% / 0.25);
+  --shadow-md: 0 4px 12px hsl(0 0% 0% / 0.35);
+  --shadow-lg: 0 8px 20px hsl(0 0% 0% / 0.4);
+  
+  /* Transitions suaves */
+  --transition-base: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: all 0.2s ease;
+}
   
   /* Admin Button Colors */
-  --admin-primary: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  --admin-primary-hover: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  --admin-primary: linear-gradient(135deg, hsl(45 100% 60%) 0%, hsl(45 100% 50%) 100%);
+  --admin-primary-hover: linear-gradient(135deg, hsl(45 100% 70%) 0%, hsl(45 100% 60%) 100%);
   --admin-system: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
   --admin-system-hover: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
   --admin-school: linear-gradient(135deg, #059669 0%, #047857 100%);
@@ -247,9 +274,9 @@
 }
 
 /* Cores específicas únicas dos módulos quando não ativos */
-.module-icon[data-module="professor"] { color: #2563eb !important; }        /* Azul */
+.module-icon[data-module="professor"] { color: hsl(45 100% 60%) !important; }        /* Amarelo forte */
 .module-icon[data-module="aula-expandida"] { color: #f59e0b !important; }  /* Amarelo */
-.module-icon[data-module="enem-interativo"] { color: #3b82f6 !important; } /* Azul claro */
+.module-icon[data-module="enem-interativo"] { color: hsl(45 100% 60%) !important; } /* Amarelo forte */
 .module-icon[data-module="ti"] { color: #6b7280 !important; }             /* Cinza */
 .module-icon[data-module="atendimento"] { color: #ef4444 !important; }     /* Vermelho */
 .module-icon[data-module="rh"] { color: #8b5cf6 !important; }              /* Roxo */
@@ -368,7 +395,7 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  background: linear-gradient(135deg, hsl(45 100% 60%), hsl(45 100% 50%));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -407,7 +434,7 @@
 
 .admin-btn {
   background: var(--admin-primary);
-  border-color: #2563eb;
+  border-color: hsl(45 100% 60%);
   color: white;
   font-size: 14px;
   padding: 12px 16px;
@@ -420,7 +447,7 @@
 
 .admin-btn:hover {
   background: var(--admin-primary-hover);
-  border-color: #1d4ed8;
+  border-color: hsl(45 100% 50%);
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
@@ -589,7 +616,7 @@
 .admin-btn:focus,
 .logout-btn:focus,
 .mobile-hamburger-btn:focus-visible {
-  outline: 2px solid #3b82f6;
+  outline: 2px solid hsl(45 100% 60%);
   outline-offset: 2px;
 }
 

@@ -179,7 +179,7 @@
 
 /* Focus states */
 .chat-input-fixed textarea:focus {
-  outline: 2px solid #3b82f6 !important;
+  outline: 2px solid hsl(45 100% 60%) !important;
   outline-offset: 2px !important;
 }
 

@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import '../styles/modern-dark.css';
 
 @tailwind base;
 @tailwind components;
@@ -139,70 +140,84 @@
   }
 
   .dark {
-    /* === DARK MODE: PRETO + AMARELO + BRANCO === */
-    --background: 0 0% 4%; /* Preto profundo para o fundo principal */
-    --foreground: 0 0% 96%; /* Branco suave para o texto */
-    --card: 0 0% 8%; /* Cartões em tom grafite */
-    --card-foreground: 0 0% 94%; /* Texto claro sobre cartões */
-    --popover: 0 0% 6%; /* Sobreposições com contraste leve */
-    --popover-foreground: 0 0% 96%;
+    /* === DARK MODE MODERNO E SOFISTICADO: GRADIENTES SUTIS + CONTRASTE ELEGANTE === */
+    --background: 240 10% 3.9%; /* Azul escuro profundo - mais sofisticado que preto puro */
+    --foreground: 0 0% 98%; /* Branco suave - melhor para os olhos */
+    --card: 240 10% 5%; /* Cards com leve elevação em azul escuro */
+    --card-foreground: 0 0% 98%; /* Texto claro nos cards */
+    --popover: 240 10% 4%; /* Popovers com fundo sutil */
+    --popover-foreground: 0 0% 98%;
 
-    /* === DESTAQUES EM AMARELO === */
-    --primary: 47 97% 54%; /* Amarelo vibrante da marca */
-    --primary-foreground: 0 0% 6%; /* Texto escuro sobre amarelo */
+    /* === DESTAQUES EM AMARELO FORTE E VIBRANTE === */
+    --primary: 45 100% 60%; /* Amarelo forte e vibrante */
+    --primary-foreground: 0 0% 0%; /* Preto sobre amarelo para máximo contraste */
 
-    /* === NEUTROS PARA NAVEGAÇÃO === */
-    --secondary: 0 0% 14%; /* Grafite para superfícies secundárias */
-    --secondary-foreground: 0 0% 96%;
-    --muted: 0 0% 16%; /* Cinza neutro para elementos discretos */
-    --muted-foreground: 0 0% 70%;
+    /* === NEUTROS SOFISTICADOS COM GRADIENTES SUTIS === */
+    --secondary: 240 10% 8%; /* Cinza azulado para superfícies secundárias */
+    --secondary-foreground: 0 0% 98%; /* Texto claro */
+    --muted: 240 10% 6%; /* Cinza azulado para elementos discretos */
+    --muted-foreground: 240 5% 64.9%; /* Cinza médio para texto muted */
 
-    /* === ACENTOS E INTERAÇÕES === */
-    --accent: 0 0% 12%;
-    --accent-foreground: 0 0% 96%;
-    --destructive: 0 84% 58%;
-    --destructive-foreground: 0 0% 96%;
+    /* === ACENTOS E INTERAÇÕES ELEGANTES === */
+    --accent: 240 10% 7%; /* Acentos em cinza azulado */
+    --accent-foreground: 0 0% 98%; /* Texto claro */
+    --destructive: 0 84% 60%; /* Vermelho elegante */
+    --destructive-foreground: 0 0% 98%; /* Texto claro sobre vermelho */
 
-    /* === BORDAS E ESTADOS DE FOCO === */
-    --border: 0 0% 18%;
-    --input: 0 0% 12%;
-    --ring: 47 97% 54%;
+    /* === BORDAS E ESTADOS DE FOCO MODERNOS === */
+    --border: 240 10% 12%; /* Bordas sutis em cinza azulado */
+    --input: 240 10% 6%; /* Inputs com fundo sutil */
+    --ring: 45 100% 60%; /* Ring de foco em amarelo forte */
 
-    /* === CORES DE STATUS === */
-    --success: 142 71% 45%;
-    --success-foreground: 0 0% 100%;
-    --info: 210 96% 62%;
-    --info-foreground: 0 0% 100%;
-    --warning: 47 97% 54%;
-    --warning-foreground: 0 0% 6%;
+    /* === CORES DE STATUS MODERNAS E ELEGANTES === */
+    --success: 142 76% 50%; /* Verde elegante */
+    --success-foreground: 0 0% 98%; /* Texto claro */
+    --info: 210 100% 60%; /* Azul moderno */
+    --info-foreground: 0 0% 98%; /* Texto claro */
+    --warning: 45 100% 60%; /* Amarelo forte para warnings */
+    --warning-foreground: 0 0% 0%; /* Preto sobre amarelo */
 
-    /* === PALETA PARA GRÁFICOS === */
-    --chart-1: 47 97% 54%;
-    --chart-2: 142 71% 45%;
-    --chart-3: 210 96% 62%;
-    --chart-4: 320 73% 54%;
-    --chart-5: 12 85% 62%;
+    /* === PALETA PARA GRÁFICOS MODERNA === */
+    --chart-1: 45 100% 60%; /* Amarelo forte */
+    --chart-2: 142 76% 50%; /* Verde elegante */
+    --chart-3: 280 100% 70%; /* Roxo moderno */
+    --chart-4: 210 100% 60%; /* Azul moderno */
+    --chart-5: 12 90% 60%; /* Laranja vibrante */
 
-    /* === SIDEBAR COM IDENTIDADE VISUAL === */
-    --sidebar-background: 0 0% 6%;
-    --sidebar-foreground: 0 0% 96%;
-    --sidebar-primary: 47 97% 54%;
-    --sidebar-primary-foreground: 0 0% 6%;
-    --sidebar-accent: 0 0% 12%;
-    --sidebar-accent-foreground: 0 0% 96%;
-    --sidebar-border: 0 0% 18%;
-    --sidebar-ring: 47 97% 54%;
+    /* === SIDEBAR COM DESIGN MODERNO E SOFISTICADO === */
+    --sidebar-background: 240 10% 4%; /* Sidebar em azul escuro sofisticado */
+    --sidebar-foreground: 0 0% 98%; /* Texto claro */
+    --sidebar-primary: 45 100% 60%; /* Amarelo forte para elementos primários */
+    --sidebar-primary-foreground: 0 0% 0%; /* Preto sobre amarelo */
+    --sidebar-accent: 240 10% 7%; /* Acentos em cinza azulado */
+    --sidebar-accent-foreground: 0 0% 98%; /* Texto claro */
+    --sidebar-border: 240 10% 10%; /* Bordas sutis */
+    --sidebar-ring: 45 100% 60%; /* Ring de foco em amarelo forte */
 
-    /* === ESTADOS DE CARREGAMENTO === */
-    --loading-bg: hsl(0 0% 6%);
-    --loading-text: hsl(0 0% 96%);
-    --loading-accent: hsl(47 97% 54%);
-    --loading-primary: hsl(47 97% 54%);
+    /* === ESTADOS DE CARREGAMENTO MODERNOS === */
+    --loading-bg: hsl(240 10% 3.9%); /* Fundo de loading moderno */
+    --loading-text: hsl(0 0% 98%); /* Texto de loading claro */
+    --loading-accent: hsl(45 100% 60%); /* Acento de loading em amarelo forte */
+    --loading-primary: hsl(45 100% 60%); /* Primary de loading em amarelo forte */
 
     /* === SOMBRAS CONTEMPORÂNEAS === */
     --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.25);
     --shadow-base: 0 1px 3px 0 hsl(0 0% 0% / 0.35), 0 1px 2px -1px hsl(0 0% 0% / 0.35);
     --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.35), 0 2px 4px -2px hsl(0 0% 0% / 0.3);
+    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.4), 0 4px 6px -4px hsl(0 0% 0% / 0.3);
+    --shadow-xl: 0 20px 25px -5px hsl(0 0% 0% / 0.4), 0 8px 10px -6px hsl(0 0% 0% / 0.3);
+
+    /* === GRADIENTES MODERNOS COM AMARELO FORTE === */
+    --gradient-primary: linear-gradient(135deg, hsl(45 100% 60%) 0%, hsl(45 100% 50%) 100%);
+    --gradient-secondary: linear-gradient(135deg, hsl(240 10% 8%) 0%, hsl(240 10% 6%) 100%);
+    --gradient-card: linear-gradient(135deg, hsl(240 10% 5%) 0%, hsl(240 10% 4%) 100%);
+    --gradient-sidebar: linear-gradient(180deg, hsl(240 10% 4%) 0%, hsl(240 10% 3%) 100%);
+    --gradient-glass: linear-gradient(135deg, hsl(240 10% 6% / 0.8) 0%, hsl(240 10% 4% / 0.6) 100%);
+
+    /* === EFEITOS GLASSMORPHISM === */
+    --glass-bg: hsl(240 10% 5% / 0.8);
+    --glass-border: hsl(240 10% 12% / 0.3);
+    --glass-backdrop: blur(20px);
     --shadow-lg: 0 10px 18px -3px hsl(0 0% 0% / 0.35), 0 4px 10px -4px hsl(0 0% 0% / 0.3);
     --shadow-xl: 0 25px 30px -8px hsl(0 0% 0% / 0.35), 0 10px 12px -6px hsl(0 0% 0% / 0.3);
 
@@ -763,16 +778,119 @@
     color: hsl(var(--card-foreground)) !important;
   }
 
+  /* === MELHORIAS ULTRA MODERNAS PARA COMPONENTES ESPECÍFICOS === */
+  
+  /* Botões com visual neon e efeitos especiais */
+  .dark .btn-primary,
+  .dark .button-primary,
+  .dark button.bg-primary,
+  .dark button[class*="bg-primary"] {
+    background: linear-gradient(135deg, hsl(45 100% 65%) 0%, hsl(45 100% 60%) 100%) !important;
+    color: hsl(0 0% 0%) !important;
+    border: none !important;
+    box-shadow: 0 0 20px hsl(45 100% 65% / 0.4), 0 4px 12px hsl(45 100% 65% / 0.3) !important;
+    transition: all 0.3s ease !important;
+    position: relative !important;
+    overflow: hidden !important;
+  }
+
+  .dark .btn-primary:hover,
+  .dark .button-primary:hover,
+  .dark button.bg-primary:hover,
+  .dark button[class*="bg-primary"]:hover {
+    background: linear-gradient(135deg, hsl(45 100% 70%) 0%, hsl(45 100% 65%) 100%) !important;
+    box-shadow: 0 0 30px hsl(45 100% 65% / 0.6), 0 6px 20px hsl(45 100% 65% / 0.4) !important;
+    transform: translateY(-2px) !important;
+  }
+
+  /* Cards com elevação ultra moderna e efeito glass */
+  .dark .card,
+  .dark .panel {
+    background: hsl(0 0% 2%) !important;
+    border: 1px solid hsl(0 0% 8%) !important;
+    box-shadow: 0 8px 32px hsl(0 0% 0% / 0.6), 0 0 0 1px hsl(0 0% 8% / 0.1) !important;
+    backdrop-filter: blur(20px) !important;
+    position: relative !important;
+  }
+
+  .dark .card::before,
+  .dark .panel::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: linear-gradient(135deg, hsl(45 100% 65% / 0.05) 0%, transparent 50%) !important;
+    pointer-events: none !important;
+    border-radius: inherit !important;
+  }
+
+  /* Inputs com visual neon e focus ring especial */
+  .dark .input,
+  .dark .textarea,
+  .dark .select {
+    background: hsl(0 0% 2%) !important;
+    border: 1px solid hsl(0 0% 8%) !important;
+    color: hsl(0 0% 100%) !important;
+    transition: all 0.3s ease !important;
+    box-shadow: inset 0 1px 3px hsl(0 0% 0% / 0.3) !important;
+  }
+
+  .dark .input:focus,
+  .dark .textarea:focus,
+  .dark .select:focus {
+    border-color: hsl(45 100% 65%) !important;
+    box-shadow: 0 0 0 3px hsl(45 100% 65% / 0.3), inset 0 1px 3px hsl(0 0% 0% / 0.3) !important;
+    background: hsl(0 0% 1%) !important;
+  }
+
+  /* Sidebar com gradiente ultra moderno e efeito glass */
+  .dark .sidebar {
+    background: linear-gradient(180deg, hsl(0 0% 1%) 0%, hsl(0 0% 0%) 100%) !important;
+    border-right: 1px solid hsl(0 0% 6%) !important;
+    box-shadow: 4px 0 20px hsl(0 0% 0% / 0.4) !important;
+    backdrop-filter: blur(20px) !important;
+  }
+
+  /* Links com hover neon */
+  .dark .link:hover {
+    color: hsl(45 100% 65%) !important;
+    text-decoration: none !important;
+    text-shadow: 0 0 10px hsl(45 100% 65% / 0.5) !important;
+  }
+
+  /* Efeito especial para elementos ativos */
+  .dark .active,
+  .dark [aria-selected="true"],
+  .dark .selected {
+    background: linear-gradient(135deg, hsl(45 100% 65% / 0.2) 0%, hsl(45 100% 65% / 0.1) 100%) !important;
+    border-color: hsl(45 100% 65%) !important;
+    box-shadow: 0 0 15px hsl(45 100% 65% / 0.3) !important;
+  }
+
+  /* Scrollbar customizada */
+  .dark ::-webkit-scrollbar {
+    width: 8px !important;
+  }
+
+  .dark ::-webkit-scrollbar-track {
+    background: hsl(0 0% 2%) !important;
+  }
+
+  .dark ::-webkit-scrollbar-thumb {
+    background: hsl(45 100% 65%) !important;
+    border-radius: 4px !important;
+  }
+
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background: hsl(45 100% 70%) !important;
+  }
+
   /* === CORREÇÃO DE CONTRASTE EM BOTÕES === */
   .dark button {
     /* Garantir contraste adequado em todos os botões */
     color: hsl(var(--foreground)) !important;
-  }
-
-  .dark button.bg-primary,
-  .dark button[class*="bg-primary"] {
-    background-color: hsl(var(--primary)) !important;
-    color: hsl(var(--primary-foreground)) !important;
   }
 
   .dark button.bg-secondary,
@@ -1091,14 +1209,14 @@
   
   /* Enhanced math expressions styling */
   .math-inline {
-    @apply inline-flex items-center mx-1 bg-blue-50 dark:bg-blue-950 px-2 py-1 
-           rounded-md text-blue-800 dark:text-blue-200 font-mono text-sm
-           border border-blue-200 dark:border-blue-800 transition-colors;
+    @apply inline-flex items-center mx-1 bg-yellow-50 dark:bg-yellow-950 px-2 py-1 
+           rounded-md text-yellow-800 dark:text-yellow-200 font-mono text-sm
+           border border-yellow-200 dark:border-yellow-800 transition-colors;
   }
   
   .math-block {
-    @apply block my-4 text-center bg-blue-50 dark:bg-blue-950 p-4 
-           rounded-lg border border-blue-200 dark:border-blue-800
+    @apply block my-4 text-center bg-yellow-50 dark:bg-yellow-950 p-4 
+           rounded-lg border border-yellow-200 dark:border-yellow-800
            shadow-sm transition-colors;
   }
   
@@ -1134,8 +1252,8 @@
   }
   
   .status-info {
-    @apply bg-blue-50 dark:bg-blue-950 text-blue-800 dark:text-blue-200 
-           border-blue-200 dark:border-blue-800;
+    @apply bg-yellow-50 dark:bg-yellow-950 text-yellow-800 dark:text-yellow-200 
+           border-yellow-200 dark:border-yellow-800;
   }
   
   /* Glassmorphism effect */

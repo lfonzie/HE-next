@@ -23,27 +23,27 @@ export function useTheme() {
       // Adiciona a classe atual
       html.classList.add(theme)
       
-      // CORREÇÃO: Aplicar paleta moderna e atraente
+      // Aplicar paleta moderna e sofisticada com azul escuro e gradientes sutis
       if (theme === 'dark') {
-        html.style.setProperty('--background', '222 84% 5%') // Azul escuro profundo
-        html.style.setProperty('--foreground', '0 0% 98%') // Branco quase puro
-        html.style.setProperty('--card', '222 84% 8%') // Cards em azul escuro sutil
-        html.style.setProperty('--card-foreground', '0 0% 95%') // Texto claro nos cards
-        html.style.setProperty('--popover', '222 84% 6%') // Popovers em azul escuro
-        html.style.setProperty('--popover-foreground', '0 0% 95%')
-        html.style.setProperty('--primary', '45 93% 47%') // Amarelo dourado
-        html.style.setProperty('--primary-foreground', '222 84% 5%') // Texto escuro no amarelo
-              html.style.setProperty('--secondary', '222 84% 15%') // Azul escuro mais claro para elementos secundários
-              html.style.setProperty('--secondary-foreground', '0 0% 95%') // Branco para texto secundário - melhor contraste
-              html.style.setProperty('--muted', '222 84% 18%') // Azul escuro médio para elementos muted
-              html.style.setProperty('--muted-foreground', '0 0% 85%') // Cinza claro para texto muted - melhor legibilidade
-              html.style.setProperty('--accent', '222 84% 20%') // Azul escuro para acentos - melhor contraste
-              html.style.setProperty('--accent-foreground', '0 0% 95%') // Branco para texto de acento - máximo contraste
-        html.style.setProperty('--destructive', '0 84% 60%') // Vermelho para ações destrutivas
-        html.style.setProperty('--destructive-foreground', '0 0% 98%')
-        html.style.setProperty('--border', '222 84% 20%') // Bordas em azul escuro sutil
-        html.style.setProperty('--input', '222 84% 12%') // Inputs em azul escuro
-        html.style.setProperty('--ring', '45 93% 47%') // Focus ring em amarelo forte
+        html.style.setProperty('--background', '240 10% 3.9%') // Azul escuro profundo - mais sofisticado
+        html.style.setProperty('--foreground', '0 0% 98%') // Branco suave - melhor para os olhos
+        html.style.setProperty('--card', '240 10% 5%') // Cards com leve elevação em azul escuro
+        html.style.setProperty('--card-foreground', '0 0% 98%') // Texto claro nos cards
+        html.style.setProperty('--popover', '240 10% 4%') // Popovers com fundo sutil
+        html.style.setProperty('--popover-foreground', '0 0% 98%')
+        html.style.setProperty('--primary', '45 100% 60%') // Amarelo forte e vibrante
+        html.style.setProperty('--primary-foreground', '0 0% 0%') // Preto sobre amarelo para máximo contraste
+        html.style.setProperty('--secondary', '240 10% 8%') // Cinza azulado para elementos secundários
+        html.style.setProperty('--secondary-foreground', '0 0% 98%') // Texto claro
+        html.style.setProperty('--muted', '240 10% 6%') // Cinza azulado para elementos discretos
+        html.style.setProperty('--muted-foreground', '240 5% 64.9%') // Cinza médio para texto muted
+        html.style.setProperty('--accent', '240 10% 7%') // Preto quase absoluto para acentos
+        html.style.setProperty('--accent-foreground', '0 0% 100%') // Branco cristalino para texto de acento
+        html.style.setProperty('--destructive', '0 84% 65%') // Vermelho neon para ações destrutivas
+        html.style.setProperty('--destructive-foreground', '0 0% 100%') // Branco cristalino sobre vermelho
+        html.style.setProperty('--border', '0 0% 8%') // Bordas em cinza ultra escuro sutil
+        html.style.setProperty('--input', '0 0% 2%') // Inputs em preto quase absoluto
+        html.style.setProperty('--ring', '45 100% 60%') // Focus ring em amarelo forte
         
               // CORREÇÃO: Aplicar fundo animado moderno
               const body = document.body

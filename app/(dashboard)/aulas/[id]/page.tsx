@@ -1090,8 +1090,8 @@ export default function LessonPage() {
               </Button>
 
               {/* Keyboard Navigation Help */}
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="flex items-center gap-2 text-sm text-blue-700">
+              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div className="flex items-center gap-2 text-sm text-yellow-700">
                   <Keyboard className="h-4 w-4" />
                   <span className="font-medium">Navegação por teclado:</span>
                   <span>← → para navegar entre slides</span>

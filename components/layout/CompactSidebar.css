@@ -16,6 +16,14 @@
   height: 100vh !important;
 }
 
+/* Dark mode moderno e sofisticado para sidebar compacta */
+.dark .compact-sidebar-fixed {
+  background: linear-gradient(180deg, hsl(240 10% 4% / 0.98) 0%, hsl(240 10% 3% / 0.98) 100%) !important;
+  border-right: 1px solid hsl(240 10% 10% / 0.3) !important;
+  box-shadow: 0 8px 32px hsl(0 0% 0% / 0.4), 0 0 0 1px hsl(240 10% 12% / 0.1) !important;
+  backdrop-filter: blur(25px) !important;
+}
+
 /* Collapsed state - Ultra compact */
 .compact-sidebar-fixed.collapsed {
   width: 64px !important;
@@ -417,12 +425,12 @@ body.sidebar-collapsed .main-content-with-sidebar * {
 
 /* Focus states for accessibility */
 .compact-sidebar-item:focus {
-  outline: 2px solid #3b82f6 !important;
+  outline: 2px solid hsl(45 100% 60%) !important;
   outline-offset: 2px !important;
 }
 
 .compact-sidebar-toggle:focus {
-  outline: 2px solid #3b82f6 !important;
+  outline: 2px solid hsl(45 100% 60%) !important;
   outline-offset: 2px !important;
 }
 

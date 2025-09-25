@@ -78,7 +78,7 @@ interface LessonProgressProps {
   className?: string
 }
 
-// Componente de entretenimento durante o loading
+// Componente de entretenimento durante o loading - Sem fundo branco
 const LoadingEntertainment = ({ elapsedTime }: { elapsedTime: number }) => {
   const tips = [
     "💡 Dica: Quanto mais específico for seu tópico, melhor será sua aula personalizada!",
@@ -106,7 +106,7 @@ const LoadingEntertainment = ({ elapsedTime }: { elapsedTime: number }) => {
   const currentFact = facts[Math.floor(elapsedTime / 15000) % facts.length]
 
   return (
-    <div className="space-y-8 p-8 bg-gradient-to-br from-yellow-50 via-orange-50 to-red-50 rounded-2xl border border-yellow-200">
+    <div className="space-y-8 p-8">
       <div className="text-center">
         <div className="flex items-center justify-center gap-3 mb-4">
           <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-xl flex items-center justify-center">

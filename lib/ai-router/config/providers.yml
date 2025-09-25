@@ -181,6 +181,53 @@ providers:
       maxConcurrentRequests: 15
     fallbackPriority: 4
 
+  perplexity:
+    id: "perplexity-sonar"
+    name: "Perplexity AI"
+    type: "perplexity"
+    enabled: true
+    capabilities:
+      supportsJsonStrict: true
+      supportsToolUse: false
+      supportsStreaming: true
+      maxContextTokens: 128000
+      languagePreference: "multilingual"
+      domainExpertise:
+        - domain: "research"
+          confidence: 0.95
+          specialties: ["pesquisa", "informacoes-atualizadas"]
+        - domain: "educational"
+          confidence: 0.9
+          specialties: ["explicacoes", "conceitos"]
+        - domain: "conversational"
+          confidence: 0.85
+          specialties: ["chat", "perguntas-respostas"]
+      responseStyle: "informative"
+      avgLatencyMs: 1200
+      successRate: 0.96
+      costPer1kTokens:
+        inputPer1k: 0.0002
+        outputPer1k: 0.0002
+        currency: "USD"
+      dataResidency: ["us"]
+      complianceStandards:
+        - standard: "SOC2"
+          level: "intermediate"
+          certifications: ["SOC2 Type I"]
+      safetyFilters:
+        contentFiltering: "intermediate"
+        piiProtection: true
+        dataRetention: 30
+    config:
+      model: "sonar"
+      temperature: 0.7
+      maxTokens: 4000
+    limits:
+      requestsPerMinute: 100
+      tokensPerMinute: 200000
+      maxConcurrentRequests: 15
+    fallbackPriority: 4
+
   groq:
     id: "groq-llama-3"
     name: "Groq Llama 3"
