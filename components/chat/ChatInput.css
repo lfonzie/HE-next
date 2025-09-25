@@ -91,6 +91,7 @@
 .chat-input-fixed textarea {
   min-height: 48px !important;
   height: 48px !important;
+  max-height: 48px !important;
   resize: none !important;
   border-radius: 20px !important;
   border: 1px solid #e5e7eb !important;
@@ -98,6 +99,7 @@
   font-size: 16px !important;
   background: #f9fafb !important;
   transition: all 0.2s ease !important;
+  overflow: hidden !important;
 }
 
 /* Textarea focus state */
@@ -225,9 +227,11 @@
   .chat-input-fixed textarea {
     min-height: 44px !important;
     height: 44px !important;
+    max-height: 44px !important;
     font-size: 16px !important; /* Prevent zoom on iOS */
     border-radius: 18px !important;
     padding: 10px 14px !important;
+    overflow: hidden !important;
   }
 }
 
