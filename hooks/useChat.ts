@@ -193,7 +193,7 @@ export function useChat(onStreamingStart?: () => void) {
       
       while (currentRetryCount <= maxRetries) {
         try {
-          response = await fetch('/api/chat/ai-sdk-multi', {
+          response = await fetch('/api/chat', {
             method: "POST",
             headers: {
               "Content-Type": "application/json; charset=utf-8",
