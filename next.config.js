@@ -9,8 +9,6 @@ const nextConfig = {
   // Next.js 15+ features enabled
   experimental: {
     optimizePackageImports: ['@radix-ui/react-icons', 'lucide-react'],
-    // Explicitly disable Turbopack to use Webpack
-    turbo: false,
   },
   // Fix multiple lockfiles warning
   outputFileTracingRoot: __dirname,
@@ -208,13 +206,24 @@ const nextConfig = {
     config.externals = config.externals || []
     config.externals.push('canvg')
     
-    // Fix webpack optimization issues that can cause "Cannot read properties of undefined (reading 'call')" error
-    config.optimization = {
-      ...config.optimization,
-      sideEffects: false,
-      concatenateModules: false,
-      splitChunks: false,
-      usedExports: false,
+    // Optimize for production builds and memory usage
+    if (!dev) {
+      config.optimization = {
+        ...config.optimization,
+        sideEffects: false,
+        concatenateModules: true,
+        splitChunks: {
+          chunks: 'all',
+          cacheGroups: {
+            vendor: {
+              test: /[\\/]node_modules[\\/]/,
+              name: 'vendors',
+              chunks: 'all',
+            },
+          },
+        },
+        usedExports: true,
+      }
     }
     
     return config

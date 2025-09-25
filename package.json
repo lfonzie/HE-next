@@ -10,7 +10,7 @@
     "dev:clean": "rm -rf .next && npm run dev",
     "dev:turbo-alt": "./dev-turbo-alternative.sh",
     "build": "next build",
-    "build:render": "npm ci --include=dev && npm run build",
+    "build:render": "NODE_OPTIONS='--max-old-space-size=4096' npm ci --include=dev && NODE_OPTIONS='--max-old-space-size=4096' npm run build",
     "build:turbo": "next build --turbopack",
     "start": "next start -p $PORT",
     "health": "curl -f http://localhost:${PORT:-10000}/api/health || exit 1",

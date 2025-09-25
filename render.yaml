@@ -1,33 +1,15 @@
 services:
   - type: web
-    name: hubedu
+    name: hubedu-nextjs
     env: node
-    repo: https://github.com/lfonzie/HE-next
-    branch: main
-    rootDir: .
-    buildCommand: npm ci --include=dev && npx prisma generate && npm run build
-    startCommand: npx prisma migrate deploy && npm start
+    plan: starter
+    buildCommand: npm run build:render
+    startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
-      - key: ENEM_FALLBACK_MODEL
-        value: gpt-4o-mini
-      - key: DIRECT_URL
-        sync: false
-      - key: NEXTAUTH_URL
-        value: https://your-hubedu-app.onrender.com
-      - key: NEXTAUTH_SECRET
-        sync: false # Prompt for value during deployment
-      - key: DATABASE_URL
-        sync: false # Prompt for value during deployment
-      - key: OPENAI_API_KEY
-        sync: false # Prompt for value during deployment
-      - key: GOOGLE_GENERATIVE_AI_API_KEY
-        sync: false # Prompt for value during deployment (for Google Gemini)
-      - key: NEXT_PUBLIC_BASE_URL
-        value: https://your-hubedu-app.onrender.com
-      - key: NEXT_TELEMETRY_DISABLED
-        value: "1"
+      - key: NODE_OPTIONS
+        value: --max-old-space-size=4096
     healthCheckPath: /api/health
     autoDeploy: true
-    plan: starter
+    branch: main
