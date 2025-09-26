@@ -41,14 +41,14 @@ export const MODEL_PRICING: ModelPricing[] = [
     description: 'Gemini 1.5 Flash - Modelo rápido e econômico do Google'
   },
   
-  // Perplexity - Sonar (não Pro)
+  // Perplexity - Search API
   {
     provider: 'perplexity',
-    model: 'sonar',
-    inputCostPerMillionTokens: 1.00,
-    outputCostPerMillionTokens: 1.00,
+    model: 'search-api',
+    inputCostPerMillionTokens: 0.50,
+    outputCostPerMillionTokens: 0.50,
     contextWindow: 128000,
-    description: 'Perplexity Sonar - API de busca com IA (não Pro)'
+    description: 'Perplexity Search API - API de busca otimizada (2025)'
   }
 ]
 
@@ -193,10 +193,10 @@ export const PRICING_SUMMARY = {
     context: '1M tokens',
     usage: 'Modelo mais econômico para tarefas rápidas'
   },
-  perplexitySonar: {
-    input: '$1.00 por milhão de tokens',
-    output: '$1.00 por milhão de tokens',
+  perplexitySearch: {
+    input: '$0.50 por milhão de tokens',
+    output: '$0.50 por milhão de tokens',
     context: '128K tokens',
-    usage: 'API de busca com IA (não Pro)'
+    usage: 'API de busca otimizada (2025)'
   }
 }

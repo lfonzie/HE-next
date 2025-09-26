@@ -3,6 +3,8 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { processMessageForDisplay, forceConvertMathToUnicode } from '@/utils/unicode';
+import { normalizeFormulas } from '@/lib/utils/latex-normalization';
 import { 
   BookOpen, 
   Lightbulb, 
@@ -96,12 +98,28 @@ export default function MessageRenderer({
         </div>
         
         <div className="prose max-w-none">
-          <p className="text-gray-800 leading-relaxed">{content}</p>
+          <p className="text-gray-800 leading-relaxed">
+            {(() => {
+              // Processar Unicode para fórmulas matemáticas e químicas
+              const processedContent = processMessageForDisplay(content);
+              const latexNormalizedContent = normalizeFormulas(processedContent);
+              const mathProcessedContent = forceConvertMathToUnicode(latexNormalizedContent);
+              return mathProcessedContent;
+            })()}
+          </p>
         </div>
         
         {question && (
           <div className="mt-4 p-3 bg-white rounded-lg border">
-            <h4 className="font-semibold mb-2 text-gray-900">{question}</h4>
+            <h4 className="font-semibold mb-2 text-gray-900">
+              {(() => {
+                // Processar Unicode para fórmulas matemáticas e químicas
+                const processedContent = processMessageForDisplay(question);
+                const latexNormalizedContent = normalizeFormulas(processedContent);
+                const mathProcessedContent = forceConvertMathToUnicode(latexNormalizedContent);
+                return mathProcessedContent;
+              })()}
+            </h4>
             
             {helpMessage && onToggleHelp && (
               <button
@@ -115,7 +133,13 @@ export default function MessageRenderer({
             
             {showHelp && helpMessage && (
               <div className="p-2 bg-blue-50 rounded text-sm text-blue-800 mb-3">
-                {helpMessage}
+                {(() => {
+                  // Processar Unicode para fórmulas matemáticas e químicas
+                  const processedContent = processMessageForDisplay(helpMessage);
+                  const latexNormalizedContent = normalizeFormulas(processedContent);
+                  const mathProcessedContent = forceConvertMathToUnicode(latexNormalizedContent);
+                  return mathProcessedContent;
+                })()}
               </div>
             )}
             
@@ -123,7 +147,13 @@ export default function MessageRenderer({
               <div className="space-y-2">
                 {options.map((option, index) => (
                   <div key={index} className="text-sm text-gray-700">
-                    <span className="font-medium">{String.fromCharCode(65 + index)})</span> {option}
+                    <span className="font-medium">{String.fromCharCode(65 + index)})</span> {(() => {
+                      // Processar Unicode para fórmulas matemáticas e químicas
+                      const processedContent = processMessageForDisplay(option);
+                      const latexNormalizedContent = normalizeFormulas(processedContent);
+                      const mathProcessedContent = forceConvertMathToUnicode(latexNormalizedContent);
+                      return mathProcessedContent;
+                    })()}
                   </div>
                 ))}
               </div>

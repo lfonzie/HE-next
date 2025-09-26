@@ -19,12 +19,16 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
   className = "",
   isStreaming = false
 }) => {
-  // Para streaming, usar processamento mais simples e rápido
+  // Para streaming, aplicar processamento Unicode básico para fórmulas matemáticas
   if (isStreaming) {
+    // Aplicar conversão Unicode básica mesmo durante streaming
+    const streamingProcessedContent = processMessageForDisplay(content);
+    const streamingMathContent = forceConvertMathToUnicode(streamingProcessedContent);
+    
     return (
       <div className={`markdown-content ${className}`}>
         <div className="text-gray-700 dark:text-gray-300 leading-normal whitespace-pre-line">
-          {content}
+          {streamingMathContent}
         </div>
       </div>
     )

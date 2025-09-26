@@ -2,15 +2,8 @@ import NextAuth from "next-auth"
 import { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { getServerSession } from "next-auth/next"
-
-// Usuário de desenvolvimento temporário
-const DEV_USER = {
-  id: "dev-user-123",
-  email: "dev@hubedu.ia",
-  name: "Usuário Desenvolvimento",
-  role: "STUDENT",
-  password: "dev123" // Senha simples para desenvolvimento
-}
+import bcrypt from "bcryptjs"
+import { prisma } from "@/lib/db"
 
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET || "dev-secret-key",
@@ -30,26 +23,65 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        console.log("🔐 [DEV] NextAuth authorize called with:", { email: credentials?.email })
+        console.log("🔐 [AUTH] NextAuth authorize called with:", { email: credentials?.email })
         
         if (!credentials?.email || !credentials?.password) {
-          console.log("❌ [DEV] Missing credentials")
+          console.log("❌ [AUTH] Missing credentials")
           return null
         }
 
-        // Verificação simples para desenvolvimento
-        if (credentials.email === DEV_USER.email && credentials.password === DEV_USER.password) {
-          console.log("✅ [DEV] Authentication successful for:", DEV_USER.email)
-          return {
-            id: DEV_USER.id,
-            email: DEV_USER.email,
-            name: DEV_USER.name,
-            role: DEV_USER.role,
-          }
-        }
+        try {
+          // Buscar usuário no banco de dados
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email }
+          })
 
-        console.log("❌ [DEV] Invalid credentials")
-        return null
+          if (!user) {
+            console.log("❌ [AUTH] User not found:", credentials.email)
+            return null
+          }
+
+          if (!user.password_hash) {
+            console.log("❌ [AUTH] User has no password set:", credentials.email)
+            return null
+          }
+
+          // Verificar senha
+          const isValidPassword = await bcrypt.compare(credentials.password, user.password_hash)
+          
+          if (!isValidPassword) {
+            console.log("❌ [AUTH] Invalid password for:", credentials.email)
+            return null
+          }
+
+          console.log("✅ [AUTH] Authentication successful for:", user.email)
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name || user.email,
+            role: user.role,
+          }
+        } catch (error) {
+          console.error("❌ [AUTH] Database error:", error)
+          
+          // Fallback temporário para desenvolvimento quando o banco não está disponível
+          if (error.message.includes("denied access") || error.message.includes("not available")) {
+            console.log("⚠️ [AUTH] Database not available, using fallback for development")
+            
+            // Usuário de fallback temporário
+            if (credentials.email === "admin@hubedu.ia" && credentials.password === "admin123") {
+              console.log("✅ [AUTH] Fallback authentication successful")
+              return {
+                id: "fallback-admin-123",
+                email: "admin@hubedu.ia",
+                name: "Admin Fallback",
+                role: "ADMIN",
+              }
+            }
+          }
+          
+          return null
+        }
       }
     })
   ],
@@ -57,12 +89,14 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id
+        token.role = user.role
       }
       return token
     },
     async session({ session, token }) {
       if (token) {
         session.user.id = token.id as string
+        session.user.role = token.role as string
       }
       return session
     },

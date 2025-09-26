@@ -113,7 +113,7 @@ export async function POST(req: NextRequest) {
                   content
                 };
                 controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
-                console.log(`📝 [CHAT-STREAM] Chunk ${chunkCount}: "${content}"`);
+                // Log removido para reduzir ruído no terminal
               }
             }
             console.log(`✅ [CHAT-STREAM] OpenAI/GPT5 stream completed. Total chunks: ${chunkCount}`);

@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 // Removed framer-motion animations
 import ContentProcessor from './ContentProcessor'
 import { useUnsplashImage } from '@/hooks/useUnsplashImage'
-import GeminiNativeAudioPlayer from '@/components/audio/GeminiNativeAudioPlayer'
+import FixedTTSPlayer from '@/components/audio/FixedTTSPlayer'
 
 interface AnimationSlideProps {
   title: string
@@ -23,6 +23,11 @@ interface AnimationSlideProps {
   isLastSlide?: boolean
   lessonTheme?: string
   imageUrl?: string // Add imageUrl prop for dynamic images
+  // TTS navigation props
+  onPrevious?: () => void
+  onNext?: () => void
+  canGoPrevious?: boolean
+  canGoNext?: boolean
 }
 
 export default function AnimationSlide({
@@ -37,7 +42,11 @@ export default function AnimationSlide({
   isFirstSlide = false,
   isLastSlide = false,
   lessonTheme = 'geral',
-  imageUrl
+  imageUrl,
+  onPrevious,
+  onNext,
+  canGoPrevious = false,
+  canGoNext = false
 }: AnimationSlideProps) {
   // Removed animation-related state variables
 
@@ -124,14 +133,20 @@ export default function AnimationSlide({
             </div>
           )}
           
-          {/* Gemini 2.5 Audio Preview Player */}
+          {/* Fixed TTS Player com Gemini 2.5 + WaveNet fallback */}
           {content && (
             <div className="mb-6">
-              <GeminiNativeAudioPlayer
+              <FixedTTSPlayer
                 text={content}
                 voice="Zephyr"
                 autoPlay={false}
                 className="w-full"
+                onPrevious={onPrevious}
+                onNext={onNext}
+                canGoPrevious={canGoPrevious}
+                canGoNext={canGoNext}
+                initialSpeed={1.0}
+                initialVolume={0.8}
               />
             </div>
           )}

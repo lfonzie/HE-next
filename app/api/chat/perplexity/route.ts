@@ -1,8 +1,7 @@
 import { NextRequest } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { streamText, generateText } from 'ai'
-import { perplexity } from '@ai-sdk/perplexity'
+import { Perplexity } from '@perplexity-ai/perplexity_ai'
 import { getSystemPrompt } from '@/lib/system-message-loader'
 
 // Prevent prerendering of this API route
@@ -59,52 +58,38 @@ export async function POST(request: NextRequest) {
     // Obter system prompt para o módulo
     const systemPrompt = getSystemPrompt(targetModule)
     
-    // Preparar mensagens para o AI SDK
-    const aiMessages = [
-      {
-        role: 'system' as const,
-        content: systemPrompt
-      },
-      ...messages.map(msg => ({
-        role: msg.role as 'user' | 'assistant',
-        content: msg.content
-      }))
-    ]
-
-    // Configurar modelo Perplexity - usando sonar
-    const model = perplexity(process.env.PERPLEXITY_MODEL_SELECTION || 'sonar', {
+    // Configurar cliente Perplexity
+    const client = new Perplexity({
       apiKey: process.env.PERPLEXITY_API_KEY,
     })
 
-    // Configurações de streaming
-    const streamingConfig = {
-      maxTokens: 4000,
-      temperature: 0.7,
-      topP: 0.9,
-    }
+    // Usar a nova Search API
+    const searchResult = await client.search.create({
+      query: lastMessage.content,
+      max_results: 5,
+      max_tokens_per_page: 1024
+    })
+
+    // Formatar resultados da busca
+    const searchResults = searchResult.results.map(result => 
+      `**${result.title}**\n${result.snippet}\nURL: ${result.url}\n`
+    ).join('\n---\n');
+
+    const responseText = `Baseado na busca mais recente, aqui estão os resultados:\n\n${searchResults}`;
 
     // Headers otimizados
     const headers = {
       'Content-Type': 'text/plain; charset=utf-8',
       'X-Provider': 'perplexity',
-      'X-Model': process.env.PERPLEXITY_MODEL_SELECTION || 'sonar',
+      'X-Model': 'search-api',
       'X-Module': targetModule,
-      'X-Streaming': 'true'
+      'X-Streaming': 'false'
     }
 
-    // Streaming com Perplexity
-    const result = await streamText({
-      model,
-      messages: aiMessages,
-      maxTokens: streamingConfig.maxTokens,
-      temperature: streamingConfig.temperature,
-      topP: streamingConfig.topP,
-    })
+    console.log('✅ Perplexity Search API completed successfully')
 
-    console.log('✅ Perplexity streaming started successfully')
-
-    // Retornar resposta de streaming
-    return result.toTextStreamResponse({
+    // Retornar resposta direta (não streaming)
+    return new Response(responseText, {
       headers
     })
 
@@ -123,3 +108,4 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+

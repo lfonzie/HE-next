@@ -2,6 +2,7 @@
 
 import React from 'react'
 import { normalizeUnicode, processMessageForDisplay, convertMathToUnicode, forceConvertMathToUnicode } from "@/utils/unicode";
+import { normalizeFormulas } from "@/lib/utils/latex-normalization";
 
 interface MarkdownRendererProps {
   content?: string
@@ -11,7 +12,8 @@ interface MarkdownRendererProps {
 export default function MarkdownRenderer({ content = '', className = '' }: MarkdownRendererProps) {
   // Processar Unicode e normalizar conteúdo
   const processedContent = processMessageForDisplay(content);
-  const mathProcessedContent = forceConvertMathToUnicode(processedContent);
+  const latexNormalizedContent = normalizeFormulas(processedContent);
+  const mathProcessedContent = forceConvertMathToUnicode(latexNormalizedContent);
   // Preservar quebras de linha duplas para separação de parágrafos
   const normalizedContent = mathProcessedContent.replace(/\n{3,}/g, '\n\n').trim();
   

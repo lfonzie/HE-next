@@ -222,8 +222,26 @@ export function convertMathToUnicode(text: string): string {
     return output;
   };
   
-  // Primeiro processar frações com parser robusto
-  let result = replaceLatexFractions(text)
+  // Primeiro processar frações específicas, depois frações com parser robusto
+  let result = text
+    // Frações específicas (processar antes das frações gerais)
+    .replace(/\\frac\{1\}\{2\}/g, '½')
+    .replace(/\\frac\{1\}\{3\}/g, '⅓')
+    .replace(/\\frac\{2\}\{3\}/g, '⅔')
+    .replace(/\\frac\{1\}\{4\}/g, '¼')
+    .replace(/\\frac\{3\}\{4\}/g, '¾')
+    .replace(/\\frac\{1\}\{5\}/g, '⅕')
+    .replace(/\\frac\{2\}\{5\}/g, '⅖')
+    .replace(/\\frac\{3\}\{5\}/g, '⅗')
+    .replace(/\\frac\{4\}\{5\}/g, '⅘')
+    .replace(/\\frac\{1\}\{6\}/g, '⅙')
+    .replace(/\\frac\{5\}\{6\}/g, '⅚')
+    .replace(/\\frac\{1\}\{8\}/g, '⅛')
+    .replace(/\\frac\{3\}\{8\}/g, '⅜')
+    .replace(/\\frac\{5\}\{8\}/g, '⅝')
+    .replace(/\\frac\{7\}\{8\}/g, '⅞');
+  
+  result = replaceLatexFractions(result)
     // Processar funções trigonométricas específicas
     .replace(/\\sin/g, 'sin')
     .replace(/\\cos/g, 'cos')
@@ -400,6 +418,23 @@ export function convertMathToUnicode(text: string): string {
     .replace(/\\Psi/g, 'Ψ')
     .replace(/\\Omega/g, 'Ω')
     
+    // Frações específicas (processar antes das frações gerais)
+    .replace(/\\frac\{1\}\{2\}/g, '½')
+    .replace(/\\frac\{1\}\{3\}/g, '⅓')
+    .replace(/\\frac\{2\}\{3\}/g, '⅔')
+    .replace(/\\frac\{1\}\{4\}/g, '¼')
+    .replace(/\\frac\{3\}\{4\}/g, '¾')
+    .replace(/\\frac\{1\}\{5\}/g, '⅕')
+    .replace(/\\frac\{2\}\{5\}/g, '⅖')
+    .replace(/\\frac\{3\}\{5\}/g, '⅗')
+    .replace(/\\frac\{4\}\{5\}/g, '⅘')
+    .replace(/\\frac\{1\}\{6\}/g, '⅙')
+    .replace(/\\frac\{5\}\{6\}/g, '⅚')
+    .replace(/\\frac\{1\}\{8\}/g, '⅛')
+    .replace(/\\frac\{3\}\{8\}/g, '⅜')
+    .replace(/\\frac\{5\}\{8\}/g, '⅝')
+    .replace(/\\frac\{7\}\{8\}/g, '⅞')
+    
     // Conjuntos
     .replace(/\\in/g, '∈')
     .replace(/\\notin/g, '∉')
@@ -492,6 +527,26 @@ export function convertMathToUnicode(text: string): string {
     .replace(/\\heat/g, 'Δ')
     .replace(/\\light/g, 'hν')
     .replace(/\\electricity/g, '⚡')
+    .replace(/\\catalyzed/g, '→')
+    .replace(/\\heated/g, 'Δ')
+    .replace(/\\photolysis/g, 'hν')
+    .replace(/\\electrolysis/g, '⚡')
+    .replace(/\\decomposition/g, '→')
+    .replace(/\\synthesis/g, '→')
+    .replace(/\\combustion/g, '→')
+    .replace(/\\oxidation/g, '→')
+    .replace(/\\reduction/g, '→')
+    .replace(/\\neutralization/g, '→')
+    .replace(/\\precipitation/g, '↓')
+    .replace(/\\gas/g, '↑')
+    .replace(/\\solid/g, '↓')
+    .replace(/\\liquid/g, '→')
+    .replace(/\\aqueous/g, '(aq)')
+    .replace(/\\gas\b/g, '(g)')
+    .replace(/\\solid\b/g, '(s)')
+    .replace(/\\liquid\b/g, '(l)')
+    .replace(/\\crystal\b/g, '(c)')
+    .replace(/\\plasma\b/g, '(p)')
     
     // Conversões específicas para fotossíntese e reações químicas
     .replace(/\\rightarrow/g, '→')

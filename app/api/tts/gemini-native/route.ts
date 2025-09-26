@@ -72,29 +72,58 @@ export async function POST(request: NextRequest) {
                   return
                 }
                 
-                console.log('📨 [GEMINI-2.5-NATIVE-AUDIO] Message received:', message.type)
+                console.log('📨 [GEMINI-2.5-NATIVE-AUDIO] Message received:', message.type || 'undefined')
+                console.log('📨 [GEMINI-2.5-NATIVE-AUDIO] Full message structure:', JSON.stringify(message, null, 2))
                 
+                // Check for audio data in different possible structures
+                let audioData = null
+                let mimeType = 'audio/wav'
+                
+                // Try different message structures
                 if (message.serverContent?.modelTurn?.parts) {
                   const part = message.serverContent.modelTurn.parts[0]
                   
                   if (part?.inlineData) {
-                    console.log(`🎵 [GEMINI-2.5-NATIVE-AUDIO] Audio data received`)
-                    
-                    // Send audio data to client
-                    try {
-                      if (!isControllerClosed && !isSessionClosed && controller.desiredSize !== null) {
-                        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
-                          type: 'audio', 
-                          data: part.inlineData.data,
-                          mimeType: part.inlineData.mimeType
-                        })}\n\n`))
-                      }
-                    } catch (error) {
-                      console.error('❌ [GEMINI-2.5-NATIVE-AUDIO] Error enqueueing audio data:', error)
-                      closeControllerAndSession()
-                    }
+                    audioData = part.inlineData.data
+                    mimeType = part.inlineData.mimeType || 'audio/wav'
+                    console.log(`🎵 [GEMINI-2.5-NATIVE-AUDIO] Audio data found in modelTurn.parts`)
                   }
+                }
+                
+                // Alternative structure check
+                if (!audioData && message.inlineData) {
+                  audioData = message.inlineData.data
+                  mimeType = message.inlineData.mimeType || 'audio/wav'
+                  console.log(`🎵 [GEMINI-2.5-NATIVE-AUDIO] Audio data found in inlineData`)
+                }
+                
+                // Another alternative structure
+                if (!audioData && message.data) {
+                  audioData = message.data
+                  console.log(`🎵 [GEMINI-2.5-NATIVE-AUDIO] Audio data found in data field`)
+                }
+                
+                if (audioData) {
+                  console.log(`🎵 [GEMINI-2.5-NATIVE-AUDIO] Audio data received: ${audioData.length} chars, mimeType: ${mimeType}`)
                   
+                  // Send audio data to client
+                  try {
+                    if (!isControllerClosed && !isSessionClosed && controller.desiredSize !== null) {
+                      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
+                        type: 'audio', 
+                        data: audioData,
+                        mimeType: mimeType
+                      })}\n\n`))
+                    }
+                  } catch (error) {
+                    console.error('❌ [GEMINI-2.5-NATIVE-AUDIO] Error enqueueing audio data:', error)
+                    closeControllerAndSession()
+                  }
+                }
+                
+                // Check for text content
+                if (message.serverContent?.modelTurn?.parts) {
+                  const part = message.serverContent.modelTurn.parts[0]
                   if (part?.text) {
                     console.log(`💬 [GEMINI-2.5-NATIVE-AUDIO] Text: ${part.text}`)
                   }

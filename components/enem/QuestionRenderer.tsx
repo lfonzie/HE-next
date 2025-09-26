@@ -3,6 +3,8 @@
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { ImageWithFallback } from './ImageWithFallback'
+import { processMessageForDisplay, forceConvertMathToUnicode } from '@/utils/unicode'
+import { normalizeFormulas } from '@/lib/utils/latex-normalization'
 
 interface QuestionRendererProps {
   question: string
@@ -17,6 +19,11 @@ export function QuestionRenderer({
   imageAlt, 
   className = "" 
 }: QuestionRendererProps) {
+  // Processar Unicode para fórmulas matemáticas e químicas
+  const processedContent = processMessageForDisplay(question);
+  const latexNormalizedContent = normalizeFormulas(processedContent);
+  const mathProcessedContent = forceConvertMathToUnicode(latexNormalizedContent);
+  
   return (
     <div className={`prose max-w-none ${className}`}>
       {/* Question Statement with Markdown Support */}
@@ -69,7 +76,7 @@ export function QuestionRenderer({
             ),
           }}
         >
-          {question}
+          {mathProcessedContent}
         </ReactMarkdown>
       </div>
 

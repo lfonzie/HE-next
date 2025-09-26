@@ -281,6 +281,10 @@ export default function DynamicStage({
             isLastSlide={stageIndex === totalStages - 1}
             lessonTheme={lessonTheme}
             imageUrl={activity.imageUrl} // Pass dynamic image URL
+            onPrevious={onPrevious}
+            onNext={onNext}
+            canGoPrevious={canGoPrevious}
+            canGoNext={canGoNext}
           />
         )
 

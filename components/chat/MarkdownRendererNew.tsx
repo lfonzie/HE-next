@@ -6,6 +6,7 @@ import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/github.css";
 import { normalizeUnicode, processMessageForDisplay, convertMathToUnicode, forceConvertMathToUnicode } from "@/utils/unicode";
+import { normalizeFormulas } from "@/lib/utils/latex-normalization";
 
 interface MarkdownRendererProps {
   content: string;
@@ -18,12 +19,16 @@ export const MarkdownRendererNew: React.FC<MarkdownRendererProps> = ({
   className = "",
   isStreaming = false
 }) => {
-  // Para streaming, usar processamento mais simples e rápido
+  // Para streaming, aplicar processamento Unicode básico para fórmulas matemáticas
   if (isStreaming) {
+    // Aplicar conversão Unicode básica mesmo durante streaming
+    const streamingProcessedContent = processMessageForDisplay(content);
+    const streamingMathContent = forceConvertMathToUnicode(streamingProcessedContent);
+    
     return (
       <div className={`markdown-content ${className}`}>
         <div className="text-gray-700 dark:text-gray-300 leading-normal whitespace-pre-line">
-          {content}
+          {streamingMathContent}
         </div>
       </div>
     )
@@ -31,7 +36,8 @@ export const MarkdownRendererNew: React.FC<MarkdownRendererProps> = ({
   
   // Processar Unicode e normalizar conteúdo apenas quando não está streaming
   const processedContent = processMessageForDisplay(content);
-  const mathProcessedContent = forceConvertMathToUnicode(processedContent);
+  const latexNormalizedContent = normalizeFormulas(processedContent);
+  const mathProcessedContent = forceConvertMathToUnicode(latexNormalizedContent);
   // Preservar quebras de linha duplas para separação de parágrafos
   const normalizedContent = mathProcessedContent.replace(/\n{3,}/g, '\n\n').trim();
   

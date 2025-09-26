@@ -24,6 +24,8 @@ import {
 import { EnemScore, EnemItem, EnemResponse } from '@/types/enem';
 import { useToast } from '@/hooks/use-toast';
 import ReactMarkdown from 'react-markdown';
+import { processMessageForDisplay, forceConvertMathToUnicode } from '@/utils/unicode';
+import { normalizeFormulas } from '@/lib/utils/latex-normalization';
 import remarkGfm from 'remark-gfm';
 
 interface EnemResultsProps {
@@ -513,9 +515,16 @@ export function EnemResults({ score, sessionId, onRetake, onRefocus, items = [],
                     <CardContent className="space-y-3">
                       {/* Questão */}
                       <div className="prose max-w-none prose-sm">
-                        <ReactMarkdown
-                          remarkPlugins={[remarkGfm]}
-                          components={{
+                        {(() => {
+                          // Processar Unicode para fórmulas matemáticas e químicas
+                          const processedContent = processMessageForDisplay(item.text || '');
+                          const latexNormalizedContent = normalizeFormulas(processedContent);
+                          const mathProcessedContent = forceConvertMathToUnicode(latexNormalizedContent);
+                          
+                          return (
+                            <ReactMarkdown
+                              remarkPlugins={[remarkGfm]}
+                              components={{
                             h1: ({ children }) => (
                               <h1 className="text-base font-semibold mb-2 text-gray-900">{children}</h1>
                             ),
@@ -541,8 +550,10 @@ export function EnemResults({ score, sessionId, onRetake, onRefocus, items = [],
                             ),
                           }}
                         >
-                          {item.text || ''}
+                          {mathProcessedContent}
                         </ReactMarkdown>
+                          )
+                        })()}
                       </div>
 
                       {/* Alternativas */}

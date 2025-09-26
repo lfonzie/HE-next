@@ -112,4 +112,6 @@ prisma/migrations/
 .vercel
 
 # TypeScript
-*.tsbuildinfo
+*.tsbuildinfoHE-next/
+env_final
+env_local_final

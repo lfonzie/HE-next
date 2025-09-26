@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { processMessageForDisplay, forceConvertMathToUnicode } from '@/utils/unicode'
+import { normalizeFormulas } from '@/lib/utils/latex-normalization'
 import {
   CheckCircle,
   Flag,
@@ -146,11 +148,17 @@ export function EnemQuestionRenderer({
   }, [onImageZoom])
 
   // Render question text with enhanced markdown
-  const renderQuestionText = () => (
-    <div className={`prose max-w-none ${fontSizeClasses[fontSize]}`}>
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
-        components={{
+  const renderQuestionText = () => {
+    // Processar Unicode para fórmulas matemáticas e químicas
+    const processedContent = processMessageForDisplay(item.text || '');
+    const latexNormalizedContent = normalizeFormulas(processedContent);
+    const mathProcessedContent = forceConvertMathToUnicode(latexNormalizedContent);
+    
+    return (
+      <div className={`prose max-w-none ${fontSizeClasses[fontSize]}`}>
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          components={{
           h1: ({ children }) => (
             <h1 className="text-2xl font-bold mb-4 text-gray-900">{children}</h1>
           ),
@@ -199,10 +207,11 @@ export function EnemQuestionRenderer({
           ),
         }}
       >
-        {item.text}
+        {mathProcessedContent}
       </ReactMarkdown>
     </div>
-  )
+    )
+  }
 
   // Render alternatives
   const renderAlternatives = () => (

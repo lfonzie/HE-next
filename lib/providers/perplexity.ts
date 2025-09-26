@@ -1,13 +1,13 @@
+import { Perplexity } from '@perplexity-ai/perplexity_ai';
 import { mapToOpenAIMessages, trimHistory, ChatMessage } from "../chat-history";
 
-function getPerplexityHeaders() {
+function getPerplexityClient() {
   if (!process.env.PERPLEXITY_API_KEY) {
     throw new Error("PERPLEXITY_API_KEY environment variable is required");
   }
-  return {
-    "Authorization": `Bearer ${process.env.PERPLEXITY_API_KEY}`,
-    "Content-Type": "application/json"
-  };
+  return new Perplexity({
+    apiKey: process.env.PERPLEXITY_API_KEY,
+  });
 }
 
 export async function callPerplexity(
@@ -16,31 +16,31 @@ export async function callPerplexity(
   input: string,
   systemPrompt?: string
 ) {
-  const trimmed = trimHistory([...history, { role: "user", content: input }]);
-  const messages = mapToOpenAIMessages(trimmed);
-
-  if (systemPrompt && !messages.some(m => m.role === "system")) {
-    messages.unshift({ role: "system", content: systemPrompt });
-  }
-
-  const response = await fetch("https://api.perplexity.ai/chat/completions", {
-    method: "POST",
-    headers: getPerplexityHeaders(),
-    body: JSON.stringify({
-      model,
-      messages,
-      temperature: 0.7,
-      stream: false
-    })
+  const client = getPerplexityClient();
+  
+  // Use the new Search API instead of chat completions
+  const searchResult = await client.search.create({
+    query: input,
+    max_results: 5,
+    max_tokens_per_page: 1024
   });
 
-  if (!response.ok) {
-    throw new Error(`Perplexity API error: ${response.status} ${response.statusText}`);
-  }
+  // Format the search results into a response
+  const searchResults = searchResult.results.map(result => 
+    `**${result.title}**\n${result.snippet}\nURL: ${result.url}\n`
+  ).join('\n---\n');
 
-  const res = await response.json();
-  const text = res.choices[0]?.message?.content ?? "";
-  return { text, raw: res, usage: res.usage };
+  const text = `Baseado na busca mais recente, aqui estão os resultados:\n\n${searchResults}`;
+  
+  return { 
+    text, 
+    raw: searchResult, 
+    usage: { 
+      prompt_tokens: 0, 
+      completion_tokens: 0, 
+      total_tokens: 0 
+    } 
+  };
 }
 
 export async function streamPerplexity(
@@ -49,65 +49,51 @@ export async function streamPerplexity(
   input: string,
   systemPrompt?: string
 ) {
-  const trimmed = trimHistory([...history, { role: "user", content: input }]);
-  const messages = mapToOpenAIMessages(trimmed);
-
-  if (systemPrompt && !messages.some(m => m.role === "system")) {
-    messages.unshift({ role: "system", content: systemPrompt });
-  }
-
-  const response = await fetch("https://api.perplexity.ai/chat/completions", {
-    method: "POST",
-    headers: getPerplexityHeaders(),
-    body: JSON.stringify({
-      model,
-      messages,
-      temperature: 0.7,
-      stream: true
-    })
+  const client = getPerplexityClient();
+  
+  // Use the new Search API - note that Search API doesn't support streaming
+  // We'll simulate streaming by chunking the response
+  const searchResult = await client.search.create({
+    query: input,
+    max_results: 5,
+    max_tokens_per_page: 1024
   });
 
-  if (!response.ok) {
-    throw new Error(`Perplexity API error: ${response.status} ${response.statusText}`);
-  }
+  // Format the search results
+  const searchResults = searchResult.results.map(result => 
+    `**${result.title}**\n${result.snippet}\nURL: ${result.url}\n`
+  ).join('\n---\n');
 
-  // Criar um stream iterável similar ao OpenAI
-  const reader = response.body?.getReader();
-  if (!reader) {
-    throw new Error("No response body from Perplexity");
-  }
-
-  const decoder = new TextDecoder();
+  const fullText = `Baseado na busca mais recente, aqui estão os resultados:\n\n${searchResults}`;
+  
+  // Simulate streaming by chunking the response
+  const chunks = fullText.split(' ');
+  let currentIndex = 0;
   
   return {
     async *[Symbol.asyncIterator]() {
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          
-          const chunk = decoder.decode(value, { stream: true });
-          const lines = chunk.split('\n');
-          
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const data = line.slice(6);
-              if (data === '[DONE]') return;
-              
-              try {
-                const parsed = JSON.parse(data);
-                if (parsed.choices?.[0]?.delta) {
-                  yield parsed;
-                }
-              } catch (e) {
-                // Ignorar linhas inválidas
-              }
+      while (currentIndex < chunks.length) {
+        const chunk = chunks[currentIndex] + (currentIndex < chunks.length - 1 ? ' ' : '');
+        yield {
+          choices: [{
+            delta: {
+              content: chunk
             }
-          }
-        }
-      } finally {
-        reader.releaseLock();
+          }]
+        };
+        currentIndex++;
+        
+        // Add small delay to simulate streaming
+        await new Promise(resolve => setTimeout(resolve, 50));
       }
+      
+      // Final chunk to indicate completion
+      yield {
+        choices: [{
+          delta: {},
+          finish_reason: 'stop'
+        }]
+      };
     }
   };
 }

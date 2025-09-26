@@ -236,6 +236,11 @@ export function normalizeFormulas(text: string): string {
   normalizedText = normalizedText.replace(/\\xleftarrow\{\\text\{([^}]*)\}\}/g, '← [$1]');
   normalizedText = normalizedText.replace(/\\xleftrightarrow\{\\text\{([^}]*)\}\}/g, '↔ [$1]');
   
+  // Handle arrows with text annotations without \text command
+  normalizedText = normalizedText.replace(/\\xrightarrow\{([^}]*)\}/g, '→ [$1]');
+  normalizedText = normalizedText.replace(/\\xleftarrow\{([^}]*)\}/g, '← [$1]');
+  normalizedText = normalizedText.replace(/\\xleftrightarrow\{([^}]*)\}/g, '↔ [$1]');
+  
   // 7. Handle simple arrows
   Object.entries(LATEX_TO_UNICODE_MAPPINGS.arrows).forEach(([latex, unicode]) => {
     normalizedText = normalizedText.replace(new RegExp(latex.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), unicode);
@@ -274,8 +279,10 @@ export function normalizeFormulas(text: string): string {
   normalizedText = normalizedText.replace(/\\[^a-zA-Z]/g, '');
   normalizedText = normalizedText.replace(/\\[a-zA-Z]+\{[^}]*\}/g, '');
 
-  // 16. Clean up LaTeX brackets
+  // 16. Clean up LaTeX brackets and extra braces
   normalizedText = normalizedText.replace(/[\[\]]/g, '');
+  normalizedText = normalizedText.replace(/\{\{([^}]*)\}\}/g, '$1'); // Remove double braces
+  normalizedText = normalizedText.replace(/\{([^}]*)\}/g, '$1'); // Remove single braces
 
   return normalizedText;
 }
@@ -309,8 +316,10 @@ export function normalizeChemicalFormula(input: string): string {
     .replace(/\\longleftrightarrow|\\xleftrightarrow\{[^}]*\}/g, "↔")
     // Remove \text{} commands
     .replace(/\\text\{([^}]*)\}/g, "$1")
-    // Clean LaTeX brackets
+    // Clean LaTeX brackets and extra braces
     .replace(/[\[\]]/g, "")
+    .replace(/\{\{([^}]*)\}\}/g, '$1') // Remove double braces
+    .replace(/\{([^}]*)\}/g, '$1') // Remove single braces
     // Clean remaining LaTeX commands
     .replace(/\\[a-zA-Z]+/g, '');
 }
