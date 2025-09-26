@@ -1,326 +1,115 @@
-/* ===== MODERN DARK MODE STYLES ===== */
+/* === Modern dark theme enhancements (2025 baseline) === */
 
-/* === CARDS E ELEMENTOS MODERNOS COM GLASSMORPHISM === */
-.dark .bg-card {
-  background: var(--gradient-card) !important;
-  backdrop-filter: var(--glass-backdrop) !important;
-  border: 1px solid var(--glass-border) !important;
-  box-shadow: var(--shadow-md) !important;
-  color: hsl(var(--card-foreground)) !important;
-}
-
-.dark .bg-primary {
-  background: var(--gradient-primary) !important;
-  color: hsl(var(--primary-foreground)) !important;
-  box-shadow: 0 4px 12px hsl(45 100% 60% / 0.3) !important;
-}
-
-/* === ELEMENTOS MODERNOS COM GLASSMORPHISM === */
-.dark .box,
+/* Utility surfaces keep the 60-30-10 ratio for background/foreground/accent */
+.dark .surface,
 .dark .card,
+.dark .bg-card,
 .dark .panel,
 .dark .modal,
 .dark .dialog,
 .dark .popover,
-.dark .tooltip,
 .dark .dropdown,
-.dark .menu {
-  background: var(--gradient-card) !important;
-  backdrop-filter: var(--glass-backdrop) !important;
-  border: 1px solid var(--glass-border) !important;
-  box-shadow: var(--shadow-md) !important;
-  color: hsl(var(--card-foreground)) !important;
+.dark .menu,
+.dark .tooltip {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  box-shadow: var(--shadow-md);
+  color: hsl(var(--card-foreground));
 }
 
-/* === SIDEBAR E NAVEGAÇÃO MODERNOS === */
-.dark .sidebar,
 .dark .header,
 .dark .footer,
+.dark .sidebar,
 .dark .nav,
 .dark .navbar {
-  background: var(--gradient-sidebar) !important;
-  backdrop-filter: var(--glass-backdrop) !important;
-  border-color: var(--glass-border) !important;
-  box-shadow: var(--shadow-lg) !important;
-  color: hsl(var(--foreground)) !important;
+  background: hsl(var(--surface-1));
+  border-bottom: 1px solid hsl(var(--border));
+  box-shadow: var(--shadow-sm);
 }
 
-/* === FORMULÁRIOS E INPUTS MODERNOS === */
-.dark .form,
 .dark .input,
-.dark .textarea,
-.dark .select {
-  background: var(--glass-bg) !important;
-  backdrop-filter: var(--glass-backdrop) !important;
-  border: 1px solid var(--glass-border) !important;
-  color: hsl(var(--foreground)) !important;
-  transition: all 0.3s ease !important;
+.dark input,
+.dark textarea,
+.dark select {
+  background: hsl(var(--surface-2));
+  border: 1px solid hsl(var(--border));
+  color: hsl(var(--foreground));
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .dark .input:focus,
-.dark .textarea:focus,
-.dark .select:focus {
-  border-color: hsl(var(--ring)) !important;
-  box-shadow: 0 0 0 3px hsl(var(--ring) / 0.2) !important;
-  background: hsl(var(--input)) !important;
+.dark input:focus,
+.dark textarea:focus,
+.dark select:focus {
+  border-color: hsl(var(--ring));
+  box-shadow: 0 0 0 3px hsl(var(--ring) / 0.25);
 }
 
-/* === BOTÕES MODERNOS COM EFEITOS ELEGANTES === */
+.dark .btn,
 .dark .button,
-.dark .btn {
-  background: var(--gradient-secondary) !important;
-  border: 1px solid var(--glass-border) !important;
-  color: hsl(var(--foreground)) !important;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  box-shadow: var(--shadow-sm) !important;
+.dark button,
+.dark .bg-secondary,
+.dark .bg-muted {
+  background: hsl(var(--surface-2));
+  color: hsl(var(--foreground));
+  border: 1px solid hsl(var(--border));
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
+.dark .btn:hover,
 .dark .button:hover,
-.dark .btn:hover {
-  transform: translateY(-1px) !important;
-  box-shadow: var(--shadow-md) !important;
-  background: var(--gradient-primary) !important;
-  color: hsl(var(--primary-foreground)) !important;
+.dark button:hover,
+.dark .bg-secondary:hover,
+.dark .bg-muted:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
-/* === BOTÕES PRIMÁRIOS COM EFEITOS ESPECIAIS === */
 .dark .btn-primary,
-.dark button[class*="bg-primary"] {
-  background: var(--gradient-primary) !important;
-  border: none !important;
-  box-shadow: 0 4px 12px hsl(45 100% 60% / 0.3), inset 0 1px 0 hsl(45 100% 70% / 0.2) !important;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+.dark .button-primary,
+.dark .bg-primary,
+.dark button.bg-primary {
+  background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
+  color: hsl(var(--primary-foreground));
+  border: none;
+  box-shadow: 0 10px 24px hsl(var(--primary) / 0.25);
 }
 
 .dark .btn-primary:hover,
-.dark button[class*="bg-primary"]:hover {
-  transform: translateY(-1px) !important;
-  box-shadow: 0 6px 16px hsl(45 100% 60% / 0.4), inset 0 1px 0 hsl(45 100% 70% / 0.3) !important;
+.dark .button-primary:hover,
+.dark .bg-primary:hover,
+.dark button.bg-primary:hover {
+  box-shadow: 0 16px 32px hsl(var(--primary) / 0.35);
 }
 
-/* === LINKS MODERNOS === */
-.dark .link {
-  color: hsl(var(--primary)) !important;
-  text-decoration: none !important;
-  transition: all 0.3s ease !important;
+.dark .text-primary,
+.dark a,
+.dark .link,
+.dark [class*="text-yellow"] {
+  color: hsl(var(--primary));
 }
 
-.dark .link:hover {
-  color: hsl(45 100% 70%) !important;
-  text-shadow: 0 0 8px hsl(45 100% 60% / 0.5) !important;
-}
-
-/* === BADGES E TAGS MODERNOS === */
 .dark .badge,
-.dark .tag,
-.dark .chip {
-  background: var(--gradient-secondary) !important;
-  border: 1px solid var(--glass-border) !important;
-  color: hsl(var(--foreground)) !important;
-  box-shadow: var(--shadow-sm) !important;
+.dark .chip,
+.dark .tag {
+  background: hsl(var(--surface-2));
+  border: 1px solid hsl(var(--border));
+  color: hsl(var(--foreground));
 }
 
-/* === TABELAS MODERNAS === */
-.dark .table {
-  background: var(--gradient-card) !important;
-  backdrop-filter: var(--glass-backdrop) !important;
-  border: 1px solid var(--glass-border) !important;
-  box-shadow: var(--shadow-md) !important;
+.dark .shadow-soft {
+  box-shadow: var(--shadow-md);
 }
 
-.dark .table th {
-  background: var(--gradient-secondary) !important;
-  color: hsl(var(--foreground)) !important;
-  border-bottom: 1px solid var(--glass-border) !important;
+.dark .shadow-elevated {
+  box-shadow: var(--shadow-lg);
 }
 
-.dark .table td {
-  border-bottom: 1px solid var(--glass-border) !important;
-  color: hsl(var(--foreground)) !important;
+.dark .border-subtle {
+  border-color: hsl(var(--border));
 }
 
-/* === ELEMENTOS DE NAVEGAÇÃO === */
-.dark .breadcrumb {
-  background: transparent !important;
-  color: hsl(var(--muted-foreground)) !important;
-}
-
-.dark .breadcrumb a {
-  color: hsl(var(--primary)) !important;
-  transition: all 0.3s ease !important;
-}
-
-.dark .breadcrumb a:hover {
-  color: hsl(45 100% 70%) !important;
-}
-
-/* === PAGINAÇÃO MODERNA === */
-.dark .pagination {
-  background: transparent !important;
-}
-
-.dark .pagination button {
-  background: var(--gradient-secondary) !important;
-  border: 1px solid var(--glass-border) !important;
-  color: hsl(var(--foreground)) !important;
-  transition: all 0.3s ease !important;
-}
-
-.dark .pagination button:hover {
-  background: var(--gradient-primary) !important;
-  color: hsl(var(--primary-foreground)) !important;
-  transform: translateY(-1px) !important;
-}
-
-.dark .pagination button.active {
-  background: var(--gradient-primary) !important;
-  color: hsl(var(--primary-foreground)) !important;
-  box-shadow: 0 4px 12px hsl(45 100% 60% / 0.3) !important;
-}
-
-/* === AVATARES E IMAGENS === */
-.dark .avatar {
-  border: 2px solid var(--glass-border) !important;
-  box-shadow: var(--shadow-sm) !important;
-}
-
-.dark .image {
-  border-radius: 8px !important;
-  box-shadow: var(--shadow-md) !important;
-}
-
-/* === ÍCONES E LOGOS === */
-.dark .icon {
-  color: hsl(var(--muted-foreground)) !important;
-  transition: all 0.3s ease !important;
-}
-
-.dark .icon:hover {
-  color: hsl(var(--primary)) !important;
-  transform: scale(1.1) !important;
-}
-
-/* === TIPOGRAFIA MODERNA === */
-.dark .title,
-.dark .heading {
-  color: hsl(var(--foreground)) !important;
-  text-shadow: 0 1px 2px hsl(0 0% 0% / 0.3) !important;
-}
-
-.dark .subtitle {
-  color: hsl(var(--muted-foreground)) !important;
-}
-
-.dark .text {
-  color: hsl(var(--foreground)) !important;
-  line-height: 1.6 !important;
-}
-
-/* === ELEMENTOS DE CARREGAMENTO === */
-.dark .loading {
-  background: var(--gradient-card) !important;
-  backdrop-filter: var(--glass-backdrop) !important;
-  border: 1px solid var(--glass-border) !important;
-}
-
-.dark .spinner {
-  border-color: hsl(var(--primary)) !important;
-  border-top-color: transparent !important;
-}
-
-/* === SCROLLBARS MODERNOS === */
-.dark ::-webkit-scrollbar {
-  width: 8px !important;
-}
-
-.dark ::-webkit-scrollbar-track {
-  background: hsl(var(--muted)) !important;
-  border-radius: 4px !important;
-}
-
-.dark ::-webkit-scrollbar-thumb {
-  background: var(--gradient-primary) !important;
-  border-radius: 4px !important;
-}
-
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: hsl(210 100% 70%) !important;
-}
-
-/* === ANIMAÇÕES MODERNAS === */
-@keyframes modernFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes modernSlideIn {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-.dark .animate-fade-in {
-  animation: modernFadeIn 0.5s ease-out !important;
-}
-
-.dark .animate-slide-in {
-  animation: modernSlideIn 0.3s ease-out !important;
-}
-
-/* === EFEITOS DE HOVER MODERNOS === */
-.dark .hover-lift {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-}
-
-.dark .hover-lift:hover {
-  transform: translateY(-2px) !important;
-  box-shadow: var(--shadow-lg) !important;
-}
-
-.dark .hover-glow {
-  transition: all 0.3s ease !important;
-}
-
-.dark .hover-glow:hover {
-  box-shadow: 0 0 20px hsl(45 100% 60% / 0.3) !important;
-}
-
-/* === RESPONSIVIDADE === */
-@media (max-width: 768px) {
-  .dark .sidebar {
-    backdrop-filter: blur(15px) !important;
-  }
-  
-  .dark .card {
-    margin: 0.5rem !important;
-    border-radius: 12px !important;
-  }
-}
-
-/* === ACESSIBILIDADE === */
-@media (prefers-reduced-motion: reduce) {
-  .dark * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-
-/* === CONTRASTE ALTO === */
-@media (prefers-contrast: high) {
-  .dark {
-    --glass-border: hsl(240 10% 20% / 0.8) !important;
-    --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.6) !important;
-  }
+.dark .transition-theme {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease,
+    box-shadow 0.3s ease;
 }

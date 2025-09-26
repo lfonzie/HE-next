@@ -5,7 +5,7 @@
   "display": "standalone",
   "scope": "/",
   "background_color": "#ffffff",
-  "theme_color": "#ffd233",
+  "theme_color": "#ffd700",
   "description": "Professor Particular Digital e Assistente Escolar IA - Plataforma completa com IA conversacional, simulador ENEM e 8 módulos educacionais",
   "orientation": "portrait-primary",
   "categories": ["education", "productivity", "utilities"],

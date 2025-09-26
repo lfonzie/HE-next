@@ -15,11 +15,12 @@ interface ClientProvidersProps {
 
 export function ClientProviders({ children }: ClientProvidersProps) {
   return (
-    <ThemeProvider 
-      attribute="class" 
-      defaultTheme="light" 
-      enableSystem={false}
-      disableTransitionOnChange={false}
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="system"
+      enableSystem
+      enableColorScheme
+      disableTransitionOnChange
       storageKey="hubedu-theme"
       themes={['light', 'dark']}
     >
