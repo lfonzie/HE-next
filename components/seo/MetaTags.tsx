@@ -90,8 +90,8 @@ export function MetaTags({
       <meta name="robots" content={robotsContent} />
       <meta name="author" content={author || 'HubEdu.ia'} />
       <meta name="generator" content="Next.js" />
-      <meta name="theme-color" content="#ffd233" />
-      <meta name="msapplication-TileColor" content="#ffd233" />
+      <meta name="theme-color" content="#ffd700" />
+      <meta name="msapplication-TileColor" content="#ffd700" />
       <meta name="msapplication-config" content="/browserconfig.xml" />
 
       {/* Canonical URL */}
@@ -149,8 +149,8 @@ export function MetaTags({
       <meta name="application-name" content="HubEdu.ia" />
       <meta name="msapplication-tooltip" content="HubEdu.ia - Plataforma Educacional com IA" />
       <meta name="msapplication-starturl" content="/" />
-      <meta name="msapplication-navbutton-color" content="#ffd233" />
-      <meta name="msapplication-TileColor" content="#ffd233" />
+      <meta name="msapplication-navbutton-color" content="#ffd700" />
+      <meta name="msapplication-TileColor" content="#ffd700" />
       <meta name="msapplication-TileImage" content="/icons/ms-icon-144x144.png" />
     </Head>
   )

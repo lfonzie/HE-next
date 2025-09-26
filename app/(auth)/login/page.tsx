@@ -1,83 +1,78 @@
 "use client"
 
-import { useState, useEffect, useRef, Suspense } from 'react'
-import { signIn } from 'next-auth/react'
+import { useEffect, useRef, useState, Suspense } from 'react'
+import Image from 'next/image'
+import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { signIn } from 'next-auth/react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Mail, Lock, Eye, EyeOff, AlertCircle, ArrowLeft, MonitorSmartphone } from 'lucide-react'
+
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
-import { Mail, Lock, Eye, EyeOff, AlertCircle, ArrowLeft } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
-import Image from 'next/image'
 import { useLoading } from '@/components/ui/loading'
+import { ThemeSwitcher } from '@/components/ui/theme-switcher'
 
 function LoginForm() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-  const [rememberMe, setRememberMe] = useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get('callbackUrl') || '/chat'
-  const { start: startLoading, end: endLoading } = useLoading()
-  
-  // Refs para foco
+
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [rememberMe, setRememberMe] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
+
   const emailRef = useRef<HTMLInputElement>(null)
   const passwordRef = useRef<HTMLInputElement>(null)
+  const { start: startLoading, end: endLoading } = useLoading()
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+  useEffect(() => {
+    emailRef.current?.focus()
+    router.prefetch(callbackUrl)
+  }, [callbackUrl, router])
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
     setError('')
-    
-    // Start loading with optimized system
+    setIsLoading(true)
+
     const loadingKey = startLoading('login', {
-      message: 'Carregando…',
+      message: 'Conectando…',
       cancelable: false,
       priority: 'high',
-      timeout: 15000 // 15s timeout
+      timeout: 15000,
     })
 
     try {
-      console.log('🔐 Attempting login with:', { email, callbackUrl })
-      
       const result = await signIn('credentials', {
         email,
         password,
         redirect: false,
       })
 
-      console.log('🔐 Login result:', result)
-
       if (result?.error) {
-        console.error('❌ Login error:', result.error)
-        setError('Credenciais inválidas')
+        setError('Credenciais inválidas. Verifique seu e-mail e senha.')
         endLoading(loadingKey, 'error')
       } else if (result?.ok) {
-        console.log('✅ Login successful, redirecting to:', callbackUrl)
-        
-        // End login loading first
         endLoading(loadingKey, 'success')
-        
-        // Add a small delay to ensure session is properly set
+
         setTimeout(async () => {
-          console.log('🚀 Navigating to:', callbackUrl)
-          // Force refresh the session before navigation
           await fetch('/api/auth/session', { method: 'GET' })
           router.push(callbackUrl)
-        }, 500)
+        }, 400)
       } else {
-        console.error('❌ Unexpected login result:', result)
-        setError('Erro inesperado no login')
+        setError('Não foi possível autenticar no momento. Tente novamente.')
         endLoading(loadingKey, 'error')
       }
-    } catch (error) {
-      console.error('❌ Login exception:', error)
-      setError('Erro ao fazer login')
+    } catch (err) {
+      console.error('Login error', err)
+      setError('Erro interno ao tentar efetuar login.')
       endLoading(loadingKey, 'error')
     } finally {
       setIsLoading(false)
@@ -89,281 +84,202 @@ function LoginForm() {
     await signIn('google', { callbackUrl })
   }
 
-  const togglePasswordVisibility = () => setShowPassword(prev => !prev)
-
-  // Auto-focus no email ao carregar and prefetch callback route
-  useEffect(() => {
-    emailRef.current?.focus()
-    // Prefetch callback route to reduce navigation latency
-    router.prefetch(callbackUrl)
-  }, [router, callbackUrl])
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-yellow-50 via-orange-50 to-white p-4 relative overflow-hidden">
-      {/* Enhanced animated background */}
-      <div className="absolute inset-0 opacity-5">
-        <motion.div 
-          className="absolute top-20 left-10 w-72 h-72 bg-yellow-400 rounded-full blur-3xl"
-          animate={{ 
-            scale: [1, 1.2, 1],
-            rotate: [0, 180, 360]
-          }}
-          transition={{ 
-            duration: 20, 
-            repeat: Infinity,
-            ease: "linear"
-          }}
-        />
-        <motion.div 
-          className="absolute bottom-20 right-10 w-96 h-96 bg-orange-400 rounded-full blur-3xl"
-          animate={{ 
-            scale: [1.2, 1, 1.2],
-            rotate: [360, 180, 0]
-          }}
-          transition={{ 
-            duration: 25, 
-            repeat: Infinity,
-            ease: "linear",
-            delay: 2
-          }}
-        />
-        <motion.div 
-          className="absolute top-1/2 left-1/2 w-64 h-64 bg-yellow-300 rounded-full blur-2xl"
-          animate={{ 
-            scale: [1, 1.3, 1],
-            rotate: [0, -180, -360]
-          }}
-          transition={{ 
-            duration: 15, 
-            repeat: Infinity,
-            ease: "linear",
-            delay: 1
-          }}
-        />
+    <div className="relative flex min-h-screen flex-col justify-center overflow-hidden bg-[hsl(var(--background))] px-4 py-10 text-[hsl(var(--foreground))] transition-theme sm:px-6 lg:px-8">
+      <motion.div
+        className="pointer-events-none absolute inset-0 -z-10 opacity-80"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 0.9 }}
+        transition={{ duration: 1.2, ease: 'easeOut' }}
+        aria-hidden="true"
+      >
+        <div className="mx-auto h-full w-full max-w-5xl rounded-full bg-[radial-gradient(circle_at_top,rgba(255,215,0,0.12)_0%,transparent_55%)] blur-3xl" />
+      </motion.div>
+
+      <div className="absolute right-6 top-6 flex items-center gap-2">
+        <MonitorSmartphone className="h-4 w-4 opacity-60" aria-hidden="true" />
+        <ThemeSwitcher />
       </div>
 
       <motion.div
-        initial={{ opacity: 0, scale: 0.8, y: 50 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ 
-          duration: 0.8, 
-          type: "spring", 
-          stiffness: 100 
-        }}
-        className="w-full max-w-md relative z-10"
+        className="mx-auto flex w-full max-w-5xl flex-col gap-10 lg:flex-row"
+        initial={{ opacity: 0, y: 32 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: 'easeOut' }}
       >
-        <Card className="shadow-2xl border-0 rounded-2xl bg-white/95 backdrop-blur-sm">
-          <CardHeader className="text-center pb-8">
-            <motion.div 
-              className="flex justify-center mb-6"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
-            >
-              <Image
-                src="/assets/Logo_HubEdu.ia.svg"
-                alt="HubEdu.ia"
-                width={150}
-                height={150}
-                className="object-contain transition-transform hover:scale-105"
-                priority
-                unoptimized
-              />
-            </motion.div>
-            <motion.h1 
-              className="text-3xl font-bold text-black mb-2"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-            >
-              HubEdu.ia
-            </motion.h1>
-            <motion.p 
-              className="text-gray-700 text-lg"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-            >
-              Plataforma Educacional Inteligente
-            </motion.p>
-          </CardHeader>
+        <section className="flex flex-1 flex-col justify-between gap-8 rounded-3xl bg-surface-1 p-8 shadow-soft transition-theme lg:p-12">
+          <div className="space-y-6">
+            <Image
+              src="/assets/Logo_HubEdu.ia.svg"
+              alt="HubEdu.ia"
+              width={160}
+              height={48}
+              className="h-12 w-auto"
+              priority
+              unoptimized
+            />
+            <div className="space-y-3">
+              <h1 className="text-step-4 font-semibold leading-tight">Plataforma educacional inteligente</h1>
+              <p className="max-w-sm text-subtle text-step-0">
+                Gestão acadêmica e aprendizagem contínua com foco em usabilidade, acessibilidade e experiência de 2025.
+              </p>
+            </div>
+          </div>
 
-          <CardContent className="px-8 pb-8">
-            {/* Error display */}
-            <AnimatePresence>
+          <div className="grid gap-4 text-sm text-subtle">
+            <div className="flex items-start gap-3 rounded-2xl bg-surface-2 p-4 transition-theme">
+              <span className="mt-1 inline-flex h-2.5 w-2.5 flex-shrink-0 rounded-full bg-primary" aria-hidden="true" />
+              <p>Autenticação segura com JWT, proteção anti-brute-force e monitoramento em tempo real.</p>
+            </div>
+            <div className="flex items-start gap-3 rounded-2xl bg-surface-2 p-4 transition-theme">
+              <span className="mt-1 inline-flex h-2.5 w-2.5 flex-shrink-0 rounded-full bg-primary" aria-hidden="true" />
+              <p>Dashboard responsivo, otimizado para Core Web Vitals com layout fluido para qualquer dispositivo.</p>
+            </div>
+          </div>
+        </section>
+
+        <Card className="flex-1 border border-subtle bg-surface-0/95 shadow-elevated backdrop-blur transition-theme">
+          <CardHeader className="space-y-2 pb-6">
+            <CardTitle className="text-step-3 font-semibold">Acesse o HubEdu.ia</CardTitle>
+            <p className="text-step--1 text-subtle">
+              Use seu e-mail institucional para entrar. Você pode alternar entre tema claro e escuro a qualquer momento.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <AnimatePresence mode="wait">
               {error && (
-                <motion.div 
-                  className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3"
-                  initial={{ opacity: 0, scale: 0.9, y: -10 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.9, y: -10 }}
-                  transition={{ type: "spring", stiffness: 300 }}
+                <motion.div
+                  key={error}
+                  className="mb-6 flex items-center gap-3 rounded-2xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  role="alert"
                 >
-                  <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
-                  <p className="text-red-700 text-sm">{error}</p>
+                  <AlertCircle className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
+                  <span>{error}</span>
                 </motion.div>
               )}
             </AnimatePresence>
 
-            <form onSubmit={handleSubmit} className="space-y-6" noValidate>
-              {/* EMAIL */}
-              <motion.div 
-                className="space-y-3"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.7 }}
-              >
-                <Label htmlFor="email" className="text-gray-800 font-medium">Email *</Label>
+            <form className="space-y-5" noValidate onSubmit={handleSubmit}>
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-step--1 font-medium">
+                  Email institucional
+                </Label>
                 <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <Mail className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-subtle" aria-hidden="true" />
                   <Input
                     ref={emailRef}
                     id="email"
                     type="email"
                     placeholder="professor@escola.com.br"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    spellCheck={false}
                     autoComplete="username email"
                     inputMode="email"
-                    className="h-12 pl-12 rounded-xl border-gray-200 focus:border-yellow-400 focus:ring-yellow-400 text-lg"
+                    spellCheck={false}
+                    required
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    className="h-12 rounded-2xl border-subtle bg-surface-0 pl-12 text-step-0 transition-theme focus:border-primary focus:ring-2 focus:ring-primary/40"
                   />
                 </div>
-              </motion.div>
+              </div>
 
-              {/* PASSWORD */}
-              <motion.div 
-                className="space-y-3"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.8 }}
-              >
-                <Label htmlFor="password" className="text-gray-800 font-medium">Senha *</Label>
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-step--1 font-medium">
+                  Senha
+                </Label>
                 <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <Lock className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-subtle" aria-hidden="true" />
                   <Input
                     ref={passwordRef}
                     id="password"
-                    type={showPassword ? "text" : "password"}
+                    type={showPassword ? 'text' : 'password'}
                     placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    spellCheck={false}
                     autoComplete="current-password"
-                    className="h-12 pl-12 pr-12 rounded-xl border-gray-200 focus:border-yellow-400 focus:ring-yellow-400 text-lg"
+                    spellCheck={false}
+                    required
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    className="h-12 rounded-2xl border-subtle bg-surface-0 pl-12 pr-12 text-step-0 transition-theme focus:border-primary focus:ring-2 focus:ring-primary/40"
                   />
                   <button
                     type="button"
-                    onClick={togglePasswordVisibility}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none focus:text-gray-600 transition-colors"
-                    aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                    onClick={() => setShowPassword((value) => !value)}
+                    className="absolute right-4 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-transparent text-subtle transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
                   >
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
-                <p className="text-gray-500 text-sm">Mínimo de 6 caracteres</p>
-              </motion.div>
-
-              {/* REMEMBER + FORGOT */}
-              <motion.div 
-                className="flex items-center justify-between"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.9 }}
-              >
-                <label className="flex items-center space-x-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    id="remember"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    className="h-4 w-4 text-yellow-400 border-gray-300 rounded focus:ring-yellow-400"
-                  />
-                  <span className="text-gray-700 text-sm">Lembrar de mim</span>
-                </label>
-
-                <button 
-                  type="button"
-                  className="text-yellow-600 hover:text-yellow-700 text-sm font-medium transition-colors"
-                  onClick={() => router.push('/forgot-password')}
-                >
-                  Esqueci minha senha
-                </button>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1 }}
-              >
-                <button
-                  type="submit"
-                  className="w-full h-12 bg-yellow-400 hover:bg-yellow-500 active:bg-yellow-600 text-black font-semibold text-lg rounded-xl transition-all duration-200 hover:shadow-lg mt-8 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <span className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full mr-3 animate-spin" />
-                      Entrando...
-                    </>
-                  ) : (
-                    "Entrar no HubEdu.ia"
-                  )}
-                </button>
-              </motion.div>
-            </form>
-
-            {/* divider */}
-            <motion.div 
-              className="mt-8"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1.1 }}
-            >
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-200" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-4 bg-white text-gray-500 font-medium">ou</span>
-                </div>
+                <p className="text-step--2 text-subtle">Use pelo menos 8 caracteres com letras e números.</p>
               </div>
 
-              <button
-                type="button"
-                className="w-full mt-6 h-12 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 active:bg-gray-100 text-gray-700 font-medium transition-all duration-200 hover:shadow-md inline-flex items-center justify-center"
-                onClick={handleGoogleSignIn}
-                disabled={isLoading}
-              >
-                <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24" aria-hidden="true">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                </svg>
-                Continuar com Google
-              </button>
-            </motion.div>
+              <div className="flex flex-wrap items-center justify-between gap-3 text-step--1 text-subtle">
+                <label className="inline-flex items-center gap-2">
+                  <input
+                    id="remember"
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(event) => setRememberMe(event.target.checked)}
+                    className="h-4 w-4 rounded border-subtle bg-surface-0 text-primary focus:ring-primary"
+                  />
+                  <span>Lembrar acesso neste dispositivo</span>
+                </label>
+                <Link href="/forgot-password" className="font-medium text-primary transition-colors hover:text-accent">
+                  Esqueci minha senha
+                </Link>
+              </div>
 
-            <motion.div 
-              className="mt-8 text-center space-y-4"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.2 }}
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="w-full h-12 rounded-2xl text-step-0 font-semibold shadow-soft transition-theme hover:shadow-elevated"
+              >
+                {isLoading ? (
+                  <span className="inline-flex items-center gap-2">
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-transparent border-t-[rgba(0,0,0,0.6)] dark:border-t-[rgba(0,0,0,0.85)]" />
+                    Entrando…
+                  </span>
+                ) : (
+                  'Entrar'
+                )}
+              </Button>
+            </form>
+
+            <div className="py-6">
+              <Separator className="bg-border" />
+              <span className="mt-3 block text-center text-step--1 text-subtle">ou</span>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              className="group flex h-12 w-full items-center justify-center gap-3 rounded-2xl border-subtle bg-surface-0 text-step-0 font-medium transition-theme hover:border-primary hover:text-primary"
+              onClick={handleGoogleSignIn}
+              disabled={isLoading}
             >
-              <p className="text-gray-600 text-sm">
-                Entre em contato com a administração da sua escola para obter acesso.
-              </p>
-              <button 
-                className="text-gray-600 hover:text-yellow-600 font-medium text-sm inline-flex items-center gap-2 transition-colors"
+              <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+              </svg>
+              Continuar com Google
+            </Button>
+
+            <div className="mt-8 flex items-center justify-between rounded-2xl bg-surface-2 px-4 py-3 text-step--1 text-subtle">
+              <p>Precisa de acesso?</p>
+              <Button
+                type="button"
+                variant="ghost"
+                className="gap-2 text-step--1 text-primary transition-colors hover:text-accent"
                 onClick={() => router.push('/')}
               >
-                <ArrowLeft className="w-4 h-4" />
-                Voltar à página inicial
-              </button>
-            </motion.div>
+                <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+                Voltar ao site
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </motion.div>
@@ -373,11 +289,13 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-[hsl(var(--background))] text-[hsl(var(--foreground))] transition-theme">
+          <span className="inline-flex h-10 w-10 animate-spin rounded-full border-2 border-transparent border-t-primary" />
+        </div>
+      }
+    >
       <LoginForm />
     </Suspense>
   )

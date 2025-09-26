@@ -1,23 +1,35 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
-import { Sun, Moon, Monitor } from "lucide-react"
+import { Moon, Monitor, Sun } from "lucide-react"
 import { useTheme } from "@/hooks/useTheme"
 
 export function ThemeSwitcher() {
-  const { theme, setTheme, mounted } = useTheme()
+  const { theme, resolvedTheme, setTheme, mounted } = useTheme()
+
+  const activeTheme = theme ?? "system"
+
+  const renderIcon = () => {
+    switch (resolvedTheme) {
+      case "dark":
+        return <Moon className="h-4 w-4" />
+      case "light":
+      default:
+        return <Sun className="h-4 w-4" />
+    }
+  }
 
   if (!mounted) {
     return (
-      <Button variant="outline" size="sm" disabled>
-        <Sun className="h-4 w-4" />
+      <Button variant="outline" size="sm" disabled aria-label="Carregando temas">
+        <Sun className="h-4 w-4 animate-pulse" />
       </Button>
     )
   }
@@ -25,32 +37,34 @@ export function ThemeSwitcher() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
-          {theme === "light" ? (
-            <Sun className="h-4 w-4" />
-          ) : theme === "dark" ? (
-            <Moon className="h-4 w-4" />
-          ) : (
-            <Monitor className="h-4 w-4" />
-          )}
-          <span className="sr-only">Alterar tema</span>
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-2"
+          aria-label="Alterar tema"
+        >
+          {activeTheme === "system" ? <Monitor className="h-4 w-4" /> : renderIcon()}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem 
-          onClick={() => setTheme("light")}
-          className="gap-2"
+        <DropdownMenuRadioGroup
+          value={activeTheme}
+          onValueChange={setTheme}
+          aria-label="Seleção de tema"
         >
-          <Sun className="h-4 w-4" />
-          <span>Claro</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem 
-          onClick={() => setTheme("dark")}
-          className="gap-2"
-        >
-          <Moon className="h-4 w-4" />
-          <span>Escuro</span>
-        </DropdownMenuItem>
+          <DropdownMenuRadioItem value="light" className="gap-2">
+            <Sun className="h-4 w-4" />
+            <span>Claro</span>
+          </DropdownMenuRadioItem>
+          <DropdownMenuRadioItem value="dark" className="gap-2">
+            <Moon className="h-4 w-4" />
+            <span>Escuro</span>
+          </DropdownMenuRadioItem>
+          <DropdownMenuRadioItem value="system" className="gap-2">
+            <Monitor className="h-4 w-4" />
+            <span>Automático</span>
+          </DropdownMenuRadioItem>
+        </DropdownMenuRadioGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   )
@@ -58,12 +72,12 @@ export function ThemeSwitcher() {
 
 // Versão compacta para uso em modais
 export function ThemeSwitcherCompact() {
-  const { theme, setTheme, mounted } = useTheme()
+  const { resolvedTheme, toggleTheme, mounted } = useTheme()
 
   if (!mounted) {
     return (
-      <Button variant="ghost" size="sm" disabled>
-        <Sun className="h-4 w-4" />
+      <Button variant="ghost" size="sm" disabled aria-label="Carregando temas">
+        <Sun className="h-4 w-4 animate-pulse" />
       </Button>
     )
   }
@@ -72,10 +86,11 @@ export function ThemeSwitcherCompact() {
     <Button
       variant="ghost"
       size="sm"
-      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+      onClick={toggleTheme}
       className="gap-2 hover:bg-primary/10"
+      aria-label={`Alternar para tema ${resolvedTheme === "dark" ? "claro" : "escuro"}`}
     >
-      {theme === "dark" ? (
+      {resolvedTheme === "dark" ? (
         <>
           <Sun className="h-4 w-4" />
           <span className="text-sm">Claro</span>

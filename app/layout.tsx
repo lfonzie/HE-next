@@ -107,7 +107,7 @@ export const metadata: Metadata = {
       { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
     ],
     other: [
-      { rel: 'mask-icon', url: '/favicon.svg', color: '#ffd233' },
+      { rel: 'mask-icon', url: '/favicon.svg', color: '#ffd700' },
     ],
   },
   manifest: '/manifest.json',
@@ -152,7 +152,7 @@ export const metadata: Metadata = {
     'mobile-web-app-capable': 'yes',
     'apple-mobile-web-app-capable': 'yes',
     'apple-mobile-web-app-status-bar-style': 'black-translucent',
-    'msapplication-TileColor': '#ffd233',
+    'msapplication-TileColor': '#ffd700',
     'msapplication-config': '/browserconfig.xml',
   },
 }
@@ -162,8 +162,11 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 3,
   userScalable: true,
-  themeColor: '#ffd233',
-  colorScheme: 'light',
+  themeColor: [
+    { media: '(prefers-color-scheme: dark)', color: '#000000' },
+    { media: '(prefers-color-scheme: light)', color: '#007BFF' },
+  ],
+  colorScheme: 'light dark',
   // Prevent excessive zoom
   viewportFit: 'cover',
 }
