@@ -51,6 +51,25 @@ export async function POST(request: NextRequest) {
 
     const { message, module, history, conversationId } = validationResult.data;
     
+    // Recuperar histórico do banco se conversationId for fornecido
+    let finalHistory = history
+    if (conversationId && session?.user?.id) {
+      try {
+        const { getConversationHistory } = await import('@/lib/conversation-persistence')
+        const dbHistory = await getConversationHistory(conversationId, session.user.id, 10)
+        
+        if (dbHistory.length > 0) {
+          finalHistory = dbHistory.map(msg => ({
+            role: msg.role,
+            content: msg.content
+          }))
+          console.log(`📚 [FAST-CHAT] Using database history: ${dbHistory.length} messages`)
+        }
+      } catch (error) {
+        console.warn('⚠️ [FAST-CHAT] Failed to load database history, using provided:', error)
+      }
+    }
+    
     console.log(`🚀 [FAST-CHAT] Processing: "${message.substring(0, 30)}..." module=${module}`);
     
     // 1. Classificação rápida local (sem chamadas externas)
@@ -66,7 +85,7 @@ export async function POST(request: NextRequest) {
     
     // 2. Preparar mensagens (sem validações complexas)
     const finalMessages: Message[] = [
-      ...(history || []).slice(-5).map((msg: any) => ({
+      ...(finalHistory || []).slice(-5).map((msg: any) => ({
         role: msg.role as 'user' | 'assistant' | 'system',
         content: msg.content
       })),

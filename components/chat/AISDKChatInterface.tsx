@@ -61,7 +61,14 @@ export function AISDKChatInterface() {
     if (!message.trim() || isLoading) return
 
     try {
-      await sendMessage(message, selectedModule)
+      // Passar o ID da conversa atual para manter o histórico
+      await sendMessage(
+        message, 
+        selectedModule,
+        undefined, // subject
+        undefined, // grade
+        currentConversation?.id // conversationId - CRÍTICO para manter histórico
+      )
       setMessage('')
     } catch (error) {
       toast({

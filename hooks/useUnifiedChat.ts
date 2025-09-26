@@ -1,0 +1,341 @@
+"use client";
+import { useEffect, useState, useCallback } from "react";
+import { v4 as uuidv4 } from "uuid";
+import { analyzeQuestion, getSelectionExplanation } from "@/lib/complexity-detector";
+
+type Provider = "openai" | "gpt5" | "gemini" | "perplexity";
+
+interface ChatMessage {
+  id: string;
+  role: "user" | "assistant" | "system";
+  content: string;
+  timestamp: Date;
+}
+
+interface ChatResponse {
+  conversationId: string;
+  reply: string;
+  provider: string;
+  model: string;
+  usage?: any;
+  timing?: {
+    total: number;
+    provider: number;
+  };
+}
+
+export function useUnifiedChat(
+  initialProvider: Provider = "openai", 
+  initialModel = "gpt-4o-mini"
+) {
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [provider, setProvider] = useState<Provider>(initialProvider);
+  const [model, setModel] = useState<string>(initialModel);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [autoSelection, setAutoSelection] = useState<string | null>(null);
+
+  // Função para validar UUID
+  const isValidUUID = (str: string) => {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(str);
+  };
+
+  // Boot: tenta pegar da URL ou localStorage (apenas UUIDs válidos)
+  useEffect(() => {
+    const urlId = new URLSearchParams(window.location.search).get("cid");
+    const saved = urlId ?? localStorage.getItem("chat:cid");
+    
+    if (saved && isValidUUID(saved)) {
+      setConversationId(saved);
+      // Carregar histórico da conversa
+      loadConversationHistory(saved);
+    } else if (saved && !isValidUUID(saved)) {
+      // ID inválido encontrado, limpar e gerar novo
+      console.warn("Invalid conversation ID found, generating new one:", saved);
+      localStorage.removeItem("chat:cid");
+      const url = new URL(window.location.href);
+      url.searchParams.delete("cid");
+      window.history.replaceState({}, "", url.toString());
+    }
+  }, []);
+
+  const loadConversationHistory = useCallback(async (cid: string) => {
+    try {
+      const response = await fetch(`/api/chat/unified?conversationId=${cid}`);
+      if (response.ok) {
+        const data = await response.json();
+        setMessages(data.messages || []);
+      }
+    } catch (error) {
+      console.warn("Failed to load conversation history:", error);
+    }
+  }, []);
+
+  const ensureId = useCallback(() => {
+    if (!conversationId || !isValidUUID(conversationId)) {
+      const id = uuidv4();
+      setConversationId(id);
+      const url = new URL(window.location.href);
+      url.searchParams.set("cid", id);
+      window.history.replaceState({}, "", url.toString());
+      localStorage.setItem("chat:cid", id);
+      return id;
+    }
+    return conversationId;
+  }, [conversationId, isValidUUID]);
+
+  const send = useCallback(async (input: string, system?: string, useAutoSelection: boolean = true) => {
+    setLoading(true);
+    setError(null);
+    
+    // Análise automática da pergunta
+    let currentProvider = provider;
+    let currentModel = model;
+    let selectionExplanation = null;
+    
+    if (useAutoSelection) {
+      const analysis = analyzeQuestion(input);
+      currentProvider = analysis.recommendedProvider;
+      currentModel = analysis.recommendedModel;
+      selectionExplanation = getSelectionExplanation(analysis);
+      
+      // Atualizar provider e model se diferentes
+      if (currentProvider !== provider) {
+        setProvider(currentProvider);
+      }
+      if (currentModel !== model) {
+        setModel(currentModel);
+      }
+      
+      setAutoSelection(selectionExplanation);
+    }
+    
+    const cid = ensureId();
+    const userMessage: ChatMessage = {
+      id: `user-${Date.now()}`,
+      role: "user",
+      content: input,
+      timestamp: new Date()
+    };
+    
+    setMessages(prev => [...prev, userMessage]);
+    
+    try {
+      const response = await fetch("/api/chat/unified", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          provider: currentProvider, 
+          model: currentModel, 
+          input, 
+          system,
+          conversationId: cid
+        })
+      });
+      
+      const data: ChatResponse = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.reply || "Erro na API");
+      }
+      
+      // Atualizar conversationId se necessário
+      if (data.conversationId && data.conversationId !== cid) {
+        setConversationId(data.conversationId);
+        localStorage.setItem("chat:cid", data.conversationId);
+        const url = new URL(window.location.href);
+        url.searchParams.set("cid", data.conversationId);
+        window.history.replaceState({}, "", url.toString());
+      }
+      
+      const assistantMessage: ChatMessage = {
+        id: `assistant-${Date.now()}`,
+        role: "assistant",
+        content: data.reply,
+        timestamp: new Date()
+      };
+      
+      setMessages(prev => [...prev, assistantMessage]);
+      
+    } catch (e: any) {
+      setError(e.message);
+      const errorMessage: ChatMessage = {
+        id: `error-${Date.now()}`,
+        role: "assistant",
+        content: `⚠️ Erro: ${e.message}`,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setLoading(false);
+    }
+  }, [provider, model, ensureId]);
+
+  const sendStream = useCallback(async (input: string, system?: string, useAutoSelection: boolean = true) => {
+    setLoading(true);
+    setError(null);
+    
+    // Análise automática da pergunta
+    let currentProvider = provider;
+    let currentModel = model;
+    let selectionExplanation = null;
+    
+    if (useAutoSelection) {
+      const analysis = analyzeQuestion(input);
+      currentProvider = analysis.recommendedProvider;
+      currentModel = analysis.recommendedModel;
+      selectionExplanation = getSelectionExplanation(analysis);
+      
+      // Atualizar provider e model se diferentes
+      if (currentProvider !== provider) {
+        setProvider(currentProvider);
+      }
+      if (currentModel !== model) {
+        setModel(currentModel);
+      }
+      
+      setAutoSelection(selectionExplanation);
+    }
+    
+    const cid = ensureId();
+    const userMessage: ChatMessage = {
+      id: `user-${Date.now()}`,
+      role: "user",
+      content: input,
+      timestamp: new Date()
+    };
+    
+    setMessages(prev => [...prev, userMessage]);
+    
+    // Criar mensagem temporária para streaming
+    const tempId = `temp-${Date.now()}`;
+    const tempMessage: ChatMessage = {
+      id: tempId,
+      role: "assistant",
+      content: "",
+      timestamp: new Date()
+    };
+    
+    setMessages(prev => [...prev, tempMessage]);
+    
+    try {
+      const response = await fetch("/api/chat/unified/stream", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          provider: currentProvider, 
+          model: currentModel, 
+          input, 
+          system,
+          conversationId: cid
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error("Erro no streaming");
+      }
+      
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let fullContent = "";
+      
+      if (reader) {
+        console.log(`📡 [UNIFIED-CHAT] Starting to read stream...`);
+        let chunkCount = 0;
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n');
+          
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6));
+                if (data.type === "content") {
+                  chunkCount++;
+                  fullContent += data.content;
+                  console.log(`📝 [UNIFIED-CHAT] Received chunk ${chunkCount}: "${data.content}"`);
+                  setMessages(prev => 
+                    prev.map(msg => 
+                      msg.id === tempId 
+                        ? { ...msg, content: fullContent }
+                        : msg
+                    )
+                  );
+                } else if (data.type === "metadata" && data.conversationId !== cid) {
+                  setConversationId(data.conversationId);
+                  localStorage.setItem("chat:cid", data.conversationId);
+                  const url = new URL(window.location.href);
+                  url.searchParams.set("cid", data.conversationId);
+                  window.history.replaceState({}, "", url.toString());
+                }
+              } catch (e) {
+                console.warn(`⚠️ [UNIFIED-CHAT] Failed to parse line: ${line}`, e);
+              }
+            }
+          }
+        }
+        console.log(`✅ [UNIFIED-CHAT] Stream completed. Total chunks: ${chunkCount}`);
+      }
+      
+      // Finalizar mensagem temporária
+      setMessages(prev => 
+        prev.map(msg => 
+          msg.id === tempId 
+            ? { ...msg, id: `assistant-${Date.now()}`, content: fullContent }
+            : msg
+        )
+      );
+      
+    } catch (e: any) {
+      setError(e.message);
+      setMessages(prev => 
+        prev.filter(msg => msg.id !== tempId).concat({
+          id: `error-${Date.now()}`,
+          role: "assistant",
+          content: `⚠️ Erro: ${e.message}`,
+          timestamp: new Date()
+        })
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [provider, model, ensureId]);
+
+  const newConversation = useCallback((nextProvider?: Provider, nextModel?: string) => {
+    const id = uuidv4();
+    setConversationId(id);
+    localStorage.setItem("chat:cid", id);
+    const url = new URL(window.location.href);
+    url.searchParams.set("cid", id);
+    window.history.replaceState({}, "", url.toString());
+    setMessages([]);
+    setError(null);
+    if (nextProvider) setProvider(nextProvider);
+    if (nextModel) setModel(nextModel);
+  }, []);
+
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
+
+  return {
+    conversationId,
+    provider,
+    setProvider,
+    model,
+    setModel,
+    messages,
+    send,
+    sendStream,
+    loading,
+    error,
+    clearError,
+    newConversation,
+    autoSelection
+  };
+}

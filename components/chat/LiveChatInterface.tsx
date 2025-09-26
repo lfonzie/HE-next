@@ -2,11 +2,9 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { 
-  Send, 
   Mic, 
   MicOff, 
   Volume2, 
@@ -42,10 +40,8 @@ interface LiveChatInterfaceProps {
 }
 
 export function LiveChatInterface({ className = '', autoConnect = false }: LiveChatInterfaceProps) {
-  const [textMessage, setTextMessage] = useState('')
   const [isPlayingAudio, setIsPlayingAudio] = useState<string | null>(null)
   
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   
   // Elementos para WebRTC
@@ -102,20 +98,23 @@ export function LiveChatInterface({ className = '', autoConnect = false }: LiveC
     stopVideoStreaming,
     startScreenSharing,
     stopScreenSharing,
-    sendTextMessage,
     clearMessages,
     clearError
   } = useLiveChat({ autoConnect })
 
+  // Debug logging
+  console.log('[LiveChatInterface] State:', {
+    isConnected,
+    connectionStatus,
+    error,
+    messages: messages.length,
+    isAudioStreaming,
+    isVideoStreaming,
+    isScreenSharing
+  })
+
   const { toast } = useToast()
 
-  // Auto-resize textarea
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto'
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
-    }
-  }, [textMessage])
 
   // Handle connection status changes
   useEffect(() => {
@@ -128,13 +127,6 @@ export function LiveChatInterface({ className = '', autoConnect = false }: LiveC
     }
   }, [error, toast])
 
-  const handleTextSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!textMessage.trim() || !isConnected) return
-
-    await sendTextMessage(textMessage.trim())
-    setTextMessage('')
-  }, [textMessage, isConnected, sendTextMessage])
 
   // Função para habilitar áudio (necessário devido a políticas de autoplay)
   const enableAudio = useCallback(async () => {
@@ -156,12 +148,6 @@ export function LiveChatInterface({ className = '', autoConnect = false }: LiveC
     }
   }, [toast])
 
-  const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleTextSubmit(e)
-    }
-  }, [handleTextSubmit])
 
   const handleAudioStreamingToggle = useCallback(async () => {
     console.log('🎤 [DEBUG] handleAudioStreamingToggle called, isAudioStreaming:', isAudioStreaming)
@@ -349,7 +335,7 @@ export function LiveChatInterface({ className = '', autoConnect = false }: LiveC
             {messages.length === 0 ? (
               <div className="text-center text-muted-foreground py-8">
                 <Mic className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>Inicie uma conversa por voz ou texto</p>
+                <p>Inicie uma conversa por voz</p>
                 <p className="text-sm mt-2">
                   {isConnected ? 'Conectado e pronto para conversar' : 'Conecte-se para começar'}
                 </p>
@@ -441,7 +427,10 @@ export function LiveChatInterface({ className = '', autoConnect = false }: LiveC
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={connect}
+                    onClick={() => {
+                      console.log('[LiveChatInterface] Connect button clicked');
+                      connect();
+                    }}
                     disabled={connectionStatus === 'connecting'}
                   >
                     {connectionStatus === 'connecting' ? (
@@ -535,25 +524,6 @@ export function LiveChatInterface({ className = '', autoConnect = false }: LiveC
               </Button>
             </div>
 
-            {/* Text input */}
-            <form onSubmit={handleTextSubmit} className="flex gap-2">
-              <Textarea
-                ref={textareaRef}
-                value={textMessage}
-                onChange={(e) => setTextMessage(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder={isConnected ? "Digite uma mensagem..." : "Conecte-se primeiro..."}
-                disabled={!isConnected || isStreaming}
-                className="flex-1 min-h-[40px] max-h-[120px] resize-none"
-              />
-              <Button
-                type="submit"
-                disabled={!textMessage.trim() || !isConnected || isStreaming}
-                size="sm"
-              >
-                <Send className="w-4 h-4" />
-              </Button>
-            </form>
 
             {/* Status indicators */}
             <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">

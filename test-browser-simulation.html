@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Gemini Native Audio - Simulação Browser</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        button {
+            background: #8b5cf6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #7c3aed;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .log {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .error {
+            color: red;
+        }
+        .success {
+            color: green;
+        }
+        .info {
+            color: blue;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎤 Teste Gemini Native Audio - Simulação Browser</h1>
+    
+    <div class="container">
+        <h2>Controles de Áudio</h2>
+        <button id="generateBtn">🔊 Gerar Áudio</button>
+        <button id="playBtn" disabled>▶️ Reproduzir</button>
+        <button id="pauseBtn" disabled>⏸️ Pausar</button>
+        <button id="regenerateBtn" disabled>🔄 Regenerar</button>
+    </div>
+
+    <div class="container">
+        <h2>Status</h2>
+        <div id="status">Pronto para gerar áudio</div>
+    </div>
+
+    <div class="container">
+        <h2>Logs</h2>
+        <div id="logs" class="log"></div>
+    </div>
+
+    <audio id="audioElement" style="display: none;"></audio>
+
+    <script>
+        const API_URL = '/api/tts/gemini-native';
+        const TEST_TEXT = "Este é um teste de áudio do Gemini 2.5 Flash Native Audio para verificar se está funcionando corretamente no navegador.";
+
+        let audioUrl = null;
+        let isPlaying = false;
+        let isLoading = false;
+        let isStreaming = false;
+
+        const generateBtn = document.getElementById('generateBtn');
+        const playBtn = document.getElementById('playBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const regenerateBtn = document.getElementById('regenerateBtn');
+        const statusDiv = document.getElementById('status');
+        const logsDiv = document.getElementById('logs');
+        const audioElement = document.getElementById('audioElement');
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}\n`;
+            logsDiv.textContent += logEntry;
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+            
+            if (type === 'error') {
+                console.error(message);
+            } else if (type === 'success') {
+                console.log(message);
+            } else {
+                console.log(message);
+            }
+        }
+
+        function updateStatus(message) {
+            statusDiv.textContent = message;
+            log(`Status: ${message}`, 'info');
+        }
+
+        function updateButtons() {
+            generateBtn.disabled = isLoading || isStreaming || !!audioUrl;
+            playBtn.disabled = !audioUrl || isPlaying;
+            pauseBtn.disabled = !audioUrl || !isPlaying;
+            regenerateBtn.disabled = isLoading || isStreaming;
+        }
+
+        // Function to convert PCM to WAV
+        function convertPCMToWAV(pcmData, sampleRate, channels, bitsPerSample) {
+            const length = pcmData.length;
+            const arrayBuffer = new ArrayBuffer(44 + length);
+            const view = new DataView(arrayBuffer);
+            
+            const writeString = (offset, string) => {
+                for (let i = 0; i < string.length; i++) {
+                    view.setUint8(offset + i, string.charCodeAt(i));
+                }
+            };
+            
+            writeString(0, 'RIFF');
+            view.setUint32(4, 36 + length, true);
+            writeString(8, 'WAVE');
+            writeString(12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true); // PCM format
+            view.setUint16(22, channels, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * channels * bitsPerSample / 8, true);
+            view.setUint16(32, channels * bitsPerSample / 8, true);
+            view.setUint16(34, bitsPerSample, true);
+            writeString(36, 'data');
+            view.setUint32(40, length, true);
+            
+            const wavData = new Uint8Array(arrayBuffer);
+            wavData.set(pcmData, 44);
+            
+            return wavData;
+        }
+
+        async function generateAudio() {
+            if (!TEST_TEXT || !TEST_TEXT.trim()) {
+                log('❌ Nenhum texto para gerar áudio', 'error');
+                return;
+            }
+
+            isLoading = true;
+            isStreaming = false;
+            updateStatus('Gerando áudio...');
+            updateButtons();
+
+            try {
+                // Clean up previous audio
+                if (audioElement.src) {
+                    audioElement.pause();
+                    audioElement.src = '';
+                    isPlaying = false;
+                }
+                if (audioUrl) {
+                    URL.revokeObjectURL(audioUrl);
+                    audioUrl = null;
+                }
+
+                log(`🎤 [GEMINI-NATIVE] Generating audio for: "${TEST_TEXT.substring(0, 50)}..."`);
+                log(`🎤 [GEMINI-NATIVE] Voice: Zephyr`);
+
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: TEST_TEXT.trim(),
+                        voice: 'Zephyr',
+                        speed: 1.0,
+                        pitch: 0.0
+                    }),
+                });
+
+                log(`🎤 [GEMINI-NATIVE] Response status: ${response.status}`);
+                log(`🎤 [GEMINI-NATIVE] Response headers: ${JSON.stringify(Object.fromEntries(response.headers.entries()))}`);
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    log(`❌ [GEMINI-NATIVE] HTTP Error: ${response.status}`, 'error');
+                    log(`❌ [GEMINI-NATIVE] Error data: ${JSON.stringify(errorData)}`, 'error');
+                    throw new Error(errorData.error || 'Failed to generate audio');
+                }
+
+                // Handle streaming response from Gemini Live API
+                const reader = response.body?.getReader();
+                if (!reader) {
+                    throw new Error('No response body');
+                }
+
+                isStreaming = true;
+                updateStatus('Streaming...');
+                updateButtons();
+
+                const audioChunks = [];
+                let chunkCount = 0;
+                let detectedMimeType = null;
+
+                log('🔄 [GEMINI-NATIVE] Starting to read stream...');
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    
+                    if (done) {
+                        log('✅ [GEMINI-NATIVE] Stream reading complete');
+                        break;
+                    }
+
+                    // Parse SSE data
+                    const chunk = new TextDecoder().decode(value);
+                    const lines = chunk.split('\n');
+                    
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            try {
+                                const data = JSON.parse(line.slice(6));
+                                log(`📨 [GEMINI-NATIVE] Received data type: ${data.type}`);
+                                
+                                if (data.type === 'audio' && data.data) {
+                                    chunkCount++;
+                                    log(`🎵 [GEMINI-NATIVE] Audio chunk ${chunkCount} received: ${data.data.length} chars`);
+                                    
+                                    // Store mimeType from first chunk
+                                    if (chunkCount === 1 && data.mimeType) {
+                                        detectedMimeType = data.mimeType;
+                                        log(`🎵 [GEMINI-NATIVE] Detected MIME type: ${detectedMimeType}`);
+                                    }
+                                    
+                                    // Convert base64 to Uint8Array - fix for proper decoding
+                                    try {
+                                        const binaryString = atob(data.data);
+                                        const audioData = new Uint8Array(binaryString.length);
+                                        for (let i = 0; i < binaryString.length; i++) {
+                                            audioData[i] = binaryString.charCodeAt(i);
+                                        }
+                                        audioChunks.push(audioData);
+                                        log(`✅ [GEMINI-NATIVE] Chunk ${chunkCount} added to array, total chunks: ${audioChunks.length}`);
+                                    } catch (e) {
+                                        log(`❌ [GEMINI-NATIVE] Error decoding base64: ${e.message}`, 'error');
+                                    }
+                                } else if (data.type === 'done') {
+                                    log('✅ [GEMINI-NATIVE] Streaming complete signal received');
+                                    break;
+                                } else if (data.type === 'error') {
+                                    log(`❌ [GEMINI-NATIVE] Stream error: ${data.content}`, 'error');
+                                    throw new Error(data.content || 'Streaming error');
+                                } else {
+                                    log(`📨 [GEMINI-NATIVE] Unknown data type: ${data.type}`);
+                                }
+                            } catch (e) {
+                                log(`❌ [GEMINI-NATIVE] Failed to parse SSE data: ${e.message}`, 'error');
+                                log(`❌ [GEMINI-NATIVE] Raw line: ${line}`, 'error');
+                            }
+                        } else if (line.trim()) {
+                            log(`📨 [GEMINI-NATIVE] Non-data line: ${line}`);
+                        }
+                    }
+                }
+
+                log(`🎵 [GEMINI-NATIVE] Total chunks received: ${chunkCount}`);
+                log(`🎵 [GEMINI-NATIVE] Audio chunks array length: ${audioChunks.length}`);
+
+                if (audioChunks.length === 0) {
+                    log('❌ [GEMINI-NATIVE] No audio chunks received!', 'error');
+                    log(`❌ [GEMINI-NATIVE] Chunk count: ${chunkCount}`, 'error');
+                    log(`❌ [GEMINI-NATIVE] Audio chunks: ${audioChunks}`, 'error');
+                    throw new Error('No audio data received from Gemini Native Audio');
+                }
+
+                // Combine all audio chunks
+                const totalLength = audioChunks.reduce((sum, chunk) => sum + chunk.length, 0);
+                log(`🔗 [GEMINI-NATIVE] Combining ${audioChunks.length} chunks, total length: ${totalLength} bytes`);
+                
+                const combinedAudio = new Uint8Array(totalLength);
+                let offset = 0;
+                
+                for (const chunk of audioChunks) {
+                    combinedAudio.set(chunk, offset);
+                    offset += chunk.length;
+                }
+
+                // Convert PCM to WAV if needed
+                let finalAudioData = combinedAudio;
+                let mimeType = detectedMimeType || 'audio/mpeg';
+                
+                if (detectedMimeType && detectedMimeType.includes('pcm')) {
+                    log('🔄 [GEMINI-NATIVE] Converting PCM to WAV...');
+                    finalAudioData = convertPCMToWAV(combinedAudio, 24000, 1, 16); // 24kHz, mono, 16-bit
+                    mimeType = 'audio/wav';
+                    log(`🎵 [GEMINI-NATIVE] PCM converted to WAV: ${finalAudioData.length} bytes`);
+                }
+                
+                // Create blob and URL
+                const audioBlob = new Blob([finalAudioData], { type: mimeType });
+                audioUrl = URL.createObjectURL(audioBlob);
+                
+                log(`🎵 [GEMINI-NATIVE] Created audio blob: ${audioBlob.size} bytes, type: ${mimeType}`);
+
+                // Set up audio element
+                log(`🎵 [GEMINI-NATIVE] Setting up audio element with URL: ${audioUrl}`);
+                audioElement.src = audioUrl;
+                audioElement.load();
+                
+                // Add event listeners
+                audioElement.addEventListener('play', () => {
+                    isPlaying = true;
+                    updateStatus('Reproduzindo...');
+                    updateButtons();
+                    log('▶️ [GEMINI-NATIVE] Audio started playing');
+                });
+
+                audioElement.addEventListener('ended', () => {
+                    isPlaying = false;
+                    updateStatus('Áudio finalizado');
+                    updateButtons();
+                    log('⏹️ [GEMINI-NATIVE] Audio ended');
+                });
+
+                audioElement.addEventListener('error', (e) => {
+                    log(`❌ [GEMINI-NATIVE] Audio error: ${e.message}`, 'error');
+                    updateStatus('Erro ao reproduzir áudio');
+                    isPlaying = false;
+                    updateButtons();
+                });
+
+                audioElement.addEventListener('canplay', () => {
+                    log('🎵 [GEMINI-NATIVE] Audio can play');
+                });
+
+                audioElement.addEventListener('loadstart', () => {
+                    log('🎵 [GEMINI-NATIVE] Audio load started');
+                });
+
+                updateStatus('Áudio gerado com sucesso!');
+                log('✅ [GEMINI-NATIVE] Audio generated successfully!', 'success');
+
+            } catch (error) {
+                log(`❌ [GEMINI-NATIVE] Error generating audio: ${error.message}`, 'error');
+                updateStatus(`Erro: ${error.message}`);
+            } finally {
+                isLoading = false;
+                isStreaming = false;
+                updateButtons();
+            }
+        }
+
+        function playAudio() {
+            if (audioElement && audioUrl) {
+                audioElement.play().catch(error => {
+                    log(`❌ [GEMINI-NATIVE] Play error: ${error.message}`, 'error');
+                });
+            }
+        }
+
+        function pauseAudio() {
+            if (audioElement) {
+                audioElement.pause();
+                isPlaying = false;
+                updateStatus('Áudio pausado');
+                updateButtons();
+            }
+        }
+
+        function regenerateAudio() {
+            generateAudio();
+        }
+
+        // Event listeners
+        generateBtn.addEventListener('click', generateAudio);
+        playBtn.addEventListener('click', playAudio);
+        pauseBtn.addEventListener('click', pauseAudio);
+        regenerateBtn.addEventListener('click', regenerateAudio);
+
+        // Initialize
+        updateButtons();
+        log('🚀 [GEMINI-NATIVE] Test page loaded and ready');
+    </script>
+</body>
+</html>

@@ -8,7 +8,7 @@ import { GeneralWelcome } from "@/components/chat/GeneralWelcome";
 import { ModuleWelcome } from "@/components/chat/ModuleWelcome";
 import { ModuleWelcomeScreen } from "@/components/chat/ModuleWelcomeScreen";
 import { ClassificationIndicator } from "@/components/chat/ClassificationIndicator";
-import { useChat } from "@/hooks/useChat";
+import { useUnifiedChat } from "@/hooks/useUnifiedChat";
 import { ModuleId, MODULES, convertModuleId, convertToOldModuleId } from "@/lib/modules";
 import { ModuleType, Message as ChatMessageType, Conversation as ChatConversation } from "@/types";
 import { getRandomSuggestions, ModuleSuggestion } from "@/lib/module-suggestions";
@@ -63,22 +63,109 @@ export default function ChatComponent() {
   const { startLoading, stopLoading } = useGlobalLoading();
   const { isNavigating } = useNavigationLoading();
   
-  // Chat state
+  // Chat state - usando o novo sistema unificado
   const {
-    conversations,
-    currentConversation,
-    sendMessage,
-    createConversation,
-    deleteConversation,
-    updateConversation,
-    clearCurrentConversation,
-    setCurrentConversation,
-    refreshConversations,
-    isStreaming,
-    cancelStream,
+    conversationId,
+    messages,
+    send,
+    sendStream,
+    loading,
     error,
-    retry
-  } = useChat();
+    newConversation,
+    provider,
+    setProvider,
+    model,
+    setModel,
+    autoSelection
+  } = useUnifiedChat("openai", "gpt-4o-mini");
+
+  // Adaptar para interface existente
+  const currentConversation = conversationId ? {
+    id: conversationId,
+    title: "Conversa Atual",
+    messages: messages.map(msg => ({
+      id: msg.id,
+      role: msg.role,
+      content: msg.content,
+      timestamp: msg.timestamp,
+      isStreaming: false,
+      blocks: [],
+      actions: [],
+      trace: {},
+      image: undefined,
+      attachment: undefined
+    })),
+    createdAt: new Date(),
+    updatedAt: new Date()
+  } : null;
+
+  const conversations = currentConversation ? [currentConversation] : [];
+  const isStreaming = loading;
+
+  // Funções adaptadas
+  const sendMessage = async (
+    message: string,
+    module?: string,
+    subject?: string,
+    grade?: string,
+    conversationId?: string,
+    image?: string,
+    attachment?: File,
+    useWebSearch?: boolean,
+    provider?: 'auto' | 'openai' | 'google' | 'anthropic' | 'mistral' | 'groq',
+    complexity?: 'simple' | 'complex' | 'fast'
+  ) => {
+    await sendStream(message); // Usar streaming em vez de send normal
+  };
+
+  const createConversation = async (title?: string) => {
+    newConversation();
+  };
+
+  const deleteConversation = async (id: string) => {
+    // Não implementado no sistema unificado ainda
+  };
+
+  const updateConversation = async (id: string, updates: Partial<ChatConversation>) => {
+    // Não implementado no sistema unificado ainda
+  };
+
+  const clearCurrentConversation = () => {
+    newConversation();
+  };
+
+  const setCurrentConversation = (conversation: ChatConversation | null) => {
+    // Não implementado no sistema unificado ainda
+  };
+
+  const refreshConversations = async () => {
+    // Não implementado no sistema unificado ainda
+  };
+
+  const cancelStream = () => {
+    // Não implementado no sistema unificado ainda
+  };
+
+  const retry = () => {
+    // Não implementado no sistema unificado ainda
+  };
+
+  // Função para definir modelo padrão baseado no provedor
+  const getDefaultModel = (provider: string) => {
+    switch (provider) {
+      case "openai": return "gpt-4o-mini";
+      case "gpt5": return "gpt-5-chat-latest";
+      case "gemini": return "gemini-2.5-flash";
+      case "perplexity": return "sonar";
+      default: return "gpt-4o-mini";
+    }
+  };
+
+  // Atualizar modelo quando provedor muda
+  const handleProviderChange = (newProvider: string) => {
+    setProvider(newProvider as any);
+    setModel(getDefaultModel(newProvider));
+  };
 
   // UI state
   const [showSupportModal, setShowSupportModal] = useState(false);
@@ -151,7 +238,8 @@ export default function ChatComponent() {
 
     try {
       startLoading("Enviando mensagem...", "data");
-      await sendMessage(message, module);
+      // Usar streaming com seleção automática baseada na complexidade
+      await sendStream(message, undefined, true); // useAutoSelection = true
       consumeQuota();
       
       if (isScrolledToBottom) {
@@ -474,6 +562,7 @@ export default function ChatComponent() {
             <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-yellow-500 to-yellow-600 text-white flex-shrink-0">
               <div className="flex items-center gap-4">
                 <h1 className="text-2xl font-bold">Chat IA</h1>
+                
               </div>
               
               <div className="flex items-center gap-2">
@@ -488,15 +577,6 @@ export default function ChatComponent() {
                   Nova Conversa
                 </Button>
                 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleSupport}
-                  className="text-black border-yellow-300 hover:bg-white/20"
-                >
-                  <Settings className="h-4 w-4 mr-2" />
-                  Suporte
-                </Button>
               </div>
             </div>
 

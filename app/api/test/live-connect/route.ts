@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenAI } from '@google/genai'
 
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+
 // Store active sessions in memory (in production, use Redis or similar)
 const activeSessions = new Map<string, any>()
 

@@ -171,8 +171,8 @@ export const ChatMessage = memo(function ChatMessage({
             borderColor: isUser ? '#f59e0b60' : `${moduleColor}60`
           }}
           title={isUser 
-            ? `Usuário\nMódulo detectado: ${moduleInfo?.name || 'N/A'}\nID: ${effectiveModuleId || 'N/A'}` 
-            : `Módulo: ${moduleInfo?.name || 'Assistente'}\nID: ${effectiveModuleId || 'N/A'}\nÍcone: ${moduleIconKey}`
+            ? `Usuário\nMódulo detectado: ${moduleInfo?.label || 'N/A'}\nID: ${effectiveModuleId || 'N/A'}` 
+            : `Módulo: ${moduleInfo?.label || 'Assistente'}\nID: ${effectiveModuleId || 'N/A'}\nÍcone: ${moduleIconKey}`
           }
           data-module-id={effectiveModuleId}
           data-icon-key={moduleIconKey}
@@ -203,7 +203,7 @@ export const ChatMessage = memo(function ChatMessage({
         {!isUser && moduleInfo && (
           <div className="mt-2 text-xs text-center max-w-24">
             <div className="font-semibold text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-800 px-2 py-1 rounded-md shadow-sm border border-gray-200 dark:border-gray-600">
-              {moduleInfo.name}
+              {moduleInfo.label}
             </div>
             <div className="text-xs text-gray-600 dark:text-gray-400 mt-1 truncate">
               {moduleInfo.description}
@@ -215,7 +215,7 @@ export const ChatMessage = memo(function ChatMessage({
         {isUser && effectiveModuleId && (
           <div className="mt-2 text-xs text-center max-w-24">
             <div className="font-semibold text-gray-800 dark:text-gray-200 bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded-md shadow-sm border border-blue-200 dark:border-blue-700">
-              {moduleInfo?.name || effectiveModuleId}
+              {moduleInfo?.label || effectiveModuleId}
             </div>
             <div className="text-xs text-gray-600 dark:text-gray-400 mt-1 truncate">
               Módulo detectado

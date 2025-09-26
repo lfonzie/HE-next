@@ -146,6 +146,27 @@ model conversations {
   model       String?  @default("gpt-4o-mini") @db.VarChar(50)
   created_at  DateTime @default(now()) @db.Timestamp(6)
   updated_at  DateTime @default(now()) @db.Timestamp(6)
+  
+  // Relacionamento com mensagens individuais
+  conversation_messages conversation_message[]
+}
+
+// Nova tabela para mensagens individuais com ordem estável
+model conversation_message {
+  id             String       @id @default(cuid())
+  conversationId String       @db.Uuid
+  role           String       // "user" | "assistant" | "system" | "tool"
+  content        Json         // array de segmentos, ou string; use Json para suportar partes (Gemini)
+  tokenCount     Int?         // opcional, para trimming inteligente
+  createdAt      DateTime     @default(now())
+  conversation   conversations @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  index          Int          // ordem estável
+  providerRaw    Json?        // payload bruto opcional para debug
+  provider       String?      @db.VarChar(50) // "openai" | "gemini" | "groq" | etc.
+  model          String?      @db.VarChar(100) // modelo usado para esta mensagem
+  
+  @@index([conversationId, index])
+  @@index([conversationId, createdAt])
 }
 
 model cost_log {

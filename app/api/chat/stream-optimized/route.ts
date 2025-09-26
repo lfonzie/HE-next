@@ -163,7 +163,7 @@ function selectProvider(message: string, module: string, forceProvider: string):
 }
 
 function getSystemPrompt(module: string): string {
-  const basePrompt = `Você é um professor virtual especializado em educação brasileira. Você é paciente, didático e sempre busca explicar conceitos de forma clara e envolvente.
+  const basePrompt = `Você é um assistente educacional brasileiro. Seja conciso e direto.
 
 🚨 IDIOMA OBRIGATÓRIO E CRÍTICO - INSTRUÇÃO NÃO NEGOCIÁVEL:
 - Responda EXCLUSIVAMENTE em Português Brasileiro (PT-BR)
@@ -358,7 +358,7 @@ export async function POST(request: NextRequest) {
     // 6. Configuração otimizada de streaming
     const streamingConfig = {
       temperature: complexity === 'complex' ? 0.7 : 0.5,
-      maxTokens: complexity === 'complex' ? 2000 : 1000,
+      maxTokens: complexity === 'complex' ? 500 : 150,
       topP: 0.9,
       // Perplexity não aceita presence_penalty e frequency_penalty simultaneamente
       ...(selectedProvider === 'perplexity' ? {
@@ -555,7 +555,7 @@ export async function POST(request: NextRequest) {
           }
         ],
         temperature: 0.7,
-        maxTokens: 1000
+        maxTokens: 150
       });
       
       // Fallback também precisa usar o formato correto

@@ -170,7 +170,7 @@ export async function POST(request: NextRequest) {
       model: modelInstance,
       messages: finalMessages,
       temperature: complexity === 'complexa' ? 0.7 : 0.5,
-      maxTokens: complexity === 'complexa' ? 2000 : 1000,
+      maxTokens: complexity === 'complexa' ? 500 : 150,
     });
     
     const streamTime = Date.now() - streamStart;

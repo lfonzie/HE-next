@@ -16,6 +16,25 @@ export function useChat(onStreamingStart?: () => void) {
   const { startLoading, stopLoading } = useGlobalLoading()
   const abortControllerRef = useRef<AbortController | null>(null)
 
+  // Inicializar conversa automaticamente se não houver uma ativa
+  useEffect(() => {
+    if (!currentConversation && session?.user?.id) {
+      const initialConversation: ChatConversation = {
+        id: `conv-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
+        title: 'Nova conversa',
+        module: 'auto',
+        messages: [],
+        subject: undefined,
+        grade: undefined,
+        tokenCount: 0,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+      setCurrentConversation(initialConversation)
+      console.log('🆕 [useChat] Conversa inicial criada automaticamente:', initialConversation.id)
+    }
+  }, [currentConversation, session?.user?.id])
+
   const sendMessage = useCallback(async (
     message: string,
     moduleParam: string,
@@ -56,11 +75,14 @@ export function useChat(onStreamingStart?: () => void) {
 
       // Include conversation history for context
       const conversationHistory = currentConversation?.messages || []
+      
+      // Garantir que sempre temos um conversationId válido
+      const finalConversationId = conversationId || currentConversation?.id || `conv-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`
 
       const requestBody = {
         message: trimmedMessage,
         module: finalModule,
-        conversationId,
+        conversationId: finalConversationId,
         history: conversationHistory.slice(-3), // AI SDK Multi uses only last 3 messages for speed
         useCache: true, // Enable cache for better performance
         forceProvider: 'auto' // Let AI SDK choose the best provider automatically
@@ -144,7 +166,6 @@ export function useChat(onStreamingStart?: () => void) {
       }
 
       const decoder = new TextDecoder('utf-8')
-      let finalConversationId = conversationId
       
       // Capture metadata from multi-provider
       const provider = response.headers.get('X-Provider') || 'unknown'
@@ -370,7 +391,7 @@ export function useChat(onStreamingStart?: () => void) {
         setCurrentConversation(prev => {
           if (!prev) {
             const newConversation = {
-              id: conversationId || `conv-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
+              id: finalConversationId,
               title: message.slice(0, 50),
               messages: [
                 { 
@@ -447,6 +468,36 @@ export function useChat(onStreamingStart?: () => void) {
           } catch (e) {
             console.warn('[Chat] Failed to switch module:', e)
           }
+        }
+
+        // Auto-save conversation to database
+        try {
+          const currentConv = currentConversation
+          if (currentConv && session?.user?.id) {
+            const saveResponse = await fetch('/api/chat/history', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                conversationId: finalConversationId,
+                messages: currentConv.messages,
+                module: currentConv.module,
+                subject: currentConv.subject,
+                grade: currentConv.grade,
+                tokenCount: currentConv.tokenCount,
+                model: jsonData.trace?.model || 'gpt-4o-mini'
+              })
+            })
+            
+            if (saveResponse.ok) {
+              console.log('✅ [Chat] Conversation auto-saved to database')
+            } else {
+              console.warn('⚠️ [Chat] Failed to auto-save conversation')
+            }
+          }
+        } catch (saveError) {
+          console.warn('⚠️ [Chat] Error auto-saving conversation:', saveError)
         }
         
         return // Exit early since we handled the structured response

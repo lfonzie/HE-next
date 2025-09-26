@@ -3,6 +3,9 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: NextRequest) {
   try {
     // Verify authentication
@@ -12,49 +15,49 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if Gemini API key is configured
-    const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY
-    if (!apiKey) {
+    if (!process.env.GEMINI_API_KEY) {
       return NextResponse.json({ 
-        error: 'Gemini API key not configured. Please set GOOGLE_GENERATIVE_AI_API_KEY, GOOGLE_API_KEY, or GEMINI_API_KEY environment variable.' 
+        error: 'Gemini API key not configured' 
       }, { status: 500 })
     }
 
-    const { message } = await request.json()
+    const { text } = await request.json()
 
-    if (!message || typeof message !== 'string' || message.trim() === '') {
-      return NextResponse.json({ error: 'Message is required' }, { status: 400 })
+    if (!text || typeof text !== 'string') {
+      return NextResponse.json({ error: 'No text provided' }, { status: 400 })
     }
 
-    console.log(`💬 [LIVE-CHAT] Processing text: "${message}"`)
+    console.log(`💬 [LIVE-STREAM] Processing text message: ${text}`)
 
-    // Initialize Gemini API (using standard API instead of Live API)
-    const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY || '')
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-2.0-flash-exp",
-      generationConfig: {
-        temperature: 0.7,
-        topP: 0.8,
-        topK: 40,
-        maxOutputTokens: 1024,
-      }
-    })
+    // Initialize Gemini API (standard version)
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" })
 
     // Create streaming response
     const encoder = new TextEncoder()
     const stream = new ReadableStream({
       async start(controller) {
         try {
-          // Generate content using standard Gemini API
-          const result = await model.generateContentStream([
-            {
-              text: `You are a helpful assistant. Respond to this message in a friendly tone: ${message.trim()}`
-            }
-          ])
+          console.log('🔗 [LIVE-STREAM] Processing text with Gemini API')
+          
+          // Send initial connection message
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
+            type: 'text', 
+            content: 'Processando mensagem...' 
+          })}\n\n`))
+
+          // Create the prompt for text processing
+          const prompt = `Responda de forma natural e conversacional à seguinte mensagem: "${text}". Seja útil, amigável e direto.`
+
+          // Generate content with streaming
+          const result = await model.generateContentStream(prompt)
 
           // Stream the response
           for await (const chunk of result.stream) {
             const chunkText = chunk.text()
             if (chunkText) {
+              console.log(`💬 [LIVE-STREAM] Text chunk: ${chunkText}`)
+              
               controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
                 type: 'text', 
                 content: chunkText 
@@ -62,14 +65,15 @@ export async function POST(request: NextRequest) {
             }
           }
 
-          // Send completion signal
+          // Send completion message
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
             type: 'done' 
           })}\n\n`))
-          controller.close()
+
+          console.log('✅ [LIVE-STREAM] Text processing completed')
 
         } catch (error: any) {
-          console.error('❌ [LIVE-CHAT] Stream error:', error)
+          console.error('❌ [LIVE-STREAM] Stream error:', error)
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
             type: 'error', 
             content: error.message 
@@ -88,9 +92,9 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error: any) {
-    console.error('❌ [LIVE-CHAT] Text processing error:', error)
+    console.error('❌ [LIVE-STREAM] Text processing error:', error)
     return NextResponse.json({ 
-      error: 'Failed to process text',
+      error: 'Failed to process text message',
       details: error.message 
     }, { status: 500 })
   }

@@ -74,6 +74,40 @@ export default function UnifiedTTSPlayer({
     }
   }, [audioUrl])
 
+  // Function to convert PCM to WAV
+  const convertPCMToWAV = (pcmData: Uint8Array, sampleRate: number, channels: number, bitsPerSample: number): Uint8Array => {
+    const length = pcmData.length
+    const arrayBuffer = new ArrayBuffer(44 + length)
+    const view = new DataView(arrayBuffer)
+    
+    // WAV header
+    const writeString = (offset: number, string: string) => {
+      for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i))
+      }
+    }
+    
+    writeString(0, 'RIFF')
+    view.setUint32(4, 36 + length, true)
+    writeString(8, 'WAVE')
+    writeString(12, 'fmt ')
+    view.setUint32(16, 16, true)
+    view.setUint16(20, 1, true) // PCM format
+    view.setUint16(22, channels, true)
+    view.setUint32(24, sampleRate, true)
+    view.setUint32(28, sampleRate * channels * bitsPerSample / 8, true)
+    view.setUint16(32, channels * bitsPerSample / 8, true)
+    view.setUint16(34, bitsPerSample, true)
+    writeString(36, 'data')
+    view.setUint32(40, length, true)
+    
+    // Copy PCM data
+    const wavData = new Uint8Array(arrayBuffer)
+    wavData.set(pcmData, 44)
+    
+    return wavData
+  }
+
   const generateAudioWithGeminiNative = async (): Promise<boolean> => {
     try {
       console.log('🎤 [UNIFIED-TTS] Trying Gemini Native Audio...')
@@ -144,8 +178,13 @@ export default function UnifiedTTSPlayer({
         offset += chunk.length
       }
 
+      // Convert PCM to WAV
+      console.log('🔄 [UNIFIED-TTS] Converting PCM to WAV...')
+      const wavData = convertPCMToWAV(combinedAudio, 24000, 1, 16) // 24kHz, mono, 16-bit
+      console.log(`🎵 [UNIFIED-TTS] PCM converted to WAV: ${wavData.length} bytes`)
+
       // Create blob and URL
-      const audioBlob = new Blob([combinedAudio], { type: 'audio/pcm' })
+      const audioBlob = new Blob([wavData], { type: 'audio/wav' })
       const url = URL.createObjectURL(audioBlob)
 
       if (audioUrl) {

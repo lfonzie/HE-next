@@ -3,6 +3,9 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { GoogleGenAI, LiveServerMessage, MediaResolution, Modality, Session } from '@google/genai'
 
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+
 // Store active sessions
 const activeSessions = new Map<string, any>()
 

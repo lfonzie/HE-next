@@ -36,7 +36,7 @@ const TOTAL_SLIDES = 14;
 const QUIZ_SLIDE_NUMBERS = [7, 12];
 const IMAGE_SLIDE_NUMBERS = [1, 8, 14];
 const MIN_TOKENS_PER_SLIDE = 130; // Reduced from 500 to 130 for more realistic content generation
-const GOOGLE_MODEL = 'gemini-1.5-flash';
+const GOOGLE_MODEL = 'gemini-2.0-flash-exp';
 const MAX_TOKENS = 10000;
 const TEMPERATURE = 0.7;
 

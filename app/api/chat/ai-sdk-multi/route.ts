@@ -41,7 +41,7 @@ function getProviderConfig(complexity: 'trivial' | 'simples' | 'complexa') {
 
 // Prompts do sistema por módulo
 const SYSTEM_PROMPTS = {
-  professor: `Você é um professor virtual especializado em educação brasileira. Responda de forma didática, clara e objetiva. Use exemplos práticos e linguagem acessível.`,
+  professor: `Você é um assistente educacional brasileiro. Seja conciso e direto. Para saudações: 1-2 frases calorosas.`,
   enem: `Você é um especialista em ENEM. Ajude com questões, estratégias de prova e preparação para o vestibular.`,
   aula_interativa: `Você é um especialista em criar aulas interativas e dinâmicas. Foque na experiência de aprendizado do aluno.`,
   aula_expandida: `Você é um especialista em criar conteúdo educacional completo e detalhado.`,
@@ -68,6 +68,33 @@ export async function POST(request: NextRequest) {
       useCache = true,
       forceProvider = 'auto'
     } = body
+    
+    // Recuperar histórico do banco se conversationId for fornecido
+    let finalHistory = history
+    if (conversationId && session?.user?.id) {
+      console.log(`🔍 [AI-SDK-MULTI] Attempting to load history for conversationId: ${conversationId}, userId: ${session.user.id}`)
+      try {
+        const { getConversationHistory } = await import('@/lib/conversation-persistence')
+        const dbHistory = await getConversationHistory(conversationId, session.user.id, 10)
+        
+        console.log(`📊 [AI-SDK-MULTI] Database history result: ${dbHistory.length} messages`)
+        
+        if (dbHistory.length > 0) {
+          finalHistory = dbHistory.map(msg => ({
+            role: msg.role,
+            content: msg.content
+          }))
+          console.log(`📚 [AI-SDK-MULTI] Using database history: ${dbHistory.length} messages`)
+          console.log(`📝 [AI-SDK-MULTI] History preview:`, finalHistory.map(h => `${h.role}: ${h.content.substring(0, 30)}...`))
+        } else {
+          console.log(`⚠️ [AI-SDK-MULTI] No database history found for conversationId: ${conversationId}`)
+        }
+      } catch (error) {
+        console.warn('⚠️ [AI-SDK-MULTI] Failed to load database history, using provided:', error)
+      }
+    } else {
+      console.log(`⚠️ [AI-SDK-MULTI] Missing conversationId (${conversationId}) or userId (${session?.user?.id}), using provided history`)
+    }
     const parseTime = Date.now() - parseStart
     console.log(`⏱️ [PARSE] Completed in ${parseTime}ms`)
 
@@ -205,7 +232,7 @@ export async function POST(request: NextRequest) {
         content: SYSTEM_PROMPTS[targetModule as keyof typeof SYSTEM_PROMPTS] || SYSTEM_PROMPTS.default
       },
       // Histórico reduzido para velocidade
-      ...history.slice(-3).map((msg: any) => ({
+      ...finalHistory.slice(-3).map((msg: any) => ({
         role: msg.role as 'user' | 'assistant',
         content: msg.content
       })),

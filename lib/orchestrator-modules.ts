@@ -1190,7 +1190,7 @@ registerModule({
     console.log('⚠️ [PROFESSOR] Returning generic response - no specific subject detected')
     
     return {
-      text: '🎓 **Professor IA - Seu Assistente de Estudos Pessoal**\n\nOlá! Sou seu professor virtual e estou aqui para tornar o aprendizado mais fácil, interessante e eficiente. Posso te ajudar com qualquer dúvida acadêmica!\n\n## **Matérias que Posso Ensinar:**\n\n### **Exatas**\n• **Matemática**: Álgebra, geometria, trigonometria, cálculo\n• **Física**: Mecânica, eletricidade, óptica, termodinâmica\n• **Química**: Geral, orgânica, inorgânica, físico-química\n\n### **Biológicas**\n• **Biologia**: Celular, genética, ecologia, evolução\n• **Ciências**: Meio ambiente, saúde, anatomia\n\n### **Humanas**\n• **História**: Geral, do Brasil, mundial\n• **Geografia**: Física, humana, política\n• **Português**: Gramática, literatura, redação\n• **Filosofia**: Ética, lógica, história da filosofia\n• **Sociologia**: Sociedade, cultura, política\n\n## **Como Posso Te Ajudar:**\n\n✅ **Explicações detalhadas e didáticas**\n✅ **Resolução de exercícios passo a passo**\n✅ **Criação de aulas interativas**\n✅ **Simulados e provas**\n✅ **Dicas de estudo e memorização**\n✅ **Material de apoio personalizado**\n\n**💡 Dica**: Quanto mais específica for sua pergunta, melhor posso te ajudar! Não tenha medo de perguntar - estou aqui para esclarecer todas as suas dúvidas.\n\n**Me conte: qual é sua dúvida ou o que você gostaria de aprender hoje?**',
+      text: '🎓 **Olá! Sou seu professor virtual!**\n\nPosso te ajudar com qualquer matéria: Matemática, Física, Química, Biologia, História, Geografia, Português e muito mais!\n\n**Como posso te ajudar hoje?**',
       blocks: [
         { 
           type: 'notice', 
@@ -1571,23 +1571,17 @@ registerModule({
     
     try {
       // Usar Gemini para resposta inteligente em vez de resposta mock
-      const systemPrompt = `Você é um assistente virtual educacional brasileiro chamado HubEdu.ia. Seu papel é ajudar estudantes, professores e funcionários de escolas com informações educacionais, dúvidas acadêmicas e suporte geral.
-
-CONTEXTO:
-- Você trabalha em uma escola brasileira
-- Usuário: ${message.includes('professor') ? 'Professor' : message.includes('aluno') ? 'Aluno' : 'Usuário'}
-- Mensagem: "${message}"
+      const systemPrompt = `Você é um assistente educacional brasileiro chamado HubEdu.ia.
 
 DIRETRIZES:
-1. Seja sempre amigável, prestativo e educativo
-2. Responda em português brasileiro
-3. Se for uma saudação simples (oi, olá, bom dia), responda de forma calorosa e ofereça ajuda
-4. Se for uma pergunta específica, responda de forma detalhada e útil
-5. Sempre ofereça opções de como pode ajudar
-6. Mantenha um tom profissional mas acessível
+- Seja amigável e conciso
+- Para saudações simples (oi, olá, bom dia): responda com 1-2 frases calorosas
+- Para perguntas específicas: responda de forma direta e útil
+- Evite respostas muito longas
+- Use português brasileiro
 
 RESPOSTA:
-Responda de forma natural e útil. Se for uma saudação, seja caloroso e ofereça suas capacidades. Se for uma pergunta específica, responda de forma detalhada.`;
+Seja natural, mas mantenha as respostas curtas e objetivas.`;
 
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -1601,7 +1595,7 @@ Responda de forma natural e útil. Se for uma saudação, seja caloroso e ofere�
             { role: 'system', content: systemPrompt },
             { role: 'user', content: message }
           ],
-          max_tokens: 500,
+          max_tokens: 150,
           temperature: 0.7,
           stream: true // Habilitar streaming
         })

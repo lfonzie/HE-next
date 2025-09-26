@@ -123,7 +123,16 @@ export function EnhancedChatInterface() {
     try {
       // TEMPORÁRIO: Debug - sempre usar "auto" para permitir classificação automática
       console.log('🔍 [EnhancedChatInterface] selectedModule antes do override:', selectedModule);
-      await sendMessage(message, "auto") // Forçar "auto" para permitir classificação automática
+      console.log('🔍 [EnhancedChatInterface] currentConversation ID:', currentConversation?.id);
+      
+      // Passar o ID da conversa atual para manter o histórico
+      await sendMessage(
+        message, 
+        "auto", // Forçar "auto" para permitir classificação automática
+        undefined, // subject
+        undefined, // grade
+        currentConversation?.id // conversationId - CRÍTICO para manter histórico
+      )
       setMessage('')
       setIsTyping(false)
       

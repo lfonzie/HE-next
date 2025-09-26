@@ -9,6 +9,8 @@ export async function POST(request: NextRequest) {
   try {
     // Verify authentication
     const session = await getServerSession(authOptions)
+    console.log('🔐 [LIVE-CHAT] Session check:', { hasSession: !!session, userId: session?.user?.id })
+    
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -26,7 +28,7 @@ export async function POST(request: NextRequest) {
 
     // Store session info (simplified for now - Live API not available)
     activeSessions.set(sessionId, {
-      userId: session.user?.id,
+      userId: session?.user?.id || 'anonymous',
       createdAt: Date.now(),
       status: 'active'
     })

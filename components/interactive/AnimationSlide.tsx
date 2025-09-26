@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 // Removed framer-motion animations
 import ContentProcessor from './ContentProcessor'
 import { useUnsplashImage } from '@/hooks/useUnsplashImage'
-import SimpleTTSButton from '@/components/audio/SimpleTTSButton'
+import GeminiNativeAudioPlayer from '@/components/audio/GeminiNativeAudioPlayer'
 
 interface AnimationSlideProps {
   title: string
@@ -124,12 +124,13 @@ export default function AnimationSlide({
             </div>
           )}
           
-          {/* Text-to-Speech Player */}
+          {/* Gemini 2.5 Audio Preview Player */}
           {content && (
             <div className="mb-6">
-              <SimpleTTSButton
+              <GeminiNativeAudioPlayer
                 text={content}
                 voice="Zephyr"
+                autoPlay={false}
                 className="w-full"
               />
             </div>

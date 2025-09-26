@@ -187,6 +187,24 @@ export function useAISDKChat(onStreamingStart?: () => void) {
               updatedAt: new Date()
             }
             setConversations(prev => [newConversation, ...prev])
+            
+            // Auto-save conversation to database
+            if (session?.user?.id) {
+              fetch('/api/chat/history', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  conversationId: newConversation.id,
+                  messages: newConversation.messages,
+                  module: newConversation.module,
+                  subject: newConversation.subject,
+                  grade: newConversation.grade,
+                  tokenCount: newConversation.tokenCount,
+                  model: jsonData.trace?.model || 'gpt-4o-mini'
+                })
+              }).catch(err => console.warn('⚠️ [AI-SDK-Chat] Failed to auto-save:', err))
+            }
+            
             return newConversation
           } else {
             const updatedMessages = [...prev.messages]
@@ -219,11 +237,30 @@ export function useAISDKChat(onStreamingStart?: () => void) {
               trace: jsonData.trace || {}
             })
             
-            return {
+            const updatedConversation = {
               ...prev,
               messages: updatedMessages,
               updatedAt: new Date()
             }
+            
+            // Auto-save updated conversation to database
+            if (session?.user?.id) {
+              fetch('/api/chat/history', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  conversationId: updatedConversation.id,
+                  messages: updatedConversation.messages,
+                  module: updatedConversation.module,
+                  subject: updatedConversation.subject,
+                  grade: updatedConversation.grade,
+                  tokenCount: updatedConversation.tokenCount,
+                  model: jsonData.trace?.model || 'gpt-4o-mini'
+                })
+              }).catch(err => console.warn('⚠️ [AI-SDK-Chat] Failed to auto-save update:', err))
+            }
+            
+            return updatedConversation
           }
         })
         

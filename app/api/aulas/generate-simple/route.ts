@@ -49,7 +49,7 @@ export async function POST(request: Request) {
     if (!response && (process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GEMINI_API_KEY)) {
       try {
         console.log('🤖 Trying Google...');
-        const model = google('gemini-1.5-flash');
+        const model = google('gemini-2.0-flash-exp');
         
         response = await generateText({
           model: model,
@@ -83,7 +83,7 @@ export async function POST(request: Request) {
         metadata: {
           provider: usedProvider,
           tokens: response.usage?.totalTokens || 0,
-          model: usedProvider === 'openai' ? 'gpt-4o-mini' : 'gemini-1.5-flash'
+          model: usedProvider === 'openai' ? 'gpt-4o-mini' : 'gemini-2.0-flash-exp'
         }
       }
     });

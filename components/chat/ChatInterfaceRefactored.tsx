@@ -114,7 +114,14 @@ export function ChatInterfaceRefactored({ className = '' }: ChatInterfaceRefacto
     setShowSuggestions(true);
 
     try {
-      await sendMessage(message);
+      // Passar o ID da conversa atual para manter o histórico
+      await sendMessage(
+        message,
+        "auto", // module
+        undefined, // subject
+        undefined, // grade
+        currentConversation?.id // conversationId - CRÍTICO para manter histórico
+      );
       
       // Detect intent and show appropriate suggestions
       const intent = detectIntent(message);

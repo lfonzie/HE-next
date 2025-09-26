@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
       })
 
       // Preparar mensagens com histórico para manter contexto
-      const systemPrompt = `Você é um professor virtual especializado em educação brasileira. Você é paciente, didático e sempre busca explicar conceitos de forma clara e envolvente. 
+      const systemPrompt = `Você é um assistente educacional brasileiro. Seja conciso e direto. 
 
 🚨 IDIOMA OBRIGATÓRIO E CRÍTICO - INSTRUÇÃO NÃO NEGOCIÁVEL:
 - Responda EXCLUSIVAMENTE em Português Brasileiro (PT-BR)
@@ -140,7 +140,35 @@ Quando responder:
 Contexto atual: Módulo: ${orchestratorResult.trace?.module || 'auto'}`
 
       // Incluir histórico da conversa para manter contexto
-      const conversationHistory = orchestratorContext.history || []
+      let conversationHistory = orchestratorContext.history || []
+      
+      // Se temos um conversationId, tentar recuperar histórico do banco
+      if (conversationId && session?.user?.id) {
+        console.log(`🔍 [CHAT-STREAM] Attempting to load history for conversationId: ${conversationId}, userId: ${session.user.id}`)
+        try {
+          const { getConversationHistory } = await import('@/lib/conversation-persistence')
+          const dbHistory = await getConversationHistory(conversationId, session.user.id, 10)
+          
+          console.log(`📊 [CHAT-STREAM] Database history result: ${dbHistory.length} messages`)
+          
+          if (dbHistory.length > 0) {
+            // Usar histórico do banco se disponível
+            conversationHistory = dbHistory.map(msg => ({
+              role: msg.role,
+              content: msg.content
+            }))
+            console.log(`📚 [CHAT-STREAM] Using database history: ${dbHistory.length} messages`)
+            console.log(`📝 [CHAT-STREAM] History preview:`, conversationHistory.map(h => `${h.role}: ${h.content.substring(0, 30)}...`))
+          } else {
+            console.log(`⚠️ [CHAT-STREAM] No database history found for conversationId: ${conversationId}`)
+          }
+        } catch (error) {
+          console.warn('⚠️ [CHAT-STREAM] Failed to load database history, using local:', error)
+        }
+      } else {
+        console.log(`⚠️ [CHAT-STREAM] Missing conversationId (${conversationId}) or userId (${session?.user?.id}), using local history`)
+      }
+      
       const recentHistory = conversationHistory.slice(-6) // Últimas 6 mensagens para contexto
 
       const messages = [
