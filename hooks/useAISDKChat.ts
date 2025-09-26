@@ -133,6 +133,113 @@ export function useAISDKChat(onStreamingStart?: () => void) {
         throw new Error(`HTTP ${response.status}: ${errorDetails}`)
       }
 
+      // Check if response is JSON (could be error or structured response)
+      const contentType = response.headers.get('content-type')
+      if (contentType?.includes('application/json')) {
+        const jsonData = await response.json()
+        
+        // Check if it's an error response
+        if (jsonData.error) {
+          console.error('[AISDKChat] Received JSON error response:', jsonData)
+          throw new Error(jsonData.error || jsonData.message || 'Erro desconhecido do servidor')
+        }
+        
+        // It's a valid structured response (orchestrator format)
+        console.log('[AISDKChat] Received structured response:', jsonData)
+        
+        // Handle structured response with blocks and actions
+        const timestamp = Date.now()
+        const randomSuffix = Math.random().toString(36).substring(2, 8)
+        const userMessageId = `user-${timestamp}-${randomSuffix}`
+        const assistantMessageId = `assistant-${timestamp}-${randomSuffix}`
+        
+        // Create conversation with structured response
+        setCurrentConversation(prev => {
+          if (!prev) {
+            const newConversation = {
+              id: conversationId || `conv-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
+              title: message.slice(0, 50),
+              messages: [
+                { 
+                  id: userMessageId,
+                  role: "user" as const, 
+                  content: message, 
+                  timestamp: new Date(),
+                  image: image,
+                  attachment: attachment
+                },
+                {
+                  id: assistantMessageId,
+                  role: "assistant" as const,
+                  content: jsonData.text || '',
+                  timestamp: new Date(),
+                  isStreaming: false,
+                  blocks: jsonData.blocks || [],
+                  actions: jsonData.actions || [],
+                  trace: jsonData.trace || {}
+                }
+              ],
+              module: jsonData.trace?.module || moduleParam || "auto",
+              subject,
+              grade,
+              tokenCount: 0,
+              createdAt: new Date(),
+              updatedAt: new Date()
+            }
+            setConversations(prev => [newConversation, ...prev])
+            return newConversation
+          } else {
+            const updatedMessages = [...prev.messages]
+            
+            // Add user message if it doesn't exist
+            const hasUserMessage = updatedMessages.some(msg => 
+              msg.role === "user" && msg.content === message
+            )
+            
+            if (!hasUserMessage) {
+              updatedMessages.push({ 
+                id: userMessageId,
+                role: "user" as const, 
+                content: message, 
+                timestamp: new Date(),
+                image: image,
+                attachment: attachment
+              })
+            }
+            
+            // Add assistant message
+            updatedMessages.push({
+              id: assistantMessageId,
+              role: "assistant" as const,
+              content: jsonData.text || '',
+              timestamp: new Date(),
+              isStreaming: false,
+              blocks: jsonData.blocks || [],
+              actions: jsonData.actions || [],
+              trace: jsonData.trace || {}
+            })
+            
+            return {
+              ...prev,
+              messages: updatedMessages,
+              updatedAt: new Date()
+            }
+          }
+        })
+        
+        // Update module if detected
+        if (jsonData.trace?.module) {
+          try {
+            autoSwitchModule(jsonData.trace.module)
+          } catch (e) {
+            console.warn('[AISDKChat] Failed to switch module:', e)
+          }
+        }
+        
+        return // Exit early since we handled the structured response
+      }
+
+      // Get the reader AFTER checking for JSON errors
       const reader = response.body?.getReader()
       if (!reader) {
         console.error('[AISDKChat] No response reader available')
@@ -146,14 +253,6 @@ export function useAISDKChat(onStreamingStart?: () => void) {
       let finalModel = ""
       let finalTier: "IA" | "IA_SUPER" | "IA_ECO" | undefined = undefined
       let receivedDone = false
-
-      // Check if response is JSON (error case) instead of streaming
-      const contentType = response.headers.get('content-type')
-      if (contentType?.includes('application/json')) {
-        const errorData = await response.json()
-        console.error('[AISDKChat] Received JSON error response:', errorData)
-        throw new Error(errorData.error || errorData.message || 'Erro desconhecido do servidor')
-      }
 
       // Extrair informações dos headers
       const provider = response.headers.get('X-Provider') || 'vercel-ai-sdk'

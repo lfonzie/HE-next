@@ -87,10 +87,18 @@ export function useConversationManager(config: ConversationManagerConfig = {
         const saved = localStorage.getItem('chat-conversations')
         if (saved) {
           const parsedConversations = JSON.parse(saved)
-          // Validate and filter conversations
+          // Validate and filter conversations, converting timestamps back to Date objects
           const validConversations = parsedConversations.filter((conv: any) => 
             conv.id && conv.title && conv.module && Array.isArray(conv.messages)
-          )
+          ).map((conv: any) => ({
+            ...conv,
+            createdAt: conv.createdAt ? new Date(conv.createdAt) : new Date(),
+            updatedAt: conv.updatedAt ? new Date(conv.updatedAt) : new Date(),
+            messages: conv.messages.map((msg: any) => ({
+              ...msg,
+              timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date()
+            }))
+          }))
           return validConversations
         }
       }

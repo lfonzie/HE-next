@@ -38,10 +38,10 @@ const RequestSchema = z.object({
 // Políticas de provider por módulo
 const MODULE_PROVIDER_POLICIES = {
   enem: { preferred: 'openai', model: 'gpt-4o-mini', complexModel: 'gpt-5-chat-latest' },
-  professor: { preferred: 'openai', model: 'gpt-4o-mini', complexModel: 'gpt-5-chat-latest' },
-  aula_interativa: { preferred: 'openai', model: 'gpt-4o-mini', complexModel: 'gpt-5-chat-latest' },
+  professor: { preferred: 'google', model: 'gemini-1.5-flash', complexModel: 'gemini-2.0-flash-exp' },
+  aula_interativa: { preferred: 'google', model: 'gemini-1.5-flash', complexModel: 'gemini-2.0-flash-exp' },
   financeiro: { preferred: 'openai', model: 'gpt-4o-mini', complexModel: 'gpt-5-chat-latest' },
-  social_media: { preferred: 'openai', model: 'gpt-4o-mini', complexModel: 'gpt-5-chat-latest' },
+  social_media: { preferred: 'perplexity', model: 'sonar', complexModel: 'sonar' },
   atendimento: { preferred: 'openai', model: 'gpt-4o-mini', complexModel: 'gpt-5-chat-latest' }
 } as const;
 

@@ -11,7 +11,7 @@ import { Volume2, User, CheckCircle, AlertCircle } from 'lucide-react'
 
 export default function TestGoogleTTSPage() {
   const [testText, setTestText] = useState('Olá! Este é um teste do Google Text-to-Speech. A voz é natural e clara.')
-  const [selectedVoice, setSelectedVoice] = useState('pt-BR-Standard-A')
+  const [selectedVoice, setSelectedVoice] = useState('pt-BR-Wavenet-C')
 
   const voices = [
     { value: 'pt-BR-Standard-A', label: 'Voz Feminina Padrão (pt-BR-Standard-A)' },

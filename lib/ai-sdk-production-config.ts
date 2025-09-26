@@ -26,12 +26,7 @@ export function createOpenAIClient(modelName: string) {
 
   try {
     // Configuração específica para produção
-    return openai(modelName, {
-      apiKey: process.env.OPENAI_API_KEY,
-      // Configurações adicionais para estabilidade em produção
-      timeout: 30000,
-      maxRetries: 3,
-    })
+    return openai(modelName)
   } catch (error) {
     console.error('Error creating OpenAI client:', error)
     throw new Error(`Failed to create OpenAI client for model ${modelName}`)
@@ -47,11 +42,7 @@ export function createGoogleClient(modelName: string) {
   }
 
   try {
-    return google(modelName, {
-      apiKey: apiKey,
-      timeout: 30000,
-      maxRetries: 3,
-    })
+    return google(modelName)
   } catch (error) {
     console.error('Error creating Google client:', error)
     throw new Error(`Failed to create Google client for model ${modelName}`)
@@ -66,9 +57,9 @@ export const PRODUCTION_MODELS = {
     fast: 'gpt-4o-mini'
   },
   google: {
-    simple: 'gemini-1.5-flash',
-    complex: 'gemini-1.5-pro',
-    fast: 'gemini-1.5-flash'
+    simple: 'gemini-2.0-flash-exp',
+    complex: 'gemini-2.0-flash-exp',
+    fast: 'gemini-2.0-flash-exp'
   }
 } as const
 

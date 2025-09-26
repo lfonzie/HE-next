@@ -16,7 +16,7 @@ const MODEL_CONFIGS = {
     groq: 'llama-3.1-8b-instant'
   },
   complex: {
-    openai: 'gpt-4o',
+    openai: 'gpt-4o-mini',
     google: 'gemini-1.5-pro',
     anthropic: 'claude-3-sonnet-20240229',
     groq: 'llama-3.1-70b-versatile'

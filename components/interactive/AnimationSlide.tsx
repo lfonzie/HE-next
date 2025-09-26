@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 // Removed framer-motion animations
 import ContentProcessor from './ContentProcessor'
 import { useUnsplashImage } from '@/hooks/useUnsplashImage'
-import AudioPlayer from '@/components/audio/AudioPlayer'
+import SimpleTTSButton from '@/components/audio/SimpleTTSButton'
 
 interface AnimationSlideProps {
   title: string
@@ -127,9 +127,10 @@ export default function AnimationSlide({
           {/* Text-to-Speech Player */}
           {content && (
             <div className="mb-6">
-              <AudioPlayer
+              <SimpleTTSButton
                 text={content}
-                className="border-orange-200 bg-orange-50"
+                voice="Zephyr"
+                className="w-full"
               />
             </div>
           )}

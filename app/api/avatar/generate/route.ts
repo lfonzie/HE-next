@@ -6,7 +6,7 @@ const DID_API_KEY = process.env.DID_API_KEY
 
 export async function POST(request: NextRequest) {
   try {
-    const { text, voice = 'alloy', model = 'tts-1' } = await request.json()
+    const { text, voice = 'Zephyr', model = 'tts-1' } = await request.json()
 
     // Validate input
     if (!text || typeof text !== 'string' || text.trim().length === 0) {

@@ -140,7 +140,7 @@ export default function SimpleAvatarPlayer({
         },
         body: JSON.stringify({
           text: text.trim(),
-          voice: 'pt-BR-Standard-A',
+          voice: 'pt-BR-Wavenet-C', // Voz feminina alternativa neural (mais natural)
           speed: 1.0,
           pitch: 0.0
         }),

@@ -43,7 +43,7 @@ export const USE_CASE_ROUTING = {
   }
 } as const
 
-// Configuração de modelos por complexidade - GPT-4o-mini, GPT-5-chat-latest e Gemini 2.0 Flash Exp
+// Configuração de modelos por complexidade - GPT-4o-mini, GPT-4o e Gemini 2.0 Flash Exp
 export const COMPLEXITY_MODELS = {
   simple: {
     openai: 'gpt-4o-mini',
@@ -53,7 +53,7 @@ export const COMPLEXITY_MODELS = {
     groq: 'llama-3.1-8b-instant'
   },
   complex: {
-    openai: 'gpt-5-chat-latest',
+    openai: 'gpt-4o-mini',
     anthropic: 'claude-3-sonnet-20240229',
     google: 'gemini-2.0-flash-exp',
     mistral: 'mistral-large-latest',
@@ -67,14 +67,14 @@ export const COMPLEXITY_MODELS = {
     groq: 'llama-3.1-8b-instant'
   },
   creative: {
-    openai: 'gpt-5-chat-latest',
+    openai: 'gpt-4o-mini',
     anthropic: 'claude-3-sonnet-20240229',
     google: 'gemini-2.0-flash-exp',
     mistral: 'mistral-large-latest',
     groq: 'llama-3.1-70b-versatile'
   },
   analytical: {
-    openai: 'gpt-5-chat-latest',
+    openai: 'gpt-4o-mini',
     anthropic: 'claude-3-sonnet-20240229',
     google: 'gemini-2.0-flash-exp',
     mistral: 'mistral-large-latest',
@@ -82,9 +82,9 @@ export const COMPLEXITY_MODELS = {
   }
 } as const
 
-// Configurações específicas por modelo - GPT-4o-mini, GPT-5-chat-latest e Gemini 2.0 Flash Exp
+// Configurações específicas por modelo - GPT-4o-mini, GPT-4o e Gemini 2.0 Flash Exp
 export const MODEL_CONFIGS = {
-  // OpenAI Models - GPT-4o-mini e GPT-5-chat-latest
+  // OpenAI Models - GPT-4o-mini e GPT-4o
   'gpt-4o-mini': {
     temperature: 0.7,
     maxTokens: 2000,
@@ -93,7 +93,7 @@ export const MODEL_CONFIGS = {
     speed: 'fast',
     quality: 'good'
   },
-  'gpt-5-chat-latest': {
+  'gpt-4o': {
     temperature: 0.7,
     maxTokens: 4000,
     timeout: 30000,
@@ -224,41 +224,8 @@ export async function routeAIModel(
   if (preferredComplexity) {
     detectedComplexity = preferredComplexity
   } else {
-    try {
-      // Chamar API de classificação de complexidade
-      const response = await fetch('/api/router/classify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message })
-      })
-      
-      if (response.ok) {
-        const data = await response.json()
-        const aiClassification = data.classification?.toLowerCase()
-        
-        // Mapear classificação da IA para nossos tipos
-        if (aiClassification === 'complexa') {
-          detectedComplexity = 'complex'
-        } else if (aiClassification === 'simples') {
-          // Para mensagens simples, verificar se são triviais (curtas) para usar Gemini
-          if (message.length < 50 && !message.includes('explicar') && !message.includes('como')) {
-            detectedComplexity = 'fast' // Usar Gemini para triviais
-          } else {
-            detectedComplexity = 'simple' // Usar GPT-4o-mini para simples
-          }
-        } else {
-          // Fallback para detecção local
-          detectedComplexity = detectComplexity(message, detectedUseCase)
-        }
-      } else {
-        // Fallback para detecção local se API falhar
-        detectedComplexity = detectComplexity(message, detectedUseCase)
-      }
-    } catch (error) {
-      console.warn('Erro na classificação via IA, usando detecção local:', error)
-      // Fallback para detecção local
-      detectedComplexity = detectComplexity(message, detectedUseCase)
-    }
+    // Usar classificação local ao invés de chamada fetch para evitar problemas de URL
+    detectedComplexity = detectComplexity(message, detectedUseCase)
   }
   
   // 3. Selecionar provedor baseado no caso de uso, complexidade e disponibilidade
@@ -268,7 +235,11 @@ export async function routeAIModel(
   const selectedModel = COMPLEXITY_MODELS[detectedComplexity][selectedProvider]
   
   // 5. Obter configuração do modelo
-  const modelConfig = MODEL_CONFIGS[selectedModel as keyof typeof MODEL_CONFIGS]
+  const modelConfig = MODEL_CONFIGS[selectedModel as keyof typeof MODEL_CONFIGS] || {
+    temperature: 0.7,
+    maxTokens: 1000,
+    timeout: 30000
+  }
   
   // 6. Gerar explicação do roteamento
   const reasoning = generateRoutingReasoning(

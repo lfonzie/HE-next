@@ -77,7 +77,24 @@ export const ChatMessage = memo(function ChatMessage({
   messageIndex,
 }: Props) {
 
-  const msgTime = useMemo(() => formatHourMinute(message.timestamp.getTime()), [message.timestamp]);
+  const msgTime = useMemo(() => {
+    if (!message.timestamp) return "";
+    
+    // Handle different timestamp formats (Date object, number, or string)
+    let timestamp: Date;
+    if (message.timestamp instanceof Date) {
+      timestamp = message.timestamp;
+    } else if (typeof message.timestamp === 'number') {
+      timestamp = new Date(message.timestamp);
+    } else if (typeof message.timestamp === 'string') {
+      timestamp = new Date(message.timestamp);
+    } else {
+      console.warn('Invalid timestamp format:', message.timestamp);
+      return "";
+    }
+    
+    return formatHourMinute(timestamp.getTime());
+  }, [message.timestamp]);
   // REMOVED: Duplicate classification - orchestrator already handles this
 
   const roleClass = isUser ? "justify-end" : "justify-start";
@@ -244,6 +261,7 @@ export const ChatMessage = memo(function ChatMessage({
                 <MarkdownRenderer 
                   content={message.content || ""} 
                   className="text-gray-700 dark:text-gray-300"
+                  isStreaming={message.isStreaming}
                 />
               </div>
             ) : !isUser && effectiveModuleId === "bem-estar" ? (
@@ -267,6 +285,7 @@ export const ChatMessage = memo(function ChatMessage({
                 <MarkdownRenderer 
                   content={message.content || ""} 
                   className="text-gray-700 dark:text-gray-300"
+                  isStreaming={message.isStreaming}
                 />
               </div>
             )}
@@ -376,7 +395,11 @@ export const ChatMessage = memo(function ChatMessage({
           {/* Metadados */}
           <footer className="mt-1 text-xs text-zinc-500 select-none">
             {msgTime && (
-              <time dateTime={new Date(message.timestamp!).toISOString()}>{msgTime}</time>
+              <time dateTime={(() => {
+                if (!message.timestamp) return new Date().toISOString();
+                if (message.timestamp instanceof Date) return message.timestamp.toISOString();
+                return new Date(message.timestamp).toISOString();
+              })()}>{msgTime}</time>
             )}
             {typeof message.tokens === "number" && (
               <span className="ml-2">{formatTokens(message.tokens)} tokens</span>

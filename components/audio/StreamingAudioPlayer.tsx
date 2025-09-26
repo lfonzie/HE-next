@@ -35,7 +35,7 @@ interface StreamingMetadata {
 
 export default function StreamingAudioPlayer({
   text,
-  voice = 'shimmer',
+  voice = 'Zephyr',
   model = 'tts-1',
   speed = 1.0,
   format = 'mp3',

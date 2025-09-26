@@ -1,7 +1,7 @@
 import { openai } from '@ai-sdk/openai'
 import { google } from '@ai-sdk/google'
 import { anthropic } from '@ai-sdk/anthropic'
-// import { perplexity } from '@ai-sdk/perplexity' // Temporarily disabled
+import { perplexity } from '@ai-sdk/perplexity'
 
 /**
  * Sistema Universal de Fallback de IA
@@ -68,7 +68,7 @@ class AIFallbackManager {
         createClient: (model: string) => openai(model),
         models: {
           simple: 'gpt-4o-mini',
-          complex: 'gpt-4o',
+          complex: 'gpt-5-chat-latest',
           fast: 'gpt-4o-mini'
         },
         timeout: 30000,
@@ -89,9 +89,9 @@ class AIFallbackManager {
         apiKey: googleApiKey,
         createClient: (model: string) => google(model),
         models: {
-          simple: 'gemini-1.5-flash',
-          complex: 'gemini-1.5-pro',
-          fast: 'gemini-1.5-flash'
+          simple: 'gemini-2.0-flash-exp',
+          complex: 'gemini-2.0-flash-exp',
+          fast: 'gemini-2.0-flash-exp'
         },
         timeout: 45000,
         maxRetries: 3
@@ -117,27 +117,26 @@ class AIFallbackManager {
       })
     }
 
-    // Perplexity Provider
-    // Inicializar Perplexity (temporariamente desabilitado)
-    // if (process.env.PERPLEXITY_API_KEY) {
-    //   this.providers.set('perplexity', {
-    //     id: 'perplexity',
-    //     name: 'Perplexity AI',
-    //     priority: 4,
-    //     enabled: true,
-    //     apiKey: process.env.PERPLEXITY_API_KEY,
-    //     createClient: (model: string) => perplexity(model, {
-    //       apiKey: process.env.PERPLEXITY_API_KEY
-    //     }),
-    //     models: {
-    //       simple: process.env.PERPLEXITY_MODEL_SELECTION || 'sonar',
-    //       complex: process.env.PERPLEXITY_MODEL_SELECTION || 'sonar',
-    //       fast: process.env.PERPLEXITY_MODEL_SELECTION || 'sonar'
-    //     },
-    //     timeout: 45000,
-    //     maxRetries: 2
-    //   })
-    // }
+    // Perplexity Provider - Para busca na web
+    if (process.env.PERPLEXITY_API_KEY) {
+      this.providers.set('perplexity', {
+        id: 'perplexity',
+        name: 'Perplexity Sonar',
+        priority: 4,
+        enabled: true,
+        apiKey: process.env.PERPLEXITY_API_KEY,
+        createClient: (model: string) => perplexity(model, {
+          apiKey: process.env.PERPLEXITY_API_KEY
+        }),
+        models: {
+          simple: 'sonar',
+          complex: 'sonar',
+          fast: 'sonar'
+        },
+        timeout: 45000,
+        maxRetries: 2
+      })
+    }
 
     // Inicializar status de saúde
     this.providers.forEach((_, providerId) => {

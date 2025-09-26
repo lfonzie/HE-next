@@ -143,6 +143,7 @@ export type ModuleType =
   | 'bem-estar'
   | 'enem-interactive'
   | 'aula-expandida'
+  | 'gemini-live'
 
 export interface ModuleConfig {
   id: ModuleType
@@ -228,6 +229,7 @@ export interface OrchestratorTrace {
   latencyMs?: number
   cost?: { inputTokens?: number; outputTokens?: number }
   errors?: string[]
+  streaming?: boolean
 }
 
 export interface OrchestratorResponse {

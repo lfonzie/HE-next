@@ -20,7 +20,7 @@ import { log } from '@/lib/lesson-logger';
 
 
 // Initialize Gemini client via Vercel AI SDK
-const geminiModel = google('gemini-2.0-flash-exp', {
+const geminiModel = google('gemini-1.5-flash', {
   apiKey: process.env.GOOGLE_GEMINI_API_KEY || process.env.GOOGLE_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY,
 });
 

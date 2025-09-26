@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
   try {
     const { 
       text, 
-      voice = 'alloy', 
+      voice = 'Zephyr', 
       model = 'tts-1',
       speed = 1.0,
       format = 'mp3'

@@ -126,7 +126,7 @@ function ultraFastLocalClassify(message: string, historyLength: number = 0): Ult
 async function googleDirectClassify(message: string, historyLength: number = 0): Promise<UltraFastClassificationResult> {
   try {
     const result = await generateText({
-      model: google('gemini-1.5-flash'),
+      model: google('gemini-2.5-flash'),
       messages: [
         {
           role: 'system',
@@ -152,8 +152,7 @@ Responda apenas com o nome do módulo e a confiança (0.0-1.0) no formato: modul
           content: message
         }
       ],
-      temperature: 0.1,
-      maxTokens: 50
+      temperature: 0.1
     });
 
     const response = result.text.trim();

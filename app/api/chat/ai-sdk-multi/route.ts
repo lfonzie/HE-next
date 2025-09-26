@@ -22,7 +22,7 @@ const MODEL_CONFIGS = {
     google: 'gemini-1.5-flash'
   },
   complexa: {
-    openai: 'gpt-4o',
+    openai: 'gpt-4o-mini',
     google: 'gemini-1.5-pro'
   }
 }
@@ -35,7 +35,7 @@ function getProviderConfig(complexity: 'trivial' | 'simples' | 'complexa') {
     case 'simples':
       return { provider: 'openai' as const, model: 'gpt-4o-mini' }
     case 'complexa':
-      return { provider: 'openai' as const, model: 'gpt-4o' }
+      return { provider: 'openai' as const, model: 'gpt-4o-mini' }
   }
 }
 

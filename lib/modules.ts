@@ -8,7 +8,8 @@ export type ModuleId =
   | "COORDENACAO"
   | "ATENDIMENTO"
   | "BEM_ESTAR"
-  | "SOCIAL_MEDIA";
+  | "SOCIAL_MEDIA"
+  | "GEMINI_LIVE";
 
 export const MODULES: Record<ModuleId, { label: string; color: string; icon: string; description: string }> = {
   PROFESSOR: { 
@@ -71,6 +72,12 @@ export const MODULES: Record<ModuleId, { label: string; color: string; icon: str
     icon: "fas fa-share-alt",
     description: "Comunicação digital"
   },
+  GEMINI_LIVE: { 
+    label: "Chat ao Vivo", 
+    color: "bg-gradient-to-br from-green-500 to-green-700 shadow-lg",
+    icon: "fas fa-video",
+    description: "Chat em tempo real com voz e vídeo"
+  },
 };
 
 export type ModuleClassification = {
@@ -93,7 +100,9 @@ export const MODULE_MAPPING: Record<string, ModuleId> = {
   "atendimento": "ATENDIMENTO",
   "social-media": "SOCIAL_MEDIA",
   "bem-estar": "BEM_ESTAR",
-  "wellbeing": "BEM_ESTAR"
+  "wellbeing": "BEM_ESTAR",
+  "gemini-live": "GEMINI_LIVE",
+  "chat-live": "GEMINI_LIVE"
 };
 
 // Mapeamento reverso de novos para antigos
@@ -107,7 +116,8 @@ export const REVERSE_MODULE_MAPPING: Record<ModuleId, string> = {
   "COORDENACAO": "coordenacao",
   "ATENDIMENTO": "atendimento",
   "SOCIAL_MEDIA": "social-media",
-  "BEM_ESTAR": "bem-estar"
+  "BEM_ESTAR": "bem-estar",
+  "GEMINI_LIVE": "gemini-live"
 };
 
 // Função para converter módulo antigo para novo

@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 
 // Google Cloud Text-to-Speech configuration
 const GOOGLE_TTS_API_URL = 'https://texttospeech.googleapis.com/v1/text:synthesize'
-const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY
+const GOOGLE_API_KEY = process.env.GOOGLE_TTS_KEY || process.env.GOOGLE_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY
 
 export async function POST(request: NextRequest) {
   try {
-    const { text, voice = 'pt-BR-Standard-A', speed = 1.0, pitch = 0.0 } = await request.json()
+    const { text, voice = 'pt-BR-Wavenet-C', speed = 1.0, pitch = 0.0 } = await request.json()
 
     // Validate input
     if (!text || typeof text !== 'string' || text.trim().length === 0) {

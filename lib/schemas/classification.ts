@@ -19,7 +19,7 @@ export const ClassificationSchema = z.object({
     'atendimento'
   ]),
   complexity: z.enum(['simples', 'media', 'complexa']),
-  provider_hint: z.enum(['openai', 'anthropic', 'gemini', 'groq']).optional(),
+  provider_hint: z.enum(['openai', 'anthropic', 'google', 'groq']).optional(),
   confidence: z.number().min(0).max(1),
   rationale: z.string().optional(),
   needsImages: z.boolean().optional()

@@ -18,7 +18,18 @@ export const MarkdownRendererNew: React.FC<MarkdownRendererProps> = ({
   className = "",
   isStreaming = false
 }) => {
-  // Processar Unicode e normalizar conteúdo
+  // Para streaming, usar processamento mais simples e rápido
+  if (isStreaming) {
+    return (
+      <div className={`markdown-content ${className}`}>
+        <div className="text-gray-700 dark:text-gray-300 leading-normal whitespace-pre-line">
+          {content}
+        </div>
+      </div>
+    )
+  }
+  
+  // Processar Unicode e normalizar conteúdo apenas quando não está streaming
   const processedContent = processMessageForDisplay(content);
   const mathProcessedContent = forceConvertMathToUnicode(processedContent);
   // Preservar quebras de linha duplas para separação de parágrafos

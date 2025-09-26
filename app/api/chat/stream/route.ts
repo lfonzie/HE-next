@@ -12,9 +12,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 
 
-import { openai } from '@/lib/openai'
-
-
+import { openai } from '@ai-sdk/openai'
 import { google } from '@ai-sdk/google'
 
 
@@ -104,7 +102,7 @@ export async function POST(request: NextRequest) {
       })
       
       // Usar Google AI para conversas simples, OpenAI para outras
-      const useGoogleAI = routingResult.provider === 'google' && process.env.GOOGLE_GENERATIVE_AI_API_KEY
+      const useGoogleAI = (routingResult.provider === 'google' || routingResult.provider === 'gemini') && process.env.GOOGLE_GENERATIVE_AI_API_KEY
       
       console.log('🎯 [CHAT-STREAM] Provider selection:', {
         message: message.substring(0, 50) + '...',
@@ -170,16 +168,16 @@ Contexto atual: Módulo: ${orchestratorResult.trace?.module || 'auto'}`
         tier = getModelTier('gemini-2.0-flash-exp')
         console.log('🤖 [CHAT-STREAM] Using Google Gemini with memory')
       } else {
-        model = 'gpt-4o-mini'
-        tier = getModelTier(model)
+        model = openai('gpt-4o-mini')
+        tier = getModelTier('gpt-4o-mini')
         console.log('🤖 [CHAT-STREAM] Using OpenAI GPT-4o-mini')
       }
       
       // Configurar routing result para headers
       routingResult = {
         provider: useGoogleAI ? 'google' : 'openai',
-        model: useGoogleAI ? 'gemini-2.0-flash-exp' : model,
-        complexity: 'simple',
+        model: useGoogleAI ? 'gemini-2.0-flash-exp' : 'gpt-4o-mini',
+        complexity: routingResult.complexity || 'simple',
         useCase: 'chat',
         metadata: {
           cost: useGoogleAI ? 'low' : 'low',

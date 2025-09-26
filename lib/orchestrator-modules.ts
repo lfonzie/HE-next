@@ -1112,6 +1112,7 @@ registerModule({
           
         case 'matemática':
           // Check if it's specifically about equations of second degree
+          const lowerMessage = message.toLowerCase();
           if (lowerMessage.includes('eq') && lowerMessage.includes('grau')) {
             specificResponse = `📐 **Equações do Segundo Grau - Guia Completo**\n\nAs equações do segundo grau são fundamentais na matemática! Elas aparecem em muitos problemas práticos e são a base para entender funções quadráticas.\n\n## **Forma Geral da Equação**\n\n**ax² + bx + c = 0**\n\nOnde:\n• **a ≠ 0** (coeficiente do termo quadrático)\n• **b** (coeficiente do termo linear)\n• **c** (termo independente)\n\n## **Como Resolver**\n\n### **1. Fórmula de Bhaskara**\n\n**x = (-b ± √Δ) / 2a**\n\nOnde **Δ = b² - 4ac** (discriminante)\n\n### **2. Análise do Discriminante**\n\n• **Δ > 0**: Duas raízes reais diferentes\n• **Δ = 0**: Uma raiz real (dupla)\n• **Δ < 0**: Duas raízes complexas\n\n## **Exemplo Prático**\n\n**Resolva: x² - 5x + 6 = 0**\n\n1. **Identifique os coeficientes**:\n   • a = 1, b = -5, c = 6\n\n2. **Calcule o discriminante**:\n   • Δ = (-5)² - 4(1)(6) = 25 - 24 = 1\n\n3. **Aplique a fórmula**:\n   • x = (5 ± √1) / 2\n   • x₁ = (5 + 1) / 2 = 3\n   • x₂ = (5 - 1) / 2 = 2\n\n## **Aplicações Práticas**\n\n• **Física**: Movimento de projéteis\n• **Engenharia**: Cálculo de estruturas\n• **Economia**: Análise de lucros\n• **Geometria**: Problemas de área\n• **Gráficos**: Parábolas\n\n## **Dicas Importantes**\n\n✅ **Sempre verifique se a = 0** (não é equação do 2º grau)\n✅ **Calcule o discriminante primeiro**\n✅ **Use a fórmula de Bhaskara quando necessário**\n✅ **Verifique suas respostas substituindo na equação original**\n\n**💡 Dica**: Pratique com muitos exemplos! A resolução de equações do segundo grau fica mais fácil com a prática.\n\n**Quer que eu resolva uma equação específica ou tem alguma dúvida sobre o processo?**`
             specificActions = [
@@ -1527,13 +1528,13 @@ registerModule({
   }
 })
 
-// atendimento module (fallback)
+// atendimento module (fallback) - Agora usa IA real
 registerModule({
   id: 'atendimento',
   name: 'Atendimento Geral',
-  version: '1.0.0',
+  version: '2.0.0',
   permissions: { requires_auth: false },
-  cost_estimate: { tokens: 400, latency_ms: 500 },
+  cost_estimate: { tokens: 800, latency_ms: 1500 },
   async detect({ text, context }): Promise<DetectedIntent> {
     // Sempre usar OpenAI para detecção - maior certeza
     try {
@@ -1565,18 +1566,154 @@ registerModule({
     // Fallback simples apenas em caso de erro
     return { intent: 'general', module: 'atendimento', confidence: 0.4, slots: {} }
   },
-  async execute({ slots }): Promise<OrchestratorResponse> {
+  async execute({ slots, context }): Promise<OrchestratorResponse> {
+    const message = context?.text || '';
+    
+    try {
+      // Usar Gemini para resposta inteligente em vez de resposta mock
+      const systemPrompt = `Você é um assistente virtual educacional brasileiro chamado HubEdu.ia. Seu papel é ajudar estudantes, professores e funcionários de escolas com informações educacionais, dúvidas acadêmicas e suporte geral.
+
+CONTEXTO:
+- Você trabalha em uma escola brasileira
+- Usuário: ${message.includes('professor') ? 'Professor' : message.includes('aluno') ? 'Aluno' : 'Usuário'}
+- Mensagem: "${message}"
+
+DIRETRIZES:
+1. Seja sempre amigável, prestativo e educativo
+2. Responda em português brasileiro
+3. Se for uma saudação simples (oi, olá, bom dia), responda de forma calorosa e ofereça ajuda
+4. Se for uma pergunta específica, responda de forma detalhada e útil
+5. Sempre ofereça opções de como pode ajudar
+6. Mantenha um tom profissional mas acessível
+
+RESPOSTA:
+Responda de forma natural e útil. Se for uma saudação, seja caloroso e ofereça suas capacidades. Se for uma pergunta específica, responda de forma detalhada.`;
+
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: message }
+          ],
+          max_tokens: 500,
+          temperature: 0.7,
+          stream: true // Habilitar streaming
+        })
+      });
+
+      if (response.ok) {
+        // Processar streaming response
+        const reader = response.body?.getReader();
+        if (!reader) {
+          throw new Error('No response body');
+        }
+
+        let fullResponse = '';
+        const decoder = new TextDecoder();
+
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value);
+            const lines = chunk.split('\n');
+
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                const data = line.slice(6);
+                if (data === '[DONE]') continue;
+
+                try {
+                  const parsed = JSON.parse(data);
+                  const content = parsed.choices?.[0]?.delta?.content;
+                  if (content) {
+                    fullResponse += content;
+                  }
+                } catch (e) {
+                  // Ignorar linhas malformadas
+                }
+              }
+            }
+          }
+        } finally {
+          reader.releaseLock();
+        }
+
+        const aiResponse = fullResponse || 'Olá! Como posso ajudar você hoje?';
+        
+        return {
+          text: aiResponse,
+          blocks: [
+            { 
+              type: 'notice', 
+              title: '🤖 HubEdu.ia - Assistente Inteligente',
+              content: 'Estou aqui para te ajudar com qualquer dúvida educacional!',
+              meta: { 
+                category: 'general_support',
+                aiPowered: true,
+                responseType: 'intelligent',
+                streaming: true
+              }
+            }
+          ],
+          actions: [
+            { type: 'cta', label: '📚 Criar aula interativa', module: 'aula_interativa', args: {} },
+            { type: 'cta', label: '🎯 Simulado ENEM (5 questões)', module: 'enem', args: { quantidade_questoes: 5 } },
+            { type: 'cta', label: '🏫 Informações da escola', module: 'secretaria', args: {} },
+            { type: 'cta', label: '💰 Questões financeiras', module: 'financeiro', args: {} }
+          ],
+          trace: {
+            module: 'atendimento',
+            confidence: 0.9,
+            intent: 'general',
+            slots,
+            latencyMs: 0,
+            aiPowered: true,
+            streaming: true
+          }
+        };
+      }
+    } catch (error) {
+      console.error('Erro na API OpenAI:', error);
+    }
+
+    // Fallback se OpenAI falhar - resposta mais inteligente que antes
     return {
-      text: `Olá! Como posso ajudar você hoje? 😊\n\nPosso te auxiliar com:\n• 📚 Aulas interativas\n• 🎯 Simulados ENEM\n• ✍️ Correção de redações\n• 🔍 Pesquisas em tempo real\n• 🏫 Informações da escola\n• 💰 Questões financeiras\n• 👩‍🏫 Coordenação pedagógica\n\nO que você gostaria de fazer?`,
-      blocks: [],
+      text: `Olá! Sou o HubEdu.ia, seu assistente educacional inteligente! 😊\n\nEstou aqui para te ajudar com qualquer dúvida ou necessidade educacional. Posso te auxiliar com:\n\n• 📚 **Aulas interativas** - Criação de conteúdo educacional personalizado\n• 🎯 **Simulados ENEM** - Questões e provas para prática\n• ✍️ **Correção de redações** - Análise e feedback detalhado\n• 🔍 **Pesquisas em tempo real** - Informações atualizadas sobre qualquer tema\n• 🏫 **Informações da escola** - Secretaria, coordenação e procedimentos\n• 💰 **Questões financeiras** - Valores, descontos e formas de pagamento\n• 👩‍🏫 **Coordenação pedagógica** - Programas e metodologias\n\n**Como posso te ajudar hoje?** Me conte sua dúvida ou o que você gostaria de fazer!`,
+      blocks: [
+        { 
+          type: 'notice', 
+          title: '🎓 HubEdu.ia - Seu Assistente Educacional',
+          content: 'Estou aqui para tornar seu aprendizado mais fácil e interessante!',
+          meta: { 
+            category: 'general_support',
+            aiPowered: false,
+            responseType: 'fallback'
+          }
+        }
+      ],
       actions: [
-        { type: 'cta', label: 'Gerar aula completa', module: 'aula_interativa', args: {} },
-        { type: 'cta', label: 'Simulado rápido (5 questões)', module: 'enem', args: { quantidade_questoes: 5 } },
-        { type: 'cta', label: 'Corrigir redação', module: 'redacao', args: {} },
-        { type: 'cta', label: 'Informações da secretaria', module: 'secretaria', args: {} },
-        { type: 'cta', label: 'Questões financeiras', module: 'financeiro', args: {} },
-        { type: 'cta', label: 'Coordenação pedagógica', module: 'coordenacao', args: {} }
-      ]
+        { type: 'cta', label: '📚 Criar aula interativa', module: 'aula_interativa', args: {} },
+        { type: 'cta', label: '🎯 Simulado ENEM (5 questões)', module: 'enem', args: { quantidade_questoes: 5 } },
+        { type: 'cta', label: '🏫 Informações da escola', module: 'secretaria', args: {} },
+        { type: 'cta', label: '💰 Questões financeiras', module: 'financeiro', args: {} },
+        { type: 'cta', label: '👩‍🏫 Coordenação pedagógica', module: 'coordenacao', args: {} }
+      ],
+      trace: {
+        module: 'atendimento',
+        confidence: 0.7,
+        intent: 'general',
+        slots,
+        latencyMs: 0,
+        aiPowered: false
+      }
     }
   }
 })

@@ -4,11 +4,11 @@ import { NextRequest, NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 import { generateText } from 'ai';
-import { google } from '@ai-sdk/google';
+import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
 
-// Initialize Google AI client via Vercel AI SDK
-const googleModel = google('gemini-1.5-flash');
+// Initialize OpenAI client via Vercel AI SDK - MUITO MAIS RÁPIDO
+const openaiModel = openai('gpt-4o-mini');
 
 // Schema para validação da saída do classificador
 const ClassificationSchema = z.object({
@@ -59,7 +59,7 @@ const ClassificationSchema = z.object({
     pesquisa_tempo_real: z.number().min(0).max(1)
   }),
   rationale: z.string(),
-  provider_hint: z.enum(['openai', 'anthropic', 'gemini', 'groq']).optional()
+  provider_hint: z.enum(['openai', 'anthropic', 'google', 'groq']).optional()
 });
 
 type ClassificationResult = z.infer<typeof ClassificationSchema>;
@@ -168,16 +168,74 @@ export async function POST(request: NextRequest) {
 
     // Cache key incluindo messageCount
     const cacheStart = Date.now();
-    const cacheKey = `${userMessage.toLowerCase().trim()}_${messageCount}`;
+    // Cache mais inteligente - considera mensagens similares
+    const normalizedMessage = userMessage.toLowerCase().trim();
+    const cacheKey = `${normalizedMessage}_${messageCount}`;
     const cached = classificationCache.get(cacheKey);
+    
+    // Cache adicional para saudações simples
+    const simpleGreetings = ['oi', 'olá', 'olá!', 'oi!', 'bom dia', 'boa tarde', 'boa noite', 'td bem', 'tudo bem', 'td bem?', 'tudo bem?'];
+    const isSimpleGreeting = simpleGreetings.includes(normalizedMessage);
+    const greetingCacheKey = `greeting_${messageCount}`;
+    const greetingCached = isSimpleGreeting ? classificationCache.get(greetingCacheKey) : null;
     const cacheTime = Date.now() - cacheStart;
     
-    if (cached && Date.now() - cached.timestamp < 300000) { // 5 min
+    // Resposta instantânea para saudações muito simples (sem IA)
+    if (isSimpleGreeting && messageCount <= 2) {
+      const instantResult = {
+        success: true,
+        classification: {
+          module: 'ATENDIMENTO',
+          confidence: 0.95,
+          scores: {
+            atendimento: 0.95,
+            professor: 0.0,
+            aula_expandida: 0.0,
+            enem_interactive: 0.0,
+            enem: 0.0,
+            professor_interativo: 0.0,
+            aula_interativa: 0.0,
+            ti: 0.0,
+            ti_suporte: 0.0,
+            rh: 0.0,
+            financeiro: 0.0,
+            coordenacao: 0.0,
+            bem_estar: 0.0,
+            social_media: 0.0,
+            conteudo_midia: 0.0,
+            secretaria: 0.0,
+            resultados_bolsas: 0.0,
+            juridico_contratos: 0.0,
+            marketing_design: 0.0,
+            pesquisa_tempo_real: 0.0
+          },
+          rationale: 'Saudação simples detectada - resposta instantânea sem IA',
+          complexity: 'simples'
+        },
+        source: 'instant',
+        messageCount,
+        model: 'instant',
+        timestamp: new Date().toISOString(),
+        cached: false,
+        latency: 0,
+        timing: { total: 0, parse: parseTime, cache: cacheTime }
+      };
+      
+      // Salvar no cache para próximas vezes
+      classificationCache.set(cacheKey, { result: instantResult, timestamp: Date.now() });
+      classificationCache.set(greetingCacheKey, { result: instantResult, timestamp: Date.now() });
+      
+      console.log(`⚡ [INSTANT] Simple greeting detected - instant response`);
+      return NextResponse.json(instantResult);
+    }
+    
+    if ((cached && Date.now() - cached.timestamp < 1800000) || (greetingCached && Date.now() - greetingCached.timestamp < 1800000)) {
       const totalTime = Date.now() - startTime;
-      console.log(`🚀 [CACHE_HIT] Found cached classification`);
+      const usedCache = cached || greetingCached;
+      console.log(`🚀 [CACHE_HIT] Found cached classification (${cached ? 'specific' : 'greeting'})`);
       console.log(`⏱️ [CACHE_HIT] Completed in ${totalTime}ms`);
       return NextResponse.json({
-        ...cached.result,
+        ...usedCache!.result,
         cached: true,
         timing: { total: totalTime, parse: parseTime, cache: cacheTime }
       });
@@ -195,15 +253,15 @@ export async function POST(request: NextRequest) {
     let aiError = null;
     
     try {
-      const googleStart = Date.now();
+      const openaiStart = Date.now();
       
-      // Check if Google API key is configured
-      if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY && !process.env.GEMINI_API_KEY && !process.env.GOOGLE_GEMINI_API_KEY && !process.env.GOOGLE_API_KEY) {
-        throw new Error('Google API key not configured');
+      // Check if OpenAI API key is configured
+      if (!process.env.OPENAI_API_KEY) {
+        throw new Error('OpenAI API key not configured');
       }
       
       const response = await generateText({
-        model: googleModel,
+        model: openaiModel,
         prompt: `Você é um classificador especializado em mensagens educacionais. Classifique cada mensagem no módulo mais específico e apropriado.
 
 🚨 IDIOMA OBRIGATÓRIO E CRÍTICO - INSTRUÇÃO NÃO NEGOCIÁVEL:
@@ -343,8 +401,8 @@ Histórico: ${history.length} mensagens`,
         temperature: 0.1,
       });
 
-      const googleTime = Date.now() - googleStart;
-      console.log(`⏱️ [GOOGLE-CALL] Completed in ${googleTime}ms`);
+      const openaiTime = Date.now() - openaiStart;
+      console.log(`⏱️ [OPENAI-CALL] Completed in ${openaiTime}ms`);
       
       const raw = response.text || "{}";
       
@@ -377,7 +435,7 @@ Histórico: ${history.length} mensagens`,
         scores = aiResult.scores;
         
         console.log(`🤖 [AI_SUCCESS] module=${aiResult.module} confidence=${aiResult.confidence}`);
-        console.log(`⏱️ [GOOGLE-TOTAL] ${googleTime}ms`);
+        console.log(`⏱️ [OPENAI-TOTAL] ${openaiTime}ms`);
       } else {
         console.warn(`⚠️ [SCHEMA_FAIL] AI returned invalid schema:`, validationResult.error.errors);
         
@@ -386,7 +444,7 @@ Histórico: ${history.length} mensagens`,
           module: parsed.module?.toLowerCase() || 'professor',
           confidence: parsed.confidence || 0.8,
           scores: {
-            atendimento: 0.1,
+            atendimento: 0.0,
             professor: 0.8,
             aula_expandida: 0.01,
             enem_interactive: 0.01,
@@ -405,7 +463,7 @@ Histórico: ${history.length} mensagens`,
             resultados_bolsas: 0.01,
             juridico_contratos: 0.01,
             marketing_design: 0.01,
-            chat_geral: 0.01
+            pesquisa_tempo_real: 0.01
           },
           rationale: parsed.rationale || 'Classificação automática corrigida',
           complexity: parsed.complexity || 'complexa'
@@ -424,13 +482,13 @@ Histórico: ${history.length} mensagens`,
         }
       }
       
-    } catch (error) {
+    } catch (error: any) {
       const aiTime = Date.now() - aiStart;
-      console.error(`❌ [AI_ERROR] Google Gemini call failed:`, error);
-      console.error(`❌ [AI_ERROR] Error message:`, error.message);
-      console.error(`❌ [AI_ERROR] Error stack:`, error.stack);
+      console.error(`❌ [AI_ERROR] OpenAI call failed:`, error);
+      console.error(`❌ [AI_ERROR] Error message:`, error?.message || 'Unknown error');
+      console.error(`❌ [AI_ERROR] Error stack:`, error?.stack || 'No stack trace');
       console.log(`⏱️ [AI-ERROR] Failed after ${aiTime}ms`);
-      aiError = 'google_gemini_failed';
+      aiError = 'openai_failed';
     }
     
     const aiTime = Date.now() - aiStart;
@@ -439,7 +497,7 @@ Histórico: ${history.length} mensagens`,
     // 4. Lógica de decisão com prioridade
     let finalModule = 'professor';
     let finalConfidence = 0.0;
-    let finalScores = { professor: 1.0 };
+    let finalScores: Record<string, number> = { professor: 1.0 };
     let finalRationale = 'Fallback default';
     
     if (aiResult && aiResult.confidence >= CLASSIFICATION_THRESHOLD) {
@@ -455,26 +513,26 @@ Histórico: ${history.length} mensagens`,
       finalConfidence = 0.8;
       finalScores = { 
         [heuristicResult]: 0.8, 
-        atendimento: 0.2,
-        professor: 0,
-        aula_expandida: 0,
-        enem_interactive: 0,
-        enem: 0,
-        professor_interativo: 0,
-        aula_interativa: 0,
-        ti: 0,
-        ti_suporte: 0,
-        rh: 0,
-        financeiro: 0,
-        coordenacao: 0,
-        bem_estar: 0,
-        social_media: 0,
-        conteudo_midia: 0,
-        secretaria: 0,
-        resultados_bolsas: 0,
-        juridico_contratos: 0,
-        marketing_design: 0,
-        chat_geral: 0
+        atendimento: 0.0,
+        professor: 0.0,
+        aula_expandida: 0.0,
+        enem_interactive: 0.0,
+        enem: 0.0,
+        professor_interativo: 0.0,
+        aula_interativa: 0.0,
+        ti: 0.0,
+        ti_suporte: 0.0,
+        rh: 0.0,
+        financeiro: 0.0,
+        coordenacao: 0.0,
+        bem_estar: 0.0,
+        social_media: 0.0,
+        conteudo_midia: 0.0,
+        secretaria: 0.0,
+        resultados_bolsas: 0.0,
+        juridico_contratos: 0.0,
+        marketing_design: 0.0,
+        pesquisa_tempo_real: 0.0
       };
       finalRationale = 'Heuristic pattern match';
       source = 'heuristic';
@@ -485,26 +543,26 @@ Histórico: ${history.length} mensagens`,
         finalModule = 'professor';
         finalConfidence = 0.5;
         finalScores = { 
+          atendimento: 0.0,
           professor: 0.5,
-          atendimento: 0.1,
           aula_expandida: 0.1,
           enem_interactive: 0.1,
           enem: 0.1,
           professor_interativo: 0.1,
           aula_interativa: 0.1,
-          ti: 0,
-          ti_suporte: 0,
-          rh: 0,
-          financeiro: 0,
-          coordenacao: 0,
-          bem_estar: 0,
-          social_media: 0,
-          conteudo_midia: 0,
-          secretaria: 0,
-          resultados_bolsas: 0,
-          juridico_contratos: 0,
-          marketing_design: 0,
-          chat_geral: 0
+          ti: 0.0,
+          ti_suporte: 0.0,
+          rh: 0.0,
+          financeiro: 0.0,
+          coordenacao: 0.0,
+          bem_estar: 0.0,
+          social_media: 0.0,
+          conteudo_midia: 0.0,
+          secretaria: 0.0,
+          resultados_bolsas: 0.0,
+          juridico_contratos: 0.0,
+          marketing_design: 0.0,
+          pesquisa_tempo_real: 0.0
         };
         finalRationale = 'Low confidence, close call';
         source = 'fallback';
@@ -544,6 +602,11 @@ Histórico: ${history.length} mensagens`,
 
     // Cache result
     classificationCache.set(cacheKey, { result, timestamp: Date.now() });
+    
+    // Salvar também no cache de saudações se for uma saudação simples
+    if (isSimpleGreeting) {
+      classificationCache.set(greetingCacheKey, { result, timestamp: Date.now() });
+    }
 
     // Telemetria compacta
     const scoreAnalysis = calculateScoreAnalysis(finalScores);

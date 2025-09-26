@@ -1,27 +1,27 @@
 // Configuração dos provedores de IA para geração de aulas
 export const AI_PROVIDERS = {
-  gemini: {
-    name: 'gemini',
+  google: {
+    name: 'google',
     model: 'gemini-2.0-flash-exp',
     priority: 1,
     timeout: 60000, // 1 minuto
-    description: 'Google Gemini - Rápido e eficiente',
+    description: 'Google Gemini 2.0 Flash - Rápido e eficiente',
     fallbackReason: 'Modelo sobrecarregado ou indisponível'
   },
-  'gpt-4o-mini': {
-    name: 'gpt-4o-mini',
+  openai: {
+    name: 'openai',
     model: 'gpt-4o-mini',
     priority: 2,
     timeout: 90000, // 1.5 minutos
     description: 'OpenAI GPT-4o Mini - Equilibrio entre velocidade e qualidade',
     fallbackReason: 'Modelo principal indisponível'
   },
-  'gpt-5': {
-    name: 'gpt-5',
-    model: 'gpt-5',
+  perplexity: {
+    name: 'perplexity',
+    model: 'sonar',
     priority: 3,
     timeout: 120000, // 2 minutos
-    description: 'OpenAI GPT-5 - Máxima qualidade e capacidade',
+    description: 'Perplexity Sonar - Para busca na web',
     fallbackReason: 'Provedores anteriores falharam'
   }
 } as const;
@@ -62,7 +62,7 @@ export function getAvailableProviders(): AIProvider[] {
 
 // Configuração de modelos por provedor
 export const PROVIDER_MODELS = {
-  gemini: ['gemini-2.0-flash-exp', 'gemini-1.5-pro'],
-  'gpt-4o-mini': ['gpt-4o-mini', 'gpt-4o'],
-  'gpt-5': ['gpt-5', 'gpt-4-turbo']
+  google: ['gemini-2.0-flash-exp'],
+  openai: ['gpt-4o-mini', 'gpt-4o'],
+  anthropic: ['claude-3-haiku-20240307', 'claude-3-sonnet-20240229']
 } as const;

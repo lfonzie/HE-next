@@ -228,7 +228,8 @@ export async function orchestrate(input: OrchestrateInput): Promise<Orchestrator
         confidence: 1.0,
         intent: 'direct_module',
         slots,
-        latencyMs: Date.now() - t0
+        latencyMs: Date.now() - t0,
+        streaming: true // Habilitar streaming universal
       }
       return { ...result, trace }
     }
@@ -298,7 +299,8 @@ export async function orchestrate(input: OrchestrateInput): Promise<Orchestrator
           confidence: det.confidence,
           intent: det.intent,
           slots: updatedSlots,
-          latencyMs: Date.now() - t0
+          latencyMs: Date.now() - t0,
+          streaming: true // Habilitar streaming universal
         }
         return { ...result, trace }
       }
@@ -326,7 +328,8 @@ export async function orchestrate(input: OrchestrateInput): Promise<Orchestrator
     confidence: det.confidence,
     intent: det.intent,
     slots: det.slots,
-    latencyMs: Date.now() - t0
+    latencyMs: Date.now() - t0,
+    streaming: true // Habilitar streaming universal para todos os módulos
   }
   return { ...result, trace }
 }

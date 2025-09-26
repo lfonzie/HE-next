@@ -1,101 +1,20 @@
-import { useState, useCallback, useRef, useMemo } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
+import { flushSync } from 'react-dom'
 import { useSession } from 'next-auth/react'
-import { Message, ModuleType, Conversation } from '@/types'
-import { useChatContext } from '@/components/providers/ChatContext'
+import { Conversation as ChatConversation, Message as ChatMessageType } from '@/types'
 import { useGlobalLoading } from '@/hooks/useGlobalLoading'
-import { encodeMessage, decodeMessage, normalizeUnicode } from '@/utils/unicode'
-
-// Função para converter módulo da API para formato do sistema
-function convertApiModuleToSystem(apiModule: string): string {
-  const moduleMapping: Record<string, string> = {
-    'PROFESSOR': 'professor',
-    'AULA_EXPANDIDA': 'aula-expandida',
-    'ENEM_INTERATIVO': 'enem-interativo',
-    'AULA_INTERATIVA': 'aula_interativa',
-    'ENEM': 'enem',
-    'TI_TROUBLESHOOTING': 'ti_troubleshooting',
-    'FAQ_ESCOLA': 'faq_escola',
-    'FINANCEIRO': 'financeiro',
-    'RH': 'rh',
-    'COORDENACAO': 'coordenacao',
-    'BEM_ESTAR': 'bem-estar',
-    'SOCIAL_MEDIA': 'social-media',
-    'CONTEUDO_MIDIA': 'conteudo_midia',
-    'ATENDIMENTO': 'atendimento'
-  }
-  
-  return moduleMapping[apiModule] || 'auto'
-}
 
 export function useChat(onStreamingStart?: () => void) {
-  const [conversations, setConversations] = useState<Conversation[]>([])
-  const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null)
+  const [conversations, setConversations] = useState<ChatConversation[]>([])
+  const [currentConversation, setCurrentConversation] = useState<ChatConversation | null>(null)
   const [isStreaming, setIsStreaming] = useState(false)
-  const [lastClassification, setLastClassification] = useState<{
-    module: string
-    confidence: number
-    rationale: string
-  } | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [retryCount, setRetryCount] = useState(0)
   const [firstTokenReceived, setFirstTokenReceived] = useState(false)
   
-  // Handle prerendering - return empty state
-  if (typeof window === 'undefined') {
-    return {
-      conversations: [],
-      currentConversation: null,
-      isLoading: false,
-      sendMessage: async () => {},
-      createConversation: async () => {},
-      deleteConversation: async () => {},
-      updateConversation: async () => {},
-      clearCurrentConversation: () => {},
-      setCurrentConversation: () => {},
-      refreshConversations: async () => {},
-      isStreaming: false,
-      cancelStream: () => {},
-      error: null,
-      retry: () => {}
-    }
-  }
-
   const { data: session } = useSession()
-  
-  // Handle prerendering for ChatContext
-  let setSelectedModule, autoSwitchModule
-  try {
-    const chatContext = useChatContext()
-    setSelectedModule = chatContext.setSelectedModule
-    autoSwitchModule = chatContext.autoSwitchModule
-  } catch (error) {
-    // Handle case where ChatContext is not available during prerendering
-    setSelectedModule = () => {}
-    autoSwitchModule = false
-  }
-  
-  const { startLoading, stopLoading, updateProgress } = useGlobalLoading()
-  
-  // Refs para otimização
+  const { startLoading, stopLoading } = useGlobalLoading()
   const abortControllerRef = useRef<AbortController | null>(null)
-  const messageQueueRef = useRef<Message[]>([])
-  const lastMessageIdRef = useRef<string | null>(null)
-  
-  // Memoized values para performance
-  const currentMessages = useMemo(() => 
-    currentConversation?.messages || [], 
-    [currentConversation?.messages]
-  )
-  
-  const conversationCount = useMemo(() => 
-    conversations.length, 
-    [conversations.length]
-  )
-  
-  const totalMessages = useMemo(() => 
-    conversations.reduce((total, conv) => total + conv.messages.length, 0),
-    [conversations]
-  )
 
   const sendMessage = useCallback(async (
     message: string,
@@ -109,61 +28,37 @@ export function useChat(onStreamingStart?: () => void) {
     provider?: 'auto' | 'openai' | 'google' | 'anthropic' | 'mistral' | 'groq',
     complexity?: 'simple' | 'complex' | 'fast'
   ) => {
-    // Validate message parameter
-    if (!message || typeof message !== 'string' || message.trim() === '') {
-      console.error('[Chat] Invalid message:', { message, type: typeof message });
-      throw new Error('Invalid message: message must be a non-empty string');
+    if (!message?.trim()) {
+      throw new Error('Message is required')
     }
 
-    // Additional validation to ensure message is not undefined
-    const trimmedMessage = message.trim();
-    if (!trimmedMessage) {
-      console.error('[Chat] Message is empty after trimming:', { originalMessage: message });
-      throw new Error('Message cannot be empty');
-    }
-
-    console.debug('[Chat] Sending message:', { 
-      message: message.substring(0, 50) + '...', 
-      moduleParam, 
-      conversationId 
-    });
-
-    // Limpar erros anteriores
+    const trimmedMessage = message.trim()
+    setIsStreaming(true)
     setError(null)
+    setRetryCount(0)
     setFirstTokenReceived(false)
     
-    // Cancelar requisição anterior se existir
+    // Cancel previous request if exists
     if (abortControllerRef.current) {
       abortControllerRef.current.abort()
     }
     
-    // Criar novo AbortController
+    // Create new AbortController
     abortControllerRef.current = new AbortController()
     
-    // Temporariamente desabilitado para desenvolvimento
-    // if (!session) throw new Error("User not authenticated")
-
-    // Mostrar loading global
-    startLoading("Carregando…", 'data')
-
-    setIsStreaming(true)
+    startLoading("Enviando mensagem...", "data")
     onStreamingStart?.() // Hide global loading overlay when streaming starts
     
     try {
-      // Temporariamente desabilitado para desenvolvimento
-      // const token = localStorage.getItem("token")
-      // if (!token) throw new Error("No auth token available")
-
-      // Usar módulo fornecido ou 'auto' para classificação automática
+      // Use provided module or 'auto' for automatic classification
       let finalModule = moduleParam || "auto"
       console.log(`🎯 Usando módulo: ${finalModule}`)
-      console.log(`🔍 [useChat] moduleParam received:`, moduleParam, `(type: ${typeof moduleParam})`)
 
       // Include conversation history for context
       const conversationHistory = currentConversation?.messages || []
 
       const requestBody = {
-        message: trimmedMessage, // Use the validated trimmed message
+        message: trimmedMessage,
         module: finalModule,
         conversationId,
         history: conversationHistory.slice(-3), // AI SDK Multi uses only last 3 messages for speed
@@ -186,38 +81,43 @@ export function useChat(onStreamingStart?: () => void) {
         forceProvider: requestBody.forceProvider
       });
       
-      // Retry logic otimizado para network failures
+      // Retry logic optimized for network failures
       let response: Response | undefined
       let currentRetryCount = 0
-      const maxRetries = 1 // Reduzido de 3 para 1
+      const maxRetries = 1 // Reduced from 3 to 1
+      
+      // Create unique message IDs for proper tracking with additional randomness
+      const timestamp = Date.now()
+      const randomSuffix = Math.random().toString(36).substring(2, 8)
+      const userMessageId = `user-${timestamp}-${randomSuffix}`
+      const assistantMessageId = `assistant-${timestamp}-${randomSuffix}`
       
       while (currentRetryCount <= maxRetries) {
         try {
-          response = await fetch('/api/chat', {
+          response = await fetch('/api/chat/stream-optimized', {
             method: "POST",
             headers: {
               "Content-Type": "application/json; charset=utf-8",
-              // Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify(requestBody),
             signal: abortControllerRef.current.signal
           })
           
           if (!response.ok) {
-            // Tentar obter detalhes do erro do servidor
+            // Try to get error details from server
             let errorDetails = response.statusText
             try {
               const errorData = await response.json()
               errorDetails = errorData.error || errorData.message || response.statusText
             } catch {
-              // Se não conseguir parsear JSON, usar statusText
+              // If can't parse JSON, use statusText
             }
             throw new Error(`HTTP ${response.status}: ${errorDetails}`)
           }
           
           break // Success, exit retry loop
         } catch (networkError: any) {
-          // Se foi cancelado pelo AbortController, não tentar novamente
+          // If cancelled by AbortController, don't retry
           if (networkError.name === 'AbortError') {
             throw networkError
           }
@@ -231,7 +131,7 @@ export function useChat(onStreamingStart?: () => void) {
             throw new Error(`Falha de rede após ${maxRetries} tentativas: ${networkError.message}`)
           }
           
-          // Delay otimizado - máximo 3 segundos em vez de 10
+          // Optimized delay - maximum 3 seconds instead of 10
           const delay = Math.min(1000 * Math.pow(1.5, currentRetryCount) + Math.random() * 500, 3000)
           console.log(`🔄 [RETRY] Tentativa ${currentRetryCount}/${maxRetries} em ${delay}ms`)
           await new Promise(resolve => setTimeout(resolve, delay))
@@ -243,21 +143,10 @@ export function useChat(onStreamingStart?: () => void) {
         throw new Error(error.message || "Chat request failed")
       }
 
-      const reader = response.body?.getReader()
-      if (!reader) {
-        console.error('[Chat] No response reader available')
-        throw new Error("No response reader - verifique a conexão com o servidor")
-      }
-
       const decoder = new TextDecoder('utf-8')
-      let assistantMessage = ""
       let finalConversationId = conversationId
-      let tokenCount = 0
-      let finalModel = ""
-      let finalTier: "IA" | "IA_SUPER" | "IA_ECO" | undefined = undefined
-      let receivedDone = false
       
-      // Capturar metadados do multi-provider
+      // Capture metadata from multi-provider
       const provider = response.headers.get('X-Provider') || 'unknown'
       const model = response.headers.get('X-Model') || 'unknown'
       const complexity = response.headers.get('X-Complexity') || 'unknown'
@@ -265,250 +154,307 @@ export function useChat(onStreamingStart?: () => void) {
       
       console.log(`🎯 [MULTI-PROVIDER] Using ${provider}:${model} (complexity: ${complexity}, latency: ${latency}ms)`)
 
-      // Check if response is JSON (error case) instead of streaming
+      // Check if response is streaming (text/event-stream) or JSON
       const contentType = response.headers.get('content-type')
-      if (contentType?.includes('application/json')) {
-        const errorData = await response.json()
-        console.error('[Chat] Received JSON error response:', errorData)
-        throw new Error(errorData.error || errorData.message || 'Erro desconhecido do servidor')
-      }
-
-      // Create unique message IDs for proper tracking with additional randomness
-      const timestamp = Date.now()
-      const randomSuffix = Math.random().toString(36).substring(2, 8)
-      const userMessageId = `user-${timestamp}-${randomSuffix}`
-      const assistantMessageId = `assistant-${timestamp}-${randomSuffix}`
-
-      // Create assistant message immediately to ensure it appears
-      setCurrentConversation(prev => {
-        if (!prev) {
-          // Create new conversation if it doesn't exist
-          const newConversation = {
-            id: conversationId || `conv-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
-            title: message.slice(0, 50),
-            messages: [
-              { 
+      if (contentType?.includes('text/event-stream')) {
+        // Process streaming response
+        console.log('[Chat] Processing streaming response')
+        
+        // Create initial assistant message for streaming
+        setCurrentConversation(prev => {
+          if (!prev) {
+            const newConversation = {
+              id: conversationId || `conv-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
+              title: message.slice(0, 50),
+              messages: [
+                { 
+                  id: userMessageId,
+                  role: "user" as const, 
+                  content: message, 
+                  timestamp: new Date(),
+                  image: image,
+                  attachment: attachment
+                },
+                {
+                  id: assistantMessageId,
+                  role: "assistant" as const,
+                  content: '',
+                  timestamp: new Date(),
+                  isStreaming: true
+                }
+              ],
+              module: moduleParam || "auto",
+              subject,
+              grade,
+              createdAt: new Date(),
+              updatedAt: new Date()
+            }
+            return newConversation
+          } else {
+            const updatedMessages = [...prev.messages]
+            
+            // Add user message if it doesn't exist
+            const hasUserMessage = updatedMessages.some(msg => 
+              msg.role === "user" && msg.content === message
+            )
+            
+            if (!hasUserMessage) {
+              updatedMessages.push({ 
                 id: userMessageId,
                 role: "user" as const, 
                 content: message, 
                 timestamp: new Date(),
                 image: image,
                 attachment: attachment
-              },
-              {
-                id: assistantMessageId,
-                role: "assistant" as const,
-                content: "",
-                timestamp: new Date(),
-                isStreaming: true
-              }
-            ],
-            module: moduleParam || "auto",
-            subject,
-            grade,
-            tokenCount: 0,
-            createdAt: new Date(),
-            updatedAt: new Date()
-          }
-          setConversations(prev => [newConversation, ...prev])
-          return newConversation
-        } else {
-          // Add messages to existing conversation
-          const updatedMessages = [...prev.messages]
-          
-          // Add user message if it doesn't exist
-          const hasUserMessage = updatedMessages.some(msg => 
-            msg.role === "user" && msg.content === message
-          )
-          
-          if (!hasUserMessage) {
-            updatedMessages.push({ 
-              id: userMessageId,
-              role: "user" as const, 
-              content: message, 
-              timestamp: new Date(),
-              image: image,
-              attachment: attachment
-            })
-          }
-          
-          // Add assistant message if it doesn't exist
-          const hasAssistantMessage = updatedMessages.some(msg => 
-            msg.role === "assistant" && msg.isStreaming
-          )
-          
-          if (!hasAssistantMessage) {
+              })
+            }
+            
+            // Add initial assistant message for streaming
             updatedMessages.push({
               id: assistantMessageId,
               role: "assistant" as const,
-              content: "",
+              content: '',
               timestamp: new Date(),
-              isStreaming: true,
-              module: undefined, // Garantir que não há módulo inicial
-              provider: provider,
-              model: model,
-              complexity: complexity,
-              latency: latency
-            })
-          }
-          
-          return {
-            ...prev,
-            messages: updatedMessages,
-            updatedAt: new Date()
-          }
-        }
-      })
-
-      // Extrair informações do provedor dos headers (já capturado acima)
-      // const provider = response.headers.get('X-Provider') || 'unknown'
-      // const model = response.headers.get('X-Model') || 'unknown'
-      const module = response.headers.get('X-Module') || finalModule
-      // const complexity = response.headers.get('X-Complexity') || 'simple' // já capturado acima
-      const tier = response.headers.get('X-Tier') as "IA" | "IA_SUPER" | "IA_ECO" | undefined
-      const routingReasoning = response.headers.get('X-Routing-Reasoning') || ''
-      
-      finalModel = model
-      finalTier = tier
-      finalModule = convertApiModuleToSystem(module)
-
-      // Atualizar o módulo ativo no sidebar para refletir o módulo detectado
-      // Chamamos uma única vez por resposta, antes do loop de streaming, para evitar múltiplas trocas
-      try {
-        if (finalModule) {
-          autoSwitchModule(finalModule)
-        }
-      } catch (e) {
-        // Em caso de falha, apenas segue sem quebrar o fluxo de streaming
-        console.warn('[Chat] Falha ao alternar módulo automaticamente:', e)
-      }
-
-      try {
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) {
-            receivedDone = true
-            
-            // Finalize the assistant message
-            setCurrentConversation(prev => {
-              if (!prev) return prev
-              
-              const updatedMessages = prev.messages.map(msg => {
-                if (msg.id === assistantMessageId) {
-                  return {
-                    ...msg,
-                    content: assistantMessage,
-                    model: finalModel,
-                    tokens: tokenCount,
-                    tier: finalTier,
-                    module: finalModule,
-                    provider: provider,
-                    complexity: complexity,
-                    routingReasoning: routingReasoning,
-                    isStreaming: false
-                  }
-                }
-                return msg
-              })
-              
-              const finalConversation = {
-                ...prev,
-                messages: updatedMessages,
-                updatedAt: new Date()
-              }
-              
-              // Update conversations list
-              setConversations(prevConvs => {
-                const existingIndex = prevConvs.findIndex(conv => conv.id === finalConversation.id)
-                if (existingIndex >= 0) {
-                  const updated = [...prevConvs]
-                  updated[existingIndex] = finalConversation
-                  return updated
-                } else {
-                  return [finalConversation, ...prevConvs]
-                }
-              })
-              
-              return finalConversation
-            })
-            
-            break
-          }
-
-          const chunk = decoder.decode(value, { stream: true })
-          
-          // Multi-provider retorna texto simples, não JSON
-          assistantMessage += decodeMessage(chunk) // Decodificar chunk Unicode
-          
-          // Atualizar mensagem em tempo real
-          setCurrentConversation(prev => {
-            if (!prev) return prev
-            
-            const updatedMessages = prev.messages.map(msg => {
-              if (msg.id === assistantMessageId) {
-                return {
-                  ...msg,
-                  content: assistantMessage,
-                  model: finalModel,
-                  module: finalModule
-                }
-              }
-              return msg
+              isStreaming: true
             })
             
             return {
               ...prev,
-              messages: updatedMessages
+              messages: updatedMessages,
+              updatedAt: new Date()
             }
-          })
-        }
-      } catch (streamError: any) {
-        console.error('[Chat] Streaming error:', streamError)
-        
-        // If streaming fails, ensure the assistant message is finalized
-        setCurrentConversation(prev => {
-          if (!prev) return prev
-          
-          const updatedMessages = prev.messages.map(msg => {
-            if (msg.id === assistantMessageId) {
-              return {
-                ...msg,
-                content: assistantMessage || "Desculpe, ocorreu um erro durante o streaming da resposta.",
-                model: finalModel,
-                tokens: tokenCount,
-                tier: finalTier,
-                module: finalModule,
-                provider: provider,
-                complexity: complexity,
-                routingReasoning: routingReasoning,
-                isStreaming: false
-              }
-            }
-            return msg
-          })
-          
-          return {
-            ...prev,
-            messages: updatedMessages,
-            updatedAt: new Date()
           }
         })
         
-        throw new Error(`Erro no streaming: ${streamError.message}`)
-      }
-      
-      // Hide loading when streaming starts
-      if (!firstTokenReceived) {
-        setFirstTokenReceived(true)
-        setTimeout(() => stopLoading(), 500)
+        const reader = response.body?.getReader()
+        if (!reader) {
+          throw new Error('No response body')
+        }
+
+        let fullResponse = ''
+        const decoder = new TextDecoder()
+
+        try {
+          while (true) {
+            const { done, value } = await reader.read()
+            if (done) break
+
+            const chunk = decoder.decode(value)
+            const lines = chunk.split('\n')
+
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                const data = line.slice(6)
+                if (data === '[DONE]') continue
+
+                try {
+                  const parsed = JSON.parse(data)
+                  
+                  if (parsed.content) {
+                    // Content chunk - real streaming
+                    fullResponse += parsed.content
+                    
+                    // Debug logging
+                    console.log('[Chat] Streaming chunk received:', {
+                      chunk: parsed.content,
+                      fullResponse: fullResponse.substring(0, 50) + '...',
+                      assistantMessageId
+                    })
+                    
+                    // Mark first token as received
+                    if (!firstTokenReceived) {
+                      setFirstTokenReceived(true)
+                      stopLoading() // Hide loading overlay when first token arrives
+                    }
+                    
+                    // Update UI with partial content - force immediate update
+                    flushSync(() => {
+                      setCurrentConversation(prev => {
+                        if (!prev) {
+                          console.warn('[Chat] No previous conversation found during streaming')
+                          return prev
+                        }
+                        
+                        const updatedMessages = prev.messages.map(msg => {
+                          if (msg.id === assistantMessageId) {
+                            console.log('[Chat] Updating message:', {
+                              id: msg.id,
+                              oldContent: msg.content?.substring(0, 20) + '...',
+                              newContent: fullResponse.substring(0, 20) + '...'
+                            })
+                            return { ...msg, content: fullResponse, isStreaming: true }
+                          }
+                          return msg
+                        })
+                        
+                        return {
+                          ...prev,
+                          messages: updatedMessages
+                        }
+                      })
+                    })
+                    
+                    // Force a small delay to ensure UI updates
+                    await new Promise(resolve => setTimeout(resolve, 10))
+                  } else if (parsed.metadata) {
+                    // Final metadata received
+                    console.log('[Chat] Received metadata:', parsed.metadata)
+                    
+                    // Finalize streaming and update with metadata
+                    setCurrentConversation(prev => {
+                      if (!prev) return prev
+                      return {
+                        ...prev,
+                        messages: prev.messages.map(msg => 
+                          msg.id === assistantMessageId 
+                            ? { 
+                                ...msg, 
+                                content: fullResponse, 
+                                isStreaming: false,
+                                model: parsed.metadata.model,
+                                tier: parsed.metadata.tier,
+                                provider: parsed.metadata.provider,
+                                complexity: parsed.metadata.complexity,
+                                module: parsed.metadata.module
+                              }
+                            : msg
+                        )
+                      }
+                    })
+                  } else if (parsed.trace) {
+                    // Trace information received
+                    console.log('[Chat] Received trace:', parsed.trace)
+                    
+                    // Update module if detected
+                    if (parsed.trace.module) {
+                      try {
+                        autoSwitchModule(parsed.trace.module)
+                      } catch (e) {
+                        console.warn('[Chat] Failed to switch module:', e)
+                      }
+                    }
+                  }
+                } catch (e) {
+                  // Ignore malformed lines
+                  console.warn('[Chat] Failed to parse streaming data:', e)
+                }
+              }
+            }
+          }
+        } finally {
+          reader.releaseLock()
+          setIsStreaming(false)
+        }
+        
+        return // Streaming processed, exit function
+        
+      } else if (contentType?.includes('application/json')) {
+        const jsonData = await response.json()
+        
+        // Check if it's an error response
+        if (jsonData.error) {
+          console.error('[Chat] Received JSON error response:', jsonData)
+          throw new Error(jsonData.error || jsonData.message || 'Erro desconhecido do servidor')
+        }
+        
+        // It's a valid structured response (orchestrator format)
+        console.log('[Chat] Received structured response:', jsonData)
+        
+        // Handle structured response with blocks and actions
+        const timestamp = Date.now()
+        const randomSuffix = Math.random().toString(36).substring(2, 8)
+        const userMessageId = `user-${timestamp}-${randomSuffix}`
+        const assistantMessageId = `assistant-${timestamp}-${randomSuffix}`
+        
+        // Create conversation with structured response
+        setCurrentConversation(prev => {
+          if (!prev) {
+            const newConversation = {
+              id: conversationId || `conv-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
+              title: message.slice(0, 50),
+              messages: [
+                { 
+                  id: userMessageId,
+                  role: "user" as const, 
+                  content: message, 
+                  timestamp: new Date(),
+                  image: image,
+                  attachment: attachment
+                },
+                {
+                  id: assistantMessageId,
+                  role: "assistant" as const,
+                  content: jsonData.text || '',
+                  timestamp: new Date(),
+                  isStreaming: false,
+                  blocks: jsonData.blocks || [],
+                  actions: jsonData.actions || [],
+                  trace: jsonData.trace || {}
+                }
+              ],
+              module: moduleParam || "auto",
+              subject,
+              grade,
+              tokenCount: 0,
+              createdAt: new Date(),
+              updatedAt: new Date()
+            }
+            setConversations(prev => [newConversation, ...prev])
+            return newConversation
+          } else {
+            const updatedMessages = [...prev.messages]
+            
+            // Add user message if it doesn't exist
+            const hasUserMessage = updatedMessages.some(msg => 
+              msg.role === "user" && msg.content === message
+            )
+            
+            if (!hasUserMessage) {
+              updatedMessages.push({ 
+                id: userMessageId,
+                role: "user" as const, 
+                content: message, 
+                timestamp: new Date(),
+                image: image,
+                attachment: attachment
+              })
+            }
+            
+            // Add assistant message
+            updatedMessages.push({
+              id: assistantMessageId,
+              role: "assistant" as const,
+              content: jsonData.text || '',
+              timestamp: new Date(),
+              isStreaming: false,
+              blocks: jsonData.blocks || [],
+              actions: jsonData.actions || [],
+              trace: jsonData.trace || {}
+            })
+            
+            return {
+              ...prev,
+              messages: updatedMessages,
+              updatedAt: new Date()
+            }
+          }
+        })
+        
+        // Update module if detected
+        if (jsonData.trace?.module) {
+          try {
+            autoSwitchModule(jsonData.trace.module)
+          } catch (e) {
+            console.warn('[Chat] Failed to switch module:', e)
+          }
+        }
+        
+        return // Exit early since we handled the structured response
       }
 
-      return {
-        conversationId: finalConversationId,
-        response: assistantMessage,
-        tokens: tokenCount,
-        model: finalModel,
-      }
+      // If we get here, it's an unsupported response type
+      console.error('[Chat] Unsupported response type:', contentType)
+      throw new Error(`Tipo de resposta não suportado: ${contentType}`)
       
     } catch (error) {
       setIsStreaming(false)
@@ -516,12 +462,10 @@ export function useChat(onStreamingStart?: () => void) {
       throw error
     } finally {
       setIsStreaming(false)
-      // Garantir que o loading seja escondido mesmo em caso de erro
-      if (!firstTokenReceived) {
-        stopLoading()
-      }
+      // Ensure loading is hidden even on error
+      stopLoading()
     }
-  }, [session, currentConversation, setSelectedModule, startLoading, stopLoading])
+  }, [session, currentConversation, startLoading, stopLoading])
 
   const fetchConversations = useCallback(async () => {
     if (!session) return
@@ -553,181 +497,61 @@ export function useChat(onStreamingStart?: () => void) {
         setConversations(conversations)
       }
     } catch (error) {
-      console.error("Failed to fetch conversations:", error)
+      console.error('Error fetching conversations:', error)
     }
   }, [session])
 
-  const startNewConversation = useCallback((module: string) => {
-    const uniqueId = `conv-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`
-    setCurrentConversation({
-      id: uniqueId,
-      module,
-      messages: [],
-      tokenCount: 0,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    })
-  }, [])
-
-  const loadConversation = useCallback(async (conversationId: string) => {
+  const createConversation = useCallback(async (title?: string) => {
     if (!session) return
 
     try {
       const token = localStorage.getItem("token")
       if (!token) return
 
-      const response = await fetch(`/api/conversations/${conversationId}`, {
+      const response = await fetch('/api/chat/conversations', {
+        method: 'POST',
         headers: {
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
+        body: JSON.stringify({
+          title: title || 'Nova Conversa',
+        }),
       })
 
       if (response.ok) {
         const data = await response.json()
-        
-        // Convert timestamp strings to Date objects for messages
-        if (data.conversation && data.conversation.messages) {
-          data.conversation.messages = data.conversation.messages.map((msg: any) => ({
+        const newConversation = {
+          ...data.conversation,
+          createdAt: new Date(data.conversation.createdAt),
+          updatedAt: new Date(data.conversation.updatedAt),
+          messages: data.conversation.messages ? data.conversation.messages.map((msg: any) => ({
             ...msg,
             timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date()
-          }))
+          })) : []
         }
         
-        // Convert conversation dates
-        if (data.conversation.createdAt) {
-          data.conversation.createdAt = new Date(data.conversation.createdAt)
-        }
-        if (data.conversation.updatedAt) {
-          data.conversation.updatedAt = new Date(data.conversation.updatedAt)
-        }
-        
-        setCurrentConversation(data.conversation)
-      } else {
-        console.error("Failed to load conversation:", response.statusText)
+        setConversations(prev => [newConversation, ...prev])
+        setCurrentConversation(newConversation)
+        return newConversation
       }
     } catch (error) {
-      console.error("Failed to load conversation:", error)
+      console.error('Error creating conversation:', error)
+      throw error
     }
   }, [session])
 
-  // Função para cancelar requisição atual
-  const cancelCurrentRequest = useCallback(() => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort()
-      setIsStreaming(false)
-    }
-  }, [])
-
-  // Função para limpar erros
-  const clearError = useCallback(() => {
-    setError(null)
-    setRetryCount(0)
-  }, [])
-
-  // Função para buscar conversas com filtros
-  const searchConversations = useCallback((query: string) => {
-    if (!query.trim()) return conversations
-    
-    const searchTerm = query.toLowerCase()
-    return conversations.filter(conv => 
-      (conv.title ?? '').toLowerCase().includes(searchTerm) ||
-      conv.messages.some(msg => 
-        msg.content.toLowerCase().includes(searchTerm)
-      )
-    )
-  }, [conversations])
-
-  // Função para obter estatísticas das conversas
-  const getConversationStats = useCallback(() => {
-    const totalTokens = conversations.reduce((total, conv) => 
-      total + (conv.tokenCount || 0), 0
-    )
-    
-    const avgMessagesPerConversation = conversations.length > 0 
-      ? totalMessages / conversations.length 
-      : 0
-    
-    const mostUsedModule = conversations.reduce((acc, conv) => {
-      acc[conv.module] = (acc[conv.module] || 0) + 1
-      return acc
-    }, {} as Record<string, number>)
-    
-    const topModule = Object.entries(mostUsedModule)
-      .sort(([,a], [,b]) => b - a)[0]?.[0] || 'Nenhum'
-    
-    return {
-      totalConversations: conversations.length,
-      totalMessages,
-      totalTokens,
-      avgMessagesPerConversation: Math.round(avgMessagesPerConversation * 10) / 10,
-      mostUsedModule: topModule
-    }
-  }, [conversations, totalMessages])
-
-  // Função para exportar conversa atual
-  const exportCurrentConversation = useCallback(() => {
-    if (!currentConversation) return null
-    
-    const exportData = {
-      conversation: {
-        id: currentConversation.id,
-        title: currentConversation.title,
-        module: currentConversation.module,
-        createdAt: currentConversation.createdAt,
-        updatedAt: currentConversation.updatedAt,
-        tokenCount: currentConversation.tokenCount
-      },
-      messages: currentConversation.messages.map(msg => ({
-        role: msg.role,
-        content: msg.content,
-        timestamp: msg.timestamp,
-        model: msg.model,
-        tokens: msg.tokens,
-        tier: msg.tier
-      }))
-    }
-    
-    return exportData
-  }, [currentConversation])
-
-  // Função para importar conversa
-  const importConversation = useCallback((importData: any) => {
-    try {
-      const newConversation: Conversation = {
-        id: importData.conversation.id || `imported-${Date.now()}`,
-        title: importData.conversation.title || 'Conversa Importada',
-        module: importData.conversation.module || 'ATENDIMENTO',
-        messages: importData.messages.map((msg: any) => ({
-          id: `imported-${Date.now()}-${Math.random()}`,
-          role: msg.role,
-          content: msg.content,
-          timestamp: new Date(msg.timestamp),
-          model: msg.model,
-          tokens: msg.tokens,
-          tier: msg.tier
-        })),
-        tokenCount: importData.conversation.tokenCount || 0,
-        createdAt: new Date(importData.conversation.createdAt),
-        updatedAt: new Date(importData.conversation.updatedAt)
-      }
-      
-      setConversations(prev => [newConversation, ...prev])
-      setCurrentConversation(newConversation)
-      
-      return true
-    } catch (error) {
-      console.error('Erro ao importar conversa:', error)
-      return false
-    }
-  }, [])
-
-  // Função para deletar conversa
   const deleteConversation = useCallback(async (id: string) => {
+    if (!session) return
+
     try {
+      const token = localStorage.getItem("token")
+      if (!token) return
+
       const response = await fetch(`/api/chat/conversations/${id}`, {
         method: 'DELETE',
         headers: {
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
       })
 
@@ -736,132 +560,92 @@ export function useChat(onStreamingStart?: () => void) {
         if (currentConversation?.id === id) {
           setCurrentConversation(null)
         }
-      } else {
-        throw new Error('Falha ao deletar conversa')
       }
     } catch (error) {
-      console.error('Erro ao deletar conversa:', error)
+      console.error('Error deleting conversation:', error)
       throw error
     }
-  }, [currentConversation])
+  }, [session, currentConversation])
 
-  // Função para criar conversa
-  const createConversation = useCallback(async (title?: string) => {
+  const updateConversation = useCallback(async (id: string, updates: Partial<ChatConversation>) => {
+    if (!session) return
+
     try {
-      const response = await fetch('/api/chat/conversations', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ title }),
-      })
+      const token = localStorage.getItem("token")
+      if (!token) return
 
-      if (response.ok) {
-        const data = await response.json()
-        const newConversation: Conversation = {
-          id: data.id,
-          title: data.title || 'Nova Conversa',
-          module: data.module || 'ATENDIMENTO',
-          messages: data.messages || [],
-          tokenCount: data.tokenCount || 0,
-          createdAt: new Date(data.createdAt),
-          updatedAt: new Date(data.updatedAt)
-        }
-        
-        setConversations(prev => [newConversation, ...prev])
-        setCurrentConversation(newConversation)
-        return newConversation
-      } else {
-        throw new Error('Falha ao criar conversa')
-      }
-    } catch (error) {
-      console.error('Erro ao criar conversa:', error)
-      throw error
-    }
-  }, [])
-
-  // Função para atualizar conversa
-  const updateConversation = useCallback(async (id: string, updates: Partial<Conversation>) => {
-    try {
       const response = await fetch(`/api/chat/conversations/${id}`, {
-        method: 'PATCH',
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(updates),
       })
 
       if (response.ok) {
-        setConversations(prev => prev.map(conv => 
-          conv.id === id ? { ...conv, ...updates } : conv
-        ))
-        if (currentConversation?.id === id) {
-          setCurrentConversation(prev => prev ? { ...prev, ...updates } : null)
+        const data = await response.json()
+        const updatedConversation = {
+          ...data.conversation,
+          createdAt: new Date(data.conversation.createdAt),
+          updatedAt: new Date(data.conversation.updatedAt),
+          messages: data.conversation.messages ? data.conversation.messages.map((msg: any) => ({
+            ...msg,
+            timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date()
+          })) : []
         }
-      } else {
-        throw new Error('Falha ao atualizar conversa')
+        
+        setConversations(prev => prev.map(conv => conv.id === id ? updatedConversation : conv))
+        if (currentConversation?.id === id) {
+          setCurrentConversation(updatedConversation)
+        }
       }
     } catch (error) {
-      console.error('Erro ao atualizar conversa:', error)
+      console.error('Error updating conversation:', error)
       throw error
     }
-  }, [currentConversation])
+  }, [session, currentConversation])
 
-  // Função para limpar conversa atual
   const clearCurrentConversation = useCallback(() => {
     setCurrentConversation(null)
   }, [])
 
-  // Função para atualizar conversas
   const refreshConversations = useCallback(async () => {
     await fetchConversations()
   }, [fetchConversations])
 
-  // Função para retry
+  const cancelStream = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+    }
+  }, [])
+
   const retry = useCallback(() => {
-    clearError()
-  }, [clearError])
+    if (error) {
+      setError(null)
+      setRetryCount(0)
+    }
+  }, [error])
 
   return {
-    // Estados principais
     conversations,
     currentConversation,
-    currentMessages,
-    isStreaming,
-    lastClassification,
-    error,
-    retryCount,
-    
-    // Estatísticas
-    conversationCount,
-    totalMessages,
-    
-    // Funções principais
     sendMessage,
-    fetchConversations,
-    startNewConversation,
-    loadConversation,
-    setCurrentConversation,
-    
-    // Funções de controle
-    cancelCurrentRequest,
-    clearError,
-    
-    // Funções de busca e análise
-    searchConversations,
-    getConversationStats,
-    
-    // Funções de importação/exportação
-    exportCurrentConversation,
-    importConversation,
-    
-    // Funções de CRUD de conversas
     createConversation,
     deleteConversation,
     updateConversation,
     clearCurrentConversation,
+    setCurrentConversation,
     refreshConversations,
-    retry,
-    cancelStream: cancelCurrentRequest,
+    isStreaming,
+    cancelStream,
+    error,
+    retry
   }
+}
+
+// Helper function to auto-switch module
+function autoSwitchModule(module: string) {
+  // This function would be implemented based on your module switching logic
+  console.log(`[Chat] Auto-switching to module: ${module}`)
 }
