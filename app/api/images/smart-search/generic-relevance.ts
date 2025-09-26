@@ -150,6 +150,18 @@ export function detectThemeCategory(query: string): {
     return { name: 'art', falsePositiveType: 'genérico/não-artístico' };
   }
   
+  // Anatomia e neurologia
+  if (query.includes('cérebro') || query.includes('brain') ||
+      query.includes('neurônio') || query.includes('neuron') ||
+      query.includes('anatomia') || query.includes('anatomy') ||
+      query.includes('sistema nervoso') || query.includes('nervous system') ||
+      query.includes('medula') || query.includes('spinal cord') ||
+      query.includes('córtex') || query.includes('cortex') ||
+      query.includes('sinapse') || query.includes('synapse') ||
+      query.includes('neurotransmissor') || query.includes('neurotransmitter')) {
+    return { name: 'anatomy', falsePositiveType: 'genérico/não-anatômico' };
+  }
+  
   // Educação geral
   if (query.includes('educação') || query.includes('education') ||
       query.includes('escola') || query.includes('school') ||
@@ -330,6 +342,32 @@ export function getCategoryTerms(category: { name: string; falsePositiveType: st
         'woman', 'mulher', 'man', 'homem', 'person', 'pessoa', 'smiling', 'sorrindo', 'casual', 'casual',
         'business', 'negócio', 'office', 'escritório', 'work', 'trabalho', 'meeting', 'reunião',
         'technology', 'tecnologia', 'computer', 'computador', 'laptop', 'notebook', 'internet'
+      ]
+    },
+    anatomy: {
+      relevant: [
+        'brain', 'cérebro', 'neuron', 'neurônio', 'neural', 'neural', 'nervous system', 'sistema nervoso',
+        'anatomy', 'anatomia', 'cortex', 'córtex', 'cerebral', 'cerebral', 'synapse', 'sinapse',
+        'neurotransmitter', 'neurotransmissor', 'spinal cord', 'medula', 'cerebellum', 'cerebelo',
+        'hippocampus', 'hipocampo', 'amygdala', 'amígdala', 'frontal lobe', 'lobo frontal',
+        'temporal lobe', 'lobo temporal', 'parietal lobe', 'lobo parietal', 'occipital lobe', 'lobo occipital',
+        'brainstem', 'tronco cerebral', 'thalamus', 'tálamo', 'hypothalamus', 'hipotálamo',
+        'gray matter', 'matéria cinzenta', 'white matter', 'matéria branca', 'dendrite', 'dendrito',
+        'axon', 'axônio', 'myelin', 'mielina', 'glial cell', 'célula glial', 'neuroglia', 'neuroglia',
+        'brain scan', 'tomografia cerebral', 'mri', 'ressonância magnética', 'ct scan', 'tomografia',
+        'neurological', 'neurológico', 'cognitive', 'cognitivo', 'memory', 'memória', 'learning', 'aprendizado'
+      ],
+      falsePositives: [
+        'coronavirus', 'covid', 'virus', 'vírus', 'disease', 'doença', 'infection', 'infecção',
+        'symptoms', 'sintomas', 'medical', 'médico', 'hospital', 'clinic', 'clínica', 'doctor', 'médico',
+        'woman', 'mulher', 'man', 'homem', 'person', 'pessoa', 'smiling', 'sorrindo', 'casual', 'casual',
+        'business', 'negócio', 'office', 'escritório', 'work', 'trabalho', 'meeting', 'reunião',
+        'technology', 'tecnologia', 'computer', 'computador', 'laptop', 'notebook', 'internet',
+        'lake como', 'como italy', 'como lake', 'varenna', 'italy', 'italian', 'italiano',
+        'landscape', 'paisagem', 'mountain', 'montanha', 'nature', 'natureza', 'forest', 'floresta',
+        'city', 'cidade', 'building', 'edifício', 'architecture', 'arquitetura', 'travel', 'viagem',
+        'vacation', 'férias', 'tourism', 'turismo', 'hotel', 'restaurant', 'restaurante',
+        'swan', 'cisne', 'moonlight', 'luar', 'lake', 'lago', 'villa', 'vila', 'ballaster'
       ]
     },
     education: {

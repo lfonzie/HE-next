@@ -72,7 +72,7 @@ export function ThemeSwitcher() {
 
 // Versão compacta para uso em modais
 export function ThemeSwitcherCompact() {
-  const { resolvedTheme, toggleTheme, mounted } = useTheme()
+  const { theme, resolvedTheme, setTheme, mounted } = useTheme()
 
   if (!mounted) {
     return (
@@ -82,15 +82,24 @@ export function ThemeSwitcherCompact() {
     )
   }
 
+  // Determinar o tema atual baseado no resolvedTheme
+  const currentTheme = resolvedTheme || "light"
+  const isDark = currentTheme === "dark"
+
+  const handleToggle = () => {
+    const newTheme = isDark ? "light" : "dark"
+    setTheme(newTheme)
+  }
+
   return (
     <Button
       variant="ghost"
       size="sm"
-      onClick={toggleTheme}
+      onClick={handleToggle}
       className="gap-2 hover:bg-primary/10"
-      aria-label={`Alternar para tema ${resolvedTheme === "dark" ? "claro" : "escuro"}`}
+      aria-label={`Alternar para tema ${isDark ? "claro" : "escuro"}`}
     >
-      {resolvedTheme === "dark" ? (
+      {isDark ? (
         <>
           <Sun className="h-4 w-4" />
           <span className="text-sm">Claro</span>

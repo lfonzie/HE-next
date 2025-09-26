@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
-import { CheckCircle, XCircle, Clock, Trophy, Star, RotateCcw, ArrowRight, ArrowLeft, AlertCircle } from 'lucide-react'
+import { CheckCircle, XCircle, Clock, Trophy, Star, RotateCcw, ArrowRight, ArrowLeft, AlertCircle, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import MarkdownRenderer from '@/components/ui/MarkdownRenderer'
 import { useQuizValidation, type QuizValidationResult } from '@/lib/quiz-validation'
@@ -70,15 +70,6 @@ export default function EnhancedQuizComponent({
   className = ""
 }: QuizComponentProps) {
   
-  console.log('🔍 DEBUG EnhancedQuizComponent - Initial render:', {
-    questionsCount: questions.length,
-    questions: questions.map(q => ({
-      id: q.id,
-      question: q.question?.slice(0, 50),
-      options: q.options,
-      correctAnswer: q.correctAnswer
-    }))
-  });
   
   // State management
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
@@ -113,16 +104,6 @@ export default function EnhancedQuizComponent({
     const averageTimePerQuestion = totalQuestions > 0 ? Math.round(totalTimeSpent / totalQuestions) : 0
     const accuracy = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0
 
-    console.log('🔍 DEBUG EnhancedQuizComponent - calculateStats:', {
-      totalQuestions,
-      correctAnswers,
-      wrongAnswers,
-      unansweredQuestions,
-      totalScore,
-      totalTimeSpent,
-      averageTimePerQuestion,
-      accuracy
-    })
 
     return {
       totalQuestions,
@@ -145,7 +126,6 @@ export default function EnhancedQuizComponent({
             setIsCompleted(true)
             // Calculate final statistics
             const stats = calculateStats()
-            console.log('🔍 DEBUG EnhancedQuizComponent - calculated stats:', stats)
             
             // Call completion callback
             onComplete(stats.totalScore, stats.totalQuestions, quizResults)
@@ -171,10 +151,6 @@ export default function EnhancedQuizComponent({
   const handleAnswerSelect = useCallback((answer: string) => {
     if (isCompleted) return
     
-    console.log('🔍 DEBUG EnhancedQuizComponent - handleAnswerSelect called with:', answer)
-    console.log('🔍 DEBUG EnhancedQuizComponent - currentQuestionIndex:', currentQuestionIndex)
-    console.log('🔍 DEBUG EnhancedQuizComponent - currentQuestion:', currentQuestion)
-    
     setSelectedAnswer(answer)
     // Don't show result immediately - wait for confirmation
     setShowResult(false)
@@ -189,8 +165,6 @@ export default function EnhancedQuizComponent({
   // Handle answer confirmation
   const handleConfirmAnswer = useCallback(() => {
     if (!selectedAnswer) return
-    
-    console.log('🔍 DEBUG EnhancedQuizComponent - handleConfirmAnswer called')
     
     setShowResult(true)
     setIsAnswerConfirmed(true)
@@ -209,12 +183,9 @@ export default function EnhancedQuizComponent({
       pointsEarned: selectedAnswer === currentQuestion.correctAnswer ? (currentQuestion.points || 10) : 0
     }
 
-    console.log('🔍 DEBUG EnhancedQuizComponent - created result:', result)
-
     setQuizResults(prev => {
       const updated = [...prev]
       updated[currentQuestionIndex] = result
-      console.log('🔍 DEBUG EnhancedQuizComponent - updated quizResults:', updated)
       return updated
     })
   }, [selectedAnswer, currentQuestionIndex, currentQuestion, questionStartTime])
@@ -274,14 +245,8 @@ export default function EnhancedQuizComponent({
 
   // Handle next question with validation
   const handleNext = useCallback(async () => {
-    console.log('🔍 DEBUG EnhancedQuizComponent - handleNext called')
-    console.log('🔍 DEBUG EnhancedQuizComponent - currentQuestionIndex:', currentQuestionIndex)
-    console.log('🔍 DEBUG EnhancedQuizComponent - questions.length:', questions.length)
-    console.log('🔍 DEBUG EnhancedQuizComponent - selectedAnswer:', selectedAnswer)
-    
     // Verificar se a pergunta atual foi respondida antes de avançar
     if (!isAnswerConfirmed) {
-      console.log('🔍 DEBUG EnhancedQuizComponent - Current question not answered, cannot advance')
       return; // Não permitir avançar sem responder a pergunta atual
     }
     
@@ -294,15 +259,13 @@ export default function EnhancedQuizComponent({
       setIsAnswerConfirmed(false) // Reset confirmation state
       setQuestionStartTime(Date.now()) // Reset timer for next question
     } else {
-      // Na última questão, validar se pode prosseguir
-      console.log('🔍 DEBUG EnhancedQuizComponent - Reached last question, validating completion')
+      // Na última questão, completar o quiz diretamente
       const validation = await validateQuizCompletion();
       
       if (validation.canProceed) {
-        console.log('🔍 DEBUG EnhancedQuizComponent - Validation passed, completing quiz')
+        // Quiz completo, chamar handleCompleteQuiz diretamente
         handleCompleteQuiz();
       } else {
-        console.log('🔍 DEBUG EnhancedQuizComponent - Validation failed, showing feedback')
         // Mostrar feedback de validação
       }
     }
@@ -353,13 +316,36 @@ export default function EnhancedQuizComponent({
     }
   }, [calculateStats, quizResults]);
 
+  // Calculate quiz results
+  const calculateQuizResults = useCallback(() => {
+    const results: QuizResult[] = questions.map((question, index) => {
+      const userAnswer = answers[index]
+      const isCorrect = userAnswer === question.correctAnswer
+      
+      return {
+        questionIndex: index,
+        question: question,
+        selectedAnswer: userAnswer,
+        correctAnswer: question.correctAnswer,
+        isCorrect,
+        timeSpent: 0, // Default value since we don't track individual question time in this function
+        pointsEarned: isCorrect ? (question.points || 10) : 0
+      }
+    })
+    
+    return results
+  }, [answers, questions])
+
   // Handle manual quiz completion
   const handleCompleteQuiz = useCallback(async () => {
-    console.log('🔍 DEBUG EnhancedQuizComponent - handleCompleteQuiz called')
     setIsCompleted(true)
+    
+    // Calculate quiz results
+    const results = calculateQuizResults()
+    setQuizResults(results)
+    
     // Calculate final statistics
     const stats = calculateStats()
-    console.log('🔍 DEBUG EnhancedQuizComponent - calculated stats:', stats)
     
     // Save quiz progress if lessonId and userId are available
     const lessonId = (window as any).currentLessonId;
@@ -369,12 +355,11 @@ export default function EnhancedQuizComponent({
     }
     
     // Call completion callback
-    onComplete(stats.totalScore, stats.totalQuestions, quizResults)
-  }, [calculateStats, onComplete, quizResults, saveQuizProgress])
+    onComplete(stats.totalScore, stats.totalQuestions, results)
+  }, [calculateStats, calculateQuizResults, onComplete, saveQuizProgress])
 
   // Handle retry
   const handleRetry = useCallback(() => {
-    console.log('🔍 DEBUG EnhancedQuizComponent - handleRetry called')
     setCurrentQuestionIndex(0)
     setSelectedAnswer(null)
     setAnswers(new Array(questions.length).fill(null))
@@ -388,26 +373,18 @@ export default function EnhancedQuizComponent({
 
   // Handle hint toggle
   const handleHintToggle = useCallback(() => {
-    console.log('🔍 DEBUG EnhancedQuizComponent - handleHintToggle called')
     setShowHint(prev => !prev)
   }, [])
 
   // Get option label (A, B, C, D)
   const getOptionLabel = useCallback((index: number) => {
     const label = currentOptions[index]
-    console.log('🔍 DEBUG EnhancedQuizComponent - getOptionLabel:', { index, label })
     return label
   }, [currentOptions])
 
   // Get option value from label
   const getOptionValue = useCallback((label: string) => {
     const value = currentQuestion.options[label as keyof typeof currentQuestion.options]
-    console.log('🔍 DEBUG EnhancedQuizComponent - getOptionValue:', { 
-      label, 
-      value, 
-      options: currentQuestion.options,
-      questionId: currentQuestion.id 
-    })
     return value
   }, [currentQuestion.options])
 
@@ -416,7 +393,6 @@ export default function EnhancedQuizComponent({
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
     const formatted = `${mins}:${secs.toString().padStart(2, '0')}`
-    console.log('🔍 DEBUG EnhancedQuizComponent - formatTime:', { seconds, formatted })
     return formatted
   }, [])
 
@@ -430,7 +406,6 @@ export default function EnhancedQuizComponent({
         default: return 'bg-gray-100 text-gray-800'
       }
     })()
-    console.log('🔍 DEBUG EnhancedQuizComponent - getDifficultyColor:', { difficulty, color })
     return color
   }, [])
 
@@ -444,7 +419,6 @@ export default function EnhancedQuizComponent({
         default: return 'Padrão'
       }
     })()
-    console.log('🔍 DEBUG EnhancedQuizComponent - getDifficultyLabel:', { difficulty, label })
     return label
   }, [])
 
@@ -547,10 +521,7 @@ export default function EnhancedQuizComponent({
           {/* Actions */}
           <div className="flex justify-center gap-4">
             {allowRetry && (
-              <Button onClick={() => {
-                console.log('🔍 DEBUG EnhancedQuizComponent - retry button clicked')
-                handleRetry()
-              }} variant="outline">
+              <Button onClick={handleRetry} variant="outline">
                 <RotateCcw className="h-4 w-4 mr-2" />
                 Refazer Quiz
               </Button>
@@ -563,6 +534,7 @@ export default function EnhancedQuizComponent({
 
   // Main quiz interface
   return (
+    <>
     <Card className={`w-full max-w-4xl mx-auto ${className}`}>
       <CardHeader>
         <div className="flex items-center justify-between">
@@ -614,25 +586,11 @@ export default function EnhancedQuizComponent({
             const isCorrect = showResult && label === currentQuestion.correctAnswer
             const isWrong = showResult && isSelected && !isCorrect
             
-            console.log('🔍 DEBUG EnhancedQuizComponent - rendering option:', {
-              label,
-              index,
-              optionValue,
-              isSelected,
-              isCorrect,
-              isWrong,
-              showResult,
-              selectedAnswer,
-              correctAnswer: currentQuestion.correctAnswer
-            })
             
             return (
               <motion.button
                 key={label}
-                onClick={() => {
-                  console.log('🔍 DEBUG EnhancedQuizComponent - option clicked:', label)
-                  handleAnswerSelect(label)
-                }}
+                onClick={() => handleAnswerSelect(label)}
                 disabled={showResult}
                 className={`w-full p-4 text-left rounded-lg border-2 transition-all duration-200 ${
                   isCorrect
@@ -682,10 +640,7 @@ export default function EnhancedQuizComponent({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => {
-                console.log('🔍 DEBUG EnhancedQuizComponent - hint button clicked')
-                handleHintToggle()
-              }}
+              onClick={handleHintToggle}
               className="text-blue-600 border-blue-200 hover:bg-blue-50"
             >
               💡 {showHint ? 'Ocultar Dica' : 'Mostrar Dica'}
@@ -748,7 +703,6 @@ export default function EnhancedQuizComponent({
               <button
                 key={index}
                 onClick={() => {
-                  console.log('🔍 DEBUG EnhancedQuizComponent - navigation dot clicked:', index)
                   // Only allow navigation if current question is confirmed or if going to a question that's already answered
                   if (isAnswerConfirmed || answers[index] !== null || index === currentQuestionIndex) {
                     setCurrentQuestionIndex(index)
@@ -775,7 +729,6 @@ export default function EnhancedQuizComponent({
                 <button
                   key={index}
                   onClick={() => {
-                    console.log('🔍 DEBUG EnhancedQuizComponent - navigation dot clicked:', index)
                     // Only allow navigation if current question is confirmed or if going to a question that's already answered
                     if (isAnswerConfirmed || answers[index] !== null || index === currentQuestionIndex) {
                       setCurrentQuestionIndex(index)
@@ -803,7 +756,6 @@ export default function EnhancedQuizComponent({
                     <button
                       key={actualIndex}
                       onClick={() => {
-                        console.log('🔍 DEBUG EnhancedQuizComponent - navigation dot clicked:', actualIndex)
                         // Only allow navigation if current question is confirmed or if going to a question that's already answered
                         if (isAnswerConfirmed || answers[actualIndex] !== null || actualIndex === currentQuestionIndex) {
                           setCurrentQuestionIndex(actualIndex)
@@ -829,10 +781,7 @@ export default function EnhancedQuizComponent({
         {/* Navigation and Completion Buttons */}
         <div className="flex items-center justify-between">
           <Button
-            onClick={() => {
-              console.log('🔍 DEBUG EnhancedQuizComponent - previous button clicked')
-              handlePrevious()
-            }}
+            onClick={handlePrevious}
             disabled={currentQuestionIndex === 0 || !isAnswerConfirmed}
             variant="outline"
             className="flex items-center gap-2"
@@ -850,10 +799,7 @@ export default function EnhancedQuizComponent({
           {/* Show OK button when answer is selected but not confirmed */}
           {selectedAnswer && !isAnswerConfirmed ? (
             <Button
-              onClick={() => {
-                console.log('🔍 DEBUG EnhancedQuizComponent - OK button clicked')
-                handleConfirmAnswer()
-              }}
+              onClick={handleConfirmAnswer}
               className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
             >
               <CheckCircle className="h-4 w-4" />
@@ -875,10 +821,7 @@ export default function EnhancedQuizComponent({
               )}
               
               <Button
-                onClick={() => {
-                  console.log('🔍 DEBUG EnhancedQuizComponent - next button clicked (last question)')
-                  handleNext()
-                }}
+                onClick={handleNext}
                 disabled={!isAnswerConfirmed || isValidating}
                 className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
               >
@@ -897,10 +840,7 @@ export default function EnhancedQuizComponent({
             </div>
           ) : (
             <Button
-              onClick={() => {
-                console.log('🔍 DEBUG EnhancedQuizComponent - next button clicked')
-                handleNext()
-              }}
+              onClick={handleNext}
               disabled={!isAnswerConfirmed}
               className="flex items-center gap-2"
             >
@@ -911,5 +851,7 @@ export default function EnhancedQuizComponent({
         </div>
       </CardContent>
     </Card>
+
+    </>
   )
 }

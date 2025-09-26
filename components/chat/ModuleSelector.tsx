@@ -28,9 +28,10 @@ interface ModuleSelectorProps {
   onSelectModule: (moduleId: string) => void;
   isCollapsed?: boolean;
   isHighlighted?: boolean;
+  onNewConversation?: () => void;
 }
 
-export function ModuleSelector({ selectedModule, onSelectModule, isCollapsed = false, isHighlighted = false }: ModuleSelectorProps) {
+export function ModuleSelector({ selectedModule, onSelectModule, isCollapsed = false, isHighlighted = false, onNewConversation }: ModuleSelectorProps) {
   const { user, isLoading } = useAuth();
   
   const { navigateToModule, isNavigating, getAvailableModules } = useModuleNavigation({
@@ -81,11 +82,21 @@ export function ModuleSelector({ selectedModule, onSelectModule, isCollapsed = f
       // Then call navigateToModule for additional navigation logic
       navigateToModule(moduleId);
       
+      // Iniciar nova conversa sempre que um módulo for selecionado
+      if (onNewConversation) {
+        onNewConversation();
+      }
+      
     } catch (error) {
       console.error('❌ ModuleSelector: Error selecting module:', error);
       
       // Fallback: ensure the module selection still works
       onSelectModule(moduleId);
+      
+      // Iniciar nova conversa mesmo em caso de erro
+      if (onNewConversation) {
+        onNewConversation();
+      }
     }
   };
 

@@ -2,6 +2,12 @@ export type ModuleId =
   | "PROFESSOR"
   | "AULA_EXPANDIDA"
   | "ENEM_INTERACTIVE"
+  | "VIRTUAL_LAB"
+  | "FLASHCARDS"
+  | "VIDEO_LEARNING"
+  | "CHAT_DOCS"
+  | "DICTATION"
+  | "LIVE_AUDIO"
   | "TI"
   | "RH"
   | "FINANCEIRO"
@@ -29,6 +35,42 @@ export const MODULES: Record<ModuleId, { label: string; color: string; icon: str
     color: "bg-gradient-to-br from-red-500 to-red-700 shadow-lg",
     icon: "fas fa-clipboard-list",
     description: "Simulador ENEM com IA"
+  },
+  VIRTUAL_LAB: { 
+    label: "Laboratório Virtual", 
+    color: "bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg",
+    icon: "fas fa-flask",
+    description: "Simulações interativas de química e física"
+  },
+  FLASHCARDS: { 
+    label: "Flashcards", 
+    color: "bg-gradient-to-br from-purple-500 to-purple-700 shadow-lg",
+    icon: "fas fa-credit-card",
+    description: "Gerador de flashcards interativos com IA"
+  },
+  VIDEO_LEARNING: { 
+    label: "Vídeo para Aprendizado", 
+    color: "bg-gradient-to-br from-orange-500 to-red-600 shadow-lg",
+    icon: "fas fa-video",
+    description: "Transforme vídeos em apps de aprendizado"
+  },
+  CHAT_DOCS: { 
+    label: "Chat com Documentos", 
+    color: "bg-gradient-to-br from-cyan-500 to-blue-600 shadow-lg",
+    icon: "fas fa-file-search",
+    description: "Converse com documentos usando IA"
+  },
+  DICTATION: { 
+    label: "Ditado por Voz", 
+    color: "bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg",
+    icon: "fas fa-microphone-alt",
+    description: "Transcreva e organize notas por voz"
+  },
+  LIVE_AUDIO: { 
+    label: "Live Audio", 
+    color: "bg-gradient-to-br from-purple-600 to-pink-600 shadow-lg",
+    icon: "fas fa-microphone",
+    description: "Chat de voz com visualizações 3D"
   },
   TI: { 
     label: "TI", 
@@ -93,6 +135,14 @@ export const MODULE_MAPPING: Record<string, ModuleId> = {
   "aula-expandida": "AULA_EXPANDIDA",
   "enem-interactive": "ENEM_INTERACTIVE",
   "enem-interativo": "ENEM_INTERACTIVE",
+  "virtual-lab": "VIRTUAL_LAB",
+  "laboratorio-virtual": "VIRTUAL_LAB",
+  "flashcards": "FLASHCARDS",
+  "video-learning": "VIDEO_LEARNING",
+  "video-to-learning": "VIDEO_LEARNING",
+  "chat-docs": "CHAT_DOCS",
+  "dictation": "DICTATION",
+  "live-audio": "LIVE_AUDIO",
   "ti": "TI",
   "rh": "RH",
   "financeiro": "FINANCEIRO",
@@ -110,6 +160,12 @@ export const REVERSE_MODULE_MAPPING: Record<ModuleId, string> = {
   "PROFESSOR": "professor",
   "AULA_EXPANDIDA": "aula-expandida",
   "ENEM_INTERACTIVE": "enem-interactive",
+  "VIRTUAL_LAB": "virtual-lab",
+  "FLASHCARDS": "flashcards",
+  "VIDEO_LEARNING": "video-learning",
+  "CHAT_DOCS": "chat-docs",
+  "DICTATION": "dictation",
+  "LIVE_AUDIO": "live-audio",
   "TI": "ti",
   "RH": "rh",
   "FINANCEIRO": "financeiro",

@@ -90,7 +90,7 @@ function LessonsPageContent() {
       { progress: 0, message: 'Analisando o tópico...' },
       { progress: 10, message: 'Identificando matéria e série...' },
       { progress: 20, message: 'Criando objetivos de aprendizagem...' },
-      { progress: 30, message: 'Estruturando os 9 slides...' },
+      { progress: 30, message: 'Estruturando os 14 slides...' },
       { progress: 40, message: 'Gerando conteúdo explicativo...' },
       { progress: 50, message: 'Criando perguntas interativas...' },
       { progress: 60, message: 'Buscando imagens no Unsplash...' },

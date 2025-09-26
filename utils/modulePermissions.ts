@@ -4,6 +4,12 @@ export const ALL_MODULES = [
   "professor",
   "aula-expandida", 
   "enem-interativo",
+  "virtual-lab",
+  "flashcards",
+  "video-learning",
+  "chat-docs",
+  "dictation",
+  "live-audio",
   "ti",
   "rh",
   "financeiro",
@@ -33,8 +39,8 @@ export function hasModulePermission(moduleId: string, userRole: string, schoolPl
   
   // Para outros usuários, verificar baseado no plano da escola
   const basicModules = ["professor", "atendimento"];
-  const fullModules = ["professor", "atendimento", "ti", "rh", "financeiro", "coordenacao", "wellbeing", "social-media"];
-  const enterpriseModules = [...fullModules, "aula-expandida", "enem-interativo", "secretaria"];
+  const fullModules = ["professor", "atendimento", "ti", "rh", "financeiro", "coordenacao", "wellbeing", "social-media", "virtual-lab", "flashcards", "chat-docs", "dictation", "live-audio"];
+  const enterpriseModules = [...fullModules, "aula-expandida", "enem-interativo", "secretaria", "video-learning"];
   
   if (schoolPlan === "PROFESSOR") {
     return basicModules.includes(moduleId);
@@ -80,6 +86,12 @@ export function getModulePermissions(userRole: string, schoolPlan: string) {
       canAccessSocialMedia: hasModulePermission("social-media", userRole, schoolPlan),
       canAccessAulaExpandida: hasModulePermission("aula-expandida", userRole, schoolPlan),
       canAccessEnemInterativo: hasModulePermission("enem-interativo", userRole, schoolPlan),
+      canAccessVirtualLab: hasModulePermission("virtual-lab", userRole, schoolPlan),
+      canAccessFlashcards: hasModulePermission("flashcards", userRole, schoolPlan),
+      canAccessVideoLearning: hasModulePermission("video-learning", userRole, schoolPlan),
+      canAccessChatDocs: hasModulePermission("chat-docs", userRole, schoolPlan),
+      canAccessDictation: hasModulePermission("dictation", userRole, schoolPlan),
+      canAccessLiveAudio: hasModulePermission("live-audio", userRole, schoolPlan),
       canAccessSecretaria: hasModulePermission("secretaria", userRole, schoolPlan),
     }
   };

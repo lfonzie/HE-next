@@ -420,20 +420,6 @@ function isFalsePositive(text: string, query: string): boolean {
       'city', 'cidade', 'building', 'edifício', 'architecture', 'arquitetura', 'travel', 'viagem',
       'vacation', 'férias', 'tourism', 'turismo', 'hotel', 'restaurant', 'restaurante',
       'swan', 'cisne', 'moonlight', 'luar', 'lake', 'lago', 'villa', 'vila', 'ballaster'
-    ],
-    'sistema solar': [
-      'lake como', 'como italy', 'como lake', 'varenna', 'italy', 'italian', 'italiano',
-      'landscape', 'paisagem', 'mountain', 'montanha', 'nature', 'natureza', 'forest', 'floresta',
-      'city', 'cidade', 'building', 'edifício', 'architecture', 'arquitetura', 'travel', 'viagem',
-      'vacation', 'férias', 'tourism', 'turismo', 'hotel', 'restaurant', 'restaurante',
-      'swan', 'cisne', 'moonlight', 'luar', 'lake', 'lago', 'villa', 'vila', 'ballaster'
-    ],
-    'solar system': [
-      'lake como', 'como italy', 'como lake', 'varenna', 'italy', 'italian', 'italiano',
-      'landscape', 'paisagem', 'mountain', 'montanha', 'nature', 'natureza', 'forest', 'floresta',
-      'city', 'cidade', 'building', 'edifício', 'architecture', 'arquitetura', 'travel', 'viagem',
-      'vacation', 'férias', 'tourism', 'turismo', 'hotel', 'restaurant', 'restaurante',
-      'swan', 'cisne', 'moonlight', 'luar', 'lake', 'lago', 'villa', 'vila', 'ballaster'
     ]
   };
   

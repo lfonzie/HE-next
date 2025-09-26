@@ -7,7 +7,7 @@
   left: 20px;
   z-index: 1001;
   background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  color: white;
+  color: black;
   border: none;
   border-radius: 12px;
   cursor: pointer;
@@ -194,7 +194,7 @@
 .unified-admin-btn.system-admin {
   background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
   border-color: #b91c1c;
-  color: white;
+  color: black;
 }
 
 .unified-admin-btn.system-admin:hover {
@@ -206,7 +206,7 @@
 .unified-admin-btn.system-prompts {
   background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
   border-color: #6d28d9;
-  color: white;
+  color: black;
 }
 
 .unified-admin-btn.system-prompts:hover {
@@ -218,7 +218,7 @@
 .unified-admin-btn.admin-escola {
   background: linear-gradient(135deg, #059669 0%, #047857 100%);
   border-color: #047857;
-  color: white;
+  color: black;
 }
 
 .unified-admin-btn.admin-escola:hover {
@@ -230,7 +230,7 @@
 .unified-admin-btn.admin {
   background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
   border-color: #6d28d9;
-  color: white;
+  color: black;
 }
 
 .unified-admin-btn.admin:hover {

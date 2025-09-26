@@ -49,6 +49,8 @@ export function transformSlidesToStages(slides: SlideData[], lessonId: string): 
     let component = 'ContentComponent';
     if (slide.type === 'quiz' || (slide.questions && slide.questions.length > 0)) {
       component = 'QuizComponent';
+    } else if (slide.type === 'summary') {
+      component = 'QuizSummarySlide';
     } else if (slide.type === 'drawing') {
       component = 'DrawingPrompt';
     } else if (slide.type === 'animation') {
@@ -76,7 +78,10 @@ export function transformSlidesToStages(slides: SlideData[], lessonId: string): 
         points: slide.points || 0,
         feedback: '',
         realTime: false,
-        imageUrl: slide.imageUrl || null
+        imageUrl: slide.imageUrl || null,
+        quizResults: slide.quizResults || null,
+        keyConcepts: slide.keyConcepts || [],
+        nextSteps: slide.nextSteps || []
       },
       route: `/aulas/${lessonId}/${index}`
     };

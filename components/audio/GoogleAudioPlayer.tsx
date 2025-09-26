@@ -3,521 +3,170 @@
 import { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { 
   Play, 
   Pause, 
   Volume2, 
-  VolumeX, 
   Loader2, 
   AlertCircle,
-  RotateCcw,
-  Gauge
+  CheckCircle
 } from 'lucide-react'
-import { toast } from 'sonner'
-import Link from 'next/link'
 
 interface GoogleAudioPlayerProps {
   text: string
-  className?: string
   voice?: string
   speed?: number
   pitch?: number
   enableFallback?: boolean
-}
-
-// Cache key generator - Unicode-safe encoding
-const generateCacheKey = (text: string, voice: string, speed: number, pitch: number): string => {
-  // Encode string to UTF-8 bytes, then to base64
-  const utf8Bytes = new TextEncoder().encode(text)
-  const base64 = btoa(String.fromCharCode(...utf8Bytes))
-  return `google_tts_${voice}_${speed}_${pitch}_${base64.replace(/[^a-zA-Z0-9]/g, '')}`
-}
-
-// Cache management
-const getCachedAudio = (cacheKey: string): string | null => {
-  if (typeof window === 'undefined') return null
-
-  try {
-    const cached = localStorage.getItem(cacheKey)
-    if (cached) {
-      const { data, timestamp, expiresAt } = JSON.parse(cached)
-
-      // Check if cache is still valid (24 hours)
-      if (Date.now() < expiresAt) {
-        return data // Return base64 data
-      } else {
-        // Remove expired cache
-        localStorage.removeItem(cacheKey)
-      }
-    }
-  } catch (error) {
-    console.warn('Error reading audio cache:', error)
-  }
-
-  return null
-}
-
-const setCachedAudio = (cacheKey: string, base64Data: string): void => {
-  if (typeof window === 'undefined') return
-
-  try {
-    const expiresAt = Date.now() + 24 * 60 * 60 * 1000 // 24 hours
-    localStorage.setItem(cacheKey, JSON.stringify({ data: base64Data, timestamp: Date.now(), expiresAt }))
-  } catch (error) {
-    console.warn('Error caching audio:', error)
-  }
+  className?: string
 }
 
 export default function GoogleAudioPlayer({
   text,
-  className = '',
-  voice = 'Zephyr', // Voz neutra e equilibrada (Gemini Native Audio)
+  voice = 'pt-BR-Wavenet-C',
   speed = 1.0,
   pitch = 0.0,
-  enableFallback = true
+  enableFallback = true,
+  className = ''
 }: GoogleAudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [isMuted, setIsMuted] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [audioBlobUrl, setAudioBlobUrl] = useState<string | null>(null) // Store blob URL
-  const [duration, setDuration] = useState<number>(0)
-  const [currentTime, setCurrentTime] = useState<number>(0)
-  const [playbackRate, setPlaybackRate] = useState<number>(1)
+  const [audioUrl, setAudioUrl] = useState<string | null>(null)
   const [usingFallback, setUsingFallback] = useState(false)
-  const [providerName, setProviderName] = useState('Google TTS')
-
   const audioRef = useRef<HTMLAudioElement>(null)
-  const abortControllerRef = useRef<AbortController | null>(null)
 
-  // Generate audio when text changes
-  useEffect(() => {
-    // Don't auto-generate audio anymore
-    // Audio will be generated only when user clicks play
-  }, [text])
-
-  const generateAudio = async () => {
-    if (!text || !text.trim()) {
-      console.log('No text to generate audio')
+  const handlePlay = async () => {
+    if (!text.trim()) {
+      setError('Texto não pode estar vazio')
       return
     }
 
-    console.log('Generating audio for text:', text.substring(0, 50) + '...')
-    const cacheKey = generateCacheKey(text.trim(), voice, speed, pitch)
-
-    // Check cache first
-    const cachedBase64 = getCachedAudio(cacheKey)
-    if (cachedBase64) {
-      console.log('Using cached audio for:', cacheKey)
-      const audioBlob = base64toBlob(cachedBase64, 'audio/mpeg')
-      const url = URL.createObjectURL(audioBlob)
-
-      // Revoke previous URL if exists
-      if (audioBlobUrl) {
-        URL.revokeObjectURL(audioBlobUrl)
-      }
-      setAudioBlobUrl(url)
-
-      if (audioRef.current) {
-        audioRef.current.src = url
-        audioRef.current.load()
-        audioRef.current.playbackRate = playbackRate // Apply current playback rate
-      }
-      return
-    }
-
-    console.log('Generating new audio...')
     setIsLoading(true)
     setError(null)
     setUsingFallback(false)
-    setProviderName('Google TTS')
 
     try {
-      // Cancel previous request if exists
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort()
-      }
-      abortControllerRef.current = new AbortController()
-
-      // Try Google TTS first
-      const response = await fetch('/api/tts/google', {
+      const response = await fetch('/api/google-tts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          text: text.trim(),
-          voice: voice,
-          speed: speed,
-          pitch: pitch
+          text,
+          voice,
+          speed,
+          pitch,
+          enableFallback,
         }),
-        signal: abortControllerRef.current.signal
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to generate audio with Google TTS')
+        throw new Error('Erro ao gerar áudio')
       }
 
-      // Create blob URL from response
-      const audioBlob = await response.blob()
-      const url = URL.createObjectURL(audioBlob)
+      const blob = await response.blob()
+      const url = URL.createObjectURL(blob)
+      setAudioUrl(url)
 
-      // Convert blob to base64 for caching
-      const reader = new FileReader()
-      reader.readAsDataURL(audioBlob)
-      reader.onloadend = () => {
-        const base64data = reader.result as string
-        setCachedAudio(cacheKey, base64data)
-      }
+      // Check if fallback was used
+      const fallbackUsed = response.headers.get('X-Fallback-Used') === 'true'
+      setUsingFallback(fallbackUsed)
 
-      // Revoke previous URL if exists
-      if (audioBlobUrl) {
-        URL.revokeObjectURL(audioBlobUrl)
-      }
-      setAudioBlobUrl(url)
-
-      // Set up audio element
       if (audioRef.current) {
         audioRef.current.src = url
-        audioRef.current.load()
-        audioRef.current.playbackRate = playbackRate // Apply current playback rate
-
-        // Verify audio loads correctly
-        audioRef.current.addEventListener('error', () => {
-          console.error('Audio failed to load:', url)
-          setError('Erro ao carregar áudio')
-        })
-
-        audioRef.current.addEventListener('canplaythrough', () => {
-          console.log('Audio loaded successfully:', url)
-        })
+        audioRef.current.play()
+        setIsPlaying(true)
       }
-
-    } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
-        // Request was cancelled, don't show error
-        return
-      }
-
-      console.error('Google TTS audio generation error:', error)
-      
-      // If fallback is enabled, try OpenAI TTS
-      if (enableFallback) {
-        console.log('Google TTS failed, trying OpenAI TTS fallback...')
-        setUsingFallback(true)
-        setProviderName('OpenAI TTS (Fallback)')
-        
-        try {
-          const fallbackResponse = await fetch('/api/tts/generate', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              text: text.trim(),
-              voice: 'shimmer', // Voz feminina do OpenAI
-              model: 'tts-1'
-            }),
-            signal: abortControllerRef.current.signal
-          })
-
-          if (!fallbackResponse.ok) {
-            const errorData = await fallbackResponse.json()
-            throw new Error(errorData.error || 'Failed to generate audio with OpenAI TTS')
-          }
-
-          // Create blob URL from fallback response
-          const audioBlob = await fallbackResponse.blob()
-          const url = URL.createObjectURL(audioBlob)
-
-          // Convert blob to base64 for caching
-          const reader = new FileReader()
-          reader.readAsDataURL(audioBlob)
-          reader.onloadend = () => {
-            const base64data = reader.result as string
-            setCachedAudio(cacheKey, base64data)
-          }
-
-          // Revoke previous URL if exists
-          if (audioBlobUrl) {
-            URL.revokeObjectURL(audioBlobUrl)
-          }
-          setAudioBlobUrl(url)
-
-          // Set up audio element
-          if (audioRef.current) {
-            audioRef.current.src = url
-            audioRef.current.load()
-            audioRef.current.playbackRate = playbackRate // Apply current playback rate
-
-            // Verify audio loads correctly
-            audioRef.current.addEventListener('error', () => {
-              console.error('Fallback audio failed to load:', url)
-              setError('Erro ao carregar áudio')
-            })
-
-            audioRef.current.addEventListener('canplaythrough', () => {
-              console.log('Fallback audio loaded successfully:', url)
-            })
-          }
-
-          toast.success('Usando OpenAI TTS como fallback')
-          return
-
-        } catch (fallbackError) {
-          console.error('OpenAI TTS fallback also failed:', fallbackError)
-          setError('Ambos os provedores de TTS falharam')
-          toast.error('Erro ao gerar áudio com ambos os provedores')
-        }
-      } else {
-        const errorMessage = error instanceof Error ? error.message : 'Failed to generate audio'
-        
-        // Check if it's an API key error
-        if (errorMessage.includes('API key') || errorMessage.includes('not configured')) {
-          setError('Chave da Google API não configurada. Verifique o arquivo .env.local')
-        } else {
-          setError(errorMessage)
-        }
-
-        toast.error('Erro ao gerar áudio com Google TTS')
-      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro desconhecido')
     } finally {
       setIsLoading(false)
     }
   }
 
-  const base64toBlob = (base64: string, contentType: string = '', sliceSize: number = 512) => {
-    const byteCharacters = atob(base64.split(',')[1]);
-    const byteArrays = [];
-
-    for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
-      const slice = byteCharacters.slice(offset, offset + sliceSize);
-
-      const byteNumbers = new Array(slice.length);
-      for (let i = 0; i < slice.length; i++) {
-        byteNumbers[i] = slice.charCodeAt(i);
-      }
-
-      const byteArray = new Uint8Array(byteNumbers);
-      byteArrays.push(byteArray);
-    }
-
-    return new Blob(byteArrays, { type: contentType });
-  }
-
-  const playAudio = async () => {
-    // If no audio URL exists, generate it first
-    if (!audioBlobUrl) {
-      await generateAudio()
-      // After generation, check if we have audio URL
-      if (!audioBlobUrl) {
-        console.log('Failed to generate audio')
-        return
-      }
-    }
-    
-    if (audioRef.current && audioBlobUrl) {
-      audioRef.current.play()
-      setIsPlaying(true)
-    }
-  }
-
-  const pauseAudio = () => {
+  const handlePause = () => {
     if (audioRef.current) {
       audioRef.current.pause()
       setIsPlaying(false)
     }
   }
 
-  const togglePlayPause = () => {
-    if (isPlaying) {
-      pauseAudio()
-    } else {
-      playAudio()
-    }
-  }
-
-  const toggleMute = () => {
-    if (audioRef.current) {
-      audioRef.current.muted = !isMuted
-      setIsMuted(!isMuted)
-    }
-  }
-
-  const changePlaybackRate = (rate: number) => {
-    if (audioRef.current) {
-      audioRef.current.playbackRate = rate
-      setPlaybackRate(rate)
-    }
-  }
-
-  const handleTimeUpdate = () => {
-    if (audioRef.current) {
-      setCurrentTime(audioRef.current.currentTime)
-    }
-  }
-
-  const handleLoadedMetadata = () => {
-    if (audioRef.current) {
-      setDuration(audioRef.current.duration)
-    }
-  }
-
   const handleEnded = () => {
     setIsPlaying(false)
-    setCurrentTime(0)
   }
 
-  const handleError = () => {
-    setError('Erro ao reproduzir áudio')
-    setIsPlaying(false)
-    toast.error('Erro ao reproduzir áudio')
-  }
-
-  const formatTime = (time: number) => {
-    const minutes = Math.floor(time / 60)
-    const seconds = Math.floor(time % 60)
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`
-  }
+  useEffect(() => {
+    return () => {
+      if (audioUrl) {
+        URL.revokeObjectURL(audioUrl)
+      }
+    }
+  }, [audioUrl])
 
   return (
     <Card className={`w-full ${className}`}>
       <CardContent className="p-4">
-        <div className="flex items-center gap-4">
-          {/* Play/Pause Button */}
-          <Button
-            onClick={togglePlayPause}
-            disabled={isLoading || !!error || !text?.trim()}
-            size="sm"
-            variant="outline"
-            className="flex-shrink-0"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                Gerando...
-              </>
-            ) : isPlaying ? (
-              <Pause className="h-4 w-4" />
-            ) : (
-              <Play className="h-4 w-4" />
-            )}
-          </Button>
+        <div className="space-y-4">
+          {/* Audio Controls */}
+          <div className="flex items-center gap-3">
+            <Button
+              onClick={isPlaying ? handlePause : handlePlay}
+              disabled={isLoading || !text.trim()}
+              className="flex items-center gap-2"
+            >
+              {isLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : isPlaying ? (
+                <Pause className="h-4 w-4" />
+              ) : (
+                <Play className="h-4 w-4" />
+              )}
+              {isLoading ? 'Gerando...' : isPlaying ? 'Pausar' : 'Reproduzir'}
+            </Button>
 
-          {/* Progress Bar */}
-          <div className="flex-1 min-w-0">
-            {error ? (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-red-600 text-sm">
-                  <AlertCircle className="h-4 w-4" />
-                  <span>{error}</span>
-                </div>
-                {error.includes('Chave da Google API') && (
-                  <div className="text-xs text-blue-600">
-                    📋 <Link href="/google-tts-setup" className="underline">Ver instruções de configuração</Link>
-                  </div>
-                )}
-                <Button
-                  onClick={generateAudio}
-                  size="sm"
-                  variant="ghost"
-                  className="h-6 px-2 text-xs"
-                >
-                  <RotateCcw className="h-3 w-3 mr-1" />
-                  Tentar novamente
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {/* Time Display */}
-                <div className="flex justify-between text-xs text-gray-500">
-                  <span>{formatTime(currentTime)}</span>
-                  <span>{formatTime(duration)}</span>
-                </div>
-
-                {/* Progress Bar */}
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                    style={{
-                      width: duration > 0 ? `${(currentTime / duration) * 100}%` : '0%'
-                    }}
-                  />
-                </div>
-
-                {/* Status Text */}
-                {!audioBlobUrl && !isLoading && (
-                  <div className="text-xs text-gray-500 text-center">
-                    🔊 Clique para gerar e reproduzir áudio ({providerName} - Voz Feminina)
-                  </div>
-                )}
-                
-                {/* Provider Status */}
-                {audioBlobUrl && !error && (
-                  <div className="text-xs text-center">
-                    {usingFallback ? (
-                      <span className="text-orange-600 font-medium">
-                        🔄 Usando OpenAI TTS (Fallback)
-                      </span>
-                    ) : (
-                      <span className="text-blue-600 font-medium">
-                        ✅ Google TTS (Voz Feminina PT-BR)
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Volume2 className="h-4 w-4" />
+              <span>Voz: {voice}</span>
+              {usingFallback && (
+                <span className="text-orange-600">(Fallback OpenAI)</span>
+              )}
+            </div>
           </div>
 
-          {/* Volume Control */}
-          <Button
-            onClick={toggleMute}
-            disabled={!audioBlobUrl || !!error}
-            size="sm"
-            variant="ghost"
-            className="flex-shrink-0"
-          >
-            {isMuted ? (
-              <VolumeX className="h-4 w-4" />
-            ) : (
-              <Volume2 className="h-4 w-4" />
-            )}
-          </Button>
+          {/* Audio Element */}
+          <audio
+            ref={audioRef}
+            onEnded={handleEnded}
+            className="w-full"
+            controls
+            preload="none"
+          />
 
-          {/* Speed Control */}
-          {audioBlobUrl && !error && (
-            <div className="flex items-center gap-1">
-              <Gauge className="h-4 w-4 text-gray-500" />
-              <select
-                value={playbackRate}
-                onChange={(e) => changePlaybackRate(parseFloat(e.target.value))}
-                className="text-xs border rounded px-1 py-0.5 bg-white"
-                disabled={!audioBlobUrl || !!error}
-              >
-                <option value={0.5}>0.5x</option>
-                <option value={0.75}>0.75x</option>
-                <option value={1}>1x</option>
-                <option value={1.25}>1.25x</option>
-                <option value={1.5}>1.5x</option>
-                <option value={2}>2x</option>
-              </select>
-            </div>
+          {/* Status */}
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
           )}
-        </div>
 
-        {/* Hidden Audio Element */}
-        <audio
-          ref={audioRef}
-          onTimeUpdate={handleTimeUpdate}
-          onLoadedMetadata={handleLoadedMetadata}
-          onEnded={handleEnded}
-          onError={handleError}
-          onPlay={() => setIsPlaying(true)}
-          onPause={() => setIsPlaying(false)}
-          preload="auto"
-        />
+          {audioUrl && !error && (
+            <Alert>
+              <CheckCircle className="h-4 w-4" />
+              <AlertDescription>
+                Áudio gerado com sucesso usando {usingFallback ? 'OpenAI TTS (fallback)' : 'Google TTS'}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Text Preview */}
+          <div className="text-sm text-muted-foreground">
+            <strong>Texto:</strong> {text.substring(0, 100)}
+            {text.length > 100 && '...'}
+          </div>
+        </div>
       </CardContent>
     </Card>
   )

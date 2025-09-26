@@ -34,13 +34,14 @@ export function useSlideValidation() {
   const validateSlide = useCallback((options: SlideValidationOptions): SlideValidationState => {
     const { currentSlide, userAnswers, questions, requireAllQuestionsAnswered = true } = options;
     
-    // Verificar se é um slide de pergunta
-    const isQuestionSlide = currentSlide?.type === 'question' || 
-                           currentSlide?.activity?.questions?.length > 0 ||
-                           questions?.length > 0;
+    // Verificar se é um slide de quiz (type: 'quiz' ou 'question')
+    const isQuizSlide = currentSlide?.type === 'quiz' || 
+                       currentSlide?.type === 'question' ||
+                       currentSlide?.activity?.questions?.length > 0 ||
+                       questions?.length > 0;
 
-    if (!isQuestionSlide) {
-      // Se não é slide de pergunta, pode avançar livremente
+    if (!isQuizSlide) {
+      // Se não é slide de quiz, pode avançar livremente
       return {
         isQuestionSlide: false,
         hasAnsweredAllQuestions: true,
@@ -87,6 +88,8 @@ export function useSlideValidation() {
       } else {
         validationMessage = `Você precisa responder ${unansweredQuestions.length} perguntas antes de avançar: ${unansweredQuestions.map(q => q + 1).join(', ')}.`;
       }
+    } else if (isQuizSlide && hasAnsweredAllQuestions) {
+      validationMessage = 'Quiz completo! Você pode avançar para o próximo slide.';
     }
 
     const newState: SlideValidationState = {

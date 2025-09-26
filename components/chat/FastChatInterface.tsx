@@ -81,6 +81,15 @@ export function FastChatInterface() {
   const handleModuleChange = (module: ModuleType) => {
     setSelectedModule(module)
     setShowModuleSelector(false)
+    
+    // Iniciar nova conversa sempre que um módulo for selecionado
+    startNewConversation(module)
+    setMessage('')
+    
+    toast({
+      title: "Nova conversa iniciada",
+      description: `Módulo ${module} selecionado - conversa limpa`,
+    })
   }
 
   const handleNewConversation = () => {

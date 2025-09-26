@@ -54,10 +54,10 @@ export function ModernHeader({
 
   return (
     <header className={headerClasses}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 overflow-visible">
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-6 py-3 overflow-visible">
         <div className="flex justify-between items-center overflow-visible">
           {/* Left side - Logo + Nome + Navigation + User Profile */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             {/* Mobile Navigation (Hamburger) - Primeiro */}
             {showNavigation && (
               <div className="lg:hidden">
@@ -73,11 +73,11 @@ export function ModernHeader({
               <Image 
                 src="/assets/Logo_HubEdu.ia.svg" 
                 alt="HubEdu.ia Logo" 
-                width={32}
-                height={32}
-                className="h-8 w-auto"
+                width={28}
+                height={28}
+                className="h-7 w-auto"
               />
-              <div className="text-lg font-bold">
+              <div className="text-base font-bold">
                 <span className="text-black">Hub</span>
                 <span className="text-yellow-500">Edu</span>
                 <span className="text-black">.ia</span>
@@ -92,11 +92,11 @@ export function ModernHeader({
               <Image 
                 src="/assets/Logo_HubEdu.ia.svg" 
                 alt="HubEdu.ia Logo" 
-                width={40}
-                height={40}
-                className="h-10 w-auto"
+                width={32}
+                height={32}
+                className="h-8 w-auto"
               />
-              <div className="text-xl font-bold">
+              <div className="text-lg font-bold">
                 <span className="text-black">Hub</span>
                 <span className="text-yellow-500">Edu</span>
                 <span className="text-black">.ia</span>

@@ -21,25 +21,25 @@ Você é um professor especializado em criar aulas profissionais de 45-60 minuto
 
 📊 MÉTRICAS OBRIGATÓRIAS:
 - MÍNIMO 500 tokens por slide de conteúdo (≈375 palavras)
-- Total estimado: ~4.500 tokens de conteúdo + metadados = ~5.500-7.000 tokens por aula
+- Total estimado: ~4.200 tokens de conteúdo + metadados = ~5.200-6.500 tokens por aula
 - Tempo total: 45-50 min (síncrono) / 30-35 min (assíncrono)
 - Palavras por slide: ~375-400 palavras (regra: 0,75 palavra/token em PT-BR)
 
 ⏱️ PACING DETALHADO POR SLIDE:
-1. SLIDE 1 - ABERTURA (4 min): Ativação de conhecimentos prévios + objetivo
+1. SLIDE 1 - ABERTURA (4 min): Ativação de conhecimentos prévios + objetivo [IMAGEM OBRIGATÓRIA]
 2. SLIDE 2 - CONCEITO PRINCIPAL (5 min): Visão geral e fundamentos
 3. SLIDE 3 - DESENVOLVIMENTO (5 min): Detalhamento e mecanismos
 4. SLIDE 4 - APLICAÇÃO (5 min): Casos práticos e exemplos reais
-5. SLIDE 5 - VARIAÇÕES (5 min): Fatores limitantes e casos especiais
-6. SLIDE 6 - CONEXÕES (5 min): Adaptações e contexto amplo
-7. SLIDE 7 - QUIZ 1 (4 min): Múltipla escolha com feedback rico
+5. SLIDE 5 - QUIZ 1 (4 min): 3 perguntas obrigatórias com resultados
+6. SLIDE 6 - VARIAÇÕES (5 min): Fatores limitantes e casos especiais [IMAGEM OBRIGATÓRIA]
+7. SLIDE 7 - CONEXÕES (5 min): Adaptações e contexto amplo
 8. SLIDE 8 - APROFUNDAMENTO (5 min): Conceitos avançados
 9. SLIDE 9 - EXEMPLOS (5 min): Casos práticos detalhados
 10. SLIDE 10 - ANÁLISE CRÍTICA (5 min): Diferentes perspectivas
 11. SLIDE 11 - SÍNTESE (5 min): Consolidação de conceitos
-12. SLIDE 12 - QUIZ 2 (4 min): Questão situacional com análise
+12. SLIDE 12 - QUIZ 2 (4 min): 3 perguntas obrigatórias com resultados
 13. SLIDE 13 - APLICAÇÕES FUTURAS (5 min): Contexto amplo
-14. SLIDE 14 - ENCERRAMENTO (3 min): Síntese + erro comum + desafio aplicado
+14. SLIDE 14 - ENCERRAMENTO (3 min): Síntese + erro comum + desafio aplicado [IMAGEM OBRIGATÓRIA]
 
 🎓 METODOLOGIA EDUCACIONAL:
 - Micro-pausas a cada 4-6 min para checagem de entendimento
@@ -49,18 +49,22 @@ Você é um professor especializado em criar aulas profissionais de 45-60 minuto
 - Feedback rico em quizzes (não apenas "correto/incorreto")
 
 🖼️ DIRETRIZES PARA IMAGENS (UNSPLASH):
-- 1-2 imagens por slide, sempre legendadas
-- Prompts específicos e educativos
+- IMAGENS OBRIGATÓRIAS nos slides 1, 7 e 14
+- Cada imagem deve ser ÚNICA e específica do tema
+- Prompts específicos e educativos para cada slide
 - Solicitar observações: "Localize o [elemento] na figura"
 - Resolução otimizada: máximo 1200px (200-500 KB por imagem)
 - Total estimado: ~2-4,5 MB por aula (com cache e lazy-loading)
 
 📝 ESTRUTURA DE QUIZ COM FEEDBACK RICO:
+- EXATAMENTE 3 perguntas por quiz (slides 6 e 12)
 - Perguntas que exigem ANÁLISE e APLICAÇÃO
 - 4 alternativas com explicação detalhada de cada uma
 - Feedback contextualizado: "Por que esta alternativa está correta/incorreta"
 - Conexão com conceitos anteriores
 - Orientações para aprofundamento
+- OBRIGATÓRIO: Exibir resultados após responder as 3 perguntas
+- OBRIGATÓRIO: Não permitir avançar sem completar o quiz
 
 SEMPRE retorne APENAS um JSON válido no seguinte formato:
 {
@@ -110,10 +114,10 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
       "tokenTarget": 500
     },
     {
-      "slideNumber": 4,
-      "type": "question",
+      "slideNumber": 6,
+      "type": "quiz",
       "title": "Quiz 1: Verificação de Compreensão",
-      "content": "Contexto da primeira pergunta com cenário prático e aplicação dos conceitos aprendidos.",
+      "content": "Agora vamos testar seu entendimento dos conceitos aprendidos. Responda as 3 perguntas abaixo para continuar.",
       "questions": [
         {
           "question": "Pergunta analítica que exige aplicação dos conceitos dos slides anteriores",
@@ -154,7 +158,8 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
         "incorrect": "Não foi desta vez, mas vamos entender o porquê. A resposta correta é [explicação detalhada] porque...",
         "followUp": "Para aprofundar: Como isso se relaciona com [conceito anterior]?"
       },
-      "imagePrompt": "Prompt específico para busca de imagem educativa",
+      "showResults": true,
+      "requireCompletion": true,
       "timeEstimate": 4,
       "tokenTarget": 400
     },
@@ -184,15 +189,15 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
       "title": "Conexões: Adaptações e Contexto Amplo",
       "content": "Conexões com outros temas, adaptações evolutivas, contexto histórico, aplicações tecnológicas e impacto social. MÍNIMO 375 palavras.",
       "microPause": "Síntese: 'Como isso se conecta com [outro tema]?'",
-      "imagePrompt": "Prompt específico para busca de imagem educativa",
+      "imagePrompt": "Prompt específico para busca de imagem educativa OBRIGATÓRIA",
       "timeEstimate": 5,
       "tokenTarget": 500
     },
     {
-      "slideNumber": 8,
-      "type": "question",
+      "slideNumber": 12,
+      "type": "quiz",
       "title": "Quiz 2: Análise Situacional",
-      "content": "Contexto da segunda pergunta com cenário complexo que exige síntese e análise crítica.",
+      "content": "Agora vamos testar sua compreensão com questões mais complexas. Responda as 3 perguntas abaixo para continuar.",
       "questions": [
         {
           "question": "Pergunta situacional que exige análise de dados, gráficos ou cenários complexos",
@@ -233,7 +238,8 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
         "incorrect": "Boa tentativa! Vamos analisar juntos: [análise detalhada do cenário]...",
         "followUp": "Desafio: Como você aplicaria isso em [situação diferente]?"
       },
-      "imagePrompt": "Prompt específico para busca de imagem educativa",
+      "showResults": true,
+      "requireCompletion": true,
       "timeEstimate": 4,
       "tokenTarget": 400
     },
@@ -323,7 +329,36 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
       "content": "Síntese dos pontos principais, erro comum a evitar, mini-desafio aplicado e orientações para próximos estudos. MÍNIMO 300 palavras.",
       "miniChallenge": "Tarefa de 2 minutos: 'Esboce [conceito] em 3 passos principais'",
       "commonMistake": "Erro comum: [descrição do erro] - Como evitar: [orientação]",
-      "imagePrompt": "Prompt específico para busca de imagem educativa",
+      "imagePrompt": "Prompt específico para busca de imagem educativa OBRIGATÓRIA",
+      "timeEstimate": 3,
+      "tokenTarget": 400
+    },
+    {
+      "slideNumber": 15,
+      "type": "summary",
+      "title": "Resumo Final: Resultados e Síntese",
+      "content": "Parabéns por completar esta aula! Aqui está um resumo dos seus resultados nos quizzes e dos principais conceitos aprendidos.",
+      "quizResults": {
+        "quiz1": {
+          "score": "X/3",
+          "feedback": "Feedback personalizado baseado no desempenho"
+        },
+        "quiz2": {
+          "score": "X/3", 
+          "feedback": "Feedback personalizado baseado no desempenho"
+        },
+        "overall": "Feedback geral sobre o aprendizado"
+      },
+      "keyConcepts": [
+        "Conceito principal 1 aprendido",
+        "Conceito principal 2 aprendido",
+        "Conceito principal 3 aprendido"
+      ],
+      "nextSteps": [
+        "Próximo passo de estudo 1",
+        "Próximo passo de estudo 2",
+        "Próximo passo de estudo 3"
+      ],
       "timeEstimate": 3,
       "tokenTarget": 400
     }
@@ -353,39 +388,40 @@ IMPORTANTE:
 - EMBARALHE as alternativas dos quizzes para variar a posição da resposta correta
 - Use diferentes posições para a resposta correta (A, B, C ou D) em cada quiz
 - CADA QUIZ DEVE TER EXATAMENTE 3 QUESTÕES com 4 alternativas cada
+- QUIZES OBRIGATÓRIOS: Não permitir avançar sem completar
+- RESULTADOS OBRIGATÓRIOS: Exibir após responder as 3 perguntas
+- IMAGENS OBRIGATÓRIAS: Slides 1, 6 e 14 devem ter imagens únicas
 - TODOS os textos devem estar em PORTUGUÊS BRASILEIRO
 - Responda APENAS com JSON válido. Não inclua formatação markdown, blocos de código ou texto adicional.`;
 
 // Template específico para fotossíntese (exemplo de aplicação)
 export const PHOTOSYNTHESIS_PROFESSIONAL_TEMPLATE = `Você é um professor especializado em fotossíntese criando uma aula profissional de 45-60 minutos.
 
-🎯 PACING ESPECÍFICO PARA FOTOSSÍNTESE (9 SLIDES):
+🎯 PACING ESPECÍFICO PARA FOTOSSÍNTESE (14 SLIDES):
 
-1. ABERTURA (4 min) - Ativação: "Onde você vê plantas crescendo?"
+1. ABERTURA (4 min) - Ativação: "Onde você vê plantas crescendo?" [IMAGEM]
 2. CONCEITO PRINCIPAL (5 min) - Equação global + cloroplastos
 3. DESENVOLVIMENTO (5 min) - Fase clara: tilacóides, fotossistemas, ATP/NADPH
-4. QUIZ 1 (4 min) - "O que acontece se dobrarmos a intensidade luminosa?"
-5. APLICAÇÃO (5 min) - Ciclo de Calvin: fixação CO₂, RuBisCO, G3P
-6. APROFUNDAMENTO (5 min) - Balanço energético e fatores limitantes
+4. APLICAÇÃO (5 min) - Casos práticos e exemplos reais
+5. QUIZ 1 (4 min) - "O que acontece se dobrarmos a intensidade luminosa?"
+6. VARIAÇÕES (5 min) - Fatores limitantes e casos especiais [IMAGEM]
 7. CONEXÕES (5 min) - Adaptações C3, C4, CAM + agricultura
-8. QUIZ 2 (4 min) - Análise de gráfico taxa × intensidade luminosa
-9. ENCERRAMENTO (3 min) - Síntese + erro comum + "desenhe o ciclo em 3 passos"
+8. APROFUNDAMENTO (5 min) - Balanço energético e mecanismos avançados
+9. EXEMPLOS (5 min) - Casos práticos detalhados
+10. ANÁLISE CRÍTICA (5 min) - Diferentes perspectivas
+11. SÍNTESE (5 min) - Consolidação de conceitos
+12. QUIZ 2 (4 min) - Análise de gráfico taxa × intensidade luminosa
+13. APLICAÇÕES FUTURAS (5 min) - Contexto amplo
+14. ENCERRAMENTO (3 min) - Síntese + erro comum + "desenhe o ciclo em 3 passos" [IMAGEM]
 
 🖼️ IMAGENS ESPECÍFICAS:
-- Slide 1: "plantas crescendo, jardim, natureza"
-- Slide 2: "cloroplastos microscópicos, células vegetais"
-- Slide 3: "tilacóides, fotossistemas, estrutura molecular"
-- Slide 4: "luz solar, intensidade luminosa, experimento"
-- Slide 5: "ciclo de Calvin, moléculas, processo bioquímico"
-- Slide 6: "gráficos científicos, dados experimentais"
-- Slide 7: "plantas C4, milho, agricultura tropical"
-- Slide 7: "gráfico taxa fotossíntese, análise científica"
-- Slide 14: "estudante concluindo aula, ambiente escolar"
-- Slide 9: "síntese visual, resumo conceitual"
+- Slide 1: "plantas crescendo, jardim, natureza" [IMAGEM OBRIGATÓRIA]
+- Slide 6: "fatores limitantes, experimentos científicos" [IMAGEM OBRIGATÓRIA]
+- Slide 14: "estudante concluindo aula, ambiente escolar" [IMAGEM OBRIGATÓRIA]
 
 📊 MÉTRICAS GARANTIDAS:
 - 500+ tokens por slide = ~375 palavras
-- Total: ~4.500 tokens conteúdo + metadados
+- Total: ~4.200 tokens conteúdo + metadados
 - Tempo: 45-50 min (síncrono) / 30-35 min (assíncrono)
 - Micro-pausas a cada 4-6 min
 - Feedback rico em quizzes
@@ -430,7 +466,7 @@ export function validateProfessionalPacing(lessonData: any): {
 
   // Validações obrigatórias
   if (lessonData.slides.length !== 9) {
-    issues.push(`Aula deve ter exatamente 9 slides, encontrados ${lessonData.slides.length}`);
+    issues.push(`Aula deve ter exatamente 14 slides, encontrados ${lessonData.slides.length}`);
   }
 
   if (metrics.totalTokens < 4000) {

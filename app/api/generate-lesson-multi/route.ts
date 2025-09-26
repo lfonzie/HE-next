@@ -162,7 +162,7 @@ Primeiro, analise o tópico e determine automaticamente:
 3. O contexto educacional e pré-requisitos
 4. Objetivos de aprendizagem apropriados para a série inferida
 
-Crie uma aula seguindo EXATAMENTE a estrutura de 9 slides especificada acima com pacing profissional.
+Crie uma aula seguindo EXATAMENTE a estrutura de 14 slides especificada acima com pacing profissional.
 
 IMPORTANTE: Responda APENAS com JSON válido, sem texto adicional, explicações ou formatação markdown.`
 

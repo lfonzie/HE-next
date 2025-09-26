@@ -22,9 +22,9 @@ export function ResponsiveButton({
   const baseClasses = "inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50";
   
   const sizeClasses = {
-    sm: "min-h-9 min-w-9 px-3 py-2 type-small",
-    md: "min-h-11 min-w-11 px-4 py-3 type-body",
-    lg: "min-h-12 min-w-12 px-6 py-4 type-body-lg"
+    sm: "min-h-8 min-w-8 px-3 py-2 type-small",
+    md: "min-h-9 min-w-9 px-4 py-2.5 type-body",
+    lg: "min-h-10 min-w-10 px-5 py-3 type-body-lg"
   };
   
   const variantClasses = {

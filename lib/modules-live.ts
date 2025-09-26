@@ -87,6 +87,42 @@ export const MODULES: Module[] = [
     provider: 'openai',
     model: 'gpt-4o-mini',
   },
+  {
+    id: 'flashcards',
+    name: 'Flashcards',
+    type: 'chat-http',
+    provider: 'google',
+    model: 'gemini-2.0-flash-exp',
+  },
+  {
+    id: 'video-learning',
+    name: 'Vídeo para Aprendizado',
+    type: 'chat-http',
+    provider: 'google',
+    model: 'gemini-2.0-flash-exp',
+  },
+  {
+    id: 'chat-docs',
+    name: 'Chat com Documentos',
+    type: 'chat-http',
+    provider: 'google',
+    model: 'gemini-2.0-flash-exp',
+  },
+  {
+    id: 'dictation',
+    name: 'Ditado por Voz',
+    type: 'chat-http',
+    provider: 'google',
+    model: 'gemini-2.0-flash-exp',
+  },
+  {
+    id: 'live-audio',
+    name: 'Live Audio',
+    type: 'chat-live',
+    provider: 'google',
+    model: 'gemini-2.5-flash-preview-native-audio-dialog',
+    modalities: ['audio']
+  },
   // Novo módulo Chat ao Vivo
   {
     id: 'gemini-live',

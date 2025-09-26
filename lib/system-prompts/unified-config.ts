@@ -79,7 +79,7 @@ export const UNIFIED_SYSTEM_PROMPTS: Record<string, SystemPromptConfig> = {
         'Mantenha linguagem apropriada para a idade do aluno'
       ]
     },
-    description: 'Prompt para geração de aulas interativas com quizzes (9 slides)',
+    description: 'Prompt para geração de aulas interativas com quizzes (14 slides)',
     version: 1,
     status: 'active',
     createdBy: 'unified-system'

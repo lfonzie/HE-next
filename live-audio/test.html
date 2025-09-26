@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Audio App - Teste</title>
+  <meta name="description" content="Teste do aplicativo de áudio em tempo real">
+</head>
+<body>
+  <script type="importmap">
+    {
+      "imports": {
+        "lit": "https://esm.sh/lit@^3.3.0",
+        "lit/": "https://esm.sh/lit@^3.3.0/",
+        "@lit/context": "https://esm.sh/@lit/context@^1.1.5",
+        "@google/genai": "https://esm.sh/@google/genai@^1.15.0",
+        "three": "https://esm.sh/three@^0.176.0",
+        "three/": "https://esm.sh/three@^0.176.0/"
+      }
+    }
+  </script>
+  
+  <div style="padding: 20px; background: #1a1a1a; color: white; min-height: 100vh;">
+    <h1>Teste do Live Audio App</h1>
+    <p>Se você está vendo esta mensagem, o componente não está carregando corretamente.</p>
+    <p>Verifique o console do navegador para erros.</p>
+  </div>
+  
+  <live-audio-app></live-audio-app>
+  
+  <script type="module" src="/live-audio-app.tsx?v=3"></script>
+</body>
+</html>

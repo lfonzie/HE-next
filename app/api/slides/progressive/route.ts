@@ -68,7 +68,7 @@ function validateSlideStructure(slide: any): slide is Slide {
     slide &&
     typeof slide === 'object' &&
     typeof slide.type === 'string' &&
-    ['explanation', 'question', 'closing'].includes(slide.type) &&
+    ['explanation', 'question'].includes(slide.type) &&
     typeof slide.title === 'string' &&
     typeof slide.content === 'string' &&
     slide.title.trim().length > 0 &&
@@ -77,6 +77,20 @@ function validateSlideStructure(slide: any): slide is Slide {
   
   // Additional validation for question slides
   if (slide.type === 'question') {
+    // Check if it's the new format with multiple questions
+    if (slide.questions && Array.isArray(slide.questions)) {
+      return isValid && 
+             slide.questions.length === 3 &&
+             slide.questions.every((q: any) => 
+               typeof q.question_stem === 'string' &&
+               Array.isArray(q.options) &&
+               q.options.length === 4 &&
+               typeof q.answer === 'string' &&
+               ['A', 'B', 'C', 'D'].includes(q.answer) &&
+               typeof q.rationale === 'string'
+             );
+    }
+    // Fallback to old format (single question)
     return isValid && 
            typeof slide.question_stem === 'string' &&
            Array.isArray(slide.options) &&
@@ -99,11 +113,11 @@ async function generateProgressiveSlide(
   const config = getModelConfig(model);
   
   const slideTypes = [
-    'explanation', 'explanation', 'explanation', // Slides 1-3
-    'question', // Slide 4
-    'explanation', 'explanation', 'explanation', // Slides 5-7
-    'question', // Slide 8
-    'closing' // Slide 9
+    'explanation', 'explanation', 'explanation', 'explanation', // Slides 1-4
+    'question', // Slide 5 (Quiz 1)
+    'explanation', 'explanation', 'explanation', 'explanation', 'explanation', 'explanation', // Slides 6-11
+    'question', // Slide 12 (Quiz 2)
+    'explanation', 'explanation' // Slides 13-14
   ];
   
   const slideType = slideTypes[position - 1];
@@ -129,19 +143,19 @@ async function generateProgressiveSlide(
     : '';
   
   // Enhanced prompt with better diversity and context awareness
-  const basePrompt = `Gere um slide (JSON, conforme contrato: type, title, content, key_points, question_stem, options, answer, rationale, image_prompt, image_confidence) para a posição ${position} de uma aula de 9 slides sobre "${topic}".
+  const basePrompt = `Gere um slide (JSON, conforme contrato: type, title, content, key_points, question_stem, options, answer, rationale, image_prompt, image_confidence) para a posição ${position} de uma aula de 14 slides sobre "${topic}".
 
 TIPO DE SLIDE: ${slideType}
-POSIÇÃO: ${position}/9
+POSIÇÃO: ${position}/14
 
 DIRETRIZES ESPECÍFICAS:
 - Para EXPLANATION: Foque em conceitos, exemplos práticos, aplicações reais
-- Para QUESTION: Crie pergunta desafiadora com 4 alternativas (só 1 correta)
-  * question_stem: Pergunta clara e específica
-  * options: Array com 4 opções ["Opção A", "Opção B", "Opção C", "Opção D"]
-  * answer: Letra da resposta correta ('A', 'B', 'C' ou 'D')
-  * rationale: Explicação detalhada da resposta correta
-- Para CLOSING: Resumo final + dica prática para aplicar o conhecimento
+- Para QUESTION: Crie um quiz com 3 perguntas, cada uma com 4 alternativas (só 1 correta)
+  * questions: Array com 3 objetos, cada um contendo:
+    - question_stem: Pergunta clara e específica
+    - options: Array com 4 opções ["Opção A", "Opção B", "Opção C", "Opção D"]
+    - answer: Letra da resposta correta ('A', 'B', 'C' ou 'D')
+    - rationale: Explicação detalhada da resposta correta
 
 DIVERSIDADE OBRIGATÓRIA:
 - Título único e específico (não genérico)
@@ -155,7 +169,7 @@ DIVERSIDADE OBRIGATÓRIA:
 IMAGEM:
 - image_prompt: 1-3 palavras em inglês para Unsplash
 - image_confidence: 0.7-1.0 (alta qualidade educacional)
-- Para slides 1 e 9: SEMPRE inclua image_prompt relevante
+- Para slides 1, 6 e 14: SEMPRE inclua image_prompt relevante
 
 ${previousContext}`;
 
@@ -236,7 +250,7 @@ export async function POST(request: NextRequest) {
 
     const { topic, position, previousSlides }: SlideGenerationRequest = await request.json();
 
-    if (!topic || !position || position < 1 || position > 9) {
+    if (!topic || !position || position < 1 || position > 14) {
       return NextResponse.json({ error: 'Invalid request parameters' }, { status: 400 });
     }
 

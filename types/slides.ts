@@ -1,7 +1,7 @@
 // TypeScript interfaces for the optimized Professor module and ENEM simulator
 
 export interface Slide {
-  type: 'explanation' | 'question' | 'closing';
+  type: 'explanation' | 'question';
   title: string; // Unique, concise (e.g., "Definição", "Exemplo Prático")
   content: string; // 120–150 words, clear and focused
   key_points?: string[]; // 3 distinct bullets for explanations
@@ -11,6 +11,13 @@ export interface Slide {
   rationale?: string; // 1–2 sentence explanation for correct answer
   image_prompt?: string; // Prompt for image generation
   image_confidence?: number; // 0–1, display only if ≥ 0.7
+  // For quiz slides with multiple questions
+  questions?: Array<{
+    question_stem: string;
+    options: string[];
+    answer: 'A' | 'B' | 'C' | 'D';
+    rationale: string;
+  }>;
 }
 
 export interface ENEMItem {
@@ -26,7 +33,7 @@ export interface ENEMItem {
 
 export interface SlideGenerationRequest {
   topic: string;
-  position: number; // 1-9
+  position: number; // 1-14
   previousSlides: Slide[];
 }
 

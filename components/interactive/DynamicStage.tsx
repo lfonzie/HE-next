@@ -6,6 +6,7 @@ import EnhancedQuizComponent from './EnhancedQuizComponent'
 import DrawingPrompt from './DrawingPrompt'
 import AnimationSlide from './AnimationSlide'
 import DiscussionBoard from './DiscussionBoard'
+import QuizSummarySlide from './QuizSummarySlide'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -363,6 +364,22 @@ export default function DynamicStage({
               </div>
             </CardContent>
           </Card>
+        )
+
+      case 'QuizSummarySlide':
+        return (
+          <QuizSummarySlide
+            title={stage.etapa}
+            content={activity.content || ''}
+            quizResults={activity.quizResults || {
+              quiz1: { score: '0/3', feedback: 'Nenhum resultado disponível', results: [] },
+              quiz2: { score: '0/3', feedback: 'Nenhum resultado disponível', results: [] },
+              overall: 'Nenhum feedback disponível'
+            }}
+            keyConcepts={activity.keyConcepts || []}
+            nextSteps={activity.nextSteps || []}
+            onComplete={() => handleStageComplete({ type: 'summary' })}
+          />
         )
 
       default:

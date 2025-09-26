@@ -16,13 +16,13 @@
 
 .weather-card .card-header {
   background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  color: white;
+  color: black;
   border-radius: 12px 12px 0 0;
   padding: 16px;
 }
 
 .weather-card .card-title {
-  color: white;
+  color: black;
   font-weight: 600;
   margin: 0;
 }

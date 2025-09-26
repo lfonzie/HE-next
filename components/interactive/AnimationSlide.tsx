@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 // Removed framer-motion animations
 import ContentProcessor from './ContentProcessor'
 import { useUnsplashImage } from '@/hooks/useUnsplashImage'
-import FixedTTSPlayer from '@/components/audio/FixedTTSPlayer'
+import AutoReadSlideGoogle from '@/components/audio/AutoReadSlideGoogle'
 
 interface AnimationSlideProps {
   title: string
@@ -28,6 +28,13 @@ interface AnimationSlideProps {
   onNext?: () => void
   canGoPrevious?: boolean
   canGoNext?: boolean
+  // Streaming audio props
+  streamingConfig?: {
+    enabled: boolean;
+    voice: string;
+    autoPlay: boolean;
+    showVisualization: boolean;
+  };
 }
 
 export default function AnimationSlide({
@@ -46,7 +53,13 @@ export default function AnimationSlide({
   onPrevious,
   onNext,
   canGoPrevious = false,
-  canGoNext = false
+  canGoNext = false,
+  streamingConfig = {
+    enabled: true,
+    voice: 'Orus',
+    autoPlay: false,
+    showVisualization: true
+  }
 }: AnimationSlideProps) {
   // Removed animation-related state variables
 
@@ -133,20 +146,16 @@ export default function AnimationSlide({
             </div>
           )}
           
-          {/* Fixed TTS Player com Gemini 2.5 + WaveNet fallback */}
-          {content && (
+          {/* Auto Read Slide Google TTS - Leitura automática usando Google TTS */}
+          {content && streamingConfig.enabled && (
             <div className="mb-6">
-              <FixedTTSPlayer
+              <AutoReadSlideGoogle
                 text={content}
-                voice="Zephyr"
+                voice="pt-BR-Wavenet-A"
                 autoPlay={false}
-                className="w-full"
-                onPrevious={onPrevious}
-                onNext={onNext}
-                canGoPrevious={canGoPrevious}
-                canGoNext={canGoNext}
-                initialSpeed={1.0}
-                initialVolume={0.8}
+                onAudioStart={() => console.log('Áudio iniciado')}
+                onAudioEnd={() => console.log('Áudio finalizado')}
+                onError={(error) => console.error('Erro de áudio:', error)}
               />
             </div>
           )}

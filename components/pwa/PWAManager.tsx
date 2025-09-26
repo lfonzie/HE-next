@@ -304,8 +304,8 @@ export default function PWAManager({ onInstall, onUpdate }: PWAManagerProps) {
         </AnimatePresence>
       )}
 
-      {/* Status PWA */}
-      {isClient && (
+      {/* Status PWA - Ocultado para evitar confusão */}
+      {false && isClient && (
         <div className="fixed bottom-4 left-4 z-40">
           <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3">
             <div className="flex items-center gap-2 text-sm">

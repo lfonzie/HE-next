@@ -29,16 +29,16 @@ export function FixedHeader({ showLoginButton = false }: FixedHeaderProps) {
 
   return (
     <header className={headerClasses}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-6 py-3 flex justify-between items-center">
         <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
           <Image 
             src="/assets/Logo_HubEdu.ia.svg" 
             alt="HubEdu.ia Logo" 
-            width={40}
-            height={40}
-            className="h-10 w-auto"
+            width={32}
+            height={32}
+            className="h-8 w-auto"
           />
-          <div className="text-xl font-bold">
+          <div className="text-lg font-bold">
             <span className="text-black">Hub</span>
             <span className="text-yellow-500">Edu</span>
             <span className="text-black">.ia</span>

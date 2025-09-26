@@ -186,6 +186,9 @@ export function ChatInterface() {
                 setSelectedModule(moduleId as ModuleType)
                 setShowModuleSelector(false)
               }}
+              onNewConversation={() => {
+                startNewConversation(selectedModule)
+              }}
             />
           </div>
         )}

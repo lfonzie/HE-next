@@ -399,7 +399,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: black;
   font-weight: 600;
   font-size: 18px;
   flex-shrink: 0;
@@ -435,7 +435,7 @@
 .admin-btn {
   background: var(--admin-primary);
   border-color: hsl(45 100% 60%);
-  color: white;
+  color: black;
   font-size: 14px;
   padding: 12px 16px;
   border-radius: 10px;
@@ -476,7 +476,7 @@
 .logout-btn {
   background: #ef4444;
   border-color: #ef4444;
-  color: white;
+  color: black;
   font-size: 14px;
   padding: 12px 16px;
   border-radius: 10px;
@@ -628,13 +628,13 @@
 
 /* Quando sidebar está expandido */
 .sidebar-expanded ~ .main-content-with-sidebar {
-  margin-left: 320px; /* Largura do sidebar expandido */
+  margin-left: 240px; /* Largura do sidebar expandido reduzida */
 }
 
 /* Para tablets */
 @media (min-width: 768px) and (max-width: 1023px) {
   .sidebar-expanded ~ .main-content-with-sidebar {
-    margin-left: 280px; /* Largura do sidebar expandido em tablet */
+    margin-left: 220px; /* Largura do sidebar expandido em tablet reduzida */
   }
 }
 

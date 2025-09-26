@@ -143,24 +143,25 @@ export async function getBestEducationalImage(topic: string): Promise<string | n
 
 export async function populateLessonWithEducationalImages(lessonData: any): Promise<any> {
   try {
-    console.log('🖼️ Populando imagens educacionais apenas no primeiro e último slide')
+    console.log('🖼️ Populando imagens educacionais obrigatórias nos slides 1, 6 e 14')
     
     const slidesWithImages = await Promise.all(
       lessonData.slides.map(async (slide: any, index: number) => {
-        // Apenas primeiro slide (index 0) e último slide (index slides.length - 1)
-        const isFirstSlide = index === 0
-        const isLastSlide = index === lessonData.slides.length - 1
+        // Imagens obrigatórias nos slides 1, 6 e 14 (índices 0, 5 e 13)
+        const isSlide1 = index === 0
+        const isSlide6 = index === 5
+        const isSlide14 = index === 13
         
-        if (slide.imagePrompt && (isFirstSlide || isLastSlide)) {
+        if (slide.imagePrompt && (isSlide1 || isSlide6 || isSlide14)) {
           const imageUrl = await getBestEducationalImage(slide.imagePrompt)
-          console.log(`✅ Imagem educacional adicionada ao slide ${index + 1} (${isFirstSlide ? 'primeiro' : 'último'})`)
+          console.log(`✅ Imagem educacional obrigatória adicionada ao slide ${index + 1}`)
           return {
             ...slide,
             imageUrl: imageUrl || null
           }
         }
         
-        // Para slides intermediários, remover imageUrl se existir
+        // Para outros slides, remover imageUrl se existir
         const { imageUrl, ...slideWithoutImage } = slide
         return slideWithoutImage
       })

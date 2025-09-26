@@ -1,7 +1,8 @@
 import { NextRequest } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { Perplexity } from '@perplexity-ai/perplexity_ai'
+import { perplexity } from '@ai-sdk/perplexity'
+import { generateText } from 'ai'
 import { getSystemPrompt } from '@/lib/system-message-loader'
 
 // Prevent prerendering of this API route
@@ -58,35 +59,37 @@ export async function POST(request: NextRequest) {
     // Obter system prompt para o módulo
     const systemPrompt = getSystemPrompt(targetModule)
     
-    // Configurar cliente Perplexity
-    const client = new Perplexity({
-      apiKey: process.env.PERPLEXITY_API_KEY,
+    // Configurar modelo Perplexity - usando apenas "sonar" como solicitado
+    const perplexityModel = perplexity('sonar')
+
+    // Preparar mensagens para o AI SDK
+    const aiMessages = [
+      ...(systemPrompt ? [{ role: 'system' as const, content: systemPrompt }] : []),
+      ...messages.map((msg: any) => ({
+        role: msg.role as 'user' | 'assistant' | 'system',
+        content: msg.content
+      }))
+    ]
+
+    // Usar o AI SDK para gerar resposta
+    const result = await generateText({
+      model: perplexityModel,
+      messages: aiMessages,
+      maxTokens: 1000,
     })
 
-    // Usar a nova Search API
-    const searchResult = await client.search.create({
-      query: lastMessage.content,
-      max_results: 5,
-      max_tokens_per_page: 1024
-    })
-
-    // Formatar resultados da busca
-    const searchResults = searchResult.results.map(result => 
-      `**${result.title}**\n${result.snippet}\nURL: ${result.url}\n`
-    ).join('\n---\n');
-
-    const responseText = `Baseado na busca mais recente, aqui estão os resultados:\n\n${searchResults}`;
+    const responseText = result.text;
 
     // Headers otimizados
     const headers = {
       'Content-Type': 'text/plain; charset=utf-8',
       'X-Provider': 'perplexity',
-      'X-Model': 'search-api',
+      'X-Model': 'sonar',
       'X-Module': targetModule,
       'X-Streaming': 'false'
     }
 
-    console.log('✅ Perplexity Search API completed successfully')
+    console.log('✅ Perplexity AI SDK completed successfully')
 
     // Retornar resposta direta (não streaming)
     return new Response(responseText, {

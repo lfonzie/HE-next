@@ -1,0 +1,5 @@
+{
+  "name": "Virtual Lab Simulator",
+  "description": "An interactive web application that simulates a chemistry and physics laboratory with visual experiments. Users can select different experiments like color mixing, pendulum motion, or bouncing balls, and adjust parameters to observe the results in real-time. It's designed to be lightweight and run directly in the browser.",
+  "requestFramePermissions": []
+}

@@ -19,11 +19,13 @@ export function useTheme() {
     const root = document.documentElement
     const activeTheme = resolvedTheme ?? systemTheme ?? "light"
 
+    // Apenas definir o dataset e color-scheme
+    // O next-themes já gerencia as classes .dark/.light automaticamente
     root.dataset.theme = activeTheme
     root.style.setProperty("color-scheme", activeTheme === "dark" ? "dark" : "light")
 
-    document.body.classList.toggle("theme-dark", activeTheme === "dark")
-    document.body.classList.toggle("theme-light", activeTheme !== "dark")
+    // Remover classes customizadas que podem estar conflitando
+    document.body.classList.remove("theme-dark", "theme-light")
   }, [mounted, resolvedTheme, systemTheme])
 
   const toggleTheme = useMemo(() => {

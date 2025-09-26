@@ -7,14 +7,9 @@ import { Badge } from '@/components/ui/badge'
 import { 
   Mic, 
   MicOff, 
-  Volume2, 
-  VolumeX, 
   Wifi, 
   WifiOff, 
   Loader2,
-  Play,
-  Pause,
-  Square,
   RotateCcw,
   Video,
   VideoOff,
@@ -23,14 +18,13 @@ import {
 } from 'lucide-react'
 import { useLiveChat } from '@/hooks/useLiveChat'
 import { useToast } from '@/hooks/use-toast'
-import { LiveChatErrorBoundary, AudioErrorFallback, ConnectionErrorFallback } from './LiveChatErrorBoundary'
+import { LiveChatErrorBoundary, ConnectionErrorFallback } from './LiveChatErrorBoundary'
 
 interface LiveMessage {
   id: string
   role: 'user' | 'assistant'
   content: string
   timestamp: number
-  audioBlob?: Blob
   isStreaming?: boolean
 }
 
@@ -40,26 +34,9 @@ interface LiveChatInterfaceProps {
 }
 
 export function LiveChatInterface({ className = '', autoConnect = false }: LiveChatInterfaceProps) {
-  const [isPlayingAudio, setIsPlayingAudio] = useState<string | null>(null)
-  
-  const audioRef = useRef<HTMLAudioElement | null>(null)
   
   // Elementos para WebRTC
   useEffect(() => {
-    // Criar elemento de áudio para reproduzir áudio do Gemini
-    const audioElement = document.getElementById('live-audio') as HTMLAudioElement
-    if (!audioElement) {
-      const audio = document.createElement('audio')
-      audio.id = 'live-audio'
-      audio.autoplay = true
-      audio.controls = false
-      audio.style.display = 'none'
-      document.body.appendChild(audio)
-      audioRef.current = audio
-    } else {
-      audioRef.current = audioElement
-    }
-
     // Criar elemento de vídeo para exibir vídeo do Gemini
     const videoElement = document.getElementById('live-video') as HTMLVideoElement
     if (!videoElement) {
@@ -84,7 +61,6 @@ export function LiveChatInterface({ className = '', autoConnect = false }: LiveC
     messages,
     isConnected,
     isStreaming,
-    isAudioStreaming,
     isVideoStreaming,
     isScreenSharing,
     connectionStatus,
@@ -92,8 +68,6 @@ export function LiveChatInterface({ className = '', autoConnect = false }: LiveC
     videoElement,
     connect,
     disconnect,
-    startAudioStreaming,
-    stopAudioStreaming,
     startVideoStreaming,
     stopVideoStreaming,
     startScreenSharing,
@@ -108,7 +82,6 @@ export function LiveChatInterface({ className = '', autoConnect = false }: LiveC
     connectionStatus,
     error,
     messages: messages.length,
-    isAudioStreaming,
     isVideoStreaming,
     isScreenSharing
   })
@@ -128,42 +101,6 @@ export function LiveChatInterface({ className = '', autoConnect = false }: LiveC
   }, [error, toast])
 
 
-  // Função para habilitar áudio (necessário devido a políticas de autoplay)
-  const enableAudio = useCallback(async () => {
-    if (audioRef.current) {
-      try {
-        await audioRef.current.play()
-        toast({
-          title: "Áudio habilitado",
-          description: "Áudio do Gemini Live ativado",
-        })
-      } catch (error) {
-        console.warn('Erro ao habilitar áudio:', error)
-        toast({
-          title: "Erro no áudio",
-          description: "Não foi possível habilitar o áudio",
-          variant: "destructive"
-        })
-      }
-    }
-  }, [toast])
-
-
-  const handleAudioStreamingToggle = useCallback(async () => {
-    console.log('🎤 [DEBUG] handleAudioStreamingToggle called, isAudioStreaming:', isAudioStreaming)
-    
-    // Show immediate feedback
-    toast({
-      title: "Iniciando microfone...",
-      description: "Solicitando acesso ao microfone",
-    })
-    
-    if (isAudioStreaming) {
-      stopAudioStreaming()
-    } else {
-      await startAudioStreaming()
-    }
-  }, [isAudioStreaming, startAudioStreaming, stopAudioStreaming, toast])
 
   const handleVideoStreamingToggle = useCallback(async () => {
     console.log('📹 [DEBUG] handleVideoStreamingToggle called, isVideoStreaming:', isVideoStreaming)
@@ -197,50 +134,6 @@ export function LiveChatInterface({ className = '', autoConnect = false }: LiveC
     }
   }, [isScreenSharing, startScreenSharing, stopScreenSharing, toast])
 
-  const playAudio = useCallback(async (audioBlob: Blob, messageId: string) => {
-    if (isPlayingAudio === messageId) {
-      // Stop current audio
-      if (audioRef.current) {
-        audioRef.current.pause()
-        audioRef.current.currentTime = 0
-      }
-      setIsPlayingAudio(null)
-      return
-    }
-
-    try {
-      const audioUrl = URL.createObjectURL(audioBlob)
-      const audio = new Audio(audioUrl)
-      
-      audioRef.current = audio
-      setIsPlayingAudio(messageId)
-
-      audio.onended = () => {
-        setIsPlayingAudio(null)
-        URL.revokeObjectURL(audioUrl)
-      }
-
-      audio.onerror = () => {
-        setIsPlayingAudio(null)
-        URL.revokeObjectURL(audioUrl)
-        toast({
-          title: "Erro de reprodução",
-          description: "Não foi possível reproduzir o áudio",
-          variant: "destructive"
-        })
-      }
-
-      await audio.play()
-    } catch (error) {
-      console.error('Audio playback error:', error)
-      setIsPlayingAudio(null)
-      toast({
-        title: "Erro de reprodução",
-        description: "Não foi possível reproduzir o áudio",
-        variant: "destructive"
-      })
-    }
-  }, [isPlayingAudio, toast])
 
   const formatTimestamp = useCallback((timestamp: number) => {
     return new Date(timestamp).toLocaleTimeString('pt-BR', {
@@ -373,26 +266,6 @@ export function LiveChatInterface({ className = '', autoConnect = false }: LiveC
                       )}
                     </div>
 
-                    {/* Audio controls */}
-                    {message.audioBlob && (
-                      <div className="flex items-center gap-2 mt-2">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => playAudio(message.audioBlob!, message.id)}
-                          className="h-8 w-8 p-0"
-                        >
-                          {isPlayingAudio === message.id ? (
-                            <Square className="w-4 h-4" />
-                          ) : (
-                            <Play className="w-4 h-4" />
-                          )}
-                        </Button>
-                        <span className="text-xs opacity-70">
-                          {message.role === 'user' ? 'Sua mensagem' : 'Resposta da IA'}
-                        </span>
-                      </div>
-                    )}
 
                     {/* Timestamp */}
                     <div className="text-xs opacity-70 mt-1">
@@ -458,23 +331,6 @@ export function LiveChatInterface({ className = '', autoConnect = false }: LiveC
 
             {/* Real-time streaming controls */}
             <div className="flex items-center justify-center gap-4">
-              {/* Audio streaming */}
-              <Button
-                size="lg"
-                onClick={handleAudioStreamingToggle}
-                disabled={!isConnected || isStreaming}
-                className={`rounded-full w-16 h-16 ${
-                  isAudioStreaming 
-                    ? 'bg-red-500 hover:bg-red-600' 
-                    : 'bg-primary hover:bg-primary/90'
-                }`}
-              >
-                {isAudioStreaming ? (
-                  <MicOff className="w-6 h-6" />
-                ) : (
-                  <Mic className="w-6 h-6" />
-                )}
-              </Button>
 
               {/* Video streaming */}
               <Button
@@ -511,32 +367,15 @@ export function LiveChatInterface({ className = '', autoConnect = false }: LiveC
                   <Monitor className="w-6 h-6" />
                 )}
               </Button>
-
-              {/* Enable Audio (for Gemini Live audio output) */}
-              <Button
-                size="lg"
-                onClick={enableAudio}
-                disabled={!isConnected}
-                className="rounded-full w-16 h-16 bg-purple-500 hover:bg-purple-600"
-                title="Habilitar áudio do Gemini Live"
-              >
-                <Volume2 className="w-6 h-6" />
-              </Button>
             </div>
 
 
             {/* Status indicators */}
             <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
-              {isConnected && !isAudioStreaming && !isVideoStreaming && !isScreenSharing && (
+              {isConnected && !isVideoStreaming && !isScreenSharing && (
                 <div className="flex items-center gap-1">
                   <div className="w-2 h-2 bg-green-500 rounded-full" />
                   <span>Conectado - Clique nos botões para iniciar</span>
-                </div>
-              )}
-              {isAudioStreaming && (
-                <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                  <span>Streaming áudio...</span>
                 </div>
               )}
               {isVideoStreaming && (

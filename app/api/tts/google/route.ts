@@ -1,108 +1,90 @@
-import { NextRequest, NextResponse } from 'next/server'
-
-// Google Cloud Text-to-Speech configuration
-const GOOGLE_TTS_API_URL = 'https://texttospeech.googleapis.com/v1/text:synthesize'
-const GOOGLE_API_KEY = process.env.GOOGLE_TTS_KEY || process.env.GOOGLE_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const { text, voice = 'pt-BR-Wavenet-C', speed = 1.0, pitch = 0.0 } = await request.json()
+    const { text, voice = 'pt-BR-Wavenet-A', language = 'pt-BR' } = await request.json();
 
-    // Validate input
-    if (!text || typeof text !== 'string' || text.trim().length === 0) {
+    if (!text) {
       return NextResponse.json(
-        { error: 'Text is required and must be a non-empty string' },
+        { error: 'Texto é obrigatório' },
         { status: 400 }
-      )
+      );
     }
 
-    // Check if Google API key is configured
-    if (!GOOGLE_API_KEY) {
+    // Verificar se temos a API key do Google Cloud
+    const GOOGLE_CLOUD_API_KEY = process.env.GOOGLE_TTS_KEY || process.env.GOOGLE_CLOUD_API_KEY;
+    if (!GOOGLE_CLOUD_API_KEY) {
       return NextResponse.json(
-        { error: 'Google API key not configured. Please set GOOGLE_API_KEY environment variable.' },
+        { error: 'GOOGLE_TTS_KEY ou GOOGLE_CLOUD_API_KEY não configurada' },
         { status: 500 }
-      )
+      );
     }
 
-    // Google Cloud TTS request
-    const ttsRequest = {
-      input: { text: text.trim() },
+    // URL da API do Google Text-to-Speech
+    const ttsUrl = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${GOOGLE_CLOUD_API_KEY}`;
+
+    // Configuração da requisição para o Google TTS
+    const requestBody = {
+      input: { text },
       voice: {
-        languageCode: 'pt-BR',
+        languageCode: language,
         name: voice,
-        ssmlGender: 'FEMALE'
+        ssmlGender: 'NEUTRAL'
       },
       audioConfig: {
         audioEncoding: 'MP3',
-        speakingRate: speed,
-        pitch: pitch,
+        speakingRate: 1.0,
+        pitch: 0.0,
         volumeGainDb: 0.0
       }
-    }
+    };
 
-    const response = await fetch(`${GOOGLE_TTS_API_URL}?key=${GOOGLE_API_KEY}`, {
+    // Fazer requisição para o Google TTS
+    const response = await fetch(ttsUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(ttsRequest)
-    })
+      body: JSON.stringify(requestBody),
+    });
 
     if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(errorData.error?.message || 'Failed to generate speech')
+      const errorData = await response.text();
+      console.error('Erro na API do Google TTS:', errorData);
+      return NextResponse.json(
+        { error: `Erro na API do Google TTS: ${response.status}` },
+        { status: response.status }
+      );
     }
 
-    const result = await response.json()
+    const data = await response.json();
     
-    // Return the audio data
-    return new NextResponse(Buffer.from(result.audioContent, 'base64'), {
+    if (!data.audioContent) {
+      return NextResponse.json(
+        { error: 'Resposta inválida da API do Google TTS' },
+        { status: 500 }
+      );
+    }
+
+    // Converter base64 para Buffer
+    const audioBuffer = Buffer.from(data.audioContent, 'base64');
+
+    // Retornar o áudio como resposta
+    return new NextResponse(audioBuffer, {
+      status: 200,
       headers: {
         'Content-Type': 'audio/mpeg',
-        'Content-Disposition': 'attachment; filename="speech.mp3"',
+        'Content-Length': audioBuffer.length.toString(),
+        'Cache-Control': 'public, max-age=3600', // Cache por 1 hora
       },
-    })
+    });
 
   } catch (error) {
-    console.error('Google TTS Error:', error)
-    
-    // Handle specific Google API errors
-    if (error instanceof Error) {
-      if (error.message.includes('API key')) {
-        return NextResponse.json(
-          { error: 'Invalid Google API key' },
-          { status: 401 }
-        )
-      }
-      if (error.message.includes('quota')) {
-        return NextResponse.json(
-          { error: 'Google TTS quota exceeded' },
-          { status: 429 }
-        )
-      }
-      if (error.message.includes('rate limit')) {
-        return NextResponse.json(
-          { error: 'Google TTS rate limit exceeded' },
-          { status: 429 }
-        )
-      }
-    }
-
+    console.error('Erro no endpoint TTS Google:', error);
     return NextResponse.json(
-      { error: 'Failed to generate speech' },
+      { error: 'Erro interno do servidor' },
       { status: 500 }
-    )
+    );
   }
 }
 
-// Handle OPTIONS request for CORS
-export async function OPTIONS() {
-  return new NextResponse(null, {
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    },
-  })
-}

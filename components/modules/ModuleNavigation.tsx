@@ -13,7 +13,13 @@ import {
   Settings, 
   Heart,
   Smartphone,
-  Wrench
+  Wrench,
+  Beaker,
+  CreditCard,
+  Video,
+  Mic,
+  FileSearch,
+  MicIcon
 } from 'lucide-react'
 
 const modules = [
@@ -38,6 +44,42 @@ const modules = [
         href: '/redacao',
         icon: FileText,
         description: 'Temas oficiais + correção automatizada'
+      },
+      {
+        name: 'Laboratório Virtual',
+        href: '/virtual-lab',
+        icon: Beaker,
+        description: 'Simulações interativas de química e física'
+      },
+      {
+        name: 'Flashcards',
+        href: '/flashcards',
+        icon: CreditCard,
+        description: 'Gerador de flashcards interativos com IA'
+      },
+      {
+        name: 'Vídeo para Aprendizado',
+        href: '/video-learning',
+        icon: Video,
+        description: 'Transforme vídeos em apps de aprendizado'
+      },
+      {
+        name: 'Chat com Documentos',
+        href: '/chat-docs',
+        icon: FileSearch,
+        description: 'Converse com documentos usando IA'
+      },
+      {
+        name: 'Ditado por Voz',
+        href: '/dictation',
+        icon: MicIcon,
+        description: 'Transcreva e organize notas por voz'
+      },
+      {
+        name: 'Live Audio',
+        href: '/live-audio',
+        icon: Mic,
+        description: 'Chat de voz com visualizações 3D'
       }
     ]
   },

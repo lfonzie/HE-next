@@ -370,6 +370,7 @@ export const ChatMessage = memo(function ChatMessage({
               </div>
             )}
 
+
             {/* Ações (copiar) */}
             {!isUser && (
               <div className="mt-2 flex items-center justify-end gap-2">

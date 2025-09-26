@@ -348,7 +348,15 @@ export default function ChatComponent() {
   const handleModuleSelect = useCallback((module: ModuleType) => {
     setSelectedModule(module);
     setShowModuleWelcome(true);
-  }, []);
+    
+    // Iniciar nova conversa sempre que um módulo for selecionado
+    createConversation();
+    
+    toast({
+      title: "Nova conversa iniciada",
+      description: `Módulo ${module} selecionado - conversa limpa`,
+    });
+  }, [createConversation, toast]);
 
   // Handle module click with suggestions
   const handleModuleClick = useCallback((moduleId: ModuleId) => {
@@ -362,7 +370,15 @@ export default function ChatComponent() {
     });
     setCurrentModuleSuggestions(suggestions);
     setShowModuleSuggestions(true);
-  }, []);
+    
+    // Iniciar nova conversa sempre que um módulo for clicado
+    createConversation();
+    
+    toast({
+      title: "Nova conversa iniciada",
+      description: `Módulo ${module.label} selecionado - conversa limpa`,
+    });
+  }, [createConversation, toast]);
 
   // Handle suggestion click
   const handleSuggestionClick = useCallback((suggestion: ModuleSuggestion) => {

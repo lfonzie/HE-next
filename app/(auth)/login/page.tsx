@@ -121,20 +121,12 @@ function LoginForm() {
             <div className="space-y-3">
               <h1 className="text-step-4 font-semibold leading-tight">Plataforma educacional inteligente</h1>
               <p className="max-w-sm text-subtle text-step-0">
-                Gestão acadêmica e aprendizagem contínua com foco em usabilidade, acessibilidade e experiência de 2025.
+                Plataforma educacional inteligente com IA para aulas personalizadas, chat interativo e ferramentas de ensino avançadas.
               </p>
             </div>
           </div>
 
           <div className="grid gap-4 text-sm text-subtle">
-            <div className="flex items-start gap-3 rounded-2xl bg-surface-2 p-4 transition-theme">
-              <span className="mt-1 inline-flex h-2.5 w-2.5 flex-shrink-0 rounded-full bg-primary" aria-hidden="true" />
-              <p>Autenticação segura com JWT, proteção anti-brute-force e monitoramento em tempo real.</p>
-            </div>
-            <div className="flex items-start gap-3 rounded-2xl bg-surface-2 p-4 transition-theme">
-              <span className="mt-1 inline-flex h-2.5 w-2.5 flex-shrink-0 rounded-full bg-primary" aria-hidden="true" />
-              <p>Dashboard responsivo, otimizado para Core Web Vitals com layout fluido para qualquer dispositivo.</p>
-            </div>
           </div>
         </section>
 

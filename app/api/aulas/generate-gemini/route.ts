@@ -38,7 +38,7 @@ import { authOptions } from '@/lib/auth';
 // Constants for configuration
 const TOTAL_SLIDES = 14;
 const QUIZ_SLIDE_NUMBERS = [7, 12];
-const IMAGE_SLIDE_NUMBERS = [1, 8, 14];
+const IMAGE_SLIDE_NUMBERS = [1, 6, 14];
 const MIN_TOKENS_PER_SLIDE = 300; // Increased to 300-600 tokens for richer content
 const GEMINI_MODEL = 'gemini-2.0-flash-exp'; // Using the model that works in other parts of the codebase
 const OPENAI_MODEL = 'gpt-4o-mini'; // Fallback model
@@ -179,40 +179,12 @@ function generateEducationalImageQuery(topic, slideNumber, slideType, slideConte
     .replace(/\s+/g, ' ')
     .trim();
 
-  // Palavras-chave educacionais específicas por contexto em PT-BR
-  const educationalKeywords = {
-    introduction: ['fundamentos', 'conceitos básicos', 'introdução', 'definição', 'princípios'],
-    content: ['diagrama', 'ilustração', 'processo', 'mecanismo', 'estrutura', 'fluxograma'],
-    quiz: ['exemplo prático', 'aplicação real', 'caso de estudo', 'exercício', 'problema'],
-    conclusion: ['resumo', 'conclusão', 'síntese', 'pontos principais', 'aplicações futuras']
-  };
-
-  // Determinar contexto do slide
-  let context = 'content';
-  if (slideNumber === 1) context = 'introduction';
-  else if (slideNumber >= 8 && slideNumber <= 12) context = 'quiz';
-  else if (slideNumber === 14) context = 'conclusion';
-
-  // Extrair palavras-chave do conteúdo do slide
-  const contentKeywords = slideContent
-    .toLowerCase()
-    .split(' ')
-    .filter(word => word.length > 3 && !['para', 'com', 'que', 'uma', 'dos', 'das', 'pelo', 'pela', 'sobre', 'como', 'quando', 'onde', 'porque'].includes(word))
-    .slice(0, 3);
-
-  // Construir query educacional em PT-BR - REMOVIDO termos genéricos
-  const baseQuery = cleanTopic;
-  const contextKeywords = educationalKeywords[context] || educationalKeywords.content;
-  const selectedContextKeyword = contextKeywords[Math.floor(Math.random() * contextKeywords.length)];
-  
-  // Combinar tópico, contexto educacional e palavras do conteúdo - SEM termos genéricos
-  const educationalQuery = `${baseQuery} ${selectedContextKeyword} ${contentKeywords.join(' ')}`.trim();
+  // Todas as queries devem ser apenas o tema principal
+  const educationalQuery = cleanTopic;
   
   log.debug('Generated educational image query', { 
     slideNumber, 
-    context, 
-    educationalQuery,
-    contentKeywords: contentKeywords.slice(0, 2)
+    educationalQuery
   });
   
   return educationalQuery;
@@ -384,26 +356,13 @@ function generateImageQuery(topic, slideNumber, slideType) {
   // Extract main keywords (múltiplas palavras-chave relevantes)
   const relevantWords = englishTopic
     .split(' ')
-    .filter(word => word.length > 2 && !['about', 'for', 'how', 'when', 'where', 'why', 'what', 'a', 'an', 'the', 'of', 'in', 'on', 'at', 'to', 'from', 'como', 'como'].includes(word))
+    .filter(word => word.length > 2 && !['about', 'for', 'how', 'when', 'where', 'why', 'what', 'a', 'an', 'the', 'of', 'in', 'on', 'at', 'to', 'from', 'como', 'funciona', 'works', 'function', 'system'].includes(word))
     .slice(0, 3); // Pegar até 3 palavras relevantes
 
   const mainKeywords = relevantWords.join(' ') || englishTopic.split(' ')[0];
 
-  // Generate specific queries based on slide context with better fallbacks
-  let query;
-  if (slideNumber === 1) {
-    // Para slide 1, focar no tema principal sem termos genéricos
-    query = mainKeywords;
-  } else if (slideNumber === 8) {
-    // Para slide 8, usar termos visuais e diagramas
-    query = `${mainKeywords} diagram illustration`;
-  } else if (slideNumber === 14) {
-    // Para slide 14, usar termos de resumo e conclusão
-    query = `${mainKeywords} summary overview`;
-  } else {
-    // Para outros slides, usar o tema principal
-    query = mainKeywords;
-  }
+  // Todas as queries devem ser apenas o tema principal
+  const query = mainKeywords;
 
   // Se a query for muito genérica ou vazia, usar o tema original
   if (!query || query.length < 3) {
@@ -448,7 +407,7 @@ REGRAS CRÍTICAS PARA JSON VÁLIDO:
 REGRAS DE CONTEÚDO:
 - Use português brasileiro claro e didático
 - Cada slide deve ter CONTEÚDO RICO com 300-600 tokens
-- Slides 7 e 12 são quizzes com 3 perguntas cada
+- Slides 5 e 12 são quizzes com 3 perguntas cada
 - OBRIGATÓRIO: Use \\n\\n para quebras de linha entre parágrafos em TODOS os slides
 - OBRIGATÓRIO: Cada parágrafo deve ser separado por \\n\\n para melhor legibilidade
 - Para imageQuery, use APENAS termos específicos do tópico em inglês
@@ -456,9 +415,9 @@ REGRAS DE CONTEÚDO:
 
 ESTRUTURA DETALHADA:
 - Slide 1: Introdução completa com contexto histórico e importância
-- Slides 2-6: Desenvolvimento progressivo dos conceitos fundamentais
-- Slide 7: Quiz sobre conceitos básicos aprendidos
-- Slides 8-11: Aplicações práticas, exemplos reais e aprofundamento
+- Slides 2-4: Desenvolvimento progressivo dos conceitos fundamentais
+- Slide 5: Quiz sobre conceitos básicos aprendidos
+- Slides 6-11: Aplicações práticas, exemplos reais e aprofundamento
 - Slide 12: Quiz sobre aplicações e análise crítica
 - Slides 13-14: Síntese, conclusões e perspectivas futuras
 
@@ -566,7 +525,7 @@ REGRAS CRÍTICAS PARA JSON VÁLIDO:
 REGRAS DE CONTEÚDO:
 - Use português brasileiro claro e didático
 - Cada slide deve ter CONTEÚDO RICO com 300-600 tokens
-- Slides 7 e 12 são quizzes com 3 perguntas cada
+- Slides 5 e 12 são quizzes com 3 perguntas cada
 - OBRIGATÓRIO: Use \\n\\n para quebras de linha entre parágrafos em TODOS os slides
 - OBRIGATÓRIO: Cada parágrafo deve ser separado por \\n\\n para melhor legibilidade
 - Para imageQuery, use APENAS termos específicos do tópico em inglês
@@ -574,9 +533,9 @@ REGRAS DE CONTEÚDO:
 
 ESTRUTURA DETALHADA:
 - Slide 1: Introdução completa com contexto histórico e importância
-- Slides 2-6: Desenvolvimento progressivo dos conceitos fundamentais
-- Slide 7: Quiz sobre conceitos básicos aprendidos
-- Slides 8-11: Aplicações práticas, exemplos reais e aprofundamento
+- Slides 2-4: Desenvolvimento progressivo dos conceitos fundamentais
+- Slide 5: Quiz sobre conceitos básicos aprendidos
+- Slides 6-11: Aplicações práticas, exemplos reais e aprofundamento
 - Slide 12: Quiz sobre aplicações e análise crítica
 - Slides 13-14: Síntese, conclusões e perspectivas futuras
 
@@ -1253,47 +1212,54 @@ export async function POST(request) {
               imageIndex++;
             }
 
-            // Se não encontrou imagem específica, usar a API smart-search que busca em 3 provedores
+            // Se não encontrou imagem específica, usar a API de busca inteligente com IA
             if (!imageUrl) {
               try {
                 const imageQuery = generateImageQuery(topic, validatedSlide.number, validatedSlide.type);
-                log.info('Attempting smart search with 3 providers', { slideNumber: validatedSlide.number, imageQuery });
+                log.info('Attempting AI-powered search', { slideNumber: validatedSlide.number, imageQuery });
                 
-                // Usar a API smart-search que busca em Unsplash, Pixabay e Wikimedia
-                const smartSearchResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/images/smart-search`, {
+                // Usar a API de busca inteligente com IA
+                const aiSearchResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/images/ai-powered-search`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ 
-                    query: imageQuery, 
+                    topic: imageQuery, 
                     subject: topic, 
-                    count: 3 
+                    count: 1 
                   }),
                 });
                 
-                if (smartSearchResponse.ok) {
-                  const smartSearchData = await smartSearchResponse.json();
-                  if (smartSearchData.success && smartSearchData.images?.length > 0) {
-                    // Selecionar a melhor imagem baseada no score de relevância
-                    const bestImage = smartSearchData.images[0];
+                if (aiSearchResponse.ok) {
+                  const aiSearchData = await aiSearchResponse.json();
+                  if (aiSearchData.success && aiSearchData.results?.length > 0) {
+                    // Selecionar a melhor imagem baseada na análise de IA
+                    const bestImage = aiSearchData.results[0];
                     imageUrl = bestImage.url;
-                    imageSource = `smart-${bestImage.source}`;
+                    imageSource = `ai-${bestImage.source}`;
                     imageMetadata = {
                       provider: bestImage.source,
                       relevanceScore: bestImage.relevanceScore,
-                      sourcesUsed: smartSearchData.sourcesUsed,
-                      totalFound: smartSearchData.totalFound
+                      educationalValue: bestImage.educationalValue,
+                      appropriateness: bestImage.appropriateness,
+                      reasoning: bestImage.reasoning,
+                      category: bestImage.category,
+                      analysisMethod: 'ai-powered',
+                      totalImages: aiSearchData.totalImages,
+                      relevantImages: aiSearchData.relevantImages
                     };
-                    log.info('Found image via smart search', { 
+                    log.info('Found image via AI-powered search', { 
                       slideNumber: validatedSlide.number, 
                       imageUrl, 
                       source: imageSource,
                       relevanceScore: bestImage.relevanceScore,
-                      sourcesUsed: smartSearchData.sourcesUsed
+                      educationalValue: bestImage.educationalValue,
+                      appropriateness: bestImage.appropriateness,
+                      category: bestImage.category
                     });
                   }
                 }
               } catch (error) {
-                log.warn('Failed smart search', { slideNumber: validatedSlide.number, error: (error as Error).message });
+                log.warn('Failed AI-powered search', { slideNumber: validatedSlide.number, error: (error as Error).message });
               }
             }
 

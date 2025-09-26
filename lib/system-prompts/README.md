@@ -270,7 +270,7 @@ Todos os prompts são logados com:
 - `topic.extraction.system` - Extração de tópicos concisos
 
 ### Professor
-- `professor.interactive.system` - Aulas interativas completas (9 slides)
+- `professor.interactive.system` - Aulas interativas completas (14 slides)
 - `professor.expanded_lesson.system` - Aulas expandidas (8 passos)
 - `math.integration.system` - Integração matemática
 
