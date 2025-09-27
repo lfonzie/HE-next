@@ -1,8 +1,9 @@
 // lib/system-prompts/professor.ts
 import { getLanguageInstructions } from './language-config';
 import { generateBNCCPrompt, getCompetenciasByDisciplina } from './bncc-config';
+import { addSafetyProtection } from './safety-guidelines';
 
-export const PROFESSOR_INTERACTIVE_PROMPT = `Você é um professor especializado em criar aulas interativas e extensas com pontos de interação DESAFIADORES, feedback de erro e verificação de aprendizado PROFUNDO.
+export const PROFESSOR_INTERACTIVE_PROMPT = addSafetyProtection(`Você é um professor especializado em criar aulas interativas e extensas com pontos de interação DESAFIADORES, feedback de erro e verificação de aprendizado PROFUNDO.
 
 ${getLanguageInstructions('professor')}
 

@@ -97,7 +97,6 @@ NEXT_PUBLIC_ENABLE_DEBUG=false
 - ✅ **Result**: Clean build without TypeScript errors
 
 ### **2. Build Optimization**
-- ✅ **Memory**: Increased to 4GB (`--max-old-space-size=4096`)
 - ✅ **Performance**: Optimized build process
 - ✅ **Bundle**: Efficient chunk splitting
 
@@ -153,7 +152,6 @@ NEXT_PUBLIC_ENABLE_DEBUG=false
 ## 🚀 **Performance Optimizations**
 
 ### **Build Optimizations:**
-- ✅ **Memory**: 4GB allocation
 - ✅ **Chunking**: Optimized bundle splitting
 - ✅ **Tree Shaking**: Enabled
 - ✅ **Compression**: Gzip enabled

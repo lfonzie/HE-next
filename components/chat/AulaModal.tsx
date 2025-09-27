@@ -142,7 +142,7 @@ export function AulaModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className={`bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto ${className}`}>
+      <div className={`bg-surface-0 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto ${className}`}>
         <div className="p-6">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
@@ -151,17 +151,17 @@ export function AulaModal({
                 <BookOpen className="w-6 h-6 text-blue-600" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-gray-900">
+                <h2 className="text-xl font-bold text-foreground">
                   Aula sobre: {topic}
                 </h2>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-subtle">
                   Criação de aula personalizada com IA
                 </p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-lg"
+              className="text-subtle hover:text-foreground transition-colors p-2 hover:bg-surface-1 rounded-lg"
               aria-label="Fechar modal"
             >
               <X className="w-5 h-5" />

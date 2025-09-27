@@ -1,9 +1,11 @@
+
 import React from 'react';
 
 export enum ExperimentID {
-  CHEMICAL_REACTION = 'chemical-reaction',
+  COLOR_MIXING = 'color-mixing',
   PENDULUM = 'pendulum',
   BOUNCING_BALL = 'bouncing-ball',
+  CHEMISTRY_LAB = 'chemistry-lab',
 }
 
 export interface Experiment {

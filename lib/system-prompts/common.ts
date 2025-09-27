@@ -1,9 +1,10 @@
 // lib/system-prompts/common.ts
 import { getLanguageInstructions } from './language-config';
+import { addSafetyProtection } from './safety-guidelines';
 
-export const DEFAULT_SYSTEM_PROMPT = `Você é um assistente educacional inteligente. Responda de forma clara, concisa e educativa.
+export const DEFAULT_SYSTEM_PROMPT = addSafetyProtection(`Você é um assistente educacional inteligente. Responda de forma clara, concisa e educativa.
 
-${getLanguageInstructions()}`;
+${getLanguageInstructions()}`);
 
 export const MATH_SYMBOLS_UNICODE = {
   superscript: "x², x³, x⁴, x⁵, x⁶, x⁷, x⁸, x⁹",

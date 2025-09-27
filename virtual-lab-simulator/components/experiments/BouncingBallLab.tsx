@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Slider } from '../ui/Slider';
 import { Button } from '../ui/Button';
@@ -19,14 +20,11 @@ export const BouncingBallLab: React.FC = () => {
     const resetBall = () => {
         position.current = INITIAL_HEIGHT;
         velocity.current = 0;
-        if (ballRef.current) {
-            ballRef.current.classList.remove('squash', 'stretch');
-        }
         if (!isPlaying) {
             setIsPlaying(true);
         }
     };
-    
+
     useEffect(() => {
         const animate = () => {
             if (!containerRef.current || !ballRef.current) {
@@ -36,17 +34,16 @@ export const BouncingBallLab: React.FC = () => {
 
             const floor = containerRef.current.clientHeight - ballRef.current.clientHeight;
 
+            // Apply gravity
             velocity.current += GRAVITY;
             position.current += velocity.current;
             
-            ballRef.current.classList.remove('squash');
-
+            // Check for collision with the floor
             if (position.current >= floor) {
                 position.current = floor;
-                velocity.current *= -restitution;
+                velocity.current *= -restitution; // Reverse and dampen velocity
                 
-                ballRef.current.classList.add('squash');
-                
+                // If velocity is very small after bounce, stop the animation
                 if (Math.abs(velocity.current) < 1) {
                     velocity.current = 0;
                     position.current = floor;
@@ -80,30 +77,13 @@ export const BouncingBallLab: React.FC = () => {
 
     return (
         <div className="flex flex-col h-full">
-            <style>{`
-                .ball-squash { transition: transform 0.1s ease-out; }
-                .squash { transform-origin: bottom; animation: squash 0.2s ease-out; }
-                @keyframes squash {
-                    0% { transform: scale(1); }
-                    50% { transform: scale(1.15, 0.85); }
-                    100% { transform: scale(1); }
-                }
-            `}</style>
-            <div ref={containerRef} className="flex-1 w-full flex justify-center items-start border-b-4 border-slate-500 bg-black/20 rounded-t-lg relative overflow-hidden">
-                <div 
-                    ref={ballRef} 
-                    className="w-10 h-10 rounded-full shadow-lg" 
-                    style={{ 
-                        transform: `translateY(${position.current}px)`,
-                        background: 'radial-gradient(circle at 12px 12px, #67e8f9, #0891b2)',
-                        filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.4))'
-                    }}>
-                </div>
+            <div ref={containerRef} className="flex-1 w-full flex justify-center items-start border-b-4 border-slate-600 bg-slate-800/50 rounded-t-lg">
+                <div ref={ballRef} className="w-10 h-10 bg-cyan-400 rounded-full shadow-lg" style={{ transform: `translateY(${position.current}px)` }}></div>
             </div>
             <div className="w-full pt-4 mt-auto">
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
                     <Slider
-                        label="Elasticidade (Restituição)"
+                        label="Bounciness (Restitution)"
                         min="0.1"
                         max="0.95"
                         step="0.01"
@@ -113,9 +93,9 @@ export const BouncingBallLab: React.FC = () => {
                     />
                      <div className="flex space-x-2 justify-self-center md:justify-self-end">
                         <Button onClick={() => setIsPlaying(!isPlaying)} disabled={velocity.current === 0 && position.current > INITIAL_HEIGHT}>
-                        {isPlaying ? 'Pausar' : 'Iniciar'}
+                        {isPlaying ? 'Pause' : 'Play'}
                         </Button>
-                        <Button onClick={resetBall}>Resetar</Button>
+                        <Button onClick={resetBall}>Reset</Button>
                     </div>
                 </div>
             </div>

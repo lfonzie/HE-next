@@ -48,12 +48,12 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({ className }) => {
     
     return (
       <div 
-        className={cn(
-          "w-12 h-12 rounded-lg flex items-center justify-center cursor-pointer transition-colors",
-          isSelected 
-            ? "text-white shadow-lg" 
-            : "bg-gray-200 text-gray-600 hover:bg-gray-300"
-        )}
+          className={cn(
+            "w-12 h-12 rounded-lg flex items-center justify-center cursor-pointer transition-colors",
+            isSelected 
+              ? "text-white shadow-lg" 
+              : "bg-surface-1 text-foreground hover:bg-surface-2"
+          )}
         style={isSelected ? { backgroundColor: color } : {}}
         title={name}
         data-module-id={moduleId}
@@ -112,11 +112,11 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({ className }) => {
         {/* Botão hamburger para mobile */}
         <button
           onClick={toggleSidebar}
-          className="fixed top-4 left-4 z-50 lg:hidden bg-white border border-gray-200 rounded-lg p-2 shadow-md"
+          className="fixed top-4 left-4 z-50 lg:hidden bg-surface-0 border border-subtle rounded-lg p-2 shadow-md transition-theme"
           aria-label="Abrir menu"
           title="Abrir menu"
         >
-          <Menu className="w-6 h-6 text-gray-600" />
+          <Menu className="w-6 h-6 text-foreground" />
         </button>
 
         {/* Sidebar mobile como overlay */}
@@ -124,26 +124,26 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({ className }) => {
           "fixed inset-0 z-40 lg:hidden transition-transform duration-300 ease-in-out",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}>
-          <div className="flex flex-col h-full bg-white border-r border-gray-200 w-80">
+          <div className="flex flex-col h-full bg-surface-0 border-r border-subtle w-80">
             {/* Header */}
-            <div className="p-4 border-b border-gray-200">
+            <div className="p-4 border-b border-subtle">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center">
                     <GraduationCap className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h1 className="text-lg font-semibold text-gray-900">HubEdu.ai</h1>
-                    <p className="text-xs text-gray-600">Powered by HubEdu.ia</p>
+                    <h1 className="text-lg font-semibold text-foreground">HubEdu.ai</h1>
+                    <p className="text-xs text-subtle">Powered by HubEdu.ia</p>
                   </div>
                 </div>
                 <button
                   onClick={closeSidebar}
-                  className="p-2 hover:bg-gray-100 rounded-lg"
+                  className="p-2 hover:bg-surface-1 rounded-lg transition-theme"
                   aria-label="Fechar menu"
                   title="Fechar menu"
                 >
-                  <X className="w-5 h-5 text-gray-600" />
+                  <X className="w-5 h-5 text-foreground" />
                 </button>
               </div>
             </div>
@@ -156,7 +156,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({ className }) => {
                   "flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors",
                   selectedModule === 'professor' 
                     ? "bg-yellow-500 text-white" 
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    : "bg-surface-1 text-foreground hover:bg-surface-2"
                 )}
                 onClick={() => {
                   setSelectedModule('professor' as ModuleType)
@@ -173,7 +173,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({ className }) => {
                   "flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors",
                   selectedModule === 'atendimento' 
                     ? "bg-blue-500 text-white" 
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    : "bg-surface-1 text-foreground hover:bg-surface-2"
                 )}
                 onClick={() => {
                   setSelectedModule('atendimento' as ModuleType)
@@ -190,7 +190,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({ className }) => {
                   "flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors",
                   selectedModule === 'aula-expandida' 
                     ? "bg-yellow-500 text-white" 
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    : "bg-surface-1 text-foreground hover:bg-surface-2"
                 )}
                 onClick={() => {
                   setSelectedModule('aula-expandida' as ModuleType)
@@ -207,7 +207,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({ className }) => {
                   "flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors",
                   selectedModule === null 
                     ? "bg-blue-500 text-white" 
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    : "bg-surface-1 text-foreground hover:bg-surface-2"
                 )}
                 onClick={() => {
                   setSelectedModule(null)
@@ -224,7 +224,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({ className }) => {
                   "flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors",
                   selectedModule === 'rh' 
                     ? "bg-purple-500 text-white" 
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    : "bg-surface-1 text-foreground hover:bg-surface-2"
                 )}
                 onClick={() => {
                   setSelectedModule('rh' as ModuleType)
@@ -241,7 +241,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({ className }) => {
                   "flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors",
                   selectedModule === 'financeiro' 
                     ? "bg-green-500 text-white" 
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    : "bg-surface-1 text-foreground hover:bg-surface-2"
                 )}
                 onClick={() => {
                   setSelectedModule('financeiro' as ModuleType)
@@ -258,7 +258,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({ className }) => {
                   "flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors",
                   selectedModule === 'coordenacao' 
                     ? "bg-blue-500 text-white" 
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    : "bg-surface-1 text-foreground hover:bg-surface-2"
                 )}
                 onClick={() => {
                   setSelectedModule('coordenacao' as ModuleType)
@@ -271,7 +271,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({ className }) => {
             </div>
 
             {/* User Profile */}
-            <div className="p-4 border-t border-gray-200">
+            <div className="p-4 border-t border-subtle">
               <div className="flex items-center gap-3 mb-3">
                 <Avatar className="w-10 h-10">
                   <AvatarImage src={session?.user?.image || ''} />
@@ -280,10 +280,10 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({ className }) => {
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-sm font-medium text-foreground">
                     {session?.user?.name || 'Usuário'}
                   </p>
-                  <p className="text-xs text-gray-600">Aluno</p>
+                  <p className="text-xs text-subtle">Aluno</p>
                 </div>
                 <Button
                   variant="destructive"
@@ -311,16 +311,16 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({ className }) => {
 
   // Em desktop, renderizar sidebar fixa
   return (
-    <div className={cn("flex flex-col h-full bg-gray-50 border-r border-gray-200", className)}>
+    <div className={cn("flex flex-col h-full bg-surface-0 border-r border-subtle", className)}>
       {/* Header */}
-      <div className="p-4 border-b border-gray-200">
+      <div className="p-4 border-b border-subtle">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center">
             <GraduationCap className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold text-gray-900">HubEdu.ai</h1>
-            <p className="text-xs text-gray-600">Powered by HubEdu.ia</p>
+            <h1 className="text-lg font-semibold text-foreground">HubEdu.ai</h1>
+            <p className="text-xs text-subtle">Powered by HubEdu.ia</p>
           </div>
         </div>
       </div>
@@ -348,7 +348,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({ className }) => {
             "w-12 h-12 rounded-lg flex items-center justify-center cursor-pointer transition-colors",
             selectedModule === null 
               ? "bg-blue-500 text-white" 
-              : "bg-gray-200 text-gray-600 hover:bg-gray-300"
+              : "bg-surface-1 text-foreground hover:bg-surface-2"
           )}
           onClick={() => setSelectedModule(null)}
           title="Chat Geral"
@@ -357,7 +357,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({ className }) => {
         </div>
 
         {/* Arrow */}
-        <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-gray-200 text-gray-600">
+        <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-surface-1 text-foreground">
           <ArrowRight className="w-6 h-6" />
         </div>
 
@@ -367,7 +367,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({ className }) => {
             "w-12 h-12 rounded-lg flex items-center justify-center cursor-pointer transition-colors",
             selectedModule === 'rh' 
               ? "bg-purple-500 text-white" 
-              : "bg-gray-200 text-gray-600 hover:bg-gray-300"
+              : "bg-surface-1 text-foreground hover:bg-gray-300"
           )}
           onClick={() => setSelectedModule('rh' as ModuleType)}
           title="Recursos Humanos"
@@ -381,7 +381,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({ className }) => {
             "w-12 h-12 rounded-lg flex items-center justify-center cursor-pointer transition-colors",
             selectedModule === 'financeiro' 
               ? "bg-green-500 text-white" 
-              : "bg-gray-200 text-gray-600 hover:bg-gray-300"
+              : "bg-surface-1 text-foreground hover:bg-gray-300"
           )}
           onClick={() => setSelectedModule('financeiro' as ModuleType)}
           title="Financeiro"
@@ -395,7 +395,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({ className }) => {
             "w-12 h-12 rounded-lg flex items-center justify-center cursor-pointer transition-colors",
             selectedModule === 'coordenacao' 
               ? "bg-blue-500 text-white" 
-              : "bg-gray-200 text-gray-600 hover:bg-gray-300"
+              : "bg-surface-1 text-foreground hover:bg-gray-300"
           )}
           onClick={() => setSelectedModule('coordenacao' as ModuleType)}
           title="Coordenação"
@@ -404,17 +404,17 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({ className }) => {
         </div>
 
         {/* Lock */}
-        <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-gray-200 text-gray-600">
+        <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-surface-1 text-foreground">
           <Lock className="w-6 h-6" />
         </div>
 
         {/* Settings */}
-        <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-gray-200 text-gray-600">
+        <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-surface-1 text-foreground">
           <Settings className="w-6 h-6" />
         </div>
 
         {/* Arrow */}
-        <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-gray-200 text-gray-600">
+        <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-surface-1 text-foreground">
           <ArrowRight className="w-6 h-6" />
         </div>
 
@@ -425,7 +425,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({ className }) => {
                 </div>
 
       {/* User Profile */}
-      <div className="p-4 border-t border-gray-200">
+      <div className="p-4 border-t border-subtle">
         <div className="flex items-center gap-3 mb-3">
           <Avatar className="w-10 h-10">
             <AvatarImage src={session?.user?.image || ''} />
@@ -434,10 +434,10 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({ className }) => {
             </AvatarFallback>
           </Avatar>
           <div className="flex-1">
-            <p className="text-sm font-medium text-gray-900">
+            <p className="text-sm font-medium text-foreground">
               {session?.user?.name || 'Usuário'}
             </p>
-            <p className="text-xs text-gray-600">Aluno</p>
+            <p className="text-xs text-subtle">Aluno</p>
           </div>
           <Button
             variant="destructive"

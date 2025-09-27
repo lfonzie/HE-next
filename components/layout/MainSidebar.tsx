@@ -113,17 +113,17 @@ export const MainSidebar: React.FC<MainSidebarProps> = ({ selectedModule, onSele
         {/* Botão hamburger para mobile com safe area */}
         <button
           onClick={toggleSidebar}
-          className="fixed top-4 left-4 z-[1001] bg-white border border-gray-200 rounded-xl p-4 shadow-lg transition-all duration-300 hover:bg-gray-50 hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0 active:shadow-lg min-w-11 min-h-11 flex items-center justify-center safe-top"
+          className="fixed top-4 left-4 z-[1001] bg-surface-0 border border-subtle rounded-xl p-4 shadow-lg transition-all duration-300 hover:bg-surface-1 hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0 active:shadow-lg min-w-11 min-h-11 flex items-center justify-center safe-top"
           aria-label="Abrir menu"
           title="Abrir menu"
         >
-          <Menu className="w-6 h-6 text-gray-900" />
+          <Menu className="w-6 h-6 text-foreground" />
         </button>
 
         {/* Sidebar mobile como overlay */}
-        <div className={`fixed top-0 left-0 w-full h-screen bg-white z-[1002] transform transition-transform duration-300 ease-out flex flex-col overflow-y-auto overflow-x-hidden shadow-2xl ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className={`fixed top-0 left-0 w-full h-screen bg-surface-0 z-[1002] transform transition-transform duration-300 ease-out flex flex-col overflow-y-auto overflow-x-hidden shadow-2xl ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
           {/* Header com safe area */}
-          <div className="flex items-center justify-between p-4 sm:p-6 border-b-2 border-gray-200 flex-shrink-0 bg-white safe-top">
+          <div className="flex items-center justify-between p-4 sm:p-6 border-b-2 border-subtle flex-shrink-0 bg-surface-0 safe-top">
             <div className="flex items-center gap-3 sm:gap-4">
               <Image 
                 src={ASSETS.logoIcon} 
@@ -134,10 +134,10 @@ export const MainSidebar: React.FC<MainSidebarProps> = ({ selectedModule, onSele
                 priority
               />
               <div className="min-w-0">
-                <h2 className="type-h4 font-bold text-gray-900 truncate">
+                <h2 className="type-h4 font-bold text-foreground truncate">
                   {session?.user?.schoolId || "Escola"}
                 </h2>
-                <p className="type-caption text-gray-500">Powered by HubEdu.ia</p>
+                <p className="type-caption text-subtle">Powered by HubEdu.ia</p>
               </div>
             </div>
             
@@ -161,8 +161,8 @@ export const MainSidebar: React.FC<MainSidebarProps> = ({ selectedModule, onSele
             />
             
             {/* Footer com informações do usuário */}
-            <div className="p-4 sm:p-6 border-t-2 border-gray-200 safe-bottom">
-              <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-5 p-3 sm:p-4 bg-gray-50 rounded-xl border border-gray-200">
+            <div className="p-4 sm:p-6 border-t-2 border-subtle safe-bottom">
+              <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-5 p-3 sm:p-4 bg-surface-1 rounded-xl border border-subtle">
                 <Avatar className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0">
                   <AvatarImage src={session?.user?.image || ''} />
                   <AvatarFallback className="bg-yellow-500 text-black font-semibold">
@@ -170,10 +170,10 @@ export const MainSidebar: React.FC<MainSidebarProps> = ({ selectedModule, onSele
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <p className="type-body font-semibold text-gray-900 truncate">
+                  <p className="type-body font-semibold text-foreground truncate">
                     {session?.user?.name || "Usuário"}
                   </p>
-                  <p className="type-caption text-gray-500 truncate">
+                  <p className="type-caption text-subtle truncate">
                     {session?.user?.role === "STUDENT" ? "Aluno" : 
                      session?.user?.role === "TEACHER" ? "Professor" :
                      session?.user?.role === "STAFF" ? "Funcionário" : 
@@ -254,9 +254,9 @@ export const MainSidebar: React.FC<MainSidebarProps> = ({ selectedModule, onSele
 
   // Em tablet e desktop, renderizar sidebar fixa com tipografia fluida
   return (
-    <div className={`fixed top-0 left-0 h-screen bg-white border-r-2 border-gray-200 z-[1000] flex flex-col overflow-y-auto overflow-x-hidden shadow-lg min-h-0 ${isTablet ? 'w-60' : 'w-64'} safe-top`}>
+    <div className={`fixed top-0 left-0 h-screen bg-surface-0 border-r-2 border-subtle z-[1000] flex flex-col overflow-y-auto overflow-x-hidden shadow-lg min-h-0 ${isTablet ? 'w-60' : 'w-64'} safe-top`}>
       {/* Header */}
-      <div className="flex items-center justify-between p-3 sm:p-4 border-b-2 border-gray-200 flex-shrink-0">
+      <div className="flex items-center justify-between p-3 sm:p-4 border-b-2 border-subtle flex-shrink-0">
         <div className="flex items-center gap-2 sm:gap-3">
           <Image 
             src={ASSETS.logoIcon} 
@@ -267,10 +267,10 @@ export const MainSidebar: React.FC<MainSidebarProps> = ({ selectedModule, onSele
             priority
           />
           <div className="min-w-0">
-            <p className="type-h4 font-semibold text-gray-900 truncate">
+            <p className="type-h4 font-semibold text-foreground truncate">
               {session?.user?.schoolId || "Escola"}
             </p>
-            <p className="type-caption text-gray-500">Powered by HubEdu.ia</p>
+            <p className="type-caption text-subtle">Powered by HubEdu.ia</p>
           </div>
         </div>
       </div>
@@ -283,8 +283,8 @@ export const MainSidebar: React.FC<MainSidebarProps> = ({ selectedModule, onSele
         />
         
         {/* Footer com informações do usuário */}
-        <div className="p-4 sm:p-6 border-t-2 border-gray-200 safe-bottom">
-          <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-5 p-3 sm:p-4 bg-gray-50 rounded-xl border border-gray-200">
+        <div className="p-4 sm:p-6 border-t-2 border-subtle safe-bottom">
+          <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-5 p-3 sm:p-4 bg-surface-1 rounded-xl border border-subtle">
             <Avatar className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0">
               <AvatarImage src={session?.user?.image || ''} />
               <AvatarFallback className="bg-yellow-500 text-black font-semibold">
@@ -292,10 +292,10 @@ export const MainSidebar: React.FC<MainSidebarProps> = ({ selectedModule, onSele
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <p className="type-body font-semibold text-gray-900 truncate">
+              <p className="type-body font-semibold text-foreground truncate">
                 {session?.user?.name || "Usuário"}
               </p>
-              <p className="type-caption text-gray-500 truncate">
+              <p className="type-caption text-subtle truncate">
                 {session?.user?.role === "STUDENT" ? "Aluno" : 
                  session?.user?.role === "TEACHER" ? "Professor" :
                  session?.user?.role === "STAFF" ? "Funcionário" : 

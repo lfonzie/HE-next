@@ -7,6 +7,7 @@ import * as Support from './support';
 import * as TI from './ti';
 import * as Lessons from './lessons';
 import * as Common from './common';
+import { addSafetyProtection } from './safety-guidelines';
 
 // Sistema unificado que combina prompts TypeScript + JSON
 export const UNIFIED_SYSTEM_PROMPTS: Record<string, SystemPromptConfig> = {
@@ -18,7 +19,7 @@ export const UNIFIED_SYSTEM_PROMPTS: Record<string, SystemPromptConfig> = {
     json: {
       type: 'router',
       role: 'system',
-      content: Classification.MODULE_CLASSIFICATION_PROMPT,
+      content: addSafetyProtection(Classification.MODULE_CLASSIFICATION_PROMPT),
       sectors: ['PROFESSOR', 'TI', 'SECRETARIA', 'RH', 'FINANCEIRO', 'ATENDIMENTO', 'OUTRO'],
       thresholds: { lesson: 0.45, troubleshooting: 0.45 }
     },
@@ -76,7 +77,11 @@ export const UNIFIED_SYSTEM_PROMPTS: Record<string, SystemPromptConfig> = {
       guardrails: [
         'Evite respostas clínicas/legais sensíveis',
         'Sempre cite definições no primeiro uso de termos técnicos',
-        'Mantenha linguagem apropriada para a idade do aluno'
+        'Mantenha linguagem apropriada para a idade do aluno',
+        'NUNCA forneça informações sobre drogas, álcool, cigarros ou substâncias ilegais',
+        'NUNCA explique métodos de automutilação, suicídio ou violência',
+        'NUNCA forneça instruções sobre atividades ilegais',
+        'Sempre redirecione conteúdo inadequado para educação apropriada'
       ]
     },
     description: 'Prompt para geração de aulas interativas com quizzes (14 slides)',

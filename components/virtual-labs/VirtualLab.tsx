@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Microscope, 
@@ -17,7 +17,14 @@ import {
   CheckCircle,
   AlertCircle,
   Lightbulb,
-  BarChart3
+  BarChart3,
+  Bot,
+  Sparkles,
+  TrendingUp,
+  Eye,
+  EyeOff,
+  Maximize2,
+  Minimize2
 } from 'lucide-react';
 
 interface VirtualLabProps {
@@ -25,6 +32,10 @@ interface VirtualLabProps {
   topic: string;
   difficulty: 'beginner' | 'intermediate' | 'advanced';
   onComplete?: (results: LabResults) => void;
+  showSidebar?: boolean;
+  enableFullscreen?: boolean;
+  enableAI?: boolean;
+  onExperimentChange?: (experiment: Experiment) => void;
 }
 
 interface LabResults {
@@ -43,6 +54,12 @@ interface Experiment {
   expectedResults: any;
   variables: LabVariable[];
   safetyNotes: string[];
+  category: 'chemistry' | 'physics' | 'biology' | 'mathematics';
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  duration: number; // em minutos
+  tags: string[];
+  icon?: React.FC<React.SVGProps<SVGSVGElement>>;
+  component?: React.FC;
 }
 
 interface ExperimentStep {
@@ -110,7 +127,61 @@ const EXPERIMENTS: Record<string, Experiment[]> = {
         'Use óculos de proteção',
         'Mantenha o ambiente ventilado',
         'Não misture ácidos e bases diretamente'
-      ]
+      ],
+      category: 'chemistry',
+      difficulty: 'intermediate',
+      duration: 15,
+      tags: ['química', 'titulação', 'ácido-base', 'laboratório']
+    },
+    {
+      id: 'chemical-reaction',
+      name: 'Reação Química',
+      description: 'Misture compostos químicos e veja a IA prever o resultado, com explicações científicas e efeitos visuais.',
+      steps: [
+        {
+          id: 'select-compounds',
+          title: 'Selecionar Compostos',
+          description: 'Escolha os compostos químicos para misturar.',
+          action: 'Selecionar reagentes',
+          expectedOutcome: 'Compostos selecionados',
+          isCompleted: false
+        },
+        {
+          id: 'mix-compounds',
+          title: 'Misturar Compostos',
+          description: 'Combine os compostos e observe a reação.',
+          action: 'Misturar reagentes',
+          expectedOutcome: 'Reação química observada',
+          isCompleted: false
+        },
+        {
+          id: 'analyze-result',
+          title: 'Analisar Resultado',
+          description: 'Analise o produto da reação e suas propriedades.',
+          action: 'Examinar produto',
+          expectedOutcome: 'Produto identificado e analisado',
+          isCompleted: false
+        }
+      ],
+      expectedResults: {
+        product: 'NaCl + H2O',
+        reactionType: 'neutralization',
+        pH: 7.0
+      },
+      variables: [
+        { name: 'temperature', type: 'numeric', value: 25, min: 0, max: 100, unit: '°C' },
+        { name: 'concentration', type: 'numeric', value: 50, min: 10, max: 100, unit: '%' },
+        { name: 'volume', type: 'numeric', value: 50, min: 10, max: 100, unit: 'mL' }
+      ],
+      safetyNotes: [
+        'Use equipamentos de proteção',
+        'Mantenha ventilação adequada',
+        'Descarte produtos adequadamente'
+      ],
+      category: 'chemistry',
+      difficulty: 'beginner',
+      duration: 12,
+      tags: ['química', 'reações', 'compostos', 'laboratório']
     }
   ],
   physics: [
@@ -157,7 +228,60 @@ const EXPERIMENTS: Record<string, Experiment[]> = {
       safetyNotes: [
         'Mantenha distância segura durante oscilações',
         'Use massa adequada para evitar acidentes'
-      ]
+      ],
+      category: 'physics',
+      difficulty: 'beginner',
+      duration: 10,
+      tags: ['física', 'movimento', 'pêndulo', 'harmônico']
+    },
+    {
+      id: 'bouncing-ball',
+      name: 'Bola Saltitante',
+      description: 'Explore gravidade e elasticidade. Ajuste o coeficiente de restituição e observe o comportamento da bola.',
+      steps: [
+        {
+          id: 'setup-ball',
+          title: 'Configurar Bola',
+          description: 'Configure a bola com diferentes propriedades físicas.',
+          action: 'Ajustar propriedades da bola',
+          expectedOutcome: 'Bola configurada',
+          isCompleted: false
+        },
+        {
+          id: 'drop-ball',
+          title: 'Soltar Bola',
+          description: 'Solte a bola e observe seu movimento.',
+          action: 'Soltar bola',
+          expectedOutcome: 'Movimento da bola observado',
+          isCompleted: false
+        },
+        {
+          id: 'analyze-motion',
+          title: 'Analisar Movimento',
+          description: 'Analise o movimento e calcule a energia.',
+          action: 'Calcular energia',
+          expectedOutcome: 'Energia calculada',
+          isCompleted: false
+        }
+      ],
+      expectedResults: {
+        restitution: 0.8,
+        energyLoss: 0.2,
+        bounceHeight: 0.64
+      },
+      variables: [
+        { name: 'restitution', type: 'numeric', value: 0.8, min: 0.1, max: 1.0, unit: '' },
+        { name: 'gravity', type: 'numeric', value: 9.81, min: 5, max: 15, unit: 'm/s²' },
+        { name: 'airResistance', type: 'numeric', value: 0.1, min: 0, max: 0.5, unit: '' }
+      ],
+      safetyNotes: [
+        'Mantenha distância segura',
+        'Use bola adequada'
+      ],
+      category: 'physics',
+      difficulty: 'beginner',
+      duration: 8,
+      tags: ['física', 'gravidade', 'elasticidade', 'movimento']
     }
   ],
   biology: [
@@ -205,7 +329,11 @@ const EXPERIMENTS: Record<string, Experiment[]> = {
         'Mantenha o microscópio limpo',
         'Não toque nas lentes',
         'Descarte adequadamente as lâminas usadas'
-      ]
+      ],
+      category: 'biology',
+      difficulty: 'beginner',
+      duration: 15,
+      tags: ['biologia', 'células', 'microscópio', 'organelas']
     }
   ],
   mathematics: [
@@ -254,12 +382,74 @@ const EXPERIMENTS: Record<string, Experiment[]> = {
       safetyNotes: [
         'Verifique os cálculos',
         'Use escala apropriada nos eixos'
-      ]
+      ],
+      category: 'mathematics',
+      difficulty: 'intermediate',
+      duration: 20,
+      tags: ['matemática', 'funções', 'gráficos', 'análise']
+    },
+    {
+      id: 'color-mixing',
+      name: 'Mistura de Cores',
+      description: 'Explore a teoria das cores e como diferentes combinações criam novas cores. Experimente com RGB e CMYK.',
+      steps: [
+        {
+          id: 'select-colors',
+          title: 'Selecionar Cores',
+          description: 'Escolha as cores primárias para misturar.',
+          action: 'Selecionar cores',
+          expectedOutcome: 'Cores selecionadas',
+          isCompleted: false
+        },
+        {
+          id: 'mix-colors',
+          title: 'Misturar Cores',
+          description: 'Combine as cores e observe o resultado.',
+          action: 'Misturar cores',
+          expectedOutcome: 'Cores misturadas',
+          isCompleted: false
+        },
+        {
+          id: 'analyze-result',
+          title: 'Analisar Resultado',
+          description: 'Analise a cor resultante e suas propriedades.',
+          action: 'Analisar cor',
+          expectedOutcome: 'Cor analisada',
+          isCompleted: false
+        }
+      ],
+      expectedResults: {
+        rgb: { red: 128, green: 128, blue: 128 },
+        hsl: { hue: 0, saturation: 0, lightness: 50 },
+        hex: '#808080'
+      },
+      variables: [
+        { name: 'red', type: 'numeric', value: 128, min: 0, max: 255, unit: '' },
+        { name: 'green', type: 'numeric', value: 128, min: 0, max: 255, unit: '' },
+        { name: 'blue', type: 'numeric', value: 128, min: 0, max: 255, unit: '' }
+      ],
+      safetyNotes: [
+        'Use cores adequadas',
+        'Verifique acessibilidade'
+      ],
+      category: 'mathematics',
+      difficulty: 'beginner',
+      duration: 12,
+      tags: ['matemática', 'cores', 'RGB', 'CMYK', 'teoria']
     }
   ]
 };
 
-export default function VirtualLab({ subject, topic, difficulty, onComplete }: VirtualLabProps) {
+export default function VirtualLab({ 
+  subject, 
+  topic, 
+  difficulty, 
+  onComplete, 
+  showSidebar = true, 
+  enableFullscreen = true, 
+  enableAI = true,
+  onExperimentChange 
+}: VirtualLabProps) {
   const [currentExperiment, setCurrentExperiment] = useState<Experiment | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
@@ -268,11 +458,28 @@ export default function VirtualLab({ subject, topic, difficulty, onComplete }: V
   const [startTime, setStartTime] = useState<Date | null>(null);
   const [attempts, setAttempts] = useState(0);
   const [showResults, setShowResults] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showAI, setShowAI] = useState(enableAI);
+  const [showSettings, setShowSettings] = useState(false);
+  const [experimentData, setExperimentData] = useState<any>(null);
+  const [insights, setInsights] = useState<string[]>([]);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     initializeExperiment();
   }, [subject, topic]);
+
+  // Listen for fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
 
   const initializeExperiment = () => {
     const availableExperiments = EXPERIMENTS[subject] || [];
@@ -285,6 +492,47 @@ export default function VirtualLab({ subject, topic, difficulty, onComplete }: V
       setCurrentStep(0);
       setAttempts(0);
       setShowResults(false);
+      setInsights([]);
+      setExperimentData(null);
+      
+      // Notify parent component about experiment change
+      if (onExperimentChange) {
+        onExperimentChange(experiment);
+      }
+    }
+  };
+
+  const toggleFullscreen = () => {
+    if (!enableFullscreen) return;
+    
+    if (!isFullscreen) {
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen();
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+    setIsFullscreen(!isFullscreen);
+  };
+
+  const handleExperimentChange = (experimentId: string) => {
+    const availableExperiments = EXPERIMENTS[subject] || [];
+    const experiment = availableExperiments.find(exp => exp.id === experimentId);
+    
+    if (experiment) {
+      setCurrentExperiment(experiment);
+      setVariables([...experiment.variables]);
+      setResults({});
+      setCurrentStep(0);
+      setShowResults(false);
+      setInsights([]);
+      setExperimentData(null);
+      
+      if (onExperimentChange) {
+        onExperimentChange(experiment);
+      }
     }
   };
 
@@ -292,6 +540,46 @@ export default function VirtualLab({ subject, topic, difficulty, onComplete }: V
     setIsRunning(true);
     setStartTime(new Date());
     setAttempts(prev => prev + 1);
+    setInsights([]);
+    
+    // Generate initial insights based on experiment
+    const initialInsights = generateInsights();
+    setInsights(initialInsights);
+  };
+
+  const generateInsights = (): string[] => {
+    if (!currentExperiment) return [];
+    
+    const insights = [];
+    
+    // Subject-specific insights
+    switch (currentExperiment.category) {
+      case 'chemistry':
+        insights.push('💡 Dica: Observe as mudanças de cor e temperatura durante a reação');
+        insights.push('🔬 Lembre-se: Sempre use equipamentos de proteção');
+        break;
+      case 'physics':
+        insights.push('⚡ Dica: Meça com precisão para obter resultados confiáveis');
+        insights.push('📊 Lembre-se: Registre todas as observações');
+        break;
+      case 'biology':
+        insights.push('🔍 Dica: Ajuste o foco gradualmente para melhor visualização');
+        insights.push('📝 Lembre-se: Desenhe o que você observa');
+        break;
+      case 'mathematics':
+        insights.push('📈 Dica: Varie os parâmetros para entender melhor o comportamento');
+        insights.push('🧮 Lembre-se: Verifique seus cálculos');
+        break;
+    }
+    
+    // Difficulty-specific insights
+    if (currentExperiment.difficulty === 'beginner') {
+      insights.push('🌟 Você está no nível iniciante - não se preocupe com erros!');
+    } else if (currentExperiment.difficulty === 'advanced') {
+      insights.push('🚀 Nível avançado - você pode explorar variações complexas');
+    }
+    
+    return insights;
   };
 
   const completeStep = () => {
@@ -305,11 +593,33 @@ export default function VirtualLab({ subject, topic, difficulty, onComplete }: V
       steps: updatedSteps
     });
 
+    // Add step-specific insights
+    const stepInsights = generateStepInsights(currentStep);
+    setInsights(prev => [...prev, ...stepInsights]);
+
     if (currentStep < currentExperiment.steps.length - 1) {
       setCurrentStep(prev => prev + 1);
     } else {
       completeExperiment();
     }
+  };
+
+  const generateStepInsights = (stepIndex: number): string[] => {
+    if (!currentExperiment) return [];
+    
+    const step = currentExperiment.steps[stepIndex];
+    const insights = [];
+    
+    // Step-specific insights based on the step title
+    if (step.title.includes('Preparar') || step.title.includes('Configurar')) {
+      insights.push('✅ Preparação concluída! Agora você pode prosseguir');
+    } else if (step.title.includes('Medir') || step.title.includes('Observar')) {
+      insights.push('📏 Medição realizada! Registre o valor obtido');
+    } else if (step.title.includes('Analisar') || step.title.includes('Calcular')) {
+      insights.push('🧠 Análise concluída! Compare com os valores esperados');
+    }
+    
+    return insights;
   };
 
   const completeExperiment = () => {
@@ -403,7 +713,73 @@ export default function VirtualLab({ subject, topic, difficulty, onComplete }: V
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6">
+    <div className={`flex h-full font-sans antialiased overflow-hidden ${
+      isFullscreen ? 'fixed inset-0 z-50 bg-white' : ''
+    }`}>
+      {/* Sidebar */}
+      {showSidebar && (
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="w-80 bg-gray-900 text-white p-6 overflow-y-auto"
+        >
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold">Laboratório Virtual</h2>
+            <button
+              onClick={toggleFullscreen}
+              className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+              title="Tela cheia"
+            >
+              {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+            </button>
+          </div>
+          
+          <div className="space-y-4">
+            <div className="p-4 bg-gray-800 rounded-lg">
+              <h3 className="font-semibold mb-2">{getSubjectIcon()} {subject.charAt(0).toUpperCase() + subject.slice(1)}</h3>
+              <p className="text-sm text-gray-300">{currentExperiment?.name}</p>
+              <div className="flex items-center gap-2 mt-2">
+                <span className={`px-2 py-1 text-xs rounded ${
+                  currentExperiment?.difficulty === 'beginner' ? 'bg-green-600' :
+                  currentExperiment?.difficulty === 'intermediate' ? 'bg-yellow-600' : 'bg-red-600'
+                }`}>
+                  {currentExperiment?.difficulty}
+                </span>
+                <span className="text-xs text-gray-400">{currentExperiment?.duration} min</span>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <h4 className="font-semibold">Experimentos Disponíveis</h4>
+              {EXPERIMENTS[subject]?.map((experiment) => (
+                <button
+                  key={experiment.id}
+                  onClick={() => handleExperimentChange(experiment.id)}
+                  className={`w-full text-left p-3 rounded-lg transition-colors ${
+                    currentExperiment?.id === experiment.id
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-800 hover:bg-gray-700'
+                  }`}
+                >
+                  <div className="font-medium">{experiment.name}</div>
+                  <div className="text-xs text-gray-400 mt-1">{experiment.description}</div>
+                  <div className="flex gap-1 mt-2">
+                    {experiment.tags.slice(0, 2).map((tag, index) => (
+                      <span key={index} className="px-2 py-1 bg-gray-700 text-xs rounded">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+      )}
+      
+      {/* Main Content */}
+      <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+        <div className="max-w-6xl mx-auto space-y-6">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -429,6 +805,16 @@ export default function VirtualLab({ subject, topic, difficulty, onComplete }: V
               </div>
               <div className="text-sm text-white/80">Tempo</div>
             </div>
+            {enableAI && (
+              <button
+                onClick={() => setShowAI(!showAI)}
+                className="flex items-center gap-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors"
+                title="Assistente IA"
+              >
+                <Bot className="w-4 h-4" />
+                IA
+              </button>
+            )}
             <button
               onClick={resetExperiment}
               className="flex items-center gap-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors"
@@ -607,6 +993,57 @@ export default function VirtualLab({ subject, topic, difficulty, onComplete }: V
         </motion.div>
       </div>
 
+      {/* AI Assistant Panel */}
+      {showAI && enableAI && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-6 rounded-2xl"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold flex items-center gap-2">
+              <Bot className="w-5 h-5" />
+              Assistente IA
+            </h3>
+            <button
+              onClick={() => setShowAI(false)}
+              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+            >
+              <EyeOff className="w-4 h-4" />
+            </button>
+          </div>
+          
+          <div className="space-y-4">
+            <div className="bg-white/20 p-4 rounded-lg">
+              <h4 className="font-semibold mb-2 flex items-center gap-2">
+                <Sparkles className="w-4 h-4" />
+                Insights Inteligentes
+              </h4>
+              <div className="space-y-2">
+                {insights.map((insight, index) => (
+                  <div key={index} className="text-sm bg-white/10 p-2 rounded">
+                    {insight}
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="bg-white/20 p-4 rounded-lg">
+              <h4 className="font-semibold mb-2 flex items-center gap-2">
+                <TrendingUp className="w-4 h-4" />
+                Sugestões de Melhoria
+              </h4>
+              <div className="text-sm space-y-1">
+                <p>• Varie os parâmetros para explorar diferentes cenários</p>
+                <p>• Registre suas observações em um caderno</p>
+                <p>• Compare seus resultados com os valores esperados</p>
+                <p>• Experimente diferentes configurações</p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       {/* Notas de Segurança */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -681,6 +1118,8 @@ export default function VirtualLab({ subject, topic, difficulty, onComplete }: V
           </motion.div>
         )}
       </AnimatePresence>
+        </div>
+      </main>
     </div>
   );
 }

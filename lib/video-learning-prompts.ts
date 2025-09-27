@@ -19,7 +19,7 @@ ESPECIFICAÇÕES:
 
 O objetivo da aplicação que será construída com base na especificação é melhorar o entendimento através de design simples e lúdico. A especificação fornecida não deve ser excessivamente complexa, ou seja, um desenvolvedor web júnior deve ser capaz de implementá-la em um único arquivo HTML (com todos os estilos e scripts inline). Mais importante, a especificação deve delinear claramente os mecanismos centrais da aplicação, e esses mecanismos devem ser altamente eficazes em reforçar a(s) ideia(s) principal(is) do vídeo dado.
 
-Forneça o resultado como um objeto JSON contendo um único campo chamado "spec", cujo valor é a especificação para a aplicação web.`
+Forneça o resultado como um objeto JSON contendo um único campo chamado "spec", cujo valor é a especificação para a aplicação web. Certifique-se de que o JSON está bem formatado e não contém caracteres de controle que possam causar problemas de parsing.`
 
 export const CODE_REGION_OPENER = '```'
 export const CODE_REGION_CLOSER = '```'
