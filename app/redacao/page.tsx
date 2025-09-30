@@ -563,7 +563,7 @@ function RedacaoPageContent() {
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   placeholder="Digite sua redação aqui... Lembre-se de seguir a estrutura: introdução, desenvolvimento e conclusão com proposta de intervenção."
-                  className="min-h-[400px] resize-none"
+                  className="!min-h-[600px] h-[600px] resize-none text-base leading-relaxed p-4"
                   maxLength={10000}
                 />
                 
