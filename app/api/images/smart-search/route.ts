@@ -879,7 +879,7 @@ async function smartImageSearch(query: string, subject?: string, count: number =
       index === self.findIndex(img => img.url === image.url)
     );
     
-    // Filtrar apenas imagens realmente relevantes ao tema
+    // Filtrar apenas imagens realmente relevantes ao tema com fallback híbrido
     const relevantImages = uniqueExactImages.filter(image => {
       const text = `${image.title || ''} ${image.description || ''}`.toLowerCase();
       const exactQuery = englishQuery.toLowerCase().trim();
@@ -892,6 +892,15 @@ async function smartImageSearch(query: string, subject?: string, count: number =
       
       // Verificar se não é inadequada ou irrelevante
       const isAppropriate = !isInappropriateImage(text, exactQuery);
+      
+      // Fallback híbrido: se a IA falhar, usar análise local melhorada
+      if (!isRelevant && !isAppropriate) {
+        const localScore = calculateEnhancedLocalRelevance(text, exactQuery);
+        if (localScore > 50) {
+          console.log(`🔄 Fallback local ativado para: "${image.title?.slice(0, 50)}..." (score: ${localScore})`);
+          return true;
+        }
+      }
       
       if (isRelevant && isAppropriate) {
         console.log(`✅ Imagem relevante e adequada encontrada: "${image.title?.slice(0, 50)}..."`);
@@ -1065,4 +1074,66 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+// Função de análise local melhorada para fallback
+function calculateEnhancedLocalRelevance(text: string, query: string): number {
+  const textLower = text.toLowerCase();
+  const queryLower = query.toLowerCase();
+  
+  let score = 0;
+  
+  // Bonus para correspondência exata (prioridade máxima)
+  if (textLower.includes(queryLower)) {
+    score += 60;
+  }
+  
+  // Bonus para palavras individuais
+  const queryWords = queryLower.split(' ').filter(word => word.length > 2);
+  queryWords.forEach(word => {
+    if (textLower.includes(word)) {
+      score += 20;
+    }
+  });
+  
+  // Bonus para termos educacionais específicos
+  const educationalTerms = {
+    'photosynthesis': ['plant', 'leaf', 'green', 'chlorophyll', 'sunlight', 'biology', 'chloroplast'],
+    'biology': ['cell', 'organism', 'biology', 'science', 'laboratory', 'microscope', 'dna'],
+    'chemistry': ['molecule', 'atom', 'reaction', 'chemistry', 'laboratory', 'chemical', 'compound'],
+    'physics': ['physics', 'energy', 'force', 'experiment', 'laboratory', 'science', 'quantum'],
+    'mathematics': ['math', 'equation', 'formula', 'calculation', 'geometry', 'algebra', 'calculus'],
+    'history': ['history', 'historical', 'ancient', 'civilization', 'culture', 'heritage'],
+    'geography': ['geography', 'landscape', 'environment', 'climate', 'earth', 'terrain']
+  };
+  
+  // Verificar termos educacionais específicos
+  for (const [theme, terms] of Object.entries(educationalTerms)) {
+    if (queryLower.includes(theme)) {
+      terms.forEach(term => {
+        if (textLower.includes(term)) {
+          score += 15;
+        }
+      });
+    }
+  }
+  
+  // Bonus para tags específicas de provedores
+  if (textLower.includes('diagram') || textLower.includes('illustration')) {
+    score += 25;
+  }
+  
+  if (textLower.includes('educational') || textLower.includes('academic')) {
+    score += 20;
+  }
+  
+  // Penalização para conteúdo irrelevante
+  const irrelevantTerms = ['book', 'text', 'logo', 'sticker', 'design', 'pattern', 'abstract', 'generic'];
+  irrelevantTerms.forEach(term => {
+    if (textLower.includes(term) && !textLower.includes(queryLower)) {
+      score -= 20;
+    }
+  });
+  
+  return Math.max(0, Math.min(100, score));
 }

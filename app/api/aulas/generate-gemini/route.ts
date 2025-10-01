@@ -39,8 +39,8 @@ import { classifyContentWithAI } from '@/lib/ai-content-classifier';
 
 // Constants for configuration
 const TOTAL_SLIDES = 14;
-const QUIZ_SLIDE_NUMBERS = [7, 12];
-const IMAGE_SLIDE_NUMBERS = [1, 6, 14];
+const QUIZ_SLIDE_NUMBERS = [5, 11];
+const IMAGE_SLIDE_NUMBERS = [1, 3, 6, 9, 12, 14];
 const MIN_TOKENS_PER_SLIDE = 300; // Increased to 300-600 tokens for richer content
 const GEMINI_MODEL = 'gemini-2.0-flash-exp'; // Using the model that works in other parts of the codebase
 const OPENAI_MODEL = 'gpt-4o-mini'; // Fallback model
@@ -364,7 +364,7 @@ function generateImageQuery(topic, slideNumber, slideType) {
   const mainKeywords = relevantWords.join(' ') || englishTopic.split(' ')[0];
 
   // Todas as queries devem ser apenas o tema principal
-  const query = mainKeywords;
+  let query = mainKeywords;
 
   // Se a query for muito genérica ou vazia, usar o tema original
   if (!query || query.length < 3) {
@@ -661,7 +661,7 @@ function validateAndFixQuizSlide(slide) {
  * @param {string} content - The raw content from Gemini.
  * @returns {Object} The parsed lesson object.
  */
-function parseGeminiContent(content) {
+function parseGeminiContent(content, topic) {
   try {
     // Clean the content to extract JSON
     let cleanContent = content.trim();
@@ -1033,7 +1033,6 @@ export async function POST(request) {
           model: geminiModel,
           prompt: generationPrompt,
           temperature: TEMPERATURE,
-          maxTokens: 6000, // Increased to allow richer content
         });
         
         // Success - break out of retry loop
@@ -1058,7 +1057,6 @@ export async function POST(request) {
                 model: openaiModel,
                 prompt: openaiPrompt,
                 temperature: TEMPERATURE,
-                maxTokens: 6000,
               });
               usedProvider = 'openai';
               log.info('OpenAI fallback successful', { requestId, provider: usedProvider });
@@ -1108,7 +1106,7 @@ export async function POST(request) {
     }
 
     const parsingTimer = log.aulaTimer('content-parsing');
-    const parsedContent = parseGeminiContent(response.text);
+    const parsedContent = parseGeminiContent(response.text, topic);
     log.aulaTimerEnd(parsingTimer, 'content-parsing');
 
     // Validação de qualidade desabilitada - slides já estão bons
@@ -1134,7 +1132,7 @@ export async function POST(request) {
         body: JSON.stringify({ 
           query: topic, 
           subject: topic, 
-          count: 3 
+          count: 6 
         }),
       });
       
@@ -1185,7 +1183,7 @@ export async function POST(request) {
         
         selectedImages = await Promise.race([
           selectThreeDistinctImages(topic),
-          new Promise<ImageResult[]>((_, reject) => 
+          new Promise<any[]>((_, reject) => 
             setTimeout(() => reject(new Error('Image selection timeout')), 10000)
           )
         ]);

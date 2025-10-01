@@ -112,8 +112,8 @@ function buildTopicOnlyQueryFallback(topic: string): string {
     'redação': 'writing',
     'redacao': 'writing',
     'respiração': 'respiration',
-    'respiração': 'respiration',
-    'respiração': 'respiration'
+    'respiração celular': 'cellular respiration',
+    'respiração aeróbica': 'aerobic respiration'
   };
 
   // Traduzir palavras individuais
@@ -375,6 +375,46 @@ export function pickOnePerProvider(pools: ProviderSearchResult): ImageResult[] {
 }
 
 /**
+ * Seleciona 2 imagens por provedor, garantindo diversidade
+ */
+export function pickTwoPerProvider(pools: ProviderSearchResult): ImageResult[] {
+  const used = new Set<string>();
+  const result: ImageResult[] = [];
+  
+  const providers: Array<keyof ProviderSearchResult> = ['wikimedia', 'unsplash', 'pixabay'];
+  
+  providers.forEach(provider => {
+    const images = pools[provider] || [];
+    const validImages = images.filter(img => img.url && img.url.startsWith('http'));
+    
+    console.log(`🔍 [${provider.toUpperCase()}] Imagens disponíveis:`, {
+      total: images.length,
+      valid: validImages.length
+    });
+    
+    // Selecionar até 2 imagens por provedor
+    let selectedCount = 0;
+    const sortedImages = validImages.sort((a, b) => (b.score || 0) - (a.score || 0));
+    
+    for (const image of sortedImages) {
+      if (selectedCount >= 2) break;
+      if (!used.has(image.url)) {
+        used.add(image.url);
+        result.push(image);
+        selectedCount++;
+        console.log(`✅ [${provider.toUpperCase()}] Imagem ${selectedCount} selecionada:`, image.url);
+      }
+    }
+    
+    if (selectedCount === 0) {
+      console.log(`❌ [${provider.toUpperCase()}] Nenhuma imagem válida encontrada`);
+    }
+  });
+  
+  return result;
+}
+
+/**
  * Completa faltas com próximas melhores imagens
  */
 export function fillShortageWithNextBest(
@@ -464,7 +504,7 @@ function generateEducationalFallbacks(count: number): ImageResult[] {
 }
 
 /**
- * Função principal: seleciona 3 imagens distintas focadas no tema
+ * Função principal: seleciona 6 imagens distintas focadas no tema
  */
 export async function selectThreeDistinctImages(topic: string): Promise<ImageResult[]> {
   const query = await buildTopicOnlyQuery(topic);
@@ -489,11 +529,11 @@ export async function selectThreeDistinctImages(topic: string): Promise<ImageRes
     pixabay: rerankImages(pools.pixabay, queryTerms, new Set())
   };
   
-  // Selecionar 1 por provedor
-  let selected = pickOnePerProvider(rerankedPools);
+  // Selecionar 2 por provedor para garantir 6 imagens
+  let selected = pickTwoPerProvider(rerankedPools);
   
   // Completar com próximas melhores se necessário
-  selected = fillShortageWithNextBest(rerankedPools, selected, 3);
+  selected = fillShortageWithNextBest(rerankedPools, selected, 6);
   
   console.log(`✅ Selecionadas ${selected.length} imagens distintas:`, 
     selected.map(img => `${img.provider}: ${img.title?.slice(0, 30)}...`)
@@ -551,6 +591,7 @@ export default {
   searchAllProviders,
   rerankImages,
   pickOnePerProvider,
+  pickTwoPerProvider,
   fillShortageWithNextBest,
   selectThreeDistinctImages,
   validateImageSelection

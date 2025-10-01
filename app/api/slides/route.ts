@@ -111,8 +111,8 @@ async function generateSlide(topic: string, position: number, previousSlides: Sl
     'explanation', 'explanation', 'explanation', 'explanation', // Slides 1-4
     'question', // Slide 5 (Quiz 1)
     'explanation', 'explanation', 'explanation', 'explanation', 'explanation', 'explanation', // Slides 6-11
-    'question', // Slide 12 (Quiz 2)
-    'explanation', 'explanation' // Slides 13-14
+    'question', // Slide 11 (Quiz 2)
+    'explanation', 'explanation', 'explanation' // Slides 12-14
   ];
   
   const slideType = slideTypes[position - 1];

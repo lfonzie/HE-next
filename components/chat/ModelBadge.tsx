@@ -110,14 +110,14 @@ const MODEL_BADGE_CONFIG = {
 export function ModelBadge({ model, className = "" }: ModelBadgeProps) {
   if (!model) {
     if (process.env.NODE_ENV === 'development') {
-      console.log('ModelBadge: no model provided');
+      console.log('ModelBadge: no model provided, returning null');
     }
     return null
   }
 
   // Debug log
   if (process.env.NODE_ENV === 'development') {
-    console.log('ModelBadge: rendering with model:', model);
+    console.log('ModelBadge: rendering with model:', model, 'className:', className);
   }
 
   // Buscar configuração do modelo

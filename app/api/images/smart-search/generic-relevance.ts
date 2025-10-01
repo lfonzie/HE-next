@@ -170,6 +170,17 @@ export function detectThemeCategory(query: string): {
     return { name: 'education', falsePositiveType: 'genérico/não-educacional' };
   }
   
+  // Biologia e plantas
+  if (query.includes('plant') || query.includes('planta') ||
+      query.includes('leaf') || query.includes('folha') ||
+      query.includes('tree') || query.includes('árvore') ||
+      query.includes('flower') || query.includes('flor') ||
+      query.includes('photosynthesis') || query.includes('fotossíntese') ||
+      query.includes('green') || query.includes('verde') ||
+      query.includes('nature') || query.includes('natureza')) {
+    return { name: 'biology', falsePositiveType: 'genérico/não-biológico' };
+  }
+  
   // Categoria genérica para temas não identificados
   return { name: 'general', falsePositiveType: 'genérico' };
 }
@@ -297,7 +308,10 @@ export function getCategoryTerms(category: { name: string; falsePositiveType: st
         'biology', 'biologia', 'cell', 'célula', 'dna', 'genetics', 'genética', 'evolution', 'evolução',
         'organism', 'organismo', 'ecosystem', 'ecossistema', 'species', 'espécie', 'habitat', 'habitat',
         'microscope', 'microscópio', 'laboratory', 'laboratório', 'research', 'pesquisa',
-        'protein', 'proteína', 'gene', 'gene', 'chromosome', 'cromossomo', 'mutation', 'mutação'
+        'protein', 'proteína', 'gene', 'gene', 'chromosome', 'cromossomo', 'mutation', 'mutação',
+        'plant', 'planta', 'leaf', 'folha', 'tree', 'árvore', 'flower', 'flor', 'green', 'verde',
+        'photosynthesis', 'fotossíntese', 'chlorophyll', 'clorofila', 'nature', 'natureza',
+        'botany', 'botânica', 'vegetation', 'vegetação', 'forest', 'floresta', 'garden', 'jardim'
       ],
       falsePositives: [
         'woman', 'mulher', 'man', 'homem', 'person', 'pessoa', 'smiling', 'sorrindo', 'casual', 'casual',
@@ -384,7 +398,10 @@ export function getCategoryTerms(category: { name: string; falsePositiveType: st
       ]
     },
     general: {
-      relevant: [],
+      relevant: [
+        'general', 'geral', 'common', 'comum', 'basic', 'básico', 'simple', 'simples',
+        'basic concept', 'conceito básico', 'fundamental', 'fundamental', 'essential', 'essencial'
+      ],
       falsePositives: [
         'woman', 'mulher', 'man', 'homem', 'person', 'pessoa', 'smiling', 'sorrindo', 'casual', 'casual',
         'business', 'negócio', 'office', 'escritório', 'work', 'trabalho', 'meeting', 'reunião',

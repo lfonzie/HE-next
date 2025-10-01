@@ -163,12 +163,24 @@ export const ChatMessage = memo(function ChatMessage({
         messageMeta: message.meta,
         messageModel: message.model,
         lastUsedModel,
+        isStreaming: message.isStreaming,
         willShow: message.meta?.model || (lastUsedModel && !message.isStreaming ? lastUsedModel : undefined)
       });
     }
     
     // Prioridade: meta.model da mensagem > lastUsedModel (apenas se não estiver streaming)
-    return message.meta?.model || (lastUsedModel && !message.isStreaming ? lastUsedModel : undefined)
+    const result = message.meta?.model || (lastUsedModel && !message.isStreaming ? lastUsedModel : undefined);
+    
+    // Debug adicional para verificar o resultado
+    if (process.env.NODE_ENV === 'development') {
+      console.log('ChatMessage modelToShow result:', {
+        messageId: message.id,
+        result,
+        willRenderBadge: !!result
+      });
+    }
+    
+    return result;
   }, [isUser, message.meta?.model, lastUsedModel, message.isStreaming])
 
   // Atualizar lastUsedModel quando receber meta.model
