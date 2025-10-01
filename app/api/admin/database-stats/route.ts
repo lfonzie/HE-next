@@ -1,18 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+
+import { prisma } from '@/lib/db';
+import { handleAdminRouteError, requireAdmin } from '@/lib/admin-auth';
 
 export const dynamic = 'force-dynamic';
 
-const prisma = new PrismaClient();
-
 export async function GET(request: NextRequest) {
   try {
-    // Skip authentication in development
-    if (process.env.NODE_ENV === 'development') {
-      // Development mode - skip auth check
-    } else {
-      // TODO: Add authentication check for production
-    }
+    await requireAdmin(request);
 
     const { searchParams } = new URL(request.url);
     const timeRange = searchParams.get('timeRange') || '30d';
@@ -278,15 +273,18 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(stats);
 
   } catch (error) {
+    const adminResponse = handleAdminRouteError(error);
+    if (adminResponse) {
+      return adminResponse;
+    }
+
     console.error('Database stats API error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to fetch database statistics',
         details: error instanceof Error ? error.message : 'Unknown error'
-      }, 
+      },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }

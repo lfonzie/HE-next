@@ -1,8 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-import OpenAI from 'openai';
-
-const prisma = new PrismaClient();
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+import { prisma } from '@/lib/db';
 
 export async function getAdminStats() {
   try {
@@ -505,4 +501,3 @@ async function getOpenAIUsage() {
   }
 }
 
-export { prisma };

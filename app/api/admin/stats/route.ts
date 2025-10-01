@@ -1,16 +1,15 @@
-import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { NextRequest, NextResponse } from 'next/server';
 
 // Prevent prerendering of this API route
 export const dynamic = 'force-dynamic';
 
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/db';
+import { handleAdminRouteError, requireAdmin } from '@/lib/admin-auth';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    console.log('Starting admin stats fetch...');
-    
-    // Simple stats without complex analytics
+    await requireAdmin(request);
+
     const [
       totalSchools,
       totalUsers,
@@ -31,8 +30,6 @@ export async function GET() {
       prisma.enem_session.count(),
     ]);
 
-    console.log('Basic stats fetched successfully');
-
     const stats = {
       totalSchools,
       totalUsers,
@@ -48,15 +45,18 @@ export async function GET() {
         totalTokens: 0,
         totalRequests: 0,
         estimatedCostUSD: 0,
-        estimatedCostBRL: 0
-      }
+        estimatedCostBRL: 0,
+      },
     };
-    
+
     return NextResponse.json(stats);
   } catch (error) {
+    const adminResponse = handleAdminRouteError(error);
+    if (adminResponse) {
+      return adminResponse;
+    }
+
     console.error('Error in admin stats API:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
   }
 }

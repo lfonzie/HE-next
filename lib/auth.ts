@@ -63,23 +63,28 @@ export const authOptions: NextAuthOptions = {
           }
         } catch (error) {
           console.error("❌ [AUTH] Database error:", error)
-          
-          // Fallback temporário para desenvolvimento quando o banco não está disponível
-          if (error.message.includes("denied access") || error.message.includes("not available")) {
-            console.log("⚠️ [AUTH] Database not available, using fallback for development")
-            
-            // Usuário de fallback temporário
-            if (credentials.email === "admin@hubedu.ia" && credentials.password === "admin123") {
-              console.log("✅ [AUTH] Fallback authentication successful")
-              return {
-                id: "fallback-admin-123",
-                email: "admin@hubedu.ia",
-                name: "Admin Fallback",
-                role: "ADMIN",
+
+          const isDevFallbackEnabled =
+            process.env.NODE_ENV === 'development' &&
+            process.env.ALLOW_DEV_AUTH_FALLBACK === 'true'
+
+          if (isDevFallbackEnabled) {
+            const message = error instanceof Error ? error.message : 'Unknown error'
+            if (message.includes("denied access") || message.includes("not available")) {
+              console.log("⚠️ [AUTH] Database not available, using guarded fallback for development")
+
+              if (credentials.email === "admin@hubedu.ia" && credentials.password === "admin123") {
+                console.log("✅ [AUTH] Development fallback authentication successful")
+                return {
+                  id: "fallback-admin-123",
+                  email: "admin@hubedu.ia",
+                  name: "Admin Fallback",
+                  role: "ADMIN",
+                }
               }
             }
           }
-          
+
           return null
         }
       }
