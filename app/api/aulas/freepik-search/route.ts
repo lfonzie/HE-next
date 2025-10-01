@@ -58,6 +58,18 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { query, subject, count = 3 } = body;
 
+    // Check authentication
+    const { getServerSession } = await import('next-auth/next');
+    const { authOptions } = await import('@/lib/auth');
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // TODO: Implement parental controls when available
+    // For now, just check authentication
+
     if (!process.env.FREEPIK_API_KEY) {
       return NextResponse.json({ 
         success: false,

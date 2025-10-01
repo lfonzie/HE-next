@@ -9,6 +9,49 @@ export async function POST(request: Request) {
   try {
     const { topic, mode = 'sync' } = await request.json();
     
+    // Check authentication
+    const { getServerSession } = await import('next-auth/next');
+    const { authOptions } = await import('@/lib/auth');
+    const { checkMessageSafety, logInappropriateContentAttempt } = await import('@/lib/safety-middleware');
+    const { classifyContentWithAI } = await import('@/lib/ai-content-classifier');
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Check for inappropriate content using AI classification
+    console.log('Starting AI content classification in simple route', { topic });
+    const aiClassification = await classifyContentWithAI(topic);
+    
+    if (aiClassification.isInappropriate && aiClassification.confidence > 0.6) {
+      console.warn('Inappropriate topic detected by AI in simple route', { 
+        topic, 
+        categories: aiClassification.categories,
+        confidence: aiClassification.confidence,
+        reasoning: aiClassification.reasoning,
+        userId: session.user.id 
+      });
+      
+      // Log the attempt for monitoring
+      logInappropriateContentAttempt(session.user.id, topic, aiClassification.categories);
+      
+      return NextResponse.json({ 
+        error: 'Tópico inadequado detectado',
+        message: aiClassification.suggestedResponse,
+        categories: aiClassification.categories,
+        confidence: aiClassification.confidence,
+        reasoning: aiClassification.reasoning,
+        educationalAlternative: aiClassification.educationalAlternative
+      }, { status: 400 });
+    }
+    
+    console.log('Content approved by AI classification in simple route', { 
+      topic, 
+      confidence: aiClassification.confidence,
+      reasoning: aiClassification.reasoning 
+    });
+    
     console.log('🚀 Lesson generation started for:', topic);
     
     // Simple prompt for testing

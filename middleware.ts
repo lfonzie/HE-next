@@ -53,7 +53,6 @@ export async function middleware(request: NextRequest) {
     '/debug-auth',
     '/perplexity-demo', // Add perplexity demo to public routes
     '/live-audio', // Live Audio Visualizer - public access
-    '/aulas', // Temporarily make aulas public for debugging
     '/enem', // Temporarily make enem public for debugging
     '/redacao', // Temporarily make redacao public for debugging
                 '/status', // Status dashboard

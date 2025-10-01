@@ -32,6 +32,8 @@ import { getServerSession } from 'next-auth';
 
 
 import { authOptions } from '@/lib/auth';
+import { checkMessageSafety, logInappropriateContentAttempt } from '@/lib/safety-middleware';
+import { classifyContentWithAI } from '@/lib/ai-content-classifier';
 
 
 
@@ -935,6 +937,15 @@ export async function POST(request) {
     const { topic, schoolId: originalSchoolId, mode = 'sync', customPrompt } = await request.json();
     const session = await getServerSession(authOptions);
 
+    // Check authentication
+    if (!session?.user?.id) {
+      log.error('Authentication failed', { hasSession: !!session, hasUser: !!session?.user });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // TODO: Implement parental controls when available
+    // For now, just check authentication
+
     // Create mutable schoolId variable
     let schoolId = originalSchoolId;
 
@@ -946,6 +957,38 @@ export async function POST(request) {
       log.error('Validation failed', { field: 'topic', value: topic });
       return NextResponse.json({ error: 'Topic is required and must be a non-empty string' }, { status: 400 });
     }
+
+    // Check for inappropriate content using AI classification
+    log.info('Starting AI content classification', { topic });
+    const aiClassification = await classifyContentWithAI(topic);
+    
+    if (aiClassification.isInappropriate && aiClassification.confidence > 0.6) {
+      log.warn('Inappropriate topic detected by AI', { 
+        topic, 
+        categories: aiClassification.categories,
+        confidence: aiClassification.confidence,
+        reasoning: aiClassification.reasoning,
+        userId: session.user.id 
+      });
+      
+      // Log the attempt for monitoring
+      logInappropriateContentAttempt(session.user.id, topic, aiClassification.categories);
+      
+      return NextResponse.json({ 
+        error: 'Tópico inadequado detectado',
+        message: aiClassification.suggestedResponse,
+        categories: aiClassification.categories,
+        confidence: aiClassification.confidence,
+        reasoning: aiClassification.reasoning,
+        educationalAlternative: aiClassification.educationalAlternative
+      }, { status: 400 });
+    }
+    
+    log.info('Content approved by AI classification', { 
+      topic, 
+      confidence: aiClassification.confidence,
+      reasoning: aiClassification.reasoning 
+    });
     if (!['sync', 'async'].includes(mode)) {
       log.error('Validation failed', { field: 'mode', value: mode });
       return NextResponse.json({ error: 'Mode must be "sync" or "async"' }, { status: 400 });

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2, Sparkles, BookOpen, Target, Users, Send, Lightbulb, TrendingUp, AlertCircle, CheckCircle, Clock, RefreshCw, Timer, BarChart3, FileText, AlertTriangle, Mic, Accessibility, Coffee, Brain, Zap, Star, Heart, Rocket, Image as ImageIcon } from 'lucide-react'
+import { Loader2, Sparkles, BookOpen, Target, Users, Send, Lightbulb, TrendingUp, AlertCircle, CheckCircle, Clock, RefreshCw, Timer, BarChart3, FileText, AlertTriangle, Mic, Accessibility, Coffee, Brain, Zap, Star, Heart, Rocket, Image as ImageIcon, Shield, X } from 'lucide-react'
 import { useEnhancedSuggestions } from '@/hooks/useEnhancedSuggestions'
 // Removido: seleção manual de imagens - agora é automática
 import Link from 'next/link'
@@ -338,6 +338,13 @@ interface FormErrors {
   topic?: string
 }
 
+interface SafetyCheckResult {
+  isInappropriate: boolean
+  inappropriateTopics: string[]
+  suggestedResponse?: string
+  educationalAlternative?: string
+}
+
 interface Suggestion {
   id: number
   text: string
@@ -382,10 +389,109 @@ function AulasPageContent() {
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [startTime, setStartTime] = useState<number | null>(null)
   const [elapsedTime, setElapsedTime] = useState(0)
+  const [safetyWarning, setSafetyWarning] = useState<SafetyCheckResult | null>(null)
   
 
   // Debug log para verificar estado inicial
   console.log('AulasPageContent render - isGenerating:', isGenerating, 'generatedLesson:', !!generatedLesson)
+
+  // Função para verificar segurança do conteúdo usando IA
+  const checkContentSafety = useCallback(async (text: string): Promise<SafetyCheckResult> => {
+    try {
+      // Usar classificação por IA
+      const response = await fetch('/api/content/classify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ topic: text }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        return {
+          isInappropriate: result.isInappropriate,
+          inappropriateTopics: result.categories || [],
+          suggestedResponse: result.suggestedResponse,
+          educationalAlternative: result.educationalAlternative
+        };
+      }
+    } catch (error) {
+      console.warn('AI classification failed, using local fallback:', error);
+    }
+
+    // Fallback para classificação local
+    const inappropriateKeywords = [
+      'drogas', 'álcool', 'cigarros', 'tabaco', 'fumar', 'beber', 'substâncias ilegais',
+      'violência', 'armas', 'suicídio', 'automutilação', 'hacking', 'pirataria',
+      'fraudes', 'atividades ilegais', 'conteúdo sexual', 'pornografia',
+      'jogos de azar', 'apostas', 'substâncias controladas', 'maconha', 'cocaína',
+      'heroína', 'crack', 'lsd', 'ecstasy', 'metanfetamina', 'bebida alcoólica',
+      'cerveja', 'vodka', 'whisky', 'cachaça', 'vinho', 'como fumar', 'como beber',
+      'como usar drogas', 'como fazer drogas', 'como obter drogas',
+      'sexo', 'como fazer sexo', 'bomba', 'como fazer uma bomba', 'explosivos',
+      'armas de fogo', 'violência doméstica', 'abuso', 'tortura', 'assassinato',
+      'terrorismo', 'extremismo', 'nazismo', 'fascismo', 'racismo', 'xenofobia',
+      'homofobia', 'transfobia', 'misoginia', 'pedofilia', 'incesto', 'zoofilia',
+      'necrofilia', 'sadomasoquismo', 'bdsm', 'fetichismo', 'prostituição',
+      'tráfico humano', 'escravidão', 'trabalho infantil', 'exploração sexual',
+      'pornografia infantil', 'sexting', 'revenge porn', 'cyberbullying',
+      'suicídio assistido', 'eutanásia', 'aborto', 'contracepção', 'esterilização',
+      'clonagem humana', 'engenharia genética perigosa', 'armas biológicas',
+      'armas químicas', 'armas nucleares', 'bombas caseiras', 'explosivos caseiros',
+      'venenos', 'toxinas', 'substâncias tóxicas', 'drogas sintéticas'
+    ];
+
+    const inappropriateTopics: string[] = [];
+    const lowerText = text.toLowerCase();
+    
+    inappropriateKeywords.forEach(keyword => {
+      if (lowerText.includes(keyword)) {
+        inappropriateTopics.push(keyword);
+      }
+    });
+
+    const isInappropriate = inappropriateTopics.length > 0;
+    
+    if (isInappropriate) {
+      const educationalAlternatives = {
+        'drogas': 'biologia e como o corpo funciona',
+        'álcool': 'química e processos biológicos',
+        'cigarros': 'sistema respiratório e saúde',
+        'violência': 'resolução pacífica de conflitos',
+        'armas': 'física e mecânica',
+        'hacking': 'programação e tecnologia construtiva',
+        'pirataria': 'direitos autorais e propriedade intelectual',
+        'fraudes': 'matemática financeira e ética',
+        'jogos de azar': 'probabilidade e estatística',
+        'apostas': 'matemática e análise de riscos',
+        'sexo': 'educação sexual responsável e biologia',
+        'bomba': 'física e química aplicadas de forma segura'
+      };
+
+      let educationalAlternative = 'conteúdos educacionais apropriados e construtivos';
+      for (const [inappropriate, alternative] of Object.entries(educationalAlternatives)) {
+        if (inappropriateTopics.some(topic => topic.includes(inappropriate))) {
+          educationalAlternative = alternative;
+          break;
+        }
+      }
+
+      const suggestedResponse = `Não posso fornecer informações sobre ${inappropriateTopics.join(', ')}. Que tal aprendermos sobre ${educationalAlternative}? Se você tem dúvidas importantes, recomendo conversar com seus pais, professores ou outros adultos responsáveis.`;
+
+      return {
+        isInappropriate: true,
+        inappropriateTopics,
+        suggestedResponse,
+        educationalAlternative
+      };
+    }
+
+    return {
+      isInappropriate: false,
+      inappropriateTopics: []
+    };
+  }, []);
 
   // Verificar se há aula salva no localStorage que pode estar causando problemas
   useEffect(() => {
@@ -526,6 +632,14 @@ function AulasPageContent() {
       }
     }
 
+    // Verificar segurança do conteúdo
+    const safetyCheck = await checkContentSafety(topic)
+    if (safetyCheck.isInappropriate) {
+      setSafetyWarning(safetyCheck)
+      toast.error('Conteúdo inadequado detectado. Por favor, escolha um tópico educacional apropriado.')
+      return
+    }
+
     setIsGenerating(true)
     setGenerationProgress(0)
     setGenerationStatus(STATUS_MESSAGES[0].message)
@@ -565,6 +679,7 @@ function AulasPageContent() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Include cookies for authentication
         body: JSON.stringify({
           topic: topic,
           mode: 'sync',
@@ -1001,6 +1116,17 @@ function AulasPageContent() {
                         console.log('Mudança no campo topic:', { oldValue: formData.topic, newValue })
                         setFormData({ ...formData, topic: newValue })
                         
+                        // Verificar segurança do conteúdo
+                        checkContentSafety(newValue).then(safetyCheck => {
+                          if (safetyCheck.isInappropriate) {
+                            setSafetyWarning(safetyCheck)
+                          } else {
+                            setSafetyWarning(null)
+                          }
+                        }).catch(error => {
+                          console.warn('Error checking content safety:', error)
+                        })
+                        
                         // Limpar erro se o campo não estiver mais vazio
                         if (formErrors.topic && newValue.trim().length >= 5) {
                           console.log('Limpando erro de validação')
@@ -1012,7 +1138,7 @@ function AulasPageContent() {
                       onKeyPress={handleKeyPress}
                       rows={6}
                       className={`resize-none transition-all duration-200 text-lg border-2 rounded-2xl p-4 ${
-                        formErrors.topic ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-blue-200 focus:border-blue-400 bg-white'
+                        formErrors.topic || safetyWarning ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-blue-200 focus:border-blue-400 bg-white'
                       }`}
                       aria-invalid={!!formErrors.topic}
                       aria-describedby={formErrors.topic ? 'topic-error' : undefined}
@@ -1031,6 +1157,32 @@ function AulasPageContent() {
                         {formErrors.topic}
                       </p>
                     </div>
+                  )}
+
+                  {/* Safety Warning */}
+                  {safetyWarning && (
+                    <Alert className="border-red-200 bg-red-50">
+                      <Shield className="h-4 w-4 text-red-600" />
+                      <AlertDescription className="text-red-800">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <p className="font-semibold mb-2">⚠️ Conteúdo inadequado detectado</p>
+                            <p className="mb-2">{safetyWarning.suggestedResponse}</p>
+                            <p className="text-sm text-red-600">
+                              Tópicos detectados: {safetyWarning.inappropriateTopics.join(', ')}
+                            </p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSafetyWarning(null)}
+                            className="text-red-600 hover:text-red-800 hover:bg-red-100"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </AlertDescription>
+                    </Alert>
                   )}
                   
                   <div className="flex items-center justify-between text-sm text-gray-600">
