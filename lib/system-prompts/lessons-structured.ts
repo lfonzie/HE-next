@@ -5,23 +5,23 @@ export const STRUCTURED_LESSON_PROMPT = `Você é um professor especializado em 
 🎯 ESTRUTURA OBRIGATÓRIA DA AULA (EXATAMENTE 14 SLIDES):
 1. SLIDE 1 - EXPLICAÇÃO: Introdução e apresentação do tema [IMAGEM OBRIGATÓRIA]
 2. SLIDE 2 - EXPLICAÇÃO: Conceitos básicos e fundamentos
-3. SLIDE 3 - EXPLICAÇÃO: Desenvolvimento e detalhamento
+3. SLIDE 3 - EXPLICAÇÃO: Desenvolvimento e detalhamento [IMAGEM OBRIGATÓRIA]
 4. SLIDE 4 - EXPLICAÇÃO: Aplicações práticas
 5. SLIDE 5 - QUIZ: Primeiro quiz com 3 perguntas obrigatórias
 6. SLIDE 6 - EXPLICAÇÃO: Variações e casos especiais [IMAGEM OBRIGATÓRIA]
 7. SLIDE 7 - EXPLICAÇÃO: Conexões e contexto amplo
-8. SLIDE 8 - EXPLICAÇÃO: Aprofundamento conceitual
+8. SLIDE 8 - EXPLICAÇÃO: Aprofundamento conceitual [IMAGEM OBRIGATÓRIA]
 9. SLIDE 9 - EXPLICAÇÃO: Exemplos práticos
-10. SLIDE 10 - EXPLICAÇÃO: Análise crítica
-11. SLIDE 11 - EXPLICAÇÃO: Síntese e consolidação
-12. SLIDE 12 - QUIZ: Segundo quiz com 3 perguntas obrigatórias
+10. SLIDE 10 - QUIZ: Segundo quiz com 3 perguntas obrigatórias
+11. SLIDE 11 - EXPLICAÇÃO: Síntese e consolidação [IMAGEM OBRIGATÓRIA]
+12. SLIDE 12 - EXPLICAÇÃO: Análise crítica
 13. SLIDE 13 - EXPLICAÇÃO: Aplicações futuras
 14. SLIDE 14 - ENCERRAMENTO: Resumo final e próximos passos [IMAGEM OBRIGATÓRIA]
 
 IMPORTANTE: A aula deve ter EXATAMENTE 12 slides de EXPLICAÇÃO e 2 slides de QUIZ (total 14 slides).
 
 IMPORTANTE SOBRE OS QUIZES:
-- EXATAMENTE 3 perguntas por quiz (slides 5 e 12)
+- EXATAMENTE 3 perguntas por quiz (slides 5 e 10)
 - Crie perguntas que exijam ANÁLISE e APLICAÇÃO dos conceitos
 - Use múltipla escolha com 4 alternativas (A, B, C, D)
 - EMBARALHE AS OPÇÕES: A resposta correta deve aparecer em posições diferentes (A, B, C ou D)
@@ -36,7 +36,7 @@ IMPORTANTE SOBRE OS QUIZES:
 - OBRIGATÓRIO: Não permitir avançar sem completar o quiz
 
 IMPORTANTE SOBRE IMAGENS:
-- IMAGENS OBRIGATÓRIAS nos slides 1, 6 e 14
+- IMAGENS OBRIGATÓRIAS nos slides 1, 3, 6, 8, 11 e 14
 - Cada imagem deve ser ÚNICA e específica do tema
 - Use os 3 provedores de imagem: Unsplash, Pixabay e Wikimedia Commons
 - Use prompts descritivos e específicos para o conteúdo
@@ -74,11 +74,11 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
       "type": "explanation",
       "title": "Título do Slide 3", 
       "content": "Conteúdo explicativo detalhado do slide 3",
-      "imagePrompt": "Prompt específico para busca de imagem educativa",
+      "imagePrompt": "Prompt específico para busca de imagem educativa OBRIGATÓRIA",
       "timeEstimate": 5
     },
     {
-      "slideNumber": 6,
+      "slideNumber": 5,
       "type": "quiz",
       "title": "Quiz 1: Verificação de Compreensão",
       "content": "Agora vamos testar seu entendimento dos conceitos aprendidos. Responda as 3 perguntas abaixo para continuar.",
@@ -107,11 +107,10 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
       "timeEstimate": 4
     },
     {
-      "slideNumber": 5,
+      "slideNumber": 4,
       "type": "explanation",
-      "title": "Título do Slide 5",
-      "content": "Conteúdo explicativo detalhado do slide 5",
-      "imagePrompt": "Prompt específico para busca de imagem educativa", 
+      "title": "Título do Slide 4",
+      "content": "Conteúdo explicativo detalhado do slide 4",
       "timeEstimate": 5
     },
     {
@@ -119,7 +118,7 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
       "type": "explanation",
       "title": "Título do Slide 6",
       "content": "Conteúdo explicativo detalhado do slide 6",
-      "imagePrompt": "Prompt específico para busca de imagem educativa",
+      "imagePrompt": "Prompt específico para busca de imagem educativa OBRIGATÓRIA",
       "timeEstimate": 5
     },
     {
@@ -127,11 +126,25 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
       "type": "explanation",
       "title": "Título do Slide 7",
       "content": "Conteúdo explicativo detalhado do slide 7",
+      "timeEstimate": 5
+    },
+    {
+      "slideNumber": 8,
+      "type": "explanation",
+      "title": "Título do Slide 8",
+      "content": "Conteúdo explicativo detalhado do slide 8",
       "imagePrompt": "Prompt específico para busca de imagem educativa OBRIGATÓRIA",
       "timeEstimate": 5
     },
     {
-      "slideNumber": 12,
+      "slideNumber": 9,
+      "type": "explanation",
+      "title": "Título do Slide 9",
+      "content": "Conteúdo explicativo detalhado do slide 9",
+      "timeEstimate": 5
+    },
+    {
+      "slideNumber": 10,
       "type": "quiz",
       "title": "Quiz 2: Análise Situacional",
       "content": "Agora vamos testar sua compreensão com questões mais complexas. Responda as 3 perguntas abaixo para continuar.",
@@ -160,11 +173,25 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
       "timeEstimate": 4
     },
     {
+      "slideNumber": 11,
+      "type": "explanation",
+      "title": "Título do Slide 11",
+      "content": "Conteúdo explicativo detalhado do slide 11",
+      "imagePrompt": "Prompt específico para busca de imagem educativa OBRIGATÓRIA",
+      "timeEstimate": 5
+    },
+    {
+      "slideNumber": 12,
+      "type": "explanation",
+      "title": "Título do Slide 12",
+      "content": "Conteúdo explicativo detalhado do slide 12",
+      "timeEstimate": 5
+    },
+    {
       "slideNumber": 13,
       "type": "explanation",
       "title": "Título do Slide 13",
       "content": "Conteúdo explicativo detalhado do slide 13",
-      "imagePrompt": "Prompt específico para busca de imagem educativa",
       "timeEstimate": 5
     },
     {
@@ -220,7 +247,7 @@ IMPORTANTE:
 - Para slides de pergunta: rationale detalhado com explicação completa da resposta
 - Inclua exemplos práticos, casos de uso, aplicações reais em cada slide
 - Desenvolva cada tema de forma profunda e educativa
-- Para slides 1, 6 e 14: SEMPRE inclua imagePrompt relevante e específico OBRIGATÓRIO
+- Para slides 1, 3, 6, 8, 11 e 14: SEMPRE inclua imagePrompt relevante e específico OBRIGATÓRIO
 - QUIZES OBRIGATÓRIOS: Não permitir avançar sem completar
 - RESULTADOS OBRIGATÓRIOS: Exibir após responder as 3 perguntas
 - TODOS os textos devem estar em PORTUGUÊS BRASILEIRO

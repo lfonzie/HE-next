@@ -280,7 +280,12 @@ Contexto atual: Módulo: ${orchestratorResult.trace?.module || 'auto'}`
                 provider: routingResult.provider,
                 complexity: routingResult.complexity,
                 routingReasoning: routingResult.metadata.reasoning
-              } 
+              },
+              meta: {
+                provider: routingResult.provider,
+                model: routingResult.model,
+                timestamp: Date.now()
+              }
             })}\n\n`))
             controller.enqueue(encoder.encode('data: [DONE]\n\n'))
             controller.close()
@@ -318,7 +323,12 @@ Contexto atual: Módulo: ${orchestratorResult.trace?.module || 'auto'}`
                 tier: 'IA',
                 tokens: 0,
                 module: orchestratorResult.trace?.module
-              } 
+              },
+              meta: {
+                provider: 'orchestrator',
+                model: 'orchestrator',
+                timestamp: Date.now()
+              }
             })}\n\n`))
             controller.enqueue(encoder.encode('data: [DONE]\n\n'))
             controller.close()

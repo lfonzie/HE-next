@@ -100,7 +100,7 @@ export async function POST(req: NextRequest) {
           console.log(`📤 [CHAT-STREAM] Metadata sent:`, metadata);
 
           // Processar stream baseado no provedor
-          if (provider === "openai" || provider === "gpt5" || provider === "groq") {
+          if (provider === "openai" || provider === "gpt5") {
             console.log(`📡 [CHAT-STREAM] Processing OpenAI/GPT5 stream...`);
             let chunkCount = 0;
             for await (const chunk of stream) {
@@ -142,6 +142,25 @@ export async function POST(req: NextRequest) {
               }
             }
           }
+
+          // Enviar metadados finais
+          const finalMetadata = {
+            metadata: {
+              model: model,
+              provider: provider,
+              tier: provider === 'gemini' ? 'IA_ECO' : 'IA',
+              complexity: 'simple',
+              module: module,
+              tokens: 0
+            },
+            meta: {
+              provider: provider,
+              model: model,
+              timestamp: Date.now()
+            }
+          };
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify(finalMetadata)}\n\n`));
+          console.log(`📊 [CHAT-STREAM] Final metadata sent:`, finalMetadata);
 
           // Enviar sinal de fim
           console.log(`🏁 [CHAT-STREAM] Sending done signal...`);

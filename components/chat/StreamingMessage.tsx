@@ -4,7 +4,8 @@ import React, { useState, useEffect } from "react";
 import { ModuleId } from "@/lib/modules";
 import { getModuleIcon } from "@/lib/moduleIcons";
 import { MarkdownRendererNew as MarkdownRenderer } from "./MarkdownRendererNew";
-import { ModelChip, ModelDetails } from "./ModelChip";
+import { ModelBadge } from "./ModelBadge";
+import { useConversation } from "@/stores/conversation";
 
 interface StreamingMessageProps {
   content: string;
@@ -22,7 +23,7 @@ interface StreamingMessageProps {
 const getModuleIconKey = (moduleId: ModuleId | null): string => {
   if (!moduleId) return "professor";
   
-  const mapping: Record<ModuleId, string> = {
+  const mapping: Partial<Record<ModuleId, string>> = {
     PROFESSOR: "professor",
     AULA_EXPANDIDA: "aula-expandida",
     ENEM_INTERACTIVE: "enem-interativo",
@@ -68,11 +69,23 @@ export const StreamingMessage: React.FC<StreamingMessageProps> = ({
   provider,
   complexity
 }) => {
+  const { lastUsedModel, setLastUsedModel } = useConversation()
+
   // StreamingMessage representa mensagens do sistema/IA, não do usuário
   // Não fazemos classificação automática aqui pois são respostas do sistema
 
   // Use currentModuleId diretamente (sem classificação automática)
   const effectiveModuleId = currentModuleId;
+
+  // Determinar modelo a ser exibido
+  const modelToShow = model || lastUsedModel
+
+  // Atualizar lastUsedModel quando receber model
+  React.useEffect(() => {
+    if (model) {
+      setLastUsedModel(model)
+    }
+  }, [model, setLastUsedModel])
 
   // Debug log para verificar consistência de módulos (remover em produção)
   if (process.env.NODE_ENV === 'development') {
@@ -81,7 +94,7 @@ export const StreamingMessage: React.FC<StreamingMessageProps> = ({
       isComplete,
       currentModuleId,
       effectiveModuleId,
-      willUseStandardMarkdown: effectiveModuleId === "atendimento"
+      willUseStandardMarkdown: effectiveModuleId === "ATENDIMENTO"
     });
   }
 
@@ -101,52 +114,43 @@ export const StreamingMessage: React.FC<StreamingMessageProps> = ({
             boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
             borderColor: `${moduleColor}60`
           }}
-          title={`Módulo: ${currentModuleId === "professor" ? "Professor" : 
-                 currentModuleId === "ti" ? "TI" :
-                 currentModuleId === "rh" ? "RH" :
-                 currentModuleId === "financeiro" ? "Financeiro" :
-                 currentModuleId === "coordenacao" ? "Coordenação" :
-                 currentModuleId === "atendimento" ? "Atendimento" :
-                 currentModuleId === "bem-estar" ? "Bem-Estar" :
-                 currentModuleId === "social-media" ? "Social Media" :
+          title={`Módulo: ${currentModuleId === "PROFESSOR" ? "Professor" : 
+                 currentModuleId === "TI" ? "TI" :
+                 currentModuleId === "RH" ? "RH" :
+                 currentModuleId === "FINANCEIRO" ? "Financeiro" :
+                 currentModuleId === "COORDENACAO" ? "Coordenação" :
+                 currentModuleId === "ATENDIMENTO" ? "Atendimento" :
+                 currentModuleId === "BEM_ESTAR" ? "Bem-Estar" :
+                 currentModuleId === "SOCIAL_MEDIA" ? "Social Media" :
                  currentModuleId || 'Assistente'}`}
         >
           <ModuleIcon className="w-5 h-5 text-white" />
         </div>
-        {/* Chip do modelo usado */}
-        <div className="mt-1">
-          <ModelChip 
-            model={model}
-            provider={provider}
-            complexity={complexity}
-            tier={tier}
-            className="scale-90"
-          />
-        </div>
+        {/* Badge do modelo removido - agora aparece apenas na linha de metadados */}
         
         {/* Descrição do módulo */}
         {currentModuleId && (
           <div className="mt-2 text-xs text-center max-w-24">
             <div className="font-semibold text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-800 px-2 py-1 rounded-md shadow-sm border border-gray-200 dark:border-gray-600">
-              {currentModuleId === "professor" ? "Professor" : 
-               currentModuleId === "ti" ? "TI" :
-               currentModuleId === "rh" ? "RH" :
-               currentModuleId === "financeiro" ? "Financeiro" :
-               currentModuleId === "coordenacao" ? "Coordenação" :
-               currentModuleId === "atendimento" ? "Atendimento" :
-               currentModuleId === "bem-estar" ? "Bem-Estar" :
-               currentModuleId === "social-media" ? "Social Media" :
+              {currentModuleId === "PROFESSOR" ? "Professor" : 
+               currentModuleId === "TI" ? "TI" :
+               currentModuleId === "RH" ? "RH" :
+               currentModuleId === "FINANCEIRO" ? "Financeiro" :
+               currentModuleId === "COORDENACAO" ? "Coordenação" :
+               currentModuleId === "ATENDIMENTO" ? "Atendimento" :
+               currentModuleId === "BEM_ESTAR" ? "Bem-Estar" :
+               currentModuleId === "SOCIAL_MEDIA" ? "Social Media" :
                currentModuleId}
             </div>
             <div className="text-xs text-gray-600 dark:text-gray-400 mt-1 truncate">
-              {currentModuleId === "professor" ? "Assistente de estudos" : 
-               currentModuleId === "ti" ? "Suporte técnico" :
-               currentModuleId === "rh" ? "Recursos humanos" :
-               currentModuleId === "financeiro" ? "Controle financeiro" :
-               currentModuleId === "coordenacao" ? "Gestão pedagógica" :
-               currentModuleId === "atendimento" ? "Suporte geral" :
-               currentModuleId === "bem-estar" ? "Suporte emocional" :
-               currentModuleId === "social-media" ? "Comunicação digital" :
+              {currentModuleId === "PROFESSOR" ? "Assistente de estudos" : 
+               currentModuleId === "TI" ? "Suporte técnico" :
+               currentModuleId === "RH" ? "Recursos humanos" :
+               currentModuleId === "FINANCEIRO" ? "Controle financeiro" :
+               currentModuleId === "COORDENACAO" ? "Gestão pedagógica" :
+               currentModuleId === "ATENDIMENTO" ? "Suporte geral" :
+               currentModuleId === "BEM_ESTAR" ? "Suporte emocional" :
+               currentModuleId === "SOCIAL_MEDIA" ? "Comunicação digital" :
                "Módulo especializado"}
             </div>
           </div>
@@ -167,15 +171,13 @@ export const StreamingMessage: React.FC<StreamingMessageProps> = ({
           
           {/* Metadados */}
           <footer className="message-metadata mt-1 text-xs text-gray-500">
-            {tokens && tokens > 0 && (
-              <ModelDetails 
-                model={model}
-                provider={provider}
-                complexity={complexity}
-                tier={tier}
-                tokens={tokens}
-              />
-            )}
+            <div className="flex items-center gap-2">
+              {tokens && tokens > 0 && (
+                <span>{tokens} tokens</span>
+              )}
+              {/* Badge do modelo - única fonte de verdade */}
+              <ModelBadge model={modelToShow} />
+            </div>
           </footer>
         </article>
       </div>

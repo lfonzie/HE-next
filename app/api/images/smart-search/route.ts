@@ -834,15 +834,28 @@ async function smartImageSearch(query: string, subject?: string, count: number =
   let allImages: ImageResult[] = [];
   let semanticAnalysis = null;
   
-  // ETAPA 1: Busca pelo termo exato do tema (prioridade máxima)
-  console.log(`🎯 ETAPA 1: Buscando pelo termo exato "${query}"`);
+  // ETAPA 0: Detectar tema e traduzir para inglês
+  console.log(`🌍 ETAPA 0: Detectando tema e traduzindo para inglês`);
+  let englishQuery: string;
+  try {
+    const { detectTheme } = await import('@/lib/themeDetection');
+    const themeDetection = await detectTheme(query, subject);
+    englishQuery = themeDetection.englishTheme;
+    console.log(`✅ Tema detectado: "${themeDetection.theme}" → "${englishQuery}"`);
+  } catch (error) {
+    console.warn('⚠️ Erro na detecção de tema, usando query original:', error);
+    englishQuery = query;
+  }
+  
+  // ETAPA 1: Busca pelo termo exato do tema em inglês (prioridade máxima)
+  console.log(`🎯 ETAPA 1: Buscando pelo termo exato em inglês "${englishQuery}"`);
   
   const exactSearchPromises = [
-    searchUnsplash(query, subject || 'general', count),
-    searchPixabay(query, subject || 'general', count),
-    searchWikimedia(query, subject || 'general', count),
-    searchBing(query, subject || 'general', count),
-    searchPexels(query, subject || 'general', count)
+    searchUnsplash(englishQuery, subject || 'general', count),
+    searchPixabay(englishQuery, subject || 'general', count),
+    searchWikimedia(englishQuery, subject || 'general', count),
+    searchBing(englishQuery, subject || 'general', count),
+    searchPexels(englishQuery, subject || 'general', count)
   ];
   
   try {
@@ -869,9 +882,9 @@ async function smartImageSearch(query: string, subject?: string, count: number =
     // Filtrar apenas imagens realmente relevantes ao tema
     const relevantImages = uniqueExactImages.filter(image => {
       const text = `${image.title || ''} ${image.description || ''}`.toLowerCase();
-      const exactQuery = query.toLowerCase().trim();
+      const exactQuery = englishQuery.toLowerCase().trim();
       
-      // Verificar se realmente contém o termo exato
+      // Verificar se realmente contém o termo exato em inglês
       const hasExactMatch = text.includes(exactQuery);
       
       // Verificar se não é um falso positivo (ex: "metallica" em "aporonisu metallica" - um pássaro)
@@ -907,7 +920,7 @@ async function smartImageSearch(query: string, subject?: string, count: number =
         totalFound: relevantImages.length,
         sourcesUsed,
         query,
-        optimizedQuery: query,
+        optimizedQuery: englishQuery,
         fallbackUsed: false,
         semanticAnalysis: null,
         searchMethod: 'exact'
@@ -959,7 +972,7 @@ async function smartImageSearch(query: string, subject?: string, count: number =
     // Filtrar imagens inadequadas ou irrelevantes também na busca semântica
     const filteredImages = allImages.filter(image => {
       const text = `${image.title || ''} ${image.description || ''}`.toLowerCase();
-      const exactQuery = query.toLowerCase().trim();
+      const exactQuery = englishQuery.toLowerCase().trim();
       
       // Verificar se não é inadequada ou irrelevante
       const isAppropriate = !isInappropriateImage(text, exactQuery);
@@ -996,7 +1009,7 @@ async function smartImageSearch(query: string, subject?: string, count: number =
       totalFound: uniqueImages.length,
       sourcesUsed,
       query,
-      optimizedQuery: semanticQuery,
+      optimizedQuery: englishQuery,
       fallbackUsed: true,
       semanticAnalysis: {
         primaryQuery: semanticAnalysis.primaryQuery,

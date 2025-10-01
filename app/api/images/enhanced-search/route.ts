@@ -68,11 +68,23 @@ export async function POST(request: NextRequest) {
 
     console.log(`🔍 Enhanced image search for: "${query}" (${subject})`);
 
+    // Detectar tema e traduzir para inglês
+    let englishQuery: string;
+    try {
+      const { detectTheme } = await import('@/lib/themeDetection');
+      const themeDetection = await detectTheme(query, subject);
+      englishQuery = themeDetection.englishTheme;
+      console.log(`✅ Tema detectado: "${themeDetection.theme}" → "${englishQuery}"`);
+    } catch (error) {
+      console.warn('⚠️ Erro na detecção de tema, usando query original:', error);
+      englishQuery = query;
+    }
+
     // Try Google alternatives first if enabled
     if (useGoogleAlternatives) {
       try {
         const googleResults = await googleImageAlternativesService.searchImages({
-          query,
+          query: englishQuery,
           subject,
           count,
           safeSearch: true,
@@ -118,7 +130,7 @@ export async function POST(request: NextRequest) {
 
     // Buscar em múltiplas fontes em paralelo
     const searchPromises = sources.map(source => 
-      searchInSource(source, query, subject, Math.ceil(count * 2))
+      searchInSource(source, englishQuery, subject, Math.ceil(count * 2))
     );
 
     const allResults = await Promise.all(searchPromises);
@@ -127,23 +139,23 @@ export async function POST(request: NextRequest) {
     // Filtrar e classificar resultados
     const filteredResults = filterAndScoreImages(
       combinedResults,
-      query,
+      englishQuery,
       subject,
       grade,
       preferredDimensions
     );
 
     // Se não encontrou imagens suficientes, usar fallbacks inteligentes
-    if (finalResults.length < count) {
-      const fallbackImages = generateIntelligentFallbacks(query, subject, count - finalResults.length);
-      finalResults.push(...fallbackImages);
+    if (filteredResults.length < count) {
+      const fallbackImages = generateIntelligentFallbacks(englishQuery, subject, count - filteredResults.length);
+      filteredResults.push(...fallbackImages);
     }
 
-    console.log(`✅ Enhanced search completed: ${finalResults.length} results`);
+    console.log(`✅ Enhanced search completed: ${filteredResults.length} results`);
 
     return NextResponse.json({
       success: true,
-      images: finalResults,
+      images: filteredResults,
       query,
       subject,
       totalFound: combinedResults.length,

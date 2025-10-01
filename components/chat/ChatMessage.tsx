@@ -19,7 +19,8 @@ import { MessageRenderer } from "./MessageRenderer";
 import { MarkdownRendererNew as MarkdownRenderer } from "./MarkdownRendererNew";
 import { BlocksRenderer } from "./BlocksRenderer";
 import { ActionsRenderer } from "./ActionsRenderer";
-import { ModelChip, ModelDetails } from "./ModelChip";
+import { ModelBadge } from "./ModelBadge";
+import { useConversation } from "@/stores/conversation";
 import { MODULES, convertToOldModuleId } from "@/lib/modules";
 import { getModuleIcon } from "@/lib/moduleIcons";
 import { getModuleIconKey, getModuleColor, debugIconMapping } from "@/lib/iconMapping";
@@ -76,6 +77,16 @@ export const ChatMessage = memo(function ChatMessage({
   conversationId,
   messageIndex,
 }: Props) {
+  const { lastUsedModel, setLastUsedModel } = useConversation()
+
+  // Debug log para verificar store
+  if (process.env.NODE_ENV === 'development') {
+    console.log('ChatMessage useConversation debug:', {
+      messageId: message.id,
+      lastUsedModel,
+      setLastUsedModel: typeof setLastUsedModel
+    });
+  }
 
   const msgTime = useMemo(() => {
     if (!message.timestamp) return "";
@@ -140,6 +151,33 @@ export const ChatMessage = memo(function ChatMessage({
     debugIconMapping(effectiveModuleId);
   }
 
+  // Determinar modelo a ser exibido: meta.model da mensagem ou lastUsedModel como fallback
+  const modelToShow = useMemo(() => {
+    if (isUser) return undefined // Não mostrar badge para mensagens do usuário
+    
+    // Debug log para verificar dados
+    if (process.env.NODE_ENV === 'development') {
+      console.log('ChatMessage modelToShow debug:', {
+        messageId: message.id,
+        isUser,
+        messageMeta: message.meta,
+        messageModel: message.model,
+        lastUsedModel,
+        willShow: message.meta?.model || (lastUsedModel && !message.isStreaming ? lastUsedModel : undefined)
+      });
+    }
+    
+    // Prioridade: meta.model da mensagem > lastUsedModel (apenas se não estiver streaming)
+    return message.meta?.model || (lastUsedModel && !message.isStreaming ? lastUsedModel : undefined)
+  }, [isUser, message.meta?.model, lastUsedModel, message.isStreaming])
+
+  // Atualizar lastUsedModel quando receber meta.model
+  React.useEffect(() => {
+    if (!isUser && message.meta?.model) {
+      setLastUsedModel(message.meta.model)
+    }
+  }, [isUser, message.meta?.model, setLastUsedModel])
+
   // Bubble classes based on role
   const bubbleClass = (role: 'user' | 'assistant' | 'system') => {
     if (role === 'user') {
@@ -186,18 +224,7 @@ export const ChatMessage = memo(function ChatMessage({
           )}
         </div>
         
-        {/* Chip do modelo usado - apenas para assistente */}
-        {!isUser && (
-          <div className="mt-1">
-            <ModelChip 
-              model={message.model}
-              provider={message.provider}
-              complexity={message.complexity}
-              tier={message.tier}
-              className="scale-90"
-            />
-          </div>
-        )}
+        {/* Badge do modelo removido - agora aparece apenas na linha de metadados */}
         
         {/* Descrição do módulo - apenas para assistente */}
         {!isUser && moduleInfo && (
@@ -395,28 +422,26 @@ export const ChatMessage = memo(function ChatMessage({
 
           {/* Metadados */}
           <footer className="mt-1 text-xs text-zinc-500 select-none">
-            {msgTime && (
-              <time dateTime={(() => {
-                if (!message.timestamp) return new Date().toISOString();
-                if (message.timestamp instanceof Date) return message.timestamp.toISOString();
-                return new Date(message.timestamp).toISOString();
-              })()}>{msgTime}</time>
-            )}
-            {typeof message.tokens === "number" && (
-              <span className="ml-2">{formatTokens(message.tokens)} tokens</span>
-            )}
-            {/* Informações detalhadas do modelo - só se houver tokens */}
-            {!isUser && message.tokens && message.tokens > 0 && (
-              <div className="mt-1">
-                <ModelDetails 
-                  model={message.model}
-                  provider={message.provider}
-                  complexity={message.complexity}
-                  tier={message.tier}
-                  tokens={message.tokens}
-                />
-              </div>
-            )}
+            <div className="flex items-center gap-2">
+              {msgTime && (
+                <time dateTime={(() => {
+                  if (!message.timestamp) return new Date().toISOString();
+                  if (message.timestamp instanceof Date) return message.timestamp.toISOString();
+                  return new Date(message.timestamp).toISOString();
+                })()}>{msgTime}</time>
+              )}
+              {typeof message.tokens === "number" && (
+                <span>{formatTokens(message.tokens)} tokens</span>
+              )}
+              {/* Badge do modelo - única fonte de verdade */}
+              {!isUser && (
+                modelToShow ? (
+                  <ModelBadge model={modelToShow} />
+                ) : message.isStreaming ? (
+                  <span className="ml-2 text-xs text-gray-400">...</span>
+                ) : null
+              )}
+            </div>
           </footer>
         </article>
       </div>
@@ -443,7 +468,8 @@ export const ChatMessage = memo(function ChatMessage({
     prev.message.complexity === next.message.complexity &&
     prev.message.webSearchUsed === next.message.webSearchUsed &&
     JSON.stringify(prev.message.citations ?? []) === JSON.stringify(next.message.citations ?? []) &&
-    JSON.stringify(prev.message.attachment ?? null) === JSON.stringify(next.message.attachment ?? null)
+    JSON.stringify(prev.message.attachment ?? null) === JSON.stringify(next.message.attachment ?? null) &&
+    JSON.stringify(prev.message.meta ?? null) === JSON.stringify(next.message.meta ?? null)
   );
 });
 

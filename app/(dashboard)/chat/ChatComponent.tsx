@@ -77,7 +77,7 @@ export default function ChatComponent() {
     model,
     setModel,
     autoSelection
-  } = useUnifiedChat("openai", "gpt-4o-mini");
+  } = useUnifiedChat("gemini", "gemini-2.0-flash-exp");
 
   // Adaptar para interface existente
   const currentConversation = conversationId ? {
@@ -93,7 +93,15 @@ export default function ChatComponent() {
       actions: [],
       trace: {},
       image: undefined,
-      attachment: undefined
+      attachment: undefined,
+      // Preservar metadados do modelo
+      model: msg.model,
+      provider: msg.provider,
+      tier: msg.tier as "IA" | "IA_SUPER" | "IA_ECO" | undefined,
+      complexity: msg.complexity,
+      module: msg.module,
+      tokens: msg.tokens,
+      meta: msg.meta
     })),
     createdAt: new Date(),
     updatedAt: new Date()
@@ -101,6 +109,15 @@ export default function ChatComponent() {
 
   const conversations = currentConversation ? [currentConversation] : [];
   const isStreaming = loading;
+
+  // Debug log para verificar dados das mensagens
+  if (process.env.NODE_ENV === 'development') {
+    console.log('ChatComponent messages debug:', {
+      messagesCount: messages.length,
+      lastMessage: messages[messages.length - 1],
+      currentConversationMessages: currentConversation?.messages
+    });
+  }
 
   // Funções adaptadas
   const sendMessage = async (

@@ -63,6 +63,13 @@ export interface Message {
   provider?: string
   complexity?: string
   routingReasoning?: string
+  // Metadados padronizados do modelo efetivo
+  meta?: {
+    provider?: 'openai' | 'google' | 'anthropic' | 'local';
+    model?: string;           // ex: 'gpt-4o-mini' ou 'gemini-2.0-flash-exp'
+    routedFrom?: string;      // opcional: 'preferred:gpt-4o' -> 'used:gpt-4o-mini'
+    timestamp?: number;
+  };
   // Orchestrated UI payloads
   blocks?: OrchestratorBlock[]
   actions?: OrchestratorAction[]

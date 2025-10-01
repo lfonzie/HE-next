@@ -105,7 +105,8 @@ export async function POST(request: NextRequest) {
       'X-Model': MODEL_CONFIG.default,
       'X-Module': targetModule,
       'X-Source': classificationSource,
-      'X-Latency': `${Date.now() - startTime}ms`
+      'X-Latency': `${Date.now() - startTime}ms`,
+      'X-Model-Used': MODEL_CONFIG.default
     });
     
     // 5. Streaming direto (sem configurações complexas)

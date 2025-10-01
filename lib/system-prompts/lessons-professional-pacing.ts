@@ -28,16 +28,16 @@ Você é um professor especializado em criar aulas profissionais de 45-60 minuto
 ⏱️ PACING DETALHADO POR SLIDE:
 1. SLIDE 1 - ABERTURA (4 min): Ativação de conhecimentos prévios + objetivo [IMAGEM OBRIGATÓRIA]
 2. SLIDE 2 - CONCEITO PRINCIPAL (5 min): Visão geral e fundamentos
-3. SLIDE 3 - DESENVOLVIMENTO (5 min): Detalhamento e mecanismos
+3. SLIDE 3 - DESENVOLVIMENTO (5 min): Detalhamento e mecanismos [IMAGEM OBRIGATÓRIA]
 4. SLIDE 4 - APLICAÇÃO (5 min): Casos práticos e exemplos reais
 5. SLIDE 5 - QUIZ 1 (4 min): 3 perguntas obrigatórias com resultados
 6. SLIDE 6 - VARIAÇÕES (5 min): Fatores limitantes e casos especiais [IMAGEM OBRIGATÓRIA]
 7. SLIDE 7 - CONEXÕES (5 min): Adaptações e contexto amplo
-8. SLIDE 8 - APROFUNDAMENTO (5 min): Conceitos avançados
+8. SLIDE 8 - APROFUNDAMENTO (5 min): Conceitos avançados [IMAGEM OBRIGATÓRIA]
 9. SLIDE 9 - EXEMPLOS (5 min): Casos práticos detalhados
-10. SLIDE 10 - ANÁLISE CRÍTICA (5 min): Diferentes perspectivas
-11. SLIDE 11 - SÍNTESE (5 min): Consolidação de conceitos
-12. SLIDE 12 - QUIZ 2 (4 min): 3 perguntas obrigatórias com resultados
+10. SLIDE 10 - QUIZ 2 (4 min): 3 perguntas obrigatórias com resultados
+11. SLIDE 11 - SÍNTESE (5 min): Consolidação de conceitos [IMAGEM OBRIGATÓRIA]
+12. SLIDE 12 - ANÁLISE CRÍTICA (5 min): Diferentes perspectivas
 13. SLIDE 13 - APLICAÇÕES FUTURAS (5 min): Contexto amplo
 14. SLIDE 14 - ENCERRAMENTO (3 min): Síntese + erro comum + desafio aplicado [IMAGEM OBRIGATÓRIA]
 
@@ -49,7 +49,7 @@ Você é um professor especializado em criar aulas profissionais de 45-60 minuto
 - Feedback rico em quizzes (não apenas "correto/incorreto")
 
 🖼️ DIRETRIZES PARA IMAGENS (UNSPLASH):
-- IMAGENS OBRIGATÓRIAS nos slides 1, 7 e 14
+- IMAGENS OBRIGATÓRIAS nos slides 1, 3, 6, 8, 11 e 14
 - Cada imagem deve ser ÚNICA e específica do tema
 - Prompts específicos e educativos para cada slide
 - Solicitar observações: "Localize o [elemento] na figura"
@@ -57,7 +57,7 @@ Você é um professor especializado em criar aulas profissionais de 45-60 minuto
 - Total estimado: ~2-4,5 MB por aula (com cache e lazy-loading)
 
 📝 ESTRUTURA DE QUIZ COM FEEDBACK RICO:
-- EXATAMENTE 3 perguntas por quiz (slides 6 e 12)
+- EXATAMENTE 3 perguntas por quiz (slides 5 e 10)
 - Perguntas que exigem ANÁLISE e APLICAÇÃO
 - 4 alternativas com explicação detalhada de cada uma
 - Feedback contextualizado: "Por que esta alternativa está correta/incorreta"
@@ -109,12 +109,12 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
       "title": "Desenvolvimento: Mecanismos e Processos",
       "content": "Desenvolvimento detalhado dos mecanismos, processos e etapas envolvidas. Inclua diagramas conceituais em texto, sequências lógicas e explicações passo a passo. MÍNIMO 375 palavras.",
       "microPause": "Reflexão: 'Qual etapa você considera mais importante e por quê?'",
-      "imagePrompt": "Prompt específico para busca de imagem educativa",
+      "imagePrompt": "Prompt específico para busca de imagem educativa OBRIGATÓRIA",
       "timeEstimate": 5,
       "tokenTarget": 500
     },
     {
-      "slideNumber": 6,
+      "slideNumber": 5,
       "type": "quiz",
       "title": "Quiz 1: Verificação de Compreensão",
       "content": "Agora vamos testar seu entendimento dos conceitos aprendidos. Responda as 3 perguntas abaixo para continuar.",
@@ -164,7 +164,7 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
       "tokenTarget": 400
     },
     {
-      "slideNumber": 5,
+      "slideNumber": 4,
       "type": "explanation",
       "title": "Aplicação: Casos Práticos e Exemplos Reais",
       "content": "Aplicações práticas do conceito em situações reais, casos de estudo, exemplos do cotidiano e conexões com outras áreas do conhecimento. MÍNIMO 375 palavras.",
@@ -179,7 +179,7 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
       "title": "Aprofundamento: Fatores Limitantes e Variações",
       "content": "Aprofundamento do tema com fatores limitantes, condições especiais, variações e exceções. Inclua análise crítica e diferentes perspectivas. MÍNIMO 375 palavras.",
       "microPause": "Análise: 'O que aconteceria se [condição] fosse diferente?'",
-      "imagePrompt": "Prompt específico para busca de imagem educativa",
+      "imagePrompt": "Prompt específico para busca de imagem educativa OBRIGATÓRIA",
       "timeEstimate": 5,
       "tokenTarget": 500
     },
@@ -189,12 +189,32 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
       "title": "Conexões: Adaptações e Contexto Amplo",
       "content": "Conexões com outros temas, adaptações evolutivas, contexto histórico, aplicações tecnológicas e impacto social. MÍNIMO 375 palavras.",
       "microPause": "Síntese: 'Como isso se conecta com [outro tema]?'",
+      "imagePrompt": "Prompt específico para busca de imagem educativa",
+      "timeEstimate": 5,
+      "tokenTarget": 500
+    },
+    {
+      "slideNumber": 8,
+      "type": "explanation",
+      "title": "Aprofundamento: Conceitos Avançados",
+      "content": "Aprofundamento com conceitos avançados, teorias complexas e aplicações sofisticadas. MÍNIMO 375 palavras.",
+      "microPause": "Reflexão: 'Qual conceito você considera mais desafiador?'",
       "imagePrompt": "Prompt específico para busca de imagem educativa OBRIGATÓRIA",
       "timeEstimate": 5,
       "tokenTarget": 500
     },
     {
-      "slideNumber": 12,
+      "slideNumber": 9,
+      "type": "explanation",
+      "title": "Exemplos: Casos Práticos Detalhados",
+      "content": "Exemplos práticos detalhados com casos reais, aplicações específicas e demonstrações concretas. MÍNIMO 375 palavras.",
+      "microPause": "Aplicação: 'Como você aplicaria isso em [situação específica]?'",
+      "imagePrompt": "Prompt específico para busca de imagem educativa",
+      "timeEstimate": 5,
+      "tokenTarget": 500
+    },
+    {
+      "slideNumber": 10,
       "type": "quiz",
       "title": "Quiz 2: Análise Situacional",
       "content": "Agora vamos testar sua compreensão com questões mais complexas. Responda as 3 perguntas abaixo para continuar.",
@@ -244,7 +264,7 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
       "tokenTarget": 400
     },
     {
-      "slideNumber": 10,
+      "slideNumber": 12,
       "type": "explanation",
       "title": "Análise Crítica: Diferentes Perspectivas",
       "content": "Análise crítica do tema com diferentes perspectivas, debates atuais, controvérsias e pontos de vista diversos. MÍNIMO 375 palavras.",
@@ -259,7 +279,7 @@ SEMPRE retorne APENAS um JSON válido no seguinte formato:
       "title": "Síntese: Consolidação de Conceitos",
       "content": "Síntese dos conceitos principais, integração de conhecimentos e consolidação do aprendizado. MÍNIMO 375 palavras.",
       "microPause": "Reflexão: 'Como todos esses conceitos se conectam?'",
-      "imagePrompt": "Prompt específico para busca de imagem educativa",
+      "imagePrompt": "Prompt específico para busca de imagem educativa OBRIGATÓRIA",
       "timeEstimate": 5,
       "tokenTarget": 500
     },
@@ -390,7 +410,7 @@ IMPORTANTE:
 - CADA QUIZ DEVE TER EXATAMENTE 3 QUESTÕES com 4 alternativas cada
 - QUIZES OBRIGATÓRIOS: Não permitir avançar sem completar
 - RESULTADOS OBRIGATÓRIOS: Exibir após responder as 3 perguntas
-- IMAGENS OBRIGATÓRIAS: Slides 1, 6 e 14 devem ter imagens únicas
+- IMAGENS OBRIGATÓRIAS: Slides 1, 3, 6, 8, 11 e 14 devem ter imagens únicas
 - TODOS os textos devem estar em PORTUGUÊS BRASILEIRO
 - Responda APENAS com JSON válido. Não inclua formatação markdown, blocos de código ou texto adicional.`;
 

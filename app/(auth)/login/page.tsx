@@ -159,8 +159,8 @@ function LoginForm() {
                 <Label htmlFor="email" className="text-step--1 font-medium">
                   Email institucional
                 </Label>
-                <div className="relative">
-                  <Mail className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-subtle" aria-hidden="true" />
+                <div className="flex items-center h-12 rounded-2xl border border-subtle bg-surface-0 px-4 transition-theme focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/40">
+                  <Mail className="h-5 w-5 text-subtle mr-3 flex-shrink-0" aria-hidden="true" />
                   <Input
                     ref={emailRef}
                     id="email"
@@ -172,7 +172,7 @@ function LoginForm() {
                     required
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
-                    className="h-12 rounded-2xl border-subtle bg-surface-0 pl-12 text-step-0 transition-theme focus:border-primary focus:ring-2 focus:ring-primary/40"
+                    className="flex-1 border-0 bg-transparent p-0 text-step-0 focus-visible:outline-none focus-visible:ring-0"
                   />
                 </div>
               </div>
@@ -181,8 +181,8 @@ function LoginForm() {
                 <Label htmlFor="password" className="text-step--1 font-medium">
                   Senha
                 </Label>
-                <div className="relative">
-                  <Lock className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-subtle" aria-hidden="true" />
+                <div className="flex items-center h-12 rounded-2xl border border-subtle bg-surface-0 px-4 transition-theme focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/40">
+                  <Lock className="h-5 w-5 text-subtle mr-3 flex-shrink-0" aria-hidden="true" />
                   <Input
                     ref={passwordRef}
                     id="password"
@@ -193,12 +193,12 @@ function LoginForm() {
                     required
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
-                    className="h-12 rounded-2xl border-subtle bg-surface-0 pl-12 pr-12 text-step-0 transition-theme focus:border-primary focus:ring-2 focus:ring-primary/40"
+                    className="flex-1 border-0 bg-transparent p-0 text-step-0 focus-visible:outline-none focus-visible:ring-0"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((value) => !value)}
-                    className="absolute right-4 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-transparent text-subtle transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="ml-3 flex h-9 w-9 items-center justify-center rounded-full border border-transparent text-subtle transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring flex-shrink-0"
                     aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
                   >
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}

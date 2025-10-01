@@ -31,8 +31,8 @@ export function MessageHeader({
   showModel = true,
   className = ''
 }: MessageHeaderProps) {
-  const formatTimestamp = (timestamp: number) => {
-    const date = new Date(timestamp)
+  const formatTimestamp = (timestamp: Date | number) => {
+    const date = timestamp instanceof Date ? timestamp : new Date(timestamp)
     return date.toLocaleTimeString('pt-BR', {
       hour: '2-digit',
       minute: '2-digit'
@@ -125,27 +125,7 @@ export function MessageHeader({
             </Tooltip>
           )}
 
-          {/* Model info */}
-          {showModel && message.model && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Badge 
-                  variant="outline" 
-                  className={`text-xs ${getModelTierColor(message.tier)}`}
-                >
-                  {message.model}
-                </Badge>
-              </TooltipTrigger>
-              <TooltipContent>
-                <div className="space-y-1">
-                  <div>Modelo: {message.model}</div>
-                  {message.provider && <div>Provedor: {message.provider}</div>}
-                  {message.tier && <div>Tier: {message.tier}</div>}
-                  {message.tokens && <div>Tokens: {message.tokens}</div>}
-                </div>
-              </TooltipContent>
-            </Tooltip>
-          )}
+          {/* Model info removido - agora aparece apenas na linha de metadados da mensagem */}
 
           {/* Complexity badge */}
           {message.complexity && (

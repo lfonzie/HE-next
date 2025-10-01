@@ -10,6 +10,18 @@ interface ChatMessage {
   role: "user" | "assistant" | "system";
   content: string;
   timestamp: Date;
+  model?: string;
+  provider?: string;
+  tier?: string;
+  complexity?: string;
+  module?: string;
+  tokens?: number;
+  meta?: {
+    provider?: 'openai' | 'google' | 'anthropic' | 'local';
+    model?: string;
+    routedFrom?: string;
+    timestamp?: number;
+  };
 }
 
 interface ChatResponse {
@@ -255,7 +267,7 @@ export function useUnifiedChat(
             if (line.startsWith('data: ')) {
               try {
                 const data = JSON.parse(line.slice(6));
-                if (data.type === "content") {
+                if (data.content) {
                   chunkCount++;
                   fullContent += data.content;
                   console.log(`📝 [UNIFIED-CHAT] Received chunk ${chunkCount}: "${data.content}"`);
@@ -263,6 +275,35 @@ export function useUnifiedChat(
                     prev.map(msg => 
                       msg.id === tempId 
                         ? { ...msg, content: fullContent }
+                        : msg
+                    )
+                  );
+                } else if (data.metadata) {
+                  console.log(`📊 [UNIFIED-CHAT] Received metadata:`, data.metadata);
+                  setMessages(prev => 
+                    prev.map(msg => 
+                      msg.id === tempId 
+                        ? { 
+                            ...msg, 
+                            model: data.metadata.model,
+                            provider: data.metadata.provider,
+                            tier: data.metadata.tier,
+                            complexity: data.metadata.complexity,
+                            module: data.metadata.module,
+                            tokens: data.metadata.tokens
+                          }
+                        : msg
+                    )
+                  );
+                } else if (data.meta) {
+                  console.log(`🏷️ [UNIFIED-CHAT] Received meta:`, data.meta);
+                  setMessages(prev => 
+                    prev.map(msg => 
+                      msg.id === tempId 
+                        ? { 
+                            ...msg, 
+                            meta: data.meta
+                          }
                         : msg
                     )
                   );

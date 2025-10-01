@@ -508,7 +508,12 @@ export async function POST(request: NextRequest) {
               provider: finalProvider,
               complexity: complexity,
               classificationSource: classificationSource
-            } 
+            },
+            meta: {
+              provider: finalProvider,
+              model: modelName,
+              timestamp: Date.now()
+            }
           })}\n\n`))
           
           controller.enqueue(encoder.encode('data: [DONE]\n\n'))
