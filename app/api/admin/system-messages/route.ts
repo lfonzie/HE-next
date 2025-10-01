@@ -1,24 +1,13 @@
 // app/api/admin/system-messages/route.ts
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import fs from 'fs'
 import path from 'path'
 
-// Verificar se o usuário é admin
-async function isAdmin(session: any): Promise<boolean> {
-  // Implementar lógica de verificação de admin
-  // Por enquanto, assumir que qualquer usuário autenticado é admin
-  return !!session?.user
-}
+import { handleAdminRouteError, requireAdmin } from '@/lib/admin-auth'
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session || !(await isAdmin(session))) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    await requireAdmin(request)
 
     const filePath = path.join(process.cwd(), 'system-message.json')
     
@@ -31,6 +20,11 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(config)
   } catch (error) {
+    const adminResponse = handleAdminRouteError(error)
+    if (adminResponse) {
+      return adminResponse
+    }
+
     console.error('Error loading system messages:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
@@ -38,11 +32,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session || !(await isAdmin(session))) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    await requireAdmin(request)
 
     const config = await request.json()
     
@@ -64,6 +54,11 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, message: 'Configuration saved successfully' })
   } catch (error) {
+    const adminResponse = handleAdminRouteError(error)
+    if (adminResponse) {
+      return adminResponse
+    }
+
     console.error('Error saving system messages:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }

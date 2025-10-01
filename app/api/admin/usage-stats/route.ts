@@ -6,29 +6,20 @@ import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic';
 
 
-import { getServerSession } from 'next-auth'
+import {
 
 
-import { authOptions } from '@/lib/auth'
-
-
-import { 
-
-
-  getUsageStats, 
-  getUserUsageStats, 
+  getUsageStats,
+  getUserUsageStats,
   getSchoolUsageStats,
   getUsageTrends,
   getModelPerformanceStats
 } from '@/lib/usage-analytics'
+import { handleAdminRouteError, requireAdmin } from '@/lib/admin-auth'
 
 export async function GET(request: NextRequest) {
   try {
-    // Check authentication and admin role
-    const session = await getServerSession(authOptions)
-    if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    await requireAdmin(request)
 
     const { searchParams } = new URL(request.url)
     const type = searchParams.get('type') || 'overview'
@@ -69,6 +60,11 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Invalid type parameter' }, { status: 400 })
     }
   } catch (error) {
+    const adminResponse = handleAdminRouteError(error)
+    if (adminResponse) {
+      return adminResponse
+    }
+
     console.error('Usage stats API error:', error)
     return NextResponse.json(
       { error: 'Failed to fetch usage statistics' },
@@ -79,11 +75,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    // Check authentication and admin role
-    const session = await getServerSession(authOptions)
-    if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    await requireAdmin(request)
 
     const body = await request.json()
     const { type, filters } = body
@@ -123,6 +115,11 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(results)
   } catch (error) {
+    const adminResponse = handleAdminRouteError(error)
+    if (adminResponse) {
+      return adminResponse
+    }
+
     console.error('Usage stats bulk API error:', error)
     return NextResponse.json(
       { error: 'Failed to fetch bulk usage statistics' },
