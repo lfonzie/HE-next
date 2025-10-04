@@ -6,6 +6,8 @@
 @tailwind components;
 @tailwind utilities;
 
+@import '../styles/aulas-dark-mode.css';
+
 @layer base {
   :root {
     /* --- Light theme (fallback) --- */

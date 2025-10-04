@@ -1,6 +1,7 @@
 'use client'
 
 import { memo, useState, useMemo } from 'react'
+import { useDarkMode } from '@/hooks/useDarkMode'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -63,6 +64,7 @@ const AulaSuggestionsEnhanced = memo(({ onSuggestionClick, isGenerating, classNa
   const [selectedLevel, setSelectedLevel] = useState<string>('all')
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all')
   const [sortBy, setSortBy] = useState<'popularity' | 'alphabetical' | 'time'>('popularity')
+  const { isDark } = useDarkMode()
 
   // Carregar dados das sugestões
   const loadSuggestions = async () => {
@@ -139,13 +141,13 @@ const AulaSuggestionsEnhanced = memo(({ onSuggestionClick, isGenerating, classNa
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case 'básico':
-        return 'bg-green-100 text-green-800 border-green-200'
+        return 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800'
       case 'intermediário':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200'
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-300 dark:border-yellow-800'
       case 'avançado':
-        return 'bg-red-100 text-red-800 border-red-200'
+        return 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800'
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200'
+        return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700'
     }
   }
 
@@ -173,25 +175,25 @@ const AulaSuggestionsEnhanced = memo(({ onSuggestionClick, isGenerating, classNa
 
   if (loading) {
     return (
-      <Card className={`border-2 border-yellow-100 bg-gradient-to-br from-yellow-50 via-orange-50 to-red-50 ${className}`}>
+      <Card className={`border-2 border-yellow-200 bg-gradient-to-br from-yellow-50 via-orange-50 to-red-50 dark:border-yellow-800 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 ${className}`}>
         <CardHeader className="text-center pb-4">
-          <CardTitle className="flex items-center justify-center gap-2 text-2xl">
-            <Lightbulb className="h-7 w-7 text-yellow-500" />
+          <CardTitle className="flex items-center justify-center gap-2 text-2xl text-gray-900 dark:text-white">
+            <Lightbulb className="h-7 w-7 text-yellow-500 dark:text-yellow-400" />
             Sugestões Inteligentes
           </CardTitle>
-          <CardDescription className="text-base">
+          <CardDescription className="text-base text-gray-600 dark:text-gray-300">
             Carregando sugestões personalizadas...
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {Array.from({ length: 6 }).map((_, index) => (
-              <div key={index} className="p-6 border-2 border-gray-200 rounded-xl bg-gray-50 animate-pulse">
-                <div className="h-6 bg-gray-300 rounded-lg mb-3"></div>
-                <div className="h-4 bg-gray-300 rounded-lg w-2/3 mb-4"></div>
+              <div key={index} className="p-6 border-2 border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 animate-pulse">
+                <div className="h-6 bg-gray-300 dark:bg-gray-600 rounded-lg mb-3"></div>
+                <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded-lg w-2/3 mb-4"></div>
                 <div className="flex gap-2">
-                  <div className="h-6 w-16 bg-gray-300 rounded-full"></div>
-                  <div className="h-6 w-20 bg-gray-300 rounded-full"></div>
+                  <div className="h-6 w-16 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
+                  <div className="h-6 w-20 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
                 </div>
               </div>
             ))}
@@ -203,17 +205,17 @@ const AulaSuggestionsEnhanced = memo(({ onSuggestionClick, isGenerating, classNa
 
   if (error) {
     return (
-      <Card className={`border-2 border-red-100 bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 ${className}`}>
+      <Card className={`border-2 border-red-200 bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 dark:border-red-800 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 ${className}`}>
         <CardHeader className="text-center pb-4">
-          <CardTitle className="flex items-center justify-center gap-2 text-2xl text-red-600">
+          <CardTitle className="flex items-center justify-center gap-2 text-2xl text-red-600 dark:text-red-400">
             <AlertCircle className="h-7 w-7" />
             Erro ao Carregar Sugestões
           </CardTitle>
         </CardHeader>
         <CardContent className="text-center">
-          <Alert className="border-red-200 bg-red-50 mb-4">
-            <AlertCircle className="h-4 w-4 text-red-600" />
-            <AlertDescription className="text-red-800">
+          <Alert className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20 mb-4">
+            <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
+            <AlertDescription className="text-red-800 dark:text-red-300">
               {error}
             </AlertDescription>
           </Alert>
@@ -227,11 +229,11 @@ const AulaSuggestionsEnhanced = memo(({ onSuggestionClick, isGenerating, classNa
   }
 
   return (
-    <Card className={`border-2 border-yellow-100 bg-gradient-to-br from-yellow-50 via-orange-50 to-red-50 ${className}`}>
+    <Card className={`border-2 border-yellow-200 bg-gradient-to-br from-yellow-50 via-orange-50 to-red-50 dark:border-yellow-800 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 ${className}`}>
       <CardHeader className="text-center pb-4">
         <div className="flex items-center justify-center gap-3">
-          <CardTitle className="flex items-center gap-2 text-2xl">
-            <Lightbulb className="h-7 w-7 text-yellow-500" />
+          <CardTitle className="flex items-center gap-2 text-2xl text-gray-900 dark:text-white">
+            <Lightbulb className="h-7 w-7 text-yellow-500 dark:text-yellow-400" />
             Sugestões Inteligentes
           </CardTitle>
           <Button
@@ -245,7 +247,7 @@ const AulaSuggestionsEnhanced = memo(({ onSuggestionClick, isGenerating, classNa
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
           </Button>
         </div>
-        <CardDescription className="text-base">
+        <CardDescription className="text-base text-gray-600 dark:text-gray-300">
           {suggestionsData?.metadata.total || 0} sugestões personalizadas com filtros inteligentes
         </CardDescription>
       </CardHeader>
@@ -256,7 +258,7 @@ const AulaSuggestionsEnhanced = memo(({ onSuggestionClick, isGenerating, classNa
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
                 <Input
                   placeholder="Buscar por tópico, descrição ou tags..."
                   value={searchTerm}
@@ -321,7 +323,7 @@ const AulaSuggestionsEnhanced = memo(({ onSuggestionClick, isGenerating, classNa
         {/* Resultados */}
         <div className="mb-4">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               Mostrando {filteredSuggestions.length} de {suggestionsData?.metadata.total || 0} sugestões
             </p>
             {(searchTerm || selectedCategory !== 'all' || selectedLevel !== 'all' || selectedDifficulty !== 'all') && (
@@ -348,7 +350,11 @@ const AulaSuggestionsEnhanced = memo(({ onSuggestionClick, isGenerating, classNa
             <button
               key={suggestion.id}
               onClick={() => onSuggestionClick(suggestion)}
-              className="group p-6 text-left border-2 border-blue-200 rounded-xl hover:border-blue-400 hover:bg-white hover:shadow-xl transition-all duration-300 bg-white/80 backdrop-blur-sm transform hover:scale-105 hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="suggestion-button group p-6 text-left border-2 border-blue-200 dark:border-gray-600 rounded-xl hover:border-blue-400 dark:hover:border-gray-500 hover:bg-white dark:hover:bg-gray-700 hover:shadow-xl transition-all duration-300 bg-white/80 dark:bg-gray-800/90 backdrop-blur-sm transform hover:scale-105 hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                backgroundColor: isDark ? '#374151 !important' : undefined,
+                background: isDark ? '#374151 !important' : undefined
+              }}
               disabled={isGenerating}
               aria-label={`Gerar aula sobre ${suggestion.text}`}
             >
@@ -359,10 +365,10 @@ const AulaSuggestionsEnhanced = memo(({ onSuggestionClick, isGenerating, classNa
                     {getCategoryIcon(suggestion.category)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-gray-800 group-hover:text-blue-800 leading-relaxed text-sm">
+                    <h3 className="font-semibold text-gray-800 dark:text-gray-200 group-hover:text-blue-800 dark:group-hover:text-blue-300 leading-relaxed text-sm">
                       {suggestion.text}
                     </h3>
-                    <p className="text-xs text-gray-600 mt-1 line-clamp-2">
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
                       {suggestion.description}
                     </p>
                   </div>
@@ -385,13 +391,13 @@ const AulaSuggestionsEnhanced = memo(({ onSuggestionClick, isGenerating, classNa
                 </div>
 
                 {/* Footer com métricas */}
-                <div className="flex items-center justify-between text-xs text-gray-500">
+                <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
                   <div className="flex items-center gap-1">
                     <Clock className="h-3 w-3" />
                     <span>{suggestion.estimatedTime}min</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Star className="h-3 w-3 text-yellow-500" />
+                    <Star className="h-3 w-3 text-yellow-500 dark:text-yellow-400" />
                     <span>{suggestion.popularity}%</span>
                   </div>
                 </div>
@@ -399,19 +405,19 @@ const AulaSuggestionsEnhanced = memo(({ onSuggestionClick, isGenerating, classNa
                 {/* Tags */}
                 <div className="flex flex-wrap gap-1">
                   {suggestion.tags.slice(0, 3).map((tag, index) => (
-                    <span key={index} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                    <span key={index} className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded-full">
                       {tag}
                     </span>
                   ))}
                   {suggestion.tags.length > 3 && (
-                    <span className="text-xs text-gray-400 px-2 py-1">
+                    <span className="text-xs text-gray-400 dark:text-gray-500 px-2 py-1">
                       +{suggestion.tags.length - 3}
                     </span>
                   )}
                 </div>
 
                 {/* Call to action */}
-                <div className="flex items-center gap-1 text-xs text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity">
                   <Send className="h-3 w-3" />
                   <span>Clique para gerar automaticamente</span>
                 </div>
@@ -422,11 +428,11 @@ const AulaSuggestionsEnhanced = memo(({ onSuggestionClick, isGenerating, classNa
 
         {filteredSuggestions.length === 0 && (
           <div className="text-center py-8">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Search className="h-8 w-8 text-gray-400" />
+            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Search className="h-8 w-8 text-gray-400 dark:text-gray-500" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-600 mb-2">Nenhuma sugestão encontrada</h3>
-            <p className="text-gray-500 mb-4">
+            <h3 className="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">Nenhuma sugestão encontrada</h3>
+            <p className="text-gray-500 dark:text-gray-400 mb-4">
               Tente ajustar os filtros ou fazer uma nova busca
             </p>
             <Button
@@ -445,9 +451,9 @@ const AulaSuggestionsEnhanced = memo(({ onSuggestionClick, isGenerating, classNa
         )}
 
         <div className="mt-8 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/60 rounded-full border border-blue-200">
-            <TrendingUp className="h-4 w-4 text-blue-600" />
-            <span className="text-sm text-gray-700">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/60 dark:bg-gray-800/60 rounded-full border border-blue-200 dark:border-blue-800">
+            <TrendingUp className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            <span className="text-sm text-gray-700 dark:text-gray-300">
               Ou descreva seu próprio tópico abaixo
             </span>
           </div>

@@ -1,0 +1,127 @@
+/* CSS customizado para modo escuro na seção de Aulas */
+/* Força o modo escuro quando a classe .dark está presente */
+
+/* Card principal da seção */
+.dark .aulas-section {
+  background: linear-gradient(135deg, #1f2937 0%, #111827 50%, #0f172a 100%) !important;
+  border-color: #fbbf24 !important;
+}
+
+.dark .aulas-section .card-title {
+  color: #f9fafb !important;
+}
+
+.dark .aulas-section .card-description {
+  color: #d1d5db !important;
+}
+
+.dark .aulas-section .card-icon {
+  color: #fbbf24 !important;
+}
+
+/* SOLUÇÃO AGRESSIVA: Forçar fundo escuro em TODOS os botões dentro de aulas-section */
+.dark .aulas-section button,
+.dark .aulas-section .suggestion-button,
+.dark .aulas-section button[class*="group"],
+.dark .aulas-section button[class*="suggestion"],
+.dark .aulas-section .group {
+  background: #374151 !important;
+  background-color: #374151 !important;
+  border-color: #4b5563 !important;
+  color: #f3f4f6 !important;
+}
+
+.dark .aulas-section button:hover,
+.dark .aulas-section .suggestion-button:hover,
+.dark .aulas-section button[class*="group"]:hover,
+.dark .aulas-section button[class*="suggestion"]:hover,
+.dark .aulas-section .group:hover {
+  background: #4b5563 !important;
+  background-color: #4b5563 !important;
+  border-color: #6b7280 !important;
+  color: #e5e7eb !important;
+}
+
+/* Forçar cores dos textos dentro dos cards */
+.dark .aulas-section button .text-gray-800,
+.dark .aulas-section button .text-gray-900,
+.dark .aulas-section button .text-black,
+.dark .aulas-section button h3,
+.dark .aulas-section button p,
+.dark .aulas-section button span {
+  color: #f3f4f6 !important;
+}
+
+.dark .aulas-section button .text-gray-600,
+.dark .aulas-section button .text-gray-700 {
+  color: #d1d5db !important;
+}
+
+/* Forçar cores dos badges */
+.dark .aulas-section button .bg-green-100,
+.dark .aulas-section button .bg-yellow-100,
+.dark .aulas-section button .bg-red-100,
+.dark .aulas-section button .bg-blue-100 {
+  background-color: #374151 !important;
+  color: #f3f4f6 !important;
+}
+
+.dark .aulas-section button .text-green-800,
+.dark .aulas-section button .text-yellow-800,
+.dark .aulas-section button .text-red-800,
+.dark .aulas-section button .text-blue-800 {
+  color: #f3f4f6 !important;
+}
+
+/* Footer e outros elementos */
+.dark .aulas-section .footer-container {
+  background: rgba(31, 41, 55, 0.6) !important;
+  border-color: #374151 !important;
+}
+
+.dark .aulas-section .footer-text {
+  color: #d1d5db !important;
+}
+
+.dark .aulas-section .footer-icon {
+  color: #60a5fa !important;
+}
+
+.dark .aulas-section .loading-skeleton {
+  background: #374151 !important;
+  border-color: #4b5563 !important;
+}
+
+.dark .aulas-section .skeleton-element {
+  background: #4b5563 !important;
+}
+
+.dark .aulas-section .alert-error {
+  background: rgba(153, 27, 27, 0.2) !important;
+  border-color: #dc2626 !important;
+}
+
+.dark .aulas-section .alert-error .alert-icon {
+  color: #f87171 !important;
+}
+
+.dark .aulas-section .alert-error .alert-description {
+  color: #fca5a5 !important;
+}
+
+/* Garantir que no modo claro as letras sejam pretas */
+.aulas-section .card-title {
+  color: #000000 !important;
+}
+
+.aulas-section .card-description {
+  color: #374151 !important;
+}
+
+.aulas-section .suggestion-text {
+  color: #1f2937 !important;
+}
+
+.aulas-section .footer-text {
+  color: #374151 !important;
+}

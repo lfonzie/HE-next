@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { ContentBlockedModal } from '@/components/ui/content-blocked-modal'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
@@ -10,6 +11,8 @@ import { Loader2, Sparkles, BookOpen, Target, Users, Send, Lightbulb, TrendingUp
 import { useEnhancedSuggestions } from '@/hooks/useEnhancedSuggestions'
 // Removido: seleção manual de imagens - agora é automática
 import Link from 'next/link'
+import { useTheme } from '@/hooks/useTheme'
+import { DarkModeTest } from '@/components/debug/DarkModeTest'
 
 // Mock components for demo (replace with actual imports)
 const toast = {
@@ -122,7 +125,7 @@ const LoadingEntertainment = ({ elapsedTime }: { elapsedTime: number }) => {
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="p-6 bg-white/70 backdrop-blur-sm rounded-2xl border border-yellow-200 shadow-sm">
+        <div className="p-6 bg-white/70 backdrop-blur-sm rounded-2xl border border-yellow-200 shadow-sm dark:bg-black/70 dark:border-gray-700">
           <div className="flex items-start gap-4">
             <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center flex-shrink-0">
               <Lightbulb className="h-6 w-6 text-white" />
@@ -134,7 +137,7 @@ const LoadingEntertainment = ({ elapsedTime }: { elapsedTime: number }) => {
           </div>
         </div>
         
-        <div className="p-6 bg-white/70 backdrop-blur-sm rounded-2xl border border-orange-200 shadow-sm">
+        <div className="p-6 bg-white/70 backdrop-blur-sm rounded-2xl border border-orange-200 shadow-sm dark:bg-black/70 dark:border-gray-700">
           <div className="flex items-start gap-4">
             <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center flex-shrink-0">
               <Brain className="h-6 w-6 text-white" />
@@ -227,7 +230,7 @@ const PacingMetrics = ({ metrics, warnings, className }: PacingMetricsProps) => 
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl border border-green-200">
+        <div className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl border border-green-200 dark:from-black dark:to-black dark:border-gray-700">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center">
               <Clock className="h-5 w-5 text-white" />
@@ -239,7 +242,7 @@ const PacingMetrics = ({ metrics, warnings, className }: PacingMetricsProps) => 
           </div>
         </div>
         
-        <div className="p-6 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl border border-yellow-200">
+        <div className="p-6 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl border border-yellow-200 dark:from-black dark:to-black dark:border-gray-700">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-xl flex items-center justify-center">
               <Timer className="h-5 w-5 text-white" />
@@ -277,17 +280,17 @@ const PacingMetrics = ({ metrics, warnings, className }: PacingMetricsProps) => 
       </div>
       
       {warnings && warnings.length > 0 && (
-        <div className="p-6 bg-gradient-to-br from-yellow-50 to-orange-50 border border-yellow-200 rounded-2xl">
+        <div className="p-6 bg-gradient-to-br from-yellow-50 to-orange-50 border border-yellow-200 rounded-2xl dark:from-gray-800 dark:to-gray-900 dark:border-yellow-800">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-xl flex items-center justify-center">
               <AlertTriangle className="h-5 w-5 text-white" />
             </div>
-            <div className="text-xl font-bold text-yellow-800">⚠️ Avisos de Qualidade</div>
+            <div className="text-xl font-bold text-yellow-800 dark:text-yellow-400">⚠️ Avisos de Qualidade</div>
           </div>
           <ul className="space-y-2">
             {warnings.map((warning, index) => (
-              <li key={index} className="flex items-start gap-3 text-yellow-800">
-                <div className="w-2 h-2 bg-yellow-600 rounded-full mt-2 flex-shrink-0"></div>
+              <li key={index} className="flex items-start gap-3 text-yellow-800 dark:text-yellow-400">
+                <div className="w-2 h-2 bg-yellow-600 dark:bg-yellow-500 rounded-full mt-2 flex-shrink-0"></div>
                 <span className="font-medium">{warning}</span>
               </li>
             ))}
@@ -382,6 +385,7 @@ function AulasPageContent() {
   const [generatedLesson, setGeneratedLesson] = useState<GeneratedLesson | null>(null)
   const [pacingMetrics, setPacingMetrics] = useState<any>(null)
   const [pacingWarnings, setPacingWarnings] = useState<string[]>([])
+  const { resolvedTheme } = useTheme()
   const [generationProgress, setGenerationProgress] = useState(0)
   const [generationStatus, setGenerationStatus] = useState('')
   const [formData, setFormData] = useState<FormData>({ topic: '' })
@@ -390,108 +394,19 @@ function AulasPageContent() {
   const [startTime, setStartTime] = useState<number | null>(null)
   const [elapsedTime, setElapsedTime] = useState(0)
   const [safetyWarning, setSafetyWarning] = useState<SafetyCheckResult | null>(null)
+  const [contentBlockedModal, setContentBlockedModal] = useState<{
+    isOpen: boolean
+    blockedContent: any | null
+  }>({
+    isOpen: false,
+    blockedContent: null
+  })
   
 
   // Debug log para verificar estado inicial
   console.log('AulasPageContent render - isGenerating:', isGenerating, 'generatedLesson:', !!generatedLesson)
 
-  // Função para verificar segurança do conteúdo usando IA
-  const checkContentSafety = useCallback(async (text: string): Promise<SafetyCheckResult> => {
-    try {
-      // Usar classificação por IA
-      const response = await fetch('/api/content/classify', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ topic: text }),
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        return {
-          isInappropriate: result.isInappropriate,
-          inappropriateTopics: result.categories || [],
-          suggestedResponse: result.suggestedResponse,
-          educationalAlternative: result.educationalAlternative
-        };
-      }
-    } catch (error) {
-      console.warn('AI classification failed, using local fallback:', error);
-    }
-
-    // Fallback para classificação local
-    const inappropriateKeywords = [
-      'drogas', 'álcool', 'cigarros', 'tabaco', 'fumar', 'beber', 'substâncias ilegais',
-      'violência', 'armas', 'suicídio', 'automutilação', 'hacking', 'pirataria',
-      'fraudes', 'atividades ilegais', 'conteúdo sexual', 'pornografia',
-      'jogos de azar', 'apostas', 'substâncias controladas', 'maconha', 'cocaína',
-      'heroína', 'crack', 'lsd', 'ecstasy', 'metanfetamina', 'bebida alcoólica',
-      'cerveja', 'vodka', 'whisky', 'cachaça', 'vinho', 'como fumar', 'como beber',
-      'como usar drogas', 'como fazer drogas', 'como obter drogas',
-      'sexo', 'como fazer sexo', 'bomba', 'como fazer uma bomba', 'explosivos',
-      'armas de fogo', 'violência doméstica', 'abuso', 'tortura', 'assassinato',
-      'terrorismo', 'extremismo', 'nazismo', 'fascismo', 'racismo', 'xenofobia',
-      'homofobia', 'transfobia', 'misoginia', 'pedofilia', 'incesto', 'zoofilia',
-      'necrofilia', 'sadomasoquismo', 'bdsm', 'fetichismo', 'prostituição',
-      'tráfico humano', 'escravidão', 'trabalho infantil', 'exploração sexual',
-      'pornografia infantil', 'sexting', 'revenge porn', 'cyberbullying',
-      'suicídio assistido', 'eutanásia', 'aborto', 'contracepção', 'esterilização',
-      'clonagem humana', 'engenharia genética perigosa', 'armas biológicas',
-      'armas químicas', 'armas nucleares', 'bombas caseiras', 'explosivos caseiros',
-      'venenos', 'toxinas', 'substâncias tóxicas', 'drogas sintéticas'
-    ];
-
-    const inappropriateTopics: string[] = [];
-    const lowerText = text.toLowerCase();
-    
-    inappropriateKeywords.forEach(keyword => {
-      if (lowerText.includes(keyword)) {
-        inappropriateTopics.push(keyword);
-      }
-    });
-
-    const isInappropriate = inappropriateTopics.length > 0;
-    
-    if (isInappropriate) {
-      const educationalAlternatives = {
-        'drogas': 'biologia e como o corpo funciona',
-        'álcool': 'química e processos biológicos',
-        'cigarros': 'sistema respiratório e saúde',
-        'violência': 'resolução pacífica de conflitos',
-        'armas': 'física e mecânica',
-        'hacking': 'programação e tecnologia construtiva',
-        'pirataria': 'direitos autorais e propriedade intelectual',
-        'fraudes': 'matemática financeira e ética',
-        'jogos de azar': 'probabilidade e estatística',
-        'apostas': 'matemática e análise de riscos',
-        'sexo': 'educação sexual responsável e biologia',
-        'bomba': 'física e química aplicadas de forma segura'
-      };
-
-      let educationalAlternative = 'conteúdos educacionais apropriados e construtivos';
-      for (const [inappropriate, alternative] of Object.entries(educationalAlternatives)) {
-        if (inappropriateTopics.some(topic => topic.includes(inappropriate))) {
-          educationalAlternative = alternative;
-          break;
-        }
-      }
-
-      const suggestedResponse = `Não posso fornecer informações sobre ${inappropriateTopics.join(', ')}. Que tal aprendermos sobre ${educationalAlternative}? Se você tem dúvidas importantes, recomendo conversar com seus pais, professores ou outros adultos responsáveis.`;
-
-      return {
-        isInappropriate: true,
-        inappropriateTopics,
-        suggestedResponse,
-        educationalAlternative
-      };
-    }
-
-    return {
-      isInappropriate: false,
-      inappropriateTopics: []
-    };
-  }, []);
+  // OPTIMIZED: Removed redundant checkContentSafety function - now handled by backend
 
   // Verificar se há aula salva no localStorage que pode estar causando problemas
   useEffect(() => {
@@ -633,12 +548,8 @@ function AulasPageContent() {
     }
 
     // Verificar segurança do conteúdo
-    const safetyCheck = await checkContentSafety(topic)
-    if (safetyCheck.isInappropriate) {
-      setSafetyWarning(safetyCheck)
-      toast.error('Conteúdo inadequado detectado. Por favor, escolha um tópico educacional apropriado.')
-      return
-    }
+    // OPTIMIZED: Safety check now handled by backend
+    // Remove safety check logic since it's handled by backend
 
     setIsGenerating(true)
     setGenerationProgress(0)
@@ -694,6 +605,23 @@ function AulasPageContent() {
       if (!response.ok) {
         const errorData = await response.json()
         console.error('Erro da API:', errorData)
+        
+        // OPTIMIZED: Handle content blocking with modal
+        if (errorData.blocked && response.status === 400) {
+          setContentBlockedModal({
+            isOpen: true,
+            blockedContent: {
+              topic: topic,
+              categories: errorData.categories || [],
+              confidence: errorData.confidence || 0,
+              reasoning: errorData.reasoning || '',
+              educationalAlternative: errorData.educationalAlternative,
+              message: errorData.message || 'Este conteúdo não é adequado para ambiente educacional.'
+            }
+          })
+          setIsGenerating(false)
+          return
+        }
         
         // Tratar diferentes tipos de erro
         if (response.status === 429 || errorData.error?.includes('overloaded')) {
@@ -951,6 +879,7 @@ function AulasPageContent() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl" role="main">
+      <DarkModeTest />
         {/* Header quando aula foi gerada */}
         {generatedLesson && (
           <header className="text-center mb-12">
@@ -1006,6 +935,7 @@ function AulasPageContent() {
           </header>
         )}
 
+
       {/* Enhanced Header - Oculto durante carregamento E quando aula foi gerada */}
       {!isGenerating && !generatedLesson && (
         <header className="text-center mb-16">
@@ -1013,7 +943,7 @@ function AulasPageContent() {
             {/* Background decoration */}
             <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 via-orange-400/20 to-red-400/20 rounded-3xl blur-3xl"></div>
             
-            <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl p-12 shadow-xl border border-white/20">
+            <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl p-12 shadow-xl border border-white/20 dark:bg-black/80 dark:border-gray-700">
               <div className="relative mb-8">
                 <div className="w-24 h-24 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-3xl flex items-center justify-center shadow-lg mx-auto mb-6">
                   <BookOpen className="h-12 w-12 text-white" />
@@ -1023,59 +953,60 @@ function AulasPageContent() {
                 </div>
               </div>
               
-              <h1 className="text-6xl font-bold mb-6 bg-gradient-to-r from-yellow-600 to-yellow-700 bg-clip-text text-transparent">
+              <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-yellow-600 to-yellow-700 bg-clip-text text-transparent">
                 Aulas Interativas com IA
               </h1>
-              <p className="text-2xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
+              <p className="text-xl text-gray-600 mb-6 max-w-3xl mx-auto leading-relaxed dark:text-gray-300">
                 Transforme qualquer tópico em uma experiência de aprendizado envolvente e personalizada
               </p>
               
               <div className="flex flex-wrap justify-center gap-3 mb-8">
-                <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-yellow-100 text-yellow-800 border border-yellow-200">
+                <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-yellow-100 text-yellow-800 border border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-700">
                   <Sparkles className="h-4 w-4" />
                   IA Avançada
                 </Badge>
-                <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-orange-100 text-orange-800 border border-orange-200">
+                <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-orange-100 text-orange-800 border border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-700">
                   <Target className="h-4 w-4" />
                   Personalizado
                 </Badge>
-                <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-red-100 text-red-800 border border-red-200">
+                <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-red-100 text-red-800 border border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700">
                   <Users className="h-4 w-4" />
                   Interativo
                 </Badge>
-                <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-green-100 text-green-800 border border-green-200">
-                  <Heart className="h-4 w-4" />
-                  Gamificado
+                <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-green-100 text-green-800 border border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700">
+                  <Brain className="h-4 w-4" />
+                  Inteligente
                 </Badge>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-                <div className="p-4 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-2xl border border-yellow-200">
+                <div className="p-4 bg-black/50 rounded-2xl border border-gray-700">
                   <div className="w-12 h-12 bg-yellow-500 rounded-xl flex items-center justify-center mx-auto mb-3">
                     <Brain className="h-6 w-6 text-white" />
                   </div>
-                  <h3 className="font-semibold text-yellow-900 mb-2">IA Inteligente</h3>
-                  <p className="text-sm text-yellow-700">Algoritmos avançados que adaptam o conteúdo ao seu nível</p>
+                  <h3 className="font-semibold text-yellow-300 mb-2">IA Inteligente</h3>
+                  <p className="text-sm text-gray-300">Algoritmos avançados que adaptam o conteúdo ao seu nível</p>
                 </div>
-                <div className="p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl border border-orange-200">
+                <div className="p-4 bg-black/50 rounded-2xl border border-gray-700">
                   <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center mx-auto mb-3">
                     <Zap className="h-6 w-6 text-white" />
                   </div>
-                  <h3 className="font-semibold text-orange-900 mb-2">Geração Rápida</h3>
-                  <p className="text-sm text-orange-700">Aulas completas em menos de 2 minutos</p>
+                  <h3 className="font-semibold text-orange-300 mb-2">Geração Rápida</h3>
+                  <p className="text-sm text-gray-300">Aulas completas em menos de 2 minutos</p>
                 </div>
-                <div className="p-4 bg-gradient-to-br from-red-50 to-red-100 rounded-2xl border border-red-200">
+                <div className="p-4 bg-black/50 rounded-2xl border border-gray-700">
                   <div className="w-12 h-12 bg-red-500 rounded-xl flex items-center justify-center mx-auto mb-3">
                     <Rocket className="h-6 w-6 text-white" />
                   </div>
-                  <h3 className="font-semibold text-red-900 mb-2">Experiência Única</h3>
-                  <p className="text-sm text-red-700">Cada aula é única e adaptada ao seu interesse</p>
+                  <h3 className="font-semibold text-red-300 mb-2">Experiência Única</h3>
+                  <p className="text-sm text-gray-300">Cada aula é única e adaptada ao seu interesse</p>
                 </div>
               </div>
             </div>
           </div>
         </header>
       )}
+
 
       {/* Lesson Generator - Moved right after header */}
       {!isGenerating && !generatedLesson && (
@@ -1084,7 +1015,7 @@ function AulasPageContent() {
             {/* Background decoration */}
             <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/10 via-orange-400/10 to-red-400/10 rounded-3xl blur-2xl"></div>
             
-            <Card className="relative bg-white/90 backdrop-blur-sm border-2 border-yellow-200 shadow-xl rounded-3xl overflow-hidden">
+            <Card className="relative bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-2 border-yellow-200 dark:border-yellow-800 shadow-xl rounded-3xl overflow-hidden">
               <CardHeader className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white p-8">
                 <CardTitle className="flex items-center gap-3 text-2xl">
                   <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
@@ -1117,15 +1048,8 @@ function AulasPageContent() {
                         setFormData({ ...formData, topic: newValue })
                         
                         // Verificar segurança do conteúdo
-                        checkContentSafety(newValue).then(safetyCheck => {
-                          if (safetyCheck.isInappropriate) {
-                            setSafetyWarning(safetyCheck)
-                          } else {
-                            setSafetyWarning(null)
-                          }
-                        }).catch(error => {
-                          console.warn('Error checking content safety:', error)
-                        })
+                        // OPTIMIZED: Safety check now handled by backend
+                        // Remove safety check logic since it's handled by backend
                         
                         // Limpar erro se o campo não estiver mais vazio
                         if (formErrors.topic && newValue.trim().length >= 5) {
@@ -1193,8 +1117,8 @@ function AulasPageContent() {
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-r from-yellow-50 via-orange-50 to-red-50 border border-yellow-200 rounded-2xl p-6">
-                  <h4 className="font-semibold text-lg text-gray-800 mb-4 flex items-center gap-2">
+                <div className="bg-gradient-to-r from-yellow-50 via-orange-50 to-red-50 border border-yellow-200 rounded-2xl p-6 dark:from-black dark:via-black dark:to-black dark:border-gray-700">
+                  <h4 className="font-semibold text-lg text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
                     <div className="w-6 h-6 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-lg flex items-center justify-center">
                       <Target className="h-3 w-3 text-white" />
                     </div>
@@ -1205,31 +1129,31 @@ function AulasPageContent() {
                       <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
                         <Sparkles className="h-4 w-4 text-white" />
                       </div>
-                      <span className="text-gray-700">Identificar matéria e série ideais</span>
+                      <span className="text-gray-700 dark:text-gray-300">Identificar matéria e série ideais</span>
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg flex items-center justify-center">
                         <Target className="h-4 w-4 text-white" />
                       </div>
-                      <span className="text-gray-700">Criar objetivos específicos</span>
+                      <span className="text-gray-700 dark:text-gray-300">Criar objetivos específicos</span>
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 bg-gradient-to-br from-red-400 to-red-600 rounded-lg flex items-center justify-center">
                         <Users className="h-4 w-4 text-white" />
                       </div>
-                      <span className="text-gray-700">Desenvolver atividades interativas</span>
+                      <span className="text-gray-700 dark:text-gray-300">Desenvolver atividades interativas</span>
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-green-600 rounded-lg flex items-center justify-center">
                         <Heart className="h-4 w-4 text-white" />
                       </div>
-                      <span className="text-gray-700">Implementar gamificação</span>
+                      <span className="text-gray-700 dark:text-gray-300">Implementar gamificação</span>
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg flex items-center justify-center">
                         <ImageIcon className="h-4 w-4 text-white" />
                       </div>
-                      <span className="text-gray-700">Selecionar imagens educacionais automaticamente</span>
+                      <span className="text-gray-700 dark:text-gray-300">Selecionar imagens educacionais automaticamente</span>
                     </div>
                   </div>
                 </div>
@@ -1280,17 +1204,22 @@ function AulasPageContent() {
       {/* Enhanced Suggestions */}
       {!isGenerating && !generatedLesson && (
         <div className="max-w-6xl mx-auto mb-16">
-          <div className="text-center mb-8">
-            <h3 className="text-3xl font-bold text-gray-800 mb-4 flex items-center justify-center gap-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
-                <Lightbulb className="h-4 w-4 text-white" />
+          <div className="relative">
+            {/* Background decoration */}
+            <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 via-orange-400/20 to-red-400/20 rounded-3xl blur-3xl"></div>
+            
+            <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl p-12 shadow-xl border border-white/20">
+              <div className="text-center mb-8">
+                <h3 className="text-3xl font-bold text-gray-800 mb-4 flex items-center justify-center gap-3">
+                  <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
+                    <Lightbulb className="h-4 w-4 text-white" />
+                  </div>
+                  Sugestões Inteligentes
+                </h3>
+                <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                  Explore nossa biblioteca de tópicos educacionais com filtros inteligentes
+                </p>
               </div>
-              Sugestões Inteligentes
-            </h3>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Explore nossa biblioteca de tópicos educacionais com filtros inteligentes
-            </p>
-          </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {suggestionsLoading ? (
@@ -1309,45 +1238,44 @@ function AulasPageContent() {
                 <button
                   key={suggestion.id}
                   onClick={() => handleSuggestionClick(suggestion)}
-                  className="group p-6 text-left border-2 border-gray-200 rounded-2xl hover:border-yellow-300 hover:bg-gradient-to-br hover:from-yellow-50 hover:to-orange-50 transition-all duration-300 bg-white/80 backdrop-blur-sm hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="group p-6 text-left border-2 border-yellow-400 rounded-2xl hover:border-yellow-500 hover:bg-yellow-50/20 transition-all duration-300 !bg-transparent backdrop-blur-sm hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed text-yellow-400 hover:text-yellow-600"
                   disabled={isGenerating}
                   aria-label={`Gerar aula sobre ${suggestion.text}`}
                 >
                   <div className="space-y-3">
                     <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
-                        <BookOpen className="h-4 w-4 text-white" />
+                      <div className="w-8 h-8 border-2 border-yellow-400 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-200 bg-transparent">
+                        <BookOpen className="h-4 w-4 text-yellow-400" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-base font-semibold text-gray-800 group-hover:text-yellow-800 line-clamp-2 leading-relaxed">
+                        <p className="text-base font-semibold text-yellow-400 group-hover:text-yellow-300 line-clamp-2 leading-relaxed">
                           {suggestion.text}
                         </p>
-                        <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                        <p className="text-sm text-yellow-500/80 mt-1 line-clamp-2">
                           {suggestion.description}
                         </p>
                       </div>
                     </div>
                     
                     <div className="flex flex-wrap gap-2">
-                      <Badge variant="secondary" className="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 border border-yellow-200">
+                      <Badge className="text-xs px-2 py-1 !border-2 !border-yellow-400 !text-yellow-600 !bg-transparent">
                         {suggestion.category}
                       </Badge>
-                      <Badge variant="outline" className="text-xs px-2 py-1 border-orange-200 text-orange-700">
+                      <Badge className="text-xs px-2 py-1 !border-2 !border-orange-400 !text-orange-600 !bg-transparent">
                         {suggestion.level}
                       </Badge>
                       <Badge 
-                        variant="outline" 
-                        className={`text-xs px-2 py-1 ${
-                          suggestion.difficulty === 'básico' ? 'bg-green-100 text-green-800 border-green-200' :
-                          suggestion.difficulty === 'intermediário' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' :
-                          'bg-red-100 text-red-800 border-red-200'
+                        className={`text-xs px-2 py-1 !bg-transparent ${
+                          suggestion.difficulty === 'básico' ? '!border-2 !border-green-400 !text-green-600' :
+                          suggestion.difficulty === 'intermediário' ? '!border-2 !border-yellow-400 !text-yellow-600' :
+                          '!border-2 !border-red-400 !text-red-600'
                         }`}
                       >
                         {suggestion.difficulty}
                       </Badge>
                     </div>
                     
-                    <div className="flex items-center justify-between text-xs text-gray-500">
+                    <div className="flex items-center justify-between text-xs text-yellow-500/70">
                       <div className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
                         <span>{suggestion.estimatedTime}min</span>
@@ -1360,7 +1288,7 @@ function AulasPageContent() {
                     
                     <div className="flex flex-wrap gap-1">
                       {suggestion.tags.slice(0, 3).map((tag, index) => (
-                        <span key={index} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                        <span key={index} className="text-xs !border-2 !border-yellow-400 !text-yellow-600 !bg-transparent px-2 py-1 rounded-full">
                           {tag}
                         </span>
                       ))}
@@ -1374,26 +1302,28 @@ function AulasPageContent() {
                 </button>
               ))
             )}
-          </div>
-          
-          <div className="text-center mt-8 space-y-4">
-            <Button
-              onClick={refreshSuggestions}
-              variant="outline"
-              size="lg"
-              disabled={suggestionsLoading}
-              className="border-2 border-orange-200 text-orange-700 hover:bg-orange-50 hover:border-orange-300 transition-all duration-200"
-            >
-              <RefreshCw className={`h-5 w-5 mr-2 ${suggestionsLoading ? 'animate-spin' : ''}`} />
-              Atualizar Sugestões
-            </Button>
-            
-            <div className="text-sm text-gray-500">
-              <p>Quer ver mais opções? 
-                <Link href="/suggestions-library" className="text-blue-600 hover:text-blue-800 underline ml-1">
-                  Acesse nossa biblioteca completa de sugestões
-                </Link>
-              </p>
+              </div>
+              
+              <div className="text-center mt-8 space-y-4">
+                <Button
+                  onClick={refreshSuggestions}
+                  variant="outline"
+                  size="lg"
+                  disabled={suggestionsLoading}
+                  className="border-2 border-orange-200 text-orange-700 hover:bg-orange-50 hover:border-orange-300 transition-all duration-200"
+                >
+                  <RefreshCw className={`h-5 w-5 mr-2 ${suggestionsLoading ? 'animate-spin' : ''}`} />
+                  Atualizar Sugestões
+                </Button>
+                
+                <div className="text-sm text-gray-500">
+                  <p>Quer ver mais opções? 
+                    <Link href="/suggestions-library" className="text-blue-600 hover:text-blue-800 underline ml-1">
+                      Acesse nossa biblioteca completa de sugestões
+                    </Link>
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1406,7 +1336,7 @@ function AulasPageContent() {
             {/* Background decoration */}
             <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 via-orange-400/20 to-red-400/20 rounded-3xl blur-3xl"></div>
             
-            <Card className="relative bg-white/90 backdrop-blur-sm border-2 border-yellow-200 shadow-xl rounded-3xl overflow-hidden">
+            <Card className="relative bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-2 border-yellow-200 dark:border-yellow-800 shadow-xl rounded-3xl overflow-hidden">
               <CardHeader className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white p-8 text-center">
                 <div className="flex items-center justify-center gap-4 mb-4">
                   <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center">
@@ -1476,13 +1406,13 @@ function AulasPageContent() {
             {/* Background decoration */}
             <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 via-orange-400/20 to-red-400/20 rounded-3xl blur-3xl"></div>
             
-            <Card className="relative bg-white/90 backdrop-blur-sm border-2 border-yellow-200 shadow-xl rounded-3xl overflow-hidden">
+            <Card className="relative bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-2 border-yellow-200 dark:border-yellow-800 shadow-xl rounded-3xl overflow-hidden">
               <CardContent className="p-12">
                 <div className="space-y-12">
 
                   {/* Estrutura da Aula */}
                   <div>
-                    <h3 className="text-3xl font-bold mb-8 flex items-center gap-3">
+                    <h3 className="text-3xl font-bold mb-8 flex items-center gap-3 dark:text-white">
                       <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center">
                         <BookOpen className="h-5 w-5 text-white" />
                       </div>
@@ -1490,18 +1420,18 @@ function AulasPageContent() {
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {generatedLesson.stages.map((stage: any, index: number) => (
-                        <div key={index} className="group p-6 bg-gradient-to-br from-white to-gray-50 rounded-2xl border border-gray-200 hover:border-orange-300 hover:shadow-lg transition-all duration-200">
+                        <div key={index} className="group p-6 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 hover:border-orange-300 dark:hover:border-orange-600 hover:shadow-lg transition-all duration-200">
                           <div className="flex items-center gap-4 mb-4">
                             <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
                               <span className="text-lg font-bold text-white">{index + 1}</span>
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="font-bold text-gray-900 text-lg">{stage.etapa}</p>
+                              <p className="font-bold text-gray-900 dark:text-gray-100 text-lg">{stage.etapa}</p>
                               <div className="flex items-center gap-3 mt-2">
-                                <Badge variant="secondary" className="bg-orange-100 text-orange-800 border border-orange-200">
+                                <Badge variant="secondary" className="bg-orange-100 text-orange-800 border border-orange-200 dark:bg-orange-900/20 dark:text-orange-300 dark:border-orange-800">
                                   {stage.type}
                                 </Badge>
-                                <span className="text-sm text-gray-500 flex items-center gap-1">
+                                <span className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
                                   <Clock className="h-4 w-4" />
                                   {stage.estimatedTime} min
                                 </span>
@@ -1517,7 +1447,7 @@ function AulasPageContent() {
                   <PacingMetrics 
                     metrics={pacingMetrics} 
                     warnings={pacingWarnings}
-                    className="bg-gradient-to-br from-yellow-50 to-orange-50 p-8 rounded-2xl border border-yellow-200"
+                    className="bg-gradient-to-br from-yellow-50 to-orange-50 p-8 rounded-2xl border border-yellow-200 dark:from-gray-800 dark:to-gray-900 dark:border-yellow-800"
                   />
 
                   {/* Botões de ação */}
@@ -1532,7 +1462,7 @@ function AulasPageContent() {
                     <Button 
                       onClick={handleSaveLesson} 
                       variant="outline" 
-                      className="sm:w-auto h-16 text-lg border-2 border-yellow-400 text-yellow-700 hover:bg-yellow-50 hover:border-yellow-500 transition-all duration-200 rounded-2xl"
+                      className="sm:w-auto h-16 text-lg border-2 border-yellow-400 text-yellow-700 hover:bg-yellow-50 hover:border-yellow-500 dark:border-yellow-600 dark:text-yellow-300 dark:hover:bg-yellow-900/20 dark:hover:border-yellow-500 transition-all duration-200 rounded-2xl"
                     >
                       <FileText className="mr-2 h-5 w-5" />
                       Salvar Aula
@@ -1545,7 +1475,14 @@ function AulasPageContent() {
         </div>
       )}
 
-      </div>
+      {/* Content Blocked Modal */}
+      <ContentBlockedModal
+        isOpen={contentBlockedModal.isOpen}
+        onClose={() => setContentBlockedModal({ isOpen: false, blockedContent: null })}
+        blockedContent={contentBlockedModal.blockedContent}
+      />
+
+    </div>
   )
 }
 
