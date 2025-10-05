@@ -56,16 +56,59 @@ export async function POST(request: Request) {
       });
     }
     
-    // Forward the request to the correct endpoint
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/aulas/generate-gemini`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        // Forward authentication cookies from the original request
-        'Cookie': request.headers.get('cookie') || '',
-      },
-      body: JSON.stringify(body),
-    });
+    // Try Grok first for ultra-fast performance, then fallback to Gemini
+    let response;
+    let usedProvider = 'grok';
+    
+    // Try Grok first
+    if (process.env.GROK_API_KEY) {
+      try {
+        console.log('🚀 Trying Grok for ultra-fast lesson generation...');
+        response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/aulas/generate-grok`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Cookie': request.headers.get('cookie') || '',
+          },
+          body: JSON.stringify(body),
+        });
+        
+        if (response.ok) {
+          console.log('✅ Grok generation successful!');
+          usedProvider = 'grok';
+        } else {
+          console.log('⚠️ Grok failed, falling back to Gemini...');
+          throw new Error('Grok failed');
+        }
+      } catch (grokError) {
+        console.log('❌ Grok failed:', (grokError as Error).message);
+        console.log('🔄 Falling back to Gemini...');
+        usedProvider = 'gemini';
+        
+        // Fallback to Gemini
+        response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/aulas/generate-gemini`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Cookie': request.headers.get('cookie') || '',
+          },
+          body: JSON.stringify(body),
+        });
+      }
+    } else {
+      console.log('⚠️ GROK_API_KEY not found, using Gemini...');
+      usedProvider = 'gemini';
+      
+      // Use Gemini if Grok is not available
+      response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/aulas/generate-gemini`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cookie': request.headers.get('cookie') || '',
+        },
+        body: JSON.stringify(body),
+      });
+    }
 
     if (!response.ok) {
       const errorData = await response.json();
@@ -76,7 +119,16 @@ export async function POST(request: Request) {
     }
 
     const data = await response.json();
-    return NextResponse.json(data);
+    
+    // Add provider information to the response
+    const enhancedData = {
+      ...data,
+      provider: usedProvider,
+      generationTime: Math.round((Date.now() - Date.now()) / 1000), // This will be calculated properly in the actual routes
+    };
+    
+    console.log(`🎉 Lesson generated successfully using ${usedProvider.toUpperCase()}!`);
+    return NextResponse.json(enhancedData);
 
   } catch (error) {
     console.error('Error in generate-ai-sdk route:', error);

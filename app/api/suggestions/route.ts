@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
     // Inicializar o Gemini
     const genAI = new GoogleGenerativeAI(apiKey)
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' })
 
     const prompt = `
 Você é um assistente educacional especializado em criar sugestões de aulas interessantes e envolventes.

@@ -44,7 +44,7 @@ interface CustomExamConfig {
 
 export function EnemCustomizer({ onBack, onStart, isCreating = false }: EnemCustomizerProps) {
   const [selectedAreas, setSelectedAreas] = useState<EnemArea[]>(['CN', 'CH', 'LC', 'MT']);
-  const [numQuestions, setNumQuestions] = useState(5);
+  const [numQuestions, setNumQuestions] = useState(15);
   
   // Auto-balancear distribuição quando número de questões muda
   const handleNumQuestionsChange = (value: number) => {

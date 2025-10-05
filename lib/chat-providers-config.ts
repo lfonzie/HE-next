@@ -1,6 +1,7 @@
 /**
  * Configuração específica dos providers para o chat
  * Modelos especificados pelo usuário:
+ * - Grok: Grok 4 Fast Reasoning (PADRÃO para ENEM e Redação)
  * - Google: Gemini 1.5 e 2.0 Flash
  * - OpenAI: GPT-4o-mini e GPT-5 Chat Latest
  * - Perplexity: Sonar (para busca na web)
@@ -9,6 +10,7 @@
 import { openai } from '@ai-sdk/openai'
 import { google } from '@ai-sdk/google'
 import { perplexity } from '@ai-sdk/perplexity'
+import { grok } from '@/lib/providers/grok-ai-sdk'
 
 export interface ChatProviderConfig {
   id: string
@@ -29,6 +31,24 @@ export interface ChatProviderConfig {
 }
 
 export const CHAT_PROVIDERS: Record<string, ChatProviderConfig> = {
+  grok: {
+    id: 'grok',
+    name: 'Grok 4 Fast Reasoning',
+    priority: 0,
+    enabled: true,
+    apiKey: process.env.GROK_API_KEY,
+    createClient: (model: string) => grok(model),
+    models: {
+      simple: 'grok-4-fast-reasoning',
+      complex: 'grok-4-fast-reasoning',
+      fast: 'grok-4-fast-reasoning'
+    },
+    timeout: 30000,
+    maxRetries: 3,
+    description: 'Grok 4 Fast Reasoning - Ultra-rápido e eficiente',
+    useCase: 'ENEM, Redação, conversas rápidas, raciocínio avançado, respostas instantâneas'
+  },
+
   google: {
     id: 'google',
     name: 'Google Gemini',
@@ -73,9 +93,7 @@ export const CHAT_PROVIDERS: Record<string, ChatProviderConfig> = {
     priority: 3,
     enabled: true,
     apiKey: process.env.PERPLEXITY_API_KEY,
-    createClient: (model: string) => perplexity(model, {
-      apiKey: process.env.PERPLEXITY_API_KEY
-    }),
+    createClient: (model: string) => perplexity(model),
     models: {
       simple: 'sonar',
       complex: 'sonar',
@@ -86,6 +104,46 @@ export const CHAT_PROVIDERS: Record<string, ChatProviderConfig> = {
     description: 'Perplexity Sonar - Busca na web em tempo real',
     useCase: 'Pesquisas, informações atualizadas, notícias'
   }
+}
+
+/**
+ * Seleciona o provider baseado no módulo/página
+ * Prioriza Grok 4 Fast Reasoning para ENEM e Redação
+ */
+export function selectProviderByModule(module: string): ChatProviderConfig | null {
+  // Módulos que devem usar Grok 4 Fast Reasoning
+  const grokModules = ['enem', 'redacao', 'simulador'];
+  
+  if (grokModules.includes(module.toLowerCase()) && CHAT_PROVIDERS.grok.enabled) {
+    console.log(`🎯 [PROVIDER-SELECTION] Using Grok 4 Fast Reasoning for module: ${module}`);
+    return CHAT_PROVIDERS.grok;
+  }
+  
+  // Para outros módulos, usar a lógica padrão
+  const enabledProviders = Object.values(CHAT_PROVIDERS)
+    .filter(provider => provider.enabled)
+    .sort((a, b) => a.priority - b.priority);
+  
+  return enabledProviders[0] || null;
+}
+
+/**
+ * Obtém o provider configurado para um módulo específico
+ */
+export function getProviderForModule(module: string, complexity: 'simple' | 'complex' | 'fast' = 'fast'): {
+  provider: ChatProviderConfig;
+  model: string;
+} | null {
+  const selectedProvider = selectProviderByModule(module);
+  
+  if (!selectedProvider) {
+    return null;
+  }
+  
+  return {
+    provider: selectedProvider,
+    model: selectedProvider.models[complexity]
+  };
 }
 
 /**
@@ -110,7 +168,9 @@ export function selectChatProvider(
   // Para módulos específicos, usar provider preferido
   if (context?.module) {
     const modulePreferences: Record<string, string> = {
-      'enem': 'openai',
+      'enem': 'grok',
+      'redacao': 'grok',
+      'simulador': 'grok',
       'professor': 'google',
       'aula_interativa': 'google',
       'financeiro': 'openai',
@@ -126,9 +186,9 @@ export function selectChatProvider(
 
   // Seleção baseada na complexidade
   const providerOrder = {
-    simple: ['google', 'openai', 'perplexity'],
-    complex: ['openai', 'google', 'perplexity'],
-    fast: ['google', 'perplexity', 'openai']
+    simple: ['grok', 'google', 'openai', 'perplexity'],
+    complex: ['grok', 'openai', 'google', 'perplexity'],
+    fast: ['grok', 'google', 'perplexity', 'openai']
   }
 
   const order = providerOrder[complexity]

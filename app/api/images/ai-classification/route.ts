@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
 
     console.log(`🤖 Analisando ${images.length} imagens com IA para: "${query}"`)
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' })
 
     // Prompt melhorado para análise de imagens com IA
     const analysisPrompt = `

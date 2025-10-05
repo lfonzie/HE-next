@@ -9,7 +9,7 @@ export interface QuestionAnalysis {
   complexity: ComplexityLevel;
   type: QuestionType;
   needsWebSearch: boolean;
-  recommendedProvider: 'openai' | 'gpt5' | 'gemini' | 'perplexity';
+  recommendedProvider: 'openai' | 'gpt5' | 'gemini' | 'perplexity' | 'grok';
   recommendedModel: string;
   confidence: number;
 }
@@ -85,7 +85,7 @@ export function analyzeQuestion(question: string): QuestionAnalysis {
   }
   
   // Selecionar provedor e modelo baseado na análise
-  let recommendedProvider: 'openai' | 'gpt5' | 'gemini' | 'perplexity';
+  let recommendedProvider: 'openai' | 'gpt5' | 'gemini' | 'perplexity' | 'grok';
   let recommendedModel: string;
   let confidence = 0.8;
   
@@ -95,20 +95,20 @@ export function analyzeQuestion(question: string): QuestionAnalysis {
     recommendedModel = 'sonar';
     confidence = 0.9;
   } else if (complexity === 'complex' || type === 'analysis') {
-    // Perguntas complexas → GPT-5
-    recommendedProvider = 'gpt5';
-    recommendedModel = 'gpt-5-chat-latest';
-    confidence = 0.85;
+    // Perguntas complexas → Grok 4 Fast Reasoning (mais avançado)
+    recommendedProvider = 'grok';
+    recommendedModel = 'grok-4-fast-reasoning';
+    confidence = 0.9;
   } else if (complexity === 'simple' && wordCount <= 3) {
-    // Perguntas triviais → Gemini
-    recommendedProvider = 'gemini';
-    recommendedModel = 'gemini-2.5-flash';
-    confidence = 0.8;
+    // Perguntas triviais → Grok 4 Fast Reasoning (ultra-rápido)
+    recommendedProvider = 'grok';
+    recommendedModel = 'grok-4-fast-reasoning';
+    confidence = 0.9;
   } else {
-    // Perguntas simples → GPT-4o Mini
-    recommendedProvider = 'openai';
-    recommendedModel = 'gpt-4o-mini';
-    confidence = 0.8;
+    // Perguntas simples → Grok 4 Fast Reasoning (padrão)
+    recommendedProvider = 'grok';
+    recommendedModel = 'grok-4-fast-reasoning';
+    confidence = 0.9;
   }
   
   return {

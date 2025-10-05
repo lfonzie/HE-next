@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { analyzeQuestion, getSelectionExplanation } from "@/lib/complexity-detector";
 
-type Provider = "openai" | "gpt5" | "gemini" | "perplexity";
+type Provider = "openai" | "gpt5" | "gemini" | "perplexity" | "grok";
 
 interface ChatMessage {
   id: string;
@@ -54,36 +54,25 @@ export function useUnifiedChat(
     return uuidRegex.test(str);
   };
 
-  // Boot: tenta pegar da URL ou localStorage (apenas UUIDs válidos)
+  // Boot: sempre limpar conversas antigas e iniciar nova conversa efêmera
   useEffect(() => {
-    const urlId = new URLSearchParams(window.location.search).get("cid");
-    const saved = urlId ?? localStorage.getItem("chat:cid");
+    // Limpar qualquer resquício de conversa anterior
+    localStorage.removeItem("chat:cid");
+    const url = new URL(window.location.href);
+    url.searchParams.delete("cid");
+    window.history.replaceState({}, "", url.toString());
     
-    if (saved && isValidUUID(saved)) {
-      setConversationId(saved);
-      // Carregar histórico da conversa
-      loadConversationHistory(saved);
-    } else if (saved && !isValidUUID(saved)) {
-      // ID inválido encontrado, limpar e gerar novo
-      console.warn("Invalid conversation ID found, generating new one:", saved);
-      localStorage.removeItem("chat:cid");
-      const url = new URL(window.location.href);
-      url.searchParams.delete("cid");
-      window.history.replaceState({}, "", url.toString());
-    }
+    // Limpar estado atual
+    setMessages([]);
+    setError(null);
+    
+    // Gerar nova conversa efêmera
+    const newId = uuidv4();
+    setConversationId(newId);
+    console.log("🧹 [UNIFIED-CHAT] Cleared old conversation, started new ephemeral chat:", newId);
   }, []);
 
-  const loadConversationHistory = useCallback(async (cid: string) => {
-    try {
-      const response = await fetch(`/api/chat/unified?conversationId=${cid}`);
-      if (response.ok) {
-        const data = await response.json();
-        setMessages(data.messages || []);
-      }
-    } catch (error) {
-      console.warn("Failed to load conversation history:", error);
-    }
-  }, []);
+  // Função removida: loadConversationHistory - conversas são efêmeras
 
   const ensureId = useCallback(() => {
     if (!conversationId || !isValidUUID(conversationId)) {

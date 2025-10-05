@@ -84,7 +84,7 @@ async function generateExamFromLocalDB(params: {
     
     // Convert to the format expected by the simulator
     const convertedQuestions = areaQuestionsData.map(question => ({
-      item_id: `enem_${question.year}_${question.index}`,
+      item_id: `${question.year}-1-${question.index}`,
       text: question.context,
       alternatives: {
         A: question.alternatives[0]?.text || '',

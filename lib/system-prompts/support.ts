@@ -15,7 +15,7 @@ Como responder:
 1) Se houver solução no FAQ: resuma e entregue o passo a passo.
 2) Se não houver: proponha diagnóstico (perguntas úteis) e próximos passos.
 3) Peça detalhes quando necessário: navegador, SO, módulo, mensagem de erro.
-4) Formate com listas, passos e destaques.`;
+4) Formate com listas, passos e destaques.`);
 
 export const SECRETARIA_SUPPORT_PROMPT = addSafetyProtection(`Você é um assistente virtual da secretaria escolar. Ajude com questões relacionadas a matrículas, documentação, frequência e atendimento aos pais. Seja cordial, organizado e sempre confirme informações importantes. Se não souber algo específico, oriente o usuário a falar com a secretaria presencialmente.
 

@@ -6,10 +6,8 @@ import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic';
 
 
-import OpenAI from 'openai'
-
-
 import { prisma } from '@/lib/prisma'
+import { callGrok } from '@/lib/providers/grok'
 
 
 
@@ -24,9 +22,7 @@ interface EnemTheme {
   createdAt?: string
 }
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+// Usando Grok 4 Fast Reasoning para geração de temas
 
 // Função para limpar resposta da IA removendo markdown code blocks
 function cleanAIResponse(response: string): string {
@@ -89,7 +85,7 @@ export async function POST(request: NextRequest) {
 
     // Se não há temas salvos, gerar novos temas com IA
     if (savedThemes.length === 0) {
-      console.log('Nenhum tema salvo encontrado. Gerando novos temas com IA...')
+      console.log('Nenhum tema salvo encontrado. Gerando novos temas com Grok 4 Fast Reasoning...')
       
       const prompt = `Gere 3 temas de redação para o ENEM seguindo os padrões oficiais. Cada tema deve ser atual, relevante e adequado para uma dissertação-argumentativa.
 
@@ -125,22 +121,18 @@ Responda APENAS com um JSON válido no formato:
 
 IMPORTANTE: Responda APENAS com JSON válido, sem formatação markdown ou texto adicional.`
 
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          { 
-            role: "system", 
-            content: "Você é um especialista em temas de redação do ENEM. Gere temas atuais, relevantes e adequados para dissertação-argumentativa." 
-          },
-          { role: "user", content: prompt }
-        ],
-        temperature: 0.8,
-        max_tokens: 1000,
-      })
+      const systemPrompt = `Você é um especialista em temas de redação do ENEM. Gere temas atuais, relevantes e adequados para dissertação-argumentativa.`
 
-      const response = completion.choices[0]?.message?.content
+      const result = await callGrok(
+        'grok-4-fast-reasoning',
+        [],
+        prompt,
+        systemPrompt
+      )
+
+      const response = result.text
       if (!response) {
-        throw new Error('Resposta vazia da OpenAI')
+        throw new Error('Resposta vazia do Grok')
       }
 
       const cleanedResponse = cleanAIResponse(response)
@@ -192,15 +184,15 @@ IMPORTANTE: Responda APENAS com JSON válido, sem formatação markdown ou texto
         themes: themeData.themes,
         totalAvailable: themeData.themes.length,
         selectedAt: new Date().toISOString(),
-        message: 'Novos temas gerados com IA'
+        message: 'Novos temas gerados com Grok 4 Fast Reasoning'
       })
     }
 
     // Converter para formato EnemTheme e filtrar válidos
     const allThemes = savedThemes.map(conversation => {
       try {
-        const messages = JSON.parse(conversation.messages)
-        const themeData = JSON.parse(messages[0]?.content || '{}')
+        const messages = JSON.parse(conversation.messages as string)
+        const themeData = JSON.parse((messages[0]?.content as string) || '{}')
         
         return {
           id: themeData.themeId || conversation.id,
@@ -262,7 +254,7 @@ IMPORTANTE: Responda APENAS com JSON válido, sem formatação markdown ou texto
     // Retornar erro se IA falhar - sem fallback
     return NextResponse.json(
       { 
-        error: 'Erro ao gerar temas com IA',
+        error: 'Erro ao gerar temas com Grok 4 Fast Reasoning',
         details: error instanceof Error ? error.message : 'Erro desconhecido'
       },
       { status: 500 }

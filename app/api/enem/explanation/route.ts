@@ -17,6 +17,8 @@ import { getServerSession } from 'next-auth';
 
 import { authOptions } from '@/lib/auth';
 
+import { callGrok } from '@/lib/providers/grok';
+
 
 
 // Inicializar cliente OpenAI
@@ -31,14 +33,14 @@ export async function POST(request: NextRequest) {
     console.log('POST /api/enem/explanation called');
     
     body = await request.json();
-    const { item_id, session_id, question_text, alternatives, correct_answer, user_answer, area } = body;
+    const { item_id, session_id, question_text, alternatives, correct_answer, user_answer, area, question_number } = body;
 
     if (!item_id) {
       return NextResponse.json({ error: 'item_id is required' }, { status: 400 });
     }
 
-    if (!process.env.OPENAI_API_KEY) {
-      console.warn('OpenAI API key not found, using fallback explanation');
+    if (!process.env.GROK_API_KEY) {
+      console.warn('Grok API key not found, using fallback explanation');
       return NextResponse.json({
         explanation: generateFallbackExplanation(area, correct_answer, user_answer),
         item_id,
@@ -48,9 +50,9 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Preparar contexto da questão para a OpenAI
-    const questionContext = `
-Questão ENEM - Área: ${area || 'Não especificada'}
+    // Preparar contexto da questão para o Grok
+const questionContext = `
+Questão ENEM ${question_number ? `#${question_number}` : ''} - Área: ${area || 'Não especificada'}
 Enunciado: ${question_text || 'Questão não disponível'}
 
 Alternativas:
@@ -60,51 +62,45 @@ Resposta correta: ${correct_answer || 'Não especificada'}
 ${user_answer ? `Resposta do usuário: ${user_answer}` : 'Usuário não respondeu'}
 `;
 
-    // Chamada para OpenAI GPT-4 Mini
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: `Você é um tutor especializado em preparação para o ENEM. Sua tarefa é explicar questões de forma didática e educativa.
+    const systemPrompt = `Você é um tutor especializado em preparação para o ENEM. Sua tarefa é explicar questões de forma didática e CONCISA.
 
 Instruções:
-1. Explique por que a resposta correta está certa
-2. Se o usuário respondeu errado, explique o erro de forma construtiva
-3. Forneça dicas de estudo relacionadas ao tema
-4. Use linguagem clara e acessível para estudantes do ensino médio
-5. Inclua estratégias de resolução para questões similares
-6. Mantenha o tom motivacional e educativo
+1. Seja DIRETO e OBJETIVO - máximo 2 parágrafos para a explicação principal
+2. SEMPRE mencione o número da questão no início da explicação (ex: "Na Questão #4...")
+3. Explique por que a resposta correta está certa de forma clara
+4. Se o usuário respondeu errado, explique o erro de forma construtiva e breve
+5. Forneça UMA dica de estudo específica e prática
+6. Use linguagem clara e acessível para estudantes do ensino médio
+7. Evite explicações longas e repetitivas
+8. Foque no essencial para o aprendizado
+9. NÃO inclua mensagens genéricas de motivação ou frases como "persista para arrasar no ENEM"
 
-Formato da resposta:
-- Explicação principal (2-3 parágrafos)
-- Dica de estudo específica
-- Estratégia de resolução
-- Motivação para continuar estudando`
-        },
-        {
-          role: "user",
-          content: questionContext
-        }
-      ],
-      max_tokens: 800,
-      temperature: 0.7,
-    });
+Formato da resposta (MÁXIMO 150 palavras):
+- Explicação principal (1-2 parágrafos curtos) - SEMPRE começando com "Na Questão #X..."
+- Uma dica de estudo específica
 
-    const explanation = completion.choices[0]?.message?.content || generateFallbackExplanation(area, correct_answer, user_answer);
+IMPORTANTE: Seja conciso! O estudante precisa entender rapidamente o conceito, não uma dissertação. NÃO inclua mensagens genéricas de motivação.`
+
+    // Chamada para Grok 4 Fast Reasoning
+    const result = await callGrok(
+      'grok-4-fast-reasoning',
+      [],
+      questionContext,
+      systemPrompt
+    );
+
+    const explanation = result.text || generateFallbackExplanation(area, correct_answer, user_answer);
 
     // Persist token usage for ENEM explanations
     try {
       const session = await getServerSession(authOptions).catch(() => null);
-      const totalTokens = (completion as any)?.usage?.total_tokens
-        || (((completion as any)?.usage?.prompt_tokens || 0) + ((completion as any)?.usage?.completion_tokens || 0))
-        || Math.ceil((explanation?.length || 0) / 4);
+      const totalTokens = result.usage?.total_tokens || Math.ceil((explanation?.length || 0) / 4);
       const userId = session?.user?.id;
       if (userId && totalTokens > 0) {
         await logTokens({
           userId,
           moduleGroup: 'ENEM',
-          model: 'gpt-4o-mini',
+          model: 'grok-4-fast-reasoning',
           totalTokens,
           subject: area,
           messages: { item_id, session_id }
@@ -119,7 +115,7 @@ Formato da resposta:
       item_id,
       session_id,
       success: true,
-      source: 'openai'
+      source: 'grok'
     });
 
   } catch (error) {
@@ -138,7 +134,7 @@ Formato da resposta:
       session_id: body.session_id,
       success: true,
       source: 'fallback',
-      error: 'OpenAI API error, using fallback'
+      error: 'Grok API error, using fallback'
     });
   }
 }
@@ -168,9 +164,7 @@ function generateFallbackExplanation(area?: string, correctAnswer?: string, user
 
 **Dica de estudo:** Revise os conceitos fundamentais relacionados a esta questão e pratique exercícios similares para consolidar seu aprendizado.
 
-**Estratégia de resolução:** Leia cuidadosamente o enunciado, identifique as informações-chave e elimine as alternativas que claramente não se aplicam ao contexto apresentado.
-
-**Motivação:** Cada questão é uma oportunidade de aprendizado. Continue praticando para melhorar seu desempenho!`;
+**Estratégia de resolução:** Leia cuidadosamente o enunciado, identifique as informações-chave e elimine as alternativas que claramente não se aplicam ao contexto apresentado.`;
 
   return explanation;
 }

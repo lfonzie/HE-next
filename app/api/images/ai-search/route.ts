@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
 
     console.log(`🧠 Gerando queries inteligentes com IA para: "${topic}"`)
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' })
 
     // Prompt para geração de queries inteligentes
     const queryPrompt = `

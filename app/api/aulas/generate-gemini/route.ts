@@ -395,7 +395,7 @@ function isQuotaExceededError(error) {
  * @returns {string} The formatted prompt.
  */
 function getGeminiLessonPromptTemplate(topic, systemPrompt = '') {
-  return `Crie uma aula completa e detalhada sobre "${topic}" com exatamente 14 slides em JSON.
+  return `Crie uma aula completa e didática sobre "${topic}" com exatamente 14 slides em JSON.
 
 REGRAS CRÍTICAS PARA JSON VÁLIDO:
 - Responda APENAS com JSON válido, sem texto adicional
@@ -406,30 +406,42 @@ REGRAS CRÍTICAS PARA JSON VÁLIDO:
 - NÃO use vírgulas finais antes de } ou ]
 - Certifique-se de que todas as chaves e colchetes estão balanceados
 
-REGRAS DE CONTEÚDO:
-- Use português brasileiro claro e didático
-- Cada slide deve ter CONTEÚDO RICO com 300-600 tokens
+REGRAS DE CONTEÚDO FUNDAMENTAIS:
+- Use português brasileiro claro, objetivo e didático
+- Cada slide deve ter CONTEÚDO RICO E DETALHADO com 400-500 tokens (densidade alta)
 - Slides 5 e 12 são quizzes com 3 perguntas cada
 - OBRIGATÓRIO: Use \\n\\n para quebras de linha entre parágrafos em TODOS os slides
 - OBRIGATÓRIO: Cada parágrafo deve ser separado por \\n\\n para melhor legibilidade
 - Para imageQuery, use APENAS termos específicos do tópico em inglês
 - Evite termos genéricos como "education", "learning", "teaching"
 
-ESTRUTURA DETALHADA:
-- Slide 1: Introdução completa com contexto histórico e importância
-- Slides 2-4: Desenvolvimento progressivo dos conceitos fundamentais
-- Slide 5: Quiz sobre conceitos básicos aprendidos
-- Slides 6-11: Aplicações práticas, exemplos reais e aprofundamento
-- Slide 12: Quiz sobre aplicações e análise crítica
-- Slides 13-14: Síntese, conclusões e perspectivas futuras
+DIRETRIZES DE QUALIDADE E DENSIDADE:
+- EVITE repetições desnecessárias do título ou conceitos
+- Seja OBJETIVO e DIRETO, mas com CONTEÚDO SUBSTANCIAL
+- Use exemplos RELEVANTES e NATURAIS (não force contextualização brasileira)
+- Mantenha progressão LÓGICA e CLARA entre os slides
+- Foque na COMPREENSÃO PROFUNDA, não superficial
+- Use linguagem ACESSÍVEL para estudantes do ensino médio
+- DESENVOLVA cada conceito com múltiplos aspectos e detalhes
+- INCLUA analogias, exemplos práticos e conexões interdisciplinares
+- APROFUNDE explicações com contexto histórico quando relevante
+- CONECTE teoria com aplicações práticas e casos reais
+
+ESTRUTURA DETALHADA E ESPECÍFICA:
+- Slide 1: Introdução clara com definição básica e importância do tema
+- Slides 2-4: Conceitos fundamentais desenvolvidos progressivamente (do básico ao intermediário)
+- Slide 5: Quiz sobre conceitos básicos aprendidos (perguntas específicas e objetivas)
+- Slides 6-11: Aplicações práticas, exemplos reais e aprofundamento temático
+- Slide 12: Quiz sobre aplicações e análise crítica (perguntas que testam compreensão prática)
+- Slides 13-14: Síntese clara e perspectivas futuras (conclusões objetivas)
 
 FORMATO JSON:
 {
   "slides": [
     {
       "number": 1,
-      "title": "Introdução Completa ao ${topic}",
-      "content": "Conteúdo detalhado e rico sobre ${topic} com contexto histórico, definições precisas, importância no mundo atual e objetivos da aula.\\n\\nDesenvolva parágrafos explicativos sobre os fundamentos, aplicações práticas e relevância do tema.\\n\\nInclua exemplos concretos e conexões com o cotidiano dos estudantes.\\n\\nCada seção deve ser claramente separada para facilitar a compreensão.",
+      "title": "Introdução ao ${topic}",
+      "content": "Defina claramente o que é ${topic} de forma simples mas completa, explicando sua natureza fundamental e importância histórica.\\n\\nDesenvolva o contexto histórico relevante, destacando descobertas importantes e cientistas que contribuíram para o entendimento atual.\\n\\nExplique por que este tema é crucial para os estudantes, conectando com aplicações práticas no cotidiano e profissões relacionadas.\\n\\nApresente os objetivos de aprendizagem desta aula de forma detalhada, especificando o que será coberto.\\n\\nUse exemplos concretos e analogias familiares para facilitar a compreensão inicial, preparando o terreno para o aprofundamento posterior.",
       "type": "content",
       "imageQuery": "${topic}",
       "tokenEstimate": 450
@@ -437,7 +449,7 @@ FORMATO JSON:
     {
       "number": 7,
       "title": "Quiz: Conceitos Fundamentais de ${topic}",
-      "content": "Avalie seus conhecimentos sobre os conceitos fundamentais de ${topic} apresentados nos slides anteriores.\\n\\nEste quiz testará sua compreensão dos princípios básicos e definições essenciais.\\n\\nLeia cada pergunta com atenção e escolha a resposta mais adequada.\\n\\nBoa sorte!",
+      "content": "Teste sua compreensão dos conceitos básicos de ${topic} apresentados nos slides anteriores.\\n\\nEste quiz avalia se você entendeu as definições e princípios fundamentais.\\n\\nLeia cada pergunta com atenção e escolha a resposta mais adequada.",
       "type": "quiz",
       "imageQuery": null,
       "tokenEstimate": 350,
@@ -450,23 +462,23 @@ FORMATO JSON:
           "explanation": "Explicação detalhada da resposta correta com justificativa técnica e exemplos práticos"
         },
         {
-          "q": "Qual característica é fundamental para ${topic}?",
-          "options": ["Característica incorreta mas relacionada", "Característica fundamental correta", "Característica secundária", "Característica irrelevante"],
-          "correct": 1,
-          "explanation": "Explicação detalhada da resposta correta com justificativa técnica e exemplos práticos"
+          "q": "Com base no conteúdo apresentado, qual é a característica principal de ${topic}?",
+          "options": ["Característica principal correta", "Característica secundária", "Característica incorreta", "Característica irrelevante"],
+          "correct": 0,
+          "explanation": "Explicação clara da resposta correta com base no conteúdo apresentado"
         },
         {
-          "q": "Como ${topic} se relaciona com outras áreas?",
-          "options": ["Relação incorreta", "Relação secundária", "Relação principal correta", "Relação irrelevante"],
+          "q": "Qual é a aplicação mais comum de ${topic} mencionada na aula?",
+          "options": ["Aplicação incorreta", "Aplicação secundária", "Aplicação principal correta", "Aplicação irrelevante"],
           "correct": 2,
-          "explanation": "Explicação detalhada da resposta correta com justificativa técnica e exemplos práticos"
+          "explanation": "Explicação da aplicação correta com base nos exemplos apresentados"
         }
       ]
     },
     {
       "number": 12,
       "title": "Quiz: Aplicações Práticas de ${topic}",
-      "content": "Teste seus conhecimentos sobre as aplicações práticas e casos reais de ${topic}.\\n\\nEste quiz avalia sua capacidade de aplicar os conceitos aprendidos em situações concretas.\\n\\nAnalise cada cenário e escolha a melhor solução baseada nos conhecimentos adquiridos.",
+      "content": "Teste sua compreensão sobre as aplicações práticas de ${topic} apresentadas na aula.\\n\\nEste quiz avalia sua capacidade de aplicar os conceitos aprendidos em situações reais.\\n\\nAnalise cada cenário e escolha a melhor resposta baseada no conteúdo estudado.",
       "type": "quiz",
       "imageQuery": null,
       "tokenEstimate": 350,
@@ -476,19 +488,19 @@ FORMATO JSON:
           "q": "Em qual situação ${topic} seria mais aplicável?",
           "options": ["Situação incorreta", "Situação parcialmente correta", "Situação irrelevante", "Situação ideal correta"],
           "correct": 3,
-          "explanation": "Explicação detalhada da resposta correta com justificativa técnica e exemplos práticos"
+          "explanation": "Explicação da situação ideal com base nos exemplos apresentados na aula"
         },
         {
-          "q": "Qual seria o resultado esperado ao aplicar ${topic}?",
+          "q": "Qual seria o resultado esperado ao aplicar ${topic} corretamente?",
           "options": ["Resultado esperado correto", "Resultado parcialmente correto", "Resultado incorreto", "Resultado irrelevante"],
           "correct": 0,
-          "explanation": "Explicação detalhada da resposta correta com justificativa técnica e exemplos práticos"
+          "explanation": "Explicação do resultado correto com base no conteúdo da aula"
         },
         {
-          "q": "Qual limitação deve ser considerada ao usar ${topic}?",
+          "q": "Qual limitação importante deve ser considerada ao usar ${topic}?",
           "options": ["Limitação secundária", "Limitação irrelevante", "Limitação principal correta", "Limitação incorreta"],
           "correct": 2,
-          "explanation": "Explicação detalhada da resposta correta com justificativa técnica e exemplos práticos"
+          "explanation": "Explicação da limitação principal mencionada no conteúdo da aula"
         }
       ]
     }
@@ -499,11 +511,17 @@ Tópico: ${topic}
 ${systemPrompt ? `[Custom: ${systemPrompt}]` : ''}
 
 IMPORTANTE: 
-- Cada slide deve ter conteúdo rico e detalhado (300-600 tokens)
+- Cada slide deve ter conteúdo rico e detalhado (400-500 tokens)
 - Use apenas termos específicos do tópico em inglês para imageQuery
 - Evite termos genéricos educacionais
-- Desenvolva parágrafos explicativos completos
-- Responda APENAS com JSON válido.`;
+- Desenvolva parágrafos explicativos completos e substanciais
+- Responda APENAS com JSON válido
+- CONTEXTUALIZAÇÃO BRASILEIRA: Use exemplos brasileiros apenas quando NATURALMENTE relevantes ao tema, sem forçar conexões artificiais
+- FOQUE na clareza e objetividade, mas com DENSIDADE DE INFORMAÇÃO
+- Mantenha linguagem acessível para estudantes do ensino médio
+- DESENVOLVA cada conceito com profundidade e múltiplas perspectivas
+- INCLUA exemplos práticos, analogias e conexões interdisciplinares
+- APROFUNDE explicações com contexto histórico e científico quando relevante`;
 }
 
 /**
@@ -524,30 +542,42 @@ REGRAS CRÍTICAS PARA JSON VÁLIDO:
 - NÃO use vírgulas finais antes de } ou ]
 - Certifique-se de que todas as chaves e colchetes estão balanceados
 
-REGRAS DE CONTEÚDO:
-- Use português brasileiro claro e didático
-- Cada slide deve ter CONTEÚDO RICO com 300-600 tokens
+REGRAS DE CONTEÚDO FUNDAMENTAIS:
+- Use português brasileiro claro, objetivo e didático
+- Cada slide deve ter CONTEÚDO RICO E DETALHADO com 400-500 tokens (densidade alta)
 - Slides 5 e 12 são quizzes com 3 perguntas cada
 - OBRIGATÓRIO: Use \\n\\n para quebras de linha entre parágrafos em TODOS os slides
 - OBRIGATÓRIO: Cada parágrafo deve ser separado por \\n\\n para melhor legibilidade
 - Para imageQuery, use APENAS termos específicos do tópico em inglês
 - Evite termos genéricos como "education", "learning", "teaching"
 
-ESTRUTURA DETALHADA:
-- Slide 1: Introdução completa com contexto histórico e importância
-- Slides 2-4: Desenvolvimento progressivo dos conceitos fundamentais
-- Slide 5: Quiz sobre conceitos básicos aprendidos
-- Slides 6-11: Aplicações práticas, exemplos reais e aprofundamento
-- Slide 12: Quiz sobre aplicações e análise crítica
-- Slides 13-14: Síntese, conclusões e perspectivas futuras
+DIRETRIZES DE QUALIDADE E DENSIDADE:
+- EVITE repetições desnecessárias do título ou conceitos
+- Seja OBJETIVO e DIRETO, mas com CONTEÚDO SUBSTANCIAL
+- Use exemplos RELEVANTES e NATURAIS (não force contextualização brasileira)
+- Mantenha progressão LÓGICA e CLARA entre os slides
+- Foque na COMPREENSÃO PROFUNDA, não superficial
+- Use linguagem ACESSÍVEL para estudantes do ensino médio
+- DESENVOLVA cada conceito com múltiplos aspectos e detalhes
+- INCLUA analogias, exemplos práticos e conexões interdisciplinares
+- APROFUNDE explicações com contexto histórico quando relevante
+- CONECTE teoria com aplicações práticas e casos reais
+
+ESTRUTURA DETALHADA E ESPECÍFICA:
+- Slide 1: Introdução clara com definição básica e importância do tema
+- Slides 2-4: Conceitos fundamentais desenvolvidos progressivamente (do básico ao intermediário)
+- Slide 5: Quiz sobre conceitos básicos aprendidos (perguntas específicas e objetivas)
+- Slides 6-11: Aplicações práticas, exemplos reais e aprofundamento temático
+- Slide 12: Quiz sobre aplicações e análise crítica (perguntas que testam compreensão prática)
+- Slides 13-14: Síntese clara e perspectivas futuras (conclusões objetivas)
 
 FORMATO JSON:
 {
   "slides": [
     {
       "number": 1,
-      "title": "Introdução Completa ao ${topic}",
-      "content": "Conteúdo detalhado e rico sobre ${topic} com contexto histórico, definições precisas, importância no mundo atual e objetivos da aula.\\n\\nDesenvolva parágrafos explicativos sobre os fundamentos, aplicações práticas e relevância do tema.\\n\\nInclua exemplos concretos e conexões com o cotidiano dos estudantes.\\n\\nCada seção deve ser claramente separada para facilitar a compreensão.",
+      "title": "Introdução ao ${topic}",
+      "content": "Defina claramente o que é ${topic} de forma simples mas completa, explicando sua natureza fundamental e importância histórica.\\n\\nDesenvolva o contexto histórico relevante, destacando descobertas importantes e cientistas que contribuíram para o entendimento atual.\\n\\nExplique por que este tema é crucial para os estudantes, conectando com aplicações práticas no cotidiano e profissões relacionadas.\\n\\nApresente os objetivos de aprendizagem desta aula de forma detalhada, especificando o que será coberto.\\n\\nUse exemplos concretos e analogias familiares para facilitar a compreensão inicial, preparando o terreno para o aprofundamento posterior.",
       "type": "content",
       "imageQuery": "${topic}",
       "tokenEstimate": 450
@@ -555,7 +585,7 @@ FORMATO JSON:
     {
       "number": 7,
       "title": "Quiz: Conceitos Fundamentais de ${topic}",
-      "content": "Avalie seus conhecimentos sobre os conceitos fundamentais de ${topic} apresentados nos slides anteriores.\\n\\nEste quiz testará sua compreensão dos princípios básicos e definições essenciais.\\n\\nLeia cada pergunta com atenção e escolha a resposta mais adequada.\\n\\nBoa sorte!",
+      "content": "Teste sua compreensão dos conceitos básicos de ${topic} apresentados nos slides anteriores.\\n\\nEste quiz avalia se você entendeu as definições e princípios fundamentais.\\n\\nLeia cada pergunta com atenção e escolha a resposta mais adequada.",
       "type": "quiz",
       "imageQuery": null,
       "tokenEstimate": 350,
@@ -568,23 +598,23 @@ FORMATO JSON:
           "explanation": "Explicação detalhada da resposta correta com justificativa técnica e exemplos práticos"
         },
         {
-          "q": "Qual característica é fundamental para ${topic}?",
-          "options": ["Característica incorreta mas relacionada", "Característica fundamental correta", "Característica secundária", "Característica irrelevante"],
-          "correct": 1,
-          "explanation": "Explicação detalhada da resposta correta com justificativa técnica e exemplos práticos"
+          "q": "Com base no conteúdo apresentado, qual é a característica principal de ${topic}?",
+          "options": ["Característica principal correta", "Característica secundária", "Característica incorreta", "Característica irrelevante"],
+          "correct": 0,
+          "explanation": "Explicação clara da resposta correta com base no conteúdo apresentado"
         },
         {
-          "q": "Como ${topic} se relaciona com outras áreas?",
-          "options": ["Relação incorreta", "Relação secundária", "Relação principal correta", "Relação irrelevante"],
+          "q": "Qual é a aplicação mais comum de ${topic} mencionada na aula?",
+          "options": ["Aplicação incorreta", "Aplicação secundária", "Aplicação principal correta", "Aplicação irrelevante"],
           "correct": 2,
-          "explanation": "Explicação detalhada da resposta correta com justificativa técnica e exemplos práticos"
+          "explanation": "Explicação da aplicação correta com base nos exemplos apresentados"
         }
       ]
     },
     {
       "number": 12,
       "title": "Quiz: Aplicações Práticas de ${topic}",
-      "content": "Teste seus conhecimentos sobre as aplicações práticas e casos reais de ${topic}.\\n\\nEste quiz avalia sua capacidade de aplicar os conceitos aprendidos em situações concretas.\\n\\nAnalise cada cenário e escolha a melhor solução baseada nos conhecimentos adquiridos.",
+      "content": "Teste sua compreensão sobre as aplicações práticas de ${topic} apresentadas na aula.\\n\\nEste quiz avalia sua capacidade de aplicar os conceitos aprendidos em situações reais.\\n\\nAnalise cada cenário e escolha a melhor resposta baseada no conteúdo estudado.",
       "type": "quiz",
       "imageQuery": null,
       "tokenEstimate": 350,
@@ -594,19 +624,19 @@ FORMATO JSON:
           "q": "Em qual situação ${topic} seria mais aplicável?",
           "options": ["Situação incorreta", "Situação parcialmente correta", "Situação irrelevante", "Situação ideal correta"],
           "correct": 3,
-          "explanation": "Explicação detalhada da resposta correta com justificativa técnica e exemplos práticos"
+          "explanation": "Explicação da situação ideal com base nos exemplos apresentados na aula"
         },
         {
-          "q": "Qual seria o resultado esperado ao aplicar ${topic}?",
+          "q": "Qual seria o resultado esperado ao aplicar ${topic} corretamente?",
           "options": ["Resultado esperado correto", "Resultado parcialmente correto", "Resultado incorreto", "Resultado irrelevante"],
           "correct": 0,
-          "explanation": "Explicação detalhada da resposta correta com justificativa técnica e exemplos práticos"
+          "explanation": "Explicação do resultado correto com base no conteúdo da aula"
         },
         {
-          "q": "Qual limitação deve ser considerada ao usar ${topic}?",
+          "q": "Qual limitação importante deve ser considerada ao usar ${topic}?",
           "options": ["Limitação secundária", "Limitação irrelevante", "Limitação principal correta", "Limitação incorreta"],
           "correct": 2,
-          "explanation": "Explicação detalhada da resposta correta com justificativa técnica e exemplos práticos"
+          "explanation": "Explicação da limitação principal mencionada no conteúdo da aula"
         }
       ]
     }
@@ -617,11 +647,17 @@ Tópico: ${topic}
 ${systemPrompt ? `[Custom: ${systemPrompt}]` : ''}
 
 IMPORTANTE: 
-- Cada slide deve ter conteúdo rico e detalhado (300-600 tokens)
+- Cada slide deve ter conteúdo rico e detalhado (400-500 tokens)
 - Use apenas termos específicos do tópico em inglês para imageQuery
 - Evite termos genéricos educacionais
-- Desenvolva parágrafos explicativos completos
-- Responda APENAS com JSON válido.`;
+- Desenvolva parágrafos explicativos completos e substanciais
+- Responda APENAS com JSON válido
+- CONTEXTUALIZAÇÃO BRASILEIRA: Use exemplos brasileiros apenas quando NATURALMENTE relevantes ao tema, sem forçar conexões artificiais
+- FOQUE na clareza e objetividade, mas com DENSIDADE DE INFORMAÇÃO
+- Mantenha linguagem acessível para estudantes do ensino médio
+- DESENVOLVA cada conceito com profundidade e múltiplas perspectivas
+- INCLUA exemplos práticos, analogias e conexões interdisciplinares
+- APROFUNDE explicações com contexto histórico e científico quando relevante`;
 }
 
 /**
@@ -1177,28 +1213,37 @@ export async function POST(request) {
         });
       }
       
-      // FALLBACK: Se smart-search não funcionou, usar sistema antigo
+      // FALLBACK: Se smart-search não funcionou, usar sistema melhorado
       if (selectedImages.length === 0) {
-        log.info('Smart search failed, falling back to enhanced selection', { topic });
+        log.info('Smart search failed, falling back to enhanced semantic selection', { topic });
         
-        selectedImages = await Promise.race([
-          selectThreeDistinctImages(topic),
-          new Promise<any[]>((_, reject) => 
-            setTimeout(() => reject(new Error('Image selection timeout')), 10000)
-          )
-        ]);
-        
-        // Validar seleção
-        const validation = validateImageSelection(selectedImages);
-        if (!validation.isValid) {
-          log.warn('Image selection validation failed', { issues: validation.issues });
+        try {
+          // Usar o novo sistema de seleção semântica melhorado
+          const { selectThreeDistinctImages } = await import('@/lib/image-selection-enhanced');
+          
+          selectedImages = await Promise.race([
+            selectThreeDistinctImages(topic),
+            new Promise<any[]>((_, reject) => 
+              setTimeout(() => reject(new Error('Image selection timeout')), 15000)
+            )
+          ]);
+          
+          // Validar seleção
+          const { validateImageSelection } = await import('@/lib/image-selection-enhanced');
+          const validation = validateImageSelection(selectedImages);
+          if (!validation.isValid) {
+            log.warn('Image selection validation failed', { issues: validation.issues });
+          }
+          
+          log.info('Enhanced semantic image selection completed', {
+            totalImages: selectedImages.length,
+            providers: [...new Set(selectedImages.map(img => img.provider))],
+            validation: validation.metrics
+          });
+        } catch (error) {
+          log.error('Enhanced image selection failed', { error: (error as Error).message });
+          selectedImages = [];
         }
-        
-        log.info('Enhanced image selection completed', {
-          totalImages: selectedImages.length,
-          providers: [...new Set(selectedImages.map(img => img.provider))],
-          validation: validation.metrics
-        });
       }
       
     } catch (error) {

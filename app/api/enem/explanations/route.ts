@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic';
 
 import { openai, selectModel, getModelConfig } from '@/lib/openai'
+import { callGrok } from '@/lib/providers/grok'
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,8 +25,8 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    const model = selectModel('gpt-4o-mini')
-    const config = getModelConfig(model)
+    // Usar Grok 4 Fast Reasoning para explicações do ENEM
+    const model = 'grok-4-fast-reasoning'
 
     // Gerar explicações em lotes para otimizar performance
     const batchSize = 3
@@ -40,16 +41,17 @@ export async function POST(request: NextRequest) {
 
     for (const batch of batches) {
       try {
-        const systemPrompt = `Você é um especialista em educação e questões do ENEM. Sua missão é fornecer explicações detalhadas e educativas para questões que o estudante errou.
+        const systemPrompt = `Você é um especialista em educação e questões do ENEM. Sua missão é fornecer explicações CONCISAS e educativas para questões que o estudante errou.
 
 Para cada questão errada, forneça:
-1. Explicação clara e didática da resposta correta
-2. Por que a resposta escolhida pelo estudante está incorreta
-3. Conceitos fundamentais envolvidos na questão
-4. Dicas práticas para resolver questões similares
-5. Sugestões de estudo para melhorar na área
+1. Explicação clara e DIRETA da resposta correta (máximo 2 parágrafos)
+2. Por que a resposta escolhida pelo estudante está incorreta (breve)
+3. Conceitos fundamentais envolvidos na questão (essenciais apenas)
+4. Uma dica prática para resolver questões similares
+5. Uma sugestão de estudo específica
 
-Seja didático, encorajador e focado no aprendizado. Use linguagem clara e acessível.`
+Seja didático e CONCISO. Use linguagem clara e acessível. MÁXIMO 150 palavras por explicação.
+IMPORTANTE: NÃO inclua mensagens genéricas de motivação ou frases como "persista para arrasar no ENEM".`
 
         const userPrompt = `Analise as seguintes questões que o estudante errou e forneça explicações detalhadas:
 
@@ -74,17 +76,14 @@ Retorne APENAS um JSON válido com array de explicações no formato:
   }
 ]`
 
-        const completion = await openai.chat.completions.create({
-          model: model,
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt }
-          ],
-          temperature: 0.7,
-          max_tokens: 2000,
-        })
+        const result = await callGrok(
+          model,
+          [],
+          userPrompt,
+          systemPrompt
+        )
 
-        const response = completion.choices[0]?.message?.content
+        const response = result.text
         if (!response) continue
 
         // Limpar resposta para extrair JSON
@@ -140,7 +139,7 @@ Retorne APENAS um JSON válido com array de explicações no formato:
       explanations,
       totalWrong: wrongQuestions.length,
       success: true,
-      source: 'ai_generated'
+      source: 'grok_generated'
     })
 
   } catch (error) {

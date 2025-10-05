@@ -300,7 +300,7 @@ async function searchPixabay(query: string, baseUrl: string): Promise<ImageResul
 }
 
 /**
- * Re-ranking focado APENAS no tema específico - sem viés educacional
+ * Re-ranking focado APENAS no tema específico - com expansão semântica
  */
 export function rerankImages(images: ImageResult[], queryTerms: string[], usedGlobal: Set<string>): ImageResult[] {
   const hasTerm = (text: string, term: string) => text.toLowerCase().includes(term.toLowerCase());
@@ -311,10 +311,15 @@ export function rerankImages(images: ImageResult[], queryTerms: string[], usedGl
       let score = img.score || 0;
       const text = `${img.title || ''} ${img.description || ''}`.toLowerCase();
       
-      // Boost APENAS por termos do tema específico
+      // Boost MAIOR por termos do tema específico (incluindo termos expandidos)
       for (const term of queryTerms) {
         if (hasTerm(text, term)) {
-          score += 0.1; // Boost maior para termos específicos do tema
+          // Dar mais peso para termos mais específicos
+          if (term.length > 8) {
+            score += 0.15; // Boost maior para termos longos/específicos
+          } else {
+            score += 0.1; // Boost padrão para termos médios
+          }
         }
       }
       
@@ -323,11 +328,27 @@ export function rerankImages(images: ImageResult[], queryTerms: string[], usedGl
         score -= 0.3;
       }
       
-      // Penalidade para termos genéricos educacionais
-      const genericTerms = ['education', 'learning', 'teaching', 'school', 'classroom', 'student', 'teacher', 'study', 'book', 'academic'];
+      // Penalidade MAIOR para termos genéricos educacionais
+      const genericTerms = ['education', 'learning', 'teaching', 'school', 'classroom', 'student', 'teacher', 'study', 'book', 'academic', 'lesson', 'course', 'tutorial'];
       for (const term of genericTerms) {
         if (hasTerm(text, term)) {
-          score -= 0.05; // Penalidade para termos genéricos
+          score -= 0.08; // Penalidade maior para termos genéricos
+        }
+      }
+      
+      // Bonus para termos científicos específicos
+      const scientificTerms = ['diagram', 'chart', 'graph', 'illustration', 'process', 'structure', 'mechanism', 'system', 'anatomy', 'physiology', 'molecular', 'cellular', 'biological', 'chemical', 'physical', 'mathematical'];
+      for (const term of scientificTerms) {
+        if (hasTerm(text, term)) {
+          score += 0.05; // Bonus para termos científicos
+        }
+      }
+      
+      // Penalidade para arte abstrata ou genérica
+      const abstractTerms = ['abstract', 'artistic', 'creative', 'design', 'pattern', 'texture', 'colorful', 'beautiful', 'aesthetic'];
+      for (const term of abstractTerms) {
+        if (hasTerm(text, term)) {
+          score -= 0.03; // Penalidade leve para arte abstrata
         }
       }
       
@@ -512,6 +533,7 @@ export async function selectThreeDistinctImages(topic: string): Promise<ImageRes
   
   console.log(`🔍 Buscando imagens para tema: "${topic}"`);
   console.log(`📝 Query gerada: "${query}"`);
+  console.log(`🎯 Termos expandidos: [${queryTerms.join(', ')}]`);
   
   const pools = await searchAllProviders(query);
   
@@ -522,7 +544,7 @@ export async function selectThreeDistinctImages(topic: string): Promise<ImageRes
     pixabay: pools.pixabay.length
   });
   
-  // Re-ranking de todas as imagens
+  // Re-ranking de todas as imagens com termos expandidos
   const rerankedPools: ProviderSearchResult = {
     wikimedia: rerankImages(pools.wikimedia, queryTerms, new Set()),
     unsplash: rerankImages(pools.unsplash, queryTerms, new Set()),
@@ -536,7 +558,7 @@ export async function selectThreeDistinctImages(topic: string): Promise<ImageRes
   selected = fillShortageWithNextBest(rerankedPools, selected, 6);
   
   console.log(`✅ Selecionadas ${selected.length} imagens distintas:`, 
-    selected.map(img => `${img.provider}: ${img.title?.slice(0, 30)}...`)
+    selected.map(img => `${img.provider}: ${img.title?.slice(0, 30)}... (score: ${img.score?.toFixed(2)})`)
   );
   
   return selected;

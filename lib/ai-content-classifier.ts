@@ -22,39 +22,16 @@ export interface ContentClassificationSchema {
   educationalAlternative?: string;
 }
 
-// Schema para validação da resposta da IA
-const ContentClassificationSchema = {
-  type: 'object',
-  properties: {
-    isInappropriate: {
-      type: 'boolean',
-      description: 'Se o conteúdo é inadequado para ambiente educacional'
-    },
-    confidence: {
-      type: 'number',
-      minimum: 0,
-      maximum: 1,
-      description: 'Nível de confiança da classificação (0-1)'
-    },
-    categories: {
-      type: 'array',
-      items: {
-        type: 'string'
-      },
-      description: 'Categorias de inadequação detectadas'
-    },
-    reasoning: {
-      type: 'string',
-      description: 'Explicação da classificação'
-    },
-    educationalAlternative: {
-      type: 'string',
-      description: 'Alternativa educacional apropriada'
-    }
-  },
-  required: ['isInappropriate', 'confidence', 'categories', 'reasoning'],
-  additionalProperties: false
-};
+// Schema para validação da resposta da IA usando zod
+import { z } from 'zod';
+
+const ContentClassificationSchema = z.object({
+  isInappropriate: z.boolean().describe('Se o conteúdo é inadequado para ambiente educacional'),
+  confidence: z.number().min(0).max(1).describe('Nível de confiança da classificação (0-1)'),
+  categories: z.array(z.string()).describe('Categorias de inadequação detectadas'),
+  reasoning: z.string().describe('Explicação da classificação'),
+  educationalAlternative: z.string().optional().describe('Alternativa educacional apropriada')
+});
 
 // Prompt especializado para classificação de conteúdo educacional
 const CLASSIFICATION_PROMPT = `
@@ -140,7 +117,7 @@ export async function classifyContentWithAI(topic: string): Promise<ContentClass
           temperature: 0.1, // Baixa temperatura para consistência
         });
 
-        const classification = result.object as ContentClassificationSchema;
+        const classification = result.object;
         
         // Gerar resposta sugerida se inadequado
         let suggestedResponse: string | undefined;
@@ -149,7 +126,11 @@ export async function classifyContentWithAI(topic: string): Promise<ContentClass
         }
 
         return {
-          ...classification,
+          isInappropriate: classification.isInappropriate,
+          confidence: classification.confidence,
+          categories: classification.categories,
+          reasoning: classification.reasoning,
+          educationalAlternative: classification.educationalAlternative,
           suggestedResponse
         };
       } catch (openaiError) {
@@ -169,7 +150,7 @@ export async function classifyContentWithAI(topic: string): Promise<ContentClass
           temperature: 0.1,
         });
 
-        const classification = result.object as ContentClassificationSchema;
+        const classification = result.object;
         
         // Gerar resposta sugerida se inadequado
         let suggestedResponse: string | undefined;
@@ -178,7 +159,11 @@ export async function classifyContentWithAI(topic: string): Promise<ContentClass
         }
 
         return {
-          ...classification,
+          isInappropriate: classification.isInappropriate,
+          confidence: classification.confidence,
+          categories: classification.categories,
+          reasoning: classification.reasoning,
+          educationalAlternative: classification.educationalAlternative,
           suggestedResponse
         };
       } catch (geminiError) {

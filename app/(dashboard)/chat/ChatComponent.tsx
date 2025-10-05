@@ -41,7 +41,7 @@ type MinimalChatHook = {
     image?: string,
     attachment?: File,
     useWebSearch?: boolean,
-    provider?: 'auto' | 'openai' | 'google' | 'anthropic' | 'mistral' | 'groq',
+    provider?: 'auto' | 'openai' | 'google' | 'anthropic' | 'mistral' | 'groq' | 'grok',
     complexity?: 'simple' | 'complex' | 'fast'
   ) => Promise<void>;
   createConversation: (title?: string) => Promise<void>;
@@ -77,7 +77,14 @@ export default function ChatComponent() {
     model,
     setModel,
     autoSelection
-  } = useUnifiedChat("gemini", "gemini-2.0-flash-exp");
+  } = useUnifiedChat("grok", "grok-4-fast-reasoning");
+
+  // Garantir que sempre inicie com conversa limpa ao montar o componente
+  useEffect(() => {
+    console.log("🧹 [CHAT-COMPONENT] Component mounted, ensuring clean ephemeral chat");
+    // O useUnifiedChat já limpa automaticamente, mas garantimos aqui também
+    newConversation();
+  }, []);
 
   // Adaptar para interface existente
   const currentConversation = conversationId ? {
@@ -129,7 +136,7 @@ export default function ChatComponent() {
     image?: string,
     attachment?: File,
     useWebSearch?: boolean,
-    provider?: 'auto' | 'openai' | 'google' | 'anthropic' | 'mistral' | 'groq',
+    provider?: 'auto' | 'openai' | 'google' | 'anthropic' | 'mistral' | 'groq' | 'grok',
     complexity?: 'simple' | 'complex' | 'fast'
   ) => {
     await sendStream(message); // Usar streaming em vez de send normal

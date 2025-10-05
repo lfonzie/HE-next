@@ -11,12 +11,13 @@ import { streamOpenAI } from "@/lib/providers/openai";
 import { streamGPT5 } from "@/lib/providers/gpt5";
 import { streamGemini } from "@/lib/providers/gemini";
 import { streamPerplexity } from "@/lib/providers/perplexity";
+import { streamGrok } from "@/lib/providers/grok";
 import { randomUUID } from "crypto";
 
 export const runtime = "nodejs";
 
 type Body = {
-  provider: "openai" | "gpt5" | "gemini" | "perplexity";
+  provider: "openai" | "gpt5" | "gemini" | "perplexity" | "grok";
   model: string;
   input: string;
   system?: string;
@@ -53,6 +54,8 @@ export async function POST(req: NextRequest) {
 
     // 4) Criar stream baseado no provedor
     let stream: any;
+    let finalProvider = provider;
+    let finalModel = model;
     
     console.log(`🔧 [CHAT-STREAM] Creating stream for provider: ${provider}, model: ${model}`);
     
@@ -72,6 +75,20 @@ export async function POST(req: NextRequest) {
       case "perplexity":
         stream = await streamPerplexity(model, history, input, system);
         console.log(`✅ [CHAT-STREAM] Perplexity stream created successfully`);
+        break;
+      case "grok":
+        try {
+          stream = await streamGrok(model, history, input, system);
+          console.log(`✅ [CHAT-STREAM] Grok stream created successfully`);
+        } catch (grokError) {
+          console.error(`❌ [CHAT-STREAM] Grok failed, falling back to Gemini:`, grokError);
+          // Fallback to Gemini if Grok fails
+          stream = await streamGemini("gemini-2.0-flash-exp", history, input, system);
+          console.log(`✅ [CHAT-STREAM] Gemini fallback stream created successfully`);
+          // Update provider for metadata
+          finalProvider = "gemini";
+          finalModel = "gemini-2.0-flash-exp";
+        }
         break;
       default:
         return NextResponse.json({ error: "Provider inválido" }, { status: 400 });
@@ -93,14 +110,14 @@ export async function POST(req: NextRequest) {
           const metadata = {
             type: "metadata",
             conversationId: finalConversationId,
-            provider,
-            model
+            provider: finalProvider,
+            model: finalModel
           };
           controller.enqueue(encoder.encode(`data: ${JSON.stringify(metadata)}\n\n`));
           console.log(`📤 [CHAT-STREAM] Metadata sent:`, metadata);
 
           // Processar stream baseado no provedor
-          if (provider === "openai" || provider === "gpt5") {
+          if (finalProvider === "openai" || finalProvider === "gpt5") {
             console.log(`📡 [CHAT-STREAM] Processing OpenAI/GPT5 stream...`);
             let chunkCount = 0;
             for await (const chunk of stream) {
@@ -117,7 +134,7 @@ export async function POST(req: NextRequest) {
               }
             }
             console.log(`✅ [CHAT-STREAM] OpenAI/GPT5 stream completed. Total chunks: ${chunkCount}`);
-          } else if (provider === "gemini") {
+          } else if (finalProvider === "gemini") {
             for await (const chunk of stream.stream) {
               const text = chunk.text();
               if (text) {
@@ -129,7 +146,19 @@ export async function POST(req: NextRequest) {
                 controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
               }
             }
-          } else if (provider === "perplexity") {
+          } else if (finalProvider === "perplexity") {
+            for await (const chunk of stream) {
+              const content = chunk.choices[0]?.delta?.content;
+              if (content) {
+                fullResponse += content;
+                const data = {
+                  type: "content",
+                  content
+                };
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
+              }
+            }
+          } else if (finalProvider === "grok") {
             for await (const chunk of stream) {
               const content = chunk.choices[0]?.delta?.content;
               if (content) {
@@ -146,16 +175,16 @@ export async function POST(req: NextRequest) {
           // Enviar metadados finais
           const finalMetadata = {
             metadata: {
-              model: model,
-              provider: provider,
-              tier: provider === 'gemini' ? 'IA_ECO' : 'IA',
+              model: finalModel,
+              provider: finalProvider,
+              tier: finalProvider === 'gemini' ? 'IA_ECO' : 'IA',
               complexity: 'simple',
               module: module,
               tokens: 0
             },
             meta: {
-              provider: provider,
-              model: model,
+              provider: finalProvider,
+              model: finalModel,
               timestamp: Date.now()
             }
           };
@@ -175,13 +204,13 @@ export async function POST(req: NextRequest) {
               finalConversationId, 
               "assistant", 
               fullResponse, 
-              provider, 
-              model
+              finalProvider, 
+              finalModel
             );
             
             await updateConversation(finalConversationId, {
               updated_at: new Date(),
-              model: model
+              model: finalModel
             });
             
             console.log(`✅ [CHAT-STREAM] Response saved: ${fullResponse.length} chars`);

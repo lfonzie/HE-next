@@ -46,31 +46,89 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Simple score calculation
+    // Enhanced score calculation
     const totalQuestions = items.length;
     const answeredQuestions = responses.length;
     let correctAnswers = 0;
+    
+    // Calculate time statistics
+    const totalTimeSpent = responses.reduce((sum, response) => sum + (response.time_spent || 0), 0);
+    const averageTimePerQuestion = answeredQuestions > 0 ? totalTimeSpent / answeredQuestions : 0;
+    
+    // Calculate difficulty breakdown
+    const difficultyBreakdown = { easy: { correct: 0, total: 0 }, medium: { correct: 0, total: 0 }, hard: { correct: 0, total: 0 } };
+    const accuracyByTopic: Record<string, { correct: number; total: number }> = {};
+    const areaScores: Record<string, { correct: number; total: number }> = {};
 
-    // Count correct answers
+    // Count correct answers and calculate breakdowns
     responses.forEach(response => {
       const item = items.find(item => item.item_id === response.item_id);
-      if (item && response.selected_answer === item.correct_answer) {
-        correctAnswers++;
+      if (item) {
+        const isCorrect = response.selected_answer === item.correct_answer;
+        
+        // Count by difficulty - use area as difficulty indicator if estimated_difficulty is not available
+        const difficulty = item.estimated_difficulty?.toLowerCase() || 'medium';
+        const difficultyKey = difficulty as keyof typeof difficultyBreakdown;
+        if (difficultyBreakdown[difficultyKey]) {
+          difficultyBreakdown[difficultyKey].total++;
+          if (isCorrect) {
+            difficultyBreakdown[difficultyKey].correct++;
+          }
+        }
+        
+        // Count by area
+        const area = item.area || 'Geral';
+        if (!areaScores[area]) {
+          areaScores[area] = { correct: 0, total: 0 };
+        }
+        areaScores[area].total++;
+        if (isCorrect) {
+          areaScores[area].correct++;
+        }
+        
+        // Count by topic - use area as topic if topic is not available
+        const topic = item.topic || item.area || 'Geral';
+        if (!accuracyByTopic[topic]) {
+          accuracyByTopic[topic] = { correct: 0, total: 0 };
+        }
+        accuracyByTopic[topic].total++;
+        if (isCorrect) {
+          accuracyByTopic[topic].correct++;
+          correctAnswers++;
+        }
       }
     });
 
     const accuracy = totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0;
     const calculatedScore = Math.round(200 + (accuracy / 100) * 800); // 200-1000 range
 
+    // Calculate individual area scores
+    const areaScoresFormatted = {
+      CN: { raw_score: 0, percentage: 0, correct: 0, total: 0 },
+      CH: { raw_score: 0, percentage: 0, correct: 0, total: 0 },
+      LC: { raw_score: 0, percentage: 0, correct: 0, total: 0 },
+      MT: { raw_score: 0, percentage: 0, correct: 0, total: 0 }
+    };
+
+    // Calculate scores for each area
+    Object.entries(areaScores).forEach(([area, stats]) => {
+      if (areaScoresFormatted[area as keyof typeof areaScoresFormatted]) {
+        const areaAccuracy = stats.total > 0 ? (stats.correct / stats.total) * 100 : 0;
+        const areaScore = Math.round(200 + (areaAccuracy / 100) * 800);
+        
+        areaScoresFormatted[area as keyof typeof areaScoresFormatted] = {
+          raw_score: areaScore,
+          percentage: Math.round(areaAccuracy),
+          correct: stats.correct,
+          total: stats.total
+        };
+      }
+    });
+
     const score = {
       score_id: `score_${Date.now()}`,
       session_id: session_id,
-      area_scores: {
-        CN: { raw_score: calculatedScore, percentage: Math.round(accuracy), correct: correctAnswers, total: totalQuestions },
-        CH: { raw_score: calculatedScore, percentage: Math.round(accuracy), correct: correctAnswers, total: totalQuestions },
-        LC: { raw_score: calculatedScore, percentage: Math.round(accuracy), correct: correctAnswers, total: totalQuestions },
-        MT: { raw_score: calculatedScore, percentage: Math.round(accuracy), correct: correctAnswers, total: totalQuestions }
-      },
+      area_scores: areaScoresFormatted,
       total_score: calculatedScore,
       tri_estimated: {
         score: calculatedScore,
@@ -78,10 +136,15 @@ export async function POST(request: NextRequest) {
         disclaimer: 'Esta é uma estimativa baseada nas suas respostas. A pontuação oficial do ENEM depende de parâmetros específicos do exame completo.'
       },
       stats: {
-        total_time_spent: 0,
-        average_time_per_question: 0,
-        accuracy_by_topic: {},
-        difficulty_breakdown: { easy: { correct: 0, total: 0 }, medium: { correct: 0, total: 0 }, hard: { correct: 0, total: 0 } },
+        total_time_spent: totalTimeSpent,
+        average_time_per_question: averageTimePerQuestion,
+        accuracy_by_topic: Object.fromEntries(
+          Object.entries(accuracyByTopic).map(([topic, stats]) => [
+            topic, 
+            stats.total > 0 ? stats.correct / stats.total : 0
+          ])
+        ),
+        difficulty_breakdown: difficultyBreakdown,
         total_questions: totalQuestions,
         answered_questions: answeredQuestions,
         correct_answers: correctAnswers,

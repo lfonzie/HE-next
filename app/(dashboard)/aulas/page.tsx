@@ -8,11 +8,9 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, Sparkles, BookOpen, Target, Users, Send, Lightbulb, TrendingUp, AlertCircle, CheckCircle, Clock, RefreshCw, Timer, BarChart3, FileText, AlertTriangle, Mic, Accessibility, Coffee, Brain, Zap, Star, Heart, Rocket, Image as ImageIcon, Shield, X } from 'lucide-react'
-import { useEnhancedSuggestions } from '@/hooks/useEnhancedSuggestions'
+import { useDynamicSuggestions } from '@/hooks/useDynamicSuggestions'
 // Removido: seleção manual de imagens - agora é automática
 import Link from 'next/link'
-import { useTheme } from '@/hooks/useTheme'
-import { DarkModeTest } from '@/components/debug/DarkModeTest'
 
 // Mock components for demo (replace with actual imports)
 const toast = {
@@ -81,82 +79,154 @@ interface LessonProgressProps {
   className?: string
 }
 
-// Componente de entretenimento durante o loading - Sem fundo branco
-const LoadingEntertainment = ({ elapsedTime }: { elapsedTime: number }) => {
-  const tips = [
-    "💡 Dica: Quanto mais específico for seu tópico, melhor será sua aula personalizada!",
-    "🎯 Nossa IA analisa o contexto educacional para criar objetivos de aprendizagem precisos",
-    "🎮 Cada aula inclui atividades interativas e sistema de gamificação",
-    "📊 O pacing é otimizado profissionalmente para máxima eficácia pedagógica",
-    "🎨 Imagens e recursos visuais são gerados automaticamente para cada tópico",
-    "🏆 Sistema de conquistas motiva o aprendizado contínuo",
-    "📚 Metodologia baseada em pesquisa científica em educação",
-    "⚡ IA processa milhares de padrões educacionais para personalizar sua experiência"
-  ]
-  
-  const facts = [
-    "🧠 O cérebro aprende melhor com intervalos de 25-30 minutos",
-    "🎯 Objetivos claros aumentam a retenção em até 40%",
-    "🎮 Gamificação pode melhorar o engajamento em até 90%",
-    "📊 Feedback imediato acelera o aprendizado significativamente",
-    "🎨 Recursos visuais melhoram a compreensão em até 65%",
-    "⚡ Aprendizagem ativa é 6x mais eficaz que passiva",
-    "🏆 Reconhecimento aumenta a motivação intrínseca",
-    "📚 Repetição espaçada é a chave para memorização duradoura"
+// Componente de entretenimento durante o loading - Design melhorado com card único
+const LoadingEntertainment = ({ elapsedTime, curiosities, topic }: { 
+  elapsedTime: number
+  curiosities: Array<{ text: string; category: string }>
+  topic: string
+}) => {
+  // Fallback para curiosidades genéricas se não houver curiosidades específicas
+  const fallbackCuriosities = [
+    "🧠 O cérebro humano processa informações 200.000 vezes mais rápido que um computador",
+    "📚 A leitura regular pode aumentar a expectativa de vida em até 2 anos",
+    "🎯 Objetivos claros aumentam a probabilidade de sucesso em até 40%",
+    "⚡ Aprendizagem ativa é 6 vezes mais eficaz que aprendizagem passiva",
+    "🎨 Cores podem influenciar o humor e a produtividade no aprendizado",
+    "🏆 Reconhecimento e feedback positivo aumentam a motivação intrínseca",
+    "📊 Repetição espaçada é a técnica mais eficaz para memorização duradoura",
+    "🌱 A curiosidade é o combustível natural do aprendizado e da descoberta",
+    "🎮 Gamificação pode aumentar o engajamento em atividades educacionais em até 90%",
+    "💡 Cada pessoa tem um estilo de aprendizado único - visual, auditivo ou cinestésico"
   ]
 
-  const currentTip = tips[Math.floor(elapsedTime / 10000) % tips.length]
-  const currentFact = facts[Math.floor(elapsedTime / 15000) % facts.length]
+  // Combinar curiosidades específicas com fallback
+  const allCuriosities = curiosities.length > 0 
+    ? [...curiosities.map(c => c.text), ...fallbackCuriosities]
+    : fallbackCuriosities
+
+  // Selecionar curiosidade atual baseada no tempo
+  const currentCuriosity = allCuriosities[Math.floor(elapsedTime / 8000) % allCuriosities.length]
 
   return (
     <div className="space-y-8 p-8">
+      {/* Header melhorado */}
       <div className="text-center">
-        <div className="flex items-center justify-center gap-3 mb-4">
-          <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-xl flex items-center justify-center">
-            <Coffee className="h-6 w-6 text-white" />
+        <div className="flex items-center justify-center gap-4 mb-6">
+          <div className="relative">
+            <div className="w-16 h-16 bg-gradient-to-br from-yellow-500 via-orange-500 to-red-500 rounded-2xl flex items-center justify-center shadow-lg">
+              <Coffee className="h-8 w-8 text-white" />
+            </div>
+            <div className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center">
+              <Sparkles className="h-3 w-3 text-white fill-current" />
+            </div>
           </div>
-          <span className="text-2xl font-bold text-gray-800">Enquanto aguardamos...</span>
-        </div>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Nossa IA está trabalhando intensamente para criar sua aula perfeita! 
-          <br />
-          <strong className="text-yellow-600">Pode levar até 1 minuto e meio</strong> para garantir qualidade máxima.
-        </p>
-      </div>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="p-6 bg-white/70 backdrop-blur-sm rounded-2xl border border-yellow-200 shadow-sm dark:bg-black/70 dark:border-gray-700">
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center flex-shrink-0">
-              <Lightbulb className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h4 className="text-xl font-bold text-gray-900 mb-3">Dica do Dia</h4>
-              <p className="text-gray-700 leading-relaxed">{currentTip}</p>
-            </div>
+          <div className="text-left">
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
+              Criando sua Aula Personalizada
+            </h2>
+            <p className="text-lg text-gray-600 mt-1">
+              Nossa IA está trabalhando intensamente para você!
+            </p>
           </div>
         </div>
         
-        <div className="p-6 bg-white/70 backdrop-blur-sm rounded-2xl border border-orange-200 shadow-sm dark:bg-black/70 dark:border-gray-700">
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center flex-shrink-0">
-              <Brain className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h4 className="text-xl font-bold text-gray-900 mb-3">Fato Científico</h4>
-              <p className="text-gray-700 leading-relaxed">{currentFact}</p>
+        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-2xl p-6 border border-yellow-200 max-w-2xl mx-auto">
+          <div className="flex items-center justify-center gap-2 mb-3">
+            <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
+            <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+            <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
+          </div>
+          <p className="text-gray-700 font-medium">
+            <strong className="text-yellow-600">Tempo estimado:</strong> até 1 minuto e meio para garantir qualidade máxima
+          </p>
+        </div>
+      </div>
+      
+      {/* Card único "Você Sabia?" */}
+      <div className="max-w-4xl mx-auto">
+        <div className="relative">
+          {/* Background decoration */}
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 via-purple-400/20 to-pink-400/20 rounded-3xl blur-2xl"></div>
+          
+          <div className="relative bg-white/90 backdrop-blur-sm rounded-3xl p-8 border-2 border-blue-200 shadow-xl">
+            <div className="flex items-start gap-6">
+              <div className="flex-shrink-0">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+                  <Lightbulb className="h-8 w-8 text-white" />
+                </div>
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-4">
+                  <h3 className="text-2xl font-bold text-gray-900">Você Sabia?</h3>
+                  <div className="flex gap-1">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                    <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }}></div>
+                    <div className="w-2 h-2 bg-pink-500 rounded-full animate-pulse" style={{ animationDelay: '0.6s' }}></div>
+                  </div>
+                </div>
+                <p className="text-lg text-gray-700 leading-relaxed font-medium">
+                  {currentCuriosity}
+                </p>
+                {curiosities.length > 0 && (
+                  <div className="mt-4 flex items-center gap-2 text-sm text-blue-600">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <span>Curiosidade específica sobre: <strong>{topic}</strong></span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </div>
       
-      <div className="flex justify-center gap-6 text-4xl">
-        <div className="animate-bounce" style={{ animationDelay: '0ms' }}>🎯</div>
-        <div className="animate-bounce" style={{ animationDelay: '200ms' }}>✨</div>
-        <div className="animate-bounce" style={{ animationDelay: '400ms' }}>🚀</div>
-        <div className="animate-bounce" style={{ animationDelay: '600ms' }}>💡</div>
-        <div className="animate-bounce" style={{ animationDelay: '800ms' }}>🎮</div>
-        <div className="animate-bounce" style={{ animationDelay: '1000ms' }}>🏆</div>
+      {/* Animações melhoradas */}
+      <div className="flex justify-center gap-8 text-5xl">
+        <div className="animate-bounce" style={{ animationDelay: '0ms' }}>
+          <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-xl flex items-center justify-center shadow-lg">
+            🎯
+          </div>
+        </div>
+        <div className="animate-bounce" style={{ animationDelay: '200ms' }}>
+          <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-orange-600 rounded-xl flex items-center justify-center shadow-lg">
+            ✨
+          </div>
+        </div>
+        <div className="animate-bounce" style={{ animationDelay: '400ms' }}>
+          <div className="w-12 h-12 bg-gradient-to-br from-red-400 to-red-600 rounded-xl flex items-center justify-center shadow-lg">
+            🚀
+          </div>
+        </div>
+        <div className="animate-bounce" style={{ animationDelay: '600ms' }}>
+          <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+            💡
+          </div>
+        </div>
+        <div className="animate-bounce" style={{ animationDelay: '800ms' }}>
+          <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+            🎮
+          </div>
+        </div>
+        <div className="animate-bounce" style={{ animationDelay: '1000ms' }}>
+          <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
+            🏆
+          </div>
+        </div>
+      </div>
+      
+      {/* Progress indicators */}
+      <div className="flex justify-center gap-4">
+        <div className="flex items-center gap-2 text-sm text-gray-600">
+          <div className="w-3 h-3 bg-yellow-500 rounded-full animate-pulse"></div>
+          <span>Analisando conteúdo</span>
+        </div>
+        <div className="flex items-center gap-2 text-sm text-gray-600">
+          <div className="w-3 h-3 bg-orange-500 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+          <span>Gerando atividades</span>
+        </div>
+        <div className="flex items-center gap-2 text-sm text-gray-600">
+          <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
+          <span>Otimizando experiência</span>
+        </div>
       </div>
     </div>
   )
@@ -182,20 +252,45 @@ const LessonProgress = ({ progress, status, isGenerating, elapsedTime, className
   }
 
   return (
-    <div className={`space-y-4 ${className}`}>
-      <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-        <div 
-          className="bg-yellow-600 h-3 rounded-full transition-all duration-300 ease-out"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          {isGenerating && <Loader2 className="h-4 w-4 animate-spin" />}
-          <span className="text-sm text-gray-600">{status}</span>
+    <div className={`space-y-6 ${className}`}>
+      {/* Barra de progresso melhorada */}
+      <div className="relative">
+        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-hidden shadow-inner">
+          <div 
+            className="bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 h-4 rounded-full transition-all duration-500 ease-out shadow-lg relative"
+            style={{ width: `${progress}%` }}
+          >
+            {/* Efeito de brilho na barra */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse"></div>
+          </div>
         </div>
-        <div className="flex items-center gap-1 text-sm text-yellow-600 font-medium">
-          <Timer className="h-4 w-4" />
+        
+        {/* Indicador de progresso */}
+        <div className="flex justify-between items-center mt-2">
+          <div className="text-sm text-gray-500 font-medium">
+            {Math.round(progress)}% concluído
+          </div>
+          <div className="text-sm text-gray-500 font-medium">
+            Tempo estimado: ~90s
+          </div>
+        </div>
+      </div>
+      
+      {/* Status e tempo */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          {isGenerating && (
+            <div className="relative">
+              <Loader2 className="h-5 w-5 animate-spin text-yellow-600" />
+              <div className="absolute inset-0 h-5 w-5 animate-ping rounded-full bg-yellow-400 opacity-20"></div>
+            </div>
+          )}
+          <span className={`text-lg font-medium ${status.includes('Erro') ? 'text-red-600' : 'text-gray-700'}`}>
+            {status}
+          </span>
+        </div>
+        <div className="flex items-center gap-2 text-lg text-yellow-600 font-semibold bg-yellow-50 px-3 py-1 rounded-full">
+          <Timer className="h-5 w-5" />
           <span>{formatTime(elapsedTime)}</span>
         </div>
       </div>
@@ -203,103 +298,6 @@ const LessonProgress = ({ progress, status, isGenerating, elapsedTime, className
   )
 }
 
-// Componente para exibir métricas de pacing profissional
-interface PacingMetricsProps {
-  metrics?: {
-    totalTokens: number
-    totalWords: number
-    synchronousTime: number
-    asynchronousTime: number
-    tokenPerSlide: number
-    wordsPerSlide: number
-  }
-  warnings?: string[]
-  className?: string
-}
-
-const PacingMetrics = ({ metrics, warnings, className }: PacingMetricsProps) => {
-  if (!metrics) return null
-
-  return (
-    <div className={`space-y-6 ${className}`}>
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-xl flex items-center justify-center">
-          <BarChart3 className="h-5 w-5 text-white" />
-        </div>
-        <h3 className="text-2xl font-bold text-gray-800">📊 Métricas de Pacing Profissional</h3>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl border border-green-200 dark:from-black dark:to-black dark:border-gray-700">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center">
-              <Clock className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-600">Tempo Síncrono</p>
-              <p className="text-2xl font-bold text-green-600">{metrics.synchronousTime} min</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="p-6 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl border border-yellow-200 dark:from-black dark:to-black dark:border-gray-700">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-xl flex items-center justify-center">
-              <Timer className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-600">Tempo Assíncrono</p>
-              <p className="text-2xl font-bold text-yellow-600">{metrics.asynchronousTime} min</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="p-6 bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl border border-orange-200">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center">
-              <FileText className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total de Tokens</p>
-              <p className="text-2xl font-bold text-orange-600">{metrics.totalTokens.toLocaleString()}</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="p-6 bg-gradient-to-br from-red-50 to-pink-50 rounded-2xl border border-red-200">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-pink-600 rounded-xl flex items-center justify-center">
-              <Target className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-600">Palavras por Slide</p>
-              <p className="text-2xl font-bold text-red-600">{metrics.wordsPerSlide}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      {warnings && warnings.length > 0 && (
-        <div className="p-6 bg-gradient-to-br from-yellow-50 to-orange-50 border border-yellow-200 rounded-2xl dark:from-gray-800 dark:to-gray-900 dark:border-yellow-800">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-xl flex items-center justify-center">
-              <AlertTriangle className="h-5 w-5 text-white" />
-            </div>
-            <div className="text-xl font-bold text-yellow-800 dark:text-yellow-400">⚠️ Avisos de Qualidade</div>
-          </div>
-          <ul className="space-y-2">
-            {warnings.map((warning, index) => (
-              <li key={index} className="flex items-start gap-3 text-yellow-800 dark:text-yellow-400">
-                <div className="w-2 h-2 bg-yellow-600 dark:bg-yellow-500 rounded-full mt-2 flex-shrink-0"></div>
-                <span className="font-medium">{warning}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </div>
-  )
-}
 
 // Enhanced interfaces
 interface GeneratedLesson {
@@ -320,15 +318,6 @@ interface GeneratedLesson {
   feedback: any
   demoMode?: boolean
   createdAt: string
-  pacingMetrics?: {
-    totalTokens: number
-    totalWords: number
-    synchronousTime: number
-    asynchronousTime: number
-    tokenPerSlide: number
-    wordsPerSlide: number
-  }
-  pacingWarnings?: string[]
 }
 
 interface FormData {
@@ -383,9 +372,6 @@ function AulasPageContent() {
   // State management
   const [isGenerating, setIsGenerating] = useState(false)
   const [generatedLesson, setGeneratedLesson] = useState<GeneratedLesson | null>(null)
-  const [pacingMetrics, setPacingMetrics] = useState<any>(null)
-  const [pacingWarnings, setPacingWarnings] = useState<string[]>([])
-  const { resolvedTheme } = useTheme()
   const [generationProgress, setGenerationProgress] = useState(0)
   const [generationStatus, setGenerationStatus] = useState('')
   const [formData, setFormData] = useState<FormData>({ topic: '' })
@@ -401,7 +387,12 @@ function AulasPageContent() {
     isOpen: false,
     blockedContent: null
   })
+  const [curiosities, setCuriosities] = useState<Array<{ text: string; category: string }>>([])
+  const [currentTopic, setCurrentTopic] = useState('')
+  const [topicIntroduction, setTopicIntroduction] = useState<string>('')
   
+  // Hook para buscar sugestões do banco de dados
+  const { suggestions, loading: suggestionsLoading, error: suggestionsError, refreshSuggestions } = useDynamicSuggestions()
 
   // Debug log para verificar estado inicial
   console.log('AulasPageContent render - isGenerating:', isGenerating, 'generatedLesson:', !!generatedLesson)
@@ -450,26 +441,21 @@ function AulasPageContent() {
     console.log('Limpando todo o estado e localStorage')
     setIsGenerating(false)
     setGeneratedLesson(null)
-    setPacingMetrics(null)
-    setPacingWarnings([])
     setGenerationProgress(0)
     setGenerationStatus('')
     setFormData({ topic: '' })
     setFormErrors({})
     setStartTime(null)
     setElapsedTime(0)
+    setCuriosities([])
+    setCurrentTopic('')
+    setTopicIntroduction('')
     
     // Limpar localStorage
     const keys = Object.keys(localStorage).filter(key => key.startsWith('demo_lesson_'))
     keys.forEach(key => localStorage.removeItem(key))
     console.log('localStorage limpo')
   }, [])
-
-  // Usar sugestões melhoradas
-  const { suggestions, loading: suggestionsLoading, error: suggestionsError, refreshSuggestions } = useEnhancedSuggestions({
-    limit: 6, // Mostrar apenas 6 sugestões na página principal
-    sortBy: 'popularity'
-  })
 
   // Cronômetro
   useEffect(() => {
@@ -529,6 +515,79 @@ function AulasPageContent() {
   }, [formData.topic])
 
 
+  // Função para buscar curiosidades sobre o tópico
+  const fetchCuriosities = useCallback(async (topic: string) => {
+    try {
+      console.log('🎯 Buscando curiosidades para:', topic)
+      
+      const response = await fetch('/api/aulas/generate-curiosities', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ topic })
+      })
+
+      if (!response.ok) {
+        throw new Error('Erro ao buscar curiosidades')
+      }
+
+      const result = await response.json()
+      
+      if (result.success && result.curiosities) {
+        console.log('✅ Curiosidades obtidas:', result.curiosities.length)
+        setCuriosities(result.curiosities)
+        setCurrentTopic(topic)
+        return result.curiosities
+      } else {
+        throw new Error('Resposta inválida da API de curiosidades')
+      }
+    } catch (error) {
+      console.warn('⚠️ Erro ao buscar curiosidades, usando fallback:', error)
+      setCuriosities([])
+      setCurrentTopic(topic)
+      return []
+    }
+  }, [])
+
+  // Função para buscar introdução específica sobre o tópico
+  const fetchTopicIntroduction = useCallback(async (topic: string) => {
+    try {
+      console.log('📚 Buscando introdução para:', topic)
+      
+      const response = await fetch('/api/aulas/generate-curiosities', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          topic,
+          type: 'introduction' // Novo parâmetro para diferenciar da busca de curiosidades
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('Erro ao buscar introdução')
+      }
+
+      const result = await response.json()
+      
+      if (result.success && result.introduction) {
+        console.log('✅ Introdução obtida:', result.introduction)
+        setTopicIntroduction(result.introduction)
+        return result.introduction
+      } else {
+        throw new Error('Resposta inválida da API de introdução')
+      }
+    } catch (error) {
+      console.warn('⚠️ Erro ao buscar introdução, usando fallback:', error)
+      // Fallback para introdução genérica baseada no tópico
+      const fallbackIntroduction = `Esta aula foi cuidadosamente elaborada para proporcionar uma compreensão completa e interativa sobre ${topic}. Você será guiado através de conceitos fundamentais, exemplos práticos e atividades que facilitam o aprendizado e a retenção do conhecimento. Prepare-se para uma experiência educacional envolvente e personalizada!`
+      setTopicIntroduction(fallbackIntroduction)
+      return fallbackIntroduction
+    }
+  }, [])
+
   // Enhanced lesson generation with better error handling and progress tracking
   const handleGenerate = useCallback(async (topicOverride: string | null = null) => {
     const topic = topicOverride || formData.topic
@@ -557,6 +616,12 @@ function AulasPageContent() {
     setGeneratedLesson(null)
     setStartTime(Date.now())
     
+    // Pré-chamada para buscar curiosidades e introdução sobre o tópico
+    console.log('🎯 Iniciando busca de curiosidades e introdução...')
+    await Promise.all([
+      fetchCuriosities(topic),
+      fetchTopicIntroduction(topic)
+    ])
 
     const generationStartTime = Date.now()
     const estimatedDuration = 90000 // 90 seconds (1 minute and 30 seconds) for realistic timing
@@ -680,13 +745,6 @@ function AulasPageContent() {
       setGenerationStatus(`Aula gerada com sucesso usando ${result.provider}!`)
       setGeneratedLesson(generatedLesson)
       
-      // Capturar métricas de pacing profissional
-      if (result.pacingMetrics) {
-        setPacingMetrics(result.pacingMetrics)
-      }
-      if (result.warnings) {
-        setPacingWarnings(result.warnings)
-      }
 
       // Store in localStorage for demo mode with quota management
       console.log('Salvando aula no localStorage:', generatedLesson.id, generatedLesson)
@@ -775,21 +833,18 @@ function AulasPageContent() {
         setGenerationStatus('')
       }, 2000)
     }
-  }, [formData.topic, validateForm, isGenerating])
+  }, [formData.topic, validateForm, isGenerating, fetchCuriosities])
 
-  // Enhanced suggestion handler with analytics
-  const handleSuggestionClick = useCallback(async (suggestion: Suggestion) => {
+// Removido: manipulação manual de imagens - agora é automática
+
+  // Função para lidar com clique nas sugestões
+  const handleSuggestionClick = useCallback(async (suggestion: { text: string; category: string; level: string }) => {
     setFormData({ topic: suggestion.text })
     setFormErrors({})
     
-    // Simulate analytics tracking
-    console.log('Suggestion clicked:', { text: suggestion.text, category: suggestion.category })
-    
-    // Auto-generate after suggestion click
+    // Auto-gerar após clique na sugestão
     await handleGenerate(suggestion.text)
   }, [handleGenerate])
-
-// Removido: manipulação manual de imagens - agora é automática
 
   // Enhanced form submission handler
   const handleKeyPress = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -865,45 +920,48 @@ function AulasPageContent() {
     window.location.href = `/aulas/${(generatedLesson as any)?.id || ""}`
   }
 
-  const handleSaveLesson = async () => {
-    if (!generatedLesson) return
-
-    try {
-      // Mock API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      toast.success('Aula salva com sucesso!')
-    } catch (error) {
-      toast.error('Erro ao salvar aula. Tente novamente.')
-    }
-  }
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl" role="main">
-      <DarkModeTest />
         {/* Header quando aula foi gerada */}
         {generatedLesson && (
           <header className="text-center mb-12">
             <div className="relative">
               {/* Background decoration */}
-              <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 via-orange-400/20 to-red-400/20 rounded-3xl blur-3xl"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-green-400/20 via-blue-400/20 to-purple-400/20 rounded-3xl blur-3xl"></div>
               
               <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-white/20">
                 <div className="flex items-center justify-center gap-6 mb-6">
                   <div className="relative">
-                    <div className="w-20 h-20 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-2xl flex items-center justify-center shadow-lg">
+                    <div className="w-20 h-20 bg-gradient-to-br from-green-400 to-green-600 rounded-2xl flex items-center justify-center shadow-lg">
                       <CheckCircle className="h-10 w-10 text-white" />
                     </div>
-                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center">
+                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
                       <Star className="h-3 w-3 text-white fill-current" />
                     </div>
                   </div>
                   <div className="text-left">
-                    <h1 className="text-4xl font-bold bg-gradient-to-r from-yellow-600 to-yellow-700 bg-clip-text text-transparent mb-2">
+                    <h1 className="text-4xl font-bold bg-gradient-to-r from-green-600 to-green-700 bg-clip-text text-transparent mb-2">
                       Aula Criada com Sucesso!
                     </h1>
                     <p className="text-lg text-gray-600">Sua experiência de aprendizado personalizada está pronta</p>
                   </div>
                 </div>
+                
+                {/* Seção "Sobre este tema" */}
+                {topicIntroduction && (
+                  <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-2xl p-6 border border-blue-200 dark:border-blue-700 mb-6">
+                    <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
+                      <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                        <BookOpen className="h-3 w-3 text-white" />
+                      </div>
+                      Sobre este tema
+                    </h3>
+                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                      {topicIntroduction}
+                    </p>
+                  </div>
+                )}
                 
                 <div className="flex flex-col sm:flex-row justify-center gap-4">
                   <Button 
@@ -911,8 +969,9 @@ function AulasPageContent() {
                       setGeneratedLesson(null)
                       setFormData({ topic: '' })
                       setFormErrors({})
-                      setPacingMetrics(null)
-                      setPacingWarnings([])
+                      setCuriosities([])
+                      setCurrentTopic('')
+                      setTopicIntroduction('')
                     }}
                     variant="outline"
                     className="flex items-center gap-2 border-2 hover:bg-gray-50 transition-all duration-200"
@@ -923,7 +982,7 @@ function AulasPageContent() {
                   </Button>
                   <Button 
                     onClick={handleStartLesson}
-                    className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-200"
+                    className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-200"
                     size="lg"
                   >
                     <Users className="h-5 w-5" />
@@ -1117,46 +1176,6 @@ function AulasPageContent() {
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-r from-yellow-50 via-orange-50 to-red-50 border border-yellow-200 rounded-2xl p-6 dark:from-black dark:via-black dark:to-black dark:border-gray-700">
-                  <h4 className="font-semibold text-lg text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
-                    <div className="w-6 h-6 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-lg flex items-center justify-center">
-                      <Target className="h-3 w-3 text-white" />
-                    </div>
-                    O que nossa IA fará automaticamente:
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
-                        <Sparkles className="h-4 w-4 text-white" />
-                      </div>
-                      <span className="text-gray-700 dark:text-gray-300">Identificar matéria e série ideais</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg flex items-center justify-center">
-                        <Target className="h-4 w-4 text-white" />
-                      </div>
-                      <span className="text-gray-700 dark:text-gray-300">Criar objetivos específicos</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-gradient-to-br from-red-400 to-red-600 rounded-lg flex items-center justify-center">
-                        <Users className="h-4 w-4 text-white" />
-                      </div>
-                      <span className="text-gray-700 dark:text-gray-300">Desenvolver atividades interativas</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-green-600 rounded-lg flex items-center justify-center">
-                        <Heart className="h-4 w-4 text-white" />
-                      </div>
-                      <span className="text-gray-700 dark:text-gray-300">Implementar gamificação</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg flex items-center justify-center">
-                        <ImageIcon className="h-4 w-4 text-white" />
-                      </div>
-                      <span className="text-gray-700 dark:text-gray-300">Selecionar imagens educacionais automaticamente</span>
-                    </div>
-                  </div>
-                </div>
 
 
                 <div className="space-y-4">
@@ -1234,69 +1253,38 @@ function AulasPageContent() {
                 </div>
               ))
             ) : (
-              suggestions.map((suggestion) => (
+              suggestions.map((suggestion, index) => (
                 <button
-                  key={suggestion.id}
+                  key={`${suggestion.text}-${index}`}
                   onClick={() => handleSuggestionClick(suggestion)}
-                  className="group p-6 text-left border-2 border-yellow-400 rounded-2xl hover:border-yellow-500 hover:bg-yellow-50/20 transition-all duration-300 !bg-transparent backdrop-blur-sm hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed text-yellow-400 hover:text-yellow-600"
+                  className="group p-6 text-left border-2 border-blue-200 dark:border-blue-700 rounded-2xl hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50/20 dark:hover:bg-blue-900/20 transition-all duration-300 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={isGenerating}
                   aria-label={`Gerar aula sobre ${suggestion.text}`}
                 >
                   <div className="space-y-3">
                     <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 border-2 border-yellow-400 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-200 bg-transparent">
-                        <BookOpen className="h-4 w-4 text-yellow-400" />
+                      <div className="w-8 h-8 border-2 border-blue-400 dark:border-blue-500 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-200 bg-blue-50 dark:bg-blue-900/20">
+                        <BookOpen className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-base font-semibold text-yellow-400 group-hover:text-yellow-300 line-clamp-2 leading-relaxed">
+                        <p className="text-base font-semibold text-gray-800 dark:text-gray-200 group-hover:text-blue-800 dark:group-hover:text-blue-300 line-clamp-2 leading-relaxed">
                           {suggestion.text}
-                        </p>
-                        <p className="text-sm text-yellow-500/80 mt-1 line-clamp-2">
-                          {suggestion.description}
                         </p>
                       </div>
                     </div>
                     
                     <div className="flex flex-wrap gap-2">
-                      <Badge className="text-xs px-2 py-1 !border-2 !border-yellow-400 !text-yellow-600 !bg-transparent">
+                      <Badge variant="secondary" className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200">
                         {suggestion.category}
                       </Badge>
-                      <Badge className="text-xs px-2 py-1 !border-2 !border-orange-400 !text-orange-600 !bg-transparent">
+                      <Badge variant="outline" className="text-xs border-blue-300 dark:border-blue-600 text-blue-700 dark:text-blue-300">
                         {suggestion.level}
                       </Badge>
-                      <Badge 
-                        className={`text-xs px-2 py-1 !bg-transparent ${
-                          suggestion.difficulty === 'básico' ? '!border-2 !border-green-400 !text-green-600' :
-                          suggestion.difficulty === 'intermediário' ? '!border-2 !border-yellow-400 !text-yellow-600' :
-                          '!border-2 !border-red-400 !text-red-600'
-                        }`}
-                      >
-                        {suggestion.difficulty}
-                      </Badge>
                     </div>
                     
-                    <div className="flex items-center justify-between text-xs text-yellow-500/70">
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        <span>{suggestion.estimatedTime}min</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Star className="h-3 w-3 text-yellow-500" />
-                        <span>{suggestion.popularity}%</span>
-                      </div>
-                    </div>
-                    
-                    <div className="flex flex-wrap gap-1">
-                      {suggestion.tags.slice(0, 3).map((tag, index) => (
-                        <span key={index} className="text-xs !border-2 !border-yellow-400 !text-yellow-600 !bg-transparent px-2 py-1 rounded-full">
-                          {tag}
-                        </span>
-                      ))}
-                      {suggestion.tags.length > 3 && (
-                        <span className="text-xs text-gray-400 px-2 py-1">
-                          +{suggestion.tags.length - 3}
-                        </span>
-                      )}
+                    <div className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Send className="h-3 w-3" />
+                      <span>Clique para gerar automaticamente</span>
                     </div>
                   </div>
                 </button>
@@ -1329,6 +1317,7 @@ function AulasPageContent() {
         </div>
       )}
 
+
       {/* Enhanced Loading State */}
       {isGenerating && (
         <div className="max-w-6xl mx-auto">
@@ -1337,53 +1326,80 @@ function AulasPageContent() {
             <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 via-orange-400/20 to-red-400/20 rounded-3xl blur-3xl"></div>
             
             <Card className="relative bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-2 border-yellow-200 dark:border-yellow-800 shadow-xl rounded-3xl overflow-hidden">
-              <CardHeader className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white p-8 text-center">
-                <div className="flex items-center justify-center gap-4 mb-4">
-                  <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center">
-                    <Loader2 className="h-8 w-8 animate-spin" />
+              <CardHeader className="bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 text-white p-8 text-center relative overflow-hidden">
+                {/* Background decoration */}
+                <div className="absolute inset-0 bg-gradient-to-r from-white/10 via-transparent to-white/10 animate-pulse"></div>
+                
+                <div className="relative z-10">
+                  <div className="flex items-center justify-center gap-6 mb-6">
+                    <div className="relative">
+                      <div className="w-20 h-20 bg-white/20 rounded-3xl flex items-center justify-center backdrop-blur-sm">
+                        <Loader2 className="h-10 w-10 animate-spin" />
+                      </div>
+                      <div className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-300 rounded-full flex items-center justify-center">
+                        <Sparkles className="h-3 w-3 text-yellow-800 fill-current animate-pulse" />
+                      </div>
+                    </div>
+                    <div className="text-left">
+                      <h1 className="text-5xl font-bold mb-3 bg-gradient-to-r from-white to-yellow-100 bg-clip-text text-transparent">
+                        Criando sua Aula
+                      </h1>
+                      <p className="text-2xl text-yellow-100 font-medium">
+                        IA trabalhando intensamente para você!
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h1 className="text-4xl font-bold mb-2">
-                      Gerando sua Aula Personalizada
-                    </h1>
-                    <p className="text-xl text-yellow-100">Nossa IA está trabalhando intensamente para você!</p>
+                  
+                  {/* Progress indicators */}
+                  <div className="flex justify-center gap-6 mt-6">
+                    <div className="flex items-center gap-2 text-yellow-100">
+                      <div className="w-3 h-3 bg-yellow-300 rounded-full animate-pulse"></div>
+                      <span className="text-sm font-medium">Analisando</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-yellow-100">
+                      <div className="w-3 h-3 bg-orange-300 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+                      <span className="text-sm font-medium">Gerando</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-yellow-100">
+                      <div className="w-3 h-3 bg-red-300 rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
+                      <span className="text-sm font-medium">Otimizando</span>
+                    </div>
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="p-8 space-y-8">
-                {/* Enhanced Progress Bar */}
-                <div className="space-y-6">
-                  <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden shadow-inner">
-                    <div 
-                      className="bg-gradient-to-r from-yellow-500 to-orange-600 h-4 rounded-full transition-all duration-500 ease-out shadow-lg"
-                      style={{ width: `${generationProgress}%` }}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      {isGenerating && <Loader2 className="h-5 w-5 animate-spin text-yellow-600" />}
-                      <span className={`text-lg font-medium ${generationStatus.includes('Erro') ? 'text-red-600' : 'text-gray-700'}`}>
-                        {generationStatus}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 text-lg text-yellow-600 font-semibold">
-                      <Timer className="h-5 w-5" />
-                      <span>{formatTime(elapsedTime)}</span>
-                    </div>
-                  </div>
+                {/* Enhanced Progress Section */}
+                <div className="space-y-8">
+                  <LessonProgress 
+                    progress={generationProgress}
+                    status={generationStatus}
+                    isGenerating={isGenerating}
+                    elapsedTime={elapsedTime}
+                  />
                   
                   {/* Mensagem de erro específica */}
                   {generationStatus.includes('Erro') && (
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
-                          <span className="text-white text-sm">⚠️</span>
+                    <div className="bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-200 rounded-2xl p-6 shadow-lg">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-red-500 rounded-2xl flex items-center justify-center shadow-lg">
+                          <AlertTriangle className="h-6 w-6 text-white" />
                         </div>
-                        <div>
-                          <h4 className="font-semibold text-red-800">Erro na Geração</h4>
-                          <p className="text-red-700 text-sm mt-1">
+                        <div className="flex-1">
+                          <h4 className="font-bold text-red-800 text-lg mb-2">Erro na Geração</h4>
+                          <p className="text-red-700 font-medium">
                             {generationStatus.replace('Erro: ', '')}
                           </p>
+                          <div className="mt-3">
+                            <Button
+                              onClick={() => handleGenerate()}
+                              variant="outline"
+                              size="sm"
+                              className="border-red-300 text-red-700 hover:bg-red-50 hover:border-red-400"
+                            >
+                              <RefreshCw className="h-4 w-4 mr-2" />
+                              Tentar Novamente
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1391,7 +1407,11 @@ function AulasPageContent() {
                 </div>
                 
                 {/* Enhanced Entertainment Section */}
-                <LoadingEntertainment elapsedTime={elapsedTime} />
+                <LoadingEntertainment 
+                  elapsedTime={elapsedTime} 
+                  curiosities={curiosities}
+                  topic={currentTopic}
+                />
               </CardContent>
             </Card>
           </div>
@@ -1399,87 +1419,11 @@ function AulasPageContent() {
       )}
 
 
-      {/* Enhanced Generated Lesson Display */}
-      {generatedLesson && (
-        <div className="max-w-6xl mx-auto">
-          <div className="relative">
-            {/* Background decoration */}
-            <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 via-orange-400/20 to-red-400/20 rounded-3xl blur-3xl"></div>
-            
-            <Card className="relative bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-2 border-yellow-200 dark:border-yellow-800 shadow-xl rounded-3xl overflow-hidden">
-              <CardContent className="p-12">
-                <div className="space-y-12">
-
-                  {/* Estrutura da Aula */}
-                  <div>
-                    <h3 className="text-3xl font-bold mb-8 flex items-center gap-3 dark:text-white">
-                      <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center">
-                        <BookOpen className="h-5 w-5 text-white" />
-                      </div>
-                      Estrutura da Aula
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {generatedLesson.stages.map((stage: any, index: number) => (
-                        <div key={index} className="group p-6 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 hover:border-orange-300 dark:hover:border-orange-600 hover:shadow-lg transition-all duration-200">
-                          <div className="flex items-center gap-4 mb-4">
-                            <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
-                              <span className="text-lg font-bold text-white">{index + 1}</span>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-bold text-gray-900 dark:text-gray-100 text-lg">{stage.etapa}</p>
-                              <div className="flex items-center gap-3 mt-2">
-                                <Badge variant="secondary" className="bg-orange-100 text-orange-800 border border-orange-200 dark:bg-orange-900/20 dark:text-orange-300 dark:border-orange-800">
-                                  {stage.type}
-                                </Badge>
-                                <span className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                                  <Clock className="h-4 w-4" />
-                                  {stage.estimatedTime} min
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Métricas de Pacing Profissional */}
-                  <PacingMetrics 
-                    metrics={pacingMetrics} 
-                    warnings={pacingWarnings}
-                    className="bg-gradient-to-br from-yellow-50 to-orange-50 p-8 rounded-2xl border border-yellow-200 dark:from-gray-800 dark:to-gray-900 dark:border-yellow-800"
-                  />
-
-                  {/* Botões de ação */}
-                  <div className="flex flex-col sm:flex-row gap-6 pt-8">
-                    <Button 
-                      onClick={handleStartLesson} 
-                      className="flex-1 h-16 text-xl font-bold bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 shadow-lg hover:shadow-xl transition-all duration-200 rounded-2xl"
-                    >
-                      <Users className="mr-3 h-6 w-6" />
-                      Iniciar Aula Agora
-                    </Button>
-                    <Button 
-                      onClick={handleSaveLesson} 
-                      variant="outline" 
-                      className="sm:w-auto h-16 text-lg border-2 border-yellow-400 text-yellow-700 hover:bg-yellow-50 hover:border-yellow-500 dark:border-yellow-600 dark:text-yellow-300 dark:hover:bg-yellow-900/20 dark:hover:border-yellow-500 transition-all duration-200 rounded-2xl"
-                    >
-                      <FileText className="mr-2 h-5 w-5" />
-                      Salvar Aula
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      )}
 
       {/* Content Blocked Modal */}
       <ContentBlockedModal
         isOpen={contentBlockedModal.isOpen}
         onClose={() => setContentBlockedModal({ isOpen: false, blockedContent: null })}
-        blockedContent={contentBlockedModal.blockedContent}
       />
 
     </div>

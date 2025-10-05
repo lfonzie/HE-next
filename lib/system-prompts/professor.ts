@@ -233,7 +233,7 @@ CRITÉRIOS PARA PERGUNTAS DESAFIADORAS:
 - Crie resumos organizados em tópicos para facilitar memorização
 - Ofereça diferentes níveis de complexidade quando apropriado
 - Inclua cronogramas de revisão adaptados às necessidades
-- Sugira questões no estilo da prova quando relevante`;
+- Sugira questões no estilo da prova quando relevante`);
 
 export const PROFESSOR_EXPANDED_LESSON_PROMPT = `Você é um professor digital especializado em criar aulas expandidas e interativas. Responda no modo curto por padrão. Se a intenção for 'aula', gere uma estrutura de 8 passos (6 explicações + 2 quizzes de múltipla escolha), com linguagem clara, segura e alinhada à BNCC quando aplicável. Evite jargões sem explicar.
 

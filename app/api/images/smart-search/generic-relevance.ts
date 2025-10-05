@@ -49,6 +49,23 @@ export function detectThemeCategory(query: string): {
   name: string;
   falsePositiveType: string;
 } {
+  // Detectar temas históricos/sensíveis primeiro
+  if (isHistoricalTopic(query)) {
+    return {
+      name: 'historical',
+      falsePositiveType: 'histórico irrelevante'
+    };
+  }
+  // Gravidade específica (prioridade máxima)
+  if (query.includes('gravidade') || query.includes('gravity') ||
+      query.includes('gravitational') || query.includes('gravitacional') ||
+      query.includes('mass') || query.includes('massa') ||
+      query.includes('weight') || query.includes('peso') ||
+      query.includes('attraction') || query.includes('atração') ||
+      query.includes('celestial') || query.includes('celestial bodies')) {
+    return { name: 'gravity', falsePositiveType: 'genérico/não-físico' };
+  }
+  
   // Astronomia e espaço
   if (query.includes('sistema solar') || query.includes('solar system') || 
       query.includes('planeta') || query.includes('planet') ||
@@ -106,7 +123,12 @@ export function detectThemeCategory(query: string): {
   if (query.includes('física') || query.includes('physics') ||
       query.includes('fisica') || query.includes('energia') || query.includes('energy') ||
       query.includes('força') || query.includes('force') ||
-      query.includes('movimento') || query.includes('motion')) {
+      query.includes('movimento') || query.includes('motion') ||
+      query.includes('gravidade') || query.includes('gravity') ||
+      query.includes('gravitational') || query.includes('mass') || query.includes('massa') ||
+      query.includes('weight') || query.includes('peso') ||
+      query.includes('attraction') || query.includes('atração') ||
+      query.includes('celestial') || query.includes('celestial bodies')) {
     return { name: 'physics', falsePositiveType: 'genérico/não-físico' };
   }
   
@@ -181,8 +203,28 @@ export function detectThemeCategory(query: string): {
     return { name: 'biology', falsePositiveType: 'genérico/não-biológico' };
   }
   
+  // Temas históricos/sensíveis
+  if (isHistoricalTopic(query)) {
+    return { name: 'historical', falsePositiveType: 'histórico irrelevante' };
+  }
+  
   // Categoria genérica para temas não identificados
   return { name: 'general', falsePositiveType: 'genérico' };
+}
+
+// Função para detectar temas históricos
+function isHistoricalTopic(query: string): boolean {
+  const historicalKeywords = [
+    'war', 'guerra', 'world war', 'segunda guerra', 'primeira guerra',
+    'holocaust', 'genocide', 'genocídio', 'nazi', 'hitler', 'stalin',
+    'battle', 'batalha', 'conflict', 'conflito', 'military', 'militar',
+    'revolution', 'revolução', 'civil war', 'guerra civil',
+    'crusade', 'cruzada', 'invasion', 'invasão', 'occupation', 'ocupação',
+    'history', 'história', 'historical', 'histórico', 'ancient', 'antigo',
+    'medieval', 'medieval', 'renaissance', 'renascimento'
+  ];
+  
+  return historicalKeywords.some(keyword => query.toLowerCase().includes(keyword));
 }
 
 // Função para obter termos relevantes e falsos positivos por categoria
@@ -191,6 +233,32 @@ export function getCategoryTerms(category: { name: string; falsePositiveType: st
   falsePositives: string[];
 } {
   const categoryTerms: Record<string, { relevant: string[]; falsePositives: string[] }> = {
+    gravity: {
+      relevant: [
+        'gravity', 'gravidade', 'gravitational', 'gravitacional', 'mass', 'massa', 'weight', 'peso',
+        'attraction', 'atração', 'celestial', 'celestial bodies', 'planets', 'planetas',
+        'newton', 'einstein', 'space', 'espaço', 'universe', 'universo', 'cosmos', 'cosmos',
+        'orbit', 'órbita', 'orbital', 'orbital', 'falling', 'queda', 'acceleration', 'aceleração',
+        'physics', 'física', 'force', 'força', 'motion', 'movimento', 'energy', 'energia',
+        'physics diagram', 'diagrama de física', 'scientific illustration', 'ilustração científica',
+        'physics concept', 'conceito de física', 'physical law', 'lei física',
+        'gravitational field', 'campo gravitacional', 'gravitational pull', 'atração gravitacional',
+        'earth', 'terra', 'moon', 'lua', 'sun', 'sol', 'solar system', 'sistema solar',
+        'black hole', 'buraco negro', 'spacetime', 'espaço-tempo', 'relativity', 'relatividade'
+      ],
+      falsePositives: [
+        'woman', 'mulher', 'man', 'homem', 'person', 'pessoa', 'smiling', 'sorrindo', 'casual', 'casual',
+        'business', 'negócio', 'office', 'escritório', 'work', 'trabalho', 'meeting', 'reunião',
+        'technology', 'tecnologia', 'computer', 'computador', 'laptop', 'notebook', 'internet',
+        'library', 'biblioteca', 'books', 'livros', 'education', 'educação', 'learning', 'aprendizado',
+        'school', 'escola', 'classroom', 'sala de aula', 'student', 'estudante', 'teacher', 'professor',
+        'water', 'água', 'drop', 'gota', 'splash', 'salpico', 'liquid', 'líquido', 'wet', 'molhado',
+        'lake', 'lago', 'como', 'italy', 'italian', 'italiano', 'landscape', 'paisagem', 'mountain', 'montanha',
+        'nature', 'natureza', 'forest', 'floresta', 'city', 'cidade', 'building', 'edifício',
+        'architecture', 'arquitetura', 'travel', 'viagem', 'vacation', 'férias', 'tourism', 'turismo',
+        'hotel', 'restaurant', 'restaurante', 'swan', 'cisne', 'moonlight', 'luar', 'villa', 'vila'
+      ]
+    },
     astronomy: {
       relevant: [
         'solar system', 'sistema solar', 'planet', 'planeta', 'sun', 'sol', 'moon', 'lua',
@@ -251,6 +319,76 @@ export function getCategoryTerms(category: { name: string; falsePositiveType: st
         'smartphone', 'celular', 'internet', 'digital', 'social media', 'rede social', 'app', 'aplicativo'
       ]
     },
+    historical: {
+      relevant: [
+        // Documentos históricos
+        'document', 'documento', 'archive', 'arquivo', 'manuscript', 'manuscrito',
+        'letter', 'carta', 'treaty', 'tratado', 'declaration', 'declaração',
+        'newspaper', 'jornal', 'report', 'relatório', 'record', 'registro',
+        
+        // Mapas e geografia histórica
+        'map', 'mapa', 'territory', 'território', 'border', 'fronteira',
+        'region', 'região', 'country', 'país', 'nation', 'nação',
+        'geography', 'geografia', 'historical map', 'mapa histórico',
+        
+        // Figuras históricas (sem conteúdo inadequado)
+        'leader', 'líder', 'politician', 'político', 'commander', 'comandante',
+        'general', 'general', 'president', 'presidente', 'minister', 'ministro',
+        'historical figure', 'figura histórica', 'portrait', 'retrato',
+        
+        // Eventos históricos
+        'conference', 'conferência', 'meeting', 'reunião', 'summit', 'cúpula',
+        'ceremony', 'cerimônia', 'event', 'evento', 'occasion', 'ocasião',
+        'historical event', 'evento histórico', 'milestone', 'marco',
+        
+        // Tecnologia histórica
+        'weapon', 'arma', 'tank', 'tanque', 'aircraft', 'aeronave', 'ship', 'navio',
+        'uniform', 'uniforme', 'equipment', 'equipamento', 'vehicle', 'veículo',
+        'military equipment', 'equipamento militar', 'historical technology', 'tecnologia histórica',
+        
+        // Arquitetura e locais históricos
+        'building', 'edifício', 'monument', 'monumento', 'memorial', 'memorial',
+        'museum', 'museu', 'library', 'biblioteca', 'archive', 'arquivo',
+        'historical building', 'edifício histórico', 'landmark', 'marco',
+        
+        // Termos educacionais históricos
+        'educational', 'educacional', 'learning', 'aprendizado', 'teaching', 'ensino',
+        'study', 'estudo', 'research', 'pesquisa', 'academic', 'acadêmico',
+        'history', 'história', 'historical', 'histórico', 'educational history', 'história educacional'
+      ],
+      falsePositives: [
+        // Conteúdo violento ou gráfico
+        'blood', 'sangue', 'corpse', 'cadáver', 'death', 'morte', 'killing', 'matando',
+        'execution', 'execução', 'torture', 'tortura', 'massacre', 'massacre',
+        'bombing', 'bombardeio', 'destruction', 'destruição', 'ruins', 'ruínas',
+        
+        // Conteúdo político controverso
+        'propaganda', 'propaganda', 'hate', 'ódio', 'racist', 'racista',
+        'supremacist', 'supremacista', 'extremist', 'extremista',
+        
+        // Conteúdo inadequado para educação
+        'adult', 'adulto', 'sexy', 'sensual', 'nude', 'nu', 'explicit', 'explícito',
+        
+        // Conteúdo irrelevante ao tema histórico
+        'modern', 'moderno', 'contemporary', 'contemporâneo', 'current', 'atual',
+        'today', 'hoje', 'now', 'agora', 'recent', 'recente',
+        
+        // Arte abstrata ou genérica
+        'abstract', 'abstrato', 'art', 'arte', 'painting', 'pintura', 'drawing', 'desenho',
+        'illustration', 'ilustração', 'cartoon', 'desenho animado', 'comic', 'quadrinho',
+        
+        // Conteúdo comercial ou não educacional
+        'advertisement', 'anúncio', 'commercial', 'comercial', 'marketing', 'marketing',
+        'product', 'produto', 'sale', 'venda', 'buy', 'comprar', 'shop', 'loja',
+        
+        // Conteúdo genérico não histórico
+        'woman', 'mulher', 'man', 'homem', 'person', 'pessoa', 'smiling', 'sorrindo',
+        'casual', 'casual', 'business', 'negócio', 'office', 'escritório', 'work', 'trabalho',
+        'technology', 'tecnologia', 'computer', 'computador', 'laptop', 'notebook',
+        'library', 'biblioteca', 'books', 'livros', 'education', 'educação', 'learning', 'aprendizado',
+        'school', 'escola', 'classroom', 'sala de aula', 'student', 'estudante', 'teacher', 'professor'
+      ]
+    },
     geography: {
       relevant: [
         'geography', 'geografia', 'country', 'país', 'continent', 'continente', 'capital', 'capital',
@@ -281,13 +419,21 @@ export function getCategoryTerms(category: { name: string; falsePositiveType: st
       relevant: [
         'physics', 'física', 'energy', 'energia', 'force', 'força', 'motion', 'movimento',
         'wave', 'onda', 'particle', 'partícula', 'quantum', 'quântico', 'relativity', 'relatividade',
-        'gravity', 'gravidade', 'magnetism', 'magnetismo', 'electricity', 'eletricidade',
-        'experiment', 'experimento', 'laboratory', 'laboratório', 'measurement', 'medição'
+        'gravity', 'gravidade', 'gravitational', 'gravitacional', 'mass', 'massa', 'weight', 'peso',
+        'attraction', 'atração', 'celestial', 'celestial bodies', 'planets', 'planetas',
+        'magnetism', 'magnetismo', 'electricity', 'eletricidade', 'electromagnetic', 'eletromagnético',
+        'experiment', 'experimento', 'laboratory', 'laboratório', 'measurement', 'medição',
+        'newton', 'einstein', 'space', 'espaço', 'universe', 'universo', 'cosmos', 'cosmos',
+        'orbit', 'órbita', 'orbital', 'orbital', 'falling', 'queda', 'acceleration', 'aceleração',
+        'physics diagram', 'diagrama de física', 'scientific illustration', 'ilustração científica',
+        'physics concept', 'conceito de física', 'physical law', 'lei física'
       ],
       falsePositives: [
         'woman', 'mulher', 'man', 'homem', 'person', 'pessoa', 'smiling', 'sorrindo', 'casual', 'casual',
         'business', 'negócio', 'office', 'escritório', 'work', 'trabalho', 'meeting', 'reunião',
-        'technology', 'tecnologia', 'computer', 'computador', 'laptop', 'notebook', 'internet'
+        'technology', 'tecnologia', 'computer', 'computador', 'laptop', 'notebook', 'internet',
+        'library', 'biblioteca', 'books', 'livros', 'education', 'educação', 'learning', 'aprendizado',
+        'school', 'escola', 'classroom', 'sala de aula', 'student', 'estudante', 'teacher', 'professor'
       ]
     },
     chemistry: {

@@ -26,6 +26,8 @@ import { useToast } from '@/hooks/use-toast';
 import ReactMarkdown from 'react-markdown';
 import { processMessageForDisplay, forceConvertMathToUnicode } from '@/utils/unicode';
 import { normalizeFormulas } from '@/lib/utils/latex-normalization';
+import { processTextWithImages } from '@/lib/utils/image-extraction';
+import { ImageWithFallback } from './ImageWithFallback';
 import remarkGfm from 'remark-gfm';
 
 interface EnemResultsProps {
@@ -42,6 +44,11 @@ export function EnemResults({ score, sessionId, onRetake, onRefocus, items = [],
   const [generatingExplanation, setGeneratingExplanation] = useState<string | null>(null);
   const [explanations, setExplanations] = useState<Record<string, string>>({});
   const { toast } = useToast();
+
+  // Função para obter o número da questão relativo à prova gerada
+  const getQuestionNumber = (itemId: string, index: number): number => {
+    return index + 1;
+  };
 
   const handleExport = async (format: 'PDF' | 'CSV' | 'JSON') => {
     setExporting(true);
@@ -153,7 +160,7 @@ export function EnemResults({ score, sessionId, onRetake, onRefocus, items = [],
   const questionsToReview = [...wrongAnswers, ...unansweredQuestions];
 
   // Função para gerar explicação
-  const generateExplanation = async (itemId: string) => {
+  const generateExplanation = async (itemId: string, questionNumber?: number) => {
     setGeneratingExplanation(itemId);
     try {
       // Encontrar a questão e resposta do usuário
@@ -174,7 +181,8 @@ export function EnemResults({ score, sessionId, onRetake, onRefocus, items = [],
           alternatives: item.alternatives,
           correct_answer: item.correct_answer,
           user_answer: userResponse?.selected_answer,
-          area: item.area
+          area: item.area,
+          question_number: questionNumber
         })
       });
 
@@ -197,7 +205,7 @@ export function EnemResults({ score, sessionId, onRetake, onRefocus, items = [],
       console.error('Error generating explanation:', error);
       toast({
         title: "Erro",
-        description: `Falha ao gerar explicação: ${error.message}`,
+        description: `Falha ao gerar explicação: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
         variant: "destructive"
       });
     } finally {
@@ -481,7 +489,7 @@ export function EnemResults({ score, sessionId, onRetake, onRefocus, items = [],
                         {/* Primeira linha: Badges principais */}
                         <div className="flex items-center gap-2 flex-wrap">
                           <Badge variant={isUnanswered ? "secondary" : "destructive"} className="text-sm font-semibold">
-                            Questão {index + 1}
+                            Questão {getQuestionNumber(item.item_id, index)}
                           </Badge>
                           <Badge variant="outline">{item.area}</Badge>
                           <Badge variant="secondary">{item.estimated_difficulty}</Badge>
@@ -516,42 +524,64 @@ export function EnemResults({ score, sessionId, onRetake, onRefocus, items = [],
                       {/* Questão */}
                       <div className="prose max-w-none prose-sm">
                         {(() => {
+                          // Processar texto e extrair imagens
+                          const { cleanText, images } = processTextWithImages(item.text || '');
+                          
                           // Processar Unicode para fórmulas matemáticas e químicas
-                          const processedContent = processMessageForDisplay(item.text || '');
+                          const processedContent = processMessageForDisplay(cleanText);
                           const latexNormalizedContent = normalizeFormulas(processedContent);
                           const mathProcessedContent = forceConvertMathToUnicode(latexNormalizedContent);
                           
                           return (
-                            <ReactMarkdown
-                              remarkPlugins={[remarkGfm]}
-                              components={{
-                            h1: ({ children }) => (
-                              <h1 className="text-base font-semibold mb-2 text-gray-900">{children}</h1>
-                            ),
-                            h2: ({ children }) => (
-                              <h2 className="text-sm font-semibold mb-2 text-gray-900">{children}</h2>
-                            ),
-                            p: ({ children }) => (
-                              <p className="text-gray-800 mb-2 leading-relaxed text-sm">{children}</p>
-                            ),
-                            ul: ({ children }) => (
-                              <ul className="list-disc list-inside mb-2 space-y-1 text-gray-800 text-sm">{children}</ul>
-                            ),
-                            ol: ({ children }) => (
-                              <ol className="list-decimal list-inside mb-2 space-y-1 text-gray-800 text-sm">{children}</ol>
-                            ),
-                            strong: ({ children }) => (
-                              <strong className="font-semibold text-gray-900">{children}</strong>
-                            ),
-                            code: ({ children }) => (
-                              <code className="bg-gray-100 px-1 py-0.5 rounded text-xs font-mono text-gray-800">
-                                {children}
-                              </code>
-                            ),
-                          }}
-                        >
-                          {mathProcessedContent}
-                        </ReactMarkdown>
+                            <div className="space-y-3">
+                              {/* Renderizar imagens extraídas */}
+                              {images.map((image, imgIndex) => (
+                                <div key={imgIndex} className="mb-4">
+                                  <div className="mb-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+                                    <p className="text-xs text-blue-800 font-medium">
+                                      📷 Imagem {imgIndex + 1}
+                                    </p>
+                                  </div>
+                                  <ImageWithFallback
+                                    src={image.url}
+                                    alt={image.alt || `Imagem ${imgIndex + 1} da questão`}
+                                    className="max-w-full h-auto rounded-lg border border-gray-200"
+                                  />
+                                </div>
+                              ))}
+                              
+                              {/* Renderizar texto sem imagens */}
+                              <ReactMarkdown
+                                remarkPlugins={[remarkGfm]}
+                                components={{
+                                  h1: ({ children }) => (
+                                    <h1 className="text-base font-semibold mb-2 text-gray-900">{children}</h1>
+                                  ),
+                                  h2: ({ children }) => (
+                                    <h2 className="text-sm font-semibold mb-2 text-gray-900">{children}</h2>
+                                  ),
+                                  p: ({ children }) => (
+                                    <p className="text-gray-800 mb-2 leading-relaxed text-sm">{children}</p>
+                                  ),
+                                  ul: ({ children }) => (
+                                    <ul className="list-disc list-inside mb-2 space-y-1 text-gray-800 text-sm">{children}</ul>
+                                  ),
+                                  ol: ({ children }) => (
+                                    <ol className="list-decimal list-inside mb-2 space-y-1 text-gray-800 text-sm">{children}</ol>
+                                  ),
+                                  strong: ({ children }) => (
+                                    <strong className="font-semibold text-gray-900">{children}</strong>
+                                  ),
+                                  code: ({ children }) => (
+                                    <code className="bg-gray-100 px-1 py-0.5 rounded text-xs font-mono text-gray-800">
+                                      {children}
+                                    </code>
+                                  ),
+                                }}
+                              >
+                                {mathProcessedContent}
+                              </ReactMarkdown>
+                            </div>
                           )
                         })()}
                       </div>
@@ -637,7 +667,7 @@ export function EnemResults({ score, sessionId, onRetake, onRefocus, items = [],
                       {!hasExplanation && (
                         <div className="flex justify-center">
                           <Button
-                            onClick={() => generateExplanation(item.item_id)}
+                            onClick={() => generateExplanation(item.item_id, getQuestionNumber(item.item_id, index))}
                             disabled={isGenerating}
                             variant="outline"
                             size="sm"

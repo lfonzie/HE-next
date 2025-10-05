@@ -37,7 +37,6 @@ Responda APENAS com o tema principal em português, sem explicações.
     const result = await generateText({
       model: openai('gpt-4o-mini'),
       prompt,
-      maxTokens: 50,
       temperature: 0.1
     });
 
@@ -66,23 +65,33 @@ Responda APENAS com o tema principal em português, sem explicações.
 }
 
 /**
- * Traduz o tema principal para inglês usando AI
+ * Traduz o tema principal para inglês usando AI e expande com termos relacionados
  */
 export async function translateThemeToEnglish(mainTheme: string): Promise<string> {
   try {
     const prompt = `
-Traduza o seguinte tema científico/educacional do português para inglês.
-Use termos técnicos precisos e comuns em conteúdo educacional.
+Traduza o seguinte tema científico/educacional do português para inglês e inclua termos relacionados e sinônimos.
+
+Para cada tema, inclua:
+1. O termo principal em inglês
+2. Termos relacionados cientificamente
+3. Sinônimos técnicos
+4. Conceitos associados
+
+Exemplos:
+- "respiração" → "respiration breathing lungs oxygen carbon dioxide respiratory system"
+- "fotossíntese" → "photosynthesis plants chlorophyll sunlight carbon dioxide oxygen"
+- "célula" → "cell cellular biology membrane nucleus cytoplasm"
+- "matemática" → "mathematics math algebra geometry calculus numbers"
 
 Tema: "${mainTheme}"
 
-Responda APENAS com a tradução em inglês, sem explicações.
+Responda APENAS com os termos em inglês separados por espaço, sem explicações.
 `;
 
     const result = await generateText({
       model: openai('gpt-4o-mini'),
       prompt,
-      maxTokens: 30,
       temperature: 0.1
     });
 
@@ -91,7 +100,7 @@ Responda APENAS com a tradução em inglês, sem explicações.
   } catch (error) {
     console.error('Erro ao traduzir tema:', error);
     
-    // Fallback: tradução manual
+    // Fallback: tradução manual com expansão
     return translateThemeFallback(mainTheme);
   }
 }
@@ -138,40 +147,72 @@ function extractThemeFallback(query: string): string {
 }
 
 /**
- * Fallback para tradução manual
+ * Fallback para tradução manual com expansão semântica
  */
 function translateThemeFallback(theme: string): string {
   const translations: Record<string, string> = {
-    'respiração': 'respiration',
-    'fotossíntese': 'photosynthesis',
-    'independência': 'independence',
-    'brasil': 'brazil',
-    'inteligência artificial': 'artificial intelligence',
-    'matemática': 'mathematics',
-    'física': 'physics',
-    'química': 'chemistry',
-    'biologia': 'biology',
-    'história': 'history',
-    'geografia': 'geography',
-    'português': 'portuguese',
-    'literatura': 'literature',
-    'arte': 'art',
-    'música': 'music',
-    'sistema imunológico': 'immune system',
-    'célula': 'cell',
-    'dna': 'dna',
-    'genética': 'genetics',
-    'evolução': 'evolution',
-    'clima': 'climate',
-    'relevo': 'relief',
-    'paisagem': 'landscape',
-    'continente': 'continent',
-    'oceano': 'ocean',
-    'floresta': 'forest',
-    'deserto': 'desert',
-    'montanha': 'mountain',
-    'rio': 'river',
-    'lago': 'lake'
+    'respiração': 'respiration breathing lungs oxygen carbon dioxide respiratory system',
+    'respiração celular': 'cellular respiration mitochondria atp energy metabolism',
+    'respiração aeróbica': 'aerobic respiration oxygen mitochondria atp',
+    'fotossíntese': 'photosynthesis plants chlorophyll sunlight carbon dioxide oxygen',
+    'independência': 'independence freedom liberation autonomy',
+    'brasil': 'brazil brazilian south america portuguese colony',
+    'inteligência artificial': 'artificial intelligence ai machine learning neural networks',
+    'matemática': 'mathematics math algebra geometry calculus numbers',
+    'física': 'physics mechanics energy motion force',
+    'química': 'chemistry chemical reactions molecules atoms elements',
+    'biologia': 'biology living organisms cells evolution genetics',
+    'história': 'history historical events past civilizations',
+    'geografia': 'geography earth continents countries landscapes',
+    'português': 'portuguese language grammar literature',
+    'literatura': 'literature books poetry novels writing',
+    'arte': 'art painting drawing sculpture creativity',
+    'música': 'music sound rhythm melody harmony',
+    'sistema imunológico': 'immune system antibodies white blood cells defense',
+    'célula': 'cell cellular biology membrane nucleus cytoplasm',
+    'dna': 'dna genetics chromosomes genes heredity',
+    'genética': 'genetics genes heredity chromosomes dna',
+    'evolução': 'evolution natural selection adaptation species',
+    'clima': 'climate weather temperature precipitation atmosphere',
+    'relevo': 'relief topography mountains valleys landscapes',
+    'paisagem': 'landscape scenery nature environment',
+    'continente': 'continent landmass geography earth',
+    'oceano': 'ocean sea water marine life',
+    'floresta': 'forest trees nature ecosystem wildlife',
+    'deserto': 'desert arid dry climate sand',
+    'montanha': 'mountain peak elevation geology',
+    'rio': 'river water flow stream aquatic',
+    'lago': 'lake water body freshwater aquatic',
+    'eletricidade': 'electricity electrical current voltage power energy',
+    'corrente elétrica': 'electric current flow electrons circuit',
+    'voltagem': 'voltage electrical potential difference power',
+    'resistência': 'resistance electrical opposition current flow',
+    'circuito': 'circuit electrical path components',
+    'pulmão': 'lung respiratory breathing oxygen carbon dioxide',
+    'coração': 'heart cardiac circulation blood vessels',
+    'cérebro': 'brain nervous system neurons thinking',
+    'sangue': 'blood circulation red cells white cells plasma',
+    'ossos': 'bones skeleton structure calcium',
+    'músculos': 'muscles muscular system movement contraction',
+    'digestão': 'digestion digestive system stomach intestines',
+    'excreção': 'excretion kidneys urinary system waste',
+    'reprodução': 'reproduction reproductive system genetics',
+    'nutrição': 'nutrition food nutrients vitamins minerals',
+    'crescimento': 'growth development increase size',
+    'desenvolvimento': 'development growth evolution progress',
+    'adaptação': 'adaptation evolution survival environment',
+    'ecossistema': 'ecosystem environment organisms interactions',
+    'biodiversidade': 'biodiversity species variety life',
+    'sustentabilidade': 'sustainability environment conservation future',
+    'poluição': 'pollution contamination environment waste',
+    'reciclagem': 'recycling waste reuse environment',
+    'energia renovável': 'renewable energy solar wind sustainable',
+    'aquecimento global': 'global warming climate change temperature',
+    'efeito estufa': 'greenhouse effect atmosphere temperature',
+    'camada de ozônio': 'ozone layer atmosphere protection',
+    'deforestation': 'deforestation trees forest destruction',
+    'extinção': 'extinction species disappearance biodiversity',
+    'conservação': 'conservation protection preservation environment'
   };
   
   const lowerTheme = theme.toLowerCase();

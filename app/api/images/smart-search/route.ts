@@ -184,6 +184,27 @@ const SEMANTIC_THEME_MAPPING: Record<string, {
     visualConcepts: ['industrial', 'emissions', 'pollution', 'deforestation', 'fossil fuels'],
     educationalContext: ['environmental science', 'climate education', 'sustainability', 'ecology'],
     relatedSubjects: ['environment', 'geography', 'science', 'ecology']
+  },
+  'gravity': {
+    primaryTerms: ['gravity', 'gravitational force', 'gravitational pull', 'mass attraction'],
+    contextualTerms: ['newton', 'einstein', 'relativity', 'spacetime', 'orbital mechanics', 'celestial bodies'],
+    visualConcepts: ['space', 'planets', 'orbits', 'falling objects', 'gravitational field', 'physics diagram'],
+    educationalContext: ['physics education', 'scientific concepts', 'natural laws', 'space science'],
+    relatedSubjects: ['physics', 'astronomy', 'mathematics', 'space science']
+  },
+  'how gravity works': {
+    primaryTerms: ['how gravity works', 'gravity explanation', 'gravitational force', 'mass attraction'],
+    contextualTerms: ['newton', 'einstein', 'relativity', 'spacetime', 'orbital mechanics', 'celestial bodies'],
+    visualConcepts: ['space', 'planets', 'orbits', 'falling objects', 'gravitational field', 'physics diagram'],
+    educationalContext: ['physics education', 'scientific concepts', 'natural laws', 'space science'],
+    relatedSubjects: ['physics', 'astronomy', 'mathematics', 'space science']
+  },
+  'gravidade': {
+    primaryTerms: ['gravity', 'gravitational force', 'gravitational pull', 'mass attraction'],
+    contextualTerms: ['newton', 'einstein', 'relativity', 'spacetime', 'orbital mechanics', 'celestial bodies'],
+    visualConcepts: ['space', 'planets', 'orbits', 'falling objects', 'gravitational field', 'physics diagram'],
+    educationalContext: ['physics education', 'scientific concepts', 'natural laws', 'space science'],
+    relatedSubjects: ['physics', 'astronomy', 'mathematics', 'space science']
   }
 };
 
@@ -216,7 +237,10 @@ function analyzeSemanticTheme(topic: string, subject?: string): {
     'aquecimento global': 'global warming',
     'causas do aquecimento global': 'global warming causes',
     'mudanças climáticas': 'climate change',
-    'mudancas climaticas': 'climate change'
+    'mudancas climaticas': 'climate change',
+    'gravidade': 'gravity',
+    'como funciona a gravidade': 'how gravity works',
+    'como funciona a gravidade?': 'how gravity works'
   };
   
   // Traduzir o tema para inglês se necessário
@@ -355,16 +379,24 @@ function selectDiverseImages(images: ImageResult[], count: number): ImageResult[
   return selected;
 }
 
-// Função para detectar imagens inadequadas ou irrelevantes - VERSÃO GENÉRICA
+// Função para detectar imagens inadequadas ou irrelevantes - VERSÃO MELHORADA
 function isInappropriateImage(text: string, query: string): boolean {
   const textLower = text.toLowerCase();
   const queryLower = query.toLowerCase();
   
-  // Lista de termos que indicam conteúdo inadequado para educação
+  // Detectar se é um tema histórico/sensível
+  const isHistoricalTopic = isHistoricalOrSensitiveTopic(queryLower);
+  
+  if (isHistoricalTopic) {
+    return isInappropriateForHistoricalTopic(textLower, queryLower);
+  }
+  
+  // Lista de termos que indicam conteúdo inadequado para educação (versão genérica)
   const inappropriateTerms = [
     'anti', 'against', 'opposition', 'protest', 'demonstration', 'controversy',
-    'debate', 'dispute', 'conflict', 'war', 'violence', 'aggressive',
-    'negative', 'criticism', 'complaint', 'rejection', 'refusal'
+    'debate', 'dispute', 'conflict', 'violence', 'aggressive',
+    'negative', 'criticism', 'complaint', 'rejection', 'refusal',
+    'adult', 'sexy', 'nude', 'explicit', 'inappropriate'
   ];
   
   // Verificar se contém termos inadequados
@@ -389,6 +421,125 @@ function isInappropriateImage(text: string, query: string): boolean {
   }
   
   return false;
+}
+
+// Função para detectar temas históricos ou sensíveis
+function isHistoricalOrSensitiveTopic(query: string): boolean {
+  const historicalKeywords = [
+    'war', 'guerra', 'world war', 'segunda guerra', 'primeira guerra',
+    'holocaust', 'genocide', 'genocídio', 'nazi', 'hitler', 'stalin',
+    'battle', 'batalha', 'conflict', 'conflito', 'military', 'militar',
+    'revolution', 'revolução', 'civil war', 'guerra civil',
+    'crusade', 'cruzada', 'invasion', 'invasão', 'occupation', 'ocupação'
+  ];
+  
+  return historicalKeywords.some(keyword => query.includes(keyword));
+}
+
+// Função específica para filtrar imagens inadequadas em temas históricos
+function isInappropriateForHistoricalTopic(text: string, query: string): boolean {
+  // Termos que indicam conteúdo inadequado para educação histórica
+  const inappropriateHistoricalTerms = [
+    // Conteúdo violento ou gráfico
+    'blood', 'sangue', 'corpse', 'cadáver', 'death', 'morte', 'killing', 'matando',
+    'execution', 'execução', 'torture', 'tortura', 'massacre', 'massacre',
+    'bombing', 'bombardeio', 'destruction', 'destruição', 'ruins', 'ruínas',
+    
+    // Conteúdo político controverso
+    'propaganda', 'propaganda', 'hate', 'ódio', 'racist', 'racista',
+    'supremacist', 'supremacista', 'extremist', 'extremista',
+    
+    // Conteúdo inadequado para educação
+    'adult', 'adulto', 'sexy', 'sensual', 'nude', 'nu', 'explicit', 'explícito',
+    
+    // Conteúdo irrelevante ao tema histórico
+    'modern', 'moderno', 'contemporary', 'contemporâneo', 'current', 'atual',
+    'today', 'hoje', 'now', 'agora', 'recent', 'recente',
+    
+    // Arte abstrata ou genérica
+    'abstract', 'abstrato', 'art', 'arte', 'painting', 'pintura', 'drawing', 'desenho',
+    'illustration', 'ilustração', 'cartoon', 'desenho animado', 'comic', 'quadrinho',
+    
+    // Conteúdo comercial ou não educacional
+    'advertisement', 'anúncio', 'commercial', 'comercial', 'marketing', 'marketing',
+    'product', 'produto', 'sale', 'venda', 'buy', 'comprar', 'shop', 'loja'
+  ];
+  
+  // Verificar se contém termos inadequados
+  const hasInappropriateContent = inappropriateHistoricalTerms.some(term => text.includes(term));
+  
+  if (hasInappropriateContent) {
+    console.log(`🚫 Conteúdo inadequado para tema histórico detectado: "${text.slice(0, 50)}..."`);
+    return true;
+  }
+  
+  // Verificar se é relevante para educação histórica
+  const isEducationallyRelevant = isEducationallyRelevantForHistory(text, query);
+  
+  if (!isEducationallyRelevant) {
+    console.log(`🚫 Conteúdo não educacional para tema histórico detectado: "${text.slice(0, 50)}..."`);
+    return true;
+  }
+  
+  return false;
+}
+
+// Função para verificar se a imagem é educacionalmente relevante para história
+function isEducationallyRelevantForHistory(text: string, query: string): boolean {
+  // Termos que indicam conteúdo educacionalmente relevante para história
+  const educationalHistoricalTerms = [
+    // Documentos históricos
+    'document', 'documento', 'archive', 'arquivo', 'manuscript', 'manuscrito',
+    'letter', 'carta', 'treaty', 'tratado', 'declaration', 'declaração',
+    
+    // Mapas e geografia histórica
+    'map', 'mapa', 'territory', 'território', 'border', 'fronteira',
+    'region', 'região', 'country', 'país', 'nation', 'nação',
+    
+    // Figuras históricas (sem conteúdo inadequado)
+    'leader', 'líder', 'politician', 'político', 'commander', 'comandante',
+    'general', 'general', 'president', 'presidente', 'minister', 'ministro',
+    
+    // Eventos históricos
+    'conference', 'conferência', 'meeting', 'reunião', 'summit', 'cúpula',
+    'ceremony', 'cerimônia', 'event', 'evento', 'occasion', 'ocasião',
+    
+    // Tecnologia histórica
+    'weapon', 'arma', 'tank', 'tanque', 'aircraft', 'aeronave', 'ship', 'navio',
+    'uniform', 'uniforme', 'equipment', 'equipamento', 'vehicle', 'veículo',
+    
+    // Arquitetura e locais históricos
+    'building', 'edifício', 'monument', 'monumento', 'memorial', 'memorial',
+    'museum', 'museu', 'library', 'biblioteca', 'archive', 'arquivo',
+    
+    // Termos educacionais
+    'educational', 'educacional', 'learning', 'aprendizado', 'teaching', 'ensino',
+    'study', 'estudo', 'research', 'pesquisa', 'academic', 'acadêmico'
+  ];
+  
+  // Verificar se contém termos educacionalmente relevantes
+  const hasEducationalContent = educationalHistoricalTerms.some(term => text.includes(term));
+  
+  // Verificar se é específico ao tema histórico
+  const isSpecificToTopic = isSpecificToHistoricalTopic(text, query);
+  
+  return hasEducationalContent && isSpecificToTopic;
+}
+
+// Função para verificar se a imagem é específica ao tema histórico
+function isSpecificToHistoricalTopic(text: string, query: string): boolean {
+  // Extrair palavras-chave do tema
+  const topicKeywords = query.split(' ').filter(word => word.length > 3);
+  
+  // Verificar se o texto contém palavras-chave do tema
+  const hasTopicKeywords = topicKeywords.some(keyword => text.includes(keyword));
+  
+  // Verificar se não é genérico demais
+  const isNotTooGeneric = !text.includes('generic') && !text.includes('genérico') &&
+                         !text.includes('abstract') && !text.includes('abstrato') &&
+                         !text.includes('art') && !text.includes('arte');
+  
+  return hasTopicKeywords && isNotTooGeneric;
 }
 
 // Função para detectar falsos positivos na busca
