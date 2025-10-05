@@ -1,6 +1,7 @@
 import NextAuth from "next-auth"
 import { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
+import GoogleProvider from "next-auth/providers/google"
 import { getServerSession } from "next-auth/next"
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/db"
@@ -16,6 +17,10 @@ export const authOptions: NextAuthOptions = {
   },
   debug: process.env.NODE_ENV === 'development',
   providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
     CredentialsProvider({
       name: "credentials",
       credentials: {
@@ -91,11 +96,40 @@ export const authOptions: NextAuthOptions = {
     })
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       if (user) {
         token.id = user.id
         token.role = user.role
       }
+      
+      // Handle Google OAuth
+      if (account?.provider === 'google') {
+        try {
+          // Check if user exists in database
+          const existingUser = await prisma.user.findUnique({
+            where: { email: user.email }
+          })
+          
+          if (existingUser) {
+            token.id = existingUser.id
+            token.role = existingUser.role
+          } else {
+            // Create new user for Google OAuth
+            const newUser = await prisma.user.create({
+              data: {
+                email: user.email!,
+                name: user.name || '',
+                role: 'STUDENT',
+              }
+            })
+            token.id = newUser.id
+            token.role = newUser.role
+          }
+        } catch (error) {
+          console.error('Error handling Google OAuth:', error)
+        }
+      }
+      
       return token
     },
     async session({ session, token }) {
@@ -104,6 +138,18 @@ export const authOptions: NextAuthOptions = {
         session.user.role = token.role as string
       }
       return session
+    },
+    async redirect({ url, baseUrl }) {
+      // Force redirect to hubedu.ia.br domain
+      if (url.startsWith("/")) {
+        return `${baseUrl}${url}`
+      }
+      // If URL is from the same origin, allow it
+      else if (new URL(url).origin === baseUrl) {
+        return url
+      }
+      // Otherwise, redirect to base URL
+      return baseUrl
     },
   },
 }
