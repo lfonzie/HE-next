@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
 
     // Prompt melhorado para análise de imagens com IA
     const analysisPrompt = `
-Analise esta imagem e determine sua relevância ao tema "${query}" (processo biológico de plantas que converte luz em energia). Forneça um score de 0-1 (1 = altamente relevante, como diagramas de clorofila ou plantas em luz solar) e uma justificativa breve. Ignore elementos genéricos como folhas isoladas sem contexto fotossintético.
+Analise cada imagem e determine sua relevância ao tema "${query}". Forneça uma análise detalhada considerando o contexto educacional.
 
 TEMA EDUCACIONAL: "${query}"
 CONTEXTO: ${subject}
@@ -68,25 +68,31 @@ Para cada imagem, forneça uma análise detalhada em JSON com os seguintes campo
   "appropriateness": 0-100, // Adequação para educação (0=inadequada, 100=perfeita)
   "reasoning": "Explicação detalhada da análise",
   "isRelevant": true/false, // Se deve ser incluída na aula
-  "category": "categoria do conteúdo (ex: anatomy, astronomy, biology, etc.)"
+  "category": "categoria do conteúdo (ex: music, biology, history, etc.)"
 }
 
 CRITÉRIOS DE ANÁLISE ESPECÍFICOS:
 1. RELEVÂNCIA: A imagem está diretamente relacionada ao tema "${query}"?
+   - Para temas musicais (como "${query}"): bandas, instrumentos, concertos, performances, música
    - Para fotossíntese: plantas verdes, clorofila, luz solar, diagramas do processo
    - Para biologia: células, organismos, processos biológicos
    - Para química: moléculas, reações, laboratórios
    - Para física: experimentos, fenômenos físicos, equipamentos
+   - Para história: eventos históricos, figuras históricas, artefatos
 2. VALOR EDUCACIONAL: A imagem ajuda no aprendizado do tema?
+   - Para música: performances, instrumentos, contexto cultural são educativos
    - Diagramas explicativos são altamente valorizados
    - Imagens de laboratório para ciências
    - Ilustrações didáticas são preferíveis a fotos genéricas
 3. ADEQUAÇÃO: A imagem é apropriada para ambiente educacional?
+   - Para música: performances artísticas são adequadas
    - Evitar conteúdo inadequado ou irrelevante
-   - Priorizar imagens científicas e educativas
+   - Priorizar imagens científicas, artísticas e educativas
 4. QUALIDADE: A imagem é clara e informativa?
    - Resolução adequada para apresentação
    - Conteúdo visual claro e compreensível
+
+IMPORTANTE: Seja rigoroso mas justo. Para temas musicais e artísticos, aceite imagens relacionadas à cultura, arte e expressão criativa quando relevantes ao tema.
 
 IMAGENS PARA ANALISAR:
 ${images.map((img, index) => `

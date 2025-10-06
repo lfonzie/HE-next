@@ -1,27 +1,35 @@
-// Configuração dos provedores de IA para geração de aulas
+// Configuração dos provedores de IA para geração de aulas - Grok 4 Fast como padrão
 export const AI_PROVIDERS = {
-  google: {
-    name: 'google',
-    model: 'gemini-2.0-flash-exp',
-    priority: 1,
-    timeout: 60000, // 1 minuto
-    description: 'Google Gemini 2.0 Flash - Rápido e eficiente',
+  grok: {
+    name: 'grok',
+    model: 'grok-4-fast-reasoning',
+    priority: 0,
+    timeout: 15000, // 15 segundos
+    description: 'Grok 4 Fast Reasoning - Ultra-rápido e eficiente',
     fallbackReason: 'Modelo sobrecarregado ou indisponível'
   },
   openai: {
     name: 'openai',
     model: 'gpt-4o-mini',
-    priority: 2,
-    timeout: 90000, // 1.5 minutos
-    description: 'OpenAI GPT-4o Mini - Equilibrio entre velocidade e qualidade',
+    priority: 1,
+    timeout: 30000, // 30 segundos
+    description: 'OpenAI GPT-4o Mini - Alta qualidade e confiabilidade',
     fallbackReason: 'Modelo principal indisponível'
+  },
+  google: {
+    name: 'google',
+    model: 'gemini-2.0-flash-exp',
+    priority: 2,
+    timeout: 60000, // 1 minuto
+    description: 'Google Gemini 2.0 Flash - Rápido e eficiente',
+    fallbackReason: 'Modelo sobrecarregado ou indisponível'
   },
   perplexity: {
     name: 'perplexity',
     model: 'sonar',
     priority: 3,
     timeout: 120000, // 2 minutos
-    description: 'Perplexity Sonar - Para busca na web',
+    description: 'Perplexity Sonar - Para busca na web em tempo real',
     fallbackReason: 'Provedores anteriores falharam'
   }
 } as const;

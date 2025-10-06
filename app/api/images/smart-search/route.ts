@@ -102,10 +102,10 @@ const SEMANTIC_THEME_MAPPING: Record<string, {
   relatedSubjects: string[];
 }> = {
   'metallica': {
-    primaryTerms: ['metallica band', 'metallica heavy metal', 'metallica concert', 'metallica music'],
-    contextualTerms: ['heavy metal band', 'thrash metal', 'rock concert', 'metal music', 'guitar solo'],
-    visualConcepts: ['dark', 'intense', 'energetic', 'powerful', 'metal'],
-    educationalContext: ['music history', 'cultural impact', 'artistic expression', 'band history'],
+    primaryTerms: ['metallica band', 'metallica heavy metal', 'metallica concert', 'metallica music', 'james hetfield', 'lars ulrich', 'kirk hammett'],
+    contextualTerms: ['heavy metal band', 'thrash metal', 'rock concert', 'metal music', 'guitar solo', 'master of puppets', 'black album'],
+    visualConcepts: ['dark', 'intense', 'energetic', 'powerful', 'metal', 'concert', 'stage'],
+    educationalContext: ['music history', 'cultural impact', 'artistic expression', 'band history', 'album covers', 'live performances'],
     relatedSubjects: ['music', 'culture', 'entertainment', 'art']
   },
   'mathematics': {
@@ -205,6 +205,20 @@ const SEMANTIC_THEME_MAPPING: Record<string, {
     visualConcepts: ['space', 'planets', 'orbits', 'falling objects', 'gravitational field', 'physics diagram'],
     educationalContext: ['physics education', 'scientific concepts', 'natural laws', 'space science'],
     relatedSubjects: ['physics', 'astronomy', 'mathematics', 'space science']
+  },
+  'revolução francesa': {
+    primaryTerms: ['french revolution', 'revolução francesa', 'causes of the french revolution', 'causas da revolução francesa'],
+    contextualTerms: ['bastille', 'louis xvi', 'marie antoinette', 'napoleon', 'versailles', 'paris', 'tricolor'],
+    visualConcepts: ['historical', 'revolutionary', '18th century', 'ancien régime', 'french flag', 'liberty'],
+    educationalContext: ['history education', 'revolutionary history', 'french history', 'historical analysis'],
+    relatedSubjects: ['history', 'politics', 'sociology', 'art']
+  },
+  'causas da revolução francesa': {
+    primaryTerms: ['causes of the french revolution', 'causas da revolução francesa', 'french revolution causes'],
+    contextualTerms: ['bastille', 'louis xvi', 'marie antoinette', 'napoleon', 'versailles', 'paris', 'tricolor'],
+    visualConcepts: ['historical', 'revolutionary', '18th century', 'ancien régime', 'french flag', 'liberty'],
+    educationalContext: ['history education', 'revolutionary history', 'french history', 'historical analysis'],
+    relatedSubjects: ['history', 'politics', 'sociology', 'art']
   }
 };
 
@@ -240,7 +254,9 @@ function analyzeSemanticTheme(topic: string, subject?: string): {
     'mudancas climaticas': 'climate change',
     'gravidade': 'gravity',
     'como funciona a gravidade': 'how gravity works',
-    'como funciona a gravidade?': 'how gravity works'
+    'como funciona a gravidade?': 'how gravity works',
+    'revolução francesa': 'french revolution',
+    'causas da revolução francesa': 'causes of the french revolution'
   };
   
   // Traduzir o tema para inglês se necessário
@@ -331,13 +347,15 @@ function optimizeQueryForEducation(query: string, subject?: string): string {
 }
 
 // Função para selecionar imagens garantindo diversidade de provedores
-function selectDiverseImages(images: ImageResult[], count: number): ImageResult[] {
+function selectDiverseImages(images: ImageResult[], count: number, query?: string): ImageResult[] {
   const selected: ImageResult[] = [];
   const usedProviders = new Set<string>();
   const usedUrls = new Set<string>();
   
-  // Ordenar provedores por prioridade educacional (Wikimedia primeiro para temas específicos)
-  const providers = ['wikimedia', 'unsplash', 'pexels', 'pixabay', 'bing'];
+  // Ordenar provedores por prioridade educacional (Wikimedia e Bing primeiro para Metallica)
+  const providers = query.toLowerCase().includes('metallica') 
+    ? ['wikimedia', 'bing', 'unsplash', 'pexels', 'pixabay']  // Prioridade especial para Metallica
+    : ['wikimedia', 'unsplash', 'pexels', 'pixabay', 'bing']; // Ordem padrão
   
   // Primeira passada: selecionar 1 imagem de cada provedor disponível, respeitando a ordem de prioridade
   providers.forEach(provider => {
@@ -379,48 +397,57 @@ function selectDiverseImages(images: ImageResult[], count: number): ImageResult[
   return selected;
 }
 
-// Função para detectar imagens inadequadas ou irrelevantes - VERSÃO MELHORADA
-function isInappropriateImage(text: string, query: string): boolean {
+// Função melhorada para detectar falsos positivos com análise semântica rigorosa
+function isFalsePositive(text: string, query: string): boolean {
   const textLower = text.toLowerCase();
   const queryLower = query.toLowerCase();
   
-  // Detectar se é um tema histórico/sensível
-  const isHistoricalTopic = isHistoricalOrSensitiveTopic(queryLower);
-  
-  if (isHistoricalTopic) {
-    return isInappropriateForHistoricalTopic(textLower, queryLower);
+  // Para Metallica, análise semântica rigorosa
+  if (queryLower === 'metallica') {
+    // Termos específicos do Metallica que DEVEM estar presentes
+    const metallicaSpecificTerms = [
+      'metallica', 'james hetfield', 'lars ulrich', 'kirk hammett', 
+      'robert trujillo', 'jason newsted', 'cliff burton',
+      'kill em all', 'ride the lightning', 'master of puppets',
+      'and justice for all', 'black album', 'load', 'reload',
+      'st anger', 'death magnetic', 'hardwired', 'heavy metal', 'thrash metal',
+      'band', 'concert', 'music', 'guitar', 'drum', 'bass', 'rock', 'metal'
+    ];
+    
+    // Verificar se contém termos específicos do Metallica
+    const hasMetallicaTerms = metallicaSpecificTerms.some(term => textLower.includes(term));
+    
+    // Falsos positivos óbvios para Metallica (incluindo livros históricos)
+    const falsePositives = [
+      'bird', 'animal', 'nature', 'wildlife', 'insect', 'beetle',
+      'book', 'library', 'education', 'school', 'student', 'classroom',
+      'food', 'restaurant', 'cooking', 'recipe', 'meal',
+      'car', 'vehicle', 'automobile', 'transportation',
+      'building', 'architecture', 'construction', 'house',
+      'georgius agricola', 'de re metallica', 'mining', 'mineração',
+      'metalwork', 'metalworking', 'metallurgy', 'metalúrgica',
+      'historical', 'ancient', 'medieval', 'classical', 'antique',
+      'manuscript', 'document', 'text', 'writing', 'script'
+    ];
+    
+    const hasFalsePositiveTerms = falsePositives.some(term => textLower.includes(term));
+    
+    // Se tem termos de falso positivo E não tem termos específicos do Metallica
+    if (hasFalsePositiveTerms && !hasMetallicaTerms) {
+      console.log(`🚫 Falso positivo detectado para Metallica: "${text.slice(0, 50)}..."`);
+      return true;
+    }
+    
+    return false;
   }
   
-  // Lista de termos que indicam conteúdo inadequado para educação (versão genérica)
-  const inappropriateTerms = [
-    'anti', 'against', 'opposition', 'protest', 'demonstration', 'controversy',
-    'debate', 'dispute', 'conflict', 'violence', 'aggressive',
-    'negative', 'criticism', 'complaint', 'rejection', 'refusal',
-    'adult', 'sexy', 'nude', 'explicit', 'inappropriate'
+  // Para outros temas, usar análise genérica
+  const genericFalsePositives = [
+    'adult', 'explicit', 'nude', 'sexual', 'violence', 'gore', 'blood',
+    'drug', 'alcohol', 'smoking', 'gambling', 'casino'
   ];
   
-  // Verificar se contém termos inadequados
-  const hasInappropriateContent = inappropriateTerms.some(term => textLower.includes(term));
-  
-  if (hasInappropriateContent) {
-    console.log(`🚫 Conteúdo inadequado detectado: "${text.slice(0, 50)}..."`);
-    return true;
-  }
-  
-  // Análise semântica genérica do tema para detectar relevância
-  const themeAnalysis = analyzeTopicRelevance(queryLower, textLower);
-  
-  if (!themeAnalysis.isRelevant) {
-    console.log(`🚫 Conteúdo irrelevante ao tema "${query}" detectado: "${text.slice(0, 50)}..."`);
-    return true;
-  }
-  
-  if (themeAnalysis.hasFalsePositive) {
-    console.log(`🚫 Falso positivo detectado para "${query}": ${themeAnalysis.falsePositiveReason}`);
-    return true;
-  }
-  
-  return false;
+  return genericFalsePositives.some(term => textLower.includes(term));
 }
 
 // Função para detectar temas históricos ou sensíveis
@@ -430,7 +457,10 @@ function isHistoricalOrSensitiveTopic(query: string): boolean {
     'holocaust', 'genocide', 'genocídio', 'nazi', 'hitler', 'stalin',
     'battle', 'batalha', 'conflict', 'conflito', 'military', 'militar',
     'revolution', 'revolução', 'civil war', 'guerra civil',
-    'crusade', 'cruzada', 'invasion', 'invasão', 'occupation', 'ocupação'
+    'crusade', 'cruzada', 'invasion', 'invasão', 'occupation', 'ocupação',
+    'french revolution', 'revolução francesa', 'causes of the french revolution', 'causas da revolução francesa',
+    'history', 'história', 'historical', 'histórico', 'ancient', 'antigo',
+    'medieval', 'medieval', 'renaissance', 'renascimento'
   ];
   
   return historicalKeywords.some(keyword => query.includes(keyword));
@@ -438,6 +468,29 @@ function isHistoricalOrSensitiveTopic(query: string): boolean {
 
 // Função específica para filtrar imagens inadequadas em temas históricos
 function isInappropriateForHistoricalTopic(text: string, query: string): boolean {
+  // Para Revolução Francesa específica, ser mais permissivo
+  if (query.includes('french revolution') || query.includes('revolução francesa') ||
+      query.includes('causes of the french revolution') || query.includes('causas da revolução francesa')) {
+    
+    // Verificar se tem pelo menos alguns termos relacionados à Revolução Francesa
+    const frenchRevolutionTerms = [
+      'french', 'frança', 'france', 'revolution', 'revolução', 'bastille', 'bastilha',
+      'louis', 'marie antoinette', 'maria antonieta', 'napoleon', 'napoleão',
+      'versailles', 'versalhes', 'paris', 'tricolor', 'liberty', 'liberdade',
+      'equality', 'igualdade', 'fraternity', 'fraternidade', 'historical', 'histórico',
+      '18th century', 'século xviii', 'eighteenth century', 'ancien régime', 'antigo regime',
+      'document', 'documento', 'archive', 'arquivo', 'manuscript', 'manuscrito',
+      'portrait', 'retrato', 'painting', 'pintura', 'historical painting', 'pintura histórica'
+    ];
+    
+    const hasRelevantTerms = frenchRevolutionTerms.some(term => text.includes(term));
+    
+    if (hasRelevantTerms) {
+      console.log(`✅ Imagem relevante para Revolução Francesa encontrada: "${text.slice(0, 50)}..."`);
+      return false; // Não é inadequada
+    }
+  }
+  
   // Termos que indicam conteúdo inadequado para educação histórica
   const inappropriateHistoricalTerms = [
     // Conteúdo violento ou gráfico
@@ -542,62 +595,6 @@ function isSpecificToHistoricalTopic(text: string, query: string): boolean {
   return hasTopicKeywords && isNotTooGeneric;
 }
 
-// Função para detectar falsos positivos na busca
-function isFalsePositive(text: string, query: string): boolean {
-  const queryLower = query.toLowerCase();
-  
-  // Lista de contextos que indicam falsos positivos para termos específicos
-  const falsePositivePatterns: Record<string, string[]> = {
-    'metallica': [
-      'bird', 'pássaro', 'ave', 'nature', 'natureza', 'animal', 'wildlife', 'wild', 'tropical',
-      'indonesia', 'halmahera', 'widi', 'islands', 'ilhas', 'red eyes', 'olhos vermelhos',
-      'aporonisu', 'species', 'espécie', 'biological', 'biológico', 'insect', 'inseto',
-      'dragonfly', 'libélula', 'macro', 'close-up', 'flying', 'voando', 'branch', 'galho',
-      'diptera', 'entomology', 'entomologia'
-    ],
-    'apple': [
-      'fruit', 'fruta', 'tree', 'árvore', 'garden', 'jardim', 'orchard', 'pomar',
-      'red apple', 'maçã vermelha', 'green apple', 'maçã verde'
-    ],
-    'orange': [
-      'fruit', 'fruta', 'citrus', 'citrino', 'juice', 'suco', 'tree', 'árvore'
-    ],
-    'tiger': [
-      'cat', 'gato', 'animal', 'wildlife', 'zoo', 'jungle', 'selva', 'stripes', 'listras'
-    ],
-    'como': [
-      'lake como', 'como italy', 'como lake', 'varenna', 'italy', 'italian', 'italiano',
-      'landscape', 'paisagem', 'mountain', 'montanha', 'nature', 'natureza', 'forest', 'floresta',
-      'city', 'cidade', 'building', 'edifício', 'architecture', 'arquitetura', 'travel', 'viagem',
-      'vacation', 'férias', 'tourism', 'turismo', 'hotel', 'restaurant', 'restaurante',
-      'swan', 'cisne', 'moonlight', 'luar', 'lake', 'lago', 'villa', 'vila', 'ballaster'
-    ]
-  };
-  
-  // Verificar se há padrões de falso positivo para este termo
-  if (falsePositivePatterns[queryLower]) {
-    const hasFalsePositiveContext = falsePositivePatterns[queryLower].some(pattern => 
-      text.includes(pattern)
-    );
-    
-    if (hasFalsePositiveContext) {
-      console.log(`🚫 Falso positivo geográfico detectado para "${query}": contexto geográfico/turístico`);
-      return true;
-    }
-  }
-  
-  // Verificar se o termo aparece em contexto muito genérico
-  const genericContexts = ['sticker', 'logo', 'text', 'word', 'letter', 'font', 'design'];
-  const hasGenericContext = genericContexts.some(context => text.includes(context));
-  
-  if (hasGenericContext && !text.includes('band') && !text.includes('music') && !text.includes('concert')) {
-    console.log(`🚫 Falso positivo detectado para "${query}": contexto muito genérico`);
-    return true;
-  }
-  
-  return false;
-}
-
 // Função para calcular score de relevância educacional com prioridade para termo exato
 function calculateEducationalScore(image: any, query: string, subject?: string): number {
   let score = 0;
@@ -608,101 +605,328 @@ function calculateEducationalScore(image: any, query: string, subject?: string):
     const queryWords = query.toLowerCase().split(' ').filter(word => word.length > 2);
     const exactQuery = query.toLowerCase().trim();
     
-    // PRIORIDADE MÁXIMA: Correspondência exata com o termo completo
-    if (text.includes(exactQuery)) {
-      score += 60; // Score muito alto para correspondência exata
-      console.log(`🎯 Correspondência exata encontrada para "${exactQuery}"`);
+    // ANÁLISE SEMÂNTICA INTELIGENTE
+    const semanticAnalysis = analyzeSemanticRelevance(text, exactQuery, queryWords);
+    
+    // Aplicar penalizações por irrelevância semântica
+    if (semanticAnalysis.isIrrelevant) {
+      console.log(`❌ Conteúdo irrelevante detectado: "${text.substring(0, 50)}..." - REJEITADO`);
+      return semanticAnalysis.penalty;
     }
     
-    // PRIORIDADE ALTA: Correspondências com palavras individuais
-    queryWords.forEach(word => {
-      if (text.includes(word)) {
-        score += 20; // Score alto para correspondências de palavras
-      }
-    });
+    // Aplicar bonificações por relevância semântica
+    score += semanticAnalysis.bonus;
     
-    // BONUS ESPECIAL: Sistema genérico de análise por categoria
-    const themeAnalysis = analyzeTopicRelevance(exactQuery, text);
-    
-    if (themeAnalysis.category && themeAnalysis.category !== 'general') {
-      // Bonus baseado na categoria detectada
-      const categoryBonuses: Record<string, number> = {
-        'astronomy': 40,
-        'medicine': 35,
-        'environment': 35,
-        'history': 30,
-        'geography': 30,
-        'mathematics': 30,
-        'physics': 30,
-        'chemistry': 30,
-        'biology': 30,
-        'literature': 30,
-        'technology': 30,
-        'art': 30,
-        'education': 25
-      };
-      
-      const bonus = categoryBonuses[themeAnalysis.category] || 20;
-      score += bonus;
-      console.log(`🎯 Contexto ${themeAnalysis.category} positivo detectado (+${bonus})`);
-      
-      // Penalização para falsos positivos específicos da categoria
-      if (themeAnalysis.hasFalsePositive) {
-        score -= 50; // Penalização severa para falsos positivos
-        console.log(`⚠️ Falso positivo ${themeAnalysis.falsePositiveReason} detectado - penalização severa aplicada`);
-      }
+    if (semanticAnalysis.bonus > 0) {
+      console.log(`✅ Relevância semântica detectada: ${semanticAnalysis.reason} (+${semanticAnalysis.bonus})`);
     }
     
-    // PENALIZAÇÃO: Para imagens muito genéricas sem relação ao tema
-    const genericImagePatterns = [
-      'woman in casual clothing works on her laptop',
-      'man working on computer',
-      'person using laptop',
-      'business meeting',
-      'office work',
-      'technology internet globalization'
+    // Score baseado em correspondência exata (para termos não específicos)
+    if (!semanticAnalysis.hasSpecificContext && text.includes(exactQuery)) {
+      score += 30;
+      console.log(`🎯 Termo exato encontrado: "${exactQuery}" (+30)`);
+    }
+    
+    // Score baseado em palavras-chave
+    const keywordMatches = queryWords.filter(word => text.includes(word));
+    score += keywordMatches.length * 10;
+    
+    if (keywordMatches.length > 0) {
+      console.log(`🔍 Palavras-chave encontradas: ${keywordMatches.join(', ')} (+${keywordMatches.length * 10})`);
+    }
+    
+    // Bonificar termos educacionais e científicos
+    const educationalTerms = [
+      'education', 'learning', 'academic', 'study', 'research',
+      'school', 'university', 'college', 'student', 'teacher',
+      'lesson', 'course', 'tutorial', 'guide', 'manual',
+      'science', 'scientific', 'biology', 'chemistry', 'physics',
+      'anatomy', 'physiology', 'neurology', 'psychology',
+      'diagram', 'chart', 'graph', 'illustration', 'scheme',
+      'process', 'mechanism', 'function', 'structure', 'system'
     ];
     
-    const isGenericImage = genericImagePatterns.some(pattern => text.includes(pattern));
-    if (isGenericImage && !text.includes(exactQuery)) {
-      score -= 50; // Penalização severa para imagens genéricas
-      console.log(`⚠️ Imagem genérica detectada - penalização severa aplicada`);
+    const educationalMatches = educationalTerms.filter(term => text.includes(term));
+    if (educationalMatches.length > 0) {
+      score += educationalMatches.length * 8; // Aumentar pontuação
+      console.log(`📚 Termos educacionais encontrados: ${educationalMatches.join(', ')} (+${educationalMatches.length * 8})`);
     }
     
-    // Bonus para tags relevantes
-    if (image.tags) {
-      const tags = Array.isArray(image.tags) ? image.tags : image.tags.split(', ');
-      tags.forEach((tag: string) => {
-        const tagLower = tag.toLowerCase();
-        if (tagLower.includes(exactQuery)) {
-          score += 25; // Bonus alto para tags que contêm o termo exato
-        } else if (queryWords.some(word => tagLower.includes(word))) {
-          score += 8; // Bonus menor para correspondências parciais
-        }
-      });
+    // Bonificar termos específicos de memória e cognição
+    const memoryTerms = [
+      'memory', 'memoria', 'brain', 'cerebro', 'neuron', 'neurônio',
+      'synapse', 'sinapse', 'hippocampus', 'hipocampo', 'cortex', 'córtex',
+      'cognitive', 'cognitivo', 'learning', 'aprendizado', 'recall', 'lembrança',
+      'storage', 'armazenamento', 'retrieval', 'recuperação'
+    ];
+    
+    const memoryMatches = memoryTerms.filter(term => text.includes(term));
+    if (memoryMatches.length > 0) {
+      score += memoryMatches.length * 12; // Pontuação alta para termos específicos
+      console.log(`🧠 Termos de memória encontrados: ${memoryMatches.join(', ')} (+${memoryMatches.length * 12})`);
     }
     
-    // Bonus para qualidade da imagem
+    // Bonificar termos específicos de eletricidade e física
+    const electricityTerms = [
+      'electricity', 'eletricidade', 'electrical', 'elétrico', 'electric', 'elétrico',
+      'circuit', 'circuito', 'current', 'corrente', 'voltage', 'voltagem', 'tensão',
+      'resistance', 'resistência', 'conductor', 'condutor', 'insulator', 'isolante',
+      'generator', 'gerador', 'motor', 'motor', 'transformer', 'transformador',
+      'wire', 'fio', 'cable', 'cabo', 'plug', 'plugue', 'socket', 'tomada',
+      'switch', 'interruptor', 'bulb', 'lâmpada', 'lightning', 'raio', 'relâmpago',
+      'spark', 'faísca', 'discharge', 'descarga', 'magnetism', 'magnetismo',
+      'electromagnetic', 'eletromagnético', 'diagram', 'diagrama', 'schematic', 'esquema',
+      'experiment', 'experimento', 'laboratory', 'laboratório', 'equipment', 'equipamento',
+      'device', 'dispositivo', 'appliance', 'aparelho', 'technology', 'tecnologia',
+      'engineering', 'engenharia', 'physics', 'física', 'phenomenon', 'fenômeno',
+      'wave', 'onda', 'frequency', 'frequência', 'amplitude', 'amplitude',
+      'signal', 'sinal', 'transmission', 'transmissão', 'distribution', 'distribuição',
+      'grid', 'rede', 'power plant', 'usina', 'substation', 'subestação',
+      'tower', 'torre', 'pole', 'poste', 'line', 'linha', 'infrastructure', 'infraestrutura'
+    ];
+    
+    const electricityMatches = electricityTerms.filter(term => text.includes(term));
+    if (electricityMatches.length > 0) {
+      score += electricityMatches.length * 15; // Pontuação alta para termos específicos de eletricidade
+      console.log(`⚡ Termos de eletricidade encontrados: ${electricityMatches.join(', ')} (+${electricityMatches.length * 15})`);
+    }
+    
+    // Penalizar conteúdo inadequado
+    const inappropriateTerms = [
+      'adult', 'explicit', 'nude', 'naked', 'sex', 'porn',
+      'violence', 'blood', 'gore', 'death', 'suicide'
+    ];
+    
+    if (inappropriateTerms.some(term => text.includes(term))) {
+      score -= 100;
+      console.log(`❌ Conteúdo inadequado detectado - REJEITADO`);
+    }
+    
+    // Penalizar imagens que são apenas texto/letreiro (baixa relevância visual)
+    const textOnlyTerms = [
+      'sign', 'sinal', 'text', 'texto', 'writing', 'escrita', 'lettering', 'letreiro',
+      'logo', 'brand', 'marca', 'advertisement', 'anúncio', 'ad', 'publicidade',
+      'billboard', 'outdoor', 'poster', 'cartaz', 'banner', 'faixa'
+    ];
+    
+    const textOnlyMatches = textOnlyTerms.filter(term => text.includes(term));
+    if (textOnlyMatches.length > 0) {
+      score -= textOnlyMatches.length * 20; // Penalizar imagens apenas com texto
+      console.log(`📝 Imagem apenas com texto detectada: ${textOnlyMatches.join(', ')} (-${textOnlyMatches.length * 20})`);
+    }
+    
+    // Bonificar qualidade da imagem
     if (image.width && image.height) {
       const aspectRatio = image.width / image.height;
-      // Preferir imagens com proporção adequada para slides
-      if (aspectRatio >= 1.2 && aspectRatio <= 2.0) {
-        score += 5;
+      if (aspectRatio >= 0.5 && aspectRatio <= 2.0) {
+        score += 5; // Bonificar proporções adequadas
       }
     }
     
-    // Bonus por fonte confiável
-    if (image.source === 'wikimedia') score += 15;
-    if (image.source === 'unsplash') score += 8;
-    if (image.source === 'pixabay') score += 6;
-    if (image.source === 'bing') score += 7;
-    if (image.source === 'pexels') score += 9;
+    console.log(`📊 Score final calculado: ${score}`);
+    return Math.max(0, Math.min(100, score)); // Limitar entre 0 e 100
     
-    return Math.max(0, Math.min(100, score)); // Cap em 100
   } catch (error) {
-    console.error('Erro no cálculo de score:', error);
-    return 50; // Score padrão em caso de erro
+    console.error('Erro ao calcular score educacional:', error);
+    return 0;
   }
+}
+
+// Função para análise semântica inteligente
+function analyzeSemanticRelevance(text: string, exactQuery: string, queryWords: string[]): {
+  isIrrelevant: boolean;
+  penalty: number;
+  bonus: number;
+  reason: string;
+  hasSpecificContext: boolean;
+} {
+  const lowerText = text.toLowerCase();
+  const lowerQuery = exactQuery.toLowerCase();
+  
+  // DETECÇÃO DE IRRELEVÂNCIA SEMÂNTICA
+  
+  // 1. Detectar livros históricos e documentos antigos
+  const historicalTerms = [
+        'georgius agricola', 'de re metallica', 'mining', 'mineração',
+        'metalwork', 'metalworking', 'metallurgy', 'metalúrgica',
+        'historical', 'ancient', 'medieval', 'classical', 'antique',
+    'manuscript', 'document', 'text', 'writing', 'script',
+    'pdf', 'djvu', 'book', 'livro', 'treatise', 'tratado',
+    'catalog', 'catalogue', 'journal', 'periodical'
+  ];
+  
+  // 2. Detectar contexto específico de memória e cognição
+  const memoryContextTerms = [
+    'memory', 'memoria', 'brain', 'cerebro', 'neuron', 'neurônio',
+    'synapse', 'sinapse', 'hippocampus', 'hipocampo', 'cortex', 'córtex',
+    'cognitive', 'cognitivo', 'learning', 'aprendizado', 'recall', 'lembrança',
+    'storage', 'armazenamento', 'retrieval', 'recuperação', 'encoding', 'codificação',
+    'consolidation', 'consolidação', 'forgetting', 'esquecimento', 'amnesia', 'amnésia'
+  ];
+  
+  // 3. Detectar contexto específico de eletricidade e física
+  const electricityContextTerms = [
+    'electricity', 'eletricidade', 'electrical', 'elétrico', 'electric', 'elétrico',
+    'circuit', 'circuito', 'current', 'corrente', 'voltage', 'voltagem', 'tensão',
+    'resistance', 'resistência', 'conductor', 'condutor', 'insulator', 'isolante',
+    'generator', 'gerador', 'motor', 'motor', 'transformer', 'transformador',
+    'wire', 'fio', 'cable', 'cabo', 'plug', 'plugue', 'socket', 'tomada',
+    'switch', 'interruptor', 'bulb', 'lâmpada', 'lightning', 'raio', 'relâmpago',
+    'spark', 'faísca', 'discharge', 'descarga', 'magnetism', 'magnetismo',
+    'electromagnetic', 'eletromagnético', 'diagram', 'diagrama', 'schematic', 'esquema',
+    'experiment', 'experimento', 'laboratory', 'laboratório', 'equipment', 'equipamento',
+    'device', 'dispositivo', 'appliance', 'aparelho', 'technology', 'tecnologia',
+    'engineering', 'engenharia', 'physics', 'física', 'phenomenon', 'fenômeno',
+    'wave', 'onda', 'frequency', 'frequência', 'amplitude', 'amplitude',
+    'signal', 'sinal', 'transmission', 'transmissão', 'distribution', 'distribuição',
+    'grid', 'rede', 'power plant', 'usina', 'substation', 'subestação',
+    'tower', 'torre', 'pole', 'poste', 'line', 'linha', 'infrastructure', 'infraestrutura'
+  ];
+  
+  const hasMemoryContext = memoryContextTerms.some(term => lowerText.includes(term));
+  const hasElectricityContext = electricityContextTerms.some(term => lowerText.includes(term));
+  
+  if (historicalTerms.some(term => lowerText.includes(term))) {
+    return {
+      isIrrelevant: true,
+      penalty: -100,
+      bonus: 0,
+      reason: 'Documento histórico irrelevante',
+      hasSpecificContext: false
+    };
+  }
+  
+  // 3. Bonificar contexto específico de memória
+  if (hasMemoryContext && (lowerQuery.includes('memoria') || lowerQuery.includes('memory'))) {
+    return {
+      isIrrelevant: false,
+      penalty: 0,
+      bonus: 50, // Bonificação alta para contexto de memória
+      reason: 'Contexto específico de memória detectado',
+      hasSpecificContext: true
+    };
+  }
+  
+  // 4. Bonificar contexto específico de eletricidade
+  if (hasElectricityContext && (lowerQuery.includes('eletricidade') || lowerQuery.includes('electricity'))) {
+    return {
+      isIrrelevant: false,
+      penalty: 0,
+      bonus: 60, // Bonificação alta para contexto de eletricidade
+      reason: 'Contexto específico de eletricidade detectado',
+      hasSpecificContext: true
+    };
+  }
+  
+  // 5. Detectar organismos biológicos com nomes similares (ex: borboleta metallica)
+  const biologicalTerms = [
+    'species', 'genus', 'family', 'order', 'class', 'phylum',
+    'taxonomy', 'taxonomic', 'binomial', 'scientific name',
+    'butterfly', 'moth', 'insect', 'animal', 'plant', 'fungus',
+    'bacteria', 'virus', 'organism', 'biology', 'zoology',
+    'botany', 'entomology', 'mycology', 'microbiology'
+  ];
+  
+  if (biologicalTerms.some(term => lowerText.includes(term))) {
+    return {
+      isIrrelevant: true,
+      penalty: -80,
+      bonus: 0,
+      reason: 'Organismo biológico irrelevante',
+      hasSpecificContext: false
+    };
+  }
+  
+  // 3. Detectar conteúdo técnico/científico irrelevante
+  const technicalTerms = [
+    'chemical', 'compound', 'formula', 'molecule', 'element',
+    'laboratory', 'experiment', 'research', 'analysis',
+    'technical', 'engineering', 'mechanical', 'electrical',
+    'computer', 'software', 'hardware', 'programming'
+  ];
+  
+  if (technicalTerms.some(term => lowerText.includes(term)) && !lowerText.includes('education')) {
+    return {
+      isIrrelevant: true,
+      penalty: -60,
+      bonus: 0,
+      reason: 'Conteúdo técnico irrelevante',
+      hasSpecificContext: false
+    };
+  }
+  
+  // DETECÇÃO DE RELEVÂNCIA ESPECÍFICA
+  
+  // Para Metallica especificamente
+  if (lowerQuery === 'metallica') {
+      const metallicaTerms = [
+        'metallica', 'james hetfield', 'lars ulrich', 'kirk hammett', 
+      'robert trujillo', 'cliff burton', 'master of puppets',
+      'enter sandman', 'one', 'black album', 'ride the lightning',
+      'kill em all', 'and justice for all', 'load', 'reload',
+      'st. anger', 'death magnetic', 'hardwired'
+    ];
+    
+    const metallicaMatches = metallicaTerms.filter(term => lowerText.includes(term));
+    if (metallicaMatches.length > 0) {
+      return {
+        isIrrelevant: false,
+        penalty: 0,
+        bonus: 60,
+        reason: `Termos específicos do Metallica: ${metallicaMatches.join(', ')}`,
+        hasSpecificContext: true
+      };
+    }
+    
+    // Penalizar música genérica sem contexto específico
+    const genericMusicTerms = [
+      'guitar', 'drum', 'drummer', 'bass', 'piano', 'keyboard',
+      'vinyl', 'record', 'album', 'cd', 'music', 'song',
+      'concert', 'stage', 'microphone', 'amplifier', 'speaker',
+      'musician', 'band', 'rock', 'metal', 'guitarist'
+    ];
+    
+    const hasGenericMusic = genericMusicTerms.some(term => lowerText.includes(term));
+    const hasMetallicaContext = lowerText.includes('metallica');
+    
+    if (hasGenericMusic && !hasMetallicaContext) {
+      return {
+        isIrrelevant: true,
+        penalty: -50,
+        bonus: 0,
+        reason: 'Música genérica sem contexto específico',
+        hasSpecificContext: false
+      };
+    }
+  }
+  
+  // Para outros temas, detectar contexto específico
+  const specificContextTerms = [
+    'band', 'artist', 'musician', 'singer', 'performer',
+    'album', 'song', 'track', 'music', 'concert', 'live',
+    'tour', 'show', 'performance', 'stage'
+  ];
+  
+  const hasSpecificContext = specificContextTerms.some(term => lowerText.includes(term));
+  
+  if (hasSpecificContext && lowerText.includes(lowerQuery)) {
+    return {
+      isIrrelevant: false,
+      penalty: 0,
+      bonus: 40,
+      reason: 'Contexto específico do tema encontrado',
+      hasSpecificContext: true
+    };
+  }
+  
+  // Retorno padrão para conteúdo relevante mas não específico
+  return {
+    isIrrelevant: false,
+    penalty: 0,
+    bonus: 0,
+    reason: 'Conteúdo relevante',
+    hasSpecificContext: false
+  };
 }
 
 // Buscar no Unsplash
@@ -800,85 +1024,58 @@ async function searchPixabay(query: string, subject: string, limit: number): Pro
   }
 }
 
-// Buscar no Wikimedia Commons
+// Buscar no Wikimedia Commons usando a API interna
 async function searchWikimedia(query: string, subject: string, limit: number): Promise<ImageResult[]> {
   try {
-    const optimizedQuery = optimizeQueryForEducation(query, subject);
+    console.log(`🔍 Buscando no Wikimedia via API interna: "${query}"`);
     
-    // Buscar no Wikimedia Commons - excluir PDFs e focar em imagens
-    const searchQuery = `${optimizedQuery} -filetype:pdf -filetype:doc -filetype:docx filetype:jpg OR filetype:png OR filetype:gif OR filetype:svg OR filetype:webp`;
-    const searchUrl = `https://commons.wikimedia.org/w/api.php?action=query&format=json&list=search&srsearch=${encodeURIComponent(searchQuery)}&srnamespace=6&srlimit=${Math.min(limit, 50)}&srprop=size&origin=*`;
+    // Usar a API interna do Wikimedia que já está funcionando
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/wikimedia/search`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        query: query, 
+        subject: subject, 
+        count: Math.min(limit, 20) 
+      }),
+    });
     
-    const response = await fetch(searchUrl);
-    if (!response.ok) return [];
-    
-    const data = await response.json();
-    
-    if (!data.query || !data.query.search || data.query.search.length === 0) {
+    if (!response.ok) {
+      console.log(`❌ Erro na API interna do Wikimedia: ${response.status}`);
       return [];
     }
     
-    // Buscar informações detalhadas das imagens
-    const imageTitles = data.query.search.map((item: any) => item.title);
-    const imageInfoUrl = `https://commons.wikimedia.org/w/api.php?action=query&format=json&titles=${imageTitles.join('|')}&prop=imageinfo&iiprop=url|size|mime&origin=*`;
+    const data = await response.json();
+    console.log(`✅ API interna do Wikimedia retornou ${data.photos?.length || 0} imagens`);
     
-    const imageInfoResponse = await fetch(imageInfoUrl);
-    if (!imageInfoResponse.ok) return [];
-    
-    const imageInfoData = await imageInfoResponse.json();
-    
-    const results: ImageResult[] = [];
-    const pages = imageInfoData.query.pages;
-    
-    for (const pageId in pages) {
-      const page = pages[pageId];
-      if (page.imageinfo && page.imageinfo.length > 0) {
-        const imageInfo = page.imageinfo[0];
-        
-        // Filtrar apenas arquivos de imagem válidos
-        const isValidImage = imageInfo.mime && (
-          imageInfo.mime.startsWith('image/') ||
-          imageInfo.mime === 'image/jpeg' ||
-          imageInfo.mime === 'image/png' ||
-          imageInfo.mime === 'image/gif' ||
-          imageInfo.mime === 'image/webp' ||
-          imageInfo.mime === 'image/svg+xml'
-        );
-        
-        const isImageUrl = imageInfo.url && (
-          imageInfo.url.includes('.jpg') ||
-          imageInfo.url.includes('.jpeg') ||
-          imageInfo.url.includes('.png') ||
-          imageInfo.url.includes('.gif') ||
-          imageInfo.url.includes('.webp') ||
-          imageInfo.url.includes('.svg') ||
-          imageInfo.url.includes('commons/')
-        );
-        
-        if (isValidImage && isImageUrl) {
-          const imageData = {
-            id: `wikimedia_${pageId}`,
-            url: imageInfo.url,
-            title: page.title.replace('File:', ''),
-            description: page.title.replace('File:', ''),
-            author: 'Wikimedia Commons',
-            source: 'wikimedia' as const,
-            width: imageInfo.width || 0,
-            height: imageInfo.height || 0,
-            tags: [],
-            relevanceScore: calculateEducationalScore({ title: page.title }, query, subject),
-            educationalSuitability: 0,
-            qualityScore: 0
-          };
-          
-          results.push(imageData);
-        }
-      }
+    if (!data.success || !data.photos || data.photos.length === 0) {
+      console.log(`❌ Nenhuma imagem encontrada via API interna`);
+      return [];
     }
     
+    // Converter formato da API interna para formato do smart-search
+    const results: ImageResult[] = data.photos.map((photo: any) => ({
+      id: `wikimedia_${photo.id}`,
+      url: photo.url,
+      thumbnail: photo.urls?.small || photo.url,
+      title: photo.title || photo.description,
+      description: photo.description,
+      author: photo.author || 'Wikimedia Commons',
+            source: 'wikimedia' as const,
+      width: photo.width || 0,
+      height: photo.height || 0,
+            tags: [],
+      relevanceScore: calculateEducationalScore({ title: photo.title || photo.description }, query, subject),
+            educationalSuitability: 0,
+            qualityScore: 0
+    }));
+    
+    console.log(`🎯 Wikimedia retornou ${results.length} imagens válidas via API interna`);
     return results;
   } catch (error) {
-    console.error('Erro ao buscar no Wikimedia:', error);
+    console.error('Erro ao buscar no Wikimedia via API interna:', error);
     return [];
   }
 }
@@ -986,25 +1183,17 @@ async function smartImageSearch(query: string, subject?: string, count: number =
   let semanticAnalysis = null;
   
   // ETAPA 0: Detectar tema e traduzir para inglês
-  console.log(`🌍 ETAPA 0: Detectando tema e traduzindo para inglês`);
-  let englishQuery: string;
-  try {
-    const { detectTheme } = await import('@/lib/themeDetection');
-    const themeDetection = await detectTheme(query, subject);
-    englishQuery = themeDetection.englishTheme;
-    console.log(`✅ Tema detectado: "${themeDetection.theme}" → "${englishQuery}"`);
-  } catch (error) {
-    console.warn('⚠️ Erro na detecção de tema, usando query original:', error);
-    englishQuery = query;
-  }
+  console.log(`🌍 ETAPA 0: Usando query original`);
+  const englishQuery = query;
   
   // ETAPA 1: Busca pelo termo exato do tema em inglês (prioridade máxima)
   console.log(`🎯 ETAPA 1: Buscando pelo termo exato em inglês "${englishQuery}"`);
   
+  // Usar todos os provedores com Wikimedia priorizado (geralmente retorna coisas específicas)
   const exactSearchPromises = [
+    searchWikimedia(englishQuery, subject || 'general', count * 2), // Wikimedia primeiro e com mais imagens
     searchUnsplash(englishQuery, subject || 'general', count),
     searchPixabay(englishQuery, subject || 'general', count),
-    searchWikimedia(englishQuery, subject || 'general', count),
     searchBing(englishQuery, subject || 'general', count),
     searchPexels(englishQuery, subject || 'general', count)
   ];
@@ -1013,7 +1202,7 @@ async function smartImageSearch(query: string, subject?: string, count: number =
     const exactResults = await Promise.allSettled(exactSearchPromises);
     
     exactResults.forEach((result, index) => {
-      const providerNames = ['unsplash', 'pixabay', 'wikimedia', 'bing', 'pexels'];
+      const providerNames = ['wikimedia', 'unsplash', 'pixabay', 'bing', 'pexels'];
       const providerName = providerNames[index];
       
       if (result.status === 'fulfilled' && result.value.length > 0) {
@@ -1030,37 +1219,9 @@ async function smartImageSearch(query: string, subject?: string, count: number =
       index === self.findIndex(img => img.url === image.url)
     );
     
-    // Filtrar apenas imagens realmente relevantes ao tema com fallback híbrido
-    const relevantImages = uniqueExactImages.filter(image => {
-      const text = `${image.title || ''} ${image.description || ''}`.toLowerCase();
-      const exactQuery = englishQuery.toLowerCase().trim();
-      
-      // Verificar se realmente contém o termo exato em inglês
-      const hasExactMatch = text.includes(exactQuery);
-      
-      // Verificar se não é um falso positivo (ex: "metallica" em "aporonisu metallica" - um pássaro)
-      const isRelevant = hasExactMatch && !isFalsePositive(text, exactQuery);
-      
-      // Verificar se não é inadequada ou irrelevante
-      const isAppropriate = !isInappropriateImage(text, exactQuery);
-      
-      // Fallback híbrido: se a IA falhar, usar análise local melhorada
-      if (!isRelevant && !isAppropriate) {
-        const localScore = calculateEnhancedLocalRelevance(text, exactQuery);
-        if (localScore > 50) {
-          console.log(`🔄 Fallback local ativado para: "${image.title?.slice(0, 50)}..." (score: ${localScore})`);
-          return true;
-        }
-      }
-      
-      if (isRelevant && isAppropriate) {
-        console.log(`✅ Imagem relevante e adequada encontrada: "${image.title?.slice(0, 50)}..."`);
-      } else {
-        console.log(`❌ Imagem inadequada/irrelevante descartada: "${image.title?.slice(0, 50)}..."`);
-      }
-      
-      return isRelevant && isAppropriate;
-    });
+    // Filtrar imagens com score negativo (livros históricos, etc.)
+    const relevantImages = uniqueExactImages.filter(image => image.relevanceScore >= 0);
+    console.log(`📊 ${relevantImages.length} imagens relevantes de ${uniqueExactImages.length} encontradas`);
     
     console.log(`📊 Resultados da busca exata: ${uniqueExactImages.length} imagens únicas, ${relevantImages.length} relevantes`);
     
@@ -1072,7 +1233,7 @@ async function smartImageSearch(query: string, subject?: string, count: number =
       relevantImages.sort((a, b) => b.relevanceScore - a.relevanceScore);
       
       // Selecionar com diversidade de provedores
-      const bestImages = selectDiverseImages(relevantImages, count);
+      const bestImages = selectDiverseImages(relevantImages, count, englishQuery);
       
       return {
         success: true,
@@ -1095,11 +1256,11 @@ async function smartImageSearch(query: string, subject?: string, count: number =
     
     console.log(`🔍 Buscando semanticamente por: "${semanticQuery}"`);
     
-    // Buscar com query semântica
+    // Usar todos os provedores na busca semântica com Wikimedia priorizado
     const semanticSearchPromises = [
+      searchWikimedia(semanticQuery, subject || 'general', count * 2), // Wikimedia primeiro e com mais imagens
       searchUnsplash(semanticQuery, subject || 'general', count),
       searchPixabay(semanticQuery, subject || 'general', count),
-      searchWikimedia(semanticQuery, subject || 'general', count),
       searchBing(semanticQuery, subject || 'general', count),
       searchPexels(semanticQuery, subject || 'general', count)
     ];
@@ -1110,7 +1271,7 @@ async function smartImageSearch(query: string, subject?: string, count: number =
     allImages = [];
     
     semanticResults.forEach((result, index) => {
-      const providerNames = ['unsplash', 'pixabay', 'wikimedia', 'bing', 'pexels'];
+      const providerNames = ['wikimedia', 'unsplash', 'pixabay', 'bing', 'pexels'];
       const providerName = providerNames[index];
       
       if (result.status === 'fulfilled' && result.value.length > 0) {
@@ -1129,25 +1290,9 @@ async function smartImageSearch(query: string, subject?: string, count: number =
       image.relevanceScore += semanticAnalysis.semanticScore / 10;
     });
     
-    // Filtrar imagens inadequadas ou irrelevantes também na busca semântica
-    const filteredImages = allImages.filter(image => {
-      const text = `${image.title || ''} ${image.description || ''}`.toLowerCase();
-      const exactQuery = englishQuery.toLowerCase().trim();
-      
-      // Verificar se não é inadequada ou irrelevante
-      const isAppropriate = !isInappropriateImage(text, exactQuery);
-      
-      // Verificar se não é um falso positivo
-      const isRelevant = !isFalsePositive(text, exactQuery);
-      
-      if (isAppropriate && isRelevant) {
-        console.log(`✅ Imagem semântica relevante e adequada: "${image.title?.slice(0, 50)}..."`);
-      } else {
-        console.log(`❌ Imagem semântica inadequada/irrelevante descartada: "${image.title?.slice(0, 50)}..."`);
-      }
-      
-      return isAppropriate && isRelevant;
-    });
+    // Filtrar imagens com score negativo (livros históricos, etc.)
+    const filteredImages = allImages.filter(image => image.relevanceScore >= 0);
+    console.log(`📊 ${filteredImages.length} imagens relevantes de ${allImages.length} encontradas`);
     
     // Ordenar por relevância
     filteredImages.sort((a, b) => b.relevanceScore - a.relevanceScore);
@@ -1158,7 +1303,7 @@ async function smartImageSearch(query: string, subject?: string, count: number =
     );
     
     // Selecionar com diversidade
-    const bestImages = selectDiverseImages(uniqueImages, count);
+    const bestImages = selectDiverseImages(uniqueImages, count, englishQuery);
     
     console.log(`🎯 Total final: ${uniqueImages.length} imagens únicas`);
     console.log(`🏆 Melhores ${bestImages.length} imagens selecionadas`);
@@ -1247,15 +1392,60 @@ function calculateEnhancedLocalRelevance(text: string, query: string): number {
     }
   });
   
-  // Bonus para termos educacionais específicos
+  // Bonus para termos educacionais específicos - VERSÃO EXPANDIDA
   const educationalTerms = {
+    // Ciências específicas
     'photosynthesis': ['plant', 'leaf', 'green', 'chlorophyll', 'sunlight', 'biology', 'chloroplast'],
     'biology': ['cell', 'organism', 'biology', 'science', 'laboratory', 'microscope', 'dna'],
     'chemistry': ['molecule', 'atom', 'reaction', 'chemistry', 'laboratory', 'chemical', 'compound'],
     'physics': ['physics', 'energy', 'force', 'experiment', 'laboratory', 'science', 'quantum'],
     'mathematics': ['math', 'equation', 'formula', 'calculation', 'geometry', 'algebra', 'calculus'],
+    
+    // Humanidades
     'history': ['history', 'historical', 'ancient', 'civilization', 'culture', 'heritage'],
-    'geography': ['geography', 'landscape', 'environment', 'climate', 'earth', 'terrain']
+    'geography': ['geography', 'landscape', 'environment', 'climate', 'earth', 'terrain'],
+    'literature': ['book', 'novel', 'poetry', 'author', 'writing', 'story', 'character'],
+    
+    // Arte e cultura
+    'metallica': ['metallica', 'band', 'rock', 'metal', 'heavy metal', 'thrash metal', 'concert', 'guitar', 'music', 'album', 'stage', 'performance'],
+    'music': ['music', 'band', 'concert', 'guitar', 'drums', 'bass', 'vocals', 'stage', 'performance', 'album', 'song', 'musician', 'artist'],
+    'art': ['art', 'painting', 'sculpture', 'artist', 'creative', 'design', 'museum', 'gallery'],
+    
+    // Tecnologia
+    'technology': ['computer', 'software', 'programming', 'digital', 'algorithm', 'data', 'code', 'app'],
+    
+    // Negócios
+    'business': ['business', 'company', 'market', 'economy', 'finance', 'management', 'strategy', 'sales'],
+    
+    // Esportes
+    'sports': ['sport', 'athletic', 'competition', 'game', 'player', 'team', 'training', 'fitness'],
+    
+    // Alimentação
+    'food': ['food', 'cuisine', 'cooking', 'recipe', 'chef', 'kitchen', 'restaurant', 'meal'],
+    
+    // Viagem
+    'travel': ['travel', 'tourism', 'destination', 'vacation', 'hotel', 'beach', 'mountain', 'city'],
+    
+    // Moda
+    'fashion': ['fashion', 'style', 'clothing', 'design', 'beauty', 'cosmetic', 'accessory'],
+    
+    // Animais
+    'animals': ['animal', 'pet', 'wildlife', 'nature', 'dog', 'cat', 'bird', 'fish'],
+    
+    // Arquitetura
+    'architecture': ['architecture', 'building', 'construction', 'design', 'house', 'structure', 'modern'],
+    
+    // Psicologia
+    'psychology': ['psychology', 'behavior', 'mind', 'emotion', 'mental', 'therapy', 'counseling'],
+    
+    // Filosofia
+    'philosophy': ['philosophy', 'ethics', 'moral', 'values', 'wisdom', 'truth', 'reality'],
+    
+    // Educação geral
+    'education': ['education', 'learning', 'teaching', 'school', 'student', 'teacher', 'knowledge'],
+    
+    // Ciências gerais
+    'science': ['science', 'research', 'experiment', 'laboratory', 'study', 'analysis', 'theory']
   };
   
   // Verificar termos educacionais específicos

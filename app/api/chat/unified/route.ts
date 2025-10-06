@@ -11,12 +11,13 @@ import { callOpenAI } from "@/lib/providers/openai";
 import { callGPT5 } from "@/lib/providers/gpt5";
 import { callGemini } from "@/lib/providers/gemini";
 import { callPerplexity } from "@/lib/providers/perplexity";
+import { callGrok } from "@/lib/providers/grok";
 import { ChatMessage } from "@/lib/chat-history";
 
 export const runtime = "nodejs"; // Para compatibilidade com Prisma
 
 type Body = {
-  provider: "openai" | "gpt5" | "gemini" | "perplexity";
+  provider: "openai" | "gpt5" | "gemini" | "perplexity" | "grok";
   model: string;
   input: string;
   system?: string;
@@ -70,6 +71,9 @@ export async function POST(req: NextRequest) {
         break;
       case "perplexity":
         result = await callPerplexity(model, history, input, system);
+        break;
+      case "grok":
+        result = await callGrok(model, history, input, system);
         break;
       default:
         return NextResponse.json({ error: "Provider inválido" }, { status: 400 });

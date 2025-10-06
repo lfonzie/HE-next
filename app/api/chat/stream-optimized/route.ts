@@ -5,6 +5,7 @@ import { streamText } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { google } from '@ai-sdk/google';
 import { perplexity } from '@ai-sdk/perplexity';
+import { grok } from '@/lib/providers/grok-ai-sdk';
 import { fastClassify } from '@/lib/fast-classifier';
 import { z } from 'zod';
 
@@ -17,11 +18,15 @@ const OptimizedRequestSchema = z.object({
   conversationId: z.string().optional(),
   history: z.array(z.any()).optional().default([]),
   useCache: z.boolean().optional().default(true),
-  forceProvider: z.enum(['auto', 'openai', 'google']).optional().default('auto')
+  forceProvider: z.enum(['auto', 'grok', 'openai', 'google', 'perplexity']).optional().default('auto')
 });
 
 // Configurações otimizadas de modelos
 const MODEL_CONFIGS = {
+  grok: {
+    simple: 'grok-4-fast-reasoning',
+    complex: 'grok-4-fast-reasoning'
+  },
   openai: {
     simple: 'gpt-4o-mini',
     complex: 'gpt-5-chat-latest'
@@ -125,9 +130,9 @@ function formatMessagesForProvider(messages: any[], provider: string): any[] {
   return messages;
 }
 
-function selectProvider(message: string, module: string, forceProvider: string): 'openai' | 'google' | 'perplexity' {
+function selectProvider(message: string, module: string, forceProvider: string): 'grok' | 'openai' | 'google' | 'perplexity' {
   if (forceProvider !== 'auto') {
-    return forceProvider as 'openai' | 'google';
+    return forceProvider as 'grok' | 'openai' | 'google' | 'perplexity';
   }
   
   // Se precisa de busca na web, usar Perplexity
@@ -138,6 +143,12 @@ function selectProvider(message: string, module: string, forceProvider: string):
   
   // Verificar complexidade primeiro
   const complexity = detectComplexityFast(message);
+  
+  // Priorizar Grok 4 Fast Reasoning para perguntas educacionais
+  if (process.env.GROK_API_KEY) {
+    console.log('🚀 [PROVIDER-SELECTION] Using Grok 4 Fast Reasoning for educational content');
+    return 'grok';
+  }
   
   // Para tarefas complexas, usar OpenAI (melhor qualidade)
   if (complexity === 'complex') {
@@ -323,12 +334,12 @@ export async function POST(request: NextRequest) {
     }
     
     let modelInstance;
-    if (selectedProvider === 'google' && process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+    if (selectedProvider === 'grok' && process.env.GROK_API_KEY) {
+      modelInstance = grok(modelName);
+    } else if (selectedProvider === 'google' && process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
       modelInstance = google(modelName);
     } else if (selectedProvider === 'perplexity' && process.env.PERPLEXITY_API_KEY) {
-      modelInstance = perplexity(modelName, {
-        apiKey: process.env.PERPLEXITY_API_KEY
-      });
+      modelInstance = perplexity(modelName);
     } else {
       modelInstance = openai(modelName);
     }
@@ -358,15 +369,7 @@ export async function POST(request: NextRequest) {
     // 6. Configuração otimizada de streaming
     const streamingConfig = {
       temperature: complexity === 'complex' ? 0.7 : 0.5,
-      maxTokens: complexity === 'complex' ? 500 : 150,
-      topP: 0.9,
-      // Perplexity não aceita presence_penalty e frequency_penalty simultaneamente
-      ...(selectedProvider === 'perplexity' ? {
-        frequencyPenalty: 0.1
-      } : {
-        frequencyPenalty: 0.1,
-        presencePenalty: 0.1
-      })
+      topP: 0.9
     };
 
     console.log(`📡 [STREAMING] Starting stream with ${selectedProvider}/${modelName}`);
@@ -559,8 +562,7 @@ export async function POST(request: NextRequest) {
             content: message || 'Erro no processamento da mensagem'
           }
         ],
-        temperature: 0.7,
-        maxTokens: 150
+        temperature: 0.7
       });
       
       // Fallback também precisa usar o formato correto

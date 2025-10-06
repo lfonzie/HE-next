@@ -91,7 +91,15 @@ export async function POST(request: NextRequest) {
           imageInfo.url.includes('commons/') // Wikimedia Commons images
         );
         
-        if (isValidImage && isImageUrl) {
+        // Verificação adicional para excluir PDFs e documentos
+        const isNotDocument = !imageInfo.mime?.includes('pdf') && 
+                             !imageInfo.mime?.includes('document') &&
+                             !imageInfo.mime?.includes('text') &&
+                             !imageInfo.url?.includes('.pdf') &&
+                             !imageInfo.url?.includes('.doc') &&
+                             !imageInfo.url?.includes('.txt');
+        
+        if (isValidImage && isImageUrl && isNotDocument) {
           photos.push({
             id: pageId,
             title: page.title,
@@ -212,6 +220,10 @@ async function translateToEnglish(query: string, subject?: string): Promise<stri
       'impulso nervoso': 'nerve impulse',
       'reflexos': 'reflexes',
       'memória': 'memory',
+      'como funciona': 'how does work',
+      'funcionamento': 'functioning',
+      'processo': 'process',
+      'mecanismo': 'mechanism',
       'aprendizado': 'learning',
       'cognição': 'cognition',
       'percepção': 'perception',
@@ -238,7 +250,6 @@ async function translateToEnglish(query: string, subject?: string): Promise<stri
       'estudante': 'student',
       'aula': 'lesson',
       'curso': 'course',
-      'aprendizado': 'learning',
       'conhecimento': 'knowledge',
       'habilidades': 'skills',
       'competências': 'competencies',
@@ -328,7 +339,6 @@ async function translateToEnglish(query: string, subject?: string): Promise<stri
       'estratégia': 'strategy',
       'método': 'method',
       'técnica': 'technique',
-      'processo': 'process',
       'procedimento': 'procedure',
       'protocolo': 'protocol',
       'padrão': 'pattern',
@@ -477,6 +487,38 @@ async function translateToEnglish(query: string, subject?: string): Promise<stri
       'domínio': 'domain'
     };
 
+    // Tentar tradução de frases completas primeiro
+    const lowerQuery = query.toLowerCase().trim();
+    
+    // Traduções de frases completas
+    const phraseTranslations: Record<string, string> = {
+      'como funciona a memória': 'how memory works',
+      'como funciona a memória?': 'how memory works',
+      'como funciona a eletricidade': 'how electricity works',
+      'como funciona a eletricidade?': 'how electricity works',
+      'como funciona a fotossíntese': 'how photosynthesis works',
+      'como funciona a fotossíntese?': 'how photosynthesis works',
+      'como funciona o cérebro': 'how brain works',
+      'como funciona o cérebro?': 'how brain works',
+      'como funciona o sistema nervoso': 'how nervous system works',
+      'como funciona o sistema nervoso?': 'how nervous system works',
+      'como funciona a respiração': 'how respiration works',
+      'como funciona a respiração?': 'how respiration works',
+      'como funciona o metabolismo': 'how metabolism works',
+      'como funciona o metabolismo?': 'how metabolism works',
+      'como funciona o dna': 'how dna works',
+      'como funciona o dna?': 'how dna works',
+      'como funciona a célula': 'how cell works',
+      'como funciona a célula?': 'how cell works',
+      'como funciona o corpo humano': 'how human body works',
+      'como funciona o corpo humano?': 'how human body works'
+    };
+    
+    // Verificar se há tradução de frase completa
+    if (phraseTranslations[lowerQuery]) {
+      return phraseTranslations[lowerQuery];
+    }
+    
     // Tentar tradução palavra por palavra
     const words = query.toLowerCase().split(' ');
     const translatedWords = words.map(word => {
@@ -494,7 +536,18 @@ async function translateToEnglish(query: string, subject?: string): Promise<stri
 
 // Função para melhorar a query para busca no Wikimedia Commons
 function enhanceQueryForWikimedia(query: string, subject?: string): string {
-  // Retornar APENAS a query original, sem adicionar termos educacionais
-  // Isso garante que a busca seja específica para o tema
+  const lowerQuery = query.toLowerCase();
+  
+  // Para Metallica, usar termos específicos da banda
+  if (lowerQuery.includes('metallica')) {
+    return 'Metallica band OR "Metallica" OR "James Hetfield" OR "Metallica concert" OR "Metallica live" OR "Metallica tour" OR "Metallica album"';
+  }
+  
+  // Para eletricidade, usar termos científicos e visuais específicos
+  if (lowerQuery.includes('eletricidade') || lowerQuery.includes('electricity')) {
+    return 'electricity physics OR "electrical circuit" OR "electrical current" OR "electrical field" OR "electrical energy" OR "electrical power" OR "electrical voltage" OR "electrical resistance" OR "electrical conductor" OR "electrical insulator" OR "electrical generator" OR "electrical motor" OR "electrical transformer" OR "electrical wire" OR "electrical cable" OR "electrical plug" OR "electrical socket" OR "electrical switch" OR "electrical bulb" OR "electrical lightning" OR "electrical spark" OR "electrical discharge" OR "electrical magnetism" OR "electromagnetic" OR "electrical diagram" OR "electrical schematic" OR "electrical experiment" OR "electrical laboratory" OR "electrical equipment" OR "electrical device" OR "electrical appliance" OR "electrical technology" OR "electrical engineering" OR "electrical science" OR "electrical physics" OR "electrical phenomenon" OR "electrical wave" OR "electrical frequency" OR "electrical amplitude" OR "electrical signal" OR "electrical transmission" OR "electrical distribution" OR "electrical grid" OR "electrical power plant" OR "electrical substation" OR "electrical tower" OR "electrical pole" OR "electrical line" OR "electrical infrastructure"';
+  }
+  
+  // Para outros termos, retornar a query original
   return query;
 }

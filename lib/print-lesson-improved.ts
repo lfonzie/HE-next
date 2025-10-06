@@ -1,13 +1,11 @@
 /*
- * HubEdu – Impressão de aulas (versão melhorada)
- * Pontos-chave:
- * - Tipos fortes (TypeScript) para LessonData/Stage/QuizQuestion
- * - Validação robusta com mensagens detalhadas
- * - Sanitização simples contra XSS para campos de texto
- * - Suporte a SSR (verificação de window/document)
- * - Opção de imprimir via <iframe> oculto (menos bloqueado) ou window.open
- * - CSS de impressão ajustado (A4) e melhor handling de carregamento de imagens
- * - API única: printLessonImproved(lessonData, options)
+ * HubEdu – Impressão de aulas (versão otimizada)
+ * Melhorias aplicadas:
+ * - Performance: memoização de sanitização repetida
+ * - Segurança: validação adicional de URLs e atributos
+ * - UX: melhor feedback de progresso e tratamento de erros
+ * - Code quality: funções mais modulares e testáveis
+ * - Acessibilidade: atributos ARIA e estrutura semântica melhorada
  */
 
 // =========================
@@ -29,16 +27,16 @@ export type StageActivity = {
 };
 
 export type LessonStage = {
-  etapa: string; // título da etapa
-  type: string;  // ex.: "exposição", "atividade", "quiz" etc.
+  etapa: string;
+  type: string;
   activity?: StageActivity;
-  route?: string; // opcional para referência interna
+  route?: string;
 };
 
 export type LessonMetadata = {
   subject?: string;
   grade?: string;
-  duration?: string; // ex.: "45 minutos"
+  duration?: string;
   difficulty?: string;
   tags?: string[];
 };
@@ -51,7 +49,6 @@ export type LessonData = {
   summary?: string;
   nextSteps?: string[];
   metadata?: LessonMetadata;
-  // compat anteriores
   subject?: string;
   level?: string;
   estimatedDuration?: number;
@@ -59,21 +56,26 @@ export type LessonData = {
 };
 
 export type PrintOptions = {
-  method?: "iframe" | "window"; // default: iframe
-  width?: number; // apenas para window.open
-  height?: number; // apenas para window.open
-  appName?: string; // ex.: "HubEdu – Plataforma de Educação Interativa"
-  logoUrl?: string; // URL do logo no cabeçalho
-  brandAccent?: string; // cor principal (hex)
+  method?: "iframe" | "window";
+  width?: number;
+  height?: number;
+  appName?: string;
+  logoUrl?: string;
+  brandAccent?: string;
   onError?: (err: unknown) => void;
   onBeforePrint?: () => void;
   onAfterPrint?: () => void;
+  onProgress?: (message: string) => void;
+  imageLoadTimeout?: number;
 };
 
 // =========================
 // Utils
 // =========================
 const isBrowser = typeof window !== "undefined" && typeof document !== "undefined";
+
+// Cache para sanitização (performance)
+const sanitizeCache = new Map<string, string>();
 
 function escapeHtml(str: string): string {
   return str
@@ -84,14 +86,46 @@ function escapeHtml(str: string): string {
     .replace(/'/g, "&#39;");
 }
 
-function sanitizeMaybe(str?: string) {
-  if (typeof str !== "string") return "";
+function sanitizeMaybe(str?: string): string {
+  if (typeof str !== "string" || str === "") return "";
   
-  // Primeiro escapa HTML, depois converte quebras de linha para <br>
-  return escapeHtml(str)
+  // Verificar cache
+  if (sanitizeCache.has(str)) {
+    return sanitizeCache.get(str)!;
+  }
+  
+  const result = escapeHtml(str)
     .replace(/\n/g, "<br>")
     .replace(/\r\n/g, "<br>")
     .replace(/\r/g, "<br>");
+  
+  // Limitar cache a 100 entradas
+  if (sanitizeCache.size > 100) {
+    const firstKey = sanitizeCache.keys().next().value;
+    sanitizeCache.delete(firstKey);
+  }
+  
+  sanitizeCache.set(str, result);
+  return result;
+}
+
+// Validação de URL (segurança adicional)
+function isValidUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url, window.location.href);
+    return ["http:", "https:", "data:"].includes(parsed.protocol);
+  } catch {
+    return false;
+  }
+}
+
+function sanitizeUrl(url?: string): string {
+  if (!url || typeof url !== "string") return "";
+  if (!isValidUrl(url)) {
+    console.warn("URL inválida detectada:", url);
+    return "";
+  }
+  return escapeHtml(url);
 }
 
 // =========================
@@ -114,7 +148,7 @@ export function validateLessonData(lessonData: LessonData): { isValid: boolean; 
   } else {
     const invalidObjectives = lessonData.objectives.filter((obj) => typeof obj !== "string" || obj.trim() === "");
     if (invalidObjectives.length > 0) {
-      errors.push("Todos os objetivos devem ser strings não vazias");
+      errors.push(`${invalidObjectives.length} objetivo(s) inválido(s) detectado(s)`);
     }
   }
 
@@ -124,6 +158,8 @@ export function validateLessonData(lessonData: LessonData): { isValid: boolean; 
 
   if (!lessonData.stages || !Array.isArray(lessonData.stages)) {
     errors.push("Etapas da aula são obrigatórias e devem ser um array");
+  } else if (lessonData.stages.length === 0) {
+    errors.push("Pelo menos uma etapa deve ser fornecida");
   } else {
     lessonData.stages.forEach((stage, idx) => {
       if (!stage || typeof stage !== "object") {
@@ -136,7 +172,13 @@ export function validateLessonData(lessonData: LessonData): { isValid: boolean; 
       if (!stage.type || typeof stage.type !== "string" || stage.type.trim() === "") {
         errors.push(`Stage #${idx + 1}: 'type' é obrigatório e deve ser string não vazia`);
       }
-      // validar activity.questions
+      
+      // Validar imageUrl se presente
+      if (stage.activity?.imageUrl && !isValidUrl(stage.activity.imageUrl)) {
+        errors.push(`Stage #${idx + 1}: URL de imagem inválida`);
+      }
+      
+      // Validar questions
       if (stage.activity?.questions) {
         if (!Array.isArray(stage.activity.questions)) {
           errors.push(`Stage #${idx + 1}: 'questions' deve ser um array`);
@@ -144,6 +186,12 @@ export function validateLessonData(lessonData: LessonData): { isValid: boolean; 
           stage.activity.questions.forEach((q, qidx) => {
             if (q.options && !Array.isArray(q.options)) {
               errors.push(`Stage #${idx + 1} Q#${qidx + 1}: 'options' deve ser array`);
+            }
+            if (q.options && q.options.length > 0) {
+              const correctIdx = q.correct ?? q.correctAnswer;
+              if (correctIdx !== undefined && (correctIdx < 0 || correctIdx >= q.options.length)) {
+                errors.push(`Stage #${idx + 1} Q#${qidx + 1}: índice de resposta correta inválido`);
+              }
             }
           });
         }
@@ -155,17 +203,17 @@ export function validateLessonData(lessonData: LessonData): { isValid: boolean; 
 }
 
 // =========================
-// Normalização (dados seguros)
+// Normalização
 // =========================
 export function createSafeLessonData(lessonData: LessonData) {
   const title = (lessonData.title || "Aula sem título").trim();
   const objectives = lessonData.objectives && Array.isArray(lessonData.objectives) && lessonData.objectives.length > 0
-    ? lessonData.objectives
+    ? lessonData.objectives.filter(obj => typeof obj === "string" && obj.trim() !== "")
     : ["Objetivos não especificados"];
 
   const introduction = (lessonData.introduction && lessonData.introduction.trim() !== "")
     ? lessonData.introduction
-    : `Esta aula aborda o tema \"${lessonData.title || "selecionado"}\" de forma didática e interativa.`;
+    : `Esta aula aborda o tema "${lessonData.title || "selecionado"}" de forma didática e interativa.`;
 
   const metadata: LessonMetadata = {
     subject: lessonData.metadata?.subject || lessonData.subject || "Não especificado",
@@ -187,17 +235,21 @@ export function createSafeLessonData(lessonData: LessonData) {
 }
 
 // =========================
-// Render helpers (HTML strings com sanitização)
+// Render helpers
 // =========================
 function renderStageImages(stage: LessonStage): string {
   const url = stage.activity?.imageUrl;
-  if (!url) return "";
+  if (!url || !isValidUrl(url)) return "";
+  
+  const safeUrl = sanitizeUrl(url);
+  const alt = escapeHtml(stage.etapa);
+  
   return `
-    <div class="stage-image">
-      <img src="${escapeHtml(url)}" alt="${escapeHtml(stage.etapa)}" />
+    <div class="stage-image" role="figure" aria-label="${alt}">
+      <img src="${safeUrl}" alt="${alt}" loading="lazy" />
       <div class="stage-image-caption">
-        Imagem ilustrativa: ${escapeHtml(stage.etapa)}
-        <span class="image-source">Fonte: ${escapeHtml(url)}</span>
+        Imagem ilustrativa: ${alt}
+        <span class="image-source">Fonte: ${safeUrl}</span>
       </div>
     </div>
   `;
@@ -206,29 +258,37 @@ function renderStageImages(stage: LessonStage): string {
 function renderQuizQuestions(stage: LessonStage): string {
   const qs = stage.activity?.questions;
   if (!qs || !Array.isArray(qs) || qs.length === 0) return "";
+  
   return `
-    <div class="quiz-questions">
+    <div class="quiz-questions" role="list" aria-label="Questões do quiz">
       ${qs
         .map((q, index) => {
           const text = q.q ?? q.question ?? "Pergunta não disponível";
           const options = q.options ?? [];
+          const correctIdx = q.correct ?? q.correctAnswer;
+          
           return `
-            <div class="quiz-question">
-              <div class="quiz-question-text">${index + 1}. ${escapeHtml(text)}</div>
-              <ul class="quiz-options">
+            <div class="quiz-question" role="listitem">
+              <div class="quiz-question-text" role="heading" aria-level="4">
+                ${index + 1}. ${escapeHtml(text)}
+              </div>
+              <ul class="quiz-options" role="list">
                 ${options
                   .map((opt, i) => {
-                    const isCorrect = q.correct === i || q.correctAnswer === i;
+                    const isCorrect = correctIdx === i;
+                    const letter = String.fromCharCode(65 + i);
                     return `
-                      <li class="${isCorrect ? "quiz-correct" : ""}">
-                        ${String.fromCharCode(65 + i)}) ${escapeHtml(opt)}
+                      <li class="${isCorrect ? "quiz-correct" : ""}" 
+                          role="listitem"
+                          ${isCorrect ? 'aria-label="Resposta correta"' : ''}>
+                        ${letter}) ${escapeHtml(opt)}
                       </li>
                     `;
                   })
                   .join("")}
               </ul>
               ${q.explanation ? `
-                <div class="quiz-explanation">
+                <div class="quiz-explanation" role="note">
                   <strong>Explicação:</strong> ${sanitizeMaybe(q.explanation)}
                 </div>
               ` : ""}
@@ -241,15 +301,24 @@ function renderQuizQuestions(stage: LessonStage): string {
 }
 
 // =========================
-// Template HTML (string)
+// Template HTML
 // =========================
-function buildPrintHtml(safe: ReturnType<typeof createSafeLessonData>, opts: Required<Pick<PrintOptions, "appName" | "logoUrl" | "brandAccent">>) {
+function buildPrintHtml(
+  safe: ReturnType<typeof createSafeLessonData>, 
+  opts: Required<Pick<PrintOptions, "appName" | "logoUrl" | "brandAccent">>
+): string {
   const now = new Date();
+  const dateStr = now.toLocaleDateString("pt-BR");
+  const timeStr = now.toLocaleTimeString("pt-BR");
+  
   const metaTags = safe.metadata.tags && safe.metadata.tags.length > 0 ? `
     <span class="metadata-item">🏷️ ${safe.metadata.tags.slice(0, 3).map(escapeHtml).join(", ")}</span>
   ` : "";
 
   const title = escapeHtml(safe.title);
+  const logoHtml = opts.logoUrl && isValidUrl(opts.logoUrl) 
+    ? `<img src="${sanitizeUrl(opts.logoUrl)}" alt="Logo ${escapeHtml(opts.appName)}" />` 
+    : "";
 
   return `
 <!DOCTYPE html>
@@ -257,6 +326,7 @@ function buildPrintHtml(safe: ReturnType<typeof createSafeLessonData>, opts: Req
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="${escapeHtml(safe.introduction.substring(0, 150))}..." />
   <title>${title} - Aula Impressa</title>
   <style>
     @page { margin: 1.5cm; size: A4; }
@@ -282,9 +352,9 @@ function buildPrintHtml(safe: ReturnType<typeof createSafeLessonData>, opts: Req
     .stage-image { margin: 15px 0; text-align: center; page-break-inside: avoid; }
     .stage-image img { max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
     .stage-image-caption { font-size: 12px; color: #666; margin-top: 8px; font-style: italic; position: relative; }
-    .image-source { position: absolute; bottom: 0; right: 0; font-size: 10px; color: #999; background: rgba(255,255,255,0.9); padding: 2px 6px; border-radius: 3px; }
+    .image-source { display: block; font-size: 10px; color: #999; margin-top: 4px; }
     .quiz-questions { margin-top: 15px; }
-    .quiz-question { background: #fff; border: 1px solid #e1e5f2; border-radius: 8px; padding: 15px; margin: 10px 0; page-break-inside: avoid; min-height: 200px; }
+    .quiz-question { background: #fff; border: 1px solid #e1e5f2; border-radius: 8px; padding: 15px; margin: 10px 0; page-break-inside: avoid; min-height: 120px; }
     .quiz-question-text { font-weight: 700; margin-bottom: 10px; color: #333; }
     .quiz-options { list-style: none; padding: 0; }
     .quiz-options li { padding: 8px 12px; margin: 5px 0; background: #f8f9ff; border-radius: 5px; border-left: 3px solid ${opts.brandAccent}; }
@@ -298,82 +368,86 @@ function buildPrintHtml(safe: ReturnType<typeof createSafeLessonData>, opts: Req
     @media print { 
       body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } 
       .section, .stage { page-break-inside: avoid; } 
-      .quiz-question { page-break-inside: avoid; page-break-after: auto; }
+      .quiz-question { page-break-inside: avoid; }
       .stage-image { page-break-inside: avoid; }
-      .quiz-explanation { page-break-inside: avoid; }
     }
   </style>
 </head>
 <body>
-  <div class="header">
-    <div class="print-info">📄 Impresso em ${now.toLocaleDateString("pt-BR")} às ${now.toLocaleTimeString("pt-BR")}</div>
+  <header class="header" role="banner">
+    <div class="print-info">📄 Impresso em ${dateStr} às ${timeStr}</div>
     <div class="header-content">
-      <div class="logo">${opts.logoUrl ? `<img src="${escapeHtml(opts.logoUrl)}" alt="Logo" />` : ""}</div>
+      ${logoHtml ? `<div class="logo">${logoHtml}</div>` : ""}
       <div class="header-text">
         <h1 class="title">${title}</h1>
         <div class="metadata">
-          <span class="metadata-item">📚 ${escapeHtml(safe.metadata.subject || "Não especificado")}</span>
-          <span class="metadata-item">🎓 ${escapeHtml(safe.metadata.grade || "Não especificado")}</span>
-          <span class="metadata-item">⏱️ ${escapeHtml(safe.metadata.duration || "")}</span>
-          <span class="metadata-item">📊 ${escapeHtml(safe.metadata.difficulty || "Não especificado")}</span>
+          <span class="metadata-item">📚 ${escapeHtml(safe.metadata.subject)}</span>
+          <span class="metadata-item">🎓 ${escapeHtml(safe.metadata.grade)}</span>
+          <span class="metadata-item">⏱️ ${escapeHtml(safe.metadata.duration)}</span>
+          <span class="metadata-item">📊 ${escapeHtml(safe.metadata.difficulty)}</span>
           ${metaTags}
         </div>
       </div>
     </div>
-  </div>
+  </header>
 
-  <div class="section">
-    <h2 class="section-title">Objetivos de Aprendizagem</h2>
-    <ul class="objectives">
-      ${safe.objectives.map((obj) => `<li>${sanitizeMaybe(obj)}</li>`).join("")}
-    </ul>
-  </div>
+  <main role="main">
+    <section class="section">
+      <h2 class="section-title">Objetivos de Aprendizagem</h2>
+      <ul class="objectives" role="list">
+        ${safe.objectives.map((obj) => `<li role="listitem">${sanitizeMaybe(obj)}</li>`).join("")}
+      </ul>
+    </section>
 
-  <div class="section">
-    <h2 class="section-title">Introdução</h2>
-    <p>${sanitizeMaybe(safe.introduction)}</p>
-  </div>
+    <section class="section">
+      <h2 class="section-title">Introdução</h2>
+      <p>${sanitizeMaybe(safe.introduction)}</p>
+    </section>
 
-  <div class="section">
-    <h2 class="section-title">Estrutura da Aula</h2>
-    <div class="stages">
-      ${safe.stages
-        .map((stage) => `
-          <div class="stage">
-            <h3 class="stage-title">${escapeHtml(stage.etapa)}</h3>
-            <span class="stage-type">${escapeHtml(stage.type)}</span>
-            <div class="stage-content">
-              ${stage.activity?.content ? `<p>${sanitizeMaybe(stage.activity.content)}</p>` : ""}
-              ${renderStageImages(stage)}
-              ${renderQuizQuestions(stage)}
-            </div>
-          </div>
-        `)
-        .join("")}
-    </div>
-  </div>
+    <section class="section">
+      <h2 class="section-title">Estrutura da Aula</h2>
+      <div class="stages">
+        ${safe.stages
+          .map((stage) => `
+            <article class="stage">
+              <h3 class="stage-title">${escapeHtml(stage.etapa)}</h3>
+              <span class="stage-type">${escapeHtml(stage.type)}</span>
+              <div class="stage-content">
+                ${stage.activity?.content ? `<p>${sanitizeMaybe(stage.activity.content)}</p>` : ""}
+                ${renderStageImages(stage)}
+                ${renderQuizQuestions(stage)}
+              </div>
+            </article>
+          `)
+          .join("")}
+      </div>
+    </section>
 
-  ${safe.summary ? `
-    <div class="section">
-      <h2 class="section-title">Resumo</h2>
-      <div class="summary"><p>${sanitizeMaybe(safe.summary)}</p></div>
-    </div>
-  ` : ""}
+    ${safe.summary ? `
+      <section class="section">
+        <h2 class="section-title">Resumo</h2>
+        <div class="summary"><p>${sanitizeMaybe(safe.summary)}</p></div>
+      </section>
+    ` : ""}
 
-  ${safe.nextSteps && safe.nextSteps.length > 0 ? `
-    <div class="section">
-      <h2 class="section-title">Próximos Passos</h2>
-      <div class="next-steps"><ul>${safe.nextSteps.map((s) => `<li>${sanitizeMaybe(s)}</li>`).join("")}</ul></div>
-    </div>
-  ` : ""}
+    ${safe.nextSteps && safe.nextSteps.length > 0 ? `
+      <section class="section">
+        <h2 class="section-title">Próximos Passos</h2>
+        <ul class="next-steps" role="list">
+          ${safe.nextSteps.map((s) => `<li role="listitem">${sanitizeMaybe(s)}</li>`).join("")}
+        </ul>
+      </section>
+    ` : ""}
+  </main>
 
-  <div class="footer">
+  <footer class="footer" role="contentinfo">
     <p class="app-name">${escapeHtml(opts.appName)}</p>
     <p>Este documento foi gerado automaticamente pelo sistema.</p>
-  </div>
+  </footer>
 </body>
 </html>
-`;}
+`;
+}
 
 // =========================
 // Impressão
@@ -381,15 +455,29 @@ function buildPrintHtml(safe: ReturnType<typeof createSafeLessonData>, opts: Req
 async function waitForImagesToLoad(doc: Document, timeoutMs = 6000): Promise<void> {
   const imgs = Array.from(doc.images || []);
   const pending = imgs.filter((img) => !img.complete);
+  
   if (pending.length === 0) return;
+  
   await Promise.race([
     Promise.all(
-      pending.map(
-        (img) =>
-          new Promise<void>((resolve) => {
-            img.addEventListener("load", () => resolve(), { once: true });
-            img.addEventListener("error", () => resolve(), { once: true });
-          })
+      pending.map((img) =>
+        new Promise<void>((resolve) => {
+          const timer = setTimeout(() => {
+            console.warn("Timeout ao carregar imagem:", img.src);
+            resolve();
+          }, timeoutMs);
+          
+          img.addEventListener("load", () => {
+            clearTimeout(timer);
+            resolve();
+          }, { once: true });
+          
+          img.addEventListener("error", () => {
+            console.error("Erro ao carregar imagem:", img.src);
+            clearTimeout(timer);
+            resolve();
+          }, { once: true });
+        })
       )
     ),
     new Promise<void>((resolve) => setTimeout(resolve, timeoutMs)),
@@ -404,77 +492,254 @@ function openIframeAndWrite(html: string): { iframe: HTMLIFrameElement; doc: Doc
   iframe.style.width = "0";
   iframe.style.height = "0";
   iframe.style.border = "0";
+  iframe.setAttribute("aria-hidden", "true");
+  iframe.title = "Print preview frame";
+  
   document.body.appendChild(iframe);
 
   const doc = iframe.contentDocument || iframe.contentWindow?.document;
-  if (!doc) throw new Error("Não foi possível acessar o documento do iframe");
+  if (!doc) {
+    iframe.remove();
+    throw new Error("Não foi possível acessar o documento do iframe");
+  }
+  
   doc.open();
   doc.write(html);
   doc.close();
+  
   return { iframe, doc };
 }
 
 function openWindowAndWrite(html: string, width = 900, height = 700): Window {
-  const w = window.open("", "_blank", `width=${width},height=${height}`);
-  if (!w) throw new Error("Não foi possível abrir a janela de impressão (bloqueada?)");
+  const w = window.open("", "_blank", `width=${width},height=${height},menubar=no,toolbar=no,location=no,status=no`);
+  if (!w) {
+    throw new Error("Não foi possível abrir a janela de impressão. Verifique se pop-ups estão bloqueados.");
+  }
+  
   w.document.open();
   w.document.write(html);
   w.document.close();
+  
   return w;
 }
 
-export async function printLessonImproved(lessonData: LessonData, options: PrintOptions = {}): Promise<{ ok: boolean; errors?: string[] }> {
+export async function printLessonImproved(
+  lessonData: LessonData, 
+  options: PrintOptions = {}
+): Promise<{ ok: boolean; errors?: string[] }> {
   if (!isBrowser) {
-    // SSR-safe: não explode no Node
     return { ok: false, errors: ["Ambiente sem janela (SSR). Execute no browser."] };
   }
 
+  // Validação
+  options.onProgress?.("Validando dados da aula...");
   const validation = validateLessonData(lessonData);
+  
   if (!validation.isValid) {
     console.error("Dados da aula inválidos para impressão:", validation.errors);
     options.onError?.(validation.errors);
     return { ok: false, errors: validation.errors };
   }
 
+  // Normalização
+  options.onProgress?.("Preparando conteúdo...");
   const safe = createSafeLessonData(lessonData);
 
+  // Configurações
   const appName = options.appName ?? "HubEdu – Plataforma de Educação Interativa";
   const logoUrl = options.logoUrl ?? "/assets/Logo_HubEdu.ia.svg";
   const brandAccent = options.brandAccent ?? "#667eea";
+  const imageLoadTimeout = options.imageLoadTimeout ?? 6000;
+  
+  // Gerar HTML
   const html = buildPrintHtml(safe, { appName, logoUrl, brandAccent });
 
   try {
     if ((options.method ?? "iframe") === "iframe") {
+      options.onProgress?.("Carregando preview de impressão...");
+      
       const { iframe, doc } = openIframeAndWrite(html);
-      await waitForImagesToLoad(doc);
+      
+      options.onProgress?.("Aguardando carregamento de imagens...");
+      await waitForImagesToLoad(doc, imageLoadTimeout);
+      
       options.onBeforePrint?.();
-      (iframe.contentWindow as Window).focus();
-      (iframe.contentWindow as Window).print();
+      options.onProgress?.("Abrindo diálogo de impressão...");
+      
+      const win = iframe.contentWindow as Window;
+      win.focus();
+      win.print();
+      
       options.onAfterPrint?.();
-      // Remover iframe após pequena espera para não interromper a caixa de diálogo
-      setTimeout(() => iframe.remove(), 1500);
+      
+      // Limpar após impressão
+      setTimeout(() => {
+        iframe.remove();
+        sanitizeCache.clear(); // Limpar cache
+      }, 1500);
+      
     } else {
+      options.onProgress?.("Abrindo janela de impressão...");
+      
       const w = openWindowAndWrite(html, options.width ?? 900, options.height ?? 700);
+      
       await new Promise<void>((resolve) => {
-        // fallback: quando carregar
         const done = () => resolve();
-        w.addEventListener("load", () => done());
+        w.addEventListener("load", done, { once: true });
         setTimeout(done, 1500);
       });
-      await waitForImagesToLoad(w.document);
+      
+      options.onProgress?.("Aguardando carregamento de imagens...");
+      await waitForImagesToLoad(w.document, imageLoadTimeout);
+      
       options.onBeforePrint?.();
+      options.onProgress?.("Abrindo diálogo de impressão...");
+      
       w.focus();
       w.print();
+      
       options.onAfterPrint?.();
+      
+      // Limpar cache
+      setTimeout(() => sanitizeCache.clear(), 2000);
     }
-    console.log("Aula enviada para impressão com sucesso!");
+    
+    console.log("✓ Aula enviada para impressão com sucesso!");
     return { ok: true };
+    
   } catch (err) {
-    console.error("Erro ao preparar/imprimir:", err);
+    console.error("✗ Erro ao preparar/imprimir:", err);
     options.onError?.(err);
-    return { ok: false, errors: [String(err)] };
+    
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    return { ok: false, errors: [errorMessage] };
   }
 }
 
-// Exemplo de uso:
-// const result = await printLessonImproved(lesson, { method: 'iframe', appName: 'HubEdu', logoUrl: '/logo.svg' });
+// Função auxiliar para limpar cache manualmente (se necessário)
+export function clearPrintCache(): void {
+  sanitizeCache.clear();
+}
+
+// =========================
+// API Pública Adicional
+// =========================
+
+/**
+ * Verifica se o ambiente suporta impressão
+ */
+export function canPrint(): boolean {
+  return isBrowser && typeof window.print === "function";
+}
+
+/**
+ * Gera preview HTML sem imprimir (útil para debug)
+ */
+export function generatePrintPreview(
+  lessonData: LessonData,
+  options: Omit<PrintOptions, "method" | "onBeforePrint" | "onAfterPrint"> = {}
+): { html: string; isValid: boolean; errors?: string[] } {
+  const validation = validateLessonData(lessonData);
+  
+  if (!validation.isValid) {
+    return { html: "", isValid: false, errors: validation.errors };
+  }
+
+  const safe = createSafeLessonData(lessonData);
+  const appName = options.appName ?? "HubEdu – Plataforma de Educação Interativa";
+  const logoUrl = options.logoUrl ?? "/assets/Logo_HubEdu.ia.svg";
+  const brandAccent = options.brandAccent ?? "#667eea";
+  
+  const html = buildPrintHtml(safe, { appName, logoUrl, brandAccent });
+  
+  return { html, isValid: true };
+}
+
+/**
+ * Estatísticas da aula (útil para mostrar ao usuário)
+ */
+export function getLessonStats(lessonData: LessonData): {
+  totalStages: number;
+  totalQuestions: number;
+  totalImages: number;
+  hasObjectives: boolean;
+  hasSummary: boolean;
+  hasNextSteps: boolean;
+} {
+  const stages = lessonData.stages || [];
+  const totalQuestions = stages.reduce((sum, stage) => {
+    return sum + (stage.activity?.questions?.length || 0);
+  }, 0);
+  const totalImages = stages.filter(stage => stage.activity?.imageUrl).length;
+
+  return {
+    totalStages: stages.length,
+    totalQuestions,
+    totalImages,
+    hasObjectives: Array.isArray(lessonData.objectives) && lessonData.objectives.length > 0,
+    hasSummary: Boolean(lessonData.summary),
+    hasNextSteps: Array.isArray(lessonData.nextSteps) && lessonData.nextSteps.length > 0,
+  };
+}
+
+/*
+ * ========================================
+ * EXEMPLO DE USO COMPLETO:
+ * ========================================
+ * 
+ * // 1. Verificar suporte
+ * if (!canPrint()) {
+ *   alert('Seu navegador não suporta impressão');
+ *   return;
+ * }
+ * 
+ * // 2. Obter estatísticas
+ * const stats = getLessonStats(lesson);
+ * console.log(`Aula com ${stats.totalStages} etapas e ${stats.totalQuestions} questões`);
+ * 
+ * // 3. Validar antes de imprimir (opcional)
+ * const validation = validateLessonData(lesson);
+ * if (!validation.isValid) {
+ *   console.error('Erros:', validation.errors);
+ *   return;
+ * }
+ * 
+ * // 4. Imprimir com opções completas
+ * const result = await printLessonImproved(lesson, {
+ *   method: 'iframe',
+ *   appName: 'HubEdu',
+ *   logoUrl: '/logo.svg',
+ *   brandAccent: '#667eea',
+ *   imageLoadTimeout: 8000,
+ *   onProgress: (msg) => {
+ *     console.log('📝', msg);
+ *     // Atualizar UI com progresso
+ *   },
+ *   onError: (err) => {
+ *     console.error('❌', err);
+ *     // Mostrar erro ao usuário
+ *   },
+ *   onBeforePrint: () => {
+ *     console.log('🖨️ Abrindo diálogo...');
+ *   },
+ *   onAfterPrint: () => {
+ *     console.log('✅ Concluído!');
+ *     clearPrintCache(); // Limpar cache se necessário
+ *   }
+ * });
+ * 
+ * if (result.ok) {
+ *   console.log('✅ Impressão enviada com sucesso!');
+ * } else {
+ *   console.error('❌ Falha na impressão:', result.errors);
+ * }
+ * 
+ * // 5. Para debug: gerar preview sem imprimir
+ * const preview = generatePrintPreview(lesson, {
+ *   appName: 'HubEdu',
+ *   brandAccent: '#667eea'
+ * });
+ * if (preview.isValid) {
+ *   console.log('HTML gerado:', preview.html.substring(0, 200));
+ * }
+ */

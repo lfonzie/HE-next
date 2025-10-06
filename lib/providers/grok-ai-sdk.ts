@@ -5,7 +5,7 @@ export function grok(model: string) {
     modelId: model,
     provider: 'grok',
     specificationVersion: 'v2' as const,
-    supportedUrls: [],
+    supportedUrls: {} as Record<string, RegExp[]>,
     async doGenerate(options: any) {
       const { prompt, temperature, maxTokens } = options;
       

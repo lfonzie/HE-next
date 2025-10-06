@@ -16,7 +16,7 @@ export interface QuestionAnalysis {
 
 // Palavras-chave para detecção de busca na web
 const WEB_SEARCH_KEYWORDS = [
-  'pesquisar', 'buscar', 'encontrar', 'procurar', 'onde', 'quando', 'quem', 'como',
+  'pesquisar', 'buscar', 'encontrar', 'procurar', 'onde', 'quando', 'quem',
   'últimas notícias', 'notícias', 'atual', 'recente', 'hoje', 'ontem', 'semana',
   'preço', 'cotação', 'valor', 'mercado', 'bolsa', 'ações',
   'tempo', 'clima', 'previsão', 'temperatura',

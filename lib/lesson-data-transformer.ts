@@ -18,6 +18,9 @@ export interface SlideData {
   prompt?: string;
   points?: number;
   time?: number;
+  quizResults?: any;
+  keyConcepts?: string[];
+  nextSteps?: string[];
 }
 
 export interface StageData {
@@ -136,8 +139,18 @@ export function transformCardsToStages(cards: any[], lessonId: string): StageDat
  */
 export function ensureLessonStructure(lessonData: any): any {
   if (!lessonData) {
+    console.log('[DEBUG] No lesson data provided');
     return null;
   }
+
+  console.log('[DEBUG] Ensuring lesson structure for:', lessonData.id || 'unknown', {
+    hasStages: !!(lessonData.stages && Array.isArray(lessonData.stages)),
+    stagesLength: lessonData.stages?.length || 0,
+    hasSlides: !!(lessonData.slides && Array.isArray(lessonData.slides)),
+    slidesLength: lessonData.slides?.length || 0,
+    hasCards: !!(lessonData.cards && Array.isArray(lessonData.cards)),
+    cardsLength: lessonData.cards?.length || 0
+  });
 
   // If stages already exist and have proper structure, return as is
   if (lessonData.stages && Array.isArray(lessonData.stages) && lessonData.stages.length > 0) {
@@ -150,19 +163,23 @@ export function ensureLessonStructure(lessonData: any): any {
 
   // Try to transform from slides
   if (lessonData.slides && Array.isArray(lessonData.slides) && lessonData.slides.length > 0) {
-    console.log('[DEBUG] Transforming slides to stages');
+    console.log('[DEBUG] Transforming slides to stages:', lessonData.slides.length, 'slides');
+    const transformedStages = transformSlidesToStages(lessonData.slides, lessonData.id);
+    console.log('[DEBUG] Generated stages:', transformedStages.length, 'stages');
     return {
       ...lessonData,
-      stages: transformSlidesToStages(lessonData.slides, lessonData.id)
+      stages: transformedStages
     };
   }
 
   // Try to transform from cards (database format)
   if (lessonData.cards && Array.isArray(lessonData.cards) && lessonData.cards.length > 0) {
-    console.log('[DEBUG] Transforming cards to stages');
+    console.log('[DEBUG] Transforming cards to stages:', lessonData.cards.length, 'cards');
+    const transformedStages = transformCardsToStages(lessonData.cards, lessonData.id);
+    console.log('[DEBUG] Generated stages:', transformedStages.length, 'stages');
     return {
       ...lessonData,
-      stages: transformCardsToStages(lessonData.cards, lessonData.id)
+      stages: transformedStages
     };
   }
 

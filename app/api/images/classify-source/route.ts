@@ -193,8 +193,7 @@ async function searchWikimedia(query: string, limit: number): Promise<any[]> {
       headers: {
         'User-Agent': 'HubEdu-IA/1.0 (Educational Content Generator)',
         'Accept': 'application/json',
-      },
-      timeout: 10000, // 10 second timeout
+      }
     });
     
     if (!response.ok) {
@@ -243,8 +242,7 @@ async function searchWikimedia(query: string, limit: number): Promise<any[]> {
       headers: {
         'User-Agent': 'HubEdu-IA/1.0 (Educational Content Generator)',
         'Accept': 'application/json',
-      },
-      timeout: 15000, // 15 second timeout for image info
+      }
     });
     
     if (!imageInfoResponse.ok) {
@@ -496,7 +494,7 @@ function calculateThemeMatch(image: any, subject: string): number {
     'ciências': ['science', 'scientific', 'experiment', 'research', 'discovery', 'laboratory', 'analysis']
   };
   
-  const keywords = subjectKeywords[subject.toLowerCase()] || [];
+  const keywords = subjectKeywords[subject?.toLowerCase() || 'geral'] || [];
   const imageText = (image.title + ' ' + image.description + ' ' + (image.tags?.join(' ') || '')).toLowerCase();
   
   let matches = 0;
@@ -550,7 +548,7 @@ function classifyBySubject(image: any, subject: string, grade?: string) {
   }
   
   return {
-    subject: subject.toLowerCase(),
+    subject: subject?.toLowerCase() || 'geral',
     grade: gradeLevel,
     difficulty,
     tags

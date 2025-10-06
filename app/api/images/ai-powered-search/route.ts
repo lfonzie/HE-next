@@ -214,7 +214,7 @@ async function searchWikimedia(query: string): Promise<any[]> {
     if (!imageInfoResponse.ok) return []
 
     const imageInfoData = await imageInfoResponse.json()
-    const pages = imageInfoData.query.pages
+    const pages = imageInfoData.query?.pages || {}
     const results: any[] = []
 
     for (const pageId in pages) {

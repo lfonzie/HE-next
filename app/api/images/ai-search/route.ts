@@ -121,6 +121,18 @@ function generateFallbackQueries(topic: string): string[] {
     .replace(/\s+/g, ' ')
     .trim()
 
+  // Caso específico para Metallica
+  if (cleanTopic === 'metallica') {
+    return [
+      'Metallica band members',
+      'Metallica concert live',
+      'Metallica album covers',
+      'Metallica instruments',
+      'Metallica stage performance',
+      'Metallica heavy metal'
+    ];
+  }
+
   // Traduzir termos comuns para inglês
   const translations: Record<string, string> = {
     'cérebro': 'brain',

@@ -1,11 +1,11 @@
 import { generateText } from 'ai';
-import { google } from '@ai-sdk/google';
+import { grok } from '@/lib/providers/grok-ai-sdk';
 
 export interface UltraFastClassificationResult {
   module: string;
   confidence: number;
   rationale: string;
-  method: 'google_direct' | 'local_enhanced' | 'cache';
+  method: 'grok_direct' | 'local_enhanced' | 'cache';
 }
 
 // Cache ultra-agressivo (1 hora)
@@ -123,11 +123,11 @@ function ultraFastLocalClassify(message: string, historyLength: number = 0): Ult
   return { module: 'professor', confidence: 0.6, rationale: 'Default fallback', method: 'local_enhanced' };
 }
 
-// Função para classificação com Google Gemini direto
-async function googleDirectClassify(message: string, historyLength: number = 0): Promise<UltraFastClassificationResult> {
+// Função para classificação com Grok 4 Fast direto
+async function grokDirectClassify(message: string, historyLength: number = 0): Promise<UltraFastClassificationResult> {
   try {
     const result = await generateText({
-      model: google('gemini-2.5-flash'),
+      model: grok('grok-4-fast-reasoning'),
       messages: [
         {
           role: 'system',
@@ -165,8 +165,8 @@ Responda apenas com o nome do módulo e a confiança (0.0-1.0) no formato: modul
         return {
           module: module.toLowerCase(),
           confidence,
-          rationale: `Google Gemini direct classification`,
-          method: 'google_direct'
+          rationale: `Grok 4 Fast direct classification`,
+          method: 'grok_direct'
         };
       }
     }
@@ -175,16 +175,16 @@ Responda apenas com o nome do módulo e a confiança (0.0-1.0) no formato: modul
     return ultraFastLocalClassify(message, historyLength);
     
   } catch (error) {
-    console.warn('⚠️ Google direct classification failed, using local:', error);
+    console.warn('⚠️ Grok direct classification failed, using local:', error);
     return ultraFastLocalClassify(message, historyLength);
   }
 }
 
-// Função principal ultra-rápida (com timeout para Google)
+// Função principal ultra-rápida (com timeout para Grok)
 export async function ultraFastClassify(
   message: string, 
   historyLength: number = 0,
-  useGoogle: boolean = true // Reabilitado com timeout
+  useGrok: boolean = true // Reabilitado com timeout
 ): Promise<UltraFastClassificationResult> {
   const cacheKey = `${message.toLowerCase().trim()}_${historyLength}`;
   const cached = ultraCache.get(cacheKey);
@@ -201,16 +201,16 @@ export async function ultraFastClassify(
     return result;
   }
   
-  // Para mensagens complexas, tentar Google primeiro se habilitado (com timeout)
-  if (useGoogle && process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+  // Para mensagens complexas, tentar Grok primeiro se habilitado (com timeout)
+  if (useGrok && process.env.GROK_API_KEY) {
     try {
-      // Timeout de 2 segundos para Google Gemini
-      const googlePromise = googleDirectClassify(message, historyLength);
+      // Timeout de 2 segundos para Grok 4 Fast
+      const grokPromise = grokDirectClassify(message, historyLength);
       const timeoutPromise = new Promise<UltraFastClassificationResult>((_, reject) => 
-        setTimeout(() => reject(new Error('Google timeout')), 2000)
+        setTimeout(() => reject(new Error('Grok timeout')), 2000)
       );
       
-      const result = await Promise.race([googlePromise, timeoutPromise]);
+      const result = await Promise.race([grokPromise, timeoutPromise]);
       ultraCache.set(cacheKey, { result, timestamp: Date.now() });
       
       // Limitar cache
@@ -221,7 +221,7 @@ export async function ultraFastClassify(
       
       return result;
     } catch (error) {
-      console.warn('⚠️ Google classification failed or timeout, falling back to local:', error);
+      console.warn('⚠️ Grok classification failed or timeout, falling back to local:', error);
     }
   }
   

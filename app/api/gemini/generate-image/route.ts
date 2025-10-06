@@ -26,8 +26,8 @@ export async function POST(request: NextRequest) {
     console.log('🎨 Gerando imagem com Gemini 2.5 Nano Banana:', prompt);
 
     // Verificar se a API key está configurada
-    if (!process.env.GOOGLE_GEMINI_API_KEY) {
-      console.warn('⚠️ GOOGLE_GEMINI_API_KEY não configurada');
+    if (!process.env.GEMINI_API_KEY && !process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+      console.warn('⚠️ GEMINI_API_KEY não configurada');
       return NextResponse.json({
         success: false,
         error: 'Gemini API key not configured',
@@ -35,8 +35,8 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-image' });
 
     // Construir prompt otimizado baseado no tipo
     let optimizedPrompt = '';

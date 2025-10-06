@@ -49,10 +49,28 @@ export const CHAT_PROVIDERS: Record<string, ChatProviderConfig> = {
     useCase: 'ENEM, Redação, conversas rápidas, raciocínio avançado, respostas instantâneas'
   },
 
+  openai: {
+    id: 'openai',
+    name: 'OpenAI',
+    priority: 1,
+    enabled: true,
+    apiKey: process.env.OPENAI_API_KEY,
+    createClient: (model: string) => openai(model),
+    models: {
+      simple: 'gpt-4o-mini',
+      complex: 'gpt-5-chat-latest',
+      fast: 'gpt-4o-mini'
+    },
+    timeout: 30000,
+    maxRetries: 3,
+    description: 'OpenAI GPT - Alta qualidade para tarefas complexas',
+    useCase: 'Tarefas complexas, análise detalhada, ENEM'
+  },
+
   google: {
     id: 'google',
     name: 'Google Gemini',
-    priority: 1,
+    priority: 2,
     enabled: true,
     apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY || 
             process.env.GOOGLE_GEMINI_API_KEY || 
@@ -69,24 +87,6 @@ export const CHAT_PROVIDERS: Record<string, ChatProviderConfig> = {
     useCase: 'Conversas gerais, aulas, explicações'
   },
 
-  openai: {
-    id: 'openai',
-    name: 'OpenAI',
-    priority: 2,
-    enabled: true,
-    apiKey: process.env.OPENAI_API_KEY,
-    createClient: (model: string) => openai(model),
-    models: {
-      simple: 'gpt-4o-mini',
-      complex: 'gpt-5-chat-latest',
-      fast: 'gpt-4o-mini'
-    },
-    timeout: 30000,
-    maxRetries: 3,
-    description: 'OpenAI GPT - Alta qualidade para tarefas complexas',
-    useCase: 'Tarefas complexas, análise detalhada, ENEM'
-  },
-
   perplexity: {
     id: 'perplexity',
     name: 'Perplexity Sonar',
@@ -101,8 +101,8 @@ export const CHAT_PROVIDERS: Record<string, ChatProviderConfig> = {
     },
     timeout: 45000,
     maxRetries: 2,
-    description: 'Perplexity Sonar - Busca na web em tempo real',
-    useCase: 'Pesquisas, informações atualizadas, notícias'
+    description: 'Perplexity Sonar - Para busca na web em tempo real',
+    useCase: 'Busca na web, informações atualizadas, pesquisa em tempo real'
   }
 }
 

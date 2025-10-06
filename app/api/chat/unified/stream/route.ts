@@ -5,8 +5,8 @@ import {
   ensureConversation, 
   getHistory, 
   appendMessage, 
-  updateConversation 
-} from "@/lib/chat-repository";
+  conversationManager 
+} from "@/lib/conversation-manager";
 import { streamOpenAI } from "@/lib/providers/openai";
 import { streamGPT5 } from "@/lib/providers/gpt5";
 import { streamGemini } from "@/lib/providers/gemini";
@@ -42,17 +42,21 @@ export async function POST(req: NextRequest) {
     }
 
     // 1) Garantir conversa
-    const conv = await ensureConversation(conversationId, userId, provider, module);
+    const conv = await ensureConversation(conversationId, userId, module);
     const finalConversationId = conv.id;
 
-    // 2) Recuperar histórico
-    const history = await getHistory(finalConversationId);
-    console.log(`📚 [CHAT-STREAM] History loaded: ${history.length} messages`);
+    // 2) Recuperar histórico com contexto inteligente
+    const history = await conversationManager.getConversationHistory(finalConversationId, userId);
+    const intelligentContext = conversationManager.generateIntelligentContext(history, input);
+    console.log(`📚 [CHAT-STREAM] History loaded: ${history.length} messages, intelligent context: ${intelligentContext.length} messages`);
 
     // 3) Adicionar mensagem do usuário
     await appendMessage(finalConversationId, "user", input, provider, model);
 
-    // 4) Criar stream baseado no provedor
+    // 4) Criar system prompt contextual baseado no histórico
+    const contextualSystemPrompt = createContextualSystemPrompt(intelligentContext, system, module);
+    
+    // 5) Criar stream baseado no provedor
     let stream: any;
     let finalProvider = provider;
     let finalModel = model;
@@ -61,29 +65,29 @@ export async function POST(req: NextRequest) {
     
     switch (provider) {
       case "openai":
-        stream = await streamOpenAI(model, history, input, system);
+        stream = await streamOpenAI(model, intelligentContext, input, contextualSystemPrompt);
         console.log(`✅ [CHAT-STREAM] OpenAI stream created successfully`);
         break;
       case "gpt5":
-        stream = await streamGPT5(model, history, input, system);
+        stream = await streamGPT5(model, intelligentContext, input, contextualSystemPrompt);
         console.log(`✅ [CHAT-STREAM] GPT5 stream created successfully`);
         break;
       case "gemini":
-        stream = await streamGemini(model, history, input, system);
+        stream = await streamGemini(model, intelligentContext, input, contextualSystemPrompt);
         console.log(`✅ [CHAT-STREAM] Gemini stream created successfully`);
         break;
       case "perplexity":
-        stream = await streamPerplexity(model, history, input, system);
+        stream = await streamPerplexity(model, intelligentContext, input, contextualSystemPrompt);
         console.log(`✅ [CHAT-STREAM] Perplexity stream created successfully`);
         break;
       case "grok":
         try {
-          stream = await streamGrok(model, history, input, system);
+          stream = await streamGrok(model, intelligentContext, input, contextualSystemPrompt);
           console.log(`✅ [CHAT-STREAM] Grok stream created successfully`);
         } catch (grokError) {
           console.error(`❌ [CHAT-STREAM] Grok failed, falling back to Gemini:`, grokError);
           // Fallback to Gemini if Grok fails
-          stream = await streamGemini("gemini-2.0-flash-exp", history, input, system);
+          stream = await streamGemini("gemini-2.0-flash-exp", intelligentContext, input, contextualSystemPrompt);
           console.log(`✅ [CHAT-STREAM] Gemini fallback stream created successfully`);
           // Update provider for metadata
           finalProvider = "gemini";
@@ -208,11 +212,6 @@ export async function POST(req: NextRequest) {
               finalModel
             );
             
-            await updateConversation(finalConversationId, {
-              updated_at: new Date(),
-              model: finalModel
-            });
-            
             console.log(`✅ [CHAT-STREAM] Response saved: ${fullResponse.length} chars`);
           } catch (error) {
             console.error("❌ [CHAT-STREAM] Error saving response:", error);
@@ -241,4 +240,64 @@ export async function POST(req: NextRequest) {
       error: err?.message ?? "Erro interno do servidor" 
     }, { status: 500 });
   }
+}
+
+/**
+ * Cria um system prompt contextual baseado no histórico da conversa
+ * para evitar introduções desnecessárias e manter continuidade
+ */
+function createContextualSystemPrompt(
+  history: any[], 
+  customSystem?: string, 
+  module: string = "chat"
+): string {
+  // Se há histórico, criar prompt contextual para QUALQUER tema
+  if (history && history.length > 0) {
+    const lastUserMessage = history.filter(m => m.role === 'user').pop();
+    const lastAssistantMessage = history.filter(m => m.role === 'assistant').pop();
+    
+    // Detectar se é continuação de qualquer conversa (não apenas matemática)
+    const hasHistory = history.length > 1;
+    const isContinuation = hasHistory && (
+      lastUserMessage?.content || 
+      lastAssistantMessage?.content
+    );
+    
+    if (isContinuation) {
+      return `Você é um assistente educacional brasileiro.
+
+🚨 IDIOMA OBRIGATÓRIO: Responda EXCLUSIVAMENTE em Português Brasileiro (PT-BR).
+
+CONTEXTO DA CONVERSA:
+- Esta é uma CONTINUAÇÃO de uma conversa existente
+- O usuário já está familiarizado com o tópico atual
+- NÃO faça introduções longas ou repetitivas
+- Seja DIRETO e FOQUE na resposta específica
+
+INSTRUÇÕES CRÍTICAS PARA CONTINUIDADE:
+- NÃO comece com "Oi! Que legal você estar interessado..."
+- NÃO faça introduções sobre "o que é" se já foi explicado
+- NÃO repita informações já dadas na conversa
+- Seja CONCISO e DIRETO
+- Responda APENAS o que foi perguntado
+- Use símbolos Unicode: x², √, ±, ÷, ×, ½, π
+- NUNCA use LaTeX: $...$, $$...$$, \\frac, etc.
+
+Se o usuário pedir algo específico (fórmulas, explicações, exemplos), dê diretamente sem explicações longas.`;
+    }
+  }
+  
+  // Prompt padrão para novas conversas
+  return customSystem || `Você é um assistente educacional brasileiro.
+
+🚨 IDIOMA OBRIGATÓRIO: Responda EXCLUSIVAMENTE em Português Brasileiro (PT-BR).
+
+INSTRUÇÕES:
+- Seja amigável mas DIRETO
+- Evite introduções muito longas
+- Foque na resposta específica
+- Use símbolos Unicode: x², √, ±, ÷, ×, ½, π
+- NUNCA use LaTeX: $...$, $$...$$, \\frac, etc.
+
+Contexto: Módulo ${module}`;
 }

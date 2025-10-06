@@ -1,89 +1,98 @@
 import { 
-  ProviderType, 
-  PROVIDER_MODELS, 
   AI_PROVIDERS,
   getAvailableProviders
 } from './ai-providers'
 
 // Tipos de complexidade e casos de uso
 export type ComplexityType = 'simple' | 'complex' | 'fast' | 'creative' | 'analytical'
-export type UseCaseType = 'chat' | 'education' | 'analysis' | 'creative' | 'technical' | 'research'
+export type UseCaseType = 'chat' | 'education' | 'analysis' | 'creative' | 'technical' | 'research' | 'web_search'
+export type ProviderType = 'grok' | 'google' | 'openai' | 'perplexity'
 
 // Configuração de roteamento por caso de uso
 export const USE_CASE_ROUTING = {
   chat: {
-    preferred: ['google', 'openai', 'anthropic'],
-    complexity: 'simple' as ComplexityType,
+    preferred: ['grok', 'openai', 'google'],
+    complexity: 'fast' as ComplexityType,
     description: 'Conversação geral e atendimento'
   },
   education: {
-    preferred: ['google', 'openai', 'anthropic'],
-    complexity: 'complex' as ComplexityType,
+    preferred: ['grok', 'openai', 'google'],
+    complexity: 'fast' as ComplexityType,
     description: 'Conteúdo educacional e explicações'
   },
   analysis: {
-    preferred: ['google', 'anthropic', 'openai'],
-    complexity: 'analytical' as ComplexityType,
+    preferred: ['grok', 'openai', 'google'],
+    complexity: 'fast' as ComplexityType,
     description: 'Análise de dados e raciocínio complexo'
   },
   creative: {
-    preferred: ['openai', 'mistral'],
-    complexity: 'creative' as ComplexityType,
+    preferred: ['grok', 'openai', 'google'],
+    complexity: 'fast' as ComplexityType,
     description: 'Conteúdo criativo e inovador'
   },
   technical: {
-    preferred: ['google', 'openai', 'anthropic'],
-    complexity: 'complex' as ComplexityType,
+    preferred: ['grok', 'openai', 'google'],
+    complexity: 'fast' as ComplexityType,
     description: 'Suporte técnico e resolução de problemas'
   },
   research: {
-    preferred: ['google', 'anthropic'],
-    complexity: 'analytical' as ComplexityType,
+    preferred: ['grok', 'openai', 'google'],
+    complexity: 'fast' as ComplexityType,
     description: 'Pesquisa e síntese de informações'
+  },
+  web_search: {
+    preferred: ['perplexity'],
+    complexity: 'fast' as ComplexityType,
+    description: 'Busca na web em tempo real'
   }
 } as const
 
-// Configuração de modelos por complexidade - GPT-4o-mini, GPT-4o e Gemini 2.0 Flash Exp
+// Configuração de modelos por complexidade - Grok 4 Fast como padrão
 export const COMPLEXITY_MODELS = {
   simple: {
+    grok: 'grok-4-fast-reasoning',
     openai: 'gpt-4o-mini',
-    anthropic: 'claude-3-haiku-20240307',
     google: 'gemini-2.0-flash-exp',
-    mistral: 'mistral-small-latest',
-    groq: 'llama-3.1-8b-instant'
+    perplexity: 'sonar'
   },
   complex: {
+    grok: 'grok-4-fast-reasoning',
     openai: 'gpt-4o-mini',
-    anthropic: 'claude-3-sonnet-20240229',
     google: 'gemini-2.0-flash-exp',
-    mistral: 'mistral-large-latest',
-    groq: 'llama-3.1-70b-versatile'
+    perplexity: 'sonar'
   },
   fast: {
+    grok: 'grok-4-fast-reasoning',
     openai: 'gpt-4o-mini',
-    anthropic: 'claude-3-haiku-20240307',
     google: 'gemini-2.0-flash-exp',
-    mistral: 'mistral-small-latest',
-    groq: 'llama-3.1-8b-instant'
+    perplexity: 'sonar'
   },
   creative: {
+    grok: 'grok-4-fast-reasoning',
     openai: 'gpt-4o-mini',
-    anthropic: 'claude-3-sonnet-20240229',
     google: 'gemini-2.0-flash-exp',
-    mistral: 'mistral-large-latest',
-    groq: 'llama-3.1-70b-versatile'
+    perplexity: 'sonar'
   },
   analytical: {
+    grok: 'grok-4-fast-reasoning',
     openai: 'gpt-4o-mini',
-    anthropic: 'claude-3-sonnet-20240229',
     google: 'gemini-2.0-flash-exp',
-    mistral: 'mistral-large-latest',
-    groq: 'llama-3.1-70b-versatile'
+    perplexity: 'sonar'
   }
 } as const
 
-// Configurações específicas por modelo - GPT-4o-mini, GPT-4o e Gemini 2.0 Flash Exp
+// Configurações específicas por modelo - Grok 4 Fast como padrão
 export const MODEL_CONFIGS = {
+  // Grok Models - Grok 4 Fast como padrão
+  'grok-4-fast-reasoning': {
+    temperature: 0.3,
+    maxTokens: 2000,
+    timeout: 15000,
+    cost: 'low',
+    speed: 'ultra-fast',
+    quality: 'very-high'
+  },
+  
   // OpenAI Models - GPT-4o-mini e GPT-4o
   'gpt-4o-mini': {
     temperature: 0.7,
@@ -261,9 +270,9 @@ export async function routeAIModel(
       timeout: modelConfig.timeout
     },
     metadata: {
-      cost: modelConfig.cost,
-      speed: modelConfig.speed,
-      quality: modelConfig.quality,
+      cost: (modelConfig as any).cost || 'medium',
+      speed: (modelConfig as any).speed || 'medium',
+      quality: (modelConfig as any).quality || 'good',
       reasoning
     }
   }
