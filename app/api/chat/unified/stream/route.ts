@@ -13,6 +13,7 @@ import { streamGemini } from "@/lib/providers/gemini";
 import { streamPerplexity } from "@/lib/providers/perplexity";
 import { streamGrok } from "@/lib/providers/grok";
 import { randomUUID } from "crypto";
+import { getSystemPrompt as loadSystemPrompt } from "@/lib/system-message-loader";
 
 export const runtime = "nodejs";
 
@@ -251,53 +252,37 @@ function createContextualSystemPrompt(
   customSystem?: string, 
   module: string = "chat"
 ): string {
-  // Se há histórico, criar prompt contextual para QUALQUER tema
-  if (history && history.length > 0) {
-    const lastUserMessage = history.filter(m => m.role === 'user').pop();
-    const lastAssistantMessage = history.filter(m => m.role === 'assistant').pop();
+  try {
+    // Carregar prompt do sistema do arquivo system-message.json
+    let basePrompt = loadSystemPrompt(module);
     
-    // Detectar se é continuação de qualquer conversa (não apenas matemática)
-    const hasHistory = history.length > 1;
-    const isContinuation = hasHistory && (
-      lastUserMessage?.content || 
-      lastAssistantMessage?.content
-    );
+    console.log(`✅ [SYSTEM-PROMPT] Loaded from system-message.json for module: ${module}`);
     
-    if (isContinuation) {
-      return `Você é um assistente educacional brasileiro.
-
-🚨 IDIOMA OBRIGATÓRIO: Responda EXCLUSIVAMENTE em Português Brasileiro (PT-BR).
-
-CONTEXTO DA CONVERSA:
+    // Se há histórico, adicionar instrução de continuidade
+    if (history && history.length > 1) {
+      const lastUserMessage = history.filter(m => m.role === 'user').pop();
+      const lastAssistantMessage = history.filter(m => m.role === 'assistant').pop();
+      
+      const isContinuation = (lastUserMessage?.content || lastAssistantMessage?.content);
+      
+      if (isContinuation) {
+        // Adicionar instruções de continuidade AO PROMPT DO MÓDULO
+        basePrompt += `\n\n⚠️ CONTEXTO IMPORTANTE:
 - Esta é uma CONTINUAÇÃO de uma conversa existente
 - O usuário já está familiarizado com o tópico atual
 - NÃO faça introduções longas ou repetitivas
 - Seja DIRETO e FOQUE na resposta específica
-
-INSTRUÇÕES CRÍTICAS PARA CONTINUIDADE:
-- NÃO comece com "Oi! Que legal você estar interessado..."
-- NÃO faça introduções sobre "o que é" se já foi explicado
 - NÃO repita informações já dadas na conversa
-- Seja CONCISO e DIRETO
-- Responda APENAS o que foi perguntado
-- Use símbolos Unicode: x², √, ±, ÷, ×, ½, π
-- NUNCA use LaTeX: $...$, $$...$$, \\frac, etc.
-
-Se o usuário pedir algo específico (fórmulas, explicações, exemplos), dê diretamente sem explicações longas.`;
+- Responda APENAS o que foi perguntado`;
+      }
     }
+    
+    return customSystem || basePrompt;
+    
+  } catch (error) {
+    console.error(`❌ [SYSTEM-PROMPT] Error loading for module ${module}:`, error);
+    
+    // Fallback simples apenas em caso de erro crítico
+    return customSystem || `Você é um assistente educacional brasileiro. Responda SEMPRE em português brasileiro.`;
   }
-  
-  // Prompt padrão para novas conversas
-  return customSystem || `Você é um assistente educacional brasileiro.
-
-🚨 IDIOMA OBRIGATÓRIO: Responda EXCLUSIVAMENTE em Português Brasileiro (PT-BR).
-
-INSTRUÇÕES:
-- Seja amigável mas DIRETO
-- Evite introduções muito longas
-- Foque na resposta específica
-- Use símbolos Unicode: x², √, ±, ÷, ×, ½, π
-- NUNCA use LaTeX: $...$, $$...$$, \\frac, etc.
-
-Contexto: Módulo ${module}`;
 }

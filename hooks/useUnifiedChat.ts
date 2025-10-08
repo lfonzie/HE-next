@@ -2,6 +2,8 @@
 import { useEffect, useState, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { analyzeQuestion, getSelectionExplanation } from "@/lib/complexity-detector";
+import { aiClassify } from "@/lib/ai-classifier";
+import { fastClassify } from "@/lib/fast-classifier";
 
 type Provider = "openai" | "gpt5" | "gemini" | "perplexity" | "grok";
 
@@ -113,6 +115,11 @@ export function useUnifiedChat(
       setAutoSelection(selectionExplanation);
     }
     
+    // ✨ NOVO: Detectar módulo automaticamente usando IA
+    const moduleDetection = await aiClassify(input, messages.length);
+    const detectedModule = moduleDetection.module;
+    console.log(`🎯 [AI-CLASSIFIER] Module detected: ${detectedModule} (confidence: ${moduleDetection.confidence})`);
+    
     const cid = ensureId();
     const userMessage: ChatMessage = {
       id: `user-${Date.now()}`,
@@ -132,6 +139,7 @@ export function useUnifiedChat(
           model: currentModel, 
           input, 
           system,
+          module: detectedModule, // ✨ NOVO: Passar módulo detectado
           conversationId: cid
         })
       });
@@ -200,6 +208,11 @@ export function useUnifiedChat(
       setAutoSelection(selectionExplanation);
     }
     
+    // ✨ NOVO: Detectar módulo automaticamente usando IA
+    const moduleDetection = await aiClassify(input, messages.length);
+    const detectedModule = moduleDetection.module;
+    console.log(`🎯 [AI-CLASSIFIER] Module detected: ${detectedModule} (confidence: ${moduleDetection.confidence})`);
+    
     const cid = ensureId();
     const userMessage: ChatMessage = {
       id: `user-${Date.now()}`,
@@ -230,6 +243,7 @@ export function useUnifiedChat(
           model: currentModel, 
           input, 
           system,
+          module: detectedModule, // ✨ NOVO: Passar módulo detectado
           conversationId: cid
         })
       });

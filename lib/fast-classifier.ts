@@ -26,9 +26,9 @@ const FAST_PATTERNS = {
   ],
   
   ti: [
-    /\b(projetor|internet|lenta|lento|login|não funciona|configurar|impressora|bug|sistema|computador|pc|notebook|desktop|travou|build|deploy|render|porta|log|404|405|nextauth|rota|api)\b/i,
+    /\b(classroom|google|projetor|internet|lenta|lento|login|não funciona|nao funciona|configurar|impressora|bug|erro|falha|sistema|computador|pc|notebook|desktop|travou|build|deploy|render|porta|log|404|405|nextauth|rota|api|app|aplicativo)\b/i,
     /\b(problema técnico|suporte técnico|equipamento|máquina|equipamento|hardware|software)\b/i,
-    /\b(está lento|esta lento|está travando|esta travando|não liga|nao liga|não inicia|nao inicia)\b/i
+    /\b(está lento|esta lento|está travando|esta travando|não liga|nao liga|não inicia|nao inicia|não abre|nao abre|não carrega|nao carrega)\b/i
   ],
   
   financeiro: [

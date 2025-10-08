@@ -6,6 +6,99 @@ export interface DetectedIntent {
   searchQuery?: string;
   context?: string;
   metadata?: Record<string, any>;
+  requiresAIValidation?: boolean;
+}
+
+/**
+ * Valida se a mensagem realmente é sobre clima/tempo meteorológico (versão síncrona rápida)
+ * Evita falsos positivos como "tempo de viagem", "tempo de espera", etc.
+ */
+export function validateWeatherIntentSync(message: string): boolean {
+  const lowerMessage = message.toLowerCase();
+  
+  // Palavras que indicam que NÃO é sobre clima
+  const nonWeatherKeywords = [
+    'viagem', 'viajar', 'chegar', 'espera', 'esperar', 'duração', 'demorar',
+    'demora', 'leva', 'levar', 'minutos', 'horas', 'dias', 'quanto tempo',
+    'cronômetro', 'timer', 'alarme', 'lembrete', 'prazo', 'deadline',
+    'processo', 'atividade', 'tarefa', 'estudo', 'trabalho', 'preparo',
+    'cozinhar', 'assar', 'ferver', 'descansar', 'dormir', 'exercício'
+  ];
+  
+  // Se contém palavras que claramente não são sobre clima, rejeitar
+  for (const keyword of nonWeatherKeywords) {
+    if (lowerMessage.includes(keyword)) {
+      console.log(`🚫 [WEATHER-VALIDATION] Rejected: contains "${keyword}"`);
+      return false;
+    }
+  }
+  
+  // Palavras que fortemente indicam clima
+  const strongWeatherKeywords = [
+    'clima', 'temperatura', 'chuva', 'chover', 'sol', 'nublado', 'vento',
+    'umidade', 'previsão', 'meteorologia', 'graus', '°c', '°f', 'celsius',
+    'fahrenheit', 'nuvens', 'tempestade', 'neve', 'nevar', 'garoa'
+  ];
+  
+  // Se contém palavras fortemente relacionadas a clima, aceitar
+  for (const keyword of strongWeatherKeywords) {
+    if (lowerMessage.includes(keyword)) {
+      console.log(`✅ [WEATHER-VALIDATION] Accepted: contains "${keyword}"`);
+      return true;
+    }
+  }
+  
+  // Padrões específicos que indicam clima
+  const weatherPatterns = [
+    /como está o (tempo|clima)/i,
+    /vai (chover|fazer sol|nevar)/i,
+    /está (chovendo|fazendo sol|nevando|nublado)/i,
+    /(tempo|clima) (em|de|para|hoje|amanhã)/i,
+    /previsão/i
+  ];
+  
+  for (const pattern of weatherPatterns) {
+    if (pattern.test(message)) {
+      console.log(`✅ [WEATHER-VALIDATION] Accepted: matches weather pattern`);
+      return true;
+    }
+  }
+  
+  // Se tem "tempo" + nome de cidade conhecida, provavelmente é clima
+  const cities = [
+    'são paulo', 'rio de janeiro', 'brasília', 'salvador', 'fortaleza',
+    'belo horizonte', 'manaus', 'curitiba', 'recife', 'porto alegre',
+    'belém', 'goiânia', 'guarulhos', 'campinas', 'são luís', 'maceió',
+    'nova york', 'londres', 'paris', 'tóquio', 'berlim', 'lisboa',
+    'madrid', 'roma', 'amsterdã', 'barcelona'
+  ];
+  
+  if (lowerMessage.includes('tempo') || lowerMessage.includes('clima')) {
+    for (const city of cities) {
+      if (lowerMessage.includes(city)) {
+        console.log(`✅ [WEATHER-VALIDATION] Accepted: mentions city "${city}"`);
+        return true;
+      }
+    }
+  }
+  
+  // Caso padrão: se chegou até aqui e tem "tempo" sem indicadores de clima, rejeitar
+  if (lowerMessage.includes('tempo') && !lowerMessage.includes('clima')) {
+    console.log(`🚫 [WEATHER-VALIDATION] Rejected: ambiguous "tempo" without climate context`);
+    return false;
+  }
+  
+  // Caso padrão: aceitar se passou por todos os filtros
+  return true;
+}
+
+/**
+ * Valida usando IA se a mensagem realmente é sobre clima/tempo meteorológico (versão assíncrona)
+ * Evita falsos positivos como "tempo de viagem", "tempo de espera", etc.
+ * Esta é apenas um alias para a versão síncrona, mas pode ser estendida no futuro para usar IA real
+ */
+export async function validateWeatherIntent(message: string): Promise<boolean> {
+  return validateWeatherIntentSync(message);
 }
 
 export function detectIntent(message: string): DetectedIntent {
@@ -20,14 +113,19 @@ export function detectIntent(message: string): DetectedIntent {
         /como está o clima em (.+)/i,
         /temperatura em (.+)/i,
         /clima de (.+)/i,
-        /tempo de (.+)/i,
+        // Removido: /tempo de (.+)/i - evita falsos positivos
         /previsão em (.+)/i,
         /como está o tempo em (.+)/i,
         /temperatura de (.+)/i,
-        /previsão (.+)/i
+        /previsão (.+)/i,
+        /clima hoje/i,
+        /tempo hoje/i,
+        /vai chover/i,
+        /está chovendo/i,
       ],
       confidence: 0.95,
       extractCity: true,
+      requiresAIValidation: true, // Adiciona flag para validação por IA
     },
     {
       type: 'aula',
@@ -449,7 +547,7 @@ export function detectIntent(message: string): DetectedIntent {
     for (const pattern of intent.patterns) {
       if (pattern.test(lowerMessage)) {
         return {
-          type: intent.type,
+          type: intent.type as DetectedIntent['type'],
           confidence: intent.confidence,
           topic: intent.extractTopic ? extractTopic(message) : undefined,
           city: intent.extractCity ? extractCity(message) : undefined,

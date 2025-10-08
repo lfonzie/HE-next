@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { DetectedIntent } from '../../lib/intent-detection';
+import { DetectedIntent, validateWeatherIntentSync, detectIntent } from '../../lib/intent-detection';
 import { BookOpen, ClipboardList, FileText, Lightbulb, Cloud, Search, Newspaper, Calculator, Globe, Image, BarChart3, Languages, Timer, Calendar, Target, PenTool } from 'lucide-react';
 
 interface SmartSuggestion {
@@ -65,16 +65,20 @@ export function SmartSuggestions({
     const intent = detectIntent(message);
     const suggestions: SmartSuggestion[] = [];
 
+    // Validar se realmente é sobre clima antes de sugerir
     if (intent.type === 'weather' && intent.city) {
-      suggestions.push({
-        type: 'weather',
-        title: `Clima em ${intent.city}`,
-        description: 'Veja informações detalhadas sobre temperatura, umidade, vento e condições atuais.',
-        action: () => onWeatherClick(intent.city!),
-        icon: <Cloud className="w-6 h-6" />,
-        color: 'text-cyan-600',
-        bgColor: 'bg-cyan-50 hover:bg-cyan-100'
-      });
+      const isWeatherQuery = validateWeatherIntentSync(message);
+      if (isWeatherQuery) {
+        suggestions.push({
+          type: 'weather',
+          title: `Clima em ${intent.city}`,
+          description: 'Veja informações detalhadas sobre temperatura, umidade, vento e condições atuais.',
+          action: () => onWeatherClick(intent.city!),
+          icon: <Cloud className="w-6 h-6" />,
+          color: 'text-cyan-600',
+          bgColor: 'bg-cyan-50 hover:bg-cyan-100'
+        });
+      }
     } else if (intent.type === 'aula' && intent.topic) {
       suggestions.push({
         type: 'aula',
@@ -323,96 +327,4 @@ export function SmartSuggestions({
       </div>
     </div>
   );
-}
-
-// Helper function to detect intent (imported from lib)
-function detectIntent(message: string): DetectedIntent {
-  const lowerMessage = message.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  
-  const intents = [
-    {
-      type: 'aula',
-      patterns: [
-        /aula sobre/i,
-        /explicar/i,
-        /quero aprender/i,
-        /ensinar/i,
-        /como funciona/i,
-        /o que é/i,
-        /conceito de/i,
-        /entender sobre/i,
-        /estudar sobre/i,
-        /aprender sobre/i
-      ],
-      confidence: 0.8,
-      extractTopic: true,
-    },
-    {
-      type: 'enem',
-      patterns: [
-        /simulador enem/i,
-        /fazer simulado/i,
-        /questoes.*enem/i,
-        /prova enem/i,
-        /exame nacional/i,
-        /vestibular/i,
-        /simulado/i
-      ],
-      confidence: 0.9,
-    },
-    {
-      type: 'redacao',
-      patterns: [
-        /corrigir redacao/i,
-        /avaliar texto/i,
-        /redacao.*enem/i,
-        /escrever redação/i,
-        /texto dissertativo/i,
-        /dissertação/i
-      ],
-      confidence: 0.9,
-    },
-  ];
-
-  for (const intent of intents) {
-    for (const pattern of intent.patterns) {
-      if (pattern.test(lowerMessage)) {
-        return {
-          type: intent.type,
-          confidence: intent.confidence,
-          topic: intent.extractTopic ? extractTopic(message) : undefined,
-          context: intent.type === 'aula' ? 'educational' : intent.type === 'enem' ? 'exam' : 'writing',
-          metadata: { source: 'pattern_match' },
-        };
-      }
-    }
-  }
-
-  return {
-    type: 'general',
-    confidence: 0.5,
-    metadata: { source: 'fallback' },
-  };
-}
-
-function extractTopic(message: string): string {
-  const patterns = [
-    /aula sobre (.+)/i,
-    /explicar (.+)/i,
-    /quero aprender sobre (.+)/i,
-    /ensinar (.+)/i,
-    /como funciona (.+)/i,
-    /o que é (.+)/i,
-    /conceito de (.+)/i,
-    /entender sobre (.+)/i,
-    /estudar sobre (.+)/i,
-    /aprender sobre (.+)/i
-  ];
-
-  for (const pattern of patterns) {
-    const match = message.match(pattern);
-    if (match) return match[1].trim();
-  }
-
-  return 'tópico não identificado';
 }

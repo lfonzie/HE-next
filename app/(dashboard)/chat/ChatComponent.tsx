@@ -243,12 +243,22 @@ export default function ChatComponent() {
   ) => {
     if (!message.trim()) return;
     
-    // Detect weather intent before sending message
+    // Detect weather intent before sending message with AI validation
     const intent = detectIntent(message);
     if (intent.type === 'weather' && intent.city) {
-      setWeatherCity(intent.city);
-      setShowWeatherModal(true);
-      return; // Don't send to chat, show weather modal instead
+      // Validar usando IA se realmente é sobre clima (não "tempo de viagem", etc)
+      const { validateWeatherIntent } = await import('@/lib/intent-detection');
+      const isWeatherQuery = await validateWeatherIntent(message);
+      
+      if (isWeatherQuery) {
+        console.log('✅ [CHAT] Opening weather modal for:', intent.city);
+        setWeatherCity(intent.city);
+        setShowWeatherModal(true);
+        return; // Don't send to chat, show weather modal instead
+      } else {
+        console.log('🚫 [CHAT] Not a weather query, processing normally:', message);
+        // Continuar processamento normal - não é sobre clima
+      }
     }
     
     if (isLimitReached) {
