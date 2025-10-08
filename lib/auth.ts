@@ -105,28 +105,57 @@ export const authOptions: NextAuthOptions = {
       // Handle Google OAuth
       if (account?.provider === 'google') {
         try {
+          const userEmail = user.email || ''
+          const allowedDomain = process.env.GOOGLE_ALLOWED_DOMAIN || 'colegioose.com.br'
+          const superAdminEmail = process.env.GOOGLE_SUPERADMIN_EMAIL || 'fonseca@colegioose.com.br'
+          
+          // Verificar se o email pertence ao domínio autorizado
+          if (!userEmail.endsWith(`@${allowedDomain}`)) {
+            console.error(`❌ [AUTH] Email ${userEmail} não autorizado. Apenas @${allowedDomain} permitido.`)
+            throw new Error(`Apenas emails @${allowedDomain} são autorizados para login.`)
+          }
+          
+          // Determinar a role do usuário
+          const isSuperAdmin = userEmail === superAdminEmail
+          const defaultRole = isSuperAdmin ? 'ADMIN' : 'STUDENT'
+          
+          console.log(`✅ [AUTH] Email autorizado: ${userEmail} (${isSuperAdmin ? 'SUPERADMIN' : 'Usuário padrão'})`)
+          
           // Check if user exists in database
           const existingUser = await prisma.user.findUnique({
-            where: { email: user.email }
+            where: { email: userEmail }
           })
           
           if (existingUser) {
-            token.id = existingUser.id
-            token.role = existingUser.role
+            // Se for superadmin e a role estiver diferente, atualizar
+            if (isSuperAdmin && existingUser.role !== 'ADMIN') {
+              const updatedUser = await prisma.user.update({
+                where: { email: userEmail },
+                data: { role: 'ADMIN' }
+              })
+              console.log(`🔄 [AUTH] Role atualizada para ADMIN: ${userEmail}`)
+              token.id = updatedUser.id
+              token.role = updatedUser.role
+            } else {
+              token.id = existingUser.id
+              token.role = existingUser.role
+            }
           } else {
             // Create new user for Google OAuth
             const newUser = await prisma.user.create({
               data: {
-                email: user.email!,
+                email: userEmail,
                 name: user.name || '',
-                role: 'STUDENT',
+                role: defaultRole,
               }
             })
+            console.log(`✨ [AUTH] Novo usuário criado: ${userEmail} (${defaultRole})`)
             token.id = newUser.id
             token.role = newUser.role
           }
         } catch (error) {
-          console.error('Error handling Google OAuth:', error)
+          console.error('❌ [AUTH] Error handling Google OAuth:', error)
+          throw error // Re-throw para bloquear o login
         }
       }
       

@@ -395,9 +395,30 @@ function isQuotaExceededError(error) {
  * @returns {string} The formatted prompt.
  */
 function getGeminiLessonPromptTemplate(topic, systemPrompt = '') {
-  return `Crie uma aula completa e didática sobre "${topic}" com EXATAMENTE 14 SLIDES (não mais, não menos) em JSON.
+  return `Crie uma aula completa e didática sobre "${topic}" com EXATAMENTE 14 SLIDES em JSON.
 
-ATENÇÃO CRÍTICA: DEVEM SER EXATAMENTE 14 SLIDES NUMERADOS DE 1 A 14!
+🚨 REGRA ABSOLUTA: O ARRAY "slides" DEVE TER EXATAMENTE 14 ELEMENTOS!
+❌ 13 slides = ERRADO
+❌ 12 slides = ERRADO  
+✅ 14 slides = CORRETO
+
+SLIDES OBRIGATÓRIOS (CONTE CADA UM):
+1. Slide 1 (Introdução)
+2. Slide 2 (Conceito 1)
+3. Slide 3 (Conceito 2)
+4. Slide 4 (Conceito 3)
+5. Slide 5 (QUIZ 1 - type: "quiz")
+6. Slide 6 (Aplicação 1)
+7. Slide 7 (Aplicação 2)
+8. Slide 8 (Aplicação 3)
+9. Slide 9 (Aplicação 4)
+10. Slide 10 (Aplicação 5)
+11. Slide 11 (Aplicação 6)
+12. Slide 12 (QUIZ 2 - type: "quiz")
+13. Slide 13 (Síntese)
+14. Slide 14 (Encerramento - type: "closing")
+
+ANTES DE RETORNAR: CONTE O NÚMERO DE SLIDES NO ARRAY! DEVEM SER 14!
 
 REGRAS CRÍTICAS PARA JSON VÁLIDO:
 - Responda APENAS com JSON válido, sem texto adicional
@@ -429,16 +450,16 @@ DIRETRIZES DE QUALIDADE E DENSIDADE:
 - APROFUNDE explicações com contexto histórico quando relevante
 - CONECTE teoria com aplicações práticas e casos reais
 
-ESTRUTURA DETALHADA E ESPECÍFICA (EXATAMENTE 14 SLIDES):
-- Slide 1: Introdução clara com definição básica e importância do tema
-- Slides 2-4: Conceitos fundamentais desenvolvidos progressivamente (do básico ao intermediário)
-- Slide 5: QUIZ com 3 perguntas sobre conceitos básicos (type: "quiz")
-- Slides 6-11: Aplicações práticas, exemplos reais e aprofundamento temático (6 slides de conteúdo)
-- Slide 12: QUIZ com 3 perguntas sobre aplicações (type: "quiz")
-- Slide 13: Síntese e conclusões dos conceitos aprendidos
-- Slide 14: Perspectivas futuras e encerramento (type: "closing")
+VERIFICAÇÃO FINAL OBRIGATÓRIA:
+Antes de gerar o JSON, CONTE mentalmente:
+- Slides 1-4 = 4 slides de conceitos
+- Slide 5 = 1 quiz (OBRIGATÓRIO)
+- Slides 6-11 = 6 slides de aplicações
+- Slide 12 = 1 quiz (OBRIGATÓRIO)
+- Slides 13-14 = 2 slides de conclusão
+TOTAL: 4 + 1 + 6 + 1 + 2 = 14 SLIDES ✅
 
-IMPORTANTE: Conte os slides! Devem ser EXATAMENTE 14 slides no array!
+NÃO PULE O SLIDE 12 (QUIZ)! NÃO PULE O SLIDE 13! NÃO PARE NO SLIDE 13!
 
 FORMATO JSON:
 {
@@ -570,16 +591,16 @@ DIRETRIZES DE QUALIDADE E DENSIDADE:
 - APROFUNDE explicações com contexto histórico quando relevante
 - CONECTE teoria com aplicações práticas e casos reais
 
-ESTRUTURA DETALHADA E ESPECÍFICA (EXATAMENTE 14 SLIDES):
-- Slide 1: Introdução clara com definição básica e importância do tema
-- Slides 2-4: Conceitos fundamentais desenvolvidos progressivamente (do básico ao intermediário)
-- Slide 5: QUIZ com 3 perguntas sobre conceitos básicos (type: "quiz")
-- Slides 6-11: Aplicações práticas, exemplos reais e aprofundamento temático (6 slides de conteúdo)
-- Slide 12: QUIZ com 3 perguntas sobre aplicações (type: "quiz")
-- Slide 13: Síntese e conclusões dos conceitos aprendidos
-- Slide 14: Perspectivas futuras e encerramento (type: "closing")
+VERIFICAÇÃO FINAL OBRIGATÓRIA:
+Antes de gerar o JSON, CONTE mentalmente:
+- Slides 1-4 = 4 slides de conceitos
+- Slide 5 = 1 quiz (OBRIGATÓRIO)
+- Slides 6-11 = 6 slides de aplicações
+- Slide 12 = 1 quiz (OBRIGATÓRIO)
+- Slides 13-14 = 2 slides de conclusão
+TOTAL: 4 + 1 + 6 + 1 + 2 = 14 SLIDES ✅
 
-IMPORTANTE: Conte os slides! Devem ser EXATAMENTE 14 slides no array!
+NÃO PULE O SLIDE 12 (QUIZ)! NÃO PULE O SLIDE 13! NÃO PARE NO SLIDE 13!
 
 FORMATO JSON:
 {
