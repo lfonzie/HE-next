@@ -26,6 +26,9 @@ import {
 import { EnemItem, EnemResponse, EnemScore, EnemMode, EnemArea } from '@/types/enem'
 import { useToast } from '@/hooks/use-toast'
 import { ExamGenerationLoading } from '@/components/enem/EnemLoadingStates'
+import { processQuestionsImages } from '@/lib/utils/image-url-converter'
+import { processTextWithImages } from '@/lib/utils/image-extraction'
+import { ImageWithFallback } from '@/components/enem/ImageWithFallback'
 
 // Enhanced TypeScript Interfaces
 interface QuestionSource {
@@ -172,12 +175,17 @@ export function EnemSimulatorV2({
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const questionStartTimeRef = useRef<number>(Date.now())
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const handleTimeUpRef = useRef<() => Promise<void>>()
+  const handleTimeUpRef = useRef<(() => Promise<void>) | undefined>(undefined)
   
   const { toast } = useToast()
 
+  // Converter URLs de imagens do enem.dev para caminhos locais
+  const processedItems = useMemo(() => {
+    return processQuestionsImages(items);
+  }, [items]);
+
   // Early return if no items are loaded yet
-  if (!items || items.length === 0) {
+  if (!processedItems || processedItems.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
         <div className="text-center">
@@ -190,18 +198,18 @@ export function EnemSimulatorV2({
 
   // Memoized values
   const currentItem = useMemo(() => {
-    if (currentQuestionIndex >= items.length) {
+    if (currentQuestionIndex >= processedItems.length) {
       return null;
     }
-    return items[currentQuestionIndex];
-  }, [items, currentQuestionIndex])
+    return processedItems[currentQuestionIndex];
+  }, [processedItems, currentQuestionIndex])
   const currentResponse = useMemo(() => 
     responses.get(currentItem?.item_id ?? ''), 
     [responses, currentItem?.item_id]
   )
   const progress = useMemo(
-    () => ((currentQuestionIndex + 1) / items.length) * 100,
-    [currentQuestionIndex, items.length]
+    () => ((currentQuestionIndex + 1) / processedItems.length) * 100,
+    [currentQuestionIndex, processedItems.length]
   )
   const answeredCount = responses.size
   const sourceChip = useMemo(() => getQuestionSourceChip(currentItem), [currentItem])
@@ -232,11 +240,11 @@ export function EnemSimulatorV2({
    * Handle loading state when items are available
    */
   useEffect(() => {
-    if (items.length > 0 && isGeneratingExam) {
+    if (processedItems.length > 0 && isGeneratingExam) {
       // Items are available, stop the loading animation
       setIsGeneratingExam(false)
     }
-  }, [items.length, isGeneratingExam])
+  }, [processedItems.length, isGeneratingExam])
 
   /**
    * Enhanced score calculation with detailed analytics
@@ -244,13 +252,13 @@ export function EnemSimulatorV2({
   const calculateScore = useCallback(async () => {
     try {
       if (!sessionId) throw new Error('Session ID not found')
-      if (items.length === 0) throw new Error('No questions loaded')
+      if (processedItems.length === 0) throw new Error('No questions loaded')
 
       const responseArray = Array.from(responses.values())
       const responseData = {
         session_id: sessionId,
         responses: responseArray,
-        items: items,
+        items: processedItems,
         config,
         session_metadata: {
           start_time: examSession.startTime,
@@ -276,7 +284,7 @@ export function EnemSimulatorV2({
         throw new Error('Invalid API response')
       }
 
-      onComplete(data.score, items, responseArray, examSession)
+      onComplete(data.score, processedItems, responseArray, examSession)
     } catch (error) {
       console.error('Error calculating score:', error)
       toast({
@@ -285,7 +293,7 @@ export function EnemSimulatorV2({
         variant: 'destructive',
       })
     }
-  }, [sessionId, responses, items, config, examSession, onComplete, toast])
+  }, [sessionId, responses, processedItems, config, examSession, onComplete, toast])
 
   /**
    * Enhanced time up handler
@@ -400,14 +408,14 @@ export function EnemSimulatorV2({
         case 'ArrowRight':
         case ' ':
           e.preventDefault()
-          if (currentQuestionIndex < items.length - 1) {
+          if (currentQuestionIndex < processedItems.length - 1) {
             handleNext()
           }
           break
         
         case 'f':
         case 'F':
-          if (currentQuestionIndex === items.length - 1) {
+          if (currentQuestionIndex === processedItems.length - 1) {
             e.preventDefault()
             handleCompleteExam()
           }
@@ -435,7 +443,7 @@ export function EnemSimulatorV2({
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentQuestionIndex, items.length, isCompleted, isSaving])
+  }, [currentQuestionIndex, processedItems.length, isCompleted, isSaving])
 
   /**
    * Track question start times for detailed analytics
@@ -453,10 +461,10 @@ export function EnemSimulatorV2({
   useEffect(() => {
     onProgress?.({
       current: currentQuestionIndex + 1,
-      total: items.length,
+      total: processedItems.length,
       answered: answeredCount
     })
-  }, [currentQuestionIndex, items.length, answeredCount, onProgress])
+  }, [currentQuestionIndex, processedItems.length, answeredCount, onProgress])
 
   /**
    * Enhanced answer selection with better UX and error handling
@@ -535,10 +543,10 @@ export function EnemSimulatorV2({
    * Enhanced navigation with smooth transitions
    */
   const handleNext = useCallback(() => {
-    if (currentQuestionIndex < items.length - 1) {
+    if (currentQuestionIndex < processedItems.length - 1) {
       setCurrentQuestionIndex((prev) => prev + 1)
     }
-  }, [currentQuestionIndex, items.length])
+  }, [currentQuestionIndex, processedItems.length])
 
   const handlePrevious = useCallback(() => {
     if (currentQuestionIndex > 0) {
@@ -551,7 +559,7 @@ export function EnemSimulatorV2({
    * Enhanced exam completion with better user feedback
    */
   const handleCompleteExam = useCallback(async () => {
-    const unanswered = items.length - responses.size
+    const unanswered = processedItems.length - responses.size
     
     if (unanswered > 0) {
       const confirmMessage = unanswered === 1 
@@ -564,7 +572,7 @@ export function EnemSimulatorV2({
     }
     
     setIsCompleted(true)
-  }, [responses.size, items.length])
+  }, [responses.size, processedItems.length])
 
 
   // Calculate score when exam is completed
@@ -627,7 +635,7 @@ export function EnemSimulatorV2({
             <div className="bg-gray-50 rounded-lg p-4 mt-6">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <strong>Questões respondidas:</strong> {answeredCount}/{items.length}
+                  <strong>Questões respondidas:</strong> {answeredCount}/{processedItems.length}
                 </div>
                 <div>
                   <strong>Tempo total:</strong> {formatTime(Math.floor((Date.now() - examSession.startTime.getTime()) / 1000))}
@@ -657,7 +665,7 @@ export function EnemSimulatorV2({
               <div className="flex items-center gap-4 text-sm text-gray-600">
                 <span className="flex items-center gap-1">
                   <Target className="h-4 w-4" />
-                  Questão {currentQuestionIndex + 1} de {items.length}
+                  Questão {currentQuestionIndex + 1} de {processedItems.length}
                 </span>
                 <Badge variant={sourceChip.variant} className="text-xs">
                   {sourceChip.icon && <span className="mr-1">{sourceChip.icon}</span>}
@@ -680,7 +688,7 @@ export function EnemSimulatorV2({
                 </div>
               )}
               <div className="flex items-center gap-4 text-sm text-gray-600">
-                <span>Respondidas: {answeredCount}/{items.length}</span>
+                <span>Respondidas: {answeredCount}/{processedItems.length}</span>
                 {isSaving && (
                   <span className="text-blue-600 flex items-center gap-1">
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -699,7 +707,7 @@ export function EnemSimulatorV2({
             />
             <div className="flex justify-between text-xs text-gray-500">
               <span>{Math.round(progress)}% concluído</span>
-              <span>{answeredCount} de {items.length} respondidas</span>
+              <span>{answeredCount} de {processedItems.length} respondidas</span>
             </div>
           </div>
         </CardHeader>
@@ -765,51 +773,72 @@ export function EnemSimulatorV2({
             <div className="space-y-6">
               {/* Question Text */}
               <div className="prose max-w-none prose-lg">
-                <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
-                  components={{
-                    h1: ({ children }) => (
-                      <h1 className="text-2xl font-bold mb-4 text-gray-900">{children}</h1>
-                    ),
-                    h2: ({ children }) => (
-                      <h2 className="text-xl font-semibold mb-4 text-gray-900">{children}</h2>
-                    ),
-                    h3: ({ children }) => (
-                      <h3 className="text-lg font-semibold mb-3 text-gray-900">{children}</h3>
-                    ),
-                    p: ({ children }) => (
-                      <p className="text-gray-800 mb-4 leading-relaxed text-base">{children}</p>
-                    ),
-                    ul: ({ children }) => (
-                      <ul className="list-disc list-inside mb-4 space-y-2 text-gray-800">{children}</ul>
-                    ),
-                    ol: ({ children }) => (
-                      <ol className="list-decimal list-inside mb-4 space-y-2 text-gray-800">{children}</ol>
-                    ),
-                    li: ({ children }) => <li className="mb-1 leading-relaxed">{children}</li>,
-                    strong: ({ children }) => (
-                      <strong className="font-bold text-gray-900">{children}</strong>
-                    ),
-                    em: ({ children }) => <em className="italic text-gray-800">{children}</em>,
-                    blockquote: ({ children }) => (
-                      <blockquote className="border-l-4 border-blue-300 pl-4 italic text-gray-700 mb-4 bg-blue-50 py-2">
-                        {children}
-                      </blockquote>
-                    ),
-                    code: ({ children }) => (
-                      <code className="bg-gray-200 px-2 py-1 rounded text-sm font-mono text-gray-900">
-                        {children}
-                      </code>
-                    ),
-                    pre: ({ children }) => (
-                      <pre className="bg-gray-100 p-4 rounded-lg overflow-x-auto mb-4 border">
-                        {children}
-                      </pre>
-                    ),
-                  }}
-                >
-                  {currentItem?.text ?? ''}
-                </ReactMarkdown>
+                {(() => {
+                  // Processar texto e extrair imagens
+                  const { cleanText, images } = processTextWithImages(currentItem?.text || '');
+                  
+                  return (
+                    <div className="space-y-4">
+                      {/* Renderizar imagens extraídas */}
+                      {images.map((image, imgIndex) => (
+                        <div key={imgIndex} className="mb-4">
+                          <ImageWithFallback
+                            src={image.url}
+                            alt={image.alt || `Imagem ${imgIndex + 1} da questão`}
+                            className="max-w-full h-auto rounded-lg border border-gray-200 shadow-sm"
+                          />
+                        </div>
+                      ))}
+                      
+                      {/* Renderizar texto sem imagens */}
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          h1: ({ children }) => (
+                            <h1 className="text-2xl font-bold mb-4 text-gray-900">{children}</h1>
+                          ),
+                          h2: ({ children }) => (
+                            <h2 className="text-xl font-semibold mb-4 text-gray-900">{children}</h2>
+                          ),
+                          h3: ({ children }) => (
+                            <h3 className="text-lg font-semibold mb-3 text-gray-900">{children}</h3>
+                          ),
+                          p: ({ children }) => (
+                            <p className="text-gray-800 mb-4 leading-relaxed text-base">{children}</p>
+                          ),
+                          ul: ({ children }) => (
+                            <ul className="list-disc list-inside mb-4 space-y-2 text-gray-800">{children}</ul>
+                          ),
+                          ol: ({ children }) => (
+                            <ol className="list-decimal list-inside mb-4 space-y-2 text-gray-800">{children}</ol>
+                          ),
+                          li: ({ children }) => <li className="mb-1 leading-relaxed">{children}</li>,
+                          strong: ({ children }) => (
+                            <strong className="font-bold text-gray-900">{children}</strong>
+                          ),
+                          em: ({ children }) => <em className="italic text-gray-800">{children}</em>,
+                          blockquote: ({ children }) => (
+                            <blockquote className="border-l-4 border-blue-300 pl-4 italic text-gray-700 mb-4 bg-blue-50 py-2">
+                              {children}
+                            </blockquote>
+                          ),
+                          code: ({ children }) => (
+                            <code className="bg-gray-200 px-2 py-1 rounded text-sm font-mono text-gray-900">
+                              {children}
+                            </code>
+                          ),
+                          pre: ({ children }) => (
+                            <pre className="bg-gray-100 p-4 rounded-lg overflow-x-auto mb-4 border">
+                              {children}
+                            </pre>
+                          ),
+                        }}
+                      >
+                        {cleanText}
+                      </ReactMarkdown>
+                    </div>
+                  )
+                })()}
               </div>
             </div>
           </CardContent>
@@ -920,7 +949,7 @@ export function EnemSimulatorV2({
             <div className="flex items-center gap-4">
               <div className="text-center">
                 <div className="text-lg font-bold text-gray-900">
-                  {currentQuestionIndex + 1} / {items.length}
+                  {currentQuestionIndex + 1} / {processedItems.length}
                 </div>
                 <div className="text-xs text-gray-500">questões</div>
               </div>
@@ -940,20 +969,20 @@ export function EnemSimulatorV2({
             </div>
             
             <Button
-              onClick={currentQuestionIndex === items.length - 1 ? handleCompleteExam : handleNext}
+              onClick={currentQuestionIndex === processedItems.length - 1 ? handleCompleteExam : handleNext}
               disabled={isSaving}
               className={`flex items-center gap-2 px-6 ${
-                currentQuestionIndex === items.length - 1 
+                currentQuestionIndex === processedItems.length - 1 
                   ? 'bg-green-600 hover:bg-green-700 text-white' 
                   : ''
               }`}
               aria-label={
-                currentQuestionIndex === items.length - 1 
+                currentQuestionIndex === processedItems.length - 1 
                   ? 'Finalizar simulado' 
                   : 'Próxima questão'
               }
             >
-              {currentQuestionIndex === items.length - 1 ? (
+              {currentQuestionIndex === processedItems.length - 1 ? (
                 <>
                   <Flag className="h-4 w-4" />
                   Finalizar
@@ -1021,7 +1050,7 @@ export function EnemSimulatorV2({
             </div>
             
             <div className="space-y-1">
-              <div className="text-2xl font-bold text-gray-600">{items.length - answeredCount}</div>
+              <div className="text-2xl font-bold text-gray-600">{processedItems.length - answeredCount}</div>
               <div className="text-sm text-gray-600">Restantes</div>
             </div>
             

@@ -59,17 +59,22 @@ TASK: Transform this Portuguese topic into an optimal English search query for e
 
 TOPIC: "${topic}"
 
-RULES:
-1. Translate to English using SCIENTIFIC/EDUCATIONAL terms
-2. Focus on visual, educational aspects (anatomy, diagrams, processes, systems)
-3. Avoid abstract concepts - focus on concrete, photographable subjects
-4. Use 2-4 specific keywords
-5. Return ONLY the optimized query, nothing else
+CRITICAL RULES:
+1. FIRST identify if the topic is a PROPER NAME (person, band, brand, company, place, artist, celebrity, etc.)
+2. For PROPER NAMES: Keep the exact name and add context (e.g., "Metallica band", "Tesla inventor", "Apple company")
+3. For SCIENTIFIC/EDUCATIONAL topics: Use scientific terms (anatomy, diagrams, processes, systems)
+4. AVOID translating proper names to common words (e.g., "Metallica" should NOT become "metallurgy")
+5. Use 2-4 specific keywords
+6. Return ONLY the optimized query, nothing else
 
 EXAMPLES:
+- "Metallica" → "Metallica band heavy metal"
 - "Como funciona a respiração?" → "respiratory system anatomy diagram"
+- "Beatles" → "Beatles band music"
 - "Como funciona a fotossíntese?" → "photosynthesis process plant cells"
+- "Steve Jobs" → "Steve Jobs Apple founder"
 - "Sistema solar" → "solar system planets astronomy"
+- "Tesla" → "Nikola Tesla inventor electricity"
 - "DNA" → "dna structure double helix"
 
 Respond with ONLY the optimized query:`;
@@ -288,6 +293,94 @@ async function searchPexels(query: string, count: number): Promise<FastImage[]> 
 }
 
 /**
+ * Use AI to validate if images are relevant to the ORIGINAL topic
+ */
+async function validateImageRelevance(images: FastImage[], originalTopic: string, optimizedQuery: string): Promise<{ isRelevant: boolean; reason: string; confidence: number }> {
+  if (images.length === 0) return { isRelevant: true, reason: 'No images to validate', confidence: 1.0 };
+  
+  try {
+    console.log(`🔍 AI validating image relevance for original topic: "${originalTopic}"`);
+    const { GoogleGenerativeAI } = await import('@google/generative-ai');
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+
+    const imageList = images.slice(0, 5).map((img, idx) => 
+      `${idx + 1}. Title: "${img.title}", Description: "${img.description || 'N/A'}"`
+    ).join('\n');
+
+    const prompt = `You are an EXPERT validator for educational image relevance. Your job is to detect when image search results are COMPLETELY WRONG for the topic.
+
+ORIGINAL TOPIC (Portuguese): "${originalTopic}"
+OPTIMIZED SEARCH QUERY (English): "${optimizedQuery}"
+
+SAMPLE OF FOUND IMAGES (Top 5):
+${imageList}
+
+TASK: Analyze if these images match the ORIGINAL Portuguese topic with HIGH PRECISION.
+
+COMMON MISTAKES TO DETECT:
+1. PROPER NAMES mistranslated:
+   - "Metallica" (band) → "metallurgy" or "metal industry" (WRONG!)
+   - "Tesla" (person) → "Tesla car" when topic is about the inventor (WRONG!)
+   - "Madonna" (singer) → "religious madonna" when topic is about the artist (WRONG!)
+   - "Apple" (company) → "apple fruit" when topic is about technology (WRONG!)
+
+2. CONTEXT MISMATCH:
+   - Topic is about CULTURE/ARTS → Images show SCIENCE/INDUSTRY (WRONG!)
+   - Topic is about MUSIC → Images show unrelated subjects (WRONG!)
+   - Topic is about PEOPLE → Images show objects/places (WRONG!)
+   - Topic is about BRANDS → Images show generic items (WRONG!)
+
+3. VALIDATION RULES:
+   - If >70% of images are about a DIFFERENT topic → NOT RELEVANT
+   - If images are about industrial/scientific topics but original is cultural → NOT RELEVANT
+   - If topic is a proper name and images don't show that specific entity → NOT RELEVANT
+   - Be STRICT: when in doubt about relevance, mark as NOT RELEVANT
+
+RESPONSE FORMAT (JSON only):
+{
+  "isRelevant": true/false,
+  "confidence": 0.0-1.0,
+  "reason": "Detailed explanation of why images match or don't match the ORIGINAL topic",
+  "detectedTopic": "What topic do the images actually show?"
+}
+
+EXAMPLES:
+Original Topic: "Metallica", Images show: metal structures, metallurgy, industrial metal
+Response: {"isRelevant": false, "confidence": 0.95, "reason": "Images show metallurgy/metal industry, not Metallica the band", "detectedTopic": "metallurgy/industrial metal"}
+
+Original Topic: "Como funciona DNA", Images show: DNA double helix, genetics, molecules
+Response: {"isRelevant": true, "confidence": 0.98, "reason": "Images correctly show DNA structure and genetics", "detectedTopic": "DNA and genetics"}
+
+Return ONLY valid JSON:`;
+
+    const result = await model.generateContent(prompt);
+    const responseText = result.response.text().trim();
+    
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0]);
+      const isRelevant = parsed.isRelevant && parsed.confidence >= 0.6; // Require at least 60% confidence
+      
+      console.log(`🔍 Relevance validation: ${isRelevant ? '✅ RELEVANT' : '❌ NOT RELEVANT'} (confidence: ${parsed.confidence})`);
+      console.log(`   Reason: ${parsed.reason}`);
+      console.log(`   Detected topic: ${parsed.detectedTopic}`);
+      
+      return { 
+        isRelevant, 
+        reason: parsed.reason,
+        confidence: parsed.confidence 
+      };
+    }
+  } catch (error) {
+    console.error('❌ Relevance validation failed:', (error as Error).message);
+  }
+  
+  // If validation fails, assume images are relevant to avoid breaking the flow
+  return { isRelevant: true, reason: 'Validation failed, assuming relevant', confidence: 0.5 };
+}
+
+/**
  * Use AI to filter and rank images by educational relevance
  */
 async function filterImagesWithAI(images: FastImage[], topic: string, targetCount: number): Promise<FastImage[]> {
@@ -467,21 +560,33 @@ export async function POST(request: NextRequest) {
     let finalImages: FastImage[] = [];
     if (allImages.length > 0) {
       finalImages = await filterImagesWithAI(allImages, topic, count);
-    }
-    
-    // Step 4: Fill with placeholders if needed
-    if (finalImages.length < count) {
-      const needed = count - finalImages.length;
-      console.log(`📊 Adding ${needed} placeholders to reach ${count} images`);
-      for (let i = 0; i < needed; i++) {
-        finalImages.push(createPlaceholder(topic, finalImages.length + i));
+      
+      // Step 3.5: Validate if filtered images are actually relevant to the ORIGINAL topic
+      if (finalImages.length > 0) {
+        const validation = await validateImageRelevance(finalImages, topic, optimizedQuery);
+        
+        if (!validation.isRelevant) {
+          console.log(`⚠️ Images are NOT relevant to original topic "${topic}"`);
+          console.log(`   📊 Confidence: ${(validation.confidence * 100).toFixed(1)}%`);
+          console.log(`   📝 Reason: ${validation.reason}`);
+          console.log(`🚫 Returning empty image list - slides will appear without images`);
+          finalImages = []; // Clear images - slides will show without images
+        } else {
+          console.log(`✅ Images validated as relevant to "${topic}" (confidence: ${(validation.confidence * 100).toFixed(1)}%)`);
+        }
       }
     }
+    
+    // Step 4: Fill with placeholders if needed (REMOVED - no more placeholders for irrelevant topics)
+    // When images are not relevant, we return empty array instead of placeholders
+    if (finalImages.length === 0 && allImages.length > 0) {
+      console.log(`ℹ️ No relevant images found for "${topic}" - slides will display without images`);
+    }
 
-    // Ensure we have exactly the requested count
+    // Ensure we have exactly the requested count (may be empty if not relevant)
     const images = finalImages.slice(0, count);
     
-    // Cache the results
+    // Cache the results (including empty results for irrelevant topics)
     imageCache.set(cacheKey, {
       images,
       timestamp: Date.now(),
@@ -490,8 +595,13 @@ export async function POST(request: NextRequest) {
 
     const processingTime = Date.now() - startTime;
     const providers = [...new Set(images.map(i => i.provider))];
-    console.log(`✅ INTELLIGENT SEARCH COMPLETE: ${images.length} images in ${processingTime}ms`);
-    console.log(`📦 Providers used: ${providers.join(', ')}`);
+    
+    if (images.length === 0) {
+      console.log(`ℹ️ SEARCH COMPLETE: No relevant images found in ${processingTime}ms`);
+    } else {
+      console.log(`✅ INTELLIGENT SEARCH COMPLETE: ${images.length} images in ${processingTime}ms`);
+      console.log(`📦 Providers used: ${providers.join(', ')}`);
+    }
 
     return NextResponse.json({
       success: true,
@@ -501,8 +611,9 @@ export async function POST(request: NextRequest) {
       processingTime,
       cached: false,
       optimizedQuery,
-      providers,
-      totalImagesFound: allImages.length
+      providers: images.length > 0 ? providers : [],
+      totalImagesFound: allImages.length,
+      relevanceCheck: images.length === 0 && allImages.length > 0 ? 'Images found but not relevant to topic' : 'OK'
     });
 
   } catch (error) {

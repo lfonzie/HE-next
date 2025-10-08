@@ -26,36 +26,36 @@
 
 /* Collapsed state - Ultra compact */
 .compact-sidebar-fixed.collapsed {
-  width: 64px !important;
+  width: clamp(56px, 52px + 0.5vw, 64px) !important;
 }
 
 /* Expanded state - More compact width */
 .compact-sidebar-fixed.expanded {
-  width: 240px !important;
+  width: clamp(220px, 200px + 2vw, 240px) !important;
 }
 
 /* Header styling - More compact */
 .compact-sidebar-header {
-  padding: 8px !important;
+  padding: clamp(6px, 5px + 0.2vw, 8px) !important;
   border-bottom: 1px solid rgba(229, 231, 235, 0.5) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
   flex-shrink: 0 !important;
-  min-height: 48px !important;
+  min-height: clamp(44px, 42px + 0.3vw, 48px) !important;
 }
 
 /* Header when collapsed - center logo */
 .compact-sidebar-fixed.collapsed .compact-sidebar-header {
   justify-content: center !important;
-  padding: 12px 6px !important;
+  padding: clamp(10px, 9px + 0.2vw, 12px) clamp(5px, 4px + 0.1vw, 6px) !important;
 }
 
 /* Logo container */
 .compact-sidebar-logo {
   display: flex !important;
   align-items: center !important;
-  gap: 8px !important;
+  gap: clamp(6px, 5px + 0.2vw, 8px) !important;
 }
 
 /* Logo when collapsed - center it */
@@ -66,21 +66,21 @@
 
 /* Logo image */
 .compact-sidebar-logo img {
-  height: 28px !important;
+  height: clamp(24px, 22px + 0.3vw, 28px) !important;
   width: auto !important;
 }
 
 /* Logo text */
 .compact-sidebar-logo-text {
-  font-size: 16px !important;
+  font-size: clamp(14px, 13px + 0.2vw, 16px) !important;
   font-weight: 700 !important;
   line-height: 1 !important;
 }
 
 /* Toggle button - Modern rounded */
 .compact-sidebar-toggle {
-  padding: 8px !important;
-  border-radius: 12px !important;
+  padding: clamp(6px, 5px + 0.2vw, 8px) !important;
+  border-radius: clamp(10px, 9px + 0.2vw, 12px) !important;
   background: transparent !important;
   border: none !important;
   transition: all 0.2s ease !important;
@@ -95,10 +95,10 @@
 /* Navigation styling - More compact */
 .compact-sidebar-nav {
   flex: 1 !important;
-  padding: 8px !important;
+  padding: clamp(6px, 5px + 0.2vw, 8px) !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 6px !important;
+  gap: clamp(4px, 3px + 0.2vw, 6px) !important;
   overflow-y: auto !important;
   min-height: 0 !important;
   max-height: calc(100vh - 120px) !important;
@@ -109,9 +109,9 @@
   width: 100% !important;
   display: flex !important;
   align-items: center !important;
-  gap: 8px !important;
-  padding: 8px 10px !important;
-  border-radius: 8px !important;
+  gap: clamp(6px, 5px + 0.2vw, 8px) !important;
+  padding: clamp(6px, 5px + 0.2vw, 8px) clamp(8px, 7px + 0.2vw, 10px) !important;
+  border-radius: clamp(6px, 5px + 0.2vw, 8px) !important;
   transition: all 0.2s ease !important;
   cursor: pointer !important;
   border: none !important;
@@ -133,22 +133,22 @@
 
 /* Item icons */
 .compact-sidebar-item-icon {
-  width: 18px !important;
-  height: 18px !important;
+  width: clamp(16px, 15px + 0.2vw, 18px) !important;
+  height: clamp(16px, 15px + 0.2vw, 18px) !important;
   flex-shrink: 0 !important;
 }
 
 /* Item text */
 .compact-sidebar-item-text {
   font-weight: 500 !important;
-  font-size: 13px !important;
+  font-size: clamp(12px, 11px + 0.2vw, 13px) !important;
   line-height: 1 !important;
 }
 
 /* Collapsed state - Center icons */
 .compact-sidebar-fixed.collapsed .compact-sidebar-item {
   justify-content: center !important;
-  padding: 10px !important;
+  padding: clamp(8px, 7px + 0.2vw, 10px) !important;
 }
 
 .compact-sidebar-fixed.collapsed .compact-sidebar-item-text {

@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { Question } from '@/lib/stores/enem-simulation-store';
 import { cn } from '@/lib/utils';
+import { convertEnemDevUrlToLocal } from '@/lib/utils/image-url-converter';
 
 interface EnemQuestionCardProps {
   question: Question;
@@ -44,6 +45,9 @@ export function EnemQuestionCard({
 }: EnemQuestionCardProps) {
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  
+  // Converter URL da imagem para caminho local
+  const convertedImageUrl = question.image_url ? convertEnemDevUrlToLocal(question.image_url) : undefined;
 
   const options = [
     { key: 'A', value: question.a },
@@ -146,7 +150,7 @@ export function EnemQuestionCard({
       <Card>
         <CardContent className="p-6">
           {/* Question Image */}
-          {question.image_url && !imageError && (
+          {convertedImageUrl && !imageError && (
             <div className="mb-6">
               <div className="relative">
                 {!imageLoaded && (
@@ -155,7 +159,7 @@ export function EnemQuestionCard({
                   </div>
                 )}
                 <Image
-                  src={question.image_url}
+                  src={convertedImageUrl}
                   alt={question.image_alt || 'Imagem da questão'}
                   width={800}
                   height={400}

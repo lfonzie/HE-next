@@ -9,6 +9,9 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { processMessageForDisplay, forceConvertMathToUnicode } from '@/utils/unicode'
 import { normalizeFormulas } from '@/lib/utils/latex-normalization'
+import { convertEnemDevUrlToLocal } from '@/lib/utils/image-url-converter'
+import { processTextWithImages } from '@/lib/utils/image-extraction'
+import { ImageWithFallback } from './ImageWithFallback'
 import {
   CheckCircle,
   Flag,
@@ -149,13 +152,31 @@ export function EnemQuestionRenderer({
 
   // Render question text with enhanced markdown
   const renderQuestionText = () => {
+    // Processar texto e extrair imagens
+    const { cleanText, images } = processTextWithImages(item.text || '');
+    
     // Processar Unicode para fórmulas matemáticas e químicas
-    const processedContent = processMessageForDisplay(item.text || '');
+    const processedContent = processMessageForDisplay(cleanText);
     const latexNormalizedContent = normalizeFormulas(processedContent);
     const mathProcessedContent = forceConvertMathToUnicode(latexNormalizedContent);
     
     return (
       <div className={`prose max-w-none ${fontSizeClasses[fontSize]}`}>
+        {/* Renderizar imagens extraídas do markdown */}
+        {images.map((image, imgIndex) => (
+          <div 
+            key={imgIndex} 
+            className="mb-4 cursor-pointer"
+            onClick={() => handleImageClick(image.url)}
+          >
+            <ImageWithFallback
+              src={image.url}
+              alt={image.alt || `Imagem ${imgIndex + 1} da questão`}
+              className="max-w-full h-auto rounded-lg shadow-sm hover:shadow-md transition-shadow"
+            />
+          </div>
+        ))}
+        
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
           components={{
@@ -196,14 +217,6 @@ export function EnemQuestionRenderer({
             <pre className="bg-gray-100 p-4 rounded-lg overflow-x-auto mb-4 border">
               {children}
             </pre>
-          ),
-          img: ({ src, alt }) => (
-            <img
-              src={src}
-              alt={alt}
-              className="max-w-full h-auto rounded-lg shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-              onClick={() => src && handleImageClick(src)}
-            />
           ),
         }}
       >
@@ -347,22 +360,25 @@ export function EnemQuestionRenderer({
                   Imagens da Questão
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {item.asset_refs.map((assetRef, index) => (
-                    <div
-                      key={index}
-                      className="relative group cursor-pointer"
-                      onClick={() => handleImageClick(assetRef)}
-                    >
-                      <img
-                        src={assetRef}
-                        alt={`Imagem ${index + 1} da questão`}
-                        className="w-full h-auto rounded-lg shadow-sm group-hover:shadow-md transition-shadow"
-                      />
-                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-200 rounded-lg flex items-center justify-center">
-                        <ZoomIn className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                  {item.asset_refs.map((assetRef, index) => {
+                    const convertedUrl = convertEnemDevUrlToLocal(assetRef);
+                    return (
+                      <div
+                        key={index}
+                        className="relative group cursor-pointer"
+                        onClick={() => handleImageClick(convertedUrl)}
+                      >
+                        <ImageWithFallback
+                          src={convertedUrl}
+                          alt={`Imagem ${index + 1} da questão`}
+                          className="w-full h-auto rounded-lg shadow-sm group-hover:shadow-md transition-shadow"
+                        />
+                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-200 rounded-lg flex items-center justify-center">
+                          <ZoomIn className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}

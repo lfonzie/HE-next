@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
@@ -14,6 +14,7 @@ import { QuestionRenderer } from './QuestionRenderer'
 import { AlternativeButton } from './AlternativeButton'
 import { SimulatorErrorBoundary } from './SimulatorErrorBoundary'
 import { sanitizeQuestion, SanitizedQuestion } from '@/lib/enem-data-sanitizer'
+import { processQuestionsImages } from '@/lib/utils/image-url-converter'
 
 // Função para determinar o texto do chip baseado na origem da pergunta
 function getQuestionSourceChip(question: any): { text: string; variant: "default" | "secondary" | "destructive" | "outline" } {
@@ -324,9 +325,14 @@ export function EnemSimulator({ area, numQuestions, duration, useRealQuestions =
   }
 
   // Usar questões do carregamento progressivo se disponíveis, senão usar questões tradicionais
-  const availableQuestions = progressiveLoading.loadedQuestions.length > 0 
+  const rawAvailableQuestions = progressiveLoading.loadedQuestions.length > 0 
     ? progressiveLoading.loadedQuestions 
     : questions
+
+  // Converter URLs de imagens do enem.dev para caminhos locais
+  const availableQuestions = useMemo(() => {
+    return processQuestionsImages(rawAvailableQuestions as any);
+  }, [rawAvailableQuestions]);
 
   if (availableQuestions.length === 0 && !progressiveLoading.isLoading) {
     return (

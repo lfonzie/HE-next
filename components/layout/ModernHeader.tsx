@@ -70,9 +70,9 @@ export function ModernHeader({
               href="/" 
               className="lg:hidden flex items-center gap-3 hover:opacity-80 transition-opacity"
             >
-              <Image 
-                src="/assets/Logo_HubEdu.ia.svg" 
-                alt="HubEdu.ia Logo" 
+              <Image
+                src="/assets/Logo_HubEdu.ia.svg"
+                alt="HubEdu.ia Logo"
                 width={28}
                 height={28}
                 className="h-7 w-auto"
@@ -89,9 +89,9 @@ export function ModernHeader({
               href="/" 
               className="hidden lg:flex items-center gap-3 hover:opacity-80 transition-opacity"
             >
-              <Image 
-                src="/assets/Logo_HubEdu.ia.svg" 
-                alt="HubEdu.ia Logo" 
+              <Image
+                src="/assets/Logo_HubEdu.ia.svg"
+                alt="HubEdu.ia Logo"
                 width={32}
                 height={32}
                 className="h-8 w-auto"

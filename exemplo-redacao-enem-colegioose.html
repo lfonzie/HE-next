@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Redação ENEM - Colégio OSE</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #f59e0b 0%, #dc2626 100%);
+      min-height: 100vh;
+    }
+
+    .header {
+      background: white;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .header h1 {
+      color: #f59e0b;
+      margin-bottom: 10px;
+      font-size: 2rem;
+    }
+
+    .header p {
+      color: #666;
+      font-size: 1rem;
+    }
+
+    .embed-container {
+      width: 100%;
+      height: calc(100vh - 120px);
+      position: relative;
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+
+    .loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: white;
+      background: rgba(0, 0, 0, 0.8);
+      padding: 20px;
+      border-radius: 8px;
+    }
+
+    .spinner {
+      border: 4px solid #f3f4f6;
+      border-top: 4px solid #f59e0b;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 15px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 1.5rem;
+      }
+      
+      .embed-container {
+        height: calc(100vh - 100px);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>✍️ Redação ENEM</h1>
+    <p>Colégio OSE - Pratique com temas oficiais e correção por IA</p>
+  </div>
+
+  <div class="embed-container">
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p>Carregando editor de redação...</p>
+    </div>
+    <iframe 
+      id="hubedu-iframe"
+      src="https://hubedu.ia.br/embed/redacao"
+      title="Redação ENEM"
+      allow="fullscreen"
+      onload="hideLoading()"
+    ></iframe>
+  </div>
+
+  <script>
+    function hideLoading() {
+      const loading = document.getElementById('loading');
+      loading.style.display = 'none';
+      console.log('✅ Editor de Redação carregado com sucesso');
+    }
+
+    // Listener para mensagens do iframe
+    window.addEventListener('message', function(event) {
+      // Validar origem
+      if (event.origin !== 'https://hubedu.ia.br') return;
+      
+      console.log('📨 Mensagem recebida do editor:', event.data);
+      
+      // Processar eventos específicos
+      if (event.data.type === 'essay_submitted') {
+        console.log('✅ Redação enviada! ID:', event.data.sessionId);
+        // Aqui você pode adicionar analytics ou outras ações
+      }
+    });
+
+    // Log de debug
+    console.log('🎯 Editor de Redação - Colégio OSE carregado');
+  </script>
+</body>
+</html>

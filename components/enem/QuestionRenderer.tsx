@@ -5,6 +5,8 @@ import remarkGfm from 'remark-gfm'
 import { ImageWithFallback } from './ImageWithFallback'
 import { processMessageForDisplay, forceConvertMathToUnicode } from '@/utils/unicode'
 import { normalizeFormulas } from '@/lib/utils/latex-normalization'
+import { convertEnemDevUrlToLocal } from '@/lib/utils/image-url-converter'
+import { processTextWithImages } from '@/lib/utils/image-extraction'
 
 interface QuestionRendererProps {
   question: string
@@ -19,13 +21,35 @@ export function QuestionRenderer({
   imageAlt, 
   className = "" 
 }: QuestionRendererProps) {
+  // Processar texto e extrair imagens do markdown
+  const { cleanText, images } = processTextWithImages(question);
+  
   // Processar Unicode para fórmulas matemáticas e químicas
-  const processedContent = processMessageForDisplay(question);
+  const processedContent = processMessageForDisplay(cleanText);
   const latexNormalizedContent = normalizeFormulas(processedContent);
   const mathProcessedContent = forceConvertMathToUnicode(latexNormalizedContent);
   
+  // Converter URL da prop imageUrl se necessário
+  const convertedImageUrl = imageUrl ? convertEnemDevUrlToLocal(imageUrl) : undefined;
+  
   return (
     <div className={`prose max-w-none ${className}`}>
+      {/* Renderizar imagens extraídas do markdown */}
+      {images.map((image, imgIndex) => (
+        <div key={imgIndex} className="mb-4">
+          <div className="mb-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800 font-medium">
+              📷 Imagem {imgIndex + 1} - Analise cuidadosamente o conteúdo visual para responder.
+            </p>
+          </div>
+          <ImageWithFallback
+            src={image.url}
+            alt={image.alt || `Imagem ${imgIndex + 1} da questão`}
+            className="max-w-full h-auto rounded-lg border border-gray-200"
+          />
+        </div>
+      ))}
+      
       {/* Question Statement with Markdown Support */}
       <div className="mb-4">
         <ReactMarkdown
@@ -80,8 +104,8 @@ export function QuestionRenderer({
         </ReactMarkdown>
       </div>
 
-      {/* Image Rendering with Fallback */}
-      {imageUrl && (
+      {/* Image Rendering with Fallback (from prop) */}
+      {convertedImageUrl && (
         <div className="mb-4">
           {/* Add context when image is present */}
           <div className="mb-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
@@ -90,7 +114,7 @@ export function QuestionRenderer({
             </p>
           </div>
           <ImageWithFallback
-            src={imageUrl}
+            src={convertedImageUrl}
             alt={imageAlt || "Imagem da questão"}
             className="max-w-full h-auto rounded-lg border border-gray-200"
           />
