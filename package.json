@@ -1,6 +1,6 @@
 {
   "name": "hubedu-nextjs",
-  "version": "0.0.53",
+  "version": "0.0.54",
   "private": true,
   "type": "module",
   "scripts": {
@@ -41,6 +41,7 @@
     "test:perplexity": "node test-perplexity-integration.js",
     "test:multi-provider": "node test-multi-provider.js",
     "test:smart-router": "node test-smart-router.js",
+    "test:gemini-audio": "node test-gemini-audio.js",
     "test:all": "npm run test:unit && npm run test:integration && npm run test:e2e && npm run test:performance",
     "test:ci": "npm run test:unit && npm run test:integration && npm run test:e2e",
     "otel:start": "docker-compose -f docker-compose.otel.yml up -d",

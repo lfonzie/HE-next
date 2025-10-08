@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import { callGrok } from '@/lib/providers/grok'
 import { SPEC_FROM_VIDEO_PROMPT } from '@/lib/video-learning-prompts'
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,8 +12,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
-
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
 
     // Modify the prompt to work with text description instead of video
     const textPrompt = `Você é um pedagogista e designer de produtos com profunda experiência em criar experiências de aprendizado envolventes via aplicações web interativas.
@@ -39,9 +35,14 @@ O objetivo da aplicação que será construída com base na especificação é m
 
 Forneça o resultado como um objeto JSON contendo um único campo chamado "spec", cujo valor é a especificação para a aplicação web. Certifique-se de que o JSON está bem formatado e não contém caracteres de controle que possam causar problemas de parsing.`
 
-    const result = await model.generateContent(textPrompt)
-    const response = await result.response
-    const text = response.text()
+    const result = await callGrok(
+      'grok-4-fast-reasoning',
+      [],
+      textPrompt,
+      'Você é um pedagogista e designer de produtos especializado em criar experiências de aprendizado envolventes via aplicações web interativas. Sempre forneça especificações detalhadas e práticas em português brasileiro.'
+    )
+
+    const text = result.text
 
     if (!text) {
       return NextResponse.json(

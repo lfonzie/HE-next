@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { SPEC_FROM_VIDEO_PROMPT } from '@/lib/video-learning-prompts'
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
-
 export async function POST(request: NextRequest) {
   try {
     const { videoUrl } = await request.json()
@@ -15,10 +13,43 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+    // Validar formato da URL
+    try {
+      new URL(videoUrl)
+    } catch {
+      return NextResponse.json(
+        { error: 'URL do vídeo inválida' },
+        { status: 400 }
+      )
+    }
+
+    // Verificar se é uma URL do YouTube
+    const isYouTube = videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')
+    if (!isYouTube) {
+      return NextResponse.json(
+        { error: 'Apenas URLs do YouTube são suportadas' },
+        { status: 400 }
+      )
+    }
+
+    // Verificar se a chave de API está configurada
+    if (!process.env.GEMINI_API_KEY) {
+      console.error('❌ [VIDEO-LEARNING] GEMINI_API_KEY not configured')
+      return NextResponse.json(
+        { error: 'Chave de API do Gemini não configurada' },
+        { status: 500 }
+      )
+    }
+
+    console.log(`🎥 [VIDEO-LEARNING] Processing video URL: ${videoUrl}`)
+
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
 
     let result
     try {
+      console.log('🔗 [VIDEO-LEARNING] Generating content with Gemini 2.5 Flash...')
+      
       result = await model.generateContent([
         SPEC_FROM_VIDEO_PROMPT,
         {
@@ -28,10 +59,14 @@ export async function POST(request: NextRequest) {
           },
         },
       ])
-    } catch (tokenError) {
+      
+      console.log('✅ [VIDEO-LEARNING] Content generated successfully')
+    } catch (tokenError: any) {
+      console.error('❌ [VIDEO-LEARNING] Token error:', tokenError.message)
+      
       // If token limit exceeded, try with a text-only approach
       if (tokenError.message.includes('token count exceeds') || tokenError.message.includes('maximum number of tokens')) {
-        console.log('Token limit exceeded, trying text-only approach...')
+        console.log('⚠️ [VIDEO-LEARNING] Token limit exceeded, trying text-only approach...')
         
         // Fallback: Ask user to provide video description instead
         return NextResponse.json(
@@ -120,10 +155,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
-  } catch (error) {
-    console.error('Erro ao gerar especificação:', error)
+  } catch (error: any) {
+    console.error('❌ [VIDEO-LEARNING] Error generating specification:', error)
+    console.error('❌ [VIDEO-LEARNING] Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    })
+    
     return NextResponse.json(
-      { error: 'Erro interno do servidor' },
+      { 
+        error: 'Erro interno do servidor',
+        details: error.message,
+        timestamp: new Date().toISOString()
+      },
       { status: 500 }
     )
   }

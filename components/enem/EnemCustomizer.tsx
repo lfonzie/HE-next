@@ -58,20 +58,49 @@ export function EnemCustomizer({ onBack, onStart, isCreating = false }: EnemCust
       const newMedium = Math.round(difficultyDistribution.medium * ratio);
       const newHard = Math.round(difficultyDistribution.hard * ratio);
       
-      // Garantir que pelo menos uma questão seja atribuída a cada nível se possível
+      // Garantir que o total seja exatamente igual ao número de questões
       const total = newEasy + newMedium + newHard;
-      if (total < value && value >= 3) {
-        // Distribuir as questões restantes
-        const remaining = value - total;
-        if (remaining > 0) {
-          setDifficultyDistribution({
-            easy: newEasy + Math.ceil(remaining / 3),
-            medium: newMedium + Math.ceil(remaining / 3),
-            hard: newHard + Math.floor(remaining / 3)
-          });
+      const difference = value - total;
+      
+      if (difference !== 0) {
+        // Ajustar a diferença adicionando/subtraindo do nível médio primeiro, depois fácil, depois difícil
+        let adjustedEasy = newEasy;
+        let adjustedMedium = newMedium;
+        let adjustedHard = newHard;
+        
+        if (difference > 0) {
+          // Adicionar questões restantes
+          if (adjustedMedium < value) {
+            adjustedMedium += Math.min(difference, value - adjustedMedium);
+          }
+          const remaining = value - (adjustedEasy + adjustedMedium + adjustedHard);
+          if (remaining > 0 && adjustedEasy < value) {
+            adjustedEasy += Math.min(remaining, value - adjustedEasy);
+          }
+          const finalRemaining = value - (adjustedEasy + adjustedMedium + adjustedHard);
+          if (finalRemaining > 0 && adjustedHard < value) {
+            adjustedHard += Math.min(finalRemaining, value - adjustedHard);
+          }
         } else {
-          setDifficultyDistribution({ easy: newEasy, medium: newMedium, hard: newHard });
+          // Remover questões extras
+          if (adjustedMedium > 0) {
+            adjustedMedium += Math.max(difference, -adjustedMedium);
+          }
+          const remaining = value - (adjustedEasy + adjustedMedium + adjustedHard);
+          if (remaining < 0 && adjustedEasy > 0) {
+            adjustedEasy += Math.max(remaining, -adjustedEasy);
+          }
+          const finalRemaining = value - (adjustedEasy + adjustedMedium + adjustedHard);
+          if (finalRemaining < 0 && adjustedHard > 0) {
+            adjustedHard += Math.max(finalRemaining, -adjustedHard);
+          }
         }
+        
+        setDifficultyDistribution({
+          easy: Math.max(0, adjustedEasy),
+          medium: Math.max(0, adjustedMedium),
+          hard: Math.max(0, adjustedHard)
+        });
       } else {
         setDifficultyDistribution({ easy: newEasy, medium: newMedium, hard: newHard });
       }
@@ -85,11 +114,19 @@ export function EnemCustomizer({ onBack, onStart, isCreating = false }: EnemCust
           hard: Math.max(0, value - Math.floor(value / 2) * 2)
         });
       } else {
-        // Para mais questões, usar distribuição proporcional
+        // Para mais questões, usar distribuição proporcional e garantir que some exatamente
+        const easy = Math.round(value * 0.3);
+        const medium = Math.round(value * 0.5);
+        const hard = Math.round(value * 0.2);
+        
+        const total = easy + medium + hard;
+        const difference = value - total;
+        
+        // Ajustar a diferença no nível médio
         setDifficultyDistribution({
-          easy: Math.round(value * 0.3),
-          medium: Math.round(value * 0.5),
-          hard: Math.round(value * 0.2)
+          easy: Math.max(0, easy),
+          medium: Math.max(0, medium + difference),
+          hard: Math.max(0, hard)
         });
       }
     }
@@ -102,6 +139,20 @@ export function EnemCustomizer({ onBack, onStart, isCreating = false }: EnemCust
   });
   const [selectedYear, setSelectedYear] = useState<number | undefined>(undefined);
   const { toast } = useToast();
+
+  // Helper function to ensure distribution always sums to numQuestions
+  const ensureDistributionSum = () => {
+    const currentTotal = difficultyDistribution.easy + difficultyDistribution.medium + difficultyDistribution.hard;
+    if (currentTotal !== numQuestions) {
+      const difference = numQuestions - currentTotal;
+      
+      // Ajustar a diferença no nível médio primeiro
+      setDifficultyDistribution(prev => ({
+        ...prev,
+        medium: Math.max(0, prev.medium + difference)
+      }));
+    }
+  };
 
   const areas = [
     {
@@ -146,7 +197,7 @@ export function EnemCustomizer({ onBack, onStart, isCreating = false }: EnemCust
     const currentTotal = difficultyDistribution.easy + difficultyDistribution.medium + difficultyDistribution.hard;
     const newTotal = currentTotal - difficultyDistribution[type] + value;
     
-    // Garantir que não exceda o número total de questões
+    // Garantir que não exceda o número total de questões e que seja não negativo
     if (newTotal <= numQuestions && value >= 0) {
       setDifficultyDistribution(prev => ({
         ...prev,
@@ -161,10 +212,19 @@ export function EnemCustomizer({ onBack, onStart, isCreating = false }: EnemCust
           [type]: maxValue
         }));
       }
+    } else if (value < 0) {
+      // Se o valor for negativo, definir como 0
+      setDifficultyDistribution(prev => ({
+        ...prev,
+        [type]: 0
+      }));
     }
   };
 
   const handleStartExam = async () => {
+    // Auto-corrigir distribuição antes das validações
+    ensureDistributionSum();
+    
     // Validações mais robustas
     if (selectedAreas.length === 0) {
       toast({
@@ -402,6 +462,19 @@ export function EnemCustomizer({ onBack, onStart, isCreating = false }: EnemCust
           <CardTitle className="flex items-center gap-2">
             <Brain className="h-5 w-5" />
             Distribuição de Dificuldade
+            {(() => {
+              const totalDifficulty = difficultyDistribution.easy + difficultyDistribution.medium + difficultyDistribution.hard;
+              const isMismatch = totalDifficulty !== numQuestions;
+              return isMismatch ? (
+                <span className="text-red-500 text-sm font-normal">
+                  (Total: {totalDifficulty} ≠ {numQuestions})
+                </span>
+              ) : (
+                <span className="text-green-600 text-sm font-normal">
+                  ✓ Total: {totalDifficulty}
+                </span>
+              );
+            })()}
           </CardTitle>
         </CardHeader>
         <CardContent>

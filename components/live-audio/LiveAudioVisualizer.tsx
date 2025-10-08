@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Mic, MicOff, RotateCcw, Square } from 'lucide-react'
+import { Mic, RotateCcw, Square } from 'lucide-react'
 // Import dinâmico do GoogleGenAI (como usado no projeto)
 
 // Utilitários baseados na implementação funcional da pasta live-audio
@@ -112,7 +112,6 @@ function createWavBlob(pcmData: Float32Array): Blob {
 export default function LiveAudioVisualizer() {
   const [isRecording, setIsRecording] = useState(false)
   const [status, setStatus] = useState('Aplicativo carregado! Clique no botão vermelho para iniciar a gravação.')
-  const [isInitialized, setIsInitialized] = useState(false)
   const [audioLevel, setAudioLevel] = useState(0)
   const [error, setError] = useState('')
   
@@ -132,58 +131,37 @@ export default function LiveAudioVisualizer() {
   const sourceNodeRef = useRef<MediaStreamAudioSourceNode | null>(null)
   const scriptProcessorRef = useRef<ScriptProcessorNode | null>(null)
   const sourcesRef = useRef<Set<AudioBufferSourceNode>>(new Set())
-  // Função para usar fallback com sistema de chat existente
-  const useChatFallback = useCallback(async (audioBlob: Blob) => {
+  const nextStartTimeRef = useRef<number>(0)
+  // Função para processar áudio usando API do servidor
+  const processAudioWithServer = useCallback(async (audioBlob: Blob) => {
     try {
-      console.log('🔄 Usando fallback: sistema de chat existente')
-      setStatus('🔄 Processando áudio com sistema alternativo...')
+      console.log('🔄 Processando áudio com API do servidor...')
+      setStatus('🔄 Processando áudio com Gemini 2.5...')
       
       const formData = new FormData()
       formData.append('audio', audioBlob)
       
-      const response = await fetch('/api/chat/live/send-audio', {
+      const response = await fetch('/api/live-audio/process', {
         method: 'POST',
         body: formData,
       })
       
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Erro na API de processamento de áudio')
       }
       
-      const reader = response.body?.getReader()
-      if (!reader) {
-        throw new Error('No response body')
-      }
+      const data = await response.json()
       
-      let fullResponse = ''
-      
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        
-        const chunk = new TextDecoder().decode(value)
-        const lines = chunk.split('\n')
-        
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            try {
-              const data = JSON.parse(line.slice(6))
-              if (data.type === 'content' && data.content) {
-                fullResponse += data.content
-                setStatus(`🤖 IA: ${fullResponse}`)
-              } else if (data.type === 'done') {
-                setStatus('✅ Resposta completa recebida')
-                console.log('✅ Fallback funcionou:', fullResponse)
-              }
-            } catch (e) {
-              // Ignore parsing errors
-            }
-          }
-        }
+      if (data.success && data.transcription) {
+        setStatus(`✅ Transcrição: ${data.transcription}`)
+        console.log('✅ Transcrição via servidor:', data.transcription)
+      } else {
+        throw new Error('Resposta inválida da API')
       }
       
     } catch (error) {
-      console.error('❌ Erro no fallback:', error)
+      console.error('❌ Erro no processamento:', error)
       setStatus(`❌ Erro no processamento: ${error}`)
     }
   }, [])
@@ -193,9 +171,15 @@ export default function LiveAudioVisualizer() {
     const initApp = async () => {
       try {
         await initAudio()
-        await initClient()
+        
+        // Tentar inicializar cliente, mas não falhar se não conseguir
+        try {
+          await initClient()
+        } catch (clientError) {
+          console.warn('⚠️ Cliente Gemini não inicializado, usando fallback:', clientError)
+        }
+        
         await initVisualization()
-        setIsInitialized(true)
         setStatus('Aplicação inicializada. Clique no botão vermelho para começar.')
         console.log('✅ Live Audio App inicializado com sucesso')
       } catch (error) {
@@ -221,8 +205,9 @@ export default function LiveAudioVisualizer() {
 
   // Inicializar contextos de áudio (baseado na implementação funcional)
   const initAudio = useCallback(() => {
-    inputAudioContextRef.current = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 })
-    outputAudioContextRef.current = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 })
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext
+    inputAudioContextRef.current = new AudioContextClass({ sampleRate: 16000 })
+    outputAudioContextRef.current = new AudioContextClass({ sampleRate: 24000 })
     
     inputNodeRef.current = inputAudioContextRef.current.createGain()
     outputNodeRef.current = outputAudioContextRef.current.createGain()
@@ -233,22 +218,33 @@ export default function LiveAudioVisualizer() {
 
   // Inicializar cliente Gemini (baseado na implementação funcional)
   const initClient = useCallback(async () => {
-    const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_API_KEY
-    console.log('🔑 API Key encontrada:', apiKey ? 'Sim' : 'Não')
-    
-    if (!apiKey) {
-      throw new Error('Gemini API key não configurada')
+    try {
+      // Verificar se a chave está configurada no servidor
+      const response = await fetch('/api/gemini/check-key')
+      const keyStatus = await response.json()
+      
+      console.log('🔑 Status da API Key:', keyStatus)
+      
+      if (!keyStatus.hasKey) {
+        console.warn('⚠️ Gemini API key não configurada no servidor')
+        // Não lançar erro, apenas usar fallback
+        return
+      }
+      
+      console.log('✅ Gemini API key está configurada no servidor')
+      
+      // Para o frontend, vamos usar uma abordagem diferente
+      // O processamento de áudio será feito via API routes do servidor
+      console.log('📦 Configurando cliente para usar API routes do servidor...')
+      
+    } catch (error) {
+      console.warn('⚠️ Erro ao verificar chave de API:', error)
+      // Não lançar erro, apenas usar fallback
+      return
     }
 
-    console.log('📦 Importando GoogleGenAI...')
-    // Importar GoogleGenAI dinamicamente (como usado no projeto)
-    const { GoogleGenAI } = await import('@google/genai')
-    console.log('✅ GoogleGenAI importado com sucesso')
-    
-    clientRef.current = new GoogleGenAI({ apiKey })
-    console.log('✅ Cliente Gemini criado:', clientRef.current)
-    
-    await initSession()
+    // O processamento de áudio será feito via API routes do servidor
+    // que têm acesso à chave GEMINI_API_KEY
   }, [])
 
   // Inicializar sessão Gemini Live (baseado na implementação funcional)
@@ -473,13 +469,13 @@ export default function LiveAudioVisualizer() {
             console.warn('⚠️ Erro ao enviar para Gemini Live:', error)
             // Converter PCM para WAV e usar fallback
             const wavBlob = createWavBlob(pcmData)
-            useChatFallback(wavBlob)
+            processAudioWithServer(wavBlob)
           }
         } else {
           console.warn('⚠️ Sessão não conectada, usando fallback')
           // Converter PCM para WAV e usar fallback
           const wavBlob = createWavBlob(pcmData)
-          useChatFallback(wavBlob)
+          processAudioWithServer(wavBlob)
         }
       }
 
@@ -604,7 +600,7 @@ export default function LiveAudioVisualizer() {
         height={600}
       />
 
-      <style jsx>{`
+      <style>{`
         .live-audio-container {
             width: 100%;
             height: 100vh;

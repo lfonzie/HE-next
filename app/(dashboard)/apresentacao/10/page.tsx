@@ -16,8 +16,8 @@ export default function Slide10() {
       
       <div className="pt-16 h-screen flex flex-col">
         <div className="px-4 py-4">
-          <SectionTitle subtitle="Veja o HubEdu.ia em ação - Teste nosso chat agora mesmo!">
-            🚀 <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Demo Interativo</span>
+          <SectionTitle subtitle="Teste o Chat Professor IA e outros módulos especializados em tempo real">
+            👩‍🏫 <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Demo Interativo</span>
           </SectionTitle>
         </div>
         
@@ -46,18 +46,18 @@ export default function Slide10() {
             <h4 className="text-sm font-bold text-blue-900 mb-2">💡 Como usar o demo:</h4>
             <div className="grid grid-cols-2 gap-2 text-xs text-blue-800">
               <div>
-                <p className="font-semibold mb-1">🎯 Teste os módulos:</p>
+                <p className="font-semibold mb-1">👩‍🏫 Teste os módulos:</p>
                 <ul className="space-y-0.5">
                   <li>• Professor IA - Dúvidas pedagógicas</li>
-                  <li>• Suporte T.I. - Problemas técnicos</li>
-                  <li>• Atendimento - Informações escolares</li>
+                  <li>• Suporte T.I. - Questões técnicas</li>
+                  <li>• Atendimento - Comunicação escolar</li>
                 </ul>
               </div>
               <div>
                 <p className="font-semibold mb-1">✨ Funcionalidades:</p>
                 <ul className="space-y-0.5">
+                  <li>• 5 principais IAs integradas</li>
                   <li>• Conversas temporárias (LGPD)</li>
-                  <li>• Respostas em português brasileiro</li>
                   <li>• Conteúdo adaptado para educação</li>
                 </ul>
               </div>

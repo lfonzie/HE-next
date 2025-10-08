@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { processQueryWithAI } from '@/lib/query-processor';
 import { generateText } from 'ai';
 import { google } from '@ai-sdk/google';
+import { generateImageWithGrok } from '@/lib/grok-image-generator';
 
 // Interface para requisição de geração de imagens
 interface ImageGenerationRequest {
@@ -10,6 +11,8 @@ interface ImageGenerationRequest {
   context?: string;
   style?: string;
   fallback?: boolean;
+  usePlaceholders?: boolean; // Novo campo: se true, usa SVG placeholders ao invés de base64
+  provider?: 'gemini' | 'grok'; // Provider para geração de imagens
 }
 
 // Interface para resposta da API
@@ -51,6 +54,14 @@ interface GeneratedImage {
 const GEMINI_CONFIG = {
   model: 'gemini-2.5-flash-image-preview',
   apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+  maxRetries: 3,
+  timeout: 30000
+};
+
+// Configuração do Grok Image Generation
+const GROK_CONFIG = {
+  model: 'grok-2-image-1212',
+  apiKey: process.env.XAI_API_KEY,
   maxRetries: 3,
   timeout: 30000
 };
@@ -273,13 +284,109 @@ function buildGeneralPrompt(topic: string, type: string, style: string, variatio
   return prompt;
 }
 
-// Função para gerar imagem usando Gemini 2.5 Flash
-async function generateImageWithGemini(
-  prompt: string, 
-  type: string, 
-  style: string
+// Função para gerar imagem usando Grok
+async function generateImageWithGrokAPI(
+  prompt: string,
+  type: string,
+  style: string,
+  usePlaceholder: boolean = false
 ): Promise<GeneratedImage> {
   const startTime = Date.now();
+
+  if (usePlaceholder) {
+    console.log(`🎨 Usando placeholder SVG ao invés de gerar imagem com Grok para: "${prompt}"`);
+    const placeholder = generatePlaceholderImage(type, style, 1);
+    const processingTime = Date.now() - startTime;
+    
+    return {
+      id: `placeholder-svg-grok-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      url: placeholder,
+      prompt: `Placeholder SVG (Grok): ${prompt}`,
+      type,
+      style,
+      generatedAt: new Date().toISOString(),
+      processingTime,
+      isPlaceholder: true
+    };
+  }
+
+  try {
+    console.log(`🎨 Gerando ${type} com Grok (grok-2-image-1212): "${prompt}"`);
+    
+    if (!GROK_CONFIG.apiKey) {
+      throw new Error('XAI_API_KEY não configurada');
+    }
+
+    const result = await generateImageWithGrok({
+      prompt,
+      n: 1,
+      response_format: 'url' // Use URL for lighter response
+    });
+
+    if (!result.success || result.images.length === 0) {
+      throw new Error(result.error || 'Falha ao gerar imagem com Grok');
+    }
+
+    const processingTime = Date.now() - startTime;
+
+    return {
+      id: `grok-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      url: result.images[0],
+      prompt,
+      type,
+      style,
+      generatedAt: new Date().toISOString(),
+      processingTime,
+      isPlaceholder: false
+    };
+
+  } catch (error) {
+    console.error(`❌ Erro ao gerar imagem com Grok:`, error);
+    
+    // Fallback para placeholder SVG (leve)
+    const placeholder = generatePlaceholderImage(type, style, 1);
+    const processingTime = Date.now() - startTime;
+    
+    return {
+      id: `placeholder-grok-error-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      url: placeholder,
+      prompt: `Placeholder para ${prompt}`,
+      type,
+      style,
+      generatedAt: new Date().toISOString(),
+      processingTime,
+      isPlaceholder: true
+    };
+  }
+}
+
+// Função para gerar imagem usando Gemini 2.5 Flash
+async function generateImageWithGeminiAPI(
+  prompt: string, 
+  type: string, 
+  style: string,
+  usePlaceholder: boolean = false // Novo parâmetro para forçar placeholder
+): Promise<GeneratedImage> {
+  const startTime = Date.now();
+  
+  // ✅ FIX: Se usePlaceholder=true, retornar SVG placeholder diretamente
+  // Isso evita gerar imagens base64 pesadas que não cabem no localStorage
+  if (usePlaceholder) {
+    console.log(`🎨 Usando placeholder SVG ao invés de gerar imagem base64 para: "${prompt}"`);
+    const placeholder = generatePlaceholderImage(type, style, 1);
+    const processingTime = Date.now() - startTime;
+    
+    return {
+      id: `placeholder-svg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      url: placeholder,
+      prompt: `Placeholder SVG: ${prompt}`,
+      type,
+      style,
+      generatedAt: new Date().toISOString(),
+      processingTime,
+      isPlaceholder: true
+    };
+  }
   
   try {
     console.log(`🎨 Gerando ${type} com Gemini 2.5 Flash: "${prompt}"`);
@@ -321,6 +428,10 @@ async function generateImageWithGemini(
         
         const processingTime = Date.now() - startTime;
         
+        // ⚠️ AVISO: Imagem base64 pode ser muito grande para localStorage
+        // Esta imagem deve ser removida antes de salvar no localStorage
+        console.warn(`⚠️ Imagem base64 gerada (${base64Image.length} chars) - será removida ao salvar no localStorage`);
+        
         return {
           id: `gemini-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           url: `data:${mimeType};base64,${base64Image}`,
@@ -339,7 +450,7 @@ async function generateImageWithGemini(
   } catch (error) {
     console.error(`❌ Erro ao gerar imagem com Gemini:`, error);
     
-    // Fallback para placeholder
+    // Fallback para placeholder SVG (leve)
     const placeholder = generatePlaceholderImage(type, style, 1);
     const processingTime = Date.now() - startTime;
     
@@ -360,21 +471,35 @@ async function generateImageWithGemini(
 async function generateMultipleImagesWithStrategy(
   topic: string,
   strategy: { type: string; style: string; reasoning: string; context: string },
-  count: number = 3
+  count: number = 3,
+  usePlaceholders: boolean = false, // Novo parâmetro
+  provider: 'gemini' | 'grok' = 'gemini' // Provider padrão
 ): Promise<GeneratedImage[]> {
   const images: GeneratedImage[] = [];
   
-  console.log(`🎨 Gerando ${count} imagens com estratégia: ${strategy.type} + ${strategy.style} (${strategy.context})`);
+  console.log(`🎨 Gerando ${count} imagens com ${provider.toUpperCase()}`);
+  console.log(`   Estratégia: ${strategy.type} + ${strategy.style} (${strategy.context})`);
+  
+  if (usePlaceholders) {
+    console.log(`✅ Usando placeholders SVG leves ao invés de imagens reais`);
+  }
   
   for (let i = 0; i < count; i++) {
     const variationPrompt = buildOptimizedPrompt(topic, strategy.type, strategy.style, strategy.context, i + 1);
     
-    const image = await generateImageWithGemini(variationPrompt, strategy.type, strategy.style);
+    let image: GeneratedImage;
+    
+    if (provider === 'grok') {
+      image = await generateImageWithGrokAPI(variationPrompt, strategy.type, strategy.style, usePlaceholders);
+    } else {
+      image = await generateImageWithGeminiAPI(variationPrompt, strategy.type, strategy.style, usePlaceholders);
+    }
+    
     images.push(image);
     
     // Pausa entre gerações para evitar rate limits
     if (i < count - 1) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, provider === 'grok' ? 200 : 1000));
     }
   }
   
@@ -385,7 +510,15 @@ async function generateMultipleImagesWithStrategy(
 export async function POST(request: NextRequest) {
   try {
     const body: ImageGenerationRequest = await request.json();
-    const { topic, count = 6, context = 'aula_educacional', style, fallback = true } = body;
+    const { 
+      topic, 
+      count = 6, 
+      context = 'aula_educacional', 
+      style, 
+      fallback = true, 
+      usePlaceholders = false,
+      provider = 'gemini' // Default to Gemini, but allow Grok
+    } = body;
 
     if (!topic) {
       return NextResponse.json({
@@ -396,6 +529,20 @@ export async function POST(request: NextRequest) {
 
     const startTime = Date.now();
     console.log(`🚀 API Interna de Geração de Imagens iniciada para: "${topic}"`);
+    console.log(`📡 Provider selecionado: ${provider.toUpperCase()}`);
+
+    // Verificar se a API key está configurada
+    if (provider === 'grok' && !GROK_CONFIG.apiKey) {
+      console.warn('⚠️ XAI_API_KEY não configurada, usando Gemini como fallback');
+      body.provider = 'gemini';
+    }
+
+    if (provider === 'gemini' && !GEMINI_CONFIG.apiKey) {
+      console.warn('⚠️ GEMINI_API_KEY não configurada, usando Grok como fallback');
+      body.provider = 'grok';
+    }
+
+    const finalProvider = body.provider || provider;
 
     // 1. Processar query com IA
     console.log(`🧠 Processando query com IA: "${topic}"`);
@@ -420,9 +567,15 @@ export async function POST(request: NextRequest) {
 
     console.log(`🎯 Estratégia determinada:`, imageStrategy);
 
-    // 3. Gerar imagens
+    // 3. Gerar imagens (usar placeholders se solicitado para evitar base64 pesado)
     const finalTopic = processedQuery.translatedTheme;
-    const images = await generateMultipleImagesWithStrategy(finalTopic, imageStrategy, count);
+    const images = await generateMultipleImagesWithStrategy(
+      finalTopic, 
+      imageStrategy, 
+      count, 
+      usePlaceholders,
+      finalProvider
+    );
 
     const processingTime = Date.now() - startTime;
 
@@ -447,9 +600,12 @@ export async function POST(request: NextRequest) {
       }
     };
 
-    console.log(`✅ API Interna concluída: ${images.length}/${count} imagens geradas em ${processingTime}ms`);
+    console.log(`✅ API Interna concluída com ${finalProvider.toUpperCase()}: ${images.length}/${count} imagens geradas em ${processingTime}ms`);
 
-    return NextResponse.json(result);
+    return NextResponse.json({
+      ...result,
+      provider: finalProvider
+    });
 
   } catch (error) {
     console.error('❌ Erro na API Interna de Geração de Imagens:', error);
@@ -466,8 +622,22 @@ export async function POST(request: NextRequest) {
 export async function GET() {
   return NextResponse.json({
     name: 'API Interna de Geração de Imagens',
-    version: '1.0.0',
-    description: 'API interna para geração de imagens educacionais',
+    version: '2.0.0',
+    description: 'API interna para geração de imagens educacionais com suporte a múltiplos providers',
+    providers: {
+      gemini: {
+        name: 'Google Gemini 2.5 Flash Image',
+        model: 'gemini-2.5-flash-image-preview',
+        status: GEMINI_CONFIG.apiKey ? 'configured' : 'not_configured',
+        features: ['Base64 inline images', 'High quality', 'Scientific diagrams']
+      },
+      grok: {
+        name: 'xAI Grok Image Generation',
+        model: 'grok-2-image-1212',
+        status: GROK_CONFIG.apiKey ? 'configured' : 'not_configured',
+        features: ['URL-based images', 'Fast generation', 'Up to 10 images per request']
+      }
+    },
     endpoints: {
       POST: {
         description: 'Gerar imagens baseadas em tema',
@@ -476,7 +646,9 @@ export async function GET() {
           count: 'number (opcional, padrão: 6)',
           context: 'string (opcional, padrão: aula_educacional)',
           style: 'string (opcional)',
-          fallback: 'boolean (opcional, padrão: true)'
+          fallback: 'boolean (opcional, padrão: true)',
+          provider: 'string (opcional: "gemini" ou "grok", padrão: "gemini")',
+          usePlaceholders: 'boolean (opcional, padrão: false)'
         }
       }
     },
@@ -486,7 +658,9 @@ export async function GET() {
       'Geração contextualizada',
       'Imagens puras (sem texto)',
       'Fallback para placeholders',
-      'Integração com aulas e chat'
+      'Integração com aulas e chat',
+      'Suporte a Gemini e Grok',
+      'Auto-fallback entre providers'
     ]
   });
 }

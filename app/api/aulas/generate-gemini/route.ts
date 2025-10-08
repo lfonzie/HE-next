@@ -39,7 +39,7 @@ import { classifyContentWithAI } from '@/lib/ai-content-classifier';
 
 // Constants for configuration
 const TOTAL_SLIDES = 14;
-const QUIZ_SLIDE_NUMBERS = [5, 11];
+const QUIZ_SLIDE_NUMBERS = [5, 12]; // Quiz slides at positions 5 and 12
 const IMAGE_SLIDE_NUMBERS = [1, 3, 6, 9, 12, 14];
 const MIN_TOKENS_PER_SLIDE = 300; // Increased to 300-600 tokens for richer content
 const GEMINI_MODEL = 'gemini-2.0-flash-exp'; // Using the model that works in other parts of the codebase
@@ -395,7 +395,9 @@ function isQuotaExceededError(error) {
  * @returns {string} The formatted prompt.
  */
 function getGeminiLessonPromptTemplate(topic, systemPrompt = '') {
-  return `Crie uma aula completa e didática sobre "${topic}" com exatamente 14 slides em JSON.
+  return `Crie uma aula completa e didática sobre "${topic}" com EXATAMENTE 14 SLIDES (não mais, não menos) em JSON.
+
+ATENÇÃO CRÍTICA: DEVEM SER EXATAMENTE 14 SLIDES NUMERADOS DE 1 A 14!
 
 REGRAS CRÍTICAS PARA JSON VÁLIDO:
 - Responda APENAS com JSON válido, sem texto adicional
@@ -427,13 +429,16 @@ DIRETRIZES DE QUALIDADE E DENSIDADE:
 - APROFUNDE explicações com contexto histórico quando relevante
 - CONECTE teoria com aplicações práticas e casos reais
 
-ESTRUTURA DETALHADA E ESPECÍFICA:
+ESTRUTURA DETALHADA E ESPECÍFICA (EXATAMENTE 14 SLIDES):
 - Slide 1: Introdução clara com definição básica e importância do tema
 - Slides 2-4: Conceitos fundamentais desenvolvidos progressivamente (do básico ao intermediário)
-- Slide 5: Quiz sobre conceitos básicos aprendidos (perguntas específicas e objetivas)
-- Slides 6-11: Aplicações práticas, exemplos reais e aprofundamento temático
-- Slide 12: Quiz sobre aplicações e análise crítica (perguntas que testam compreensão prática)
-- Slides 13-14: Síntese clara e perspectivas futuras (conclusões objetivas)
+- Slide 5: QUIZ com 3 perguntas sobre conceitos básicos (type: "quiz")
+- Slides 6-11: Aplicações práticas, exemplos reais e aprofundamento temático (6 slides de conteúdo)
+- Slide 12: QUIZ com 3 perguntas sobre aplicações (type: "quiz")
+- Slide 13: Síntese e conclusões dos conceitos aprendidos
+- Slide 14: Perspectivas futuras e encerramento (type: "closing")
+
+IMPORTANTE: Conte os slides! Devem ser EXATAMENTE 14 slides no array!
 
 FORMATO JSON:
 {
@@ -531,7 +536,9 @@ IMPORTANTE:
  * @returns {string} The formatted prompt.
  */
 function getOpenAILessonPromptTemplate(topic, systemPrompt = '') {
-  return `Crie uma aula completa e detalhada sobre "${topic}" com exatamente 14 slides em JSON.
+  return `Crie uma aula completa e detalhada sobre "${topic}" com EXATAMENTE 14 SLIDES (não mais, não menos) em JSON.
+
+ATENÇÃO CRÍTICA: DEVEM SER EXATAMENTE 14 SLIDES NUMERADOS DE 1 A 14!
 
 REGRAS CRÍTICAS PARA JSON VÁLIDO:
 - Responda APENAS com JSON válido, sem texto adicional
@@ -563,13 +570,16 @@ DIRETRIZES DE QUALIDADE E DENSIDADE:
 - APROFUNDE explicações com contexto histórico quando relevante
 - CONECTE teoria com aplicações práticas e casos reais
 
-ESTRUTURA DETALHADA E ESPECÍFICA:
+ESTRUTURA DETALHADA E ESPECÍFICA (EXATAMENTE 14 SLIDES):
 - Slide 1: Introdução clara com definição básica e importância do tema
 - Slides 2-4: Conceitos fundamentais desenvolvidos progressivamente (do básico ao intermediário)
-- Slide 5: Quiz sobre conceitos básicos aprendidos (perguntas específicas e objetivas)
-- Slides 6-11: Aplicações práticas, exemplos reais e aprofundamento temático
-- Slide 12: Quiz sobre aplicações e análise crítica (perguntas que testam compreensão prática)
-- Slides 13-14: Síntese clara e perspectivas futuras (conclusões objetivas)
+- Slide 5: QUIZ com 3 perguntas sobre conceitos básicos (type: "quiz")
+- Slides 6-11: Aplicações práticas, exemplos reais e aprofundamento temático (6 slides de conteúdo)
+- Slide 12: QUIZ com 3 perguntas sobre aplicações (type: "quiz")
+- Slide 13: Síntese e conclusões dos conceitos aprendidos
+- Slide 14: Perspectivas futuras e encerramento (type: "closing")
+
+IMPORTANTE: Conte os slides! Devem ser EXATAMENTE 14 slides no array!
 
 FORMATO JSON:
 {
@@ -828,7 +838,7 @@ function parseGeminiContent(content, topic) {
     }
 
     // Last resort: try to extract slides from malformed content
-    log.warn('All JSON parsing attempts failed, attempting content extraction');
+    log.warn('All JSON parsing attempts failed, attempting enhanced content extraction');
     
     // Try to extract slide content using regex patterns
     const slidePattern = /"number":\s*(\d+)[^}]*"title":\s*"([^"]*)"[^}]*"content":\s*"([^"]*(?:\\.[^"]*)*)"[^}]*"type":\s*"([^"]*)"/g;
@@ -837,18 +847,39 @@ function parseGeminiContent(content, topic) {
     
     while ((match = slidePattern.exec(cleanContent)) !== null) {
       const [, number, title, content, type] = match;
-      slides.push({
-        number: parseInt(number),
+      const slideNumber = parseInt(number);
+      const isQuiz = type === 'quiz';
+      
+      const slide: any = {
+        number: slideNumber,
         title: title.replace(/\\n/g, '\n'),
         content: content.replace(/\\n/g, '\n').replace(/\\"/g, '"'),
         type: type,
-        imageQuery: IMAGE_SLIDE_NUMBERS.includes(parseInt(number)) ? 'placeholder' : null,
+        imageQuery: IMAGE_SLIDE_NUMBERS.includes(slideNumber) ? 'placeholder' : null,
         tokenEstimate: MIN_TOKENS_PER_SLIDE,
-      });
+      };
+      
+      // If it's a quiz slide, try to extract questions
+      if (isQuiz) {
+        const questions = extractQuestionsFromContent(cleanContent, slideNumber);
+        if (questions && questions.length > 0) {
+          slide.questions = questions;
+          log.info('Extracted quiz questions for slide', { slideNumber, questionCount: questions.length });
+        } else {
+          // Generate default quiz questions if extraction fails
+          slide.questions = generateDefaultQuizQuestions(topic);
+          log.warn('Using default quiz questions for slide', { slideNumber });
+        }
+      }
+      
+      slides.push(slide);
     }
     
     if (slides.length > 0) {
-      log.info('Successfully extracted slides using regex pattern', { slideCount: slides.length });
+      log.info('Successfully extracted slides using enhanced regex pattern', { 
+        slideCount: slides.length,
+        quizSlidesFound: slides.filter(s => s.type === 'quiz').length
+      });
       return { slides };
     }
 
@@ -881,7 +912,7 @@ function parseGeminiContent(content, topic) {
           content = `Neste slide, vamos aprofundar nossos conhecimentos sobre ${topic}.\\n\\nExplore os conceitos apresentados e conecte-os com situações do seu cotidiano.\\n\\nReflita sobre como aplicar esses conhecimentos na prática.`;
         }
         
-        return {
+        const baseSlide = {
           number: slideNumber,
           title,
           content,
@@ -889,12 +920,118 @@ function parseGeminiContent(content, topic) {
           imageQuery: IMAGE_SLIDE_NUMBERS.includes(slideNumber) ? topicKeywords[0] || 'placeholder' : null,
           tokenEstimate: MIN_TOKENS_PER_SLIDE,
         };
+        
+        // Add quiz questions for quiz slides
+        if (isQuiz) {
+          return {
+            ...baseSlide,
+            questions: generateDefaultQuizQuestions(topic)
+          };
+        }
+        
+        return baseSlide;
       }),
     };
   } catch (error) {
     log.error('Error parsing Gemini content', { error: (error as Error).message });
     throw new Error('Failed to process Gemini response');
   }
+}
+
+/**
+ * Extract quiz questions from malformed JSON content
+ */
+function extractQuestionsFromContent(content, slideNumber) {
+  try {
+    // Try to find the questions array for this specific slide
+    const slidePattern = new RegExp(`"number":\\s*${slideNumber}[\\s\\S]*?"questions":\\s*\\[([\\s\\S]*?)\\]`, 'i');
+    const slideMatch = content.match(slidePattern);
+    
+    if (!slideMatch) {
+      log.debug('No questions array found for slide', { slideNumber });
+      return null;
+    }
+    
+    const questionsContent = slideMatch[1];
+    const questions = [];
+    
+    // Extract individual questions
+    const questionPattern = /"question":\s*"([^"]*(?:\\.[^"]*)*)"\s*,\s*"options":\s*\[([^\]]+)\]\s*,\s*"correct":\s*(\d+)\s*,\s*"explanation":\s*"([^"]*(?:\\.[^"]*)*)"/g;
+    let questionMatch;
+    
+    while ((questionMatch = questionPattern.exec(questionsContent)) !== null) {
+      const [, question, optionsStr, correct, explanation] = questionMatch;
+      
+      // Parse options array
+      const options = optionsStr
+        .split(',')
+        .map(opt => opt.trim().replace(/^"|"$/g, '').replace(/\\"/g, '"').replace(/\\n/g, ' '))
+        .filter(opt => opt.length > 0);
+      
+      if (options.length === 4) { // Quiz questions should have 4 options
+        questions.push({
+          question: question.replace(/\\n/g, ' ').replace(/\\"/g, '"'),
+          options,
+          correct: parseInt(correct),
+          explanation: explanation.replace(/\\n/g, ' ').replace(/\\"/g, '"')
+        });
+      }
+    }
+    
+    log.debug('Extracted questions from content', { 
+      slideNumber, 
+      questionsFound: questions.length 
+    });
+    
+    return questions.length > 0 ? questions : null;
+  } catch (error) {
+    log.error('Error extracting questions', { 
+      slideNumber, 
+      error: (error as Error).message 
+    });
+    return null;
+  }
+}
+
+/**
+ * Generate default quiz questions when extraction fails
+ */
+function generateDefaultQuizQuestions(topic) {
+  return [
+    {
+      question: `Qual é o conceito fundamental sobre ${topic}?`,
+      options: [
+        'Primeira opção relacionada ao tema',
+        'Segunda opção relacionada ao tema',
+        'Terceira opção relacionada ao tema',
+        'Quarta opção relacionada ao tema'
+      ],
+      correct: 0,
+      explanation: `Esta questão avalia sua compreensão básica sobre ${topic}. A primeira opção representa o conceito fundamental do tema.`
+    },
+    {
+      question: `Como ${topic} se aplica na prática?`,
+      options: [
+        'Aplicação prática comum',
+        'Aplicação teórica',
+        'Aplicação experimental',
+        'Aplicação conceitual'
+      ],
+      correct: 0,
+      explanation: `${topic} tem diversas aplicações práticas. Esta questão testa seu entendimento sobre as aplicações reais do conceito.`
+    },
+    {
+      question: `Qual é a importância de entender ${topic}?`,
+      options: [
+        'Fundamental para compreensão do tema',
+        'Opcional para o aprendizado',
+        'Apenas curiosidade',
+        'Não tem relevância'
+      ],
+      correct: 0,
+      explanation: `Compreender ${topic} é fundamental para o aprendizado completo do tema e suas aplicações.`
+    }
+  ];
 }
 
 /**
@@ -1159,57 +1296,50 @@ export async function POST(request) {
     // Sistema avançado de seleção de imagens - 3 imagens distintas, 1 por provedor
     let selectedImages = [];
     try {
-      // PRIMEIRO: Tentar usar o sistema smart-search melhorado
-      log.info('Attempting smart search for lesson images', { topic });
+      // ULTRA-FAST image search - single API call, cached, guaranteed results
+      log.info('⚡ Using ultra-fast image search', { topic });
       
-      const smartSearchResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/images/smart-search`, {
+      const fastSearchResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/internal/images/fast-search`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          query: topic, 
-          subject: topic, 
-          count: 6 
+          topic: topic, 
+          count: 6
         }),
       });
       
-      if (smartSearchResponse.ok) {
-        const smartSearchData = await smartSearchResponse.json();
-        log.info('Smart search response received', { 
-          success: smartSearchData.success, 
-          imagesCount: smartSearchData.images?.length || 0,
-          searchMethod: smartSearchData.searchMethod
+      if (fastSearchResponse.ok) {
+        const fastSearchData = await fastSearchResponse.json();
+        log.info('✅ Fast image search completed', { 
+          success: fastSearchData.success, 
+          imagesCount: fastSearchData.images?.length || 0,
+          provider: fastSearchData.provider,
+          cached: fastSearchData.cached,
+          processingTime: fastSearchData.processingTime
         });
         
-        if (smartSearchData.success && smartSearchData.images?.length > 0) {
-          // Converter formato smart-search para formato esperado
-          selectedImages = smartSearchData.images.map(img => ({
+        if (fastSearchData.success && fastSearchData.images?.length > 0) {
+          selectedImages = fastSearchData.images.map(img => ({
             url: img.url,
             title: img.title,
             description: img.description,
-            provider: img.source,
+            provider: img.provider,
             attribution: img.attribution || '',
             license: img.license || '',
             author: img.author || '',
             sourceUrl: img.sourceUrl || '',
-            score: img.relevanceScore || 0
+            score: 90 // High score for fast-search results
           }));
           
-          log.info('Smart search images selected for lesson', {
+          log.info('✨ Fast search images ready', {
             totalImages: selectedImages.length,
-            providers: [...new Set(selectedImages.map(img => img.provider))],
-            searchMethod: smartSearchData.searchMethod,
-            sourcesUsed: smartSearchData.sourcesUsed
-          });
-        } else {
-          log.warn('Smart search returned no images', { 
-            success: smartSearchData.success, 
-            imagesCount: smartSearchData.images?.length || 0 
+            provider: fastSearchData.provider,
+            cached: fastSearchData.cached
           });
         }
       } else {
-        log.warn('Smart search request failed', { 
-          status: smartSearchResponse.status,
-          statusText: smartSearchResponse.statusText 
+        log.error('❌ Fast image search failed', { 
+          status: fastSearchResponse.status 
         });
       }
       
@@ -1473,6 +1603,46 @@ export async function POST(request) {
         // qualityScore: metrics.quality.score, // Validação de qualidade desabilitada
         costEstimate: responseData.usage.costEstimate,
       });
+
+      // 💾 SAVE TO NEON DATABASE
+      if (session?.user?.id) {
+        try {
+          const { saveLessonToDatabase } = await import('@/lib/save-lesson-to-db');
+          
+          const saveResult = await saveLessonToDatabase({
+            id: responseData.lesson.id,
+            title: responseData.lesson.title,
+            topic: topic,
+            subject: responseData.lesson.subject,
+            level: responseData.lesson.level,
+            slides: finalSlides,
+            userId: session.user.id,
+            provider: usedProvider,
+            metadata: {
+              model: usedProvider === 'openai' ? OPENAI_MODEL : GEMINI_MODEL,
+              usage: {
+                inputTokens: (response.usage as any)?.promptTokens || 0,
+                outputTokens: (response.usage as any)?.completionTokens || 0,
+                totalTokens: totalTokens
+              },
+              costEstimate: responseData.usage.costEstimate,
+              duration: totalDuration * 1000, // convert to ms
+              objectives: responseData.lesson.objectives,
+              subject: responseData.lesson.subject,
+              grade: responseData.lesson.metadata.grade
+            }
+          });
+          
+          if (saveResult.success) {
+            log.info('✅ Lesson saved to Neon database', { lessonId: saveResult.lessonId });
+          } else {
+            log.warn('⚠️ Failed to save lesson to database (non-critical)', { error: saveResult.error });
+          }
+        } catch (dbError) {
+          log.warn('⚠️ Database save error (non-critical)', { error: (dbError as Error).message });
+          // Continue mesmo se não conseguir salvar - não bloqueia o fluxo
+        }
+      }
 
       return NextResponse.json(responseData);
 

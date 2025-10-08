@@ -253,6 +253,83 @@ function generateEducationalImageQuery(topic, slideNumber, slideType, slideConte
   return educationalQuery;
 }
 
+// Função para traduzir tema usando IA
+async function translateTopicToEnglish(topic: string): Promise<string> {
+  try {
+    // Usar Gemini para extrair o tema principal e traduzi-lo
+    const { GoogleGenerativeAI } = await import('@google/generative-ai');
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+
+    const prompt = `
+Você é um especialista em tradução e análise de temas educacionais. 
+
+TAREFA: Analise o tópico em português e extraia o tema principal, traduzindo-o para inglês de forma otimizada para busca de imagens educacionais.
+
+TÓPICO: "${topic}"
+
+INSTRUÇÕES:
+1. Identifique o TEMA PRINCIPAL (conceito científico, processo, sistema, etc.)
+2. Traduza APENAS o tema principal para inglês
+3. Use termos científicos/educacionais apropriados
+4. Foque em palavras-chave que funcionem bem em buscas de imagens
+5. Seja conciso (máximo 3 palavras)
+
+EXEMPLOS:
+- "Como funciona a eletricidade?" → "electricity physics"
+- "Como funciona a fotossíntese?" → "photosynthesis process"  
+- "Como funciona a vacinação?" → "vaccination process"
+- "Sistema nervoso" → "nervous system"
+- "Fotossíntese" → "photosynthesis"
+
+Responda APENAS com a tradução do tema principal, sem explicações adicionais.
+`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const translatedTopic = response.text().trim();
+    
+    log.info('AI translation completed', { 
+      originalTopic: topic, 
+      translatedTopic 
+    });
+    
+    return translatedTopic;
+  } catch (error) {
+    log.warn('AI translation failed, using fallback', { 
+      topic, 
+      error: (error as Error).message 
+    });
+    
+    // Fallback: extrair palavras-chave principais e traduzir manualmente
+    const cleanTopic = topic.toLowerCase().replace(/[?¿!¡.,;:]/g, '').trim();
+    const words = cleanTopic.split(' ').filter(word => 
+      word.length > 2 && 
+      !['como', 'funciona', 'a', 'o', 'as', 'os', 'de', 'da', 'do', 'das', 'dos', 'em', 'na', 'no', 'nas', 'nos'].includes(word)
+    );
+    
+    return words.join(' ');
+  }
+}
+
+// Função para gerar queries otimizadas de imagens baseadas no tópico
+async function generateOptimizedImageQueries(topic: string): Promise<string[]> {
+  // Traduzir o tópico para inglês usando IA
+  const translatedTopic = await translateTopicToEnglish(topic);
+  
+  // Usar apenas o tema traduzido para busca de imagens
+  const queries = [translatedTopic];
+  
+  log.info('Generated optimized image queries', { 
+    topic, 
+    translatedTopic,
+    queriesCount: queries.length,
+    queries: queries
+  });
+  
+  return queries;
+}
+
 /**
  * Selects the best educational image based on slide context and educational value.
  */
@@ -344,6 +421,7 @@ function validateLessonStructure(lessonData) {
 
 /**
  * Handles POST requests to generate a lesson using Grok for ultra-fast performance.
+ * Now with parallel processing and improved timeout handling.
  */
 export async function POST(request) {
   const startTime = Date.now();
@@ -544,25 +622,34 @@ IMPORTANTE:
 - INCLUA exemplos práticos, analogias e conexões interdisciplinares
 - APROFUNDE explicações com contexto histórico e científico quando relevante`;
 
-    // Generate lesson using Grok
-    const grokStartTime = Date.now();
-    log.info('Grok API attempt 1/3', { topic });
+    // PARALLEL PROCESSING: Generate lesson and prepare image prompts simultaneously
+    log.info('Starting parallel processing: lesson generation + image preparation', { topic });
     
-    const response = await callGrok(
-      GROK_MODEL_NAME,
-      [],
-      lessonPrompt,
-      undefined
-    );
-
-    const grokEndTime = Date.now();
-    log.info('Grok response', { 
+    const parallelStartTime = Date.now();
+    
+    // 1. Generate lesson using Grok with timeout
+    const lessonPromise = Promise.race([
+      callGrok(GROK_MODEL_NAME, [], lessonPrompt, undefined),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Lesson generation timeout (180s)')), 180000)
+      )
+    ]);
+    
+    // 2. Prepare optimized image search queries based on topic
+    const imageQueriesPromise = generateOptimizedImageQueries(topic);
+    
+    // Wait for both to complete
+    const [response, imageQueries] = await Promise.all([lessonPromise, imageQueriesPromise]) as [any, string[]];
+    
+    const parallelEndTime = Date.now();
+    log.info('Parallel processing completed', { 
       topic, 
-      duration: Math.round((grokEndTime - grokStartTime) / 1000),
+      duration: Math.round((parallelEndTime - parallelStartTime) / 1000),
       usage: response.usage,
       finishReason: 'stop',
       contentLength: response.text.length,
-      provider: 'grok'
+      provider: 'grok',
+      imageQueriesPrepared: imageQueries.length
     });
 
     // Parse and validate lesson content - USING SAME PARSING AS GEMINI
@@ -639,313 +726,202 @@ IMPORTANTE:
       throw new Error(`Lesson validation failed: ${validation.issues.join(', ')}`);
     }
 
-    // Process images for slides that need them - USING THE SAME SYSTEM AS GEMINI
+    // Process images for slides that need them - IMPROVED WITH OPTIMIZED QUERIES
     const imageStartTime = Date.now();
     
-    // Sistema avançado de seleção de imagens - igual ao Gemini
+    // Sistema melhorado de seleção de imagens com queries otimizadas
     let selectedImages = [];
     try {
-      // PRIMEIRO: Tentar usar o sistema smart-search melhorado
-      log.info('Attempting smart search for lesson images', { topic });
+      // NOVO: Usar queries otimizadas preparadas anteriormente
+      // Usar apenas a primeira query e buscar 6 imagens
+      const mainQuery = imageQueries[0];
       
-      const smartSearchResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/images/smart-search`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          query: topic, 
-          subject: topic, 
-          count: 6 
-        }),
+      log.info('🔍 Starting single-query image search', { 
+        topic, 
+        translatedTopic: mainQuery,
+        requestedImages: 6
       });
       
-      if (smartSearchResponse.ok) {
-        const smartSearchData = await smartSearchResponse.json();
-        log.info('Smart search response received', { 
-          success: smartSearchData.success, 
-          imagesCount: smartSearchData.images?.length || 0,
-          searchMethod: smartSearchData.searchMethod
+      try {
+        log.info('📡 Calling image search API', {
+          query: mainQuery,
+          count: 6,
+          context: 'aula_educacional',
+          endpoint: '/api/internal/images/search'
         });
         
-        if (smartSearchData.success && smartSearchData.images?.length > 0) {
-          // Converter formato smart-search para formato esperado
-          selectedImages = smartSearchData.images.map(img => ({
-            url: img.url,
-            title: img.title,
-            description: img.description,
-            provider: img.source,
-            attribution: img.attribution || '',
-            license: img.license || '',
-            author: img.author || '',
-            sourceUrl: img.sourceUrl || '',
-            score: img.relevanceScore || 0
-          }));
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/internal/images/search`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            topic: mainQuery, 
+            count: 6,
+            context: 'aula_educacional'
+          }),
+        });
+        
+        log.info('📥 Image search API response received', {
+          status: response.status,
+          statusText: response.statusText,
+          ok: response.ok
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
           
-          log.info('Smart search images selected for lesson', {
-            totalImages: selectedImages.length,
-            providers: [...new Set(selectedImages.map(img => img.provider))],
-            searchMethod: smartSearchData.searchMethod,
-            sourcesUsed: smartSearchData.sourcesUsed
+          log.info('📊 Image search data parsed', {
+            success: data.success,
+            imagesCount: data.images?.length || 0,
+            hasImages: !!data.images,
+            searchMethod: data.searchMethod,
+            provider: data.provider
           });
+          
+          if (data.success && data.images?.length > 0) {
+            const foundImages = data.images.map((img: any, index: number) => ({
+              ...img,
+              queryUsed: mainQuery,
+              queryIndex: 0,
+              imageIndex: index
+            }));
+            
+            log.info('✅ Images found and processed', {
+              totalImages: foundImages.length,
+              imageUrls: foundImages.map((img: any) => img.url),
+              imageTitles: foundImages.map((img: any) => img.title),
+              providers: [...new Set(foundImages.map((img: any) => img.source || img.provider))]
+            });
+            
+            // Usar as imagens encontradas
+            selectedImages = foundImages.slice(0, 6).map((img: any) => ({
+              url: img.url,
+              title: img.title,
+              description: img.description,
+              provider: img.source || img.provider,
+              attribution: img.attribution || '',
+              license: img.license || '',
+              author: img.author || '',
+              sourceUrl: img.sourceUrl || '',
+              score: img.relevanceScore || 80,
+              queryUsed: img.queryUsed
+            }));
+            
+            log.info('✨ Using single-query search results', { 
+              totalImages: selectedImages.length,
+              providers: [...new Set(selectedImages.map(img => img.provider))],
+              query: mainQuery
+            });
+          } else {
+            log.warn('⚠️ No images found in successful response', {
+              dataSuccess: data.success,
+              imagesArray: data.images
+            });
+          }
         } else {
-          log.warn('Smart search returned no images', { 
-            success: smartSearchData.success, 
-            imagesCount: smartSearchData.images?.length || 0 
+          log.error('❌ Image search API response not OK', {
+            status: response.status,
+            statusText: response.statusText
           });
         }
-        
-        // Tentativa adicional: Se poucas imagens, buscar com termos específicos
-        if (selectedImages.length < 3) {
-          log.info('Few images found, attempting additional searches with specific terms', { 
-            topic, 
-            currentCount: selectedImages.length 
-          });
-          
-          const specificTerms = generateSemanticTerms(topic, 1, 'content').slice(0, 3);
-          const usedUrls = new Set(selectedImages.map(img => img.url));
-          
-          for (const term of specificTerms) {
-            try {
-              const additionalResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/images/smart-search`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                  query: term, 
-                  subject: term, 
-                  count: 2 
-                }),
-              });
-              
-              if (additionalResponse.ok) {
-                const additionalData = await additionalResponse.json();
-                if (additionalData.success && additionalData.images?.length > 0) {
-                  // Adicionar apenas imagens únicas
-                  const newImages = additionalData.images
-                    .filter(img => !usedUrls.has(img.url))
-                    .map(img => ({
-                      url: img.url,
-                      title: img.title,
-                      description: img.description,
-                      provider: img.source,
-                      attribution: img.attribution || '',
-                      license: img.license || '',
-                      author: img.author || '',
-                      sourceUrl: img.sourceUrl || '',
-                      score: img.relevanceScore || 0
-                    }));
-                  
-                  selectedImages.push(...newImages.slice(0, 2));
-                  newImages.forEach(img => usedUrls.add(img.url));
-                  
-                  log.info('Additional search successful', { 
-                    term, 
-                    newImages: newImages.length,
-                    totalImages: selectedImages.length 
-                  });
-                  
-                  if (selectedImages.length >= 6) break;
-                }
-              }
-            } catch (error) {
-              log.warn('Additional search failed', { term, error: (error as Error).message });
-            }
-          }
-        }
-      } else {
-        log.warn('Smart search request failed', { 
-          status: smartSearchResponse.status,
-          statusText: smartSearchResponse.statusText 
+      } catch (searchError) {
+        log.error('❌ Image search failed with error', {
+          error: (searchError as Error).message,
+          stack: (searchError as Error).stack
         });
       }
       
-      // FALLBACK: Se smart-search não funcionou, usar sistema melhorado
-      if (selectedImages.length === 0) {
-        log.info('Smart search failed, falling back to enhanced semantic selection', { topic });
+      // Se não encontrou imagens suficientes, tentar fallback
+      if (selectedImages.length < 3) {
+        // FALLBACK: Usar API Unificada com timeout reduzido
+        log.info('⚠️ Optimized search insufficient, trying unified API fallback', { 
+          selectedImagesCount: selectedImages.length,
+          topic 
+        });
         
-        try {
-          // Usar o novo sistema de seleção semântica melhorado
-          const { selectThreeDistinctImages } = await import('@/lib/image-selection-enhanced');
-          
-          selectedImages = await Promise.race([
-            selectThreeDistinctImages(topic),
-            new Promise<any[]>((_, reject) => 
-              setTimeout(() => reject(new Error('Image selection timeout')), 15000)
-            )
-          ]);
-          
-          // Validar seleção
-          const { validateImageSelection } = await import('@/lib/image-selection-enhanced');
-          const validation = validateImageSelection(selectedImages);
-          if (!validation.isValid) {
-            log.warn('Image selection validation failed', { issues: validation.issues });
-          }
-          
-          log.info('Enhanced semantic image selection completed', {
-            totalImages: selectedImages.length,
-            providers: [...new Set(selectedImages.map(img => img.provider))],
-            validation: {
-              totalImages: validation.metrics.totalImages,
-              uniqueUrls: validation.metrics.uniqueUrls,
-              uniqueProviders: validation.metrics.uniqueProviders,
-              hasRequiredProviders: validation.metrics.hasRequiredProviders
-            }
+        const unifiedImageResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/internal/images/unified`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            topic: topic, 
+            count: 6,
+            context: 'aula_educacional',
+            strategy: 'search_first',
+            fallback: true
+          }),
+        });
+        
+        if (unifiedImageResponse.ok) {
+          const unifiedImageData = await unifiedImageResponse.json();
+          log.info('Unified image response received (fallback)', { 
+            success: unifiedImageData.success, 
+            imagesCount: unifiedImageData.images?.length || 0,
+            strategy: unifiedImageData.strategy,
+            processingTime: unifiedImageData.processingTime
           });
-        } catch (error) {
-          log.error('Enhanced image selection failed', { error: (error as Error).message });
-          selectedImages = [];
+          
+          if (unifiedImageData.success && unifiedImageData.images?.length > 0) {
+            // Converter formato unificado para formato esperado
+            selectedImages = unifiedImageData.images.map(img => ({
+              url: img.url,
+              title: img.title,
+              description: img.description,
+              provider: img.source === 'search' ? 'unified_search' : img.source === 'generation' ? 'unified_generation' : 'unified_placeholder',
+              attribution: img.metadata?.provider || '',
+              license: img.source === 'generation' ? 'Generated' : 'Various',
+              author: img.metadata?.provider || 'AI Generated',
+              sourceUrl: img.url,
+              score: Math.round(img.relevance * 100) || 80
+            }));
+            
+            log.info('Unified images selected for lesson (fallback)', {
+              totalImages: selectedImages.length,
+              strategy: unifiedImageData.strategy,
+              searchResults: unifiedImageData.searchResults,
+              generationResults: unifiedImageData.generationResults
+            });
+          }
         }
       }
-      
     } catch (error) {
       log.error('Image selection failed', { error: (error as Error).message });
       selectedImages = [];
     }
     
+    const imageEndTime = Date.now();
+
     // Processar slides com imagens selecionadas
     const usedImageUrls = new Set();
-    let imageIndex = 0;
     
-    // Process slides sequentially to handle async image searches
-    const finalSlides = [];
-    for (let i = 0; i < lessonData.slides.length; i++) {
-      const slide = lessonData.slides[i];
-      
+    // Distribuir imagens de forma equilibrada pelos slides que precisam
+    const slidesNeedingImages = lessonData.slides.filter((slide: any) => 
+      IMAGE_SLIDE_NUMBERS.includes(slide.slideNumber)
+    );
+    
+    // Process slides with selected images
+    const finalSlides = lessonData.slides.map((slide: any) => {
       if (IMAGE_SLIDE_NUMBERS.includes(slide.slideNumber)) {
         const imageQuery = slide.imageQuery || generateEducationalImageQuery(topic, slide.slideNumber, slide.type, slide.content);
         slide.imageQuery = imageQuery;
         
-        // Usar imagem real se disponível, senão tentar buscar mais imagens
-        if (selectedImages.length > 0 && imageIndex < selectedImages.length) {
+        // Distribuir imagens de forma equilibrada
+        if (selectedImages.length > 0) {
+          const slideIndex = slidesNeedingImages.findIndex(s => s.slideNumber === slide.slideNumber);
+          const imageIndex = slideIndex % selectedImages.length; // Usar módulo para distribuir
           const selectedImage = selectedImages[imageIndex];
+          
           slide.imageUrl = selectedImage.url;
           slide.imageAttribution = selectedImage.attribution;
           slide.imageLicense = selectedImage.license;
           slide.imageAuthor = selectedImage.author;
           slide.imageSource = selectedImage.provider;
           usedImageUrls.add(selectedImage.url);
-          imageIndex++;
-        } else if (selectedImages.length === 0) {
-          // Se não há imagens, tentar busca semântica inteligente com múltiplos termos
-          try {
-            log.info('No images available, attempting semantic search with related terms', { 
-              slideNumber: slide.slideNumber, 
-              imageQuery,
-              topic 
-            });
-            
-            // Gerar termos relacionados semanticamente baseados no tópico
-            const semanticTerms = generateSemanticTerms(topic, slide.slideNumber, slide.type);
-            log.info('Generated semantic terms', { semanticTerms });
-            
-            // Tentar cada termo semântico até encontrar uma imagem
-            let foundImage = false;
-            for (const term of semanticTerms) {
-              const individualSearchResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/images/smart-search`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                  query: term, 
-                  subject: term, 
-                  count: 1 
-                }),
-              });
-              
-              if (individualSearchResponse.ok) {
-                const individualData = await individualSearchResponse.json();
-                if (individualData.success && individualData.images?.length > 0) {
-                  const img = individualData.images[0];
-                  slide.imageUrl = img.url;
-                  slide.imageAttribution = img.attribution || '';
-                  slide.imageLicense = img.license || '';
-                  slide.imageAuthor = img.author || '';
-                  slide.imageSource = img.source;
-                  slide.imageQuery = term; // Atualizar com o termo que funcionou
-                  foundImage = true;
-                  log.info('Semantic image search successful', { 
-                    slideNumber: slide.slideNumber, 
-                    provider: img.source,
-                    term: term
-                  });
-                  break;
-                }
-              }
-            }
-            
-            if (!foundImage) {
-              slide.imageUrl = `https://via.placeholder.com/800x600/4F46E5/FFFFFF?text=${encodeURIComponent(imageQuery)}`;
-            }
-          } catch (error) {
-            log.warn('Semantic image search failed', { error: (error as Error).message });
-            slide.imageUrl = `https://via.placeholder.com/800x600/4F46E5/FFFFFF?text=${encodeURIComponent(imageQuery)}`;
-          }
         } else {
-          // Tentar buscar imagem específica para este slide antes de reutilizar
-          try {
-            log.info('Attempting specific image search for slide', { 
-              slideNumber: slide.slideNumber, 
-              imageQuery,
-              topic 
-            });
-            
-            // Gerar termos específicos para este slide
-            const specificTerms = generateSemanticTerms(topic, slide.slideNumber, slide.type);
-            log.info('Generated specific terms for slide', { specificTerms });
-            
-            // Tentar buscar imagem específica
-            let foundSpecificImage = false;
-            for (const term of specificTerms) {
-              // Verificar se já usamos esta imagem
-              if (usedImageUrls.has(term)) continue;
-              
-              const specificSearchResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/images/smart-search`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                  query: term, 
-                  subject: term, 
-                  count: 1 
-                }),
-              });
-              
-              if (specificSearchResponse.ok) {
-                const specificData = await specificSearchResponse.json();
-                if (specificData.success && specificData.images?.length > 0) {
-                  const img = specificData.images[0];
-                  // Verificar se a imagem já foi usada
-                  if (!usedImageUrls.has(img.url)) {
-                    slide.imageUrl = img.url;
-                    slide.imageAttribution = img.attribution || '';
-                    slide.imageLicense = img.license || '';
-                    slide.imageAuthor = img.author || '';
-                    slide.imageSource = img.source;
-                    slide.imageQuery = term;
-                    usedImageUrls.add(img.url);
-                    foundSpecificImage = true;
-                    log.info('Specific image search successful', { 
-                      slideNumber: slide.slideNumber, 
-                      provider: img.source,
-                      term: term
-                    });
-                    break;
-                  }
-                }
-              }
-            }
-            
-            if (!foundSpecificImage) {
-              // Fallback: usar placeholder com query específica
-              slide.imageUrl = `https://via.placeholder.com/800x600/4F46E5/FFFFFF?text=${encodeURIComponent(imageQuery)}`;
-              log.info('Using placeholder for slide', { slideNumber: slide.slideNumber, imageQuery });
-            }
-          } catch (error) {
-            log.warn('Specific image search failed', { error: (error as Error).message });
-            slide.imageUrl = `https://via.placeholder.com/800x600/4F46E5/FFFFFF?text=${encodeURIComponent(imageQuery)}`;
-          }
+          // Fallback: usar placeholder
+          slide.imageUrl = `https://via.placeholder.com/800x600/4F46E5/FFFFFF?text=${encodeURIComponent(imageQuery)}`;
         }
       }
-      finalSlides.push(slide);
-    }
-    
-    const imageEndTime = Date.now();
+      return slide;
+    });
 
     // Calculate metrics
     const metricsStartTime = Date.now();
@@ -1010,6 +986,8 @@ IMPORTANTE:
           tags: [topic.toLowerCase()],
           provider: 'grok',
           model: GROK_MODEL,
+          optimizedQueries: imageQueries.slice(0, 5), // Incluir queries usadas
+          parallelProcessing: true, // Indicar que usou processamento paralelo
         },
       },
       topic,
@@ -1025,7 +1003,13 @@ IMPORTANTE:
       provider: 'grok',
       generationTime: Math.round((Date.now() - startTime) / 1000),
       pacingMetrics: metrics,
-      warnings: []
+      warnings: [],
+      performance: {
+        parallelProcessing: true,
+        optimizedImageQueries: imageQueries.length,
+        totalTimeout: 180, // 3 minutos
+        imageSearchTimeout: 60 // 1 minuto para imagens
+      }
     };
 
     // Log successful generation

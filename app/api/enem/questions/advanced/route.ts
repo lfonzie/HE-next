@@ -12,7 +12,7 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 
 
-import { openai } from '@/lib/openai';
+import { callGrok } from '@/lib/providers/grok';
 
 
 import { z } from 'zod';
@@ -196,17 +196,14 @@ ${difficulty ? `Níveis de dificuldade: ${difficulty.join(', ')}` : ''}
 
 Retorne apenas JSON válido.`;
 
-  const response = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
-    messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: userPrompt }
-    ],
-    temperature: 0.7,
-    max_tokens: 3000
-  });
+  const result = await callGrok(
+    'grok-4-fast-reasoning',
+    [],
+    userPrompt,
+    systemPrompt
+  );
 
-  const content = response.choices[0]?.message?.content;
+  const content = result.text;
   if (!content) throw new Error('No content generated');
 
   const parsed = JSON.parse(content);

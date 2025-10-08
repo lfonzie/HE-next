@@ -16,15 +16,15 @@ export default function Slide2() {
       
       <div className="pt-16 px-4 sm:px-6 lg:px-8 flex items-center min-h-screen">
         <div className="max-w-6xl mx-auto w-full">
-          <SectionTitle subtitle="Tecnologia avançada combinada com pedagogia brasileira">
-            🚀 <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Inovação em Educação</span>
+          <SectionTitle subtitle="A única plataforma que combina as 5 principais IAs do mundo com pedagogia brasileira - resultado: educação 10x mais eficiente">
+            🚀 <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Por que HubEdu.ia é Revolucionário?</span>
           </SectionTitle>
           
           <div className="grid md:grid-cols-3 gap-6 mb-8">
             {[
-              { icon: '🧠', title: 'IA Generativa Avançada', description: 'Algoritmos que criam conteúdo educacional personalizado em tempo real.' },
-              { icon: '🤖', title: 'Correção Automática', description: 'IA corrige redações e simulados instantaneamente, seguindo critérios do ENEM e BNCC.' },
-              { icon: '📚', title: 'Aulas Estruturadas', description: 'Slides com introdução, desenvolvimento e conclusão, incluindo quizzes interativos.' },
+              { icon: '🎮', title: 'Aulas Completas em 2 Minutos', description: 'Aulas completas sobre qualquer tema com quizzes, geradas instantaneamente por IA.' },
+              { icon: '👩‍🏫', title: 'Chat Professor IA', description: 'Professor virtual para dúvidas pedagógicas com 5 principais IAs integradas.' },
+              { icon: '📚', title: '3000+ Questões Oficiais', description: 'Simulador ENEM com questões oficiais (2009-2024) + infinitas geradas por IA.' },
             ].map((feature, index) => (
               <div key={index} className="bg-white p-6 rounded-xl border-2 border-purple-200 hover:border-purple-400 transition-all duration-300 shadow-lg hover:shadow-xl">
                 <div className="text-center">
@@ -43,9 +43,10 @@ export default function Slide2() {
                 <h4 className="text-lg font-bold mb-3 text-purple-300">🔬 Tecnologia de Ponta:</h4>
                 <ul className="space-y-2 text-sm">
                   {[
-                    'IA Multimodal: Processa texto, imagem e áudio',
-                    'IA Avançada: Tecnologia OpenAI e Google',
-                    'Conteúdo Estruturado: Aulas organizadas',
+                    'Aulas completas em 2 minutos',
+                    'Chat Professor IA com 5 IAs',
+                    '3000+ questões oficiais ENEM',
+                    'Correção automática por IA',
                     'Cloud Native: Arquitetura escalável'
                   ].map((item, idx) => (
                     <li key={idx} className="flex items-start gap-2">

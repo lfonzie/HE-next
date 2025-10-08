@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { callGrok } from '@/lib/providers/grok'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
 
 export const dynamic = 'force-dynamic'
 
@@ -12,12 +11,6 @@ export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions)
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    if (!process.env.GEMINI_API_KEY) {
-      return NextResponse.json({
-        error: 'Gemini API key not configured'
-      }, { status: 500 })
     }
 
     const formData = await request.formData()
@@ -29,65 +22,103 @@ export async function POST(request: NextRequest) {
 
     console.log(`🎤 [DICTATION] Processing audio file: ${audioFile.name} (${audioFile.size} bytes)`)
 
-    // Converter arquivo para base64
-    const audioBuffer = await audioFile.arrayBuffer()
-    const audioBase64 = Buffer.from(audioBuffer).toString('base64')
-    const mimeType = audioFile.type || 'audio/webm'
-
-    // Use Gemini 2.0 Flash para transcrição
-    const model = genAI.getGenerativeModel({ 
-      model: 'gemini-2.0-flash-exp',
-      generationConfig: {
-        maxOutputTokens: 1024,
-        temperature: 0.3, // Baixa temperatura para transcrição mais precisa
-      }
-    })
-
-    const prompt = `Transcreva este áudio para texto em português brasileiro. 
-    
-INSTRUÇÕES:
-1. Transcreva APENAS o que foi falado, sem adicionar pontuação desnecessária
-2. Mantenha a naturalidade da fala
-3. Corrija erros de pronúncia quando óbvio
-4. Use pontuação básica (vírgulas, pontos) quando apropriado
-5. Se houver pausas longas, indique com reticências (...)
-6. Se não conseguir entender algo, use [inaudível]
-7. Responda APENAS com o texto transcrito, sem explicações adicionais
-
-TRANSCRIÇÃO:`
-
-    try {
-      const result = await model.generateContent([
-        {
-          text: prompt
-        },
-        {
-          inlineData: {
-            mimeType,
-            data: audioBase64
-          }
-        }
-      ])
-
-      const response = await result.response
-      const transcribedText = response.text().trim()
-
-      console.log(`✅ [DICTATION] Transcription completed: ${transcribedText.substring(0, 100)}...`)
-
+    // Verificar se temos as chaves de API necessárias
+    if (!process.env.GEMINI_API_KEY) {
       return NextResponse.json({
-        success: true,
-        text: transcribedText,
-        timestamp: new Date().toISOString(),
-        duration: audioFile.size / 1000 // Estimativa de duração
-      })
-
-    } catch (error: any) {
-      console.error('❌ [DICTATION] Error generating transcription:', error)
-      return NextResponse.json({
-        error: 'Failed to transcribe audio',
-        details: error.message
+        error: 'Gemini API key not configured for audio transcription'
       }, { status: 500 })
     }
+
+    // Converter arquivo de áudio para base64
+    const arrayBuffer = await audioFile.arrayBuffer()
+    const base64Audio = Buffer.from(arrayBuffer).toString('base64')
+
+    // Determinar o tipo MIME correto
+    let mimeType = audioFile.type
+    if (!mimeType || mimeType === '') {
+      // Tentar detectar pelo nome do arquivo
+      const fileName = audioFile.name.toLowerCase()
+      if (fileName.includes('.webm')) mimeType = 'audio/webm'
+      else if (fileName.includes('.mp3')) mimeType = 'audio/mpeg'
+      else if (fileName.includes('.wav')) mimeType = 'audio/wav'
+      else if (fileName.includes('.ogg')) mimeType = 'audio/ogg'
+      else mimeType = 'audio/webm' // Padrão
+    }
+
+    console.log(`🔗 [DICTATION] Transcribing audio with Gemini 2.5... (${mimeType})`)
+
+    // Usar Gemini para transcrição (suporta áudio)
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
+
+    const result = await model.generateContent([
+      {
+        inlineData: {
+          mimeType: mimeType,
+          data: base64Audio
+        }
+      },
+      'Transcreva este áudio em português brasileiro. Seja preciso e mantenha a formatação natural da fala.'
+    ])
+
+    const response = await result.response
+    const transcriptionText = response.text()
+
+    if (!transcriptionText || transcriptionText.trim() === '') {
+      console.log('⚠️ [DICTATION] Empty transcription received from Gemini')
+      return NextResponse.json({
+        error: 'Falha na transcrição do áudio - resposta vazia',
+        details: 'O áudio pode estar muito curto ou com qualidade insuficiente'
+      }, { status: 500 })
+    }
+
+    console.log(`✅ [DICTATION] Audio transcribed successfully with Gemini 2.5 (${transcriptionText.length} chars)`)
+
+    // Se temos Grok disponível, usar para polir a transcrição
+    let polishedText = transcriptionText
+    if (process.env.GROK_API_KEY) {
+      try {
+        console.log('🚀 [DICTATION] Polishing transcription with Grok 4 Fast...')
+        
+        const polishResult = await callGrok(
+          'grok-4-fast-reasoning',
+          [],
+          `Polir esta transcrição de áudio para torná-la mais clara e organizada, mantendo todo o conteúdo original:
+
+${transcriptionText}
+
+Instruções:
+- Remova palavras de preenchimento (um, uh, né, tipo)
+- Corrija repetições desnecessárias
+- Mantenha a formatação natural
+- Organize em parágrafos quando apropriado
+- Preserve todo o conteúdo original`,
+          'Você é um especialista em edição de transcrições. Sempre mantenha o conteúdo original enquanto melhora a clareza e organização do texto.'
+        )
+
+        polishedText = polishResult.text
+        console.log('✅ [DICTATION] Transcription polished successfully with Grok 4 Fast')
+      } catch (grokError) {
+        console.log('⚠️ [DICTATION] Grok polishing failed, using raw transcription:', grokError)
+        // Continuar com a transcrição original se Grok falhar
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      transcription: polishedText,
+      rawTranscription: transcriptionText,
+      audioInfo: {
+        name: audioFile.name,
+        size: audioFile.size,
+        type: audioFile.type
+      },
+      timestamp: new Date().toISOString(),
+      aiProviders: {
+        transcription: 'gemini-2.5-flash',
+        polishing: process.env.GROK_API_KEY ? 'grok-4-fast-reasoning' : 'none'
+      }
+    })
 
   } catch (error: any) {
     console.error('❌ [DICTATION] Processing error:', error)

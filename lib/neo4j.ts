@@ -201,6 +201,257 @@ export async function getUserLessonsFromNeo4j(userId: string): Promise<any[]> {
 }
 
 /**
+ * Salva uma redação completa no Neo4j
+ * @param {Object} redacaoData - Dados da redação
+ * @param {string} userId - ID do usuário
+ * @returns {Promise<string>} ID da redação salva
+ */
+export async function saveRedacaoToNeo4j(redacaoData: any, userId: string): Promise<string> {
+  const redacaoId = redacaoData.id || `redacao_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  
+  const query = `
+    MERGE (r:Redacao {id: $redacaoId})
+    SET r.title = $title,
+        r.theme = $theme,
+        r.themeYear = $themeYear,
+        r.content = $content,
+        r.wordCount = $wordCount,
+        r.createdAt = datetime(),
+        r.updatedAt = datetime()
+    
+    MERGE (u:User {id: $userId})
+    MERGE (u)-[:WROTE]->(r)
+    
+    RETURN r.id as redacaoId
+  `;
+  
+  const parameters = {
+    redacaoId,
+    title: redacaoData.title || `Redação sobre ${redacaoData.theme}`,
+    theme: redacaoData.theme,
+    themeYear: redacaoData.themeYear || new Date().getFullYear(),
+    content: redacaoData.content,
+    wordCount: redacaoData.wordCount || 0,
+    userId
+  };
+  
+  try {
+    const result = await queryNeo4j(query, parameters);
+    return result[0]?.redacaoId || redacaoId;
+  } catch (error) {
+    console.error('Erro ao salvar redação no Neo4j:', error);
+    throw error;
+  }
+}
+
+/**
+ * Salva o resultado de avaliação de uma redação no Neo4j
+ * @param {Object} evaluationData - Dados da avaliação
+ * @param {string} redacaoId - ID da redação
+ * @param {string} userId - ID do usuário
+ * @returns {Promise<string>} ID da avaliação salva
+ */
+export async function saveRedacaoEvaluationToNeo4j(evaluationData: any, redacaoId: string, userId: string): Promise<string> {
+  const evaluationId = evaluationData.id || `evaluation_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  
+  const query = `
+    MERGE (e:Evaluation {id: $evaluationId})
+    SET e.totalScore = $totalScore,
+        e.comp1 = $comp1,
+        e.comp2 = $comp2,
+        e.comp3 = $comp3,
+        e.comp4 = $comp4,
+        e.comp5 = $comp5,
+        e.feedback = $feedback,
+        e.suggestions = $suggestions,
+        e.highlights = $highlights,
+        e.createdAt = datetime(),
+        e.updatedAt = datetime()
+    
+    MERGE (r:Redacao {id: $redacaoId})
+    MERGE (u:User {id: $userId})
+    
+    MERGE (r)-[:EVALUATED_BY]->(e)
+    MERGE (u)-[:RECEIVED]->(e)
+    
+    RETURN e.id as evaluationId
+  `;
+  
+  const parameters = {
+    evaluationId,
+    totalScore: evaluationData.totalScore || 0,
+    comp1: evaluationData.scores?.comp1 || 0,
+    comp2: evaluationData.scores?.comp2 || 0,
+    comp3: evaluationData.scores?.comp3 || 0,
+    comp4: evaluationData.scores?.comp4 || 0,
+    comp5: evaluationData.scores?.comp5 || 0,
+    feedback: evaluationData.feedback || '',
+    suggestions: JSON.stringify(evaluationData.suggestions || []),
+    highlights: JSON.stringify(evaluationData.highlights || {}),
+    redacaoId,
+    userId
+  };
+  
+  try {
+    const result = await queryNeo4j(query, parameters);
+    return result[0]?.evaluationId || evaluationId;
+  } catch (error) {
+    console.error('Erro ao salvar avaliação da redação no Neo4j:', error);
+    throw error;
+  }
+}
+
+/**
+ * Busca uma redação por ID
+ * @param {string} redacaoId - ID da redação
+ * @returns {Promise<Object|null>} Dados da redação ou null se não encontrada
+ */
+export async function getRedacaoFromNeo4j(redacaoId: string): Promise<any | null> {
+  const query = `
+    MATCH (r:Redacao {id: $redacaoId})
+    OPTIONAL MATCH (r)-[:EVALUATED_BY]->(e:Evaluation)
+    RETURN r, collect(e) as evaluations
+  `;
+  
+  const parameters = { redacaoId };
+  
+  try {
+    const result = await queryNeo4j(query, parameters);
+    if (result.length === 0) return null;
+    
+    const redacao = result[0].r.properties;
+    const evaluations = result[0].evaluations.map((evaluation: any) => evaluation.properties);
+    
+    return {
+      ...redacao,
+      evaluations: evaluations.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    };
+  } catch (error) {
+    console.error('Erro ao buscar redação no Neo4j:', error);
+    throw error;
+  }
+}
+
+/**
+ * Lista todas as redações de um usuário
+ * @param {string} userId - ID do usuário
+ * @returns {Promise<Array>} Lista de redações
+ */
+export async function getUserRedacoesFromNeo4j(userId: string): Promise<any[]> {
+  const query = `
+    MATCH (u:User {id: $userId})-[:WROTE]->(r:Redacao)
+    OPTIONAL MATCH (r)-[:EVALUATED_BY]->(e:Evaluation)
+    RETURN r, collect(e) as evaluations
+    ORDER BY r.createdAt DESC
+  `;
+  
+  const parameters = { userId };
+  
+  try {
+    const result = await queryNeo4j(query, parameters);
+    return result.map((record: any) => {
+      const redacao = record.r.properties;
+      const evaluations = record.evaluations.map((evaluation: any) => evaluation.properties);
+      
+      return {
+        ...redacao,
+        evaluations: evaluations.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      };
+    });
+  } catch (error) {
+    console.error('Erro ao buscar redações do usuário:', error);
+    throw error;
+  }
+}
+
+/**
+ * Busca uma avaliação específica por ID
+ * @param {string} evaluationId - ID da avaliação
+ * @returns {Promise<Object|null>} Dados da avaliação ou null se não encontrada
+ */
+export async function getRedacaoEvaluationFromNeo4j(evaluationId: string): Promise<any | null> {
+  const query = `
+    MATCH (e:Evaluation {id: $evaluationId})
+    OPTIONAL MATCH (e)<-[:EVALUATED_BY]-(r:Redacao)
+    RETURN e, r
+  `;
+  
+  const parameters = { evaluationId };
+  
+  try {
+    const result = await queryNeo4j(query, parameters);
+    if (result.length === 0) return null;
+    
+    const evaluation = result[0].e.properties;
+    const redacao = result[0].r?.properties || null;
+    
+    return {
+      ...evaluation,
+      redacao
+    };
+  } catch (error) {
+    console.error('Erro ao buscar avaliação no Neo4j:', error);
+    throw error;
+  }
+}
+
+/**
+ * Atualiza uma redação existente
+ * @param {string} redacaoId - ID da redação
+ * @param {Object} updateData - Dados para atualizar
+ * @returns {Promise<void>}
+ */
+export async function updateRedacaoInNeo4j(redacaoId: string, updateData: any): Promise<void> {
+  const query = `
+    MATCH (r:Redacao {id: $redacaoId})
+    SET r.title = COALESCE($title, r.title),
+        r.theme = COALESCE($theme, r.theme),
+        r.themeYear = COALESCE($themeYear, r.themeYear),
+        r.content = COALESCE($content, r.content),
+        r.wordCount = COALESCE($wordCount, r.wordCount),
+        r.updatedAt = datetime()
+  `;
+  
+  const parameters = {
+    redacaoId,
+    title: updateData.title,
+    theme: updateData.theme,
+    themeYear: updateData.themeYear,
+    content: updateData.content,
+    wordCount: updateData.wordCount
+  };
+  
+  try {
+    await queryNeo4j(query, parameters);
+  } catch (error) {
+    console.error('Erro ao atualizar redação no Neo4j:', error);
+    throw error;
+  }
+}
+
+/**
+ * Deleta uma redação e suas avaliações
+ * @param {string} redacaoId - ID da redação
+ * @returns {Promise<void>}
+ */
+export async function deleteRedacaoFromNeo4j(redacaoId: string): Promise<void> {
+  const query = `
+    MATCH (r:Redacao {id: $redacaoId})
+    OPTIONAL MATCH (r)-[:EVALUATED_BY]->(e:Evaluation)
+    DETACH DELETE r, e
+  `;
+  
+  const parameters = { redacaoId };
+  
+  try {
+    await queryNeo4j(query, parameters);
+  } catch (error) {
+    console.error('Erro ao deletar redação no Neo4j:', error);
+    throw error;
+  }
+}
+
+/**
  * Fecha a conexão com o Neo4j
  */
 export async function closeNeo4jConnection(): Promise<void> {

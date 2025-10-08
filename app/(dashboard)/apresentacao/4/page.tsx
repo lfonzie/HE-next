@@ -31,16 +31,16 @@ export default function Slide4() {
       
       <div className="pt-16 px-4 sm:px-6 lg:px-8 flex items-center min-h-screen">
         <div className="max-w-6xl mx-auto w-full">
-          <SectionTitle subtitle="A melhor plataforma para preparação ao ENEM, 100% alinhada à BNCC">
+          <SectionTitle subtitle="Simulador ENEM completo com correção automática por IA de redações e questões">
             🎓 <span className="bg-gradient-to-r from-yellow-500 to-yellow-700 bg-clip-text text-transparent">Preparação para o ENEM</span>
           </SectionTitle>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             {[
-              { title: 'Banco de Questões Gigante', description: 'Mais de 3000 questões oficiais (2009-2024) + infinitas geradas por IA.', icon: '📚', stats: '3000+ Questões Oficiais' },
-              { title: 'Modos de Estudo Inteligentes', description: 'Modo rápido, personalizado por dificuldade e oficial com cronômetro.', icon: '⚡', stats: '3 Modos Disponíveis' },
-              { title: 'Correção Automática de Redação', description: 'Correção por IA com critérios oficiais do ENEM, aceitando PDFs ou imagens.', icon: '✍️', stats: 'Correção Instantânea' },
-              { title: 'Temas e Tendências 2025', description: 'Temas oficiais de redação e análise de tendências para o ENEM.', icon: '🎯', stats: 'Tendências Atualizadas' },
+              { title: '3000+ Questões Oficiais', description: 'Banco completo com questões oficiais do ENEM (2009-2024) + infinitas geradas por IA.', icon: '📚', stats: '3000+ Questões Oficiais' },
+              { title: 'Temas de Redação Completos', description: 'Todos os temas oficiais desde 1998 + infinitos gerados por IA baseados em tendências.', icon: '✍️', stats: 'Temas desde 1998' },
+              { title: 'Explicação de Erros por IA', description: 'Explicação detalhada de questões erradas no simulado usando IA avançada.', icon: '🧠', stats: 'Feedback Inteligente' },
+              { title: 'Correção Automática', description: 'Correção instantânea de redações por IA com critérios oficiais do ENEM.', icon: '🤖', stats: 'Correção Instantânea' },
             ].map((feature, index) => (
               <FeatureCard key={index} feature={feature} />
             ))}
@@ -50,9 +50,9 @@ export default function Slide4() {
             <h3 className="text-2xl font-black mb-4">🏆 Por que Escolher Nosso Simulador?</h3>
             <div className="grid md:grid-cols-3 gap-4">
               {[
-                { icon: '📈', title: 'Resultados Comprovados', description: 'Estudantes aumentam 45% no desempenho' },
+                { icon: '📈', title: 'Resultados Comprovados', description: 'Estudantes aumentam 35 pontos na média' },
                 { icon: '🎯', title: 'Foco no ENEM', description: 'Desenvolvido para o exame brasileiro' },
-                { icon: '⚡', title: 'Tecnologia Avançada', description: 'IA que gera questões personalizadas' },
+                { icon: '⚡', title: 'IA Avançada', description: 'Correção automática de redações e questões' },
               ].map((item, index) => (
                 <div key={index} className="text-center">
                   <div className="text-3xl mb-2">{item.icon}</div>

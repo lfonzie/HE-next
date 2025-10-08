@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import { callGrok } from '@/lib/providers/grok'
 import { SPEC_ADDENDUM, CODE_REGION_OPENER, CODE_REGION_CLOSER } from '@/lib/video-learning-prompts'
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,13 +13,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
-
     const fullPrompt = spec + SPEC_ADDENDUM
 
-    const result = await model.generateContent(fullPrompt)
-    const response = await result.response
-    const text = response.text()
+    const result = await callGrok(
+      'grok-4-fast-reasoning',
+      [],
+      fullPrompt,
+      'Você é um especialista em desenvolvimento de aplicações educacionais interativas. Gere código HTML, CSS e JavaScript de alta qualidade para aplicações de aprendizado baseadas em vídeo.'
+    )
+
+    const text = result.text
 
     if (!text) {
       return NextResponse.json(

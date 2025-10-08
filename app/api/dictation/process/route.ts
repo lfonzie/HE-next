@@ -1,49 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+import { callGrok } from '@/lib/providers/grok';
 
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
-    const audioFile = formData.get('audio') as File;
     const action = formData.get('action') as string;
 
-    if (!audioFile) {
-      return NextResponse.json(
-        { error: 'Audio file is required' },
-        { status: 400 }
-      );
-    }
-
-    // Convert file to base64
-    const arrayBuffer = await audioFile.arrayBuffer();
-    const base64Audio = Buffer.from(arrayBuffer).toString('base64');
-
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
-
     if (action === 'transcribe') {
-      // Transcription
-      const contents = [
-        { text: 'Generate a complete, detailed transcript of this audio.' },
-        { 
-          inlineData: { 
-            mimeType: audioFile.type, 
-            data: base64Audio 
-          } 
-        },
-      ];
-
-      const result = await model.generateContent(contents);
-      const response = await result.response;
-      const transcriptionText = response.text();
-
+      // Para transcrição de áudio, Grok não suporta diretamente
       return NextResponse.json({
-        transcription: transcriptionText
-      });
+        error: 'Grok 4 Fast não suporta transcrição de áudio diretamente',
+        suggestion: 'Use uma API de transcrição externa (como Whisper) primeiro',
+        alternative: 'Para transcrição, use o endpoint /api/dictation/transcribe'
+      }, { status: 400 });
 
     } else if (action === 'polish') {
-      // Polish transcription
+      // Polish transcription usando Grok 4 Fast
       const rawTranscription = formData.get('rawTranscription') as string;
       
       if (!rawTranscription) {
@@ -53,22 +25,34 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const prompt = `Take this raw transcription and create a polished, well-formatted note.
-                    Remove filler words (um, uh, like), repetitions, and false starts.
-                    Format any lists or bullet points properly. Use markdown formatting for headings, lists, etc.
-                    Maintain all the original content and meaning.
+      const prompt = `Pegue esta transcrição bruta e crie uma nota polida e bem formatada.
+                    Remova palavras de preenchimento (um, uh, tipo), repetições e falsos começos.
+                    Formate listas ou pontos de bala adequadamente. Use formatação markdown para cabeçalhos, listas, etc.
+                    Mantenha todo o conteúdo e significado originais.
 
-                    Raw transcription:
+                    Transcrição bruta:
                     ${rawTranscription}`;
 
-      const contents = [{ text: prompt }];
-      const result = await model.generateContent(contents);
-      const response = await result.response;
-      const polishedText = response.text();
+      try {
+        const result = await callGrok(
+          'grok-4-fast-reasoning',
+          [],
+          prompt,
+          'Você é um especialista em formatação e polimento de texto em português brasileiro.'
+        );
 
-      return NextResponse.json({
-        polishedNote: polishedText
-      });
+        return NextResponse.json({
+          polishedNote: result.text,
+          model: 'grok-4-fast-reasoning'
+        });
+
+      } catch (error) {
+        console.error('❌ [DICTATION] Error polishing with Grok:', error);
+        return NextResponse.json(
+          { error: 'Failed to polish transcription with Grok' },
+          { status: 500 }
+        );
+      }
 
     } else {
       return NextResponse.json(
@@ -80,7 +64,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error in dictation API:', error);
     return NextResponse.json(
-      { error: 'Failed to process audio' },
+      { error: 'Failed to process request' },
       { status: 500 }
     );
   }

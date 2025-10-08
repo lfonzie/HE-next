@@ -10,7 +10,7 @@ import QuizSummarySlide from './QuizSummarySlide'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { CheckCircle, Clock, Star, Trophy, XCircle, ArrowLeft, ArrowRight, BookOpen, Printer, RotateCcw, Plus } from 'lucide-react'
+import { CheckCircle, Clock, Star, Trophy, XCircle, ArrowLeft, ArrowRight, BookOpen, Printer, RotateCcw, Plus, AlertCircle } from 'lucide-react'
 
 interface StageActivity {
   component: string
@@ -100,24 +100,77 @@ export default function DynamicStage({
     console.log('🔍 DEBUG DynamicStage - useMemo triggered for stage:', stageIndex)
     console.log('🔍 DEBUG DynamicStage - stage.activity.component:', stage.activity.component)
     console.log('🔍 DEBUG DynamicStage - stage.activity.questions:', stage.activity.questions)
+    console.log('🔍 DEBUG DynamicStage - stage.activity.questions length:', stage.activity.questions?.length)
+    console.log('🔍 DEBUG DynamicStage - stage.activity.questions type:', typeof stage.activity.questions)
+    console.log('🔍 DEBUG DynamicStage - stage.activity.questions isArray:', Array.isArray(stage.activity.questions))
     
     if (stage.activity.component === 'QuizComponent' && stage.activity.questions) {
       const originalQuestions = stage.activity.questions || []
       
       console.log('🔍 DEBUG Original questions from API:', originalQuestions)
+      console.log('🔍 DEBUG Original questions length:', originalQuestions.length)
+      
+      // Verificar se as perguntas estão vazias ou inválidas
+      if (!originalQuestions || originalQuestions.length === 0) {
+        console.error('❌ No questions found in stage.activity.questions')
+        return []
+      }
       
       // Transform questions to the format expected by EnhancedQuizComponent
-      return originalQuestions.map((q: any, index: number) => {
+      const processedQuestions = originalQuestions.map((q: any, index: number) => {
         console.log(`🔍 DEBUG Processing Question ${index + 1}:`, {
           originalCorrect: q.correct,
           originalType: typeof q.correct,
           originalOptions: q.options
         });
 
+        // Safety check for question structure
+        if (!q || typeof q !== 'object') {
+          console.error(`❌ Invalid question structure at index ${index}:`, q)
+          return {
+            id: `error-${index}`,
+            question: 'Erro: Questão inválida',
+            options: { A: 'Erro', B: 'Erro', C: 'Erro', D: 'Erro' },
+            correctAnswer: 'A' as const,
+            explanation: 'Esta questão possui estrutura inválida.',
+            difficulty: 'EASY' as const,
+            points: 0
+          }
+        }
+
         // Normalize options by stripping any leading letters like "A) "
         const cleanOption = (text: string | undefined, fallback: string) => {
           const raw = (text || fallback)
           return raw.replace(/^[A-D]\)\s*/, '').trim()
+        }
+
+        // Safety check for options
+        if (!q.options || typeof q.options !== 'object') {
+          console.error(`❌ Invalid options structure at index ${index}:`, q.options)
+          return {
+            id: `error-${index}`,
+            question: q.question || 'Erro: Questão inválida',
+            options: { A: 'Erro', B: 'Erro', C: 'Erro', D: 'Erro' },
+            correctAnswer: 'A' as const,
+            explanation: 'Esta questão possui opções inválidas.',
+            difficulty: 'EASY' as const,
+            points: 0
+          }
+        }
+
+        // Ensure options array exists and has at least 4 elements
+        const optionsArray = Array.isArray(q.options) ? q.options : Object.values(q.options)
+        if (!Array.isArray(optionsArray) || optionsArray.length < 4) {
+          console.error(`❌ Insufficient options at index ${index}:`, optionsArray)
+          return {
+            id: `error-${index}`,
+            question: q.question || 'Erro: Questão inválida',
+            options: { A: 'Erro', B: 'Erro', C: 'Erro', D: 'Erro' },
+            correctAnswer: 'A' as const,
+            explanation: 'Esta questão não possui opções suficientes.',
+            difficulty: 'EASY' as const,
+            points: 0
+          }
         }
 
         // Determine correct answer - EnhancedQuizComponent expects string ('A','B','C','D')
@@ -160,12 +213,15 @@ export default function DynamicStage({
         }
 
         console.log(`🔍 DEBUG: Final transformed question ${index + 1}:`, {
-          correct: transformed.correct,
+          correctAnswer: transformed.correctAnswer,
           options: transformed.options
         })
 
         return transformed
       })
+      
+      console.log('🔍 DEBUG Final processed questions:', processedQuestions)
+      return processedQuestions
     }
     return null
   }, [stage.activity.component, stage.activity.questions])
@@ -240,15 +296,32 @@ export default function DynamicStage({
     switch (activity.component) {
       case 'QuizComponent':
         // Use the memoized processed questions to prevent re-processing on re-renders
-        if (!processedQuizQuestions) {
-          console.log('QuizComponent: Nenhuma questão processada disponível, retornando null')
-          return null
+        if (!processedQuizQuestions || processedQuizQuestions.length === 0) {
+          console.log('QuizComponent: Nenhuma questão processada disponível', {
+            processedQuizQuestions,
+            activityQuestions: activity.questions,
+            stageActivity: activity
+          })
+          return (
+            <Card className="w-full max-w-4xl mx-auto">
+              <CardContent className="p-6">
+                <div className="text-center text-yellow-600">
+                  <AlertCircle className="w-8 h-8 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Quiz Indisponível</h3>
+                  <p>Nenhuma pergunta foi encontrada para este quiz.</p>
+                  <p className="text-sm text-gray-500 mt-2">
+                    Atividade: {activity.component} | Perguntas originais: {activity.questions?.length || 0}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )
         }
         
         return (
           <EnhancedQuizComponent
             questions={processedQuizQuestions}
-            onComplete={(score, total, results) => handleStageComplete({ score, total, total: total, type: 'quiz' })}
+            onComplete={(score, total, results) => handleStageComplete({ score, total, type: 'quiz' })}
             timeLimit={activity.time ? activity.time * 60 : 0}
             showExplanations={true}
             allowRetry={true}

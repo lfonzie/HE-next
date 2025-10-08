@@ -56,50 +56,14 @@ export async function POST(request: Request) {
       });
     }
     
-    // Try Grok first for ultra-fast performance, then fallback to Gemini
+    // MUDANÇA CRÍTICA: Usar Gemini primeiro (mais confiável que Grok atualmente)
+    // Grok estava tendo timeout consistente (90s+), Gemini funciona bem
     let response;
-    let usedProvider = 'grok';
+    let usedProvider = 'gemini';
     
-    // Try Grok first
-    if (process.env.GROK_API_KEY) {
-      try {
-        console.log('🚀 Trying Grok for ultra-fast lesson generation...');
-        response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/aulas/generate-grok`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Cookie': request.headers.get('cookie') || '',
-          },
-          body: JSON.stringify(body),
-        });
-        
-        if (response.ok) {
-          console.log('✅ Grok generation successful!');
-          usedProvider = 'grok';
-        } else {
-          console.log('⚠️ Grok failed, falling back to Gemini...');
-          throw new Error('Grok failed');
-        }
-      } catch (grokError) {
-        console.log('❌ Grok failed:', (grokError as Error).message);
-        console.log('🔄 Falling back to Gemini...');
-        usedProvider = 'gemini';
-        
-        // Fallback to Gemini
-        response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/aulas/generate-gemini`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Cookie': request.headers.get('cookie') || '',
-          },
-          body: JSON.stringify(body),
-        });
-      }
-    } else {
-      console.log('⚠️ GROK_API_KEY not found, using Gemini...');
-      usedProvider = 'gemini';
-      
-      // Use Gemini if Grok is not available
+    console.log('🚀 Using Gemini as primary provider (most reliable)...');
+    
+    try {
       response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/aulas/generate-gemini`, {
         method: 'POST',
         headers: {
@@ -108,6 +72,59 @@ export async function POST(request: Request) {
         },
         body: JSON.stringify(body),
       });
+      
+      if (response.ok) {
+        console.log('✅ Gemini generation successful!');
+        usedProvider = 'gemini';
+      } else {
+        throw new Error('Gemini failed');
+      }
+    } catch (geminiError) {
+      console.log('❌ Gemini failed:', (geminiError as Error).message);
+      
+      // Fallback to Grok only if Gemini fails
+      if (process.env.GROK_API_KEY) {
+        console.log('🔄 Falling back to Grok improved...');
+        
+        try {
+          response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/aulas/generate-grok-improved`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Cookie': request.headers.get('cookie') || '',
+            },
+            body: JSON.stringify(body),
+          });
+          
+          if (response.ok) {
+            console.log('✅ Grok improved generation successful!');
+            usedProvider = 'grok-improved';
+          } else {
+            throw new Error('Grok improved failed');
+          }
+        } catch (grokImprovedError) {
+          console.log('❌ Grok improved failed:', (grokImprovedError as Error).message);
+          console.log('🔄 Trying original Grok as last resort...');
+          
+          response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/aulas/generate-grok`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Cookie': request.headers.get('cookie') || '',
+            },
+            body: JSON.stringify(body),
+          });
+          
+          if (response.ok) {
+            console.log('✅ Original Grok generation successful!');
+            usedProvider = 'grok';
+          } else {
+            throw new Error('All providers failed');
+          }
+        }
+      } else {
+        throw new Error('Gemini failed and no Grok API key available');
+      }
     }
 
     if (!response.ok) {

@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
+import { callGrok } from '@/lib/providers/grok'
 
 interface Flashcard {
   term: string
@@ -19,19 +17,33 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' })
+    const prompt = `Crie flashcards educacionais de alta qualidade para o tópico "${topic}". 
 
-    const prompt = `Gere uma lista de flashcards para o tópico "${topic}". Cada flashcard deve ter um termo e uma definição concisa. Formate a saída como uma lista de pares "Termo: Definição", com cada par em uma nova linha. Certifique-se de que os termos e definições sejam distintos e claramente separados por dois pontos. Aqui está um exemplo de saída:
+INSTRUÇÕES IMPORTANTES:
+1. **FOQUE NO CONTEÚDO PRINCIPAL**: Cada flashcard deve cobrir conceitos fundamentais e essenciais
+2. **TERMOS CLAROS**: Use termos específicos e precisos (não genéricos)
+3. **DEFINIÇÕES CONCISAS**: Máximo 2-3 frases por definição
+4. **CONTEÚDO EDUCATIVO**: Priorize informações que realmente ajudam no aprendizado
+5. **EXEMPLOS PRÁTICOS**: Inclua exemplos quando relevante
+6. **DIFICULDADE PROGRESSIVA**: Comece com conceitos básicos e avance para mais complexos
 
-História: Disciplina que estuda o passado humano
-Matemática: Ciência que estuda números, formas e padrões
-Geografia: Estudo da Terra e suas características
+FORMATO DE SAÍDA:
+Termo: Definição concisa e educativa
 
-Gere entre 5 e 15 flashcards relevantes para o tópico "${topic}".`
+EXEMPLO DE QUALIDADE:
+Fotossíntese: Processo pelo qual plantas convertem luz solar em energia química, produzindo glicose e liberando oxigênio
+Mitocôndria: Organela celular responsável pela respiração celular e produção de ATP
 
-    const result = await model.generateContent(prompt)
-    const response = await result.response
-    const text = response.text()
+Gere entre 8 e 12 flashcards de alta qualidade para "${topic}".`
+
+    const result = await callGrok(
+      'grok-4-fast-reasoning',
+      [],
+      prompt,
+      'Você é um especialista em educação e criação de materiais didáticos. Sua especialidade é criar flashcards que maximizam o aprendizado através de conteúdo focado, preciso e pedagogicamente eficaz. Sempre priorize conceitos fundamentais e informações essenciais que realmente importam para o aprendizado.'
+    )
+
+    const text = result.text
 
     if (!text) {
       return NextResponse.json(

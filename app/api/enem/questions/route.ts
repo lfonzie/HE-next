@@ -18,7 +18,7 @@ import { prisma } from '@/lib/db'
 import { enemApi, ENEM_AREAS } from '@/lib/enem-api'
 
 
-import { openai, selectModel, getModelConfig } from '@/lib/openai'
+import { callGrok } from '@/lib/providers/grok'
 
 
 import { apiConfig } from '@/lib/api-config'
@@ -345,7 +345,7 @@ function generateMockQuestions(area: string, count: number) {
 async function generateQuestions(area: string, count: number) {
   try {
     // Use GPT-4o mini as fallback model for question generation
-    const fallbackModel = process.env.ENEM_FALLBACK_MODEL || "gpt-4o-mini"
+    const fallbackModel = "grok-4-fast-reasoning"
     
     // Limit count to prevent timeout issues - batch generation strategy
     const maxCount = Math.min(count, 2) // Generate in batches of 2
@@ -377,7 +377,7 @@ async function generateQuestions(area: string, count: number) {
       }
     ]`
 
-    console.log(`Using fallback model: ${fallbackModel} for ENEM questions generation`)
+    console.log(`Using Grok 4 Fast for ENEM questions generation`)
     
     // Add timeout and retry logic with shorter timeout for batch generation
     const controller = new AbortController()
@@ -386,16 +386,14 @@ async function generateQuestions(area: string, count: number) {
       console.log('AI generation timeout - aborting request')
     }, 20000) // 20 seconds timeout for batch generation
     
-    const completion = await openai.chat.completions.create({
-      model: fallbackModel,
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.7,
-      max_tokens: 1500, // Reduced for batch generation
-    })
+    const result = await callGrok(
+      'grok-4-fast-reasoning',
+      [],
+      prompt,
+      'Você é um especialista em questões do ENEM. Gere questões educacionais de alta qualidade em português brasileiro.'
+    )
     
-    clearTimeout(timeoutId)
-
-    const response = completion.choices[0]?.message?.content
+    const response = result.text
     if (!response) return []
 
     // Clean the response to extract JSON from markdown if present
@@ -417,7 +415,7 @@ async function generateQuestions(area: string, count: number) {
       return []
     }
     
-    console.log(`✅ Generated ${questions.length} questions using ${fallbackModel}`)
+    console.log(`✅ Generated ${questions.length} questions using Grok 4 Fast`)
     
     return questions.map((q: any) => ({
       area,

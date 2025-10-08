@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+import { callGrok } from '@/lib/providers/grok';
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,31 +15,35 @@ export async function POST(request: NextRequest) {
     // Create a prompt to generate initial suggestions based on the URLs
     const urlContext = urls.map((url: string) => `URL: ${url}`).join('\n');
     
-    const prompt = `Based on the following documentation URLs, generate 4 helpful question suggestions that a user might ask:
+    const prompt = `Com base nas seguintes URLs de documentação, gere 4 sugestões de perguntas úteis que um usuário poderia fazer:
 
 ${urlContext}
 
-Please respond with a JSON object containing an array of suggestions:
+Por favor, responda com um objeto JSON contendo um array de sugestões:
 {
   "suggestions": [
-    "Question 1",
-    "Question 2", 
-    "Question 3",
-    "Question 4"
+    "Pergunta 1",
+    "Pergunta 2", 
+    "Pergunta 3",
+    "Pergunta 4"
   ]
 }
 
-Make the questions specific, helpful, and relevant to the documentation content.`;
+Torne as perguntas específicas, úteis e relevantes para o conteúdo da documentação. Responda em português brasileiro.`;
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+    const result = await callGrok(
+      'grok-4-fast-reasoning',
+      [],
+      prompt,
+      'Você é um assistente especializado em análise de documentação técnica. Sempre forneça sugestões de perguntas úteis e específicas em português brasileiro.'
+    );
+
+    const text = result.text;
 
     // Try to parse the JSON response
     try {
       let jsonStr = text.trim();
-      const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/s;
+      const fenceRegex = /^```(\w*)?\s*\n?(.*?)\n?\s*```$/;
       const match = jsonStr.match(fenceRegex);
       if (match && match[2]) {
         jsonStr = match[2].trim();

@@ -18,7 +18,8 @@ import {
   TrendingUp,
   BarChart3,
   Eye,
-  EyeOff
+  EyeOff,
+  CheckCircle
 } from 'lucide-react';
 import { Experiment } from '../types/experiment';
 import { AIAssistant } from './AIAssistant';

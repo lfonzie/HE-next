@@ -34,21 +34,21 @@ export async function POST(request: NextRequest) {
     const arrayBuffer = await audioFile.arrayBuffer()
     const base64Audio = Buffer.from(arrayBuffer).toString('base64')
 
-    // Initialize Gemini API (standard version)
+    // Initialize Gemini API (Gemini 2.5 version)
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" })
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
 
     // Create streaming response
     const encoder = new TextEncoder()
     const stream = new ReadableStream({
       async start(controller) {
         try {
-          console.log('🔗 [LIVE-STREAM] Processing audio with Gemini API')
+          console.log('🔗 [LIVE-STREAM] Processing audio with Gemini 2.5')
           
           // Send initial connection message
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
             type: 'text', 
-            content: 'Processando áudio com Gemini...' 
+            content: 'Processando áudio com Gemini 2.5...' 
           })}\n\n`))
 
           // Create the prompt for audio processing

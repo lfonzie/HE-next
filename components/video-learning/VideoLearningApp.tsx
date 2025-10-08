@@ -70,7 +70,9 @@ export default function VideoLearningApp({ initialUrl = '' }: VideoLearningAppPr
       })
 
       if (!specResponse.ok) {
-        throw new Error('Erro ao gerar especificação')
+        const errorData = await specResponse.json().catch(() => ({}))
+        console.error('Spec generation error:', errorData)
+        throw new Error(errorData.error || 'Erro ao gerar especificação')
       }
 
       const specData = await specResponse.json()

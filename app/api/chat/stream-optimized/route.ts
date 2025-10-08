@@ -161,12 +161,12 @@ function selectProvider(message: string, module: string, forceProvider: string):
                       process.env.GOOGLE_GEMINI_API_KEY || 
                       process.env.GOOGLE_API_KEY;
   
-  // Para mensagens simples e módulos específicos, usar Google (mais rápido)
-  const simpleModules = ['ti', 'rh', 'financeiro', 'secretaria', 'professor', 'aula_interativa'];
+  // Para mensagens simples e módulos específicos, usar Grok (mais rápido)
+  const simpleModules = ['ti', 'rh', 'financeiro', 'secretaria', 'coordenacao', 'social-media', 'bem-estar', 'professor', 'aula_interativa'];
   
-  if (hasGoogleKey && (simpleModules.includes(module) || complexity === 'simple')) {
-    console.log('🎯 [PROVIDER-SELECTION] Using Google Gemini for simple task');
-    return 'google';
+  if (process.env.GROK_API_KEY && (simpleModules.includes(module) || complexity === 'simple')) {
+    console.log('🎯 [PROVIDER-SELECTION] Using Grok 4 Fast for simple task');
+    return 'grok';
   }
   
   console.log('🎯 [PROVIDER-SELECTION] Using OpenAI as default');

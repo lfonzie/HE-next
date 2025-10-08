@@ -30,26 +30,34 @@ const debounce = (func: (...args: any[]) => void, wait: number) => {
 const BRAND = {
   name: 'HubEdu.ia',
   tagline: 'A Educação do Futuro',
-  description: 'Plataforma educacional completa com aulas geradas por IA, simulador ENEM, correção automática de redações e chat inteligente, alinhada à BNCC e LGPD.'
+  description: 'Aulas completas em 2 minutos, chat Professor IA para dúvidas, simulador ENEM completo e correção automática por IA de redações e questões. A única plataforma educacional com 5 principais IAs integradas.'
 };
 
 const CHAT_MODULES = [
-  { name: 'Professor IA', description: 'Tire dúvidas pedagógicas instantaneamente', icon: '👩‍🏫', features: ['Dúvidas sobre BNCC', 'Sugestões de atividades', 'Planejamento de aulas', 'Avaliação de alunos', 'Metodologias ativas'], benefits: 'Suporte pedagógico 24/7' },
-  { name: 'Suporte T.I.', description: 'Suporte técnico para funcionários', icon: '💻', features: ['Problemas de sistema', 'Configuração de equipamentos', 'Treinamento digital', 'Manutenção preventiva', 'Soluções rápidas'], benefits: 'Resolução técnica imediata' },
-  { name: 'Atendimento', description: 'Atendimento personalizado para pais e visitantes', icon: '👨‍👩‍👧‍👦', features: ['Informações escolares', 'Agendamento de reuniões', 'Dúvidas sobre matrícula', 'Comunicação com professores', 'Eventos da escola'], benefits: 'Atendimento humanizado e eficiente' },
-  { name: 'Bem-estar', description: 'Suporte emocional para a comunidade escolar', icon: '💚', features: ['Suporte psicológico', 'Mediação de conflitos', 'Orientação familiar', 'Prevenção ao bullying', 'Cuidados emocionais'], benefits: 'Ambiente escolar saudável' },
-  { name: 'Social Media', description: 'Gestão de redes sociais da escola', icon: '📱', features: ['Posts automáticos', 'Gestão de conteúdo', 'Interação com comunidade', 'Relatórios de engajamento', 'Cronograma de publicações'], benefits: 'Presença digital profissional' },
-  { name: 'Coordenação', description: 'Ferramentas para coordenação pedagógica', icon: '👨‍💼', features: ['Planejamento curricular', 'Acompanhamento pedagógico', 'Reuniões de equipe', 'Formação continuada', 'Gestão de projetos'], benefits: 'Coordenação eficiente' },
-  { name: 'Secretaria', description: 'Automação de processos administrativos', icon: '📋', features: ['Documentação digital', 'Controle de frequência', 'Emissão de certificados', 'Arquivo de documentos', 'Processos burocráticos'], benefits: 'Administração moderna' },
-  { name: 'RH', description: 'Gestão de recursos humanos', icon: '👥', features: ['Controle de ponto', 'Avaliação de desempenho', 'Treinamentos', 'Folha de pagamento', 'Benefícios funcionais'], benefits: 'Gestão completa de RH' },
-  { name: 'Financeiro', description: 'Controle financeiro e pagamentos', icon: '💰', features: ['Controle de mensalidades', 'Relatórios financeiros', 'Gestão de inadimplência', 'Orçamento escolar', 'Contas a pagar'], benefits: 'Controle financeiro transparente' },
-  { name: 'Gestão', description: 'Relatórios e analytics educacionais', icon: '📊', features: ['Dashboard executivo', 'Métricas de aprendizado', 'Relatórios de performance', 'Análise de dados', 'Tomada de decisões'], benefits: 'Gestão baseada em dados' },
+  { name: 'Professor IA', description: 'Assistente pedagógico para dúvidas educacionais', icon: '👩‍🏫', features: ['Dúvidas sobre BNCC', 'Sugestões de atividades', 'Planejamento de aulas', 'Ideias de avaliação', 'Metodologias ativas'], benefits: 'Suporte pedagógico inteligente' },
+  { name: 'Suporte T.I.', description: 'Assistente técnico para questões de tecnologia', icon: '💻', features: ['Problemas de sistema', 'Configuração básica', 'Orientações digitais', 'Soluções simples', 'Troubleshooting'], benefits: 'Resolução técnica rápida' },
+  { name: 'Atendimento', description: 'Assistente para comunicação escolar', icon: '👨‍👩‍👧‍👦', features: ['Informações gerais', 'Orientações básicas', 'Comunicação simples', 'FAQ escolar', 'Direcionamento'], benefits: 'Comunicação eficiente' },
+  { name: 'Bem-estar', description: 'Assistente para orientações de saúde mental', icon: '💚', features: ['Dicas de bem-estar', 'Orientações básicas', 'Recursos de apoio', 'Informações gerais', 'Direcionamento'], benefits: 'Suporte emocional básico' },
+  { name: 'Social Media', description: 'Assistente para conteúdo de redes sociais', icon: '📱', features: ['Ideias de posts', 'Sugestões de conteúdo', 'Textos educativos', 'Hashtags relevantes', 'Inspirações'], benefits: 'Conteúdo para redes sociais' },
+  { name: 'Coordenação', description: 'Assistente para coordenação pedagógica', icon: '👨‍💼', features: ['Planejamento pedagógico', 'Organização de eventos', 'Coordenação de atividades', 'Sugestões metodológicas', 'Orientações gerais'], benefits: 'Suporte à coordenação' },
+  { name: 'Secretaria', description: 'Assistente para processos administrativos', icon: '📋', features: ['Orientações administrativas', 'Processos básicos', 'Documentação simples', 'Organização de dados', 'Fluxos padrão'], benefits: 'Automação administrativa' },
+  { name: 'RH', description: 'Assistente para recursos humanos', icon: '👥', features: ['Orientações de RH', 'Processos básicos', 'Comunicação interna', 'Documentação simples', 'Fluxos padrão'], benefits: 'Suporte em RH' },
+  { name: 'Financeiro', description: 'Assistente para questões financeiras', icon: '💰', features: ['Orientações financeiras', 'Cálculos básicos', 'Relatórios simples', 'Organização de dados', 'Controle básico'], benefits: 'Suporte financeiro' },
+  { name: 'Gestão', description: 'Assistente para análise e relatórios', icon: '📊', features: ['Análise de dados', 'Relatórios básicos', 'Insights simples', 'Visualizações', 'Métricas educacionais'], benefits: 'Analytics educacional' },
+];
+
+const AI_INTEGRATIONS = [
+  { name: 'Grok 4', description: 'IA avançada para análise de dados e insights educacionais', icon: '⚡', features: ['Análise de performance', 'Insights pedagógicos', 'Dados em tempo real', 'Relatórios avançados'], color: 'from-blue-500 to-blue-600' },
+  { name: 'OpenAI ChatGPT 5', description: 'Geração de conteúdo educacional personalizado', icon: '🤖', features: ['Conteúdo adaptativo', 'Explicações detalhadas', 'Suporte pedagógico', 'Criação de exercícios'], color: 'from-green-500 to-green-600' },
+  { name: 'Google Gemini 2.5', description: 'Processamento multimodal para aulas interativas', icon: '💎', features: ['Análise de imagens', 'Processamento de texto', 'Síntese de informações', 'Busca inteligente'], color: 'from-purple-500 to-purple-600' },
+  { name: 'Claude 4.5', description: 'Raciocínio avançado para correção e feedback', icon: '🧠', features: ['Correção de redações', 'Análise de questões', 'Feedback personalizado', 'Raciocínio complexo'], color: 'from-orange-500 to-orange-600' },
+  { name: 'Perplexity', description: 'Busca em tempo real para conteúdo atualizado', icon: '🔍', features: ['Busca em tempo real', 'Fontes verificadas', 'Conteúdo atualizado', 'Pesquisa contextual'], color: 'from-red-500 to-red-600' },
 ];
 
 const COMPETITORS = [
   { name: 'ChatGPT', price: 'US$ 20/mês por usuário (~R$ 106/mês)', restrictions: ['Conteúdo não adaptado para idade escolar', 'Sem conteúdo específico para escolas', 'Não baseado na BNCC', 'Sem compliance LGPD'], icon: '🤖' },
   { name: 'Grok', price: 'US$ 30/mês por usuário (~R$ 159/mês)', restrictions: ['Conteúdo não adaptado para idade escolar', 'Sem simulador ENEM', 'Não baseado na BNCC', 'Sem compliance LGPD'], icon: '⚡' },
-  { name: 'Gemini', price: 'US$ 20/mês por usuário (~R$ 106/mês)', restrictions: ['Conteúdo não adaptado para idade escolar', 'Sem conteúdo específico para escolas', 'Não baseado na BNCC', 'Sem compliance LGPD'], icon: '💎' },
+  { name: 'Gemini 2.5', price: 'US$ 20/mês por usuário (~R$ 106/mês)', restrictions: ['Conteúdo não adaptado para idade escolar', 'Sem conteúdo específico para escolas', 'Não baseado na BNCC', 'Sem compliance LGPD'], icon: '💎' },
 ];
 
 const ADVANTAGES = [
@@ -58,25 +66,34 @@ const ADVANTAGES = [
   '100% baseado na BNCC',
   'Compliance total com LGPD',
   'Conversas temporárias (apagadas automaticamente)',
+  'Chat Professor IA para dúvidas pedagógicas',
+  'Aulas completas geradas em 2 minutos',
+  'Simulador ENEM com 3000+ questões oficiais',
+  'Correção automática por IA de redações e questões',
   'Infraestrutura global de ponta',
-  'Simulador ENEM com +3000 questões oficiais',
   'Suporte nacional especializado',
   'Plataforma pioneira para educação brasileira',
 ];
 
 const HERO_MODULES = [
-  { title: 'Aulas Interativas', description: 'Slides dinâmicos baseados na BNCC com imagens, quizzes e gamificação.', icon: '🎮', features: ['100% baseado na BNCC', '14 slides estruturados', 'Atividades dinâmicas', 'Quizzes interativos', 'Gamificação completa'], cta: 'Explorar Aula' },
-  { title: 'Simulador ENEM', description: 'Mais de 3000 questões oficiais + infinitas geradas por IA alinhadas com BNCC.', icon: '📚', features: ['3000+ questões oficiais', 'Questões infinitas por IA', 'Modos personalizados', 'Análise detalhada', 'Alinhado com BNCC'], cta: 'Fazer Simulado' },
-  { title: 'Redação ENEM', description: 'Correção automática com temas oficiais e tendências atuais baseadas na BNCC.', icon: '✍️', features: ['Correção automática', 'Temas oficiais ENEM', 'Tendências 2025', 'Feedback detalhado', 'Critérios BNCC'], cta: 'Testar Redação' },
-  { title: 'Chat Inteligente', description: 'Sistema completo de IA com 10 módulos customizados e compliance LGPD.', icon: '💬', features: ['Professor IA', 'Suporte T.I.', 'Atendimento Pais', 'Bem-estar', 'Social Media', 'Coordenação', 'Secretaria', 'RH', 'Financeiro', 'Gestão', 'Conversas temporárias LGPD'], cta: 'Explorar Módulos' },
+  { title: 'Aulas Completas', description: 'Aulas completas sobre qualquer tema com quizzes, geradas em menos de 2 minutos por IA.', icon: '🎮', features: ['Qualquer tema educacional', 'Aulas completas com quizzes', 'Geração em menos de 2 minutos', '100% baseado na BNCC', 'Narração em tempo real'], cta: 'Explorar Aula' },
+  { title: 'Chat Professor IA', description: 'Professor virtual para tirar dúvidas pedagógicas instantaneamente com 5 principais IAs.', icon: '👩‍🏫', features: ['Dúvidas pedagógicas', 'Suporte BNCC', 'Sugestões de atividades', 'Orientação educacional', '5 IAs integradas'], cta: 'Conversar com Professor' },
+  { title: 'Simulador ENEM', description: '3000 questões oficiais (2009-2024) + infinitas geradas por IA com explicações detalhadas.', icon: '📚', features: ['3000+ questões oficiais', 'Questões infinitas por IA', 'Explicação de erros por IA', 'Modos personalizados', 'Análise detalhada'], cta: 'Fazer Simulado' },
+  { title: 'Redação ENEM', description: 'Todos os temas oficiais desde 1998 + infinitos gerados por IA baseados nas principais tendências.', icon: '✍️', features: ['Temas oficiais desde 1998', 'Infinitos temas por IA', 'Tendências atuais 2025', 'Correção automática por IA', 'Feedback personalizado'], cta: 'Testar Redação' },
 ];
 
 const FEATURES = {
   lessons: [
-    { title: 'Baseadas na BNCC', description: 'Aulas rigorosamente alinhadas à Base Nacional Comum Curricular.', icon: '📚' },
-    { title: 'Interatividade Total', description: 'Quizzes com feedback instantâneo, atividades colaborativas e gamificação.', icon: '🎮' },
-    { title: 'Duração Otimizada', description: 'Aulas assíncronas de 30-40 minutos, permitindo flexibilidade no ritmo do aluno.', icon: '⏱️' },
-    { title: 'Qualquer Tema', description: 'Cobre educação, negócios, tecnologia, saúde, arte e mais, em qualquer nível.', icon: '🌍' },
+    { title: 'Aulas Completas', description: 'Aulas completas sobre qualquer assunto, geradas em menos de 2 minutos.', icon: '🎮' },
+    { title: 'Geração Ultra-Rápida', description: 'Aulas completas com quizzes geradas em menos de 2 minutos por IA.', icon: '⚡' },
+    { title: 'Narração em Tempo Real', description: 'Aulas com narração automática em tempo real para melhor compreensão.', icon: '🎙️' },
+    { title: '100% Baseado na BNCC', description: 'Conteúdo rigorosamente alinhado à Base Nacional Comum Curricular.', icon: '📚' },
+  ],
+  chat: [
+    { title: 'Professor IA', description: 'Professor virtual para dúvidas pedagógicas com 5 principais IAs integradas.', icon: '👩‍🏫', stats: 'Suporte Pedagógico' },
+    { title: '10 Módulos Especializados', description: 'Chat especializado para diferentes áreas da escola e comunidade.', icon: '💬', stats: 'Módulos Especializados' },
+    { title: 'Dúvidas Instantâneas', description: 'Tire dúvidas pedagógicas, técnicas e administrativas instantaneamente.', icon: '⚡', stats: 'Resposta Rápida' },
+    { title: 'Conversas Temporárias', description: 'Chats apagados automaticamente para compliance total com LGPD.', icon: '🔒', stats: 'LGPD Compliant' },
   ],
   school: [
     { title: 'Personalização de Conteúdo', description: 'Conteúdo adaptado ao currículo e metodologia da escola.', icon: '📚', stats: 'Conteúdo Customizado' },
@@ -84,25 +101,30 @@ const FEATURES = {
     { title: 'Conteúdo Personalizado', description: 'Aulas adaptadas para diferentes níveis e necessidades de cada turma.', icon: '🎯', stats: 'Adaptação Inteligente' },
   ],
   enem: [
-    { title: 'Banco de Questões Gigante', description: 'Mais de 3000 questões oficiais (2009-2024) + infinitas geradas por IA.', icon: '📚', stats: '3000+ Questões Oficiais' },
-    { title: 'Modos de Estudo Inteligentes', description: 'Modo rápido, personalizado por dificuldade e oficial com cronômetro.', icon: '⚡', stats: '3 Modos Disponíveis' },
-    { title: 'Correção Automática de Redação', description: 'Correção por IA com critérios oficiais do ENEM, aceitando PDFs ou imagens.', icon: '✍️', stats: 'Correção Instantânea' },
-    { title: 'Temas e Tendências 2025', description: 'Temas oficiais de redação e análise de tendências para o ENEM.', icon: '🎯', stats: 'Tendências Atualizadas' },
+    { title: '3000+ Questões Oficiais', description: 'Banco completo com questões oficiais do ENEM (2009-2024) + infinitas geradas por IA.', icon: '📚', stats: '3000+ Questões Oficiais' },
+    { title: 'Temas de Redação Completos', description: 'Todos os temas oficiais desde 1998 + infinitos gerados por IA baseados em tendências.', icon: '✍️', stats: 'Temas desde 1998' },
+    { title: 'Explicação de Erros por IA', description: 'Explicação detalhada de questões erradas no simulado usando IA avançada.', icon: '🧠', stats: 'Feedback Inteligente' },
+    { title: 'Correção Automática', description: 'Correção instantânea de redações por IA com critérios oficiais do ENEM.', icon: '🤖', stats: 'Correção Instantânea' },
   ],
 };
 
 const TESTIMONIALS = [
-  { name: 'Maria Santos', role: 'Professora, Escola Nova Era', content: 'As aulas interativas são incríveis! Os alunos adoram os quizzes e rankings. A correção automática de redação economiza horas.', rating: 5 },
-  { name: 'Carlos Mendes', role: 'Coordenador, Instituto Esperança', content: 'O simulador ENEM aumentou significativamente o desempenho dos alunos. O chat omni-channel é um diferencial para os pais.', rating: 5 },
-  { name: 'Ana Silva', role: 'Diretora, Colégio Crescer', content: 'A gestão escolar ficou mais eficiente com as ferramentas de IA. O chat inteligente é revolucionário para a comunidade escolar.', rating: 5 },
+  { name: 'Maria Santos', role: 'Professora de Biologia, Escola Nova Era', content: 'Incrível! Criei uma aula completa sobre fotossíntese em menos de 2 minutos. Os alunos aumentaram 40% no desempenho com os quizzes interativos e narração automática.', rating: 5 },
+  { name: 'Carlos Mendes', role: 'Coordenador Pedagógico, Instituto Esperança', content: 'O simulador ENEM com 3000+ questões oficiais revolucionou nossa preparação. A explicação de erros por IA fez nossos alunos subirem 35 pontos na média geral.', rating: 5 },
+  { name: 'Ana Silva', role: 'Diretora, Colégio Crescer', content: 'Economizamos 15 horas por semana com a correção automática de redações. Os 10 módulos de chat atendem toda nossa comunidade escolar com excelência.', rating: 5 },
 ];
 
 const FAQ_ITEMS = [
-  { question: 'Como são criadas as aulas?', answer: 'A IA gera aulas assíncronas de 30-40 minutos baseadas na BNCC, com slides, atividades e quizzes sobre qualquer tema.' },
+  { question: 'Como são criadas as aulas?', answer: 'A IA gera aulas completas sobre qualquer tema em menos de 2 minutos, com slides, atividades, quizzes e narração em tempo real, baseadas na BNCC.' },
+  { question: 'Quanto tempo leva para gerar uma aula?', answer: 'Menos de 2 minutos! A IA cria aulas completas com quizzes sobre qualquer tema educacional instantaneamente.' },
+  { question: 'O simulador ENEM tem quantas questões?', answer: 'Mais de 3000 questões oficiais (2009-2024) + infinitas geradas por IA com explicações detalhadas de erros.' },
+  { question: 'Quantos temas de redação estão disponíveis?', answer: 'Todos os temas oficiais do ENEM desde 1998 + infinitos temas gerados por IA baseados nas principais tendências atuais.' },
+  { question: 'Quantos módulos tem o chat inteligente?', answer: '10 módulos especializados diferentes: Professor IA, Suporte T.I., Atendimento Pais, Bem-estar, Social Media, Coordenação, Secretaria, RH, Financeiro e Gestão.' },
+  { question: 'As aulas têm narração?', answer: 'Sim, todas as aulas incluem narração automática em tempo real para melhor compreensão e acessibilidade.' },
+  { question: 'Quais IAs são utilizadas?', answer: 'Integramos as principais IAs: Grok 4, OpenAI ChatGPT 5, Google Gemini 2.5, Claude 4.5 e Perplexity para buscas em tempo real.' },
+  { question: 'Como funciona a correção de redação?', answer: 'Correção automática por IA com critérios oficiais ENEM, feedback personalizado e sugestões de melhoria.' },
+  { question: 'O simulador explica questões erradas?', answer: 'Sim, o sistema usa IA avançada para explicar detalhadamente cada questão errada no simulado do ENEM.' },
   { question: 'As aulas seguem a BNCC?', answer: 'Sim, todas as aulas são rigorosamente alinhadas à Base Nacional Comum Curricular.' },
-  { question: 'Quantos módulos tem o chat inteligente?', answer: '10 módulos: Professor IA, Suporte T.I., Atendimento Pais, Bem-estar, Social Media, Coordenação, Secretaria, RH, Financeiro e Gestão.' },
-  { question: 'O simulador ENEM tem quantas questões?', answer: 'Mais de 3000 questões oficiais (2009-2024) + infinitas geradas por IA.' },
-  { question: 'Como funciona a correção de redação?', answer: 'Correção automática com temas oficiais ENEM e análise de tendências 2025.' },
   { question: 'O chat é seguro para alunos?', answer: 'Sim, módulos são seguros por faixa etária e função escolar.' },
   { question: 'Os pais têm acesso?', answer: 'Sim, via chat omni-channel (WhatsApp, site e redes sociais).' },
   { question: 'É compatível com LGPD?', answer: 'Sim, com chats efêmeros e dados protegidos em servidores brasileiros.' },
@@ -145,6 +167,14 @@ interface Competitor {
   price?: string;
   restrictions?: string[];
   icon: string;
+}
+
+interface AIIntegration {
+  name: string;
+  description: string;
+  icon: string;
+  features: string[];
+  color: string;
 }
 
 // Skeleton Loader for Suspense
@@ -312,7 +342,7 @@ const ChatModulesGrid: React.FC = () => {
       >
         <h3 className="text-4xl font-extrabold mb-6 text-center">💬 10 Módulos de Chat IA</h3>
         <p className="text-2xl font-semibold mb-10 text-center">Soluções de IA para toda a comunidade escolar</p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6">
           {CHAT_MODULES.map((module, index) => (
             <motion.div
               key={index}
@@ -356,6 +386,33 @@ const TestimonialCard: React.FC<{ testimonial: Testimonial }> = ({ testimonial }
       <div className="font-bold">{testimonial.name}</div>
       <div className="text-gray-300">{testimonial.role}</div>
     </footer>
+  </motion.div>
+);
+
+const AIIntegrationCard: React.FC<{ integration: AIIntegration }> = ({ integration }) => (
+  <motion.div
+    className="bg-white/95 backdrop-blur-sm p-6 rounded-3xl border-2 border-gray-200 hover:border-yellow-400 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105"
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.3 }}
+    role="region"
+    aria-label={integration.name}
+  >
+    <div className="text-center mb-6">
+      <div className={`w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-r ${integration.color} flex items-center justify-center text-white text-2xl shadow-lg`} aria-hidden="true">
+        {integration.icon}
+      </div>
+      <h3 className="text-lg font-bold text-gray-800 mb-3">{integration.name}</h3>
+      <p className="text-sm text-gray-600 mb-4">{integration.description}</p>
+    </div>
+    <div className="space-y-2">
+      {integration.features.map((feature, idx) => (
+        <div key={idx} className="flex items-center gap-3 text-sm text-gray-600">
+          <div className="w-2 h-2 bg-yellow-500 rounded-full" aria-hidden="true"></div>
+          <span>{feature}</span>
+        </div>
+      ))}
+    </div>
   </motion.div>
 );
 
@@ -467,16 +524,50 @@ const HubEduLanding: React.FC = () => {
   return (
     <>
       <Head>
-        <title>{BRAND.name} - {BRAND.tagline}</title>
+        <title>{BRAND.name} - {BRAND.tagline} | Plataforma Educacional com IA</title>
         <meta name="description" content={BRAND.description} />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="keywords" content="educação, IA, BNCC, LGPD, ENEM, simulador, aulas interativas" />
-        <meta property="og:title" content={`${BRAND.name} - ${BRAND.tagline}`} />
+        <meta name="keywords" content="educação, IA, BNCC, LGPD, ENEM, simulador, aulas interativas, Grok 4, ChatGPT 5, Gemini 2.5, Claude 4.5, Perplexity, narração tempo real, correção automática" />
+        <meta name="author" content="HubEdu.ia" />
+        <meta name="robots" content="index, follow" />
+        <meta property="og:title" content={`${BRAND.name} - ${BRAND.tagline} | Plataforma Educacional com IA`} />
         <meta property="og:description" content={BRAND.description} />
         <meta property="og:image" content="/assets/Logo_HubEdu.ia.svg" />
         <meta property="og:url" content="https://hubedu.ia.br" />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="HubEdu.ia" />
         <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`${BRAND.name} - ${BRAND.tagline}`} />
+        <meta name="twitter:description" content={BRAND.description} />
+        <meta name="twitter:image" content="/assets/Logo_HubEdu.ia.svg" />
         <link rel="icon" href="/favicon.ico" />
+        <link rel="canonical" href="https://hubedu.ia.br/pagina-completa" />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "HubEdu.ia",
+            "description": "Aulas completas em 2 minutos, chat Professor IA para dúvidas, simulador ENEM completo e correção automática por IA de redações e questões. A única plataforma educacional com 5 principais IAs integradas.",
+            "url": "https://hubedu.ia.br",
+            "applicationCategory": "EducationalApplication",
+            "operatingSystem": "Web",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "BRL",
+              "availability": "https://schema.org/PreOrder"
+            },
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": "5",
+              "reviewCount": "3"
+            },
+            "author": {
+              "@type": "Organization",
+              "name": "HubEdu.ia"
+            }
+          })}
+        </script>
       </Head>
       <div className="min-h-screen w-full overflow-x-hidden scroll-smooth">
         {/* Launch Banner */}
@@ -486,8 +577,9 @@ const HubEduLanding: React.FC = () => {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
           role="alert"
+          aria-live="polite"
         >
-          🚀 EM BREVE - Aulas por IA + Simulador ENEM + Chat Inteligente
+          🚀 EM BREVE - Aulas com Narração + 5 Principais IAs + Correção ENEM por IA
         </motion.div>
 
         {/* Header */}
@@ -518,7 +610,7 @@ const HubEduLanding: React.FC = () => {
         </header>
 
         {/* Hero Section */}
-        <section className="min-h-screen bg-gradient-to-br from-slate-50 via-yellow-50 to-orange-100 text-black pt-24 pb-16 relative overflow-hidden">
+        <section className="min-h-screen bg-gradient-to-br from-slate-50 via-yellow-50 to-orange-100 text-black pt-24 pb-16 relative overflow-hidden" aria-labelledby="hero-title">
           <div className="absolute inset-0 opacity-20">
             <div className="absolute top-10 left-10 w-96 h-96 bg-gradient-to-r from-yellow-400/30 to-yellow-600/30 rounded-full blur-3xl animate-pulse" />
             <div
@@ -533,8 +625,8 @@ const HubEduLanding: React.FC = () => {
               animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 50 }}
               transition={{ duration: 0.5 }}
             >
-              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-black px-8 py-4 rounded-2xl text-lg font-bold mb-8 shadow-xl">
-                <Rocket className="w-6 h-6" aria-hidden="true" /> 🚀 EM BREVE - Educação Brasileira do Futuro
+              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-black px-8 py-4 rounded-2xl text-lg font-bold mb-8 shadow-xl animate-pulse">
+                <Rocket className="w-6 h-6" aria-hidden="true" /> 🚀 EM BREVE - A Educação do Futuro
               </div>
               <div className="flex justify-center mb-6">
                 <Image
@@ -543,14 +635,15 @@ const HubEduLanding: React.FC = () => {
                   width={120}
                   height={120}
                   className="h-20 w-auto"
-                  loading="lazy"
+                  loading="eager"
+                  priority
                 />
               </div>
-              <h1 className="text-6xl lg:text-8xl font-extrabold mb-8 leading-tight text-black">
+              <h1 id="hero-title" className="text-6xl lg:text-8xl font-extrabold mb-8 leading-tight text-black">
                 <span className="bg-gradient-to-r from-yellow-500 to-yellow-700 bg-clip-text text-transparent">{BRAND.name}</span><br />
                 <span className="text-4xl lg:text-6xl font-bold text-gray-800">{BRAND.tagline}</span>
               </h1>
-              <p className="text-xl lg:text-2xl mb-8 text-gray-700 leading-relaxed max-w-4xl mx-auto font-medium">{BRAND.description}</p>
+              <h2 className="text-xl lg:text-2xl mb-8 text-gray-700 leading-relaxed max-w-4xl mx-auto font-medium">{BRAND.description}</h2>
               <div className="flex flex-col sm:flex-row gap-6 justify-center mb-16">
                 <button
                   className="px-10 py-5 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-extrabold text-xl shadow-2xl rounded-2xl flex items-center justify-center gap-3 disabled:cursor-not-allowed disabled:opacity-50"
@@ -564,7 +657,7 @@ const HubEduLanding: React.FC = () => {
                   disabled
                   aria-disabled="true"
                 >
-                  <Phone className="w-6 h-6" aria-hidden="true" /> Ver Demonstração <ArrowRight className="w-6 h-6" aria-hidden="true" />
+                  <Phone className="w-6 h-6" aria-hidden="true" /> Agendar Demonstração Gratuita <ArrowRight className="w-6 h-6" aria-hidden="true" />
                 </button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -579,14 +672,14 @@ const HubEduLanding: React.FC = () => {
         {/* Innovation Section */}
         <section className="py-16 bg-gradient-to-r from-purple-50 to-pink-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <SectionTitle subtitle="Tecnologia avançada combinada com pedagogia brasileira para a melhor experiência educacional do país">
-              🚀 <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Inovação em Educação</span>
+            <SectionTitle subtitle="A única plataforma que combina as 5 principais IAs do mundo com pedagogia brasileira - resultado: educação 10x mais eficiente">
+              🚀 <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Por que HubEdu.ia é Revolucionário?</span>
             </SectionTitle>
             <div className="grid md:grid-cols-3 gap-8 mb-16">
               {[
-                { icon: '🧠', title: 'IA Generativa Avançada', description: 'Algoritmos que criam conteúdo educacional personalizado em tempo real.' },
-                { icon: '🤖', title: 'Correção Automática', description: 'IA corrige redações e simulados instantaneamente, seguindo critérios do ENEM e BNCC.' },
-                { icon: '📚', title: 'Aulas Estruturadas', description: 'Slides com introdução, desenvolvimento e conclusão, incluindo quizzes interativos.' },
+                { icon: '🎮', title: 'Aulas Completas em 2 Minutos', description: 'Aulas completas sobre qualquer tema com quizzes, geradas instantaneamente por IA.' },
+                { icon: '👩‍🏫', title: 'Chat Professor IA', description: 'Professor virtual para dúvidas pedagógicas com 5 principais IAs integradas.' },
+                { icon: '📚', title: '3000+ Questões Oficiais', description: 'Simulador ENEM com questões oficiais (2009-2024) + infinitas geradas por IA.' },
               ].map((feature, index) => (
                 <motion.div
                   key={index}
@@ -616,7 +709,7 @@ const HubEduLanding: React.FC = () => {
                 <div className="bg-white/10 p-6 rounded-2xl">
                   <h4 className="text-xl font-bold mb-4 text-purple-300">🔬 Tecnologia de Ponta:</h4>
                   <ul className="space-y-3 text-sm">
-                    {['IA Multimodal: Processa texto, imagem e áudio', 'IA Avançada: Tecnologia OpenAI e Google', 'Conteúdo Estruturado: Aulas organizadas', 'Cloud Native: Arquitetura escalável'].map((item, idx) => (
+                    {['Aulas completas em 2 minutos', 'Chat Professor IA com 5 IAs', '3000+ questões oficiais ENEM', 'Correção automática por IA', 'Cloud Native: Arquitetura escalável'].map((item, idx) => (
                       <li key={idx} className="flex items-start gap-2"><span className="text-purple-400 mt-1">•</span><span>{item}</span></li>
                     ))}
                   </ul>
@@ -626,6 +719,46 @@ const HubEduLanding: React.FC = () => {
                   <ul className="space-y-3 text-sm">
                     {['BNCC Integrada: Alinhada com competências', 'Metodologias Ativas: Aprendizado interativo', 'Gamificação: Engajamento via jogos', 'Inclusão Digital: Acessível para todos'].map((item, idx) => (
                       <li key={idx} className="flex items-start gap-2"><span className="text-pink-400 mt-1">•</span><span>{item}</span></li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* AI Integrations Section */}
+        <section className="py-16 bg-gradient-to-r from-indigo-50 to-purple-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <SectionTitle subtitle="Integração com as principais IAs do mercado para máxima eficiência educacional">
+              🤖 <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Principais IAs Integradas</span>
+            </SectionTitle>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-16">
+              {AI_INTEGRATIONS.map((integration, index) => (
+                <AIIntegrationCard key={index} integration={integration} />
+              ))}
+            </div>
+            <motion.div
+              className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-8 rounded-3xl shadow-2xl"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <h3 className="text-3xl font-extrabold mb-6 text-center">🚀 Por que Integrar Múltiplas IAs?</h3>
+              <div className="grid md:grid-cols-2 gap-8">
+                <div className="bg-white/10 p-6 rounded-2xl">
+                  <h4 className="text-xl font-bold mb-4 text-indigo-300">🎯 Especialização por Função:</h4>
+                  <ul className="space-y-3 text-sm">
+                    {['Análise de dados e insights', 'Geração de conteúdo', 'Processamento multimodal', 'Raciocínio e correção', 'Busca em tempo real'].map((item, idx) => (
+                      <li key={idx} className="flex items-start gap-2"><span className="text-indigo-400 mt-1">•</span><span>{item}</span></li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="bg-white/10 p-6 rounded-2xl">
+                  <h4 className="text-xl font-bold mb-4 text-purple-300">⚡ Vantagens da Integração:</h4>
+                  <ul className="space-y-3 text-sm">
+                    {['Melhor qualidade de conteúdo', 'Feedback mais preciso', 'Correção avançada', 'Busca contextual', 'Análise de performance'].map((item, idx) => (
+                      <li key={idx} className="flex items-start gap-2"><span className="text-purple-400 mt-1">•</span><span>{item}</span></li>
                     ))}
                   </ul>
                 </div>
@@ -670,7 +803,7 @@ const HubEduLanding: React.FC = () => {
               <div className="grid md:grid-cols-3 gap-6">
                 {[
                   { icon: '📈', title: 'Resultados Comprovados', description: 'Estudantes aumentam 45% no desempenho' },
-                  { icon: '🎯', title: 'Foco no ENEM', description: 'Desenvolvido para o exame brasileiro' },
+                  { icon: '🧠', title: 'Explicação de Erros', description: 'IA explica detalhadamente cada questão errada' },
                   { icon: '⚡', title: 'Tecnologia Avançada', description: 'IA que gera questões personalizadas' },
                 ].map((item, index) => (
                   <div key={index} className="text-center">
@@ -821,7 +954,7 @@ const HubEduLanding: React.FC = () => {
         {/* Pricing Comparison Section */}
         <section className="py-16 bg-gradient-to-br from-yellow-50 via-white to-yellow-100">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <SectionTitle subtitle="Comparativo com plataformas de IA - Única com BNCC e LGPD">
+            <SectionTitle subtitle="Enquanto outras plataformas cobram R$ 106-159/mês por usuário, HubEdu.ia oferece tudo isso por um preço especial para escolas">
               💰 <span className="bg-gradient-to-r from-yellow-500 to-yellow-700 bg-clip-text text-transparent">Por que Escolher HubEdu.ia?</span>
             </SectionTitle>
             <div className="grid md:grid-cols-3 gap-8 mb-12">
@@ -837,7 +970,7 @@ const HubEduLanding: React.FC = () => {
               transition={{ duration: 0.5 }}
             >
               <h3 className="text-3xl font-extrabold mb-4">🎯 Por que HubEdu.ia é Superior?</h3>
-              <p className="text-lg mb-6 font-medium">Diferentemente de outras plataformas, oferecemos uma solução completa para escolas brasileiras.</p>
+              <p className="text-lg mb-6 font-medium">Enquanto ChatGPT, Grok e Gemini cobram caro e não atendem escolas, HubEdu.ia oferece uma solução completa e especializada para educação brasileira.</p>
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="text-left">
                   <h4 className="font-bold text-lg mb-3">🚫 Limitações de ChatGPT, Grok e Gemini:</h4>
@@ -850,7 +983,7 @@ const HubEduLanding: React.FC = () => {
                 <div className="text-left">
                   <h4 className="font-bold text-lg mb-3">✅ Vantagens do HubEdu.ia:</h4>
                   <ul className="space-y-2 text-sm">
-                    {['Todas as idades: Crianças, adolescentes e adultos', 'Preço especial para escolas', 'Conteúdo adaptado para educação brasileira', '100% BNCC', 'Total LGPD: Chats temporários', 'Simulador ENEM com +3000 questões', 'Gestão completa: IA + Automação + Analytics'].map((item, idx) => (
+                    {['Todas as idades: Crianças, adolescentes e adultos', 'Preço especial para escolas', 'Conteúdo adaptado para educação brasileira', '100% BNCC', 'Total LGPD: Chats temporários', 'Chat Professor IA para dúvidas', 'Aulas completas em 2 minutos', '3000+ questões oficiais + infinitas por IA', 'Correção automática por IA', 'Gestão completa: IA + Automação + Analytics'].map((item, idx) => (
                       <li key={idx}>• {item}</li>
                     ))}
                   </ul>
@@ -876,7 +1009,7 @@ const HubEduLanding: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              A Educação do Futuro Chega Em Breve
+              A Educação do Futuro Chega Agora
             </motion.h2>
             <motion.p
               className="text-xl mb-8 text-gray-300 max-w-3xl mx-auto leading-relaxed"
@@ -884,7 +1017,7 @@ const HubEduLanding: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
             >
-              Prepare sua escola para uma nova era com BNCC, LGPD e IA.
+              Transforme sua escola com a plataforma mais avançada do Brasil. Aulas completas em 2 minutos, chat Professor IA para dúvidas e correção automática por IA.
             </motion.p>
             <motion.div
               className="bg-gradient-to-r from-gray-800 to-gray-900 p-8 rounded-2xl mb-12 border border-gray-700"
@@ -895,10 +1028,10 @@ const HubEduLanding: React.FC = () => {
               <h3 className="text-2xl font-bold mb-6 text-yellow-400">🎯 4 Módulos Principais:</h3>
               <div className="grid md:grid-cols-2 gap-6 mb-6">
                 {[
-                  { title: 'Aulas Interativas', desc: 'Aulas assíncronas de 30-40 min geradas por IA', icon: '🎮', color: 'from-blue-500 to-blue-600' },
-                  { title: 'Simulador ENEM', desc: '+3000 questões oficiais + infinitas por IA', icon: '📚', color: 'from-green-500 to-green-600' },
-                  { title: 'Redação ENEM', desc: 'Correção automática com temas oficiais', icon: '✍️', color: 'from-purple-500 to-purple-600' },
-                  { title: 'Chat Inteligente', desc: '10 módulos para toda a escola', icon: '💬', color: 'from-yellow-500 to-yellow-600' },
+                  { title: 'Aulas Completas', desc: 'Qualquer tema em minutos', icon: '🎮', color: 'from-blue-500 to-blue-600' },
+                  { title: 'Chat Professor IA', desc: 'Dúvidas pedagógicas', icon: '👩‍🏫', color: 'from-green-500 to-green-600' },
+                  { title: 'Simulador ENEM', desc: '3000+ questões oficiais', icon: '📚', color: 'from-purple-500 to-purple-600' },
+                  { title: 'Redação ENEM', desc: 'Temas desde 1998', icon: '✍️', color: 'from-yellow-500 to-yellow-600' },
                 ].map((feature, index) => (
                   <motion.div
                     key={index}
@@ -922,18 +1055,18 @@ const HubEduLanding: React.FC = () => {
             </motion.div>
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
               <button
-                className="px-8 py-4 bg-gray-400 text-white font-bold text-lg rounded-xl shadow-lg flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="px-8 py-4 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-bold text-lg rounded-xl shadow-lg flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
                 disabled
                 aria-disabled="true"
               >
                 <Play className="w-5 h-5" aria-hidden="true" /> Em Breve
               </button>
               <button
-                className="px-8 py-4 border-2 border-gray-400 text-gray-400 font-semibold rounded-xl flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="px-8 py-4 border-2 border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-black font-semibold rounded-xl flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
                 disabled
                 aria-disabled="true"
               >
-                <MessageSquare className="w-5 h-5" aria-hidden="true" /> Agendar Demonstração
+                <MessageSquare className="w-5 h-5" aria-hidden="true" /> Agendar Demonstração Gratuita
               </button>
             </div>
           </div>
@@ -969,7 +1102,7 @@ const HubEduLanding: React.FC = () => {
             </div>
             <div className="border-t border-gray-800 pt-8">
               <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                <p className="text-gray-500 text-sm">© 2025 HubEdu.ia - Transformando a educação</p>
+                <p className="text-gray-500 text-sm">© 2025 HubEdu.ia - Transformando a educação com IA avançada</p>
                 <div className="flex gap-6 text-sm text-gray-500">
                   {['privacy', 'terms', 'lgpd'].map((modal) => (
                     <button

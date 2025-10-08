@@ -72,7 +72,7 @@ export default function Slide7() {
       
       <div className="pt-16 px-4 sm:px-6 lg:px-8 flex items-center min-h-screen">
         <div className="max-w-6xl mx-auto w-full">
-          <SectionTitle subtitle="Conformidade total com LGPD e alinhamento rigoroso à BNCC">
+          <SectionTitle subtitle="Conformidade total com LGPD e alinhamento rigoroso à BNCC para educação brasileira">
             🛡️ <span className="bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">Compliance LGPD e BNCC</span>
           </SectionTitle>
           

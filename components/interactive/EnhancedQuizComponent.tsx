@@ -70,6 +70,29 @@ export default function EnhancedQuizComponent({
   className = ""
 }: QuizComponentProps) {
   
+  // Early validation of questions prop
+  if (!questions || !Array.isArray(questions) || questions.length === 0) {
+    console.error('EnhancedQuizComponent: Invalid questions prop', {
+      questions,
+      questionsType: typeof questions,
+      questionsIsArray: Array.isArray(questions),
+      questionsLength: questions?.length
+    })
+    return (
+      <Card className={`w-full max-w-4xl mx-auto ${className}`}>
+        <CardContent className="p-6">
+          <div className="text-center text-red-600">
+            <AlertCircle className="w-8 h-8 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Erro no Quiz</h3>
+            <p>Nenhuma pergunta válida foi fornecida.</p>
+            <p className="text-sm text-gray-500 mt-2">
+              Tipo: {typeof questions} | É Array: {Array.isArray(questions) ? 'Sim' : 'Não'} | Tamanho: {questions?.length || 0}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
   
   // State management
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
@@ -88,10 +111,38 @@ export default function EnhancedQuizComponent({
   const [isValidating, setIsValidating] = useState(false)
   const { validateQuiz } = useQuizValidation()
 
-  // Get current question
+  // Get current question with safety check
   const currentQuestion = questions[currentQuestionIndex]
   // Options are now pre-shuffled from the API, so we use them directly
   const currentOptions = ['A', 'B', 'C', 'D']
+
+  // Safety check for currentQuestion
+  if (!currentQuestion) {
+    console.error('EnhancedQuizComponent: currentQuestion is undefined', {
+      currentQuestionIndex,
+      questionsLength: questions.length,
+      questions: questions,
+      questionsType: typeof questions,
+      questionsIsArray: Array.isArray(questions)
+    })
+    return (
+      <Card className={`w-full max-w-4xl mx-auto ${className}`}>
+        <CardContent className="p-6">
+          <div className="text-center text-red-600">
+            <AlertCircle className="w-8 h-8 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Erro no Quiz</h3>
+            <p>Não foi possível carregar a pergunta atual.</p>
+            <p className="text-sm text-gray-500 mt-2">
+              Índice: {currentQuestionIndex} | Total: {questions.length}
+            </p>
+            <p className="text-sm text-gray-500 mt-1">
+              Tipo: {typeof questions} | É Array: {Array.isArray(questions) ? 'Sim' : 'Não'}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
 
   // Calculate quiz statistics
   const calculateStats = useCallback((): QuizStats => {
@@ -177,10 +228,10 @@ export default function EnhancedQuizComponent({
       questionIndex: currentQuestionIndex,
       question: currentQuestion,
       selectedAnswer: selectedAnswer,
-      correctAnswer: currentQuestion.correctAnswer,
-      isCorrect: selectedAnswer === currentQuestion.correctAnswer,
+      correctAnswer: currentQuestion?.correctAnswer || '',
+      isCorrect: selectedAnswer === currentQuestion?.correctAnswer,
       timeSpent,
-      pointsEarned: selectedAnswer === currentQuestion.correctAnswer ? (currentQuestion.points || 10) : 0
+      pointsEarned: selectedAnswer === currentQuestion?.correctAnswer ? (currentQuestion?.points || 10) : 0
     }
 
     setQuizResults(prev => {
@@ -384,9 +435,16 @@ export default function EnhancedQuizComponent({
 
   // Get option value from label
   const getOptionValue = useCallback((label: string) => {
+    if (!currentQuestion?.options) {
+      console.warn('EnhancedQuizComponent: currentQuestion.options is undefined', {
+        currentQuestion,
+        label
+      })
+      return ''
+    }
     const value = currentQuestion.options[label as keyof typeof currentQuestion.options]
-    return value
-  }, [currentQuestion.options])
+    return value || ''
+  }, [currentQuestion?.options])
 
   // Format time
   const formatTime = useCallback((seconds: number) => {
@@ -561,12 +619,12 @@ export default function EnhancedQuizComponent({
         {/* Question */}
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            {currentQuestion.difficulty && (
+            {currentQuestion?.difficulty && (
               <Badge className={getDifficultyColor(currentQuestion.difficulty)}>
                 {getDifficultyLabel(currentQuestion.difficulty)}
               </Badge>
             )}
-            {currentQuestion.points && (
+            {currentQuestion?.points && (
               <Badge variant="outline">
                 {currentQuestion.points} pontos
               </Badge>
@@ -574,7 +632,7 @@ export default function EnhancedQuizComponent({
           </div>
           
           <div className="prose max-w-none">
-            <MarkdownRenderer content={currentQuestion.question} />
+            <MarkdownRenderer content={currentQuestion?.question || ''} />
           </div>
         </div>
 
@@ -583,7 +641,7 @@ export default function EnhancedQuizComponent({
           {currentOptions.map((label, index) => {
             const optionValue = getOptionValue(label)
             const isSelected = selectedAnswer === label
-            const isCorrect = showResult && label === currentQuestion.correctAnswer
+            const isCorrect = showResult && label === currentQuestion?.correctAnswer
             const isWrong = showResult && isSelected && !isCorrect
             
             
@@ -635,7 +693,7 @@ export default function EnhancedQuizComponent({
         </div>
 
         {/* Hint */}
-        {showHints && currentQuestion.hint && (
+        {showHints && currentQuestion?.hint && (
           <div className="space-y-2">
             <Button
               variant="outline"
@@ -653,7 +711,7 @@ export default function EnhancedQuizComponent({
                   exit={{ opacity: 0, height: 0 }}
                   className="p-3 bg-blue-50 border border-blue-200 rounded-lg"
                 >
-                  <MarkdownRenderer content={currentQuestion.hint} />
+                  <MarkdownRenderer content={currentQuestion?.hint || ''} />
                 </motion.div>
               )}
             </AnimatePresence>
@@ -666,30 +724,30 @@ export default function EnhancedQuizComponent({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className={`p-4 rounded-lg border-2 ${
-              selectedAnswer === currentQuestion.correctAnswer
+              selectedAnswer === currentQuestion?.correctAnswer
                 ? 'bg-green-50 border-green-200'
                 : 'bg-red-50 border-red-200'
             }`}
           >
             <div className="flex items-center gap-3 mb-3">
-              {selectedAnswer === currentQuestion.correctAnswer ? (
+              {selectedAnswer === currentQuestion?.correctAnswer ? (
                 <CheckCircle className="h-6 w-6 text-green-600" />
               ) : (
                 <XCircle className="h-6 w-6 text-red-600" />
               )}
               <h4 className={`font-medium text-lg ${
-                selectedAnswer === currentQuestion.correctAnswer
+                selectedAnswer === currentQuestion?.correctAnswer
                   ? 'text-green-800'
                   : 'text-red-800'
               }`}>
-                {selectedAnswer === currentQuestion.correctAnswer ? 'Correto! 🎉' : 'Incorreto 😔'}
+                {selectedAnswer === currentQuestion?.correctAnswer ? 'Correto! 🎉' : 'Incorreto 😔'}
               </h4>
             </div>
             
             {showExplanations && (
               <div>
                 <h5 className="font-medium text-gray-800 mb-2">Explicação:</h5>
-                <MarkdownRenderer content={currentQuestion.explanation} />
+                <MarkdownRenderer content={currentQuestion?.explanation || ''} />
               </div>
             )}
           </motion.div>

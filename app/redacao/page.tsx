@@ -11,6 +11,7 @@ import { Loader2, FileText, Send, Clock, Target, Sparkles, X, Users, Brain } fro
 import { useNotifications } from '@/components/providers/NotificationProvider'
 import { useRouter } from 'next/navigation'
 import { FileUpload } from '@/components/redacao/FileUpload'
+import RedacaoTimer from '@/components/redacao/RedacaoTimer'
 
 interface EnemTheme {
   id: string
@@ -61,6 +62,7 @@ function RedacaoPageContent() {
   const [content, setContent] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [wordCount, setWordCount] = useState(0)
+  const [showTimer, setShowTimer] = useState(false)
   const [uploadedFileName, setUploadedFileName] = useState<string>('')
   const [uploadedFileSize, setUploadedFileSize] = useState<number>(0)
   const [isLoadingAIThemes, setIsLoadingAIThemes] = useState(false)
@@ -198,6 +200,7 @@ function RedacaoPageContent() {
     }
 
     setIsSubmitting(true)
+    setShowTimer(true)
     addNotification({ type: 'info', title: 'Processando', message: 'Enviando redação para avaliação...' })
 
     try {
@@ -233,6 +236,7 @@ function RedacaoPageContent() {
       addNotification({ type: 'error', title: 'Erro', message: error instanceof Error ? error.message : 'Falha ao avaliar redação' })
     } finally {
       setIsSubmitting(false)
+      setShowTimer(false)
     }
   }
 
@@ -577,6 +581,17 @@ function RedacaoPageContent() {
                   </div>
                   <span>{content.length}/10000 caracteres</span>
                 </div>
+
+                {/* Timer de Avaliação */}
+                {showTimer && (
+                  <div className="mb-6">
+                    <RedacaoTimer 
+                      isEvaluating={isSubmitting}
+                      estimatedTime={45}
+                    />
+                  </div>
+                )}
+
 
                 <Button
                   onClick={handleSubmit}

@@ -219,6 +219,34 @@ const SEMANTIC_THEME_MAPPING: Record<string, {
     visualConcepts: ['historical', 'revolutionary', '18th century', 'ancien régime', 'french flag', 'liberty'],
     educationalContext: ['history education', 'revolutionary history', 'french history', 'historical analysis'],
     relatedSubjects: ['history', 'politics', 'sociology', 'art']
+  },
+  'how internet works': {
+    primaryTerms: ['how internet works', 'internet technology', 'internet infrastructure', 'internet protocols'],
+    contextualTerms: ['tcp ip protocol', 'network protocols', 'data transmission', 'packet switching', 'routing', 'dns', 'http', 'https'],
+    visualConcepts: ['network diagram', 'data flow', 'server infrastructure', 'fiber optic cables', 'network topology', 'data centers'],
+    educationalContext: ['computer science', 'network engineering', 'information technology', 'digital communication'],
+    relatedSubjects: ['computer science', 'engineering', 'technology', 'telecommunications']
+  },
+  'internet': {
+    primaryTerms: ['internet', 'world wide web', 'web technology', 'network infrastructure'],
+    contextualTerms: ['computer network', 'data transmission', 'web protocols', 'digital communication', 'online connectivity'],
+    visualConcepts: ['network diagram', 'data flow', 'server infrastructure', 'fiber optic cables', 'network topology'],
+    educationalContext: ['computer science', 'network technology', 'digital literacy', 'information technology'],
+    relatedSubjects: ['computer science', 'technology', 'engineering', 'telecommunications']
+  },
+  'computer network': {
+    primaryTerms: ['computer network', 'network infrastructure', 'network topology', 'network protocols'],
+    contextualTerms: ['lan', 'wan', 'router', 'switch', 'ethernet', 'wifi', 'network security', 'data transmission'],
+    visualConcepts: ['network diagram', 'network topology', 'data flow', 'server infrastructure', 'cable infrastructure'],
+    educationalContext: ['network engineering', 'computer science', 'information technology', 'system administration'],
+    relatedSubjects: ['computer science', 'engineering', 'technology', 'telecommunications']
+  },
+  'information technology': {
+    primaryTerms: ['information technology', 'it infrastructure', 'digital technology', 'computer systems'],
+    contextualTerms: ['data processing', 'computer networks', 'software systems', 'hardware infrastructure', 'digital services'],
+    visualConcepts: ['server rooms', 'data centers', 'computer systems', 'network infrastructure', 'digital devices'],
+    educationalContext: ['computer science', 'information systems', 'technology education', 'digital literacy'],
+    relatedSubjects: ['computer science', 'engineering', 'business', 'technology']
   }
 };
 
@@ -255,6 +283,17 @@ function analyzeSemanticTheme(topic: string, subject?: string): {
     'gravidade': 'gravity',
     'como funciona a gravidade': 'how gravity works',
     'como funciona a gravidade?': 'how gravity works',
+    'como funciona a internet': 'how internet works',
+    'como funciona a internet?': 'how internet works',
+    'internet': 'internet',
+    'rede de computadores': 'computer network',
+    'redes de computadores': 'computer networks',
+    'world wide web': 'world wide web',
+    'web': 'web',
+    'tecnologia da informação': 'information technology',
+    'protocolo tcp/ip': 'tcp ip protocol',
+    'protocolos de rede': 'network protocols',
+    'infraestrutura de rede': 'network infrastructure',
     'revolução francesa': 'french revolution',
     'causas da revolução francesa': 'causes of the french revolution'
   };
@@ -691,6 +730,30 @@ function calculateEducationalScore(image: any, query: string, subject?: string):
       console.log(`⚡ Termos de eletricidade encontrados: ${electricityMatches.join(', ')} (+${electricityMatches.length * 15})`);
     }
     
+    // Bonificar termos específicos de internet e redes
+    const internetTerms = [
+      'internet', 'internet', 'web', 'world wide web', 'www', 'network', 'rede', 'networking', 'redes',
+      'tcp', 'ip', 'protocol', 'protocolo', 'http', 'https', 'dns', 'domain', 'domínio',
+      'server', 'servidor', 'client', 'cliente', 'router', 'roteador', 'switch', 'comutador',
+      'ethernet', 'wifi', 'wireless', 'sem fio', 'cable', 'cabo', 'fiber optic', 'fibra óptica',
+      'data center', 'centro de dados', 'cloud', 'nuvem', 'bandwidth', 'largura de banda',
+      'packet', 'pacote', 'routing', 'roteamento', 'transmission', 'transmissão',
+      'infrastructure', 'infraestrutura', 'topology', 'topologia', 'architecture', 'arquitetura',
+      'protocol stack', 'pilha de protocolos', 'osi model', 'modelo osi', 'lan', 'wan',
+      'isp', 'provedor', 'provider', 'hosting', 'hospedagem', 'website', 'site',
+      'browser', 'navegador', 'url', 'link', 'hyperlink', 'download', 'upload',
+      'streaming', 'broadcast', 'multicast', 'unicast', 'firewall', 'security', 'segurança',
+      'encryption', 'criptografia', 'ssl', 'tls', 'certificate', 'certificado',
+      'api', 'interface', 'programming', 'programação', 'software', 'aplicação',
+      'database', 'banco de dados', 'storage', 'armazenamento', 'backup', 'cópia de segurança'
+    ];
+    
+    const internetMatches = internetTerms.filter(term => text.includes(term));
+    if (internetMatches.length > 0) {
+      score += internetMatches.length * 18; // Pontuação alta para termos específicos de internet
+      console.log(`🌐 Termos de internet encontrados: ${internetMatches.join(', ')} (+${internetMatches.length * 18})`);
+    }
+    
     // Penalizar conteúdo inadequado
     const inappropriateTerms = [
       'adult', 'explicit', 'nude', 'naked', 'sex', 'porn',
@@ -706,7 +769,14 @@ function calculateEducationalScore(image: any, query: string, subject?: string):
     const textOnlyTerms = [
       'sign', 'sinal', 'text', 'texto', 'writing', 'escrita', 'lettering', 'letreiro',
       'logo', 'brand', 'marca', 'advertisement', 'anúncio', 'ad', 'publicidade',
-      'billboard', 'outdoor', 'poster', 'cartaz', 'banner', 'faixa'
+      'billboard', 'outdoor', 'poster', 'cartaz', 'banner', 'faixa', 'placa', 'placard',
+      'street sign', 'sinal de rua', 'road sign', 'sinal de estrada', 'shop sign', 'sinal de loja',
+      'store sign', 'sinal de loja', 'business sign', 'sinal comercial', 'company sign', 'sinal de empresa',
+      'restaurant sign', 'sinal de restaurante', 'cafe sign', 'sinal de café', 'bar sign', 'sinal de bar',
+      'hotel sign', 'sinal de hotel', 'office sign', 'sinal de escritório', 'building sign', 'sinal de prédio',
+      'neon sign', 'sinal de neon', 'led sign', 'sinal led', 'digital sign', 'sinal digital',
+      'menu', 'cardápio', 'price list', 'lista de preços', 'hours', 'horário', 'open', 'aberto',
+      'closed', 'fechado', 'welcome', 'bem-vindo', 'entrance', 'entrada', 'exit', 'saída'
     ];
     
     const textOnlyMatches = textOnlyTerms.filter(term => text.includes(term));
@@ -783,8 +853,27 @@ function analyzeSemanticRelevance(text: string, exactQuery: string, queryWords: 
     'tower', 'torre', 'pole', 'poste', 'line', 'linha', 'infrastructure', 'infraestrutura'
   ];
   
+  // 4. Detectar contexto específico de internet e redes
+  const internetContextTerms = [
+    'internet', 'internet', 'web', 'world wide web', 'www', 'network', 'rede', 'networking', 'redes',
+    'tcp', 'ip', 'protocol', 'protocolo', 'http', 'https', 'dns', 'domain', 'domínio',
+    'server', 'servidor', 'client', 'cliente', 'router', 'roteador', 'switch', 'comutador',
+    'ethernet', 'wifi', 'wireless', 'sem fio', 'cable', 'cabo', 'fiber optic', 'fibra óptica',
+    'data center', 'centro de dados', 'cloud', 'nuvem', 'bandwidth', 'largura de banda',
+    'packet', 'pacote', 'routing', 'roteamento', 'transmission', 'transmissão',
+    'infrastructure', 'infraestrutura', 'topology', 'topologia', 'architecture', 'arquitetura',
+    'protocol stack', 'pilha de protocolos', 'osi model', 'modelo osi', 'lan', 'wan',
+    'isp', 'provedor', 'provider', 'hosting', 'hospedagem', 'website', 'site',
+    'browser', 'navegador', 'url', 'link', 'hyperlink', 'download', 'upload',
+    'streaming', 'broadcast', 'multicast', 'unicast', 'firewall', 'security', 'segurança',
+    'encryption', 'criptografia', 'ssl', 'tls', 'certificate', 'certificado',
+    'api', 'interface', 'programming', 'programação', 'software', 'aplicação',
+    'database', 'banco de dados', 'storage', 'armazenamento', 'backup', 'cópia de segurança'
+  ];
+  
   const hasMemoryContext = memoryContextTerms.some(term => lowerText.includes(term));
   const hasElectricityContext = electricityContextTerms.some(term => lowerText.includes(term));
+  const hasInternetContext = internetContextTerms.some(term => lowerText.includes(term));
   
   if (historicalTerms.some(term => lowerText.includes(term))) {
     return {
@@ -814,6 +903,17 @@ function analyzeSemanticRelevance(text: string, exactQuery: string, queryWords: 
       penalty: 0,
       bonus: 60, // Bonificação alta para contexto de eletricidade
       reason: 'Contexto específico de eletricidade detectado',
+      hasSpecificContext: true
+    };
+  }
+  
+  // 5. Bonificar contexto específico de internet
+  if (hasInternetContext && (lowerQuery.includes('internet') || lowerQuery.includes('internet') || lowerQuery.includes('web') || lowerQuery.includes('network'))) {
+    return {
+      isIrrelevant: false,
+      penalty: 0,
+      bonus: 65, // Bonificação alta para contexto de internet
+      reason: 'Contexto específico de internet detectado',
       hasSpecificContext: true
     };
   }

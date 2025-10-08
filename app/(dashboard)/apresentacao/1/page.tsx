@@ -9,14 +9,14 @@ import NavigationHeader from '../components/NavigationHeader';
 const BRAND = {
   name: 'HubEdu.ia',
   tagline: 'A Educação do Futuro',
-  description: 'Plataforma educacional completa com aulas geradas por IA, simulador ENEM, correção automática de redações e chat inteligente, alinhada à BNCC e LGPD.'
+  description: 'Aulas completas em 2 minutos, chat Professor IA para dúvidas, simulador ENEM completo e correção automática por IA de redações e questões. A única plataforma educacional com 5 principais IAs integradas.'
 };
 
 const HERO_MODULES = [
-  { title: 'Aulas Interativas', description: 'Slides dinâmicos baseados na BNCC com imagens, quizzes e gamificação.', icon: '🎮' },
-  { title: 'Simulador ENEM', description: 'Mais de 3000 questões oficiais + infinitas geradas por IA alinhadas com BNCC.', icon: '📚' },
-  { title: 'Redação ENEM', description: 'Correção automática com temas oficiais e tendências atuais baseadas na BNCC.', icon: '✍️' },
-  { title: 'Chat Inteligente', description: 'Sistema completo de IA com 10 módulos customizados e compliance LGPD.', icon: '💬' },
+  { title: 'Aulas Completas', description: 'Aulas completas sobre qualquer tema com quizzes, geradas em menos de 2 minutos por IA.', icon: '🎮' },
+  { title: 'Chat Professor IA', description: 'Professor virtual para tirar dúvidas pedagógicas instantaneamente com 5 principais IAs.', icon: '👩‍🏫' },
+  { title: 'Simulador ENEM', description: '3000 questões oficiais (2009-2024) + infinitas geradas por IA com explicações detalhadas.', icon: '📚' },
+  { title: 'Redação ENEM', description: 'Todos os temas oficiais desde 1998 + infinitos gerados por IA baseados nas principais tendências.', icon: '✍️' },
 ];
 
 const FeatureCard = ({ feature }) => (
@@ -43,7 +43,7 @@ export default function Slide1() {
         <div className="max-w-6xl mx-auto w-full">
           <div className="text-center mb-8">
             <div className="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-black px-6 py-3 rounded-xl text-sm font-bold mb-6 shadow-lg">
-              <Rocket className="w-5 h-5" /> 🚀 EM BREVE - Educação Brasileira do Futuro
+              <Rocket className="w-5 h-5" /> 🚀 EM BREVE - A Educação do Futuro
             </div>
             
             <div className="flex justify-center mb-4">

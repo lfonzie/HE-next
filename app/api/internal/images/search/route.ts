@@ -122,7 +122,8 @@ async function searchUnsplash(query: string, count: number): Promise<SearchResul
     );
 
     if (!response.ok) {
-      throw new Error(`Unsplash API error: ${response.status}`);
+      console.warn(`⚠️ Unsplash API error: ${response.status} - ${response.statusText}`);
+      return []; // Retornar array vazio em vez de lançar erro
     }
 
     const data = await response.json();
@@ -149,7 +150,7 @@ async function searchUnsplash(query: string, count: number): Promise<SearchResul
     return images;
 
   } catch (error) {
-    console.error('❌ Erro ao buscar no Unsplash:', error);
+    console.warn(`⚠️ Erro ao buscar no Unsplash:`, (error as Error).message);
     return [];
   }
 }
@@ -171,7 +172,8 @@ async function searchPixabay(query: string, count: number): Promise<SearchResult
     );
 
     if (!response.ok) {
-      throw new Error(`Pixabay API error: ${response.status}`);
+      console.warn(`⚠️ Pixabay API error: ${response.status} - ${response.statusText}`);
+      return []; // Retornar array vazio em vez de lançar erro
     }
 
     const data = await response.json();
@@ -198,7 +200,7 @@ async function searchPixabay(query: string, count: number): Promise<SearchResult
     return images;
 
   } catch (error) {
-    console.error('❌ Erro ao buscar no Pixabay:', error);
+    console.warn(`⚠️ Erro ao buscar no Pixabay:`, (error as Error).message);
     return [];
   }
 }
@@ -225,7 +227,8 @@ async function searchPexels(query: string, count: number): Promise<SearchResultI
     );
 
     if (!response.ok) {
-      throw new Error(`Pexels API error: ${response.status}`);
+      console.warn(`⚠️ Pexels API error: ${response.status} - ${response.statusText}`);
+      return []; // Retornar array vazio em vez de lançar erro
     }
 
     const data = await response.json();
@@ -252,7 +255,7 @@ async function searchPexels(query: string, count: number): Promise<SearchResultI
     return images;
 
   } catch (error) {
-    console.error('❌ Erro ao buscar no Pexels:', error);
+    console.warn(`⚠️ Erro ao buscar no Pexels:`, (error as Error).message);
     return [];
   }
 }
@@ -263,8 +266,20 @@ function optimizeSearchQuery(topic: string, context?: string): string {
   
   // Otimizações baseadas no contexto
   if (context === 'aula_educacional') {
-    // Adicionar termos educacionais
-    if (query.includes('fotossíntese') || query.includes('photosynthesis')) {
+    // Mapeamento específico para temas comuns que falharam na busca
+    if (query.includes('gravidade') || query.includes('gravity')) {
+      query = 'gravity physics force gravitational';
+    } else if (query.includes('como funciona a gravidade')) {
+      query = 'gravity physics force gravitational newton';
+    } else if (query.includes('eletricidade') || query.includes('electricity')) {
+      query = 'electricity physics electrical circuit';
+    } else if (query.includes('como funciona a eletricidade')) {
+      query = 'electricity physics electrical circuit current';
+    } else if (query.includes('internet')) {
+      query = 'internet network computer technology';
+    } else if (query.includes('como funciona a internet')) {
+      query = 'internet network computer technology data';
+    } else if (query.includes('fotossíntese') || query.includes('photosynthesis')) {
       query = 'photosynthesis process plants biology';
     } else if (query.includes('sistema solar') || query.includes('solar system')) {
       query = 'solar system planets space astronomy';
@@ -289,6 +304,89 @@ function optimizeSearchQuery(topic: string, context?: string): string {
   return query;
 }
 
+// Função para extrair termos específicos do tema
+function extractThemeTerms(query: string): string[] {
+  const themeMap: { [key: string]: string[] } = {
+    'gravidade': [
+      'gravity', 'gravitational', 'force', 'physics', 'newton', 'mass', 'weight',
+      'earth', 'falling', 'objects', 'experiment', 'laboratory', 'scientific',
+      'gravitational force', 'physics experiment', 'mass weight', 'earth gravity',
+      'falling objects', 'gravitational pull', 'physics laboratory', 'scientific experiment',
+      'newton gravity', 'gravity field', 'physics concept', 'educational physics'
+    ],
+    'como funciona a gravidade': [
+      'gravity', 'gravitational', 'force', 'physics', 'newton', 'mass', 'weight',
+      'earth', 'falling', 'objects', 'experiment', 'laboratory', 'scientific',
+      'gravitational force', 'physics experiment', 'mass weight', 'earth gravity',
+      'falling objects', 'gravitational pull', 'physics laboratory', 'scientific experiment',
+      'newton gravity', 'gravity field', 'physics concept', 'educational physics'
+    ],
+    'como funciona a eletricidade': [
+      'electricity', 'eletricidade', 'electrical', 'elétrico', 'electric', 'elétrico',
+      'circuit', 'circuito', 'current', 'corrente', 'voltage', 'voltagem', 'tensão',
+      'resistance', 'resistência', 'conductor', 'condutor', 'insulator', 'isolante',
+      'generator', 'gerador', 'motor', 'motor', 'transformer', 'transformador',
+      'wire', 'fio', 'cable', 'cabo', 'plug', 'plugue', 'socket', 'tomada',
+      'switch', 'interruptor', 'bulb', 'lâmpada', 'lightning', 'raio', 'relâmpago',
+      'spark', 'faísca', 'discharge', 'descarga', 'magnetism', 'magnetismo',
+      'electromagnetic', 'eletromagnético', 'diagram', 'diagrama', 'schematic', 'esquema',
+      'experiment', 'experimento', 'laboratory', 'laboratório', 'equipment', 'equipamento',
+      'device', 'dispositivo', 'appliance', 'aparelho', 'technology', 'tecnologia',
+      'engineering', 'engenharia', 'physics', 'física', 'phenomenon', 'fenômeno',
+      'wave', 'onda', 'frequency', 'frequência', 'amplitude', 'amplitude',
+      'signal', 'sinal', 'transmission', 'transmissão', 'distribution', 'distribuição',
+      'grid', 'rede', 'power plant', 'usina', 'substation', 'subestação',
+      'tower', 'torre', 'pole', 'poste', 'line', 'linha', 'infrastructure', 'infraestrutura',
+      'outlet', 'tomada', 'receptacle', 'receptáculo', 'breaker', 'disjuntor',
+      'fuse', 'fusível', 'capacitor', 'capacitor', 'resistor', 'resistor',
+      'inductor', 'indutor', 'transistor', 'transistor', 'diode', 'diodo',
+      'led', 'luz led', 'fluorescent', 'fluorescente', 'incandescent', 'incandescente',
+      'power', 'energia', 'energy', 'energia', 'watt', 'watt', 'ampere', 'ampère',
+      'ohm', 'ohm', 'volt', 'volt', 'joule', 'joule', 'kilowatt', 'quilowatt',
+      'megawatt', 'megawatt', 'gigawatt', 'gigawatt', 'battery', 'bateria',
+      'cell', 'célula', 'electrode', 'eletrodo', 'anode', 'ânodo', 'cathode', 'cátodo',
+      'electrolyte', 'eletrólito', 'ion', 'íon', 'electron', 'elétron', 'proton', 'próton',
+      'neutron', 'nêutron', 'charge', 'carga', 'field', 'campo', 'force', 'força',
+      'attraction', 'atração', 'repulsion', 'repulsão', 'polarity', 'polaridade',
+      'positive', 'positivo', 'negative', 'negativo', 'neutral', 'neutro',
+      'ground', 'terra', 'earth', 'terra', 'safety', 'segurança', 'protection', 'proteção',
+      'insulation', 'isolamento', 'shielding', 'blindagem', 'grounding', 'aterramento'
+    ],
+    'como funciona a internet': [
+      'internet', 'internet', 'web', 'world wide web', 'www', 'network', 'rede', 'networking', 'redes',
+      'tcp', 'ip', 'protocol', 'protocolo', 'http', 'https', 'dns', 'domain', 'domínio',
+      'server', 'servidor', 'client', 'cliente', 'router', 'roteador', 'switch', 'comutador',
+      'ethernet', 'wifi', 'wireless', 'sem fio', 'cable', 'cabo', 'fiber optic', 'fibra óptica',
+      'data center', 'centro de dados', 'cloud', 'nuvem', 'bandwidth', 'largura de banda',
+      'packet', 'pacote', 'routing', 'roteamento', 'transmission', 'transmissão',
+      'infrastructure', 'infraestrutura', 'topology', 'topologia', 'architecture', 'arquitetura',
+      'protocol stack', 'pilha de protocolos', 'osi model', 'modelo osi', 'lan', 'wan',
+      'isp', 'provedor', 'provider', 'hosting', 'hospedagem', 'website', 'site',
+      'browser', 'navegador', 'url', 'link', 'hyperlink', 'download', 'upload',
+      'streaming', 'broadcast', 'multicast', 'unicast', 'firewall', 'security', 'segurança',
+      'encryption', 'criptografia', 'ssl', 'tls', 'certificate', 'certificado',
+      'api', 'interface', 'programming', 'programação', 'software', 'aplicação',
+      'database', 'banco de dados', 'storage', 'armazenamento', 'backup', 'cópia de segurança'
+    ],
+    'causas do aquecimento global': [
+      'global warming', 'aquecimento global', 'climate change', 'mudanças climáticas',
+      'greenhouse effect', 'efeito estufa', 'carbon emissions', 'emissões de carbono',
+      'temperature rise', 'aumento da temperatura', 'climate crisis', 'crise climática',
+      'environmental impact', 'impacto ambiental', 'greenhouse gases', 'gases de efeito estufa',
+      'fossil fuels', 'combustíveis fósseis', 'deforestation', 'desmatamento',
+      'industrial pollution', 'poluição industrial', 'carbon dioxide', 'dióxido de carbono',
+      'methane', 'metano', 'nitrous oxide', 'óxido nitroso', 'ozone', 'ozônio',
+      'ice melting', 'derretimento do gelo', 'polar regions', 'regiões polares',
+      'sea level rise', 'aumento do nível do mar', 'extreme weather', 'clima extremo',
+      'drought', 'seca', 'flooding', 'inundações', 'hurricane', 'furacão',
+      'tornado', 'tornado', 'wildfire', 'incêndio florestal', 'heatwave', 'onda de calor'
+    ]
+  };
+  
+  const normalizedQuery = query.toLowerCase().trim();
+  return themeMap[normalizedQuery] || [normalizedQuery];
+}
+
 // Função para buscar imagens em múltiplos provedores
 async function searchMultipleProviders(query: string, count: number): Promise<SearchResultImage[]> {
   const allImages: SearchResultImage[] = [];
@@ -311,11 +409,109 @@ async function searchMultipleProviders(query: string, count: number): Promise<Se
       }
     }
     
+    // PRIMEIRO: Tentar usar Grok 4 Fast para análise inteligente
+    if (allImages.length > 0) {
+      try {
+        console.log(`🤖 Tentando análise inteligente com Grok 4 Fast para ${allImages.length} imagens`);
+        
+        const grokResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/internal/images/grok-filter`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            images: allImages.map(img => ({
+              id: img.id,
+              title: img.title,
+              description: img.description,
+              url: img.url,
+              provider: img.source
+            })),
+            topic: query,
+            context: 'aula_educacional'
+          })
+        });
+
+        if (grokResponse.ok) {
+          const grokData = await grokResponse.json();
+          if (grokData.success && grokData.filteredImages?.length > 0) {
+            console.log(`✅ Grok análise bem-sucedida: ${grokData.filteredImages.length}/${allImages.length} imagens relevantes`);
+            
+            // Converter de volta para o formato SearchResultImage
+            const grokFilteredImages = grokData.filteredImages.map(img => ({
+              id: img.id,
+              url: img.url,
+              title: img.title,
+              description: img.description,
+              source: img.provider,
+              type: 'photo' as const,
+              style: 'modern' as const,
+              relevance: img.relevanceScore / 100, // Converter de 0-100 para 0-1
+              quality: 0.8,
+              isPlaceholder: false
+            }));
+
+            // Ordenar por relevância e qualidade
+            grokFilteredImages.sort((a, b) => (b.relevance + b.quality) - (a.relevance + a.quality));
+            
+            // Limitar ao número solicitado
+            return grokFilteredImages.slice(0, count);
+          }
+        }
+        
+        console.warn(`⚠️ Grok análise falhou, usando filtragem manual`);
+      } catch (error) {
+        console.warn(`⚠️ Erro na análise Grok:`, (error as Error).message);
+      }
+    }
+    
+    // FALLBACK: Filtragem manual (sistema anterior)
+    console.log(`🔍 Aplicando filtragem manual de fallback`);
+    
+    const filteredImages = allImages.filter(image => {
+      const text = `${image.title} ${image.description}`.toLowerCase();
+      const queryLower = query.toLowerCase();
+      
+      // Detectar conteúdo irrelevante básico
+      const irrelevantTerms = [
+        'lake como', 'como italy', 'como lombardy', 'como mountains',
+        'internet sign', 'internet board', 'internet poster', 'internet banner',
+        'sign hangs', 'hangs on', 'building exterior', 'exterior sign'
+      ];
+      
+      const isIrrelevant = irrelevantTerms.some(term => text.includes(term));
+      if (isIrrelevant) {
+        console.log(`❌ Imagem irrelevante detectada: "${image.title}" - REJEITADA`);
+        return false;
+      }
+      
+      // Detectar contexto específico do tema
+      const themeTerms = extractThemeTerms(queryLower);
+      const hasThemeContext = themeTerms.some(term => text.includes(term));
+      
+      if (hasThemeContext) {
+        console.log(`✅ Contexto do tema detectado: "${image.title}" - ACEITA`);
+        return true;
+      }
+      
+      // Aceitar se menciona o tema principal
+      const mainThemeWords = queryLower.split(' ').filter(word => word.length > 3);
+      const hasBasicRelevance = mainThemeWords.some(word => text.includes(word));
+      
+      if (hasBasicRelevance) {
+        console.log(`⚠️ Relevância básica: "${image.title}" - ACEITA COM RESERVAS`);
+        return true;
+      }
+      
+      console.log(`❌ Imagem irrelevante: "${image.title}" - REJEITADA`);
+      return false;
+    });
+    
+    console.log(`📊 Filtragem manual: ${allImages.length} → ${filteredImages.length} imagens`);
+    
     // Ordenar por relevância e qualidade
-    allImages.sort((a, b) => (b.relevance + b.quality) - (a.relevance + a.quality));
+    filteredImages.sort((a, b) => (b.relevance + b.quality) - (a.relevance + a.quality));
     
     // Limitar ao número solicitado
-    return allImages.slice(0, count);
+    return filteredImages.slice(0, count);
     
   } catch (error) {
     console.error('❌ Erro na busca múltipla:', error);
@@ -370,13 +566,8 @@ export async function POST(request: NextRequest) {
     // 2. Buscar imagens em múltiplos provedores
     const images = await searchMultipleProviders(optimizedQuery, count);
 
-    // 3. Se não encontrou imagens suficientes, criar placeholders
-    let finalImages = images;
-    if (images.length < count) {
-      const missingCount = count - images.length;
-      const placeholders = createPlaceholders(missingCount, topic);
-      finalImages = [...images, ...placeholders];
-    }
+    // 3. Retornar apenas imagens encontradas (sem placeholders)
+    const finalImages = images;
 
     const processingTime = Date.now() - startTime;
 

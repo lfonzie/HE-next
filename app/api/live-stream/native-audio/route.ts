@@ -25,12 +25,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing type or data' }, { status: 400 })
     }
 
-    console.log(`🎤 [NATIVE-AUDIO] Processing ${type} with Gemini 2.0 Flash Thinking`)
+    console.log(`🎤 [NATIVE-AUDIO] Processing ${type} with Gemini 2.5 Flash`)
 
     // Initialize Gemini API with native audio support
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-2.0-flash-thinking-exp",
+      model: "gemini-2.5-flash",
       generationConfig: {
         temperature: 0.7,
         topK: 40,

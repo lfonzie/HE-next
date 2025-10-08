@@ -648,7 +648,7 @@ function AulasPageContent() {
       console.log('Chamando API com AI SDK para gerar aula:', { topic })
       
       const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 120000) // 2 minutos timeout
+      const timeoutId = setTimeout(() => controller.abort(), 300000) // 5 minutos timeout para sistema híbrido
       
       const response = await fetch('/api/aulas/generate-ai-sdk', {
         method: 'POST',
@@ -757,18 +757,41 @@ function AulasPageContent() {
         const lessonData = JSON.stringify(generatedLesson)
         
         // Check if data is too large
-        if (lessonData.length > 2 * 1024 * 1024) { // 2MB limit
-          console.warn('Aula muito grande para localStorage, salvando versão compacta')
+        if (lessonData.length > 4 * 1024 * 1024) { // 4MB limit (aumentado de 2MB)
+          console.warn('Aula muito grande para localStorage, salvando versão otimizada')
+          // Manter TODOS os slides, mas remover dados pesados (imagens base64)
           const compactLesson = {
             id: generatedLesson.id,
             title: generatedLesson.title,
             subject: generatedLesson.subject,
             grade: (generatedLesson as any).grade,
             objectives: (generatedLesson as any).objectives,
-            stages: (generatedLesson as any).stages?.slice(0, 3), // Keep only first 3 stages
-            slides: (generatedLesson as any).slides?.slice(0, 5), // Keep only first 5 slides
-            metadata: { ...(generatedLesson as any).metadata, compact: true }
+            // ✅ MANTER TODOS OS STAGES - apenas otimizar imagens
+            stages: (generatedLesson as any).stages?.map((stage: any) => ({
+              ...stage,
+              activity: stage.activity ? {
+                ...stage.activity,
+                // Remover imagens base64 pesadas, manter apenas URLs HTTP
+                imageData: undefined,
+                imageUrl: stage.activity.imageUrl?.startsWith('http') ? stage.activity.imageUrl : undefined
+              } : stage.activity
+            })),
+            // ✅ MANTER TODOS OS SLIDES - apenas otimizar imagens
+            slides: (generatedLesson as any).slides?.map((slide: any) => ({
+              ...slide,
+              // Remover dados base64, manter apenas URLs HTTP externas
+              imageData: undefined,
+              imageMimeType: undefined,
+              imageUrl: slide.imageUrl?.startsWith('http') ? slide.imageUrl : undefined
+            })),
+            metadata: { 
+              ...(generatedLesson as any).metadata, 
+              compact: true,
+              originalSlidesCount: (generatedLesson as any).slides?.length,
+              optimizationApplied: 'removed_base64_images'
+            }
           }
+          console.log(`✅ Otimizando aula: ${compactLesson.slides?.length} slides mantidos (imagens base64 removidas)`)
           localStorage.setItem(lessonKey, JSON.stringify(compactLesson))
         } else {
           localStorage.setItem(lessonKey, lessonData)
@@ -777,24 +800,60 @@ function AulasPageContent() {
         // Verificar se foi salvo corretamente
         const saved = localStorage.getItem(lessonKey)
         console.log('Aula salva no localStorage:', saved ? 'SIM' : 'NÃO')
+        if (saved) {
+          const parsed = JSON.parse(saved)
+          console.log(`✅ Confirmado: ${parsed.slides?.length || 0} slides salvos`)
+        }
       } catch (error) {
         console.warn('Erro ao salvar no localStorage:', error)
         // Try to clean more aggressively and retry
         cleanOldLessons(true)
         try {
           const lessonKey = `demo_lesson_${(generatedLesson as any)?.id || ""}`
+          // Versão ultra-compacta: manter todos os slides mas remover TUDO que não é essencial
           const compactLesson = {
             id: generatedLesson.id,
             title: generatedLesson.title,
             subject: generatedLesson.subject,
             grade: (generatedLesson as any).grade,
             objectives: (generatedLesson as any).objectives?.slice(0, 3),
-            stages: (generatedLesson as any).stages?.slice(0, 2),
-            slides: (generatedLesson as any).slides?.slice(0, 3),
-            metadata: { ...(generatedLesson as any).metadata, compact: true }
+            // ✅ AINDA MANTER TODOS OS STAGES
+            stages: (generatedLesson as any).stages?.map((stage: any) => ({
+              etapa: stage.etapa,
+              type: stage.type,
+              route: stage.route,
+              activity: {
+                component: stage.activity?.component,
+                content: stage.activity?.content,
+                prompt: stage.activity?.prompt?.substring(0, 200), // Truncar prompts longos
+                questions: stage.activity?.questions,
+                time: stage.activity?.time,
+                points: stage.activity?.points
+              }
+            })),
+            // ✅ MANTER TODOS OS SLIDES (essenciais apenas)
+            slides: (generatedLesson as any).slides?.map((slide: any) => ({
+              slideNumber: slide.slideNumber,
+              type: slide.type,
+              title: slide.title,
+              content: slide.content,
+              timeEstimate: slide.timeEstimate,
+              questions: slide.questions,
+              question: slide.question,
+              options: slide.options,
+              correctAnswer: slide.correctAnswer,
+              explanation: slide.explanation
+            })),
+            metadata: { 
+              ...(generatedLesson as any).metadata, 
+              compact: true,
+              ultraCompact: true,
+              originalSlidesCount: (generatedLesson as any).slides?.length
+            }
           }
+          console.log(`⚠️ Ultra-compactação: ${compactLesson.slides?.length} slides mantidos (sem imagens)`)
           localStorage.setItem(lessonKey, JSON.stringify(compactLesson))
-          console.log('Aula salva em versão compacta após limpeza')
+          console.log('Aula salva em versão ultra-compacta após limpeza')
         } catch (retryError) {
           console.error('Falha ao salvar mesmo após limpeza:', retryError)
         }
@@ -809,7 +868,7 @@ function AulasPageContent() {
       
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
-          errorMessage = 'Timeout: A geração da aula demorou muito. Tente novamente.'
+          errorMessage = 'Timeout: O sistema híbrido (Grok + Gemini) está processando muitas imagens. Tente novamente.'
         } else if (error.message.includes('sobrecarregada')) {
           errorMessage = 'Todos os provedores estão sobrecarregados. Tente novamente em alguns minutos.'
         } else if (error.message.includes('servidor')) {
@@ -874,18 +933,38 @@ function AulasPageContent() {
         const lessonData = JSON.stringify(generatedLesson)
         
         // Check if data is too large
-        if (lessonData.length > 2 * 1024 * 1024) { // 2MB limit
-          console.warn('Aula muito grande para localStorage, salvando versão compacta')
+        if (lessonData.length > 4 * 1024 * 1024) { // 4MB limit (aumentado de 2MB)
+          console.warn('Aula muito grande para localStorage, salvando versão otimizada')
+          // Manter TODOS os slides, mas remover dados pesados (imagens base64)
           const compactLesson = {
             id: generatedLesson.id,
             title: generatedLesson.title,
             subject: generatedLesson.subject,
             grade: (generatedLesson as any).grade,
             objectives: (generatedLesson as any).objectives,
-            stages: (generatedLesson as any).stages?.slice(0, 3),
-            slides: (generatedLesson as any).slides?.slice(0, 5),
-            metadata: { ...(generatedLesson as any).metadata, compact: true }
+            // ✅ MANTER TODOS OS STAGES
+            stages: (generatedLesson as any).stages?.map((stage: any) => ({
+              ...stage,
+              activity: stage.activity ? {
+                ...stage.activity,
+                imageData: undefined,
+                imageUrl: stage.activity.imageUrl?.startsWith('http') ? stage.activity.imageUrl : undefined
+              } : stage.activity
+            })),
+            // ✅ MANTER TODOS OS SLIDES
+            slides: (generatedLesson as any).slides?.map((slide: any) => ({
+              ...slide,
+              imageData: undefined,
+              imageMimeType: undefined,
+              imageUrl: slide.imageUrl?.startsWith('http') ? slide.imageUrl : undefined
+            })),
+            metadata: { 
+              ...(generatedLesson as any).metadata, 
+              compact: true,
+              originalSlidesCount: (generatedLesson as any).slides?.length
+            }
           }
+          console.log(`✅ handleStartLesson: ${compactLesson.slides?.length} slides mantidos`)
           localStorage.setItem(lessonKey, JSON.stringify(compactLesson))
         } else {
           localStorage.setItem(lessonKey, lessonData)
@@ -898,18 +977,48 @@ function AulasPageContent() {
         cleanOldLessons(true)
         try {
           const lessonKey = `demo_lesson_${(generatedLesson as any)?.id || ""}`
+          // Versão ultra-compacta: manter todos os slides mas remover TUDO que não é essencial
           const compactLesson = {
             id: generatedLesson.id,
             title: generatedLesson.title,
             subject: generatedLesson.subject,
             grade: (generatedLesson as any).grade,
             objectives: (generatedLesson as any).objectives?.slice(0, 3),
-            stages: (generatedLesson as any).stages?.slice(0, 2),
-            slides: (generatedLesson as any).slides?.slice(0, 3),
-            metadata: { ...(generatedLesson as any).metadata, compact: true }
+            // ✅ MANTER TODOS OS STAGES (ultra-compactados)
+            stages: (generatedLesson as any).stages?.map((stage: any) => ({
+              etapa: stage.etapa,
+              type: stage.type,
+              route: stage.route,
+              activity: {
+                component: stage.activity?.component,
+                content: stage.activity?.content,
+                questions: stage.activity?.questions,
+                time: stage.activity?.time,
+                points: stage.activity?.points
+              }
+            })),
+            // ✅ MANTER TODOS OS SLIDES (ultra-compactados)
+            slides: (generatedLesson as any).slides?.map((slide: any) => ({
+              slideNumber: slide.slideNumber,
+              type: slide.type,
+              title: slide.title,
+              content: slide.content,
+              timeEstimate: slide.timeEstimate,
+              questions: slide.questions,
+              question: slide.question,
+              options: slide.options,
+              correctAnswer: slide.correctAnswer,
+              explanation: slide.explanation
+            })),
+            metadata: { 
+              ...(generatedLesson as any).metadata, 
+              compact: true,
+              ultraCompact: true
+            }
           }
+          console.log(`⚠️ handleStartLesson ultra-compactação: ${compactLesson.slides?.length} slides mantidos`)
           localStorage.setItem(lessonKey, JSON.stringify(compactLesson))
-          console.log('Aula salva em versão compacta após limpeza')
+          console.log('Aula salva em versão ultra-compacta após limpeza')
         } catch (retryError) {
           console.error('Falha ao salvar mesmo após limpeza:', retryError)
         }

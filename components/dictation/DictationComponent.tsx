@@ -137,22 +137,21 @@ export default function DictationComponent() {
 
       const data = await response.json()
       
-      if (data.text && data.text.trim()) {
+      if (data.success && data.transcription && data.transcription.trim()) {
         const newChunk: AudioChunk = {
           id: Date.now().toString(),
-          audioData: data.audioData || '',
-          text: data.text,
+          audioData: data.audioInfo?.name || '',
+          text: data.transcription,
           timestamp: new Date(),
-          duration: audioBlob.size / 1000 // Estimativa
+          duration: data.audioInfo?.size / 1000 || 0 // Estimativa
         }
         
         setAudioChunks(prev => [...prev, newChunk])
-        setCurrentText(prev => prev + (prev ? ' ' : '') + data.text)
+        setCurrentText(prev => prev + (prev ? ' ' : '') + data.transcription)
         
-        // Reproduzir áudio se não estiver mudo
-        if (!isMuted && data.audioData) {
-          await playAudio(data.audioData)
-        }
+        toast.success('Áudio transcrito com sucesso!')
+      } else {
+        throw new Error(data.error || 'Falha na transcrição')
       }
       
     } catch (error) {

@@ -230,14 +230,12 @@ export default function FlashcardMaker({
                   <div className="flashcard-inner">
                     <div className="flashcard-front">
                       <div className="flashcard-content">
-                        <h3 className="font-semibold text-lg mb-2">Termo</h3>
-                        <p className="text-sm text-muted-foreground">{flashcard.term}</p>
+                        <p className="text-lg font-semibold text-center">{flashcard.term}</p>
                       </div>
                     </div>
                     <div className="flashcard-back">
                       <div className="flashcard-content">
-                        <h3 className="font-semibold text-lg mb-2">Definição</h3>
-                        <p className="text-sm">{flashcard.definition}</p>
+                        <p className="text-sm text-center">{flashcard.definition}</p>
                       </div>
                     </div>
                   </div>

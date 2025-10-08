@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+import { callGrok } from '@/lib/providers/grok';
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,18 +15,22 @@ export async function POST(request: NextRequest) {
     // Create a prompt that includes the URLs as context
     const urlContext = urls.map((url: string) => `URL: ${url}`).join('\n');
     
-    const prompt = `You are a helpful assistant that can answer questions based on documentation from the following URLs:
+    const prompt = `Você é um assistente útil que pode responder perguntas baseadas na documentação das seguintes URLs:
 
 ${urlContext}
 
-Question: ${query}
+Pergunta: ${query}
 
-Please provide a comprehensive answer based on the documentation from these URLs. If the information is not available in the provided URLs, please mention that and suggest where the user might find more information.`;
+Por favor, forneça uma resposta abrangente baseada na documentação dessas URLs. Se a informação não estiver disponível nas URLs fornecidas, mencione isso e sugira onde o usuário pode encontrar mais informações. Responda em português brasileiro.`;
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+    const result = await callGrok(
+      'grok-4-fast-reasoning',
+      [],
+      prompt,
+      'Você é um assistente especializado em análise de documentação técnica. Sempre forneça respostas abrangentes e úteis baseadas na documentação fornecida em português brasileiro.'
+    );
+
+    const text = result.text;
 
     return NextResponse.json({
       text,

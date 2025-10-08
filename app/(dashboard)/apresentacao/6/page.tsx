@@ -4,33 +4,33 @@ import NavigationHeader from '../components/NavigationHeader';
 
 const ADVANCED_FEATURES = [
   {
-    category: 'Aulas Interativas',
+    category: 'Aulas Completas',
     icon: '🎮',
     features: [
-      { title: 'Geração Automática', desc: 'Aulas criadas em segundos com IA avançada', icon: '⚡' },
-      { title: 'Estrutura BNCC', desc: '14 slides organizados por competências', icon: '📚' },
-      { title: 'Quizzes Dinâmicos', desc: 'Perguntas adaptativas com feedback instantâneo', icon: '🎯' },
-      { title: 'Gamificação', desc: 'Rankings, pontos e conquistas para engajamento', icon: '🏆' },
+      { title: 'Geração Ultra-Rápida', desc: 'Aulas completas criadas em menos de 2 minutos', icon: '⚡' },
+      { title: 'Qualquer Tema', desc: 'Aulas sobre qualquer assunto educacional', icon: '🌍' },
+      { title: 'Quizzes Integrados', desc: 'Quizzes automáticos com feedback instantâneo', icon: '🎯' },
+      { title: 'Narração em Tempo Real', desc: 'Aulas com narração automática', icon: '🎙️' },
     ]
   },
   {
-    category: 'Gestão Escolar',
-    icon: '🏫',
+    category: 'Chat Professor IA',
+    icon: '👩‍🏫',
     features: [
-      { title: 'Dashboard Executivo', desc: 'Métricas em tempo real da escola', icon: '📊' },
-      { title: 'Relatórios Automáticos', desc: 'Análises de performance e engajamento', icon: '📈' },
-      { title: 'Comunicação Integrada', desc: 'WhatsApp, email e SMS automatizados', icon: '💬' },
-      { title: 'Controle de Acesso', desc: 'Perfis específicos para cada função', icon: '🔐' },
+      { title: 'Dúvidas Pedagógicas', desc: 'Professor virtual para questões educacionais', icon: '💬' },
+      { title: '5 Principais IAs', desc: 'Grok 4, ChatGPT 5, Gemini 2.5, Claude 4.5, Perplexity', icon: '🤖' },
+      { title: 'Suporte BNCC', desc: 'Orientações alinhadas ao currículo nacional', icon: '📚' },
+      { title: '10 Módulos Especializados', desc: 'Chat para diferentes áreas da escola', icon: '🏫' },
     ]
   },
   {
-    category: 'Tecnologia Avançada',
-    icon: '🤖',
+    category: 'Simulador ENEM',
+    icon: '📚',
     features: [
-      { title: 'IA Multimodal', desc: 'Processa texto, imagem e áudio', icon: '🧠' },
-      { title: 'API Integrada', desc: 'Conecta com sistemas existentes da escola', icon: '🔌' },
-      { title: 'Cloud Nativo', desc: 'Escalabilidade automática e alta disponibilidade', icon: '☁️' },
-      { title: 'Backup Automático', desc: 'Dados protegidos com redundância', icon: '💾' },
+      { title: '3000+ Questões Oficiais', desc: 'Banco completo (2009-2024) + infinitas por IA', icon: '📝' },
+      { title: 'Correção Automática', desc: 'Correção de redações e questões por IA', icon: '🤖' },
+      { title: 'Explicação de Erros', desc: 'Feedback detalhado de questões erradas', icon: '🧠' },
+      { title: 'Temas desde 1998', desc: 'Todos os temas oficiais + infinitos por IA', icon: '✍️' },
     ]
   }
 ];
@@ -69,7 +69,7 @@ export default function Slide6() {
       
       <div className="pt-16 px-4 sm:px-6 lg:px-8 flex items-center min-h-screen">
         <div className="max-w-6xl mx-auto w-full">
-          <SectionTitle subtitle="Funcionalidades avançadas que fazem a diferença">
+          <SectionTitle subtitle="4 módulos principais com tecnologia de ponta para educação brasileira">
             🚀 <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Funcionalidades Avançadas</span>
           </SectionTitle>
           
@@ -83,13 +83,14 @@ export default function Slide6() {
             <h3 className="text-2xl font-black mb-4 text-center">💡 Tecnologias de Ponta</h3>
             <div className="grid md:grid-cols-2 gap-6">
               <div className="bg-white/10 p-4 rounded-xl">
-                <h4 className="text-lg font-bold mb-3 text-indigo-300">🔬 IA e Machine Learning:</h4>
+                <h4 className="text-lg font-bold mb-3 text-indigo-300">🔬 5 Principais IAs Integradas:</h4>
                 <ul className="space-y-2 text-sm">
                   {[
-                    'OpenAI GPT-4 e Google Gemini integrados',
-                    'Processamento de linguagem natural em português',
-                    'Algoritmos de recomendação personalizados',
-                    'Análise preditiva de performance escolar'
+                    'Grok 4: Análise de dados e insights',
+                    'ChatGPT 5: Geração de conteúdo',
+                    'Gemini 2.5: Processamento multimodal',
+                    'Claude 4.5: Raciocínio e correção',
+                    'Perplexity: Busca em tempo real'
                   ].map((item, idx) => (
                     <li key={idx} className="flex items-start gap-2">
                       <span className="text-indigo-400 mt-1">•</span>
@@ -99,13 +100,14 @@ export default function Slide6() {
                 </ul>
               </div>
               <div className="bg-white/10 p-4 rounded-xl">
-                <h4 className="text-lg font-bold mb-3 text-purple-300">⚡ Performance e Escalabilidade:</h4>
+                <h4 className="text-lg font-bold mb-3 text-purple-300">⚡ Capacidades Avançadas:</h4>
                 <ul className="space-y-2 text-sm">
                   {[
-                    'Arquitetura cloud-native com AWS/Azure',
-                    'CDN global para acesso rápido',
-                    'Auto-scaling baseado na demanda',
-                    '99.9% de uptime garantido'
+                    'Aulas completas em menos de 2 minutos',
+                    'Correção automática por IA',
+                    'Chat Professor IA com 5 IAs',
+                    '3000+ questões oficiais ENEM',
+                    'Conversas temporárias LGPD'
                   ].map((item, idx) => (
                     <li key={idx} className="flex items-start gap-2">
                       <span className="text-purple-400 mt-1">•</span>

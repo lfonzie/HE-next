@@ -73,8 +73,11 @@ async function callSearchAPI(topic: string, count: number, context: string): Pro
 }
 
 // Função para chamar API de geração
-async function callGenerationAPI(topic: string, count: number, context: string): Promise<any> {
+async function callGenerationAPI(topic: string, count: number, context: string, usePlaceholders: boolean = true): Promise<any> {
   try {
+    // ✅ FIX: Sempre usar placeholders para evitar base64 pesado no localStorage
+    console.log(`🎨 Chamando API de geração com usePlaceholders=${usePlaceholders}`);
+    
     const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/internal/images/generate`, {
       method: 'POST',
       headers: {
@@ -83,7 +86,8 @@ async function callGenerationAPI(topic: string, count: number, context: string):
       body: JSON.stringify({
         topic,
         count,
-        context
+        context,
+        usePlaceholders // Usar SVG placeholders ao invés de base64
       })
     });
 
@@ -328,13 +332,25 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 3. Se ainda não tem imagens suficientes e fallback está habilitado, criar placeholders
+    // 3. Se ainda não tem imagens suficientes, tentar busca adicional com termos específicos
     if (allImages.length < count && fallback) {
       const missingCount = count - allImages.length;
-      console.log(`🖼️ Criando ${missingCount} placeholders finais`);
+      console.log(`🔍 Buscando ${missingCount} imagens adicionais com termos específicos`);
       
-      const placeholders = createFinalPlaceholders(missingCount, topic);
-      allImages.push(...placeholders);
+      // Tentar busca adicional com termos mais específicos
+      try {
+        const additionalResponse = await callSearchAPI(topic, missingCount * 2, context);
+        if (additionalResponse.success && additionalResponse.images?.length > 0) {
+          const newImages = additionalResponse.images
+            .filter(img => !allImages.some(existing => existing.url === img.url))
+            .slice(0, missingCount);
+          
+          allImages.push(...newImages);
+          console.log(`✅ Adicionadas ${newImages.length} imagens específicas`);
+        }
+      } catch (error) {
+        console.warn('⚠️ Busca adicional falhou:', (error as Error).message);
+      }
     }
 
     // 4. Limitar ao número solicitado

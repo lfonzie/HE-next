@@ -34,7 +34,7 @@ async function extractTextFromImage(buffer: Buffer): Promise<string> {
     const base64 = buffer.toString('base64')
     
     const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-4o",
       messages: [
         {
           role: "user",

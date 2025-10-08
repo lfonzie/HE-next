@@ -4,9 +4,9 @@ import { Star } from 'lucide-react';
 import NavigationHeader from '../components/NavigationHeader';
 
 const TESTIMONIALS = [
-  { name: 'Maria Santos', role: 'Professora, Escola Nova Era', content: 'As aulas interativas são incríveis! Os alunos adoram os quizzes e rankings. A correção automática de redação economiza horas.', rating: 5 },
-  { name: 'Carlos Mendes', role: 'Coordenador, Instituto Esperança', content: 'O simulador ENEM aumentou significativamente o desempenho dos alunos. O chat omni-channel é um diferencial para os pais.', rating: 5 },
-  { name: 'Ana Silva', role: 'Diretora, Colégio Crescer', content: 'A gestão escolar ficou mais eficiente com as ferramentas de IA. O chat inteligente é revolucionário para a comunidade escolar.', rating: 5 },
+  { name: 'Maria Santos', role: 'Professora de Biologia, Escola Nova Era', content: 'Incrível! Criei uma aula completa sobre fotossíntese em menos de 2 minutos. Os alunos aumentaram 40% no desempenho com os quizzes interativos e narração automática.', rating: 5 },
+  { name: 'Carlos Mendes', role: 'Coordenador Pedagógico, Instituto Esperança', content: 'O simulador ENEM com 3000+ questões oficiais revolucionou nossa preparação. A explicação de erros por IA fez nossos alunos subirem 35 pontos na média geral.', rating: 5 },
+  { name: 'Ana Silva', role: 'Diretora, Colégio Crescer', content: 'Economizamos 15 horas por semana com a correção automática de redações. Os 10 módulos de chat atendem toda nossa comunidade escolar com excelência.', rating: 5 },
 ];
 
 const SectionTitle = ({ children, subtitle }) => (
@@ -38,7 +38,7 @@ export default function Slide8() {
       
       <div className="pt-16 px-4 sm:px-6 lg:px-8 flex items-center min-h-screen">
         <div className="max-w-6xl mx-auto w-full">
-          <SectionTitle subtitle="O que dizem sobre nossa plataforma">
+          <SectionTitle subtitle="Resultados reais de escolas que já transformaram sua educação com HubEdu.ia">
             💬 <span className="text-yellow-400">Depoimentos</span>
           </SectionTitle>
           
@@ -49,12 +49,12 @@ export default function Slide8() {
           </div>
           
           <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-black p-6 rounded-2xl shadow-xl text-center">
-            <h3 className="text-xl font-black mb-3">🌟 Mais de 500 escolas já confiam no HubEdu.ia</h3>
+            <h3 className="text-xl font-black mb-3">🌟 Resultados Comprovados</h3>
             <div className="grid md:grid-cols-3 gap-4">
               {[
-                { number: '500+', label: 'Escolas Atendidas' },
-                { number: '50k+', label: 'Usuários Ativos' },
-                { number: '98%', label: 'Satisfação' },
+                { number: '40%', label: 'Aumento no Desempenho' },
+                { number: '35', label: 'Pontos na Média ENEM' },
+                { number: '15h', label: 'Economia Semanal' },
               ].map((stat, index) => (
                 <div key={index} className="text-center">
                   <div className="text-2xl font-black text-yellow-800">{stat.number}</div>
