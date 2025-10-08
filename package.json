@@ -56,7 +56,13 @@
     "benchmark:aulas": "node scripts/benchmark-aulas-final.js",
     "benchmark:models": "node scripts/benchmark-real-models.js",
     "benchmark:multi": "node scripts/benchmark-models-comparison.js",
-    "cleanup:enem": "node scripts/cleanup-enem-invalid-questions.js"
+    "cleanup:enem": "node scripts/cleanup-enem-invalid-questions.js",
+    "investigate:enem-images": "tsx scripts/investigate-enem-images.ts",
+    "investigate:enem-local-images": "tsx scripts/investigate-enem-local-images.ts",
+    "validate:enem-images": "tsx scripts/validate-enem-images.ts",
+    "list:enem-image-urls": "tsx scripts/list-enem-image-urls.ts",
+    "filter:enem-dev-images": "tsx scripts/filter-enem-dev-images.ts",
+    "download:enem-dev-images": "tsx scripts/download-enem-dev-images.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.17",

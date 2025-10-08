@@ -2,6 +2,7 @@
 // Integração com a API pública enem.dev e base de dados local para questões reais do ENEM
 import OpenAI from 'openai';
 import { enemLocalDB } from './enem-local-database';
+import { processQuestionImages } from './utils/image-url-converter';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -568,7 +569,7 @@ class EnemApiClient {
    * Converte questão da API para formato interno
    */
   convertToInternalFormat(apiQuestion: EnemQuestion): any {
-    return {
+    const baseQuestion = {
       id: apiQuestion.id,
       subject: apiQuestion.subject,
       area: apiQuestion.area,
@@ -580,7 +581,10 @@ class EnemApiClient {
       explanation: apiQuestion.explanation,
       topics: apiQuestion.topics || [],
       competencies: apiQuestion.competencies || []
-    }
+    };
+    
+    // Converter URLs do enem.dev para caminhos locais
+    return processQuestionImages(baseQuestion);
   }
 }
 

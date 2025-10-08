@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -28,6 +28,7 @@ import { processMessageForDisplay, forceConvertMathToUnicode } from '@/utils/uni
 import { normalizeFormulas } from '@/lib/utils/latex-normalization';
 import { processTextWithImages } from '@/lib/utils/image-extraction';
 import { ImageWithFallback } from './ImageWithFallback';
+import { processQuestionsImages } from '@/lib/utils/image-url-converter';
 import remarkGfm from 'remark-gfm';
 
 interface EnemResultsProps {
@@ -44,6 +45,11 @@ export function EnemResults({ score, sessionId, onRetake, onRefocus, items = [],
   const [generatingExplanation, setGeneratingExplanation] = useState<string | null>(null);
   const [explanations, setExplanations] = useState<Record<string, string>>({});
   const { toast } = useToast();
+
+  // Converter URLs de imagens do enem.dev para caminhos locais
+  const processedItems = useMemo(() => {
+    return processQuestionsImages(items);
+  }, [items]);
 
   // Função para obter o número da questão relativo à prova gerada
   const getQuestionNumber = (itemId: string, index: number): number => {
@@ -145,13 +151,13 @@ export function EnemResults({ score, sessionId, onRetake, onRefocus, items = [],
     .map(([topic, _]) => topic);
 
   // Identificar questões erradas e não respondidas
-  const wrongAnswers = items.filter(item => {
+  const wrongAnswers = processedItems.filter(item => {
     const response = responses.find(r => r.item_id === item.item_id);
     return response && response.selected_answer !== item.correct_answer;
   });
 
   // Identificar questões não respondidas
-  const unansweredQuestions = items.filter(item => {
+  const unansweredQuestions = processedItems.filter(item => {
     const response = responses.find(r => r.item_id === item.item_id);
     return !response || !response.selected_answer;
   });
@@ -164,7 +170,7 @@ export function EnemResults({ score, sessionId, onRetake, onRefocus, items = [],
     setGeneratingExplanation(itemId);
     try {
       // Encontrar a questão e resposta do usuário
-      const item = items.find(i => i.item_id === itemId);
+      const item = processedItems.find(i => i.item_id === itemId);
       const userResponse = responses.find(r => r.item_id === itemId);
       
       if (!item) {

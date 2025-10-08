@@ -1,0 +1,182 @@
+[
+  {
+    "year": 2023,
+    "totalRefs": 158,
+    "uniqueUrls": 105,
+    "questions": 48,
+    "disciplines": [
+      "linguagens",
+      "ciencias-natureza",
+      "matematica",
+      "ciencias-humanas"
+    ]
+  },
+  {
+    "year": 2022,
+    "totalRefs": 247,
+    "uniqueUrls": 161,
+    "questions": 67,
+    "disciplines": [
+      "linguagens",
+      "ciencias-natureza",
+      "ciencias-humanas",
+      "matematica"
+    ]
+  },
+  {
+    "year": 2021,
+    "totalRefs": 216,
+    "uniqueUrls": 138,
+    "questions": 59,
+    "disciplines": [
+      "ciencias-natureza",
+      "ciencias-humanas",
+      "linguagens",
+      "matematica"
+    ]
+  },
+  {
+    "year": 2020,
+    "totalRefs": 187,
+    "uniqueUrls": 131,
+    "questions": 58,
+    "disciplines": [
+      "ciencias-natureza",
+      "ciencias-humanas",
+      "matematica",
+      "linguagens"
+    ]
+  },
+  {
+    "year": 2019,
+    "totalRefs": 122,
+    "uniqueUrls": 71,
+    "questions": 49,
+    "disciplines": [
+      "ciencias-natureza",
+      "linguagens",
+      "matematica",
+      "ciencias-humanas"
+    ]
+  },
+  {
+    "year": 2018,
+    "totalRefs": 277,
+    "uniqueUrls": 186,
+    "questions": 64,
+    "disciplines": [
+      "ciencias-natureza",
+      "ciencias-humanas",
+      "linguagens",
+      "matematica"
+    ]
+  },
+  {
+    "year": 2017,
+    "totalRefs": 155,
+    "uniqueUrls": 95,
+    "questions": 56,
+    "disciplines": [
+      "ciencias-natureza",
+      "ciencias-humanas",
+      "matematica",
+      "linguagens"
+    ]
+  },
+  {
+    "year": 2016,
+    "totalRefs": 121,
+    "uniqueUrls": 83,
+    "questions": 39,
+    "disciplines": [
+      "linguagens",
+      "ciencias-humanas",
+      "matematica",
+      "ciencias-natureza"
+    ]
+  },
+  {
+    "year": 2015,
+    "totalRefs": 94,
+    "uniqueUrls": 62,
+    "questions": 32,
+    "disciplines": [
+      "linguagens",
+      "ciencias-humanas",
+      "matematica",
+      "ciencias-natureza"
+    ]
+  },
+  {
+    "year": 2014,
+    "totalRefs": 122,
+    "uniqueUrls": 86,
+    "questions": 40,
+    "disciplines": [
+      "linguagens",
+      "matematica",
+      "ciencias-humanas",
+      "ciencias-natureza"
+    ]
+  },
+  {
+    "year": 2013,
+    "totalRefs": 113,
+    "uniqueUrls": 84,
+    "questions": 32,
+    "disciplines": [
+      "linguagens",
+      "matematica",
+      "ciencias-humanas",
+      "ciencias-natureza"
+    ]
+  },
+  {
+    "year": 2012,
+    "totalRefs": 146,
+    "uniqueUrls": 103,
+    "questions": 48,
+    "disciplines": [
+      "ciencias-humanas",
+      "linguagens",
+      "matematica",
+      "ciencias-natureza"
+    ]
+  },
+  {
+    "year": 2011,
+    "totalRefs": 86,
+    "uniqueUrls": 48,
+    "questions": 38,
+    "disciplines": [
+      "linguagens",
+      "ciencias-humanas",
+      "matematica",
+      "ciencias-natureza"
+    ]
+  },
+  {
+    "year": 2010,
+    "totalRefs": 105,
+    "uniqueUrls": 68,
+    "questions": 39,
+    "disciplines": [
+      "linguagens",
+      "ciencias-humanas",
+      "matematica",
+      "ciencias-natureza"
+    ]
+  },
+  {
+    "year": 2009,
+    "totalRefs": 117,
+    "uniqueUrls": 71,
+    "questions": 45,
+    "disciplines": [
+      "linguagens",
+      "ciencias-natureza",
+      "matematica",
+      "ciencias-humanas"
+    ]
+  }
+]

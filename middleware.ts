@@ -53,14 +53,13 @@ export async function middleware(request: NextRequest) {
     '/debug-auth',
     '/perplexity-demo', // Add perplexity demo to public routes
     '/live-audio', // Live Audio Visualizer - public access
-    '/enem', // Temporarily make enem public for debugging
-    '/redacao', // Temporarily make redacao public for debugging
                 '/status', // Status dashboard
                 '/status-public', // Public status page
                 '/status-simple', // Simple status page
                 '/analytics', // Analytics (both business and dashboard)
                 '/insights', // SQL insights
-                '/ti' // TI Support module
+                '/ti', // TI Support module
+    '/embed' // Embed modules (ENEM, Redação) - public for iframe embedding
   ]
 
   // Check if current route is public
@@ -76,7 +75,58 @@ export async function middleware(request: NextRequest) {
 
   // For debugging, let's be more permissive
   if (isPublicRoute) {
-    return NextResponse.next()
+    const response = NextResponse.next()
+    
+    // Special headers for embeddable routes (apenas /embed/*)
+    const isEmbeddableRoute = request.nextUrl.pathname.startsWith('/embed/')
+    
+    if (isEmbeddableRoute) {
+      const allowedDomains = process.env.EMBED_ALLOWED_DOMAINS?.split(',').map(d => d.trim()) || []
+      const origin = request.headers.get('origin') || ''
+      
+      // Verificar se a origem está autorizada
+      let isAllowedOrigin = false
+      if (origin && allowedDomains.length > 0) {
+        try {
+          const originUrl = new URL(origin)
+          const originDomain = originUrl.hostname
+          
+          isAllowedOrigin = allowedDomains.some(allowedDomain => 
+            originDomain === allowedDomain || originDomain.endsWith(`.${allowedDomain}`)
+          )
+        } catch (error) {
+          // Origem inválida
+        }
+      }
+      
+      // Em desenvolvimento, permitir todos se configurado
+      const allowAllInDev = isDevelopment && process.env.EMBED_ALLOW_ALL_DEV === 'true'
+      
+      if (isAllowedOrigin || allowAllInDev) {
+        // Headers para permitir iframe
+        response.headers.set('X-Frame-Options', 'ALLOWALL')
+        response.headers.delete('X-Frame-Options') // Remover restrição
+        
+        // CORS headers
+        response.headers.set('Access-Control-Allow-Origin', origin || '*')
+        response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        response.headers.set('Access-Control-Allow-Headers', 'Content-Type, x-embed-token')
+        response.headers.set('Access-Control-Allow-Credentials', 'true')
+        
+        // Content Security Policy para permitir iframe
+        response.headers.set('Content-Security-Policy', "frame-ancestors 'self' *")
+        
+        if (isDevelopment && process.env.DEBUG_MIDDLEWARE === 'true') {
+          console.log(`📦 [EMBED] Permitindo acesso de: ${origin || 'desconhecido'} para ${request.nextUrl.pathname}`)
+        }
+      } else if (origin) {
+        // Origem não autorizada
+        console.log(`⛔ [EMBED] Origem não autorizada: ${origin} para ${request.nextUrl.pathname}`)
+        // Ainda permitir acesso direto, mas não configurar headers de iframe especiais
+      }
+    }
+    
+    return response
   }
 
   // Try to get token with multiple cookie names

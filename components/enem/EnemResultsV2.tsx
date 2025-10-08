@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -26,6 +26,7 @@ import { ResultsOverview } from './results/ResultsOverview'
 import { ResultsBySubject } from './results/ResultsBySubject'
 import { ResultsRecommendations } from './results/ResultsRecommendations'
 import { useToast } from '@/hooks/use-toast'
+import { processQuestionsImages } from '@/lib/utils/image-url-converter'
 
 interface EnemResultsV2Props {
   score: EnemScore
@@ -54,6 +55,11 @@ export function EnemResultsV2({
   const [isExporting, setIsExporting] = useState(false)
   const { toast } = useToast()
 
+  // Converter URLs de imagens do enem.dev para caminhos locais
+  const processedItems = useMemo(() => {
+    return processQuestionsImages(items);
+  }, [items]);
+
   // Calculate additional metrics
   const totalCorrect = Object.values(score.area_scores).reduce((sum, area) => sum + area.correct, 0)
   const totalQuestions = Object.values(score.area_scores).reduce((sum, area) => sum + area.total, 0)
@@ -77,7 +83,7 @@ export function EnemResultsV2({
       const exportData = {
         score,
         session,
-        items: items.map(item => ({
+        items: processedItems.map(item => ({
           item_id: item.item_id,
           area: item.area,
           topic: item.topic,
@@ -257,11 +263,11 @@ export function EnemResultsV2({
         </TabsContent>
 
         <TabsContent value="subjects" className="space-y-6">
-          <ResultsBySubject score={score} items={items} responses={responses} />
+          <ResultsBySubject score={score} items={processedItems} responses={responses} />
         </TabsContent>
 
         <TabsContent value="recommendations" className="space-y-6">
-          <ResultsRecommendations score={score} items={items} responses={responses} />
+          <ResultsRecommendations score={score} items={processedItems} responses={responses} />
         </TabsContent>
       </Tabs>
 

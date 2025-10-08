@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teste Embed - HubEdu Modules</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .header {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    .header h1 {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 2.5rem;
+    }
+
+    .header p {
+      color: #666;
+      font-size: 1.1rem;
+    }
+
+    .module-selector {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    .btn {
+      padding: 15px 30px;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-enem {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .btn-redacao {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .btn.active {
+      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5);
+    }
+
+    .iframe-wrapper {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .iframe-container {
+      position: relative;
+      width: 100%;
+      background: #f9fafb;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    iframe {
+      width: 100%;
+      min-height: 800px;
+      border: none;
+      display: block;
+    }
+
+    .loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: #666;
+    }
+
+    .spinner {
+      border: 4px solid #f3f4f6;
+      border-top: 4px solid #667eea;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 15px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .info-box {
+      background: #fef3c7;
+      border-left: 4px solid #f59e0b;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 4px;
+    }
+
+    .info-box p {
+      margin: 0;
+      color: #92400e;
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 1.8rem;
+      }
+      
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      iframe {
+        min-height: 100vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🎓 HubEdu - Teste de Módulos Embed</h1>
+      <p>Teste os módulos ENEM e Redação incorporados via iframe</p>
+      
+      <div class="module-selector">
+        <button class="btn btn-enem active" onclick="loadModule('enem')" id="btn-enem">
+          <span>📚</span>
+          <span>Simulador ENEM</span>
+        </button>
+        <button class="btn btn-redacao" onclick="loadModule('redacao')" id="btn-redacao">
+          <span>✍️</span>
+          <span>Redação ENEM</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="iframe-wrapper">
+      <div class="info-box">
+        <p>
+          <strong>ℹ️ Informação:</strong> 
+          Este é um exemplo de como incorporar os módulos HubEdu em seu site. 
+          O iframe abaixo carrega o módulo selecionado diretamente do HubEdu.
+        </p>
+      </div>
+
+      <div class="iframe-container">
+        <div class="loading" id="loading">
+          <div class="spinner"></div>
+          <p>Carregando módulo...</p>
+        </div>
+        <iframe 
+          id="hubedu-iframe"
+          src=""
+          title="Módulo HubEdu"
+          allow="fullscreen"
+          onload="hideLoading()"
+        ></iframe>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // URL base - altere conforme necessário
+    const BASE_URL = window.location.hostname === 'localhost' 
+      ? 'http://localhost:3000' 
+      : 'https://hubedu.ia.br';
+
+    let currentModule = null;
+
+    function loadModule(module) {
+      if (currentModule === module) return;
+      
+      currentModule = module;
+      const iframe = document.getElementById('hubedu-iframe');
+      const loading = document.getElementById('loading');
+      
+      // Mostrar loading
+      loading.style.display = 'block';
+      
+      // Atualizar src do iframe
+      iframe.src = `${BASE_URL}/embed/${module}`;
+      
+      // Atualizar botões ativos
+      document.querySelectorAll('.btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      document.getElementById(`btn-${module}`).classList.add('active');
+      
+      console.log(`📦 [EMBED-TEST] Carregando módulo: ${module}`);
+      console.log(`📦 [EMBED-TEST] URL: ${BASE_URL}/embed/${module}`);
+    }
+
+    function hideLoading() {
+      const loading = document.getElementById('loading');
+      loading.style.display = 'none';
+      console.log('✅ [EMBED-TEST] Módulo carregado com sucesso');
+    }
+
+    // Listener para mensagens do iframe
+    window.addEventListener('message', function(event) {
+      // Validar origem
+      if (!event.origin.includes('hubedu.ia.br') && !event.origin.includes('localhost')) {
+        return;
+      }
+      
+      console.log('📨 [EMBED-TEST] Mensagem recebida do iframe:', event.data);
+      
+      // Processar eventos específicos
+      if (event.data.type === 'exam_completed') {
+        console.log('✅ Simulado concluído! Pontuação:', event.data.score);
+      }
+    });
+
+    // Carregar módulo ENEM por padrão ao iniciar
+    window.addEventListener('DOMContentLoaded', function() {
+      loadModule('enem');
+    });
+
+    // Log de debug
+    console.log('🎯 [EMBED-TEST] Página de teste carregada');
+    console.log('🎯 [EMBED-TEST] Base URL:', BASE_URL);
+  </script>
+</body>
+</html>
+
