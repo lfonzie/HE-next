@@ -15,7 +15,7 @@ import { getRandomSuggestions, ModuleSuggestion } from "@/lib/module-suggestions
 import { ModuleSuggestions } from "@/components/chat/ModuleSuggestions";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Plus, Headphones, Settings, Download, Search, Square } from "lucide-react";
+import { Plus, Headphones, Settings, Download, Search, Square, Sparkles, Target, MessageSquare, Brain } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useChatContext } from "@/components/providers/ChatContext";
 import { useQuota } from "@/components/providers/QuotaProvider";
@@ -538,66 +538,66 @@ export default function ChatComponent() {
         {!hasMessages && (
           <header className="text-center mb-16">
             <div className="relative">
-              {/* Background decoration */}
-              <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 via-orange-400/20 to-red-400/20 rounded-3xl blur-3xl"></div>
+            {/* Background decoration */}
+            <div className="absolute inset-0 bg-gradient-to-r from-orange-400/20 via-red-400/20 to-pink-400/20 rounded-3xl blur-3xl"></div>
               
               <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl p-12 shadow-xl border border-white/20">
                 <div className="relative mb-8">
-                  <div className="w-24 h-24 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-3xl flex items-center justify-center shadow-lg mx-auto mb-6">
-                    <span className="text-4xl">💬</span>
+                  <div className="w-24 h-24 bg-gradient-to-br from-orange-500 to-red-600 rounded-3xl flex items-center justify-center shadow-lg mx-auto mb-6">
+                    <MessageSquare className="h-12 w-12 text-white" />
                   </div>
-                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
-                    <span className="text-white text-sm">✨</span>
+                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
+                    <Sparkles className="h-4 w-4 text-white fill-current" />
                   </div>
                 </div>
                 
-                <h1 className="text-4xl font-bold mb-6 bg-gradient-to-r from-yellow-600 to-yellow-700 bg-clip-text text-transparent">
+                <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
                   Chat Inteligente com IA
                 </h1>
-                <p className="text-2xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
+                <p className="text-xl text-gray-600 mb-6 max-w-3xl mx-auto leading-relaxed">
                   Converse com assistentes especializados para diferentes áreas e necessidades
                 </p>
                 
                 <div className="flex flex-wrap justify-center gap-3 mb-8">
-                  <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-yellow-100 text-yellow-800 border border-yellow-200">
-                    <span className="text-sm">✨</span>
+                  <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-orange-100 text-orange-800 border border-orange-200">
+                    <Sparkles className="h-4 w-4" />
                     IA Avançada
                   </Badge>
-                  <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-orange-100 text-orange-800 border border-orange-200">
-                    <span className="text-sm">🎯</span>
+                  <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-red-100 text-red-800 border border-red-200">
+                    <Target className="h-4 w-4" />
                     Especializado
                   </Badge>
-                  <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-red-100 text-red-800 border border-red-200">
-                    <span className="text-sm">👥</span>
+                  <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-pink-100 text-pink-800 border border-pink-200">
+                    <MessageSquare className="h-4 w-4" />
                     Interativo
                   </Badge>
-                  <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-green-100 text-green-800 border border-green-200">
-                    <span className="text-sm">🧠</span>
+                  <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-rose-100 text-rose-800 border border-rose-200">
+                    <Brain className="h-4 w-4" />
                     Inteligente
                   </Badge>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-                  <div className="p-4 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-2xl border border-yellow-200">
-                    <div className="w-12 h-12 bg-yellow-500 rounded-xl flex items-center justify-center mx-auto mb-3">
-                      <span className="text-white text-xl">💬</span>
-                    </div>
-                    <h3 className="font-semibold text-yellow-900 mb-2">Assistentes Especializados</h3>
-                    <p className="text-sm text-yellow-700">Professores, TI, Secretaria e mais módulos especializados</p>
-                  </div>
-                  <div className="p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl border border-orange-200">
+                  <div className="p-4 bg-orange-50 rounded-2xl border border-orange-200">
                     <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center mx-auto mb-3">
-                      <span className="text-white text-xl">🎯</span>
+                      <MessageSquare className="h-6 w-6 text-white" />
                     </div>
-                    <h3 className="font-semibold text-orange-900 mb-2">Respostas Contextuais</h3>
-                    <p className="text-sm text-orange-700">IA treinada para cada área específica de conhecimento</p>
+                    <h3 className="font-semibold text-orange-800 mb-2">Assistentes Especializados</h3>
+                    <p className="text-sm text-orange-700">Professores, TI, Secretaria e mais módulos especializados</p>
                   </div>
-                  <div className="p-4 bg-gradient-to-br from-red-50 to-red-100 rounded-2xl border border-red-200">
+                  <div className="p-4 bg-red-50 rounded-2xl border border-red-200">
                     <div className="w-12 h-12 bg-red-500 rounded-xl flex items-center justify-center mx-auto mb-3">
-                      <span className="text-white text-xl">🧠</span>
+                      <Target className="h-6 w-6 text-white" />
                     </div>
-                    <h3 className="font-semibold text-red-900 mb-2">Conversação Natural</h3>
-                    <p className="text-sm text-red-700">Interface intuitiva para diálogos fluidos e eficientes</p>
+                    <h3 className="font-semibold text-red-800 mb-2">Respostas Contextuais</h3>
+                    <p className="text-sm text-red-700">IA treinada para cada área específica de conhecimento</p>
+                  </div>
+                  <div className="p-4 bg-pink-50 rounded-2xl border border-pink-200">
+                    <div className="w-12 h-12 bg-pink-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                      <Brain className="h-6 w-6 text-white" />
+                    </div>
+                    <h3 className="font-semibold text-pink-800 mb-2">Conversação Natural</h3>
+                    <p className="text-sm text-pink-700">Interface intuitiva para diálogos fluidos e eficientes</p>
                   </div>
                 </div>
               </div>

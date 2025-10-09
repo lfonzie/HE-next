@@ -53,7 +53,9 @@ export function EnemResults({ score, sessionId, onRetake, onRefocus, items = [],
 
   // Função para obter o número da questão relativo à prova gerada
   const getQuestionNumber = (itemId: string, index: number): number => {
-    return index + 1;
+    // Encontra o item no array original de items para obter o número correto da questão
+    const itemIndex = items.findIndex(item => item.item_id === itemId);
+    return itemIndex !== -1 ? itemIndex + 1 : index + 1;
   };
 
   const handleExport = async (format: 'PDF' | 'CSV' | 'JSON') => {
@@ -339,40 +341,44 @@ export function EnemResults({ score, sessionId, onRetake, onRefocus, items = [],
       </div>
 
       {/* Area Scores */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5" />
-            Desempenho por Área
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {Object.entries(score.area_scores).map(([area, areaScore]) => {
-              const performance = getPerformanceLevel(areaScore.percentage);
-              return (
-                <div key={area} className="text-center">
-                  <div className={`p-4 rounded-lg ${performance.bg}`}>
-                    <div className="text-lg font-semibold mb-1">
-                      {getAreaName(area)}
+      {Object.entries(score.area_scores).some(([_, areaScore]) => areaScore.total > 0) && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5" />
+              Desempenho por Área
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {Object.entries(score.area_scores)
+                .filter(([_, areaScore]) => areaScore.total > 0)
+                .map(([area, areaScore]) => {
+                const performance = getPerformanceLevel(areaScore.percentage);
+                return (
+                  <div key={area} className="text-center">
+                    <div className={`p-4 rounded-lg ${performance.bg}`}>
+                      <div className="text-lg font-semibold mb-1">
+                        {getAreaName(area)}
+                      </div>
+                      <div className={`text-2xl font-bold ${performance.color} mb-2`}>
+                        {areaScore.percentage.toFixed(1)}%
+                      </div>
+                      <div className="text-sm text-gray-600 mb-2">
+                        {areaScore.correct}/{areaScore.total} corretas
+                      </div>
+                      <Progress value={areaScore.percentage} className="h-2" />
+                      <Badge variant="secondary" className="mt-2">
+                        {performance.level}
+                      </Badge>
                     </div>
-                    <div className={`text-2xl font-bold ${performance.color} mb-2`}>
-                      {areaScore.percentage.toFixed(1)}%
-                    </div>
-                    <div className="text-sm text-gray-600 mb-2">
-                      {areaScore.correct}/{areaScore.total} corretas
-                    </div>
-                    <Progress value={areaScore.percentage} className="h-2" />
-                    <Badge variant="secondary" className="mt-2">
-                      {performance.level}
-                    </Badge>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Topic Analysis */}
       <Card>
@@ -425,12 +431,12 @@ export function EnemResults({ score, sessionId, onRetake, onRefocus, items = [],
                   </Badge>
                 ))}
               </div>
-              <Button 
+              <Button
                 onClick={() => onRefocus(weakTopics)}
                 className="bg-orange-600 hover:bg-orange-700"
               >
                 <Target className="h-4 w-4 mr-2" />
-                Focar Nestes Tópicos
+                Criar Novo Simulado Focado Nestes Tópicos
               </Button>
             </div>
           </CardContent>

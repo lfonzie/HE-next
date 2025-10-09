@@ -1109,11 +1109,11 @@ function AulasPageContent() {
         <header className="text-center mb-16">
           <div className="relative">
             {/* Background decoration */}
-            <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 via-orange-400/20 to-red-400/20 rounded-3xl blur-3xl"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-green-400/20 via-teal-400/20 to-cyan-400/20 rounded-3xl blur-3xl"></div>
             
-            <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl p-12 shadow-xl border border-white/20 dark:bg-black/80 dark:border-gray-700">
+            <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl p-12 shadow-xl border border-white/20">
               <div className="relative mb-8">
-                <div className="w-24 h-24 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-3xl flex items-center justify-center shadow-lg mx-auto mb-6">
+                <div className="w-24 h-24 bg-gradient-to-br from-green-500 to-teal-600 rounded-3xl flex items-center justify-center shadow-lg mx-auto mb-6">
                   <BookOpen className="h-12 w-12 text-white" />
                 </div>
                 <div className="absolute -top-2 -right-2 w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
@@ -1121,53 +1121,53 @@ function AulasPageContent() {
                 </div>
               </div>
               
-              <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-yellow-600 to-yellow-700 bg-clip-text text-transparent">
+              <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
                 Aulas Interativas com IA
               </h1>
-              <p className="text-xl text-gray-600 mb-6 max-w-3xl mx-auto leading-relaxed dark:text-gray-300">
+              <p className="text-xl text-gray-600 mb-6 max-w-3xl mx-auto leading-relaxed">
                 Transforme qualquer tópico em uma experiência de aprendizado envolvente e personalizada
               </p>
               
               <div className="flex flex-wrap justify-center gap-3 mb-8">
-                <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-yellow-100 text-yellow-800 border border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-700">
+                <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-green-100 text-green-800 border border-green-200">
                   <Sparkles className="h-4 w-4" />
                   IA Avançada
                 </Badge>
-                <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-orange-100 text-orange-800 border border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-700">
+                <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-teal-100 text-teal-800 border border-teal-200">
                   <Target className="h-4 w-4" />
                   Personalizado
                 </Badge>
-                <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-red-100 text-red-800 border border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700">
-                  <Users className="h-4 w-4" />
+                <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-cyan-100 text-cyan-800 border border-cyan-200">
+                  <BookOpen className="h-4 w-4" />
                   Interativo
                 </Badge>
-                <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-green-100 text-green-800 border border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700">
+                <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-emerald-100 text-emerald-800 border border-emerald-200">
                   <Brain className="h-4 w-4" />
                   Inteligente
                 </Badge>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-                <div className="p-4 bg-black/50 rounded-2xl border border-gray-700">
-                  <div className="w-12 h-12 bg-yellow-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                <div className="p-4 bg-green-50 rounded-2xl border border-green-200">
+                  <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center mx-auto mb-3">
                     <Brain className="h-6 w-6 text-white" />
                   </div>
-                  <h3 className="font-semibold text-yellow-300 mb-2">IA Inteligente</h3>
-                  <p className="text-sm text-gray-300">Algoritmos avançados que adaptam o conteúdo ao seu nível</p>
+                  <h3 className="font-semibold text-green-800 mb-2">IA Inteligente</h3>
+                  <p className="text-sm text-green-700">Algoritmos avançados que adaptam o conteúdo ao seu nível</p>
                 </div>
-                <div className="p-4 bg-black/50 rounded-2xl border border-gray-700">
-                  <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                <div className="p-4 bg-teal-50 rounded-2xl border border-teal-200">
+                  <div className="w-12 h-12 bg-teal-500 rounded-xl flex items-center justify-center mx-auto mb-3">
                     <Zap className="h-6 w-6 text-white" />
                   </div>
-                  <h3 className="font-semibold text-orange-300 mb-2">Geração Rápida</h3>
-                  <p className="text-sm text-gray-300">Aulas completas em menos de 2 minutos</p>
+                  <h3 className="font-semibold text-teal-800 mb-2">Geração Rápida</h3>
+                  <p className="text-sm text-teal-700">Aulas completas em menos de 2 minutos</p>
                 </div>
-                <div className="p-4 bg-black/50 rounded-2xl border border-gray-700">
-                  <div className="w-12 h-12 bg-red-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                <div className="p-4 bg-cyan-50 rounded-2xl border border-cyan-200">
+                  <div className="w-12 h-12 bg-cyan-500 rounded-xl flex items-center justify-center mx-auto mb-3">
                     <Rocket className="h-6 w-6 text-white" />
                   </div>
-                  <h3 className="font-semibold text-red-300 mb-2">Experiência Única</h3>
-                  <p className="text-sm text-gray-300">Cada aula é única e adaptada ao seu interesse</p>
+                  <h3 className="font-semibold text-cyan-800 mb-2">Experiência Única</h3>
+                  <p className="text-sm text-cyan-700">Cada aula é única e adaptada ao seu interesse</p>
                 </div>
               </div>
             </div>

@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Loader2, FileText, Send, Clock, Target, Sparkles, X, Users, Brain } from 'lucide-react'
+import { Loader2, FileText, Send, Clock, Target, Sparkles, X, Users, Brain, CheckCircle } from 'lucide-react'
 import { useNotifications } from '@/components/providers/NotificationProvider'
 import { useRouter } from 'next/navigation'
 import { FileUpload } from '@/components/redacao/FileUpload'
@@ -93,19 +93,19 @@ function RedacaoPageContent() {
             'Pragma': 'no-cache'
           }
         })
-        
+
         if (response.ok) {
           const data = await response.json()
           console.log('Temas carregados:', data.officialThemes?.length || 0, 'oficiais +', data.aiThemes?.length || 0, 'IA')
-          
+
           // Separar temas oficiais e de IA
           setOfficialThemes(data.officialThemes || [])
           setAiThemes(data.aiThemes || [])
-          
+
           // Manter compatibilidade com código existente
           const allThemes = [...(data.officialThemes || []), ...(data.aiThemes || [])]
           setAvailableThemes(allThemes)
-          
+
           addNotification({
             type: 'success',
             title: 'Temas Carregados!',
@@ -134,6 +134,20 @@ function RedacaoPageContent() {
     return () => clearTimeout(timer)
   }, []) // Removida dependência addNotification para evitar loop infinito
 
+  // Sempre carregar novos temas aleatórios quando a página abre
+  useEffect(() => {
+    const loadFreshRandomThemes = async () => {
+      // Aguardar um pouco mais que o carregamento inicial para garantir que os temas foram carregados
+      const timer = setTimeout(async () => {
+        console.log('Carregando temas aleatórios frescos...')
+        await loadRandomAiThemes()
+      }, 1500)
+      return () => clearTimeout(timer)
+    }
+
+    loadFreshRandomThemes()
+  }, [])
+
   // Função para carregar 5 temas aleatórios de IA
   const loadRandomAiThemes = async () => {
     try {
@@ -161,10 +175,6 @@ function RedacaoPageContent() {
     }
   }
 
-  // Carregar temas aleatórios quando a página carrega
-  useEffect(() => {
-    loadRandomAiThemes()
-  }, [])
 
   // Função para lidar com texto extraído de arquivo
   const handleTextExtracted = (text: string, extractedWordCount: number) => {
@@ -269,65 +279,65 @@ function RedacaoPageContent() {
         <header className="text-center mb-16">
           <div className="relative">
             {/* Background decoration */}
-            <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 via-orange-400/20 to-red-400/20 rounded-3xl blur-3xl"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-pink-400/20 via-purple-400/20 to-indigo-400/20 rounded-3xl blur-3xl"></div>
             
             <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl p-12 shadow-xl border border-white/20">
               <div className="relative mb-8">
-                <div className="w-24 h-24 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-3xl flex items-center justify-center shadow-lg mx-auto mb-6">
+                <div className="w-24 h-24 bg-gradient-to-br from-pink-500 to-purple-600 rounded-3xl flex items-center justify-center shadow-lg mx-auto mb-6">
                   <FileText className="h-12 w-12 text-white" />
                 </div>
-                <div className="absolute -top-2 -right-2 w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
+                <div className="absolute -top-2 -right-2 w-8 h-8 bg-pink-500 rounded-full flex items-center justify-center">
                   <Sparkles className="h-4 w-4 text-white fill-current" />
                 </div>
               </div>
               
-              <h1 className="text-6xl font-bold mb-6 bg-gradient-to-r from-yellow-600 to-yellow-700 bg-clip-text text-transparent">
-                Redação ENEM
+              <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
+                Redação ENEM com IA
               </h1>
-              <p className="text-2xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
-                Pratique sua redação com temas oficiais do ENEM e avaliação por IA
+              <p className="text-xl text-gray-600 mb-6 max-w-3xl mx-auto leading-relaxed">
+                Escreva, corrija e melhore sua redação com correção automática por IA especializada em ENEM
               </p>
               
               <div className="flex flex-wrap justify-center gap-3 mb-8">
-                <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-yellow-100 text-yellow-800 border border-yellow-200">
+                <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-pink-100 text-pink-800 border border-pink-200">
                   <Sparkles className="h-4 w-4" />
                   IA Avançada
                 </Badge>
-                <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-orange-100 text-orange-800 border border-orange-200">
+                <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-purple-100 text-purple-800 border border-purple-200">
                   <Target className="h-4 w-4" />
-                  Personalizado
+                  Correção Automática
                 </Badge>
-                <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-red-100 text-red-800 border border-red-200">
-                  <Users className="h-4 w-4" />
-                  Interativo
+                <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-indigo-100 text-indigo-800 border border-indigo-200">
+                  <CheckCircle className="h-4 w-4" />
+                  Nota Estimada
                 </Badge>
-                <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-green-100 text-green-800 border border-green-200">
+                <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-100 text-blue-800 border border-blue-200">
                   <Brain className="h-4 w-4" />
-                  Inteligente
+                  Sugestões Inteligentes
                 </Badge>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-                <div className="p-4 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-2xl border border-yellow-200">
-                  <div className="w-12 h-12 bg-yellow-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                <div className="p-4 bg-pink-50 rounded-2xl border border-pink-200">
+                  <div className="w-12 h-12 bg-pink-500 rounded-xl flex items-center justify-center mx-auto mb-3">
                     <FileText className="h-6 w-6 text-white" />
                   </div>
-                  <h3 className="font-semibold text-yellow-900 mb-2">Temas Oficiais</h3>
-                  <p className="text-sm text-yellow-700">Banco completo com temas reais do ENEM</p>
+                  <h3 className="font-semibold text-pink-800 mb-2">Correção Completa</h3>
+                  <p className="text-sm text-pink-700">Análise detalhada de todos os critérios</p>
                 </div>
-                <div className="p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl border border-orange-200">
-                  <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                <div className="p-4 bg-purple-50 rounded-2xl border border-purple-200">
+                  <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center mx-auto mb-3">
                     <Target className="h-6 w-6 text-white" />
                   </div>
-                  <h3 className="font-semibold text-orange-900 mb-2">Avaliação IA</h3>
-                  <p className="text-sm text-orange-700">Correção automática seguindo critérios ENEM</p>
+                  <h3 className="font-semibold text-purple-800 mb-2">Competências ENEM</h3>
+                  <p className="text-sm text-purple-700">Avaliação das 5 competências oficiais</p>
                 </div>
-                <div className="p-4 bg-gradient-to-br from-red-50 to-red-100 rounded-2xl border border-red-200">
-                  <div className="w-12 h-12 bg-red-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                <div className="p-4 bg-indigo-50 rounded-2xl border border-indigo-200">
+                  <div className="w-12 h-12 bg-indigo-500 rounded-xl flex items-center justify-center mx-auto mb-3">
                     <Brain className="h-6 w-6 text-white" />
                   </div>
-                  <h3 className="font-semibold text-red-900 mb-2">Feedback Detalhado</h3>
-                  <p className="text-sm text-red-700">Análise completa com sugestões de melhoria</p>
+                  <h3 className="font-semibold text-indigo-800 mb-2">Sugestões de Melhoria</h3>
+                  <p className="text-sm text-indigo-700">Análise completa com sugestões de melhoria</p>
                 </div>
               </div>
             </div>
@@ -474,11 +484,11 @@ function RedacaoPageContent() {
                           body: JSON.stringify({ count: 1 })
                         })
                         console.log('Resposta recebida:', response.status, response.statusText)
-                        
+
                         if (response.ok) {
                           const data = await response.json()
                           console.log('Dados recebidos da API:', data)
-                          
+
                           // Recarregar todos os temas para incluir os novos gerados
                           const themesResponse = await fetch(`/api/redacao/temas?t=${Date.now()}`, {
                             method: 'GET',
@@ -488,7 +498,7 @@ function RedacaoPageContent() {
                               'Pragma': 'no-cache'
                             }
                           })
-                          
+
                           if (themesResponse.ok) {
                             const themesData = await themesResponse.json()
                             setOfficialThemes(themesData.officialThemes || [])
@@ -496,11 +506,14 @@ function RedacaoPageContent() {
                             const allThemes = [...(themesData.officialThemes || []), ...(themesData.aiThemes || [])]
                             setAvailableThemes(allThemes)
                           }
-                          
+
+                          // Recarregar também os temas aleatórios para atualizar o dropdown
+                          await loadRandomAiThemes()
+
                           addNotification({
                             type: 'success',
                             title: 'Temas Gerados!',
-                            message: `Novos temas foram gerados com IA. Escolha um para começar.`
+                            message: `Novos temas foram gerados com IA. O dropdown foi atualizado com novas sugestões.`
                           })
                         } else {
                           const errorData = await response.json()
@@ -532,7 +545,7 @@ function RedacaoPageContent() {
                   )}
                 </Button>
                 <p className="text-xs text-gray-500 mt-2 text-center">
-                  {availableThemes.length > 0 ? 'Clique para gerar novos temas únicos com IA' : 'Clique para gerar temas únicos com IA'}
+                  {availableThemes.length > 0 ? 'Clique para gerar novos temas únicos com IA e atualizar o dropdown' : 'Clique para gerar temas únicos com IA'}
                 </p>
               </div>
             </CardContent>
