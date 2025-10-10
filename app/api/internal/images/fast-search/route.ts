@@ -76,6 +76,8 @@ EXAMPLES:
 - "Sistema solar" → "solar system planets astronomy"
 - "Tesla" → "Nikola Tesla inventor electricity"
 - "DNA" → "dna structure double helix"
+- "Como funciona a memória?" → "memory process brain neuroscience"
+- "Como funciona o cérebro?" → "brain anatomy neuroscience"
 
 Respond with ONLY the optimized query:`;
 
@@ -316,7 +318,7 @@ OPTIMIZED SEARCH QUERY (English): "${optimizedQuery}"
 SAMPLE OF FOUND IMAGES (Top 5):
 ${imageList}
 
-TASK: Analyze if these images match the ORIGINAL Portuguese topic with HIGH PRECISION.
+TASK: Analyze if these images match the ORIGINAL Portuguese topic with BALANCED PRECISION.
 
 COMMON MISTAKES TO DETECT:
 1. PROPER NAMES mistranslated:
@@ -331,11 +333,13 @@ COMMON MISTAKES TO DETECT:
    - Topic is about PEOPLE → Images show objects/places (WRONG!)
    - Topic is about BRANDS → Images show generic items (WRONG!)
 
-3. VALIDATION RULES:
+3. VALIDATION RULES (BE BALANCED, NOT OVERLY STRICT):
    - If >70% of images are about a DIFFERENT topic → NOT RELEVANT
    - If images are about industrial/scientific topics but original is cultural → NOT RELEVANT
    - If topic is a proper name and images don't show that specific entity → NOT RELEVANT
-   - Be STRICT: when in doubt about relevance, mark as NOT RELEVANT
+   - For SCIENTIFIC/BIOLOGICAL topics, accept related imagery (e.g., brain images for memory topics)
+   - For PROCESS topics, accept both diagrams AND related anatomical/structural images
+   - Be BALANCED: when images are conceptually related, mark as RELEVANT
 
 RESPONSE FORMAT (JSON only):
 {
@@ -351,6 +355,9 @@ Response: {"isRelevant": false, "confidence": 0.95, "reason": "Images show metal
 
 Original Topic: "Como funciona DNA", Images show: DNA double helix, genetics, molecules
 Response: {"isRelevant": true, "confidence": 0.98, "reason": "Images correctly show DNA structure and genetics", "detectedTopic": "DNA and genetics"}
+
+Original Topic: "Como funciona a memória?", Images show: human brain, brain anatomy, neural activity
+Response: {"isRelevant": true, "confidence": 0.85, "reason": "Images show brain anatomy and neural structures, which are directly related to memory processes", "detectedTopic": "brain anatomy and neuroscience"}
 
 Return ONLY valid JSON:`;
 
@@ -405,16 +412,20 @@ ${imageList}
 
 TASK: Select the ${targetCount} MOST EDUCATIONAL and RELEVANT images for this topic.
 
-CRITERIA:
+CRITERIA (BE INCLUSIVE FOR SCIENTIFIC TOPICS):
 - Educational value (diagrams, anatomy, processes, scientific content)
 - Direct relevance to the topic
-- Avoid decorative/abstract images
+- For scientific/biological topics, accept anatomical structures and related imagery
+- For process topics, accept both diagrams AND related structural images
+- Avoid decorative/abstract images when scientific alternatives exist
 - Prefer scientific/educational visuals
+- Include brain images for memory/neuroscience topics
+- Include anatomical images for biological process topics
 
 RESPONSE FORMAT (JSON only):
 {
   "selected": [1, 3, 5, 7, 9, 11],
-  "reasoning": "Brief explanation"
+  "reasoning": "Brief explanation of why these images were selected for educational value"
 }
 
 Return ONLY valid JSON:`;

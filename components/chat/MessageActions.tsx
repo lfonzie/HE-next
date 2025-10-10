@@ -219,12 +219,6 @@ export function MessageActions({
 
         {/* Message metadata badges */}
         <div className="flex items-center gap-1 ml-2">
-          {message.tokens && (
-            <Badge variant="outline" className="text-xs">
-              {message.tokens} tokens
-            </Badge>
-          )}
-          
           {message.tier && (
             <Badge 
               variant="outline" 

@@ -137,7 +137,7 @@ const LoadingEntertainment = ({ elapsedTime, curiosities, topic }: {
             <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
           </div>
           <p className="text-gray-700 font-medium">
-            <strong className="text-yellow-600">Tempo estimado:</strong> até 1 minuto e meio para garantir qualidade máxima
+            <strong className="text-yellow-600">Tempo estimado:</strong> até 2 minutos para garantir qualidade máxima
           </p>
         </div>
       </div>
@@ -271,7 +271,7 @@ const LessonProgress = ({ progress, status, isGenerating, elapsedTime, className
             {Math.round(progress)}% concluído
           </div>
           <div className="text-sm text-gray-500 font-medium">
-            Tempo estimado: ~90s
+            Tempo estimado: ~120s
           </div>
         </div>
       </div>

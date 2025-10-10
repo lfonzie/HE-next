@@ -19,6 +19,7 @@ const SLIDES = [
   { id: 8, title: 'Depoimentos', path: '/apresentacao/8' },
   { id: 9, title: 'Comece Hoje', path: '/apresentacao/9' },
   { id: 10, title: 'Demonstração Interativa', path: '/apresentacao/10' },
+  { id: 11, title: '📋 Memorandum de Investimento', path: '/apresentacao/investor', special: true },
 ];
 
 export default function ApresentacaoMain() {
@@ -27,34 +28,54 @@ export default function ApresentacaoMain() {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const nextSlide = () => {
-    if (currentSlide < SLIDES.length) {
-      const nextSlideNum = currentSlide + 1;
-      setCurrentSlide(nextSlideNum);
-      router.push(`/apresentacao/${nextSlideNum}`);
+    // Skip the investor memorandum slide in sequential navigation
+    if (currentSlide < SLIDES.length - 1) {
+      let nextSlideNum = currentSlide + 1;
+      // If next slide is the special investor slide, skip it
+      if (SLIDES[nextSlideNum - 1]?.special) {
+        nextSlideNum++;
+      }
+      if (nextSlideNum <= SLIDES.length) {
+        setCurrentSlide(nextSlideNum);
+        router.push(SLIDES[nextSlideNum - 1].path);
+      }
     }
   };
 
   const prevSlide = () => {
     if (currentSlide > 1) {
-      const prevSlideNum = currentSlide - 1;
-      setCurrentSlide(prevSlideNum);
-      router.push(`/apresentacao/${prevSlideNum}`);
+      let prevSlideNum = currentSlide - 1;
+      // If previous slide is the special investor slide, skip it
+      if (SLIDES[prevSlideNum - 1]?.special) {
+        prevSlideNum--;
+      }
+      if (prevSlideNum >= 1) {
+        setCurrentSlide(prevSlideNum);
+        router.push(SLIDES[prevSlideNum - 1].path);
+      }
     }
   };
 
   const goToSlide = (slideNum) => {
     setCurrentSlide(slideNum);
-    router.push(`/apresentacao/${slideNum}`);
+    const slide = SLIDES.find(s => s.id === slideNum);
+    if (slide) {
+      router.push(slide.path);
+    }
   };
 
   // Update current slide based on URL
   useEffect(() => {
     const path = window.location.pathname;
-    const slideMatch = path.match(/\/apresentacao\/(\d+)/);
-    if (slideMatch) {
-      const slideNum = parseInt(slideMatch[1]);
-      if (slideNum >= 1 && slideNum <= SLIDES.length) {
-        setCurrentSlide(slideNum);
+    if (path === '/apresentacao/investor') {
+      setCurrentSlide(11);
+    } else {
+      const slideMatch = path.match(/\/apresentacao\/(\d+)/);
+      if (slideMatch) {
+        const slideNum = parseInt(slideMatch[1]);
+        if (slideNum >= 1 && slideNum <= SLIDES.length) {
+          setCurrentSlide(slideNum);
+        }
       }
     }
   }, []);
@@ -106,12 +127,14 @@ export default function ApresentacaoMain() {
                   <button
                     key={slide.id}
                     onClick={() => goToSlide(slide.id)}
-                    className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                      slide.id === currentSlide 
-                        ? 'bg-yellow-500 scale-125' 
-                        : 'bg-gray-300 hover:bg-gray-400'
+                    className={`rounded-full transition-all duration-300 ${
+                      slide.special
+                        ? 'px-3 py-1 text-xs font-bold bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600'
+                        : `w-3 h-3 ${slide.id === currentSlide
+                            ? 'bg-yellow-500 scale-125'
+                            : 'bg-gray-300 hover:bg-gray-400'}`
                     }`}
-                    title={`Slide ${slide.id}: ${slide.title}`}
+                    title={slide.special ? slide.title : `Slide ${slide.id}: ${slide.title}`}
                   />
           ))}
         </div>
@@ -183,19 +206,33 @@ export default function ApresentacaoMain() {
                 key={slide.id}
                 onClick={() => goToSlide(slide.id)}
                 className={`p-4 rounded-lg border-2 transition-all duration-300 text-left ${
-                  slide.id === currentSlide
-                    ? 'border-yellow-500 bg-yellow-50'
-                    : 'border-gray-200 hover:border-yellow-300 hover:bg-gray-50'
+                  slide.special
+                    ? slide.id === currentSlide
+                      ? 'border-purple-500 bg-purple-50 shadow-lg'
+                      : 'border-purple-300 hover:border-purple-400 hover:bg-purple-50 shadow-md'
+                    : slide.id === currentSlide
+                      ? 'border-yellow-500 bg-yellow-50'
+                      : 'border-gray-200 hover:border-yellow-300 hover:bg-gray-50'
                 }`}
               >
                 <div className="flex items-center space-x-3">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                    slide.id === currentSlide ? 'bg-yellow-500 text-white' : 'bg-gray-200 text-gray-600'
+                  <div className={`rounded-full flex items-center justify-center text-sm font-bold ${
+                    slide.special
+                      ? slide.id === currentSlide
+                        ? 'bg-purple-500 text-white px-3 py-1'
+                        : 'bg-purple-200 text-purple-700 px-3 py-1'
+                      : `w-8 h-8 ${slide.id === currentSlide ? 'bg-yellow-500 text-white' : 'bg-gray-200 text-gray-600'}`
                   }`}>
-                    {slide.id}
+                    {slide.special ? '📋' : slide.id}
             </div>
                   <div>
-                    <div className="font-semibold text-gray-900">{slide.title}</div>
+                    <div className={`font-semibold ${
+                      slide.special
+                        ? slide.id === currentSlide ? 'text-purple-900' : 'text-purple-700'
+                        : 'text-gray-900'
+                    }`}>
+                      {slide.title}
+                    </div>
                 </div>
                 </div>
                   </button>

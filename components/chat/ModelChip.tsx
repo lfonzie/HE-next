@@ -205,12 +205,6 @@ export function ModelDetails({
   return (
     <div className={`text-xs text-gray-500 dark:text-gray-400 ${className}`}>
       <div className="flex items-center gap-2">
-        {tokens && (
-          <span className="flex items-center gap-1">
-            <DollarSign className="w-3 h-3" />
-            {tokens} tokens
-          </span>
-        )}
         {process.env.NODE_ENV === 'development' && (
           <span className="text-gray-400">• {chipConfig.description}</span>
         )}

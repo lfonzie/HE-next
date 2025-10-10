@@ -75,12 +75,6 @@ const moduleSuggestions = {
     "Celebração de conquistas",
     "Engajamento com famílias"
   ],
-  ENEM_INTERACTIVE: [
-    "Simulador ENEM personalizado",
-    "Análise de performance",
-    "Estratégias de estudo",
-    "Revisão de conteúdo"
-  ]
 };
 
 const moduleIcons = {
@@ -92,8 +86,6 @@ const moduleIcons = {
   ATENDIMENTO: Headphones,
   BEM_ESTAR: Heart,
   SOCIAL_MEDIA: Share2,
-  ENEM_INTERACTIVE: ClipboardList,
-  AULA_EXPANDIDA: GraduationCap
 };
 
 export const GeneralWelcome: React.FC<GeneralWelcomeProps> = ({

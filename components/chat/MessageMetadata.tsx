@@ -116,7 +116,7 @@ export function MessageMetadata({
     }
   }
 
-  const timestamp = formatTimestamp(message.timestamp)
+  const timestamp = formatTimestamp(message.timestamp instanceof Date ? message.timestamp.getTime() : message.timestamp)
   const tierInfo = getTierInfo(message.tier)
   const complexityInfo = getComplexityInfo(message.complexity)
 
@@ -141,18 +141,6 @@ export function MessageMetadata({
               </TooltipContent>
             </Tooltip>
 
-            {message.tokens && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Badge variant="outline" className="text-xs">
-                    {message.tokens} tokens
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent>
-                  Tokens utilizados na resposta
-                </TooltipContent>
-              </Tooltip>
-            )}
 
             {message.tier && (
               <Tooltip>
@@ -233,16 +221,6 @@ export function MessageMetadata({
                 </div>
               )}
 
-              {/* Token usage */}
-              {message.tokens && (
-                <div className="flex items-center gap-2">
-                  <Database className="w-4 h-4 text-gray-500" />
-                  <div>
-                    <div className="text-sm font-medium">{message.tokens} tokens</div>
-                    <div className="text-xs text-gray-500">Utilizados na resposta</div>
-                  </div>
-                </div>
-              )}
 
               {/* Tier information */}
               {message.tier && (

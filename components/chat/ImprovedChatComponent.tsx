@@ -287,9 +287,6 @@ export default function ImprovedChatComponent() {
                               {getProviderIcon(message.metadata.provider)} {message.metadata.provider}
                             </Badge>
                           )}
-                          {message.metadata?.tokens && (
-                            <span>{message.metadata.tokens} tokens</span>
-                          )}
                         </div>
                       </div>
                     </div>

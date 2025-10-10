@@ -244,12 +244,20 @@ function renderStageImages(stage: LessonStage): string {
   const safeUrl = sanitizeUrl(url);
   const alt = escapeHtml(stage.etapa);
   
+  // Extrair apenas o domínio da URL para mostrar como fonte
+  let source = "";
+  try {
+    const urlObj = new URL(url);
+    source = urlObj.hostname.replace('www.', '');
+  } catch {
+    source = "Fonte externa";
+  }
+  
   return `
     <div class="stage-image" role="figure" aria-label="${alt}">
       <img src="${safeUrl}" alt="${alt}" loading="lazy" />
       <div class="stage-image-caption">
-        Imagem ilustrativa: ${alt}
-        <span class="image-source">Fonte: ${safeUrl}</span>
+        Fonte: ${source}
       </div>
     </div>
   `;
@@ -329,86 +337,482 @@ function buildPrintHtml(
   <meta name="description" content="${escapeHtml(safe.introduction.substring(0, 150))}..." />
   <title>${title} - Aula Impressa</title>
   <style>
-    @page { margin: 1.5cm; size: A4; }
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.7; color: #2c3e50; margin: 0; padding: 0; background: white; font-size: 14px; }
-    .header { background: linear-gradient(135deg, ${opts.brandAccent} 0%, #764ba2 100%); color: white; padding: 40px; margin: 0 0 40px 0; border-radius: 0 0 15px 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); position: relative; overflow: hidden; }
-    .header-content { display: flex; align-items: center; gap: 25px; position: relative; z-index: 1; }
-    .logo { width: 70px; height: 70px; background: white; border-radius: 15px; padding: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); display: flex; align-items: center; justify-content: center; }
-    .logo img { width: 100%; height: 100%; object-fit: contain; }
-    .title { font-size: 32px; font-weight: 800; margin: 0 0 15px 0; text-shadow: 0 3px 6px rgba(0, 0, 0, 0.3); letter-spacing: -0.5px; }
-    .metadata { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
-    .metadata-item { background: rgba(255,255,255,0.25); padding: 10px 16px; border-radius: 25px; font-size: 13px; font-weight: 600; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-    .print-info { position: absolute; top: 20px; right: 20px; background: rgba(255, 255, 255, 0.2); padding: 8px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; backdrop-filter: blur(10px); }
-    .section { margin: 0 1.2cm 30px 1.2cm; page-break-inside: avoid; }
-    .section-title { font-size: 20px; font-weight: 700; color: ${opts.brandAccent}; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid ${opts.brandAccent}; }
-    .objectives { list-style: none; padding: 0; }
-    .objectives li { background: #f8f9ff; margin: 8px 0; padding: 12px 15px; border-left: 4px solid ${opts.brandAccent}; border-radius: 0 8px 8px 0; }
-    .stages { display: grid; gap: 20px; }
-    .stage { background: #f8f9ff; border: 1px solid #e1e5f2; border-radius: 10px; padding: 20px; page-break-inside: avoid; }
-    .stage-title { font-size: 18px; font-weight: 800; color: ${opts.brandAccent}; margin: 0 0 10px 0; }
-    .stage-type { background: ${opts.brandAccent}; color: #fff; padding: 4px 12px; border-radius: 15px; font-size: 12px; font-weight: 600; display: inline-block; margin-bottom: 15px; }
-    .stage-content { margin-top: 15px; }
-    .stage-content p { margin: 10px 0; line-height: 1.6; }
-    .stage-image { margin: 15px 0; text-align: center; page-break-inside: avoid; }
-    .stage-image img { max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-    .stage-image-caption { font-size: 12px; color: #666; margin-top: 8px; font-style: italic; position: relative; }
-    .image-source { display: block; font-size: 10px; color: #999; margin-top: 4px; }
-    .quiz-questions { margin-top: 15px; }
-    .quiz-question { background: #fff; border: 1px solid #e1e5f2; border-radius: 8px; padding: 15px; margin: 10px 0; page-break-inside: avoid; min-height: 120px; }
-    .quiz-question-text { font-weight: 700; margin-bottom: 10px; color: #333; }
-    .quiz-options { list-style: none; padding: 0; }
-    .quiz-options li { padding: 8px 12px; margin: 5px 0; background: #f8f9ff; border-radius: 5px; border-left: 3px solid ${opts.brandAccent}; }
-    .quiz-correct { background: #e8f5e8; border-left-color: #28a745; font-weight: 700; }
-    .quiz-explanation { background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 10px; margin-top: 10px; font-size: 14px; page-break-inside: avoid; }
-    .summary { background: #e8f5e8; border: 1px solid #c3e6c3; border-radius: 8px; padding: 20px; }
-    .next-steps { list-style: none; padding: 0; }
-    .next-steps li { background: #fff3cd; margin: 8px 0; padding: 12px 15px; border-left: 4px solid #ffc107; border-radius: 0 8px 8px 0; }
-    .footer { margin: 40px 1.2cm 20px 1.2cm; padding-top: 20px; border-top: 2px solid ${opts.brandAccent}; text-align: center; color: #666; font-size: 14px; }
-    .app-name { font-weight: 800; color: ${opts.brandAccent}; }
+    @page { 
+      margin: 2cm 1.5cm; 
+      size: A4; 
+      @top-center { content: "${escapeHtml(safe.title)}"; font-size: 10pt; color: #666; }
+      @bottom-center { content: "Página " counter(page) " de " counter(pages); font-size: 10pt; color: #666; }
+    }
+    
+    body { 
+      font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+      line-height: 1.6; 
+      color: #1a1a1a; 
+      margin: 0; 
+      padding: 0; 
+      background: white; 
+      font-size: 12pt;
+    }
+    
+    /* Header simplificado */
+    .header { 
+      background: ${opts.brandAccent}; 
+      color: white; 
+      padding: 1.5cm; 
+      margin: 0 0 1cm 0; 
+      page-break-after: always;
+    }
+    
+    .title { 
+      font-size: 24pt; 
+      font-weight: 700; 
+      margin: 0 0 0.5cm 0; 
+      text-align: center;
+    }
+    
+    .metadata { 
+      display: flex; 
+      justify-content: center;
+      gap: 1cm; 
+      margin-top: 0.5cm; 
+      flex-wrap: wrap;
+    }
+    
+    .metadata-item { 
+      background: rgba(255,255,255,0.2); 
+      padding: 0.2cm 0.4cm; 
+      border-radius: 0.2cm; 
+      font-size: 10pt; 
+      font-weight: 500; 
+    }
+    
+    /* Seções */
+    .section { 
+      margin: 0 0 1cm 0; 
+      page-break-inside: avoid; 
+    }
+    
+    .section-title { 
+      font-size: 16pt; 
+      font-weight: 700; 
+      color: ${opts.brandAccent}; 
+      margin-bottom: 0.5cm; 
+      padding-bottom: 0.2cm; 
+      border-bottom: 2px solid ${opts.brandAccent}; 
+    }
+    
+    /* Objetivos */
+    .objectives { 
+      list-style: none; 
+      padding: 0; 
+      margin: 0;
+    }
+    
+    .objectives li { 
+      margin: 0.3cm 0; 
+      padding: 0.3cm 0.5cm; 
+      border-left: 3px solid ${opts.brandAccent}; 
+      background: #f8f9ff;
+      position: relative;
+      counter-increment: objective-counter;
+    }
+    
+    .objectives li::before {
+      content: counter(objective-counter);
+      position: absolute;
+      left: -0.2cm;
+      top: 50%;
+      transform: translateY(-50%);
+      background: ${opts.brandAccent};
+      color: white;
+      width: 0.5cm;
+      height: 0.5cm;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8pt;
+      font-weight: 700;
+    }
+    
+    .objectives {
+      counter-reset: objective-counter;
+    }
+    
+    /* Etapas */
+    .stages { 
+      display: grid; 
+      gap: 0.5cm; 
+    }
+    
+    .stage { 
+      background: #ffffff; 
+      border: 1px solid #e2e8f0; 
+      border-radius: 0.2cm; 
+      padding: 0.5cm; 
+      page-break-inside: avoid; 
+      position: relative;
+      counter-increment: stage-counter;
+    }
+    
+    .stage::before {
+      content: counter(stage-counter);
+      position: absolute;
+      top: -0.2cm;
+      left: 0.3cm;
+      background: ${opts.brandAccent};
+      color: white;
+      width: 0.6cm;
+      height: 0.6cm;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9pt;
+      font-weight: 700;
+    }
+    
+    .stages {
+      counter-reset: stage-counter;
+    }
+    
+    .stage-title { 
+      font-size: 14pt; 
+      font-weight: 700; 
+      color: #2d3748; 
+      margin: 0.2cm 0 0.2cm 0; 
+      padding-left: 0.3cm;
+    }
+    
+    .stage-type { 
+      background: ${opts.brandAccent}; 
+      color: #fff; 
+      padding: 0.1cm 0.3cm; 
+      border-radius: 0.2cm; 
+      font-size: 9pt; 
+      font-weight: 600; 
+      display: inline-block; 
+      margin-bottom: 0.3cm; 
+      margin-left: 0.3cm;
+    }
+    
+    .stage-content { 
+      margin-top: 0.3cm; 
+      padding-left: 0.3cm;
+    }
+    
+    .stage-content p { 
+      margin: 0.3cm 0; 
+      line-height: 1.6; 
+    }
+    
+    /* Imagens simplificadas */
+    .stage-image { 
+      margin: 0.5cm 0; 
+      text-align: center; 
+      page-break-inside: avoid; 
+    }
+    
+    .stage-image img { 
+      max-width: 100%; 
+      height: auto; 
+      border-radius: 0.2cm; 
+      border: 1px solid #e2e8f0;
+    }
+    
+    .stage-image-caption { 
+      margin-top: 0.2cm; 
+      text-align: center;
+      font-size: 9pt; 
+      color: #666; 
+      font-style: italic;
+    }
+    
+    /* Quiz */
+    .quiz-questions { 
+      margin-top: 0.5cm; 
+    }
+    
+    .quiz-question { 
+      background: #ffffff; 
+      border: 1px solid #e2e8f0; 
+      border-radius: 0.2cm; 
+      padding: 0.4cm; 
+      margin: 0.3cm 0; 
+      page-break-inside: avoid; 
+      position: relative;
+      counter-increment: question-counter;
+    }
+    
+    .quiz-question::before {
+      content: counter(question-counter);
+      position: absolute;
+      top: -0.2cm;
+      left: 0.3cm;
+      background: #4a5568;
+      color: white;
+      width: 0.5cm;
+      height: 0.5cm;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8pt;
+      font-weight: 700;
+    }
+    
+    .quiz-questions {
+      counter-reset: question-counter;
+    }
+    
+    .quiz-question-text { 
+      font-weight: 700; 
+      margin-bottom: 0.3cm; 
+      color: #2d3748; 
+      padding-left: 0.3cm;
+    }
+    
+    .quiz-options { 
+      list-style: none; 
+      padding: 0; 
+      margin: 0;
+    }
+    
+    .quiz-options li { 
+      padding: 0.2cm 0.3cm; 
+      margin: 0.1cm 0; 
+      background: #f7fafc; 
+      border-radius: 0.1cm; 
+      border-left: 3px solid #cbd5e0; 
+      font-size: 10pt;
+    }
+    
+    .quiz-correct { 
+      background: #f0fff4; 
+      border-left-color: #48bb78; 
+      font-weight: 600; 
+      color: #2f855a;
+    }
+    
+    .quiz-explanation { 
+      background: #fffaf0; 
+      border: 1px solid #fbd38d; 
+      border-radius: 0.1cm; 
+      padding: 0.3cm; 
+      margin-top: 0.3cm; 
+      font-size: 10pt; 
+      page-break-inside: avoid; 
+    }
+    
+    /* Resumo e próximos passos */
+    .summary { 
+      background: #f0fff4; 
+      border: 1px solid #9ae6b4; 
+      border-radius: 0.2cm; 
+      padding: 0.5cm; 
+      border-left: 4px solid #48bb78;
+    }
+    
+    .next-steps { 
+      list-style: none; 
+      padding: 0; 
+      margin: 0;
+    }
+    
+    .next-steps li { 
+      background: #fffaf0; 
+      margin: 0.2cm 0; 
+      padding: 0.3cm 0.4cm; 
+      border-left: 4px solid #ed8936; 
+      border-radius: 0 0.1cm 0.1cm 0; 
+      font-size: 10pt;
+    }
+    
+    /* Footer */
+    .footer { 
+      margin: 1cm 0 0.5cm 0; 
+      padding-top: 0.5cm; 
+      border-top: 2px solid ${opts.brandAccent}; 
+      text-align: center; 
+      color: #666; 
+      font-size: 10pt; 
+      page-break-inside: avoid;
+    }
+    
+    .app-name { 
+      font-weight: 700; 
+      color: ${opts.brandAccent}; 
+      font-size: 12pt;
+    }
+    
+    /* Índice da Aula */
+    .toc-content {
+      display: grid;
+      gap: 0.2cm;
+    }
+    
+    .toc-item {
+      display: flex;
+      align-items: center;
+      gap: 0.3cm;
+      padding: 0.2cm 0;
+    }
+    
+    .toc-number {
+      background: ${opts.brandAccent};
+      color: white;
+      width: 0.6cm;
+      height: 0.6cm;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8pt;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    
+    .toc-text {
+      font-size: 10pt;
+      font-weight: 500;
+      color: #2d3748;
+    }
+    
+    /* Informações da aula */
+    .lesson-info {
+      background: #f7fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.2cm;
+      padding: 0.3cm;
+      margin-top: 0.3cm;
+    }
+    
+    .info-item {
+      margin: 0.1cm 0;
+      font-size: 9pt;
+      color: #4a5568;
+    }
+    
+    /* Melhorias para impressão */
     @media print { 
-      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } 
-      .section, .stage { page-break-inside: avoid; } 
-      .quiz-question { page-break-inside: avoid; }
-      .stage-image { page-break-inside: avoid; }
+      body { 
+        -webkit-print-color-adjust: exact; 
+        print-color-adjust: exact; 
+        font-size: 11pt;
+      } 
+      
+      .section, .stage { 
+        page-break-inside: avoid; 
+      } 
+      
+      .quiz-question { 
+        page-break-inside: avoid; 
+      }
+      
+      .stage-image { 
+        page-break-inside: avoid; 
+      }
+      
+      .header {
+        page-break-after: always;
+      }
+      
+      .stage-title,
+      .quiz-question-text,
+      .section-title {
+        page-break-after: avoid;
+      }
+    }
+    
+    /* Estilos para tela (preview) */
+    @media screen {
+      body {
+        max-width: 21cm;
+        margin: 0 auto;
+        box-shadow: 0 0 1cm rgba(0,0,0,0.1);
+        background: white;
+      }
     }
   </style>
 </head>
 <body>
   <header class="header" role="banner">
-    <div class="print-info">📄 Impresso em ${dateStr} às ${timeStr}</div>
-    <div class="header-content">
-      ${logoHtml ? `<div class="logo">${logoHtml}</div>` : ""}
-      <div class="header-text">
         <h1 class="title">${title}</h1>
         <div class="metadata">
           <span class="metadata-item">📚 ${escapeHtml(safe.metadata.subject)}</span>
           <span class="metadata-item">🎓 ${escapeHtml(safe.metadata.grade)}</span>
           <span class="metadata-item">⏱️ ${escapeHtml(safe.metadata.duration)}</span>
           <span class="metadata-item">📊 ${escapeHtml(safe.metadata.difficulty)}</span>
-          ${metaTags}
-        </div>
-      </div>
     </div>
   </header>
 
   <main role="main">
+    <!-- Índice da Aula -->
     <section class="section">
-      <h2 class="section-title">Objetivos de Aprendizagem</h2>
+      <h2 class="section-title">📋 Índice da Aula</h2>
+      <div class="toc-content">
+        <div class="toc-item">
+          <span class="toc-number">1</span>
+          <span class="toc-text">Objetivos de Aprendizagem</span>
+        </div>
+        <div class="toc-item">
+          <span class="toc-number">2</span>
+          <span class="toc-text">Introdução</span>
+        </div>
+        <div class="toc-item">
+          <span class="toc-number">3</span>
+          <span class="toc-text">Desenvolvimento da Aula</span>
+        </div>
+        ${safe.summary ? `
+        <div class="toc-item">
+          <span class="toc-number">4</span>
+          <span class="toc-text">Resumo</span>
+        </div>
+        ` : ""}
+        ${safe.nextSteps && safe.nextSteps.length > 0 ? `
+        <div class="toc-item">
+          <span class="toc-number">${safe.summary ? '5' : '4'}</span>
+          <span class="toc-text">Próximos Passos</span>
+        </div>
+        ` : ""}
+      </div>
+    </section>
+
+    <!-- Objetivos de Aprendizagem -->
+    <section class="section">
+      <h2 class="section-title">🎯 Objetivos de Aprendizagem</h2>
+      <p>Ao final desta aula, você será capaz de:</p>
       <ul class="objectives" role="list">
         ${safe.objectives.map((obj) => `<li role="listitem">${sanitizeMaybe(obj)}</li>`).join("")}
       </ul>
     </section>
 
+    <!-- Introdução -->
     <section class="section">
-      <h2 class="section-title">Introdução</h2>
+      <h2 class="section-title">📖 Introdução</h2>
       <p>${sanitizeMaybe(safe.introduction)}</p>
+      ${safe.metadata.duration ? `
+      <div class="lesson-info">
+        <div class="info-item">
+          <strong>⏱️ Duração estimada:</strong> ${escapeHtml(safe.metadata.duration)}
+        </div>
+        <div class="info-item">
+          <strong>📊 Nível de dificuldade:</strong> ${escapeHtml(safe.metadata.difficulty)}
+        </div>
+        <div class="info-item">
+          <strong>🎓 Nível educacional:</strong> ${escapeHtml(safe.metadata.grade)}
+        </div>
+      </div>
+      ` : ""}
     </section>
 
+    <!-- Desenvolvimento da Aula -->
     <section class="section">
-      <h2 class="section-title">Estrutura da Aula</h2>
+      <h2 class="section-title">📚 Desenvolvimento da Aula</h2>
+      <p>Esta aula está dividida em <strong>${safe.stages.length} etapas</strong> que abordam diferentes aspectos do tema:</p>
       <div class="stages">
         ${safe.stages
-          .map((stage) => `
+          .map((stage, index) => `
             <article class="stage">
               <h3 class="stage-title">${escapeHtml(stage.etapa)}</h3>
               <span class="stage-type">${escapeHtml(stage.type)}</span>
@@ -425,14 +829,17 @@ function buildPrintHtml(
 
     ${safe.summary ? `
       <section class="section">
-        <h2 class="section-title">Resumo</h2>
-        <div class="summary"><p>${sanitizeMaybe(safe.summary)}</p></div>
+        <h2 class="section-title">📝 Resumo</h2>
+        <div class="summary">
+          <p>${sanitizeMaybe(safe.summary)}</p>
+        </div>
       </section>
     ` : ""}
 
     ${safe.nextSteps && safe.nextSteps.length > 0 ? `
       <section class="section">
-        <h2 class="section-title">Próximos Passos</h2>
+        <h2 class="section-title">🚀 Próximos Passos</h2>
+        <p>Para continuar seu aprendizado, recomendamos:</p>
         <ul class="next-steps" role="list">
           ${safe.nextSteps.map((s) => `<li role="listitem">${sanitizeMaybe(s)}</li>`).join("")}
         </ul>

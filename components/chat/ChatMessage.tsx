@@ -442,9 +442,6 @@ export const ChatMessage = memo(function ChatMessage({
                   return new Date(message.timestamp).toISOString();
                 })()}>{msgTime}</time>
               )}
-              {typeof message.tokens === "number" && (
-                <span>{formatTokens(message.tokens)} tokens</span>
-              )}
               {/* Badge do modelo - única fonte de verdade */}
               {!isUser && (
                 modelToShow ? (

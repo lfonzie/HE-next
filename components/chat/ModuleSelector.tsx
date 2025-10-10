@@ -11,8 +11,6 @@ import "./ModuleSelector.css";
 // Generate modules list from centralized icon mapping
 const MODULES = [
   { id: "professor", name: "Professor", iconKey: "professor", color: "#2563eb" },
-  { id: "aula-expandida", name: "Aula Expandida", iconKey: "aula-expandida", color: "#f59e0b" },
-  { id: "enem-interativo", name: "ENEM Interativo", iconKey: "enem-interativo", color: "#3b82f6" },
   { id: "ti", name: "TI", iconKey: "ti", color: "#6b7280" },
   { id: "atendimento", name: "Atendimento", iconKey: "atendimento", color: "#ef4444" },
   { id: "rh", name: "RH", iconKey: "rh", color: "#8b5cf6" },

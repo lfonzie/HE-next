@@ -201,50 +201,6 @@ const moduleWelcomeData = {
       "Engajamento da comunidade"
     ]
   },
-  ENEM_INTERACTIVE: {
-    title: "ENEM Interativo",
-    subtitle: "Preparação completa para o Exame Nacional",
-    description: "Simulador ENEM personalizado, análise de performance e estratégias de estudo específicas para o exame.",
-    icon: ClipboardList,
-    color: "bg-gradient-to-br from-red-500 to-red-700",
-    iconColor: "text-red-600",
-    suggestions: [
-      "Simulador ENEM personalizado",
-      "Análise de performance",
-      "Estratégias de estudo",
-      "Revisão de conteúdo",
-      "Como interpretar gráficos no ENEM?",
-      "Técnicas de redação para o ENEM"
-    ],
-    features: [
-      "Simulador personalizado",
-      "Análise de performance",
-      "Estratégias específicas",
-      "Preparação completa"
-    ]
-  },
-  AULA_EXPANDIDA: {
-    title: "Aulas Expandidas",
-    subtitle: "Conteúdo interativo e gamificado",
-    description: "Aulas completas com quizzes, exercícios interativos e conteúdo expandido para uma experiência de aprendizado imersiva.",
-    icon: GraduationCap,
-    color: "bg-gradient-to-br from-yellow-400 to-orange-500",
-    iconColor: "text-orange-600",
-    suggestions: [
-      "Aula completa sobre equações",
-      "Quiz interativo de história",
-      "Exercícios de física com simulações",
-      "Aula gamificada de biologia",
-      "Conteúdo interativo de química",
-      "Aulas com realidade virtual"
-    ],
-    features: [
-      "Conteúdo interativo",
-      "Quizzes gamificados",
-      "Exercícios práticos",
-      "Experiência imersiva"
-    ]
-  }
 };
 
 export const ModuleWelcome: React.FC<ModuleWelcomeProps> = ({

@@ -252,11 +252,6 @@ export function ConversationManager({
                             <Clock className="w-3 h-3" />
                             {formatDate(conversation.updatedAt)}
                           </div>
-                          {conversation.tokenCount > 0 && (
-                            <div className="flex items-center gap-1">
-                              <span>{conversation.tokenCount} tokens</span>
-                            </div>
-                          )}
                         </div>
                         
                         {conversation.messages.length > 0 && (

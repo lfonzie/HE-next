@@ -25,8 +25,6 @@ const getModuleIconKey = (moduleId: ModuleId | null): string => {
   
   const mapping: Partial<Record<ModuleId, string>> = {
     PROFESSOR: "professor",
-    AULA_EXPANDIDA: "aula-expandida",
-    ENEM_INTERACTIVE: "enem-interativo",
     TI: "ti",
     RH: "rh",
     FINANCEIRO: "financeiro",
@@ -43,8 +41,6 @@ const getModuleIconKey = (moduleId: ModuleId | null): string => {
 const getModuleColor = (iconKey: string): string => {
   const colors: Record<string, string> = {
     "professor": "#2563eb",
-    "aula-expandida": "#f59e0b",
-    "enem-interativo": "#3b82f6",
     "ti": "#6b7280",
     "atendimento": "#ef4444",
     "rh": "#8b5cf6",
@@ -172,9 +168,6 @@ export const StreamingMessage: React.FC<StreamingMessageProps> = ({
           {/* Metadados */}
           <footer className="message-metadata mt-1 text-xs text-gray-500">
             <div className="flex items-center gap-2">
-              {tokens && tokens > 0 && (
-                <span>{tokens} tokens</span>
-              )}
               {/* Badge do modelo - única fonte de verdade */}
               <ModelBadge model={modelToShow} />
             </div>

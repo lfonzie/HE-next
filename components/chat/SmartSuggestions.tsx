@@ -225,33 +225,6 @@ export function SmartSuggestions({
     if (suggestions.length === 0) {
       suggestions.push(
         {
-          type: 'aula',
-          title: 'Criar Aula Personalizada',
-          description: 'Gere uma aula completa sobre qualquer tema com atividades interativas.',
-          action: () => onAulaClick('tópico personalizado'),
-          icon: <BookOpen className="w-6 h-6" />,
-          color: 'text-blue-600',
-          bgColor: 'bg-blue-50 hover:bg-blue-100'
-        },
-        {
-          type: 'enem',
-          title: 'Simulador ENEM',
-          description: 'Pratique com questões oficiais e simulados personalizados.',
-          action: onEnemClick,
-          icon: <ClipboardList className="w-6 h-6" />,
-          color: 'text-green-600',
-          bgColor: 'bg-green-50 hover:bg-green-100'
-        },
-        {
-          type: 'enemModal',
-          title: 'Simulador ENEM Completo',
-          description: 'Abrir simulador completo com cronômetro e análise de performance.',
-          action: onEnemModalClick,
-          icon: <Target className="w-6 h-6" />,
-          color: 'text-green-600',
-          bgColor: 'bg-green-50 hover:bg-green-100'
-        },
-        {
           type: 'redacao',
           title: 'Correção de Redação',
           description: 'Avalie sua redação com critérios oficiais do ENEM.',
