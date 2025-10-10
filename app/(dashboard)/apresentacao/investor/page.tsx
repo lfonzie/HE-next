@@ -16,24 +16,24 @@ export default function InvestorMemorandum() {
   // Dados para gráficos
   const financialData = [
     { ano: '2025', receitaB2B: 0, receitaB2C: 0, receitaTotal: 0, lucro: -0.035, margem: 0 },
-    { ano: '2026', receitaB2B: 0.504, receitaB2C: 0.215, receitaTotal: 0.719, lucro: 0.144, margem: 20.0 },
-    { ano: '2027', receitaB2B: 1.260, receitaB2C: 0.718, receitaTotal: 1.978, lucro: 0.396, margem: 20.0 },
-    { ano: '2028', receitaB2B: 2.808, receitaB2C: 1.794, receitaTotal: 4.602, lucro: 0.920, margem: 20.0 },
-    { ano: '2029', receitaB2B: 5.616, receitaB2C: 3.588, receitaTotal: 9.204, lucro: 1.841, margem: 20.0 },
-    { ano: '2030', receitaB2B: 10.800, receitaB2C: 6.458, receitaTotal: 17.258, lucro: 3.452, margem: 20.0 },
+    { ano: '2026', receitaB2B: 0.378, receitaB2C: 0.215, receitaTotal: 0.593, lucro: 0.119, margem: 20.0 },
+    { ano: '2027', receitaB2B: 0.945, receitaB2C: 0.718, receitaTotal: 1.663, lucro: 0.333, margem: 20.0 },
+    { ano: '2028', receitaB2B: 2.106, receitaB2C: 1.794, receitaTotal: 3.900, lucro: 0.780, margem: 20.0 },
+    { ano: '2029', receitaB2B: 4.212, receitaB2C: 3.588, receitaTotal: 7.800, lucro: 1.560, margem: 20.0 },
+    { ano: '2030', receitaB2B: 8.100, receitaB2C: 6.458, receitaTotal: 14.558, lucro: 2.912, margem: 20.0 },
   ];
 
   const valuationData = [
-    { cenario: 'Conservador', valor: 69.0, equity: 13.8, roi: 3.1 },
-    { cenario: 'Base', valor: 103.5, equity: 20.7, roi: 4.6 },
-    { cenario: 'Otimista', valor: 138.1, equity: 27.6, roi: 6.1 },
+    { cenario: 'Conservador', valor: 58.2, equity: 11.6, roi: 2.6 },
+    { cenario: 'Base', valor: 87.3, equity: 17.5, roi: 3.9 },
+    { cenario: 'Otimista', valor: 116.5, equity: 23.3, roi: 5.2 },
   ];
 
 
   const roiData = [
-    { name: 'Conservador', value: 3.1, color: '#ef4444' },
-    { name: 'Base', value: 4.6, color: '#3b82f6' },
-    { name: 'Otimista', value: 6.1, color: '#10b981' },
+    { name: 'Conservador', value: 2.6, color: '#ef4444' },
+    { name: 'Base', value: 3.9, color: '#3b82f6' },
+    { name: 'Otimista', value: 5.2, color: '#10b981' },
   ];
 
   const content = (
@@ -734,9 +734,9 @@ export default function InvestorMemorandum() {
 
             <div className="bg-teal-50 p-6 rounded-lg border-l-4 border-teal-500">
               <p className="text-gray-700">
-                <strong>EBITDA Acumulado (2025–2030):</strong> R$ 6,75 milhões<br/>
+                <strong>EBITDA Acumulado (2025–2030):</strong> R$ 5,70 milhões<br/>
                 <strong>Margem EBITDA Média:</strong> 20%<br/>
-                <strong>Receita B2C em 2030:</strong> 37,5% do total (R$ 6,46 milhões)<br/>
+                <strong>Receita B2C em 2030:</strong> 44,4% do total (R$ 6,46 milhões)<br/>
                 <strong>Crescimento impulsionado por expansão B2B + B2C e eficiência operacional.</strong>
               </p>
             </div>
@@ -766,23 +766,23 @@ export default function InvestorMemorandum() {
                   <tr>
                     <td className="border border-gray-300 px-4 py-2">Conservador</td>
                     <td className="border border-gray-300 px-4 py-2">4x</td>
-                    <td className="border border-gray-300 px-4 py-2">69,0</td>
-                    <td className="border border-gray-300 px-4 py-2">13,8</td>
-                    <td className="border border-gray-300 px-4 py-2">3,1x</td>
+                    <td className="border border-gray-300 px-4 py-2">58,2</td>
+                    <td className="border border-gray-300 px-4 py-2">11,6</td>
+                    <td className="border border-gray-300 px-4 py-2">2,6x</td>
                   </tr>
                   <tr className="bg-blue-50">
                     <td className="border border-gray-300 px-4 py-2 font-bold">Base</td>
                     <td className="border border-gray-300 px-4 py-2 font-bold">6x</td>
-                    <td className="border border-gray-300 px-4 py-2 font-bold">103,5</td>
-                    <td className="border border-gray-300 px-4 py-2 font-bold">20,7</td>
-                    <td className="border border-gray-300 px-4 py-2 font-bold">4,6x</td>
+                    <td className="border border-gray-300 px-4 py-2 font-bold">87,3</td>
+                    <td className="border border-gray-300 px-4 py-2 font-bold">17,5</td>
+                    <td className="border border-gray-300 px-4 py-2 font-bold">3,9x</td>
                   </tr>
                   <tr>
                     <td className="border border-gray-300 px-4 py-2">Otimista</td>
                     <td className="border border-gray-300 px-4 py-2">8x</td>
-                    <td className="border border-gray-300 px-4 py-2">138,1</td>
-                    <td className="border border-gray-300 px-4 py-2">27,6</td>
-                    <td className="border border-gray-300 px-4 py-2">6,1x</td>
+                    <td className="border border-gray-300 px-4 py-2">116,5</td>
+                    <td className="border border-gray-300 px-4 py-2">23,3</td>
+                    <td className="border border-gray-300 px-4 py-2">5,2x</td>
                   </tr>
                 </tbody>
               </table>
@@ -822,7 +822,7 @@ export default function InvestorMemorandum() {
                 <div className="text-center">
                   <p className="text-2xl font-bold text-cyan-900 mb-2">R$ 4,5 milhões</p>
                   <p className="text-cyan-700 mb-2">20% equity</p>
-                  <p className="text-cyan-700 mb-4">pré-money R$ 18 milhões</p>
+                  <p className="text-cyan-700 mb-4">pré-money R$ 22,5 milhões</p>
                   <p className="text-sm text-cyan-600 italic">para validação ampliada e marketing inicial</p>
                 </div>
               </div>
@@ -1010,11 +1010,11 @@ export default function InvestorMemorandum() {
                     <div className="text-4xl mb-2">💰</div>
                     <h4 className="text-lg font-bold text-yellow-800">Retorno Atrativo</h4>
                   </div>
-                  <p className="text-gray-700 text-center mb-3">ROI de 3,1x a 6,1x para investidores seed</p>
+                  <p className="text-gray-700 text-center mb-3">ROI de 2,6x a 5,2x para investidores seed</p>
                   <div className="text-center">
-                    <span className="inline-block bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm mr-2">Conservador: 3,1x</span>
-                    <span className="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm mr-2">Base: 4,6x</span>
-                    <span className="inline-block bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">Otimista: 6,1x</span>
+                    <span className="inline-block bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm mr-2">Conservador: 2,6x</span>
+                    <span className="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm mr-2">Base: 3,9x</span>
+                    <span className="inline-block bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">Otimista: 5,2x</span>
                   </div>
                 </div>
 
@@ -1027,7 +1027,7 @@ export default function InvestorMemorandum() {
                     <p className="text-2xl font-bold text-gray-900 mb-1">De 1 para 250 escolas</p>
                     <p className="text-gray-700">em apenas 5 anos</p>
                     <div className="mt-3 text-sm text-gray-600">
-                      <p>📊 Receita projetada: R$ 17,3M (2030)</p>
+                      <p>📊 Receita projetada: R$ 14,6M (2030)</p>
                       <p>👨‍🎓 Alunos B2C: 18.000 (2030)</p>
                     </div>
                   </div>
@@ -1092,24 +1092,24 @@ export default function InvestorMemorandum() {
                 <div className="grid md:grid-cols-3 gap-6 mb-4">
                   <div className="text-center">
                     <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-2">
-                      <span className="text-white font-bold">3,1x</span>
+                      <span className="text-white font-bold">2,6x</span>
                     </div>
                     <h5 className="font-bold text-red-800">Conservador</h5>
-                    <p className="text-sm text-gray-600">Valuation: R$ 69,0M</p>
+                    <p className="text-sm text-gray-600">Valuation: R$ 58,2M</p>
                   </div>
                   <div className="text-center">
                     <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-2">
-                      <span className="text-white font-bold">4,6x</span>
+                      <span className="text-white font-bold">3,9x</span>
                     </div>
                     <h5 className="font-bold text-blue-800">Base</h5>
-                    <p className="text-sm text-gray-600">Valuation: R$ 103,5M</p>
+                    <p className="text-sm text-gray-600">Valuation: R$ 87,3M</p>
                   </div>
                   <div className="text-center">
                     <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-2">
-                      <span className="text-white font-bold">6,1x</span>
+                      <span className="text-white font-bold">5,2x</span>
                     </div>
                     <h5 className="font-bold text-green-800">Otimista</h5>
-                    <p className="text-sm text-gray-600">Valuation: R$ 138,1M</p>
+                    <p className="text-sm text-gray-600">Valuation: R$ 116,5M</p>
                   </div>
                 </div>
                 <ResponsiveContainer width="100%" height={200}>
