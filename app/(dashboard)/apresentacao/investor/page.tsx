@@ -237,7 +237,7 @@ export default function InvestorMemorandum() {
             <h3 className="text-2xl font-bold text-gray-800 mb-4">Diferenciais:</h3>
             <div className="bg-blue-50 p-6 rounded-lg border-l-4 border-blue-500">
               <ul className="space-y-3 text-gray-700">
-                <li><strong>Eficiência Quantificável:</strong> Economia de até R$ 3.000/mês por aluno em aulas particulares; 40% mais produtividade para professores; 30% redução de custos administrativos; 80% menos chamados de TI.</li>
+                <li><strong>Eficiência Quantificável:</strong> Potencial economia de R$ 2.500/mês por professor substituído; 40% mais produtividade para professores; 30% redução de custos administrativos; 80% menos chamados de TI.</li>
                 <li><strong>Preço Competitivo:</strong> Até 83% mais acessível que soluções globais (ex.: US$ 30/usuário/mês).</li>
                 <li><strong>LGPD-First:</strong> Chats temporários, criptografia de ponta a ponta e infraestrutura global em nuvem.</li>
                 <li><strong>Inclusão e Escalabilidade:</strong> Design leve via navegador, acessível em dispositivos low-end; validação por cinco IAs e curadoria humana para consistência BNCC.</li>
@@ -292,7 +292,7 @@ export default function InvestorMemorandum() {
               <div className="bg-indigo-50 p-6 rounded-lg border-l-4 border-indigo-500">
                 <h3 className="font-bold text-indigo-800 mb-3">Para Escolas</h3>
                 <p className="text-gray-700">
-                  Tiers mensais proporcionais ao número de alunos (R$ 2.000 para ≤150; escalando a R$ 8.000 para &gt;1.000), média R$ 5.100/escola.
+                  Tiers mensais proporcionais ao número de alunos (R$ 1.500 para ≤150; escalando a R$ 6.000 para &gt;1.000), média R$ 3.800/escola.
                 </p>
               </div>
               <div className="bg-indigo-50 p-6 rounded-lg border-l-4 border-indigo-500">
@@ -319,7 +319,7 @@ export default function InvestorMemorandum() {
                   </tr>
                   <tr className="bg-green-50">
                     <td className="border border-gray-300 px-4 py-2 font-bold">HubEdu.ia</td>
-                    <td className="border border-gray-300 px-4 py-2 font-bold">R$ 2.000/mês</td>
+                    <td className="border border-gray-300 px-4 py-2 font-bold">R$ 1.500/mês</td>
                   </tr>
                 </tbody>
               </table>
@@ -376,7 +376,7 @@ export default function InvestorMemorandum() {
                   <div className="text-3xl mb-3">💰</div>
                   <h4 className="text-lg font-bold text-blue-800 mb-2">ROI Comprovado</h4>
                   <p className="text-gray-700 text-sm">
-                    Economia de até R$ 3.000 por aluno em aulas particulares, com 40% mais produtividade docente e retenção de alunos.
+                    Potencial economia de R$ 2.500/mês por professor substituído, com 40% mais produtividade docente e retenção de alunos.
                   </p>
                 </div>
               </div>
@@ -533,11 +533,11 @@ export default function InvestorMemorandum() {
                     <td className="border border-gray-300 px-3 py-2 text-center">2026</td>
                     <td className="border border-gray-300 px-3 py-2 text-center">12</td>
                     <td className="border border-gray-300 px-3 py-2 text-center">600</td>
-                    <td className="border border-gray-300 px-3 py-2 text-center">R$504,000</td>
+                    <td className="border border-gray-300 px-3 py-2 text-center">R$378,000</td>
                     <td className="border border-gray-300 px-3 py-2 text-center">R$215,280</td>
-                    <td className="border border-gray-300 px-3 py-2 text-center">R$719,280</td>
-                    <td className="border border-gray-300 px-3 py-2 text-center">R$575,424</td>
-                    <td className="border border-gray-300 px-3 py-2 text-center">R$143,856</td>
+                    <td className="border border-gray-300 px-3 py-2 text-center">R$593,280</td>
+                    <td className="border border-gray-300 px-3 py-2 text-center">R$474,624</td>
+                    <td className="border border-gray-300 px-3 py-2 text-center">R$118,656</td>
                     <td className="border border-gray-300 px-3 py-2 text-center">20.0%</td>
                   </tr>
                   <tr>
