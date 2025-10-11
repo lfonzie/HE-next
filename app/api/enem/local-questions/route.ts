@@ -245,7 +245,7 @@ async function generateSimulationFromLocalDB(params: {
   const questionsPerArea = Math.floor(numQuestions / areas.length);
   const remainingQuestions = numQuestions % areas.length;
   
-  let allQuestions: any[] = [];
+  const allQuestions: any[] = [];
   
   for (let i = 0; i < areas.length; i++) {
     const areaQuestions = questionsPerArea + (i < remainingQuestions ? 1 : 0);

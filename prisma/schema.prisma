@@ -13,10 +13,15 @@ model User {
   email             String    @unique @db.VarChar(255)
   password_hash     String?
   name              String?   @db.VarChar(255)
-  role              role      @default(STUDENT)
+  role              role      @default(FREE)
   google_id         String?   @db.VarChar(255)
   profile_image_url String?   @db.VarChar(500)
   photo             String?   @db.VarChar(500)
+  birth_date        DateTime?
+  city              String?   @db.VarChar(255)
+  state             String?   @db.VarChar(2)
+  school            String?   @db.VarChar(255)
+  plan              String?   @default("free") @db.VarChar(50)
   school_id         String?   @db.Uuid
   created_at        DateTime  @default(now()) @db.Timestamp(6)
   updated_at        DateTime  @default(now()) @db.Timestamp(6)
@@ -1055,11 +1060,9 @@ enum publish_state {
 }
 
 enum role {
-  STUDENT
-  TEACHER
-  STAFF
+  FREE
+  PREMIUM
   ADMIN
-  SUPER_ADMIN
 }
 
 enum secretariat_automation {

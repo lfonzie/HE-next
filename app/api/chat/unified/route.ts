@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     console.log(`📝 [CHAT-UNIFIED] Conversation ID: ${finalConversationId}`);
 
     // 2) Recuperar histórico
-    let history = await getHistory(finalConversationId);
+    const history = await getHistory(finalConversationId);
     console.log(`📚 [CHAT-UNIFIED] History loaded: ${history.length} messages`);
 
     // 3) Adicionar mensagem do usuário ANTES de chamar a IA

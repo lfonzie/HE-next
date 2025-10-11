@@ -215,7 +215,7 @@ export class TRIEngine {
     responses: Array<{ proficiency: number; response: boolean }>,
     initialParameters: IRTParameters = this.DEFAULT_PARAMETERS
   ): CalibrationResult {
-    let parameters = { ...initialParameters }
+    const parameters = { ...initialParameters }
     let iterations = 0
     let convergence = false
 

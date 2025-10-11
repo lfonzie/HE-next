@@ -45,17 +45,17 @@ function RedacaoPageContent() {
         if (data.user) {
           setUser(data.user)
         } else {
-          // Redirect to login if not authenticated
-          router.push('/login?callbackUrl=' + encodeURIComponent(window.location.pathname))
+          // Redirect to ENEM register page for free access
+          router.push('/enem-register?callbackUrl=' + encodeURIComponent(window.location.pathname))
         }
       } catch (error) {
         console.error('Auth check failed:', error)
-        router.push('/login?callbackUrl=' + encodeURIComponent(window.location.pathname))
+        router.push('/enem-register?callbackUrl=' + encodeURIComponent(window.location.pathname))
       } finally {
         setAuthLoading(false)
       }
     }
-    
+
     checkAuth()
   }, [router])
   

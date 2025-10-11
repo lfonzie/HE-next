@@ -112,7 +112,7 @@ export default function GeminiLiveSimpleChat() {
       const decoder = new TextDecoder()
 
       let currentText = ''
-      let audioChunks: string[] = []
+      const audioChunks: string[] = []
 
       while (true) {
         const { done, value } = await reader!.read()

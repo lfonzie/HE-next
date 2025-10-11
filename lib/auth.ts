@@ -117,9 +117,9 @@ export const authOptions: NextAuthOptions = {
           
           // Determinar a role do usuário
           const isSuperAdmin = userEmail === superAdminEmail
-          const defaultRole = isSuperAdmin ? 'ADMIN' : 'STUDENT'
+          const defaultRole = isSuperAdmin ? 'ADMIN' : 'FREE'
           
-          console.log(`✅ [AUTH] Email autorizado: ${userEmail} (${isSuperAdmin ? 'SUPERADMIN' : 'Usuário padrão'})`)
+          console.log(`✅ [AUTH] Email autorizado: ${userEmail} (${isSuperAdmin ? 'ADMIN' : 'Usuário FREE'})`)
           
           // Check if user exists in database
           const existingUser = await prisma.user.findUnique({
@@ -135,11 +135,15 @@ export const authOptions: NextAuthOptions = {
               })
               console.log(`🔄 [AUTH] Role atualizada para ADMIN: ${userEmail}`)
               token.id = updatedUser.id
-              token.role = updatedUser.role
+              token.role = existingUser.role
             } else {
               token.id = existingUser.id
               token.role = existingUser.role
             }
+
+            // Verificar se perfil está completo
+            const isProfileComplete = existingUser.birth_date && existingUser.city && existingUser.state && existingUser.school
+            token.profileComplete = isProfileComplete
           } else {
             // Create new user for Google OAuth
             const newUser = await prisma.user.create({
@@ -147,11 +151,13 @@ export const authOptions: NextAuthOptions = {
                 email: userEmail,
                 name: user.name || '',
                 role: defaultRole,
+                plan: 'free',
               }
             })
             console.log(`✨ [AUTH] Novo usuário criado: ${userEmail} (${defaultRole})`)
             token.id = newUser.id
             token.role = newUser.role
+            token.profileComplete = false // Novo usuário precisa completar perfil
           }
         } catch (error) {
           console.error('❌ [AUTH] Error handling Google OAuth:', error)
@@ -165,6 +171,7 @@ export const authOptions: NextAuthOptions = {
       if (token) {
         session.user.id = token.id as string
         session.user.role = token.role as string
+        session.user.profileComplete = token.profileComplete as boolean
       }
       return session
     },
@@ -179,6 +186,36 @@ export const authOptions: NextAuthOptions = {
       }
       // Otherwise, redirect to base URL
       return baseUrl
+    },
+    async signIn({ user, account }) {
+      // Para Google OAuth, verificar se é usuário free ou se perfil está completo
+      if (account?.provider === 'google') {
+        try {
+          const userEmail = user.email || ''
+          const existingUser = await prisma.user.findUnique({
+            where: { email: userEmail }
+          })
+
+          if (existingUser) {
+            // Usuários FREE podem acessar sem completar perfil
+            const isFreeUser = existingUser.role === 'FREE'
+            const isProfileComplete = existingUser.birth_date && existingUser.city && existingUser.state && existingUser.school
+
+            // Só redirecionar para completar perfil se for PREMIUM e perfil não estiver completo
+            if (existingUser.role === 'PREMIUM' && !isProfileComplete) {
+              return '/complete-profile'
+            }
+          } else {
+            // Novo usuário Google é criado como free automaticamente
+            // Não precisa completar perfil para acessar
+            return true
+          }
+        } catch (error) {
+          console.error('Error checking profile completion:', error)
+        }
+      }
+
+      return true
     },
   },
 }

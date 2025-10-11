@@ -50,7 +50,7 @@ GOOGLE_GEMINI_API_KEY="your-gemini-api-key-here"`
                 <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold">1</div>
                 <div>
                   <p className="font-medium">Obter Chave da OpenAI</p>
-                  <p className="text-sm text-gray-600">Acesse <a href="https://platform.openai.com/api-keys" target="_blank" className="text-blue-600 underline">platform.openai.com/api-keys</a> e crie uma nova chave API</p>
+                  <p className="text-sm text-gray-600">Acesse <a href="https://platform.openai.com/api-keys" target="_blank" className="text-blue-600 underline" rel="noreferrer">platform.openai.com/api-keys</a> e crie uma nova chave API</p>
                 </div>
               </div>
 

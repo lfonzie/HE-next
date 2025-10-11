@@ -268,7 +268,7 @@ class EnemLocalDatabase {
 
     // Se não especificou ano, busca em todos os anos disponíveis
     const years = year ? [year] : await this.getAvailableYears()
-    let allQuestions: LocalEnemQuestion[] = []
+    const allQuestions: LocalEnemQuestion[] = []
 
     console.log(`🔍 Buscando questões com filtros:`, { year, discipline, language, limit, random })
 

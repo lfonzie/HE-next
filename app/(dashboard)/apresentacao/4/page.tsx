@@ -31,15 +31,16 @@ export default function Slide4() {
       
       <div className="pt-16 px-4 sm:px-6 lg:px-8 flex items-center min-h-screen">
         <div className="max-w-6xl mx-auto w-full">
-          <SectionTitle subtitle="Simulador ENEM completo com correção automática por IA de redações e questões">
-            🎓 <span className="bg-gradient-to-r from-yellow-500 to-yellow-700 bg-clip-text text-transparent">Preparação para o ENEM</span>
+          <SectionTitle subtitle="Simulador ENEM completo + Correção automática de redações. 100% gratuito mediante cadastro simples.">
+            🎓 <span className="bg-gradient-to-r from-yellow-500 to-yellow-700 bg-clip-text text-transparent">ENEM - 100% Gratuito</span>
           </SectionTitle>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
             {[
-              { title: '3000+ Questões Oficiais', description: 'Banco completo com questões oficiais do ENEM (2009-2024) + infinitas geradas por IA.', icon: '📚', stats: '3000+ Questões Oficiais' },
+              { title: '100% Gratuito', description: 'Acesso completo aos simulados e redação mediante cadastro simples com email Google.', icon: '🎁', stats: 'Gratuito' },
+              { title: '3000+ Questões Oficiais', description: 'Banco completo com questões oficiais do ENEM (2009-2024) + infinitas geradas por IA.', icon: '📚', stats: '3000+ Questões' },
               { title: 'Temas de Redação Completos', description: 'Todos os temas oficiais desde 1998 + infinitos gerados por IA baseados em tendências.', icon: '✍️', stats: 'Temas desde 1998' },
-              { title: 'Explicação de Erros por IA', description: 'Explicação detalhada de questões erradas no simulado usando IA avançada.', icon: '🧠', stats: 'Feedback Inteligente' },
+              { title: 'Explicação de Erros por IA', description: 'Explicação detalhada de questões erradas no simulado usando IA avançada.', icon: '🧠', stats: 'Feedback IA' },
               { title: 'Correção Automática', description: 'Correção instantânea de redações por IA com critérios oficiais do ENEM.', icon: '🤖', stats: 'Correção Instantânea' },
             ].map((feature, index) => (
               <FeatureCard key={index} feature={feature} />

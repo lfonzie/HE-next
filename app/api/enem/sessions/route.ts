@@ -70,7 +70,7 @@ async function generateExamFromLocalDB(params: {
   const questionsPerArea = Math.floor(numQuestions / areas.length);
   const remainingQuestions = numQuestions % areas.length;
   
-  let allQuestions: any[] = [];
+  const allQuestions: any[] = [];
   
   for (let i = 0; i < areas.length; i++) {
     const areaQuestions = questionsPerArea + (i < remainingQuestions ? 1 : 0);
@@ -165,7 +165,7 @@ async function getQuestionsFromLocalDB(filter: {
     }
 
     let allQuestions: EnemQuestion[] = [];
-    let skippedCount = 0;
+    const skippedCount = 0;
     let processedCount = 0;
 
     // Map area codes to discipline names

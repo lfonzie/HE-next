@@ -15,9 +15,9 @@ import { prisma } from '@/lib/db'
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, password } = await request.json()
+    const { name, email, password, birth_date, city, state, school } = await request.json()
 
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !birth_date || !city || !state || !school) {
       return NextResponse.json({ error: 'Todos os campos são obrigatórios' }, { status: 400 })
     }
 
@@ -39,6 +39,11 @@ export async function POST(request: NextRequest) {
         name,
         email,
         password_hash: hashedPassword,
+        birth_date: new Date(birth_date),
+        city,
+        state,
+        school,
+        plan: 'free',
         role: 'STUDENT'
       }
     })

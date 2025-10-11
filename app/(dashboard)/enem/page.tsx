@@ -19,7 +19,9 @@ import {
   RefreshCw,
   ArrowRight,
   History,
-  BarChart3
+  BarChart3,
+  FileText,
+  ChevronRight
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { EnemModeSelector } from '@/components/enem/EnemModeSelector';
@@ -28,6 +30,8 @@ import { EnemSimulatorV2 } from '@/components/enem/EnemSimulatorV2';
 import { EnemResults } from '@/components/enem/EnemResults';
 import { EnemMode, EnemArea, EnemScore } from '@/types/enem';
 import { ExamGenerationLoading } from '@/components/enem/EnemLoadingStates';
+import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
 type AppState = 'mode-selection' | 'customization' | 'simulation' | 'results';
 
@@ -52,7 +56,40 @@ interface SimulationConfig {
 }
 
 
-function EnemSimulatorContent() {
+function EnemUnifiedContent() {
+  const [selectedModule, setSelectedModule] = useState<'menu' | 'simulados' | 'redacao'>('menu');
+  const router = useRouter();
+  const { data: session, status } = useSession();
+
+  // Check authentication - redirect to register page if not logged in
+  useEffect(() => {
+    if (status === 'loading') return; // Still loading
+
+    if (!session) {
+      // Redirect to ENEM register page with callback
+      router.push('/enem-register?callbackUrl=/enem');
+      return;
+    }
+  }, [session, status, router]);
+
+  // Show loading while checking authentication
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Verificando acesso...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render anything if not authenticated (will redirect)
+  if (!session) {
+    return null;
+  }
+
+  // Simulados state
   const [appState, setAppState] = useState<AppState>('mode-selection');
   const [simulationConfig, setSimulationConfig] = useState<SimulationConfig | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -487,59 +524,148 @@ function EnemSimulatorContent() {
     );
   }
 
-  // Default: Mode Selection
-  return (
-    <div className="bg-gradient-to-br from-slate-50 via-yellow-50 to-orange-100">
-      <div className="container-fluid-lg mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8" role="main">
-        {/* Hero Section */}
-        {renderHero()}
-      </div>
-      
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        {/* Error Display */}
-        {error && (
-          <div className="mb-8 p-6 bg-red-50 border border-red-200 rounded-2xl">
-            <div className="flex items-center gap-3">
-              <AlertCircle className="h-5 w-5 text-red-600" />
-              <span className="text-red-800 font-medium">{error}</span>
-            </div>
-          </div>
-        )}
+  // Render menu principal
+  if (selectedModule === 'menu') {
+    return (
+      <div className="bg-gradient-to-br from-slate-50 via-yellow-50 to-orange-100 min-h-screen">
+        <div className="container mx-auto px-4 py-8 max-w-6xl">
+          {/* Header */}
+          <header className="text-center mb-16">
+            <div className="relative">
+              {/* Background decoration */}
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 via-purple-400/20 to-green-400/20 rounded-3xl blur-3xl"></div>
 
-        {/* Loading State */}
-        {loading && (
-          <div className="mb-8">
-            <ExamGenerationLoading
-              currentStep={Math.ceil((loadingProgress / 100) * 3)}
-              message={loadingMessage}
-              showSteps={true}
+              <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl p-12 shadow-xl border border-white/20">
+                <div className="relative mb-8">
+                  <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-3xl flex items-center justify-center shadow-lg mx-auto mb-6">
+                    <Target className="h-12 w-12 text-white" />
+                  </div>
+                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                    <Sparkles className="h-4 w-4 text-white fill-current" />
+                  </div>
+                </div>
+
+                <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  ENEM - Gratuito
+                </h1>
+                <p className="text-xl text-gray-600 mb-6 max-w-3xl mx-auto leading-relaxed">
+                  Prepare-se para o ENEM com simulados completos e correção automática de redações. Tudo gratuito mediante cadastro simples.
+                </p>
+
+                <div className="flex flex-wrap justify-center gap-3 mb-8">
+                  <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-green-100 text-green-800 border border-green-200">
+                    <CheckCircle className="h-4 w-4" />
+                    100% Gratuito
+                  </Badge>
+                  <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-100 text-blue-800 border border-blue-200">
+                    <Sparkles className="h-4 w-4" />
+                    IA Avançada
+                  </Badge>
+                  <Badge variant="secondary" className="flex items-center gap-2 px-4 py-2 text-sm bg-purple-100 text-purple-800 border border-purple-200">
+                    <Target className="h-4 w-4" />
+                    Correção Automática
+                  </Badge>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="p-6 bg-blue-50 rounded-2xl border border-blue-200 hover:border-blue-400 transition-all duration-300 cursor-pointer transform hover:scale-105" onClick={() => setSelectedModule('simulados')}>
+                    <div className="w-16 h-16 bg-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                      <BookOpen className="h-8 w-8 text-white" />
+                    </div>
+                    <h3 className="text-xl font-bold text-blue-800 mb-3">📚 Simulados ENEM</h3>
+                    <p className="text-blue-700 mb-4">3000+ questões oficiais + infinitas geradas por IA com correção automática</p>
+                    <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+                      Acessar Simulados <ChevronRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  <div className="p-6 bg-purple-50 rounded-2xl border border-purple-200 hover:border-purple-400 transition-all duration-300 cursor-pointer transform hover:scale-105" onClick={() => router.push('/redacao')}>
+                    <div className="w-16 h-16 bg-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                      <FileText className="h-8 w-8 text-white" />
+                    </div>
+                    <h3 className="text-xl font-bold text-purple-800 mb-3">✍️ Redação ENEM</h3>
+                    <p className="text-purple-700 mb-4">Correção automática por IA com critérios oficiais do ENEM</p>
+                    <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white">
+                      Acessar Redação <ChevronRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </header>
+        </div>
+      </div>
+    );
+  }
+
+  // Render simulados
+  if (selectedModule === 'simulados') {
+    // Default: Mode Selection
+    return (
+      <div className="bg-gradient-to-br from-slate-50 via-yellow-50 to-orange-100">
+        <div className="container-fluid-lg mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8" role="main">
+          {/* Hero Section */}
+          {renderHero()}
+        </div>
+
+        <div className="max-w-6xl mx-auto px-4 py-8">
+          {/* Error Display */}
+          {error && (
+            <div className="mb-8 p-6 bg-red-50 border border-red-200 rounded-2xl">
+              <div className="flex items-center gap-3">
+                <AlertCircle className="h-5 w-5 text-red-600" />
+                <span className="text-red-800 font-medium">{error}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Loading State */}
+          {loading && (
+            <div className="mb-8">
+              <ExamGenerationLoading
+                currentStep={Math.ceil((loadingProgress / 100) * 3)}
+                message={loadingMessage}
+                showSteps={true}
+              />
+            </div>
+          )}
+
+          {/* Mode Selection */}
+          <div className="mb-8 sm:mb-12">
+            <EnemModeSelector
+              onModeSelect={handleModeSelect}
+              onCustomize={handleCustomize}
             />
           </div>
-        )}
 
-        {/* Mode Selection */}
-        <div className="mb-8 sm:mb-12">
-          <EnemModeSelector 
-            onModeSelect={handleModeSelect}
-            onCustomize={handleCustomize}
-          />
-        </div>
+          {/* Info Section */}
+          <div className="text-center">
+            <div className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-yellow-100 to-orange-100 border border-yellow-200 rounded-2xl">
+              <BookOpen className="h-5 w-5 text-yellow-600" />
+              <span className="text-yellow-800 font-medium">
+                📚 Questões reais do ENEM • Banco completo 2009-2023
+              </span>
+            </div>
+          </div>
 
-
-        {/* Info Section */}
-        <div className="text-center">
-          <div className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-yellow-100 to-orange-100 border border-yellow-200 rounded-2xl">
-            <BookOpen className="h-5 w-5 text-yellow-600" />
-            <span className="text-yellow-800 font-medium">
-              📚 Questões reais do ENEM • Banco completo 2009-2023
-            </span>
+          {/* Back to menu button */}
+          <div className="text-center mt-8">
+            <Button
+              variant="outline"
+              onClick={() => setSelectedModule('menu')}
+              className="border-yellow-400 text-yellow-700 hover:bg-yellow-50"
+            >
+              ← Voltar ao Menu ENEM
+            </Button>
           </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  return null;
 }
 
-export default function EnemSimulatorPage() {
-  return <EnemSimulatorContent />
+export default function EnemUnifiedPage() {
+  return <EnemUnifiedContent />
 }

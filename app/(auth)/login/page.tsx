@@ -260,17 +260,30 @@ function LoginForm() {
               Continuar com Google
             </Button>
 
-            <div className="mt-8 flex items-center justify-between rounded-2xl bg-surface-2 px-4 py-3 text-step--1 text-subtle">
-              <p>Precisa de acesso?</p>
-              <Button
-                type="button"
-                variant="ghost"
-                className="gap-2 text-step--1 text-primary transition-colors hover:text-accent"
-                onClick={() => router.push('/')}
-              >
-                <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-                Voltar ao site
-              </Button>
+            <div className="mt-8 space-y-4">
+              <div className="text-center text-sm text-subtle">
+                <span>Não tem conta? </span>
+                <Button
+                  type="button"
+                  variant="link"
+                  className="p-0 h-auto text-primary hover:text-accent"
+                  onClick={() => router.push('/register')}
+                >
+                  Criar conta gratuita
+                </Button>
+              </div>
+              <div className="flex items-center justify-between rounded-2xl bg-surface-2 px-4 py-3 text-step--1 text-subtle">
+                <p>Precisa de acesso?</p>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="gap-2 text-step--1 text-primary transition-colors hover:text-accent"
+                  onClick={() => router.push('/')}
+                >
+                  <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+                  Voltar ao site
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>

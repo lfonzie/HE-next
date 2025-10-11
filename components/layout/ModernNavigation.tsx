@@ -34,25 +34,18 @@ const navigationItems: NavigationItem[] = [
     color: 'from-blue-500 to-blue-600'
   },
   {
-    name: 'ENEM',
-    href: '/enem',
-    icon: Target,
-    description: 'Simulador ENEM',
-    color: 'from-green-500 to-green-600'
-  },
-  {
-    name: 'Redação',
-    href: '/redacao',
-    icon: FileText,
-    description: 'Correção de redação',
-    color: 'from-purple-500 to-purple-600'
-  },
-  {
     name: 'Aulas',
     href: '/aulas',
     icon: BookOpen,
     description: 'Aulas interativas',
     color: 'from-orange-500 to-orange-600'
+  },
+  {
+    name: 'ENEM',
+    href: '/enem',
+    icon: Target,
+    description: 'Simulados e Redação',
+    color: 'from-green-500 to-green-600'
   }
 ]
 

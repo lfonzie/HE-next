@@ -108,7 +108,7 @@ function AdvancedTextEditor({ content, onChange, disabled = false }: EditorProps
 
   const formatText = () => {
     // Formatação básica do texto
-    let formatted = content
+    const formatted = content
       .replace(/\n\n\n+/g, '\n\n') // Remove linhas em branco excessivas
       .replace(/^\s+|\s+$/gm, '') // Remove espaços no início e fim das linhas
       .replace(/\n/g, '\n') // Garante quebras de linha consistentes

@@ -471,7 +471,7 @@ class EnemApiClient {
             const allAreas = ['linguagens', 'matematica', 'ciencias-natureza', 'ciencias-humanas']
             const questionsPerArea = Math.ceil(count / allAreas.length)
             
-            let allQuestions: EnemQuestion[] = []
+            const allQuestions: EnemQuestion[] = []
             for (const specificArea of allAreas) {
               try {
                 const localQuestions = await enemLocalDB.getQuestions({
@@ -522,7 +522,7 @@ class EnemApiClient {
         const allAreas = ['linguagens', 'matematica', 'natureza', 'humanas']
         const questionsPerArea = Math.ceil(count / allAreas.length)
         
-        let allQuestions: EnemQuestion[] = []
+        const allQuestions: EnemQuestion[] = []
         for (const specificArea of allAreas) {
           try {
             const areaQuestions = await this.getQuestions({ area: specificArea, limit: questionsPerArea })
@@ -620,7 +620,7 @@ async function generateFallbackQuestions(area: string, limit: number): Promise<E
     // Batch generation strategy - generate in batches of 2
     const batchSize = Math.min(limit, 2);
     const batches = Math.ceil(limit / batchSize);
-    let allQuestions: EnemQuestion[] = [];
+    const allQuestions: EnemQuestion[] = [];
 
     for (let i = 0; i < batches; i++) {
       const currentBatchSize = Math.min(batchSize, limit - allQuestions.length);

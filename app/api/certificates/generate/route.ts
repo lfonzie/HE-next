@@ -165,7 +165,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    let whereClause: any = {};
+    const whereClause: any = {};
     if (certificateId) {
       whereClause.unique_id = certificateId;
     } else if (userId) {

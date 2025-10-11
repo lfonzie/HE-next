@@ -458,7 +458,7 @@ async function searchWikimedia(query: string, limit: number): Promise<any[]> {
       query.replace(/revolution/gi, 'revolutionary').trim()
     ].filter(q => q.length > 0);
     
-    let allResults: any[] = [];
+    const allResults: any[] = [];
     
     // Tentar cada query alternativa
     for (const altQuery of alternativeQueries) {
@@ -538,7 +538,7 @@ async function searchUnsplash(query: string, limit: number): Promise<any[]> {
       query.replace(/revolution/gi, 'war').trim()
     ].filter(q => q.length > 0);
     
-    let allResults: any[] = [];
+    const allResults: any[] = [];
     
     // Tentar cada query alternativa
     for (const altQuery of alternativeQueries) {

@@ -9,6 +9,7 @@ declare module "next-auth" {
       image?: string | null
       role?: string
       schoolId?: string
+      profileComplete?: boolean
     }
   }
 
@@ -19,6 +20,7 @@ declare module "next-auth" {
     image?: string | null
     role?: string
     schoolId?: string
+    profileComplete?: boolean
   }
 }
 
@@ -26,6 +28,7 @@ declare module "next-auth/jwt" {
   interface JWT {
     role?: string
     schoolId?: string
+    profileComplete?: boolean
   }
 }
 

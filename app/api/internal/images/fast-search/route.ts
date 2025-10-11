@@ -560,7 +560,7 @@ export async function POST(request: NextRequest) {
     ]);
     
     // Combine all results
-    let allImages: FastImage[] = [];
+    const allImages: FastImage[] = [];
     if (unsplashResults.status === 'fulfilled') allImages.push(...unsplashResults.value);
     if (pixabayResults.status === 'fulfilled') allImages.push(...pixabayResults.value);
     if (pexelsResults.status === 'fulfilled') allImages.push(...pexelsResults.value);

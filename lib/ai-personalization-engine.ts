@@ -268,7 +268,7 @@ export class AIPersonalizationEngine {
     let currentTopic = '';
     let currentDuration = 0;
     let currentActivities = [];
-    let currentDifficulty = 5;
+    const currentDifficulty = 5;
 
     for (const line of lines) {
       if (line.includes('Tópico:') || line.includes('Topic:')) {

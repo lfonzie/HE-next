@@ -105,7 +105,7 @@ export function EnemPerformanceAnalysis({
     // Calcular scores e métricas
     const processedAreaScores: Record<string, any> = {}
     let totalCorrect = 0
-    let totalQuestions = questions.length
+    const totalQuestions = questions.length
 
     Object.entries(areaScores).forEach(([area, data]) => {
       const percentage = Math.round((data.correct / data.total) * 100)

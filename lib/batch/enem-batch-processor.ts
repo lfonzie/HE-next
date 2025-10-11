@@ -131,7 +131,7 @@ export class EnemBatchProcessor {
     const { area, mode, config } = request;
     const batchSize = Math.min(this.config.batchSize, request.totalQuestions - (batchNumber * this.config.batchSize));
     
-    let questions: Question[] = [];
+    const questions: Question[] = [];
 
     // Try database first if mode allows
     if (mode === 'REAL' || mode === 'MIXED') {

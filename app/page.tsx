@@ -6,7 +6,7 @@ import {
   Bot, Zap, Rocket, Shield, Heart, Phone, Mail, MapPin, Target, TrendingUp,
   BookOpen, Lightbulb, LogIn, ChevronDown, Brain, Award, Globe,
   GraduationCap, Trophy, Users2, BarChart3, Settings, Calendar, FileText,
-  MessageCircle, Search, Filter, Download, Share2
+  MessageCircle, Search, Filter, Download, Share2, User
 } from 'lucide-react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -78,8 +78,7 @@ const ADVANTAGES = [
 const HERO_MODULES = [
   { title: 'Aulas Completas', description: 'Aulas completas sobre qualquer tema com quizzes, geradas em menos de 2 minutos por IA.', icon: '🎮', features: ['Qualquer tema educacional', 'Aulas completas com quizzes', 'Geração em menos de 2 minutos', '100% baseado na BNCC', 'Narração em tempo real'], cta: 'Explorar Aula' },
   { title: 'Chat Professor IA', description: 'Professor virtual para tirar dúvidas pedagógicas instantaneamente com 5 principais IAs.', icon: '👩‍🏫', features: ['Dúvidas pedagógicas', 'Suporte BNCC', 'Sugestões de atividades', 'Orientação educacional', '5 IAs integradas'], cta: 'Conversar com Professor' },
-  { title: 'Simulador ENEM', description: '3000 questões oficiais (2009-2024) + infinitas geradas por IA com explicações detalhadas.', icon: '📚', features: ['3000+ questões oficiais', 'Questões infinitas por IA', 'Explicação de erros por IA', 'Modos personalizados', 'Análise detalhada'], cta: 'Fazer Simulado' },
-  { title: 'Redação ENEM', description: 'Todos os temas oficiais desde 1998 + infinitos gerados por IA baseados nas principais tendências.', icon: '✍️', features: ['Temas oficiais desde 1998', 'Infinitos temas por IA', 'Tendências atuais 2025', 'Correção automática por IA', 'Feedback personalizado'], cta: 'Testar Redação' },
+  { title: 'ENEM - Gratuito', description: 'Simulador ENEM completo (3000+ questões oficiais) + Correção automática de redações. Cadastro simples.', icon: '🎓', features: ['3000+ questões oficiais', 'Redação com correção por IA', 'Análise detalhada de desempenho', 'Temas oficiais desde 1998', '100% gratuito'], cta: 'Acessar ENEM' },
 ];
 
 const FEATURES = {
@@ -101,6 +100,7 @@ const FEATURES = {
     { title: 'Conteúdo Personalizado', description: 'Aulas adaptadas para diferentes níveis e necessidades de cada turma.', icon: '🎯', stats: 'Adaptação Inteligente' },
   ],
   enem: [
+    { title: '100% Gratuito', description: 'Simulador ENEM e redação completamente gratuitos mediante cadastro simples.', icon: '🎁', stats: 'Gratuito' },
     { title: '3000+ Questões Oficiais', description: 'Banco completo com questões oficiais do ENEM (2009-2024) + infinitas geradas por IA.', icon: '📚', stats: '3000+ Questões Oficiais' },
     { title: 'Temas de Redação Completos', description: 'Todos os temas oficiais desde 1998 + infinitos gerados por IA baseados em tendências.', icon: '✍️', stats: 'Temas desde 1998' },
     { title: 'Explicação de Erros por IA', description: 'Explicação detalhada de questões erradas no simulado usando IA avançada.', icon: '🧠', stats: 'Feedback Inteligente' },
@@ -129,7 +129,7 @@ const FAQ_ITEMS = [
   { question: 'Os pais têm acesso?', answer: 'Sim, via chat omni-channel (WhatsApp, site e redes sociais).' },
   { question: 'É compatível com LGPD?', answer: 'Sim, com chats efêmeros e dados protegidos em servidores brasileiros.' },
   { question: 'Menores de 18 anos podem usar?', answer: 'Sim, a plataforma é acessível para todas as idades.' },
-  { question: 'Quando estará disponível?', answer: 'Em breve, com suporte completo para escolas brasileiras.' },
+  { question: 'Como faço para começar?', answer: 'Cadastre-se gratuitamente e tenha acesso imediato ao simulador ENEM e correção de redações. Upgrade para Premium para desbloquear aulas e chat IA.' },
 ];
 
 // Interfaces for Type Safety
@@ -218,23 +218,23 @@ const FeatureCard: React.FC<{ feature: Feature; gradient?: string; border?: stri
 
 const ModuleCard: React.FC<{ module: Module; disabled?: boolean }> = ({ module, disabled = true }) => (
   <motion.div
-    className="bg-white/95 backdrop-blur-sm p-6 rounded-3xl border-2 border-yellow-300 hover:border-yellow-500 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105"
+    className="bg-white/95 backdrop-blur-sm p-5 rounded-3xl border-2 border-yellow-300 hover:border-yellow-500 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105 h-full flex flex-col"
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.3 }}
     role="region"
     aria-label={module.title}
   >
-    <div className="text-center mb-6">
-      <div className="text-4xl mb-4" aria-hidden="true">{module.icon}</div>
-      <h3 className="text-lg font-bold text-gray-800 mb-3">{module.title}</h3>
-      <p className="text-sm text-gray-600 mb-4">{module.description}</p>
+    <div className="text-center mb-4">
+      <div className="text-4xl mb-3" aria-hidden="true">{module.icon}</div>
+      <h3 className="text-lg font-bold text-gray-800 mb-2">{module.title}</h3>
+      <p className="text-sm text-gray-600 mb-3 leading-tight">{module.description}</p>
     </div>
-    <div className="space-y-2 mb-6">
+    <div className="space-y-2 mb-4 flex-grow">
       {module.features.slice(0, 3).map((feature, idx) => (
-        <div key={idx} className="flex items-center gap-3 text-sm text-gray-600">
-          <div className="w-2 h-2 bg-yellow-500 rounded-full" aria-hidden="true"></div>
-          <span>{feature}</span>
+        <div key={idx} className="flex items-center gap-2 text-sm text-gray-600">
+          <div className="w-2 h-2 bg-yellow-500 rounded-full flex-shrink-0" aria-hidden="true"></div>
+          <span className="leading-tight">{feature}</span>
         </div>
       ))}
       {module.features.length > 3 && (
@@ -242,7 +242,7 @@ const ModuleCard: React.FC<{ module: Module; disabled?: boolean }> = ({ module, 
       )}
     </div>
     <button
-      className="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-bold rounded-2xl transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-50"
+      className="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-bold rounded-2xl transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-50 mt-auto"
       disabled={disabled}
       aria-disabled={disabled}
     >
@@ -600,11 +600,10 @@ const HubEduLanding: React.FC = () => {
               </div>
             </div>
             <button
-              disabled
-              className="px-8 py-4 bg-gradient-to-r from-yellow-500 to-yellow-600 text-black font-bold rounded-2xl shadow-lg flex items-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
-              aria-disabled="true"
+              onClick={() => window.location.href = '/login'}
+              className="px-8 py-4 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-bold rounded-2xl shadow-lg flex items-center gap-2 transition-all duration-300"
             >
-              <LogIn className="w-5 h-5" aria-hidden="true" /> EM BREVE <ArrowRight className="w-5 h-5" aria-hidden="true" />
+              <LogIn className="w-5 h-5" aria-hidden="true" /> LOGIN <ArrowRight className="w-5 h-5" aria-hidden="true" />
             </button>
           </div>
         </header>
@@ -644,23 +643,21 @@ const HubEduLanding: React.FC = () => {
                 <span className="text-4xl lg:text-6xl font-bold text-gray-800">{BRAND.tagline}</span>
               </h1>
               <h2 className="text-xl lg:text-2xl mb-8 text-gray-700 leading-relaxed max-w-4xl mx-auto font-medium">{BRAND.description}</h2>
-              <div className="flex flex-col sm:flex-row gap-6 justify-center mb-16">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12 max-w-md mx-auto">
                 <button
-                  className="px-10 py-5 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-extrabold text-xl shadow-2xl rounded-2xl flex items-center justify-center gap-3 disabled:cursor-not-allowed disabled:opacity-50"
-                  disabled
-                  aria-disabled="true"
+                  onClick={() => window.location.href = '/login'}
+                  className="w-full px-8 py-4 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-extrabold text-lg shadow-2xl rounded-2xl flex items-center justify-center gap-3 transition-all duration-300"
                 >
-                  <Play className="w-6 h-6" aria-hidden="true" /> Em Breve
+                  <LogIn className="w-5 h-5" aria-hidden="true" /> Fazer Login
                 </button>
                 <button
-                  className="px-10 py-5 border-2 border-yellow-500 hover:bg-yellow-500 hover:text-black text-yellow-700 font-bold text-xl rounded-2xl flex items-center justify-center gap-3 disabled:cursor-not-allowed disabled:opacity-50"
-                  disabled
-                  aria-disabled="true"
+                  onClick={() => window.location.href = '/register'}
+                  className="w-full px-8 py-4 border-2 border-yellow-500 hover:bg-yellow-500 hover:text-black text-yellow-700 font-bold text-lg rounded-2xl flex items-center justify-center gap-3 transition-all duration-300"
                 >
-                  <Phone className="w-6 h-6" aria-hidden="true" /> Agendar Demonstração Gratuita <ArrowRight className="w-6 h-6" aria-hidden="true" />
+                  <User className="w-5 h-5" aria-hidden="true" /> Criar Conta
                 </button>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
                 {HERO_MODULES.map((module, index) => (
                   <ModuleCard key={index} module={module} />
                 ))}
@@ -770,8 +767,8 @@ const HubEduLanding: React.FC = () => {
         {/* Features Overview */}
         <section className="py-16 bg-gradient-to-br from-yellow-50 via-white to-yellow-100">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <SectionTitle subtitle="4 módulos principais + 10 módulos de chat para transformar sua escola">
-              🎮 <span className="bg-gradient-to-r from-yellow-500 to-yellow-700 bg-clip-text text-transparent">Como Funciona</span>
+            <SectionTitle subtitle="3 módulos principais + 10 módulos de chat para transformar sua escola">
+              🎯 <span className="bg-gradient-to-r from-yellow-500 to-yellow-700 bg-clip-text text-transparent">Como Funciona</span>
             </SectionTitle>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
               {FEATURES.lessons.map((feature, index) => (
@@ -785,8 +782,8 @@ const HubEduLanding: React.FC = () => {
         {/* ENEM Section */}
         <section className="py-16 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <SectionTitle subtitle="A melhor plataforma para preparação ao ENEM, 100% alinhada à BNCC">
-              🎓 <span className="bg-gradient-to-r from-yellow-500 to-yellow-700 bg-clip-text text-transparent">Preparação para o ENEM</span>
+            <SectionTitle subtitle="Simulador ENEM completo e redação com correção automática. 100% gratuito mediante cadastro simples.">
+              🎓 <span className="bg-gradient-to-r from-yellow-500 to-yellow-700 bg-clip-text text-transparent">ENEM - 100% Gratuito</span>
             </SectionTitle>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
               {FEATURES.enem.map((feature, index) => (
@@ -1025,24 +1022,23 @@ const HubEduLanding: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
-              <h3 className="text-2xl font-bold mb-6 text-yellow-400">🎯 4 Módulos Principais:</h3>
-              <div className="grid md:grid-cols-2 gap-6 mb-6">
+              <h3 className="text-2xl font-bold mb-8 text-yellow-400 text-center">🎯 3 Módulos Principais:</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 max-w-4xl mx-auto">
                 {[
                   { title: 'Aulas Completas', desc: 'Qualquer tema em minutos', icon: '🎮', color: 'from-blue-500 to-blue-600' },
                   { title: 'Chat Professor IA', desc: 'Dúvidas pedagógicas', icon: '👩‍🏫', color: 'from-green-500 to-green-600' },
-                  { title: 'Simulador ENEM', desc: '3000+ questões oficiais', icon: '📚', color: 'from-purple-500 to-purple-600' },
-                  { title: 'Redação ENEM', desc: 'Temas desde 1998', icon: '✍️', color: 'from-yellow-500 to-yellow-600' },
+                  { title: 'ENEM - Gratuito', desc: 'Simulados + Redação com IA', icon: '🎓', color: 'from-purple-500 to-purple-600' },
                 ].map((feature, index) => (
                   <motion.div
                     key={index}
-                    className="flex items-center gap-4 p-4 bg-gray-700/50 rounded-xl border border-gray-600"
+                    className="flex flex-col items-center gap-4 p-6 bg-gray-700/50 rounded-xl border border-gray-600 hover:border-yellow-400 transition-all duration-300"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: index * 0.1 }}
                   >
-                    <div className={`text-3xl p-3 rounded-xl bg-gradient-to-r ${feature.color} text-white shadow-lg`} aria-hidden="true">{feature.icon}</div>
-                    <div>
-                      <div className="text-gray-300 font-bold text-lg">{feature.title}</div>
+                    <div className={`text-4xl p-4 rounded-xl bg-gradient-to-r ${feature.color} text-white shadow-lg`} aria-hidden="true">{feature.icon}</div>
+                    <div className="text-center">
+                      <div className="text-gray-300 font-bold text-lg mb-2">{feature.title}</div>
                       <div className="text-gray-400 text-sm">{feature.desc}</div>
                     </div>
                   </motion.div>
@@ -1053,20 +1049,19 @@ const HubEduLanding: React.FC = () => {
                 <span className="text-gray-300 font-medium">Suporte nacional e configuração rápida</span>
               </div>
             </motion.div>
-            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center max-w-md mx-auto">
               <button
-                className="px-8 py-4 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-bold text-lg rounded-xl shadow-lg flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
-                disabled
-                aria-disabled="true"
+                onClick={() => window.location.href = '/login'}
+                className="w-full px-8 py-4 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-bold text-lg rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all duration-300"
               >
-                <Play className="w-5 h-5" aria-hidden="true" /> Em Breve
+                <LogIn className="w-5 h-5" aria-hidden="true" /> Fazer Login
               </button>
               <button
-                className="px-8 py-4 border-2 border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-black font-semibold rounded-xl flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="w-full px-8 py-4 border-2 border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-black font-semibold rounded-xl flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
                 disabled
                 aria-disabled="true"
               >
-                <MessageSquare className="w-5 h-5" aria-hidden="true" /> Agendar Demonstração Gratuita
+                <MessageSquare className="w-5 h-5" aria-hidden="true" /> Agendar Demo
               </button>
             </div>
           </div>

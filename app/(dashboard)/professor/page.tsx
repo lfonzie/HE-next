@@ -207,7 +207,7 @@ export default function ProfessorPage() {
     const words = text.toLowerCase().split(/\s+/)
     let maxScore = 0
     let detectedSubject = 'ciencias-natureza'
-    let matchedKeywords: string[] = []
+    const matchedKeywords: string[] = []
 
     for (const [subject, subjectKeywords] of Object.entries(keywords)) {
       const score = subjectKeywords.reduce((acc, keyword) => {

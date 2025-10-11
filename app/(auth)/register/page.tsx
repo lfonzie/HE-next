@@ -15,6 +15,10 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [birthDate, setBirthDate] = useState('')
+  const [city, setCity] = useState('')
+  const [state, setState] = useState('')
+  const [school, setSchool] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
@@ -34,7 +38,7 @@ export default function RegisterPage() {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, birth_date: birthDate, city, state, school }),
       })
 
       if (response.ok) {
@@ -117,6 +121,79 @@ export default function RegisterPage() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 autoComplete="new-password"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="birthDate">Data de Nascimento</Label>
+              <Input
+                id="birthDate"
+                type="date"
+                value={birthDate}
+                onChange={(e) => setBirthDate(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="city">Cidade</Label>
+              <Input
+                id="city"
+                type="text"
+                placeholder="Sua cidade"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                autoComplete="address-level2"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="state">Estado</Label>
+              <select
+                id="state"
+                value={state}
+                onChange={(e) => setState(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              >
+                <option value="">Selecione seu estado</option>
+                <option value="AC">Acre</option>
+                <option value="AL">Alagoas</option>
+                <option value="AP">Amapá</option>
+                <option value="AM">Amazonas</option>
+                <option value="BA">Bahia</option>
+                <option value="CE">Ceará</option>
+                <option value="DF">Distrito Federal</option>
+                <option value="ES">Espírito Santo</option>
+                <option value="GO">Goiás</option>
+                <option value="MA">Maranhão</option>
+                <option value="MT">Mato Grosso</option>
+                <option value="MS">Mato Grosso do Sul</option>
+                <option value="MG">Minas Gerais</option>
+                <option value="PA">Pará</option>
+                <option value="PB">Paraíba</option>
+                <option value="PR">Paraná</option>
+                <option value="PE">Pernambuco</option>
+                <option value="PI">Piauí</option>
+                <option value="RJ">Rio de Janeiro</option>
+                <option value="RN">Rio Grande do Norte</option>
+                <option value="RS">Rio Grande do Sul</option>
+                <option value="RO">Rondônia</option>
+                <option value="RR">Roraima</option>
+                <option value="SC">Santa Catarina</option>
+                <option value="SP">São Paulo</option>
+                <option value="SE">Sergipe</option>
+                <option value="TO">Tocantins</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="school">Escola Atual</Label>
+              <Input
+                id="school"
+                type="text"
+                placeholder="Nome da sua escola"
+                value={school}
+                onChange={(e) => setSchool(e.target.value)}
+                autoComplete="organization"
                 required
               />
             </div>

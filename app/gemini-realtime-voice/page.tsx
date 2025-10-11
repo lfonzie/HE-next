@@ -61,8 +61,8 @@ export default function GeminiRealtimeVoice() {
     // Parse mime type para extrair parâmetros
     const params = mimeType.split(';').map(s => s.trim());
     let sampleRate = 24000; // padrão do Gemini
-    let channels = 1;
-    let bitsPerSample = 16;
+    const channels = 1;
+    const bitsPerSample = 16;
     
     for (const param of params) {
       if (param.startsWith('rate=')) {

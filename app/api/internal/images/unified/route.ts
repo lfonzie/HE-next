@@ -221,7 +221,7 @@ export async function POST(request: NextRequest) {
     let allImages: UnifiedImage[] = [];
     let searchResults: any = null;
     let generationResults: any = null;
-    let usedStrategy = strategy;
+    const usedStrategy = strategy;
 
     // Estratégia: Buscar primeiro
     if (strategy === 'search_first') {

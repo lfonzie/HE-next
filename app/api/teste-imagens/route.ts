@@ -405,7 +405,7 @@ function simulateImageClassification(image: any, topic: string): ImageResult {
   let relevanceScore = semanticAnalysis.bonus > 0 ? semanticAnalysis.bonus : 30;
   let educationalValue = 40;
   let qualityScore = 60;
-  let appropriatenessScore = 80;
+  const appropriatenessScore = 80;
   
   // Boost por correspondência com o tema (se não foi detectado contexto específico)
   if (!semanticAnalysis.hasSpecificContext && text.includes(topicLower)) {
@@ -539,7 +539,7 @@ export async function POST(request: NextRequest) {
     
     const searchResults = await Promise.allSettled(searchPromises);
     
-    let allImages: any[] = [];
+    const allImages: any[] = [];
     const providerStats: TestResult['providerStats'] = {};
     
     // Processar resultados de todos os sistemas
