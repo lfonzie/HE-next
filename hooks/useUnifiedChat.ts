@@ -39,8 +39,9 @@ interface ChatResponse {
 }
 
 export function useUnifiedChat(
-  initialProvider: Provider = "openai", 
-  initialModel = "gpt-4o-mini"
+  initialProvider: Provider = "openai",
+  initialModel = "gpt-4o-mini",
+  onModuleDetected?: (module: string, message: string) => void
 ) {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [provider, setProvider] = useState<Provider>(initialProvider);
@@ -58,16 +59,17 @@ export function useUnifiedChat(
 
   // Boot: sempre limpar conversas antigas e iniciar nova conversa efêmera
   useEffect(() => {
+    console.log("🚀 [UNIFIED-CHAT] Hook initializing...");
     // Limpar qualquer resquício de conversa anterior
     localStorage.removeItem("chat:cid");
     const url = new URL(window.location.href);
     url.searchParams.delete("cid");
     window.history.replaceState({}, "", url.toString());
-    
+
     // Limpar estado atual
     setMessages([]);
     setError(null);
-    
+
     // Gerar nova conversa efêmera
     const newId = uuidv4();
     setConversationId(newId);
@@ -89,7 +91,7 @@ export function useUnifiedChat(
     return conversationId;
   }, [conversationId, isValidUUID]);
 
-  const send = useCallback(async (input: string, system?: string, useAutoSelection: boolean = true) => {
+  const send = useCallback(async (input: string, system?: string, useAutoSelection: boolean = true, stepFeedback?: string) => {
     setLoading(true);
     setError(null);
     
@@ -119,16 +121,19 @@ export function useUnifiedChat(
     const moduleDetection = await aiClassify(input, messages.length);
     const detectedModule = moduleDetection.module;
     console.log(`🎯 [AI-CLASSIFIER] Module detected: ${detectedModule} (confidence: ${moduleDetection.confidence})`);
-    
+
+    // 🔧 Para problemas técnicos, forçar uso do Grok 4 Fast
+    if (detectedModule === 'ti') {
+      console.log(`🔧 [AUTO-TI] Technical problem detected, using Grok 4 Fast`);
+      // Forçar uso do Grok 4 Fast para problemas técnicos
+      currentProvider = 'grok';
+      currentModel = 'grok-4-fast-reasoning';
+      setProvider('grok');
+      setModel('grok-4-fast-reasoning');
+    }
+
     const cid = ensureId();
-    const userMessage: ChatMessage = {
-      id: `user-${Date.now()}`,
-      role: "user",
-      content: input,
-      timestamp: new Date()
-    };
-    
-    setMessages(prev => [...prev, userMessage]);
+    // Mensagem do usuário agora adicionada no frontend
     
     try {
       const response = await fetch("/api/chat/unified", {
@@ -140,7 +145,8 @@ export function useUnifiedChat(
           input, 
           system,
           module: detectedModule, // ✨ NOVO: Passar módulo detectado
-          conversationId: cid
+          conversationId: cid,
+          ...(typeof stepFeedback === 'string' && stepFeedback ? { stepFeedback } : {})
         })
       });
       
@@ -183,6 +189,7 @@ export function useUnifiedChat(
   }, [provider, model, ensureId]);
 
   const sendStream = useCallback(async (input: string, system?: string, useAutoSelection: boolean = true) => {
+    console.log('🎬 [UNIFIED-CHAT] sendStream called:', { input: input.substring(0, 50) + '...', system, useAutoSelection });
     setLoading(true);
     setError(null);
     
@@ -212,16 +219,19 @@ export function useUnifiedChat(
     const moduleDetection = await aiClassify(input, messages.length);
     const detectedModule = moduleDetection.module;
     console.log(`🎯 [AI-CLASSIFIER] Module detected: ${detectedModule} (confidence: ${moduleDetection.confidence})`);
-    
+
+    // 🔧 Para problemas técnicos, forçar uso do Grok 4 Fast
+    if (detectedModule === 'ti') {
+      console.log(`🔧 [AUTO-TI] Technical problem detected, using Grok 4 Fast`);
+      // Forçar uso do Grok 4 Fast para problemas técnicos
+      currentProvider = 'grok';
+      currentModel = 'grok-4-fast-reasoning';
+      setProvider('grok');
+      setModel('grok-4-fast-reasoning');
+    }
+
     const cid = ensureId();
-    const userMessage: ChatMessage = {
-      id: `user-${Date.now()}`,
-      role: "user",
-      content: input,
-      timestamp: new Date()
-    };
-    
-    setMessages(prev => [...prev, userMessage]);
+    // Mensagem do usuário agora adicionada no frontend
     
     // Criar mensagem temporária para streaming
     const tempId = `temp-${Date.now()}`;
@@ -244,7 +254,8 @@ export function useUnifiedChat(
           input, 
           system,
           module: detectedModule, // ✨ NOVO: Passar módulo detectado
-          conversationId: cid
+          conversationId: cid,
+          ...(typeof stepFeedback === 'string' && stepFeedback ? { stepFeedback } : {})
         })
       });
       
@@ -374,6 +385,7 @@ export function useUnifiedChat(
     model,
     setModel,
     messages,
+    setMessages,
     send,
     sendStream,
     loading,

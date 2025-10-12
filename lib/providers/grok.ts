@@ -100,10 +100,11 @@ Quando responder:
 }
 
 export async function streamGrok(
-  model: string, 
-  history: ChatMessage[], 
+  model: string,
+  history: ChatMessage[],
   input: string,
-  systemPrompt?: string
+  systemPrompt?: string,
+  module?: string
 ) {
   try {
     console.log(`🔧 [GROK-STREAM] Starting stream for model: ${model}`);
@@ -154,7 +155,7 @@ Quando responder:
       body: JSON.stringify({
         model,
         messages,
-        temperature: 0.7,
+        temperature: module === 'ti' ? 0.1 : 0.7, // 🔥 Temperatura baixa para TI
         stream: true
       }),
     });
@@ -174,9 +175,10 @@ Quando responder:
       async *[Symbol.asyncIterator]() {
         const reader = response.body?.getReader();
         if (!reader) throw new Error('No response body reader');
-        
+
         const decoder = new TextDecoder();
         let buffer = '';
+        let fullContent = ''; // Para debug: acumular conteúdo completo
         
         try {
           while (true) {
@@ -195,6 +197,8 @@ Quando responder:
                 try {
                   const parsed = JSON.parse(data);
                   if (parsed.choices?.[0]?.delta?.content) {
+                    const content = parsed.choices[0].delta.content;
+                    fullContent += content; // Acumular para debug
                     yield parsed;
                   }
                 } catch (e) {
@@ -204,6 +208,7 @@ Quando responder:
             }
           }
         } finally {
+          console.log(`📝 [GROK-STREAM] Final accumulated content (${fullContent.length} chars):`, fullContent.substring(0, 500) + (fullContent.length > 500 ? '...' : ''));
           reader.releaseLock();
         }
       }

@@ -21,6 +21,10 @@ import { useChatContext } from "@/components/providers/ChatContext";
 import { useQuota } from "@/components/providers/QuotaProvider";
 import { SupportModal } from "@/components/modals/SupportModal";
 import { WeatherModal } from "@/components/chat/WeatherModal";
+import { StudyPackModal } from "@/components/chat/StudyPackModal";
+import { StudyPlanModal } from "@/components/chat/StudyPlanModal";
+import { TIResolutionSteps } from "@/components/chat/TIResolutionSteps";
+import { TIModal } from "@/components/chat/TIModal";
 import { detectIntent } from "@/lib/intent-detection";
 import { useGlobalLoading } from "@/hooks/useGlobalLoading";
 import { useNavigationLoading } from "@/hooks/useNavigationLoading";
@@ -57,16 +61,188 @@ type MinimalChatHook = {
 };
 
 export default function ChatComponent() {
+  console.log('🎨 [CHAT-COMPONENT] Rendering ChatComponent');
   const router = useRouter();
   const { toast } = useToast();
   const { quota, isLimitReached, consumeQuota } = useQuota();
   const { startLoading, stopLoading } = useGlobalLoading();
   const { isNavigating } = useNavigationLoading();
   
+  // Função para lidar com detecção automática de módulo (simplificada)
+  const handleModuleDetected = useCallback((module: string, message: string) => {
+    console.log(`🎯 [CHAT-COMPONENT] Module detected: ${module} for message: "${message}"`);
+    // Módulos agora são tratados diretamente no chat, sem modais
+  }, []);
+
+  // Funções helper para detectar e parsear respostas de resolução TI
+  const isTIResolutionMessage = useCallback((content: string): boolean => {
+    try {
+      console.log('🔍 [TI-DETECTION] Checking content for TI resolution. Full content:', content);
+      console.log('🔍 [TI-DETECTION] Content length:', content.length);
+
+      // Primeiro verificar se começa com { (JSON)
+      if (!content.trim().startsWith('{')) {
+        console.log('🔍 [TI-DETECTION] Content does not start with {, not JSON');
+        return false;
+      }
+
+      const parsed = JSON.parse(content);
+      const isValid = parsed.problema && parsed.etapas && Array.isArray(parsed.etapas);
+      console.log('🔍 [TI-DETECTION] Parsed JSON:', parsed);
+      console.log('🔍 [TI-DETECTION] Is valid TI JSON:', isValid);
+      return isValid;
+    } catch (error) {
+      console.log('🔍 [TI-DETECTION] Failed to parse as JSON:', error);
+      console.log('🔍 [TI-DETECTION] Raw content that failed:', content);
+
+      // Tentar detectar se é uma resposta de TI mesmo que não seja JSON perfeito
+      // Verificar se contém palavras-chave de TI
+      const hasTIKeywords = /\b(problema|etapas?|solução|diagnóstico|resolver|passo)\b/i.test(content);
+      const hasJSONStructure = /\{[\s\S]*"problema"[\s\S]*"etapas"[\s\S]*\}/i.test(content);
+
+      console.log('🔍 [TI-DETECTION] Has TI keywords:', hasTIKeywords);
+      console.log('🔍 [TI-DETECTION] Has JSON structure:', hasJSONStructure);
+
+      if (hasTIKeywords && hasJSONStructure) {
+        console.log('🔍 [TI-DETECTION] Attempting to extract JSON from mixed content');
+        // Tentar extrair JSON de conteúdo misto
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          try {
+            const extractedJson = JSON.parse(jsonMatch[0]);
+            const isValid = extractedJson.problema && extractedJson.etapas && Array.isArray(extractedJson.etapas);
+            console.log('🔍 [TI-DETECTION] Extracted valid TI JSON:', isValid);
+            return isValid;
+          } catch (extractError) {
+            console.log('🔍 [TI-DETECTION] Failed to extract JSON:', extractError);
+          }
+        }
+      }
+
+      return false;
+    }
+  }, []);
+
+  const parseTIResolutionData = useCallback((content: string) => {
+    try {
+      // Tentar parse direto primeiro
+      return JSON.parse(content);
+    } catch (error) {
+      console.log('🔄 [TI-PARSER] Failed to parse as direct JSON, creating structured data from text');
+
+      // 🔧 PARSER INTELIGENTE: Extrair estrutura do texto normal
+      const lines = content.split('\n').filter(line => line.trim().length > 0);
+
+      // Identificar problema principal
+      let problema = 'Problema técnico identificado';
+      const firstLine = lines[0]?.toLowerCase() || '';
+      if (firstLine.includes('pc') && firstLine.includes('lento')) {
+        problema = 'Computador funcionando lentamente';
+      } else if (firstLine.includes('internet')) {
+        problema = 'Problemas de conexão com internet';
+      } else if (firstLine.includes('impressora')) {
+        problema = 'Impressora com problemas';
+      }
+
+      // Extrair etapas do texto
+      const etapas = [];
+      let stepId = 1;
+
+      // Procurar por padrões comuns de listas numeradas - MODIFICADO PARA EVITAR COMANDOS PERIGOSOS
+      const numberedSteps = content.match(/\d+\.\s*\*\*([^*]+)\*\*:\s*([^]*?)(?=\d+\.|$)/g);
+      if (numberedSteps) {
+        numberedSteps.forEach(step => {
+          const titleMatch = step.match(/\d+\.\s*\*\*([^*]+)\*\*/);
+          const descMatch = step.match(/\*\*:\s*([^]*?)(?=\d+\.|$)/);
+
+          if (titleMatch && descMatch) {
+            let titulo = titleMatch[1].trim();
+            let descricao = descMatch[1].trim();
+
+            // EVITAR comandos perigosos - substituir por instruções manuais
+            if (titulo.toLowerCase().includes('reinici') || titulo.toLowerCase().includes('restart')) {
+              titulo = 'Verificar programas abertos';
+              descricao = 'Feche programas desnecessários antes de reinicializar manualmente se desejar';
+            }
+
+            etapas.push({
+              id: stepId++,
+              titulo,
+              descricao,
+              comando: null, // SEMPRE null - apenas instruções manuais
+              status: 'pendente',
+              validacao: 'Verificar se o problema foi resolvido'
+            });
+          }
+        });
+      }
+
+      // Fallback: criar etapas básicas se não encontrou estrutura - APENAS INSTRUÇÕES MANUAIS
+      if (etapas.length === 0) {
+        // Procurar por palavras-chave comuns - SEM EXECUÇÃO AUTOMÁTICA
+        if (content.toLowerCase().includes('reinici')) {
+          etapas.push({
+            id: 1,
+            titulo: 'Preparar para reinicialização',
+            descricao: 'Salve seus trabalhos e feche programas importantes antes de reinicializar',
+            comando: null,
+            status: 'pendente',
+            validacao: 'Execute a reinicialização manualmente quando estiver pronto'
+          });
+        }
+
+        if (content.toLowerCase().includes('limp')) {
+          etapas.push({
+            id: etapas.length + 1,
+            titulo: 'Limpar arquivos temporários',
+            descricao: 'Abra Configurações > Sistema > Armazenamento e execute a limpeza de disco',
+            comando: null,
+            status: 'pendente',
+            validacao: 'Verificar se há mais espaço disponível no disco após a limpeza'
+          });
+        }
+
+        if (content.toLowerCase().includes('atualiz')) {
+          etapas.push({
+            id: etapas.length + 1,
+            titulo: 'Verificar atualizações',
+            descricao: 'Abra Configurações > Atualização e Segurança > Windows Update para verificar atualizações',
+            comando: null,
+            status: 'pendente',
+            validacao: 'Instalar as atualizações disponíveis quando conveniente'
+          });
+        }
+      }
+
+      // Garantir pelo menos uma etapa - SEM COMANDOS EXECUTÁVEIS
+      if (etapas.length === 0) {
+        etapas.push({
+          id: 1,
+          titulo: 'Verificar programas em execução',
+          descricao: 'Abra o Gerenciador de Tarefas (Ctrl + Shift + Esc) e veja se há programas consumindo muitos recursos',
+          comando: null, // SEMPRE null - apenas instruções manuais
+          status: 'pendente',
+          validacao: 'Feche programas desnecessários e verifique se o PC ficou mais rápido'
+        });
+      }
+
+      const result = {
+        problema,
+        status: 'ativo' as const,
+        etapas,
+        proxima_acao: `Execute a etapa ${etapas.length > 0 ? '1' : ''} e me informe o resultado`
+      };
+
+      console.log('✅ [TI-PARSER] Created structured data from text:', result);
+      return result;
+    }
+  }, []);
+
   // Chat state - usando o novo sistema unificado
   const {
     conversationId,
     messages,
+    setMessages,
     send,
     sendStream,
     loading,
@@ -77,7 +253,39 @@ export default function ChatComponent() {
     model,
     setModel,
     autoSelection
-  } = useUnifiedChat("grok", "grok-4-fast-reasoning");
+  } = useUnifiedChat("grok", "grok-4-fast-reasoning", handleModuleDetected);
+
+  // Debug: verificar se as funções estão disponíveis
+  console.log('🔧 [CHAT] Hook functions availability:', {
+    sendAvailable: !!send,
+    sendStreamAvailable: !!sendStream,
+    setMessagesAvailable: !!setMessages
+  });
+
+  // Funções para lidar com etapas de resolução TI
+  const handleStepComplete = useCallback(async (stepId: number, success: boolean = true) => {
+    if (!send) {
+      console.warn('⚠️ [TI-STEP] Send function not available yet');
+      return;
+    }
+
+    const message = success
+      ? `Funcionou! O problema foi resolvido com a etapa ${stepId}.`
+      : `A etapa ${stepId} foi tentada, mas ainda há problemas. Forneça a próxima solução em formato JSON estruturado.`;
+
+    console.log(`✅ [TI-STEP] Step ${stepId} ${success ? 'succeeded' : 'failed'}`);
+
+    if (success) {
+      // Se funcionou, fechar modal e enviar mensagem normal
+      setShowTIModal(false);
+      setTiModalData(null);
+      await send(message, undefined, false, `etapa_${stepId}_funcionou`);
+    } else {
+      // Se ainda há problemas, manter modal aberto e forçar resposta JSON
+      await send(message, 'ti', false, `etapa_${stepId}_problemas`);
+    }
+  }, [send]);
+
 
   // Garantir que sempre inicie com conversa limpa ao montar o componente
   useEffect(() => {
@@ -195,6 +403,13 @@ export default function ChatComponent() {
   const [showSupportModal, setShowSupportModal] = useState(false);
   const [showWeatherModal, setShowWeatherModal] = useState(false);
   const [weatherCity, setWeatherCity] = useState('');
+  const [showStudyPackModal, setShowStudyPackModal] = useState(false);
+  const [studyPackTopic, setStudyPackTopic] = useState('');
+  const [isStudyPathModal, setIsStudyPathModal] = useState(false);
+  const [showStudyPlanModal, setShowStudyPlanModal] = useState(false);
+  const [studyPlanTopic, setStudyPlanTopic] = useState('');
+  const [showTIModal, setShowTIModal] = useState(false);
+  const [tiModalData, setTiModalData] = useState<any>(null);
   const [isCreatingConversation, setIsCreatingConversation] = useState(false);
   const [isDeletingConversation, setIsDeletingConversation] = useState<string | null>(null);
   const [showModuleWelcome, setShowModuleWelcome] = useState(false);
@@ -241,7 +456,62 @@ export default function ChatComponent() {
       onError?: (error: Error) => void;
     }
   ) => {
-    if (!message.trim()) return;
+    console.log('🚀 [CHAT] handleSendMessage called with:', { message, module });
+    if (!message.trim()) {
+      console.log('🚫 [CHAT] Empty message, returning');
+      return;
+    }
+
+    // Verificar saudações simples e responder diretamente
+    const greetingPatterns = [
+      /^\s*oi\s*$/i,
+      /^\s*olá\s*$/i,
+      // /^\s*tudo\s+bem\s*\??\s*$/i, // Removido - "tudo bem?" merece resposta completa da IA
+      /^\s*e\s*ai\s*$/i,
+      /^\s*opa\s*$/i,
+      /^\s*ei\s*$/i
+    ];
+
+    const isSimpleGreeting = greetingPatterns.some(pattern => pattern.test(message.trim()));
+    console.log('🔍 [CHAT] Checking greeting patterns:', {
+      message: message.trim(),
+      isSimpleGreeting,
+      patterns: greetingPatterns.map(p => p.toString())
+    });
+
+    if (isSimpleGreeting) {
+      console.log('👋 [CHAT] Detected simple greeting, responding directly');
+      // Para saudações simples, usar abordagem simples sem banco de dados
+      const greetingResponse: ChatMessage = {
+        id: `greeting-${Date.now()}`,
+        role: 'assistant',
+        content: 'Oi!',
+        timestamp: new Date(),
+        model: 'grok-4-fast-reasoning',
+        provider: 'grok'
+      };
+
+      // Adicionar mensagem do usuário também
+      const userMessage: ChatMessage = {
+        id: `user-${Date.now()}`,
+        role: 'user',
+        content: message,
+        timestamp: new Date(),
+        model: 'grok-4-fast-reasoning',
+        provider: 'grok'
+      };
+
+      console.log('📝 [CHAT] Adding user message and greeting response to messages');
+      // Apenas atualizar UI com a resposta (não salvar no banco para evitar problemas)
+      setMessages(prev => {
+        console.log('📊 [CHAT] Previous messages count:', prev.length);
+        const newMessages = [...prev, userMessage, greetingResponse];
+        console.log('📊 [CHAT] New messages count:', newMessages.length);
+        return newMessages;
+      });
+
+      return; // Não enviar para AI
+    }
     
     // Detect weather intent before sending message with AI validation
     const intent = detectIntent(message);
@@ -249,7 +519,7 @@ export default function ChatComponent() {
       // Validar usando IA se realmente é sobre clima (não "tempo de viagem", etc)
       const { validateWeatherIntent } = await import('@/lib/intent-detection');
       const isWeatherQuery = await validateWeatherIntent(message);
-      
+
       if (isWeatherQuery) {
         console.log('✅ [CHAT] Opening weather modal for:', intent.city);
         setWeatherCity(intent.city);
@@ -259,6 +529,24 @@ export default function ChatComponent() {
         console.log('🚫 [CHAT] Not a weather query, processing normally:', message);
         // Continuar processamento normal - não é sobre clima
       }
+    }
+
+    // Detect study pack intent
+    if (intent.type === 'studypack') {
+      console.log('✅ [CHAT] Opening study pack modal for topic:', intent.topic);
+      setStudyPackTopic(intent.topic || '');
+      setIsStudyPathModal(false);
+      setShowStudyPackModal(true);
+      return; // Don't send to chat, show study pack modal instead
+    }
+
+    // Detect study path intent (always open modal for ENEM trails)
+    if (intent.type === 'studypath') {
+      console.log('✅ [CHAT] Opening study path modal for ENEM trail, topic:', intent.topic);
+      setStudyPackTopic(intent.topic || '');
+      setIsStudyPathModal(true);
+      setShowStudyPackModal(true);
+      return; // Don't send to chat, show study pack modal instead
     }
     
     if (isLimitReached) {
@@ -270,11 +558,37 @@ export default function ChatComponent() {
       return;
     }
 
+    // Adicionar mensagem do usuário ao estado antes de enviar
+    const userMessage: ChatMessage = {
+      id: `user-${Date.now()}`,
+      role: 'user',
+      content: message,
+      timestamp: new Date(),
+      model: 'grok-4-fast-reasoning',
+      provider: 'grok'
+    };
+
+    console.log('📝 [CHAT] Adding user message to state');
+    setMessages(prev => [...prev, userMessage]);
+
     try {
+      console.log('🔄 [CHAT] Processing normal message - NOT a greeting, going to AI');
+      console.log('📊 [CHAT] Message details:', { message, length: message.length, trimmed: message.trim() });
       startLoading("Enviando mensagem...", "data");
       // Usar streaming com seleção automática baseada na complexidade
-      await sendStream(message, undefined, true); // useAutoSelection = true
-      consumeQuota();
+      console.log('🤖 [CHAT] About to call sendStream:', { message, sendStreamAvailable: !!sendStream });
+      if (!sendStream) {
+        console.error('❌ [CHAT] sendStream function not available!');
+        return;
+      }
+      try {
+        await sendStream(message, undefined, true); // useAutoSelection = true
+        console.log('✅ [CHAT] sendStream completed successfully');
+        consumeQuota();
+      } catch (error) {
+        console.error('❌ [CHAT] sendStream failed:', error);
+        throw error;
+      }
       
       if (isScrolledToBottom) {
         setTimeout(scrollToBottom, 100);
@@ -394,9 +708,15 @@ export default function ChatComponent() {
 
   // Handle module click with suggestions
   const handleModuleClick = useCallback((moduleId: ModuleId) => {
+    // Special handling for TI module - open modal directly
+    if (moduleId === 'TI') {
+      setShowTIModal(true);
+      return;
+    }
+
     const module = MODULES[moduleId];
     const suggestions = getRandomSuggestions(moduleId, 3);
-    
+
     setSelectedModule(convertToOldModuleId(moduleId) as ModuleType);
     setCurrentModuleInfo({
       name: module.label,
@@ -404,10 +724,10 @@ export default function ChatComponent() {
     });
     setCurrentModuleSuggestions(suggestions);
     setShowModuleSuggestions(true);
-    
+
     // Iniciar nova conversa sempre que um módulo for clicado
     createConversation();
-    
+
     toast({
       title: "Nova conversa iniciada",
       description: `Módulo ${module.label} selecionado - conversa limpa`,
@@ -529,6 +849,48 @@ export default function ChatComponent() {
   // Computed values
   const hasMessages = currentConversation?.messages && currentConversation.messages.length > 0;
   const isQuotaExceeded = quota.used >= quota.limit;
+
+  // useEffect para gerenciar abertura do modal TI (evita loops de re-renderização)
+  useEffect(() => {
+    if (currentConversation?.messages && currentConversation.messages.length > 0) {
+      const lastMessage = currentConversation.messages[currentConversation.messages.length - 1];
+      if (lastMessage && lastMessage.role === 'assistant') {
+        const hasTIKeywords = (text: string) => {
+          const keywords = ['pc', 'computador', 'lento', 'internet', 'wifi', 'impressora', 'erro', 'problema', 'não funciona', 'travando', 'lento'];
+          return keywords.some(keyword => text.toLowerCase().includes(keyword));
+        };
+
+        // Verificar se há mensagens de usuário com problemas técnicos na conversa
+        const hasTechnicalIssues = currentConversation.messages.some(m =>
+          m.role === 'user' && hasTIKeywords(m.content)
+        );
+
+        // Só processar se houver problemas técnicos na conversa
+        if (hasTechnicalIssues) {
+          const isTIMessage = lastMessage.role === 'assistant' &&
+            (lastMessage.content.length > 200 || lastMessage.content.trim().startsWith('{')) &&
+            !lastMessage.content.includes('😊') &&
+            !lastMessage.content.includes('Tudo bem?');
+
+          if (isTIMessage) {
+            console.log('✅ [MODAL-EFFECT] Processing TI Modal for message:', lastMessage.id);
+            const tiData = parseTIResolutionData(lastMessage.content);
+
+            // Usar setTimeout para evitar re-renders imediatos
+            setTimeout(() => {
+              setTiModalData(tiData);
+              if (!showTIModal) {
+                console.log('✅ [MODAL-EFFECT] Opening TI Modal');
+                setShowTIModal(true);
+              } else {
+                console.log('✅ [MODAL-EFFECT] Updating TI Modal with new data');
+              }
+            }, 100);
+          }
+        }
+      }
+    }
+  }, [currentConversation?.messages.length]); // Só depende do número de mensagens, não do conteúdo
 
   return (
     <div className="bg-gradient-to-br from-slate-50 via-yellow-50 to-orange-100 flex flex-col">
@@ -676,13 +1038,35 @@ export default function ChatComponent() {
                 </div>
               ) : (
                 <>
-                  {currentConversation?.messages.map((message) => (
-                    <ChatMessage
-                      key={message.id}
-                      message={message}
-                      isUser={message.role === 'user'}
-                    />
-                  ))}
+                  {console.log('🔍 [CHAT-RENDER] Current conversation messages count:', currentConversation?.messages?.length)}
+                  {currentConversation?.messages.map((message) => {
+                    // Verificar se é uma resposta de resolução TI
+                    console.log('🔍 [MESSAGE-RENDER] Processing message:', message.id, 'role:', message.role, 'content preview:', message.content.substring(0, 100));
+            // 🔧 FORÇAR DETECÇÃO TI: Verificar se é módulo TI independente do conteúdo
+            const hasTIKeywords = (text: string) => {
+              const keywords = ['pc', 'computador', 'lento', 'internet', 'wifi', 'impressora', 'erro', 'problema', 'não funciona', 'travando', 'lento'];
+              return keywords.some(keyword => text.toLowerCase().includes(keyword));
+            };
+
+            const isTIMessage = message.role === 'assistant' &&
+              currentConversation?.messages.some(m => m.role === 'user' && hasTIKeywords(m.content)) &&
+              message.content.length > 200 && // Mensagens mais longas são típicas de TI
+              !message.content.includes('😊') && // Evitar saudações
+              !message.content.includes('Tudo bem?'); // Evitar respostas curtas
+
+            console.log('🔍 [MESSAGE-RENDER] Is TI message (forced detection):', isTIMessage, 'for message:', message.id);
+
+            // Não renderizar mensagens TI no chat - elas aparecem no modal
+            // A lógica de abertura do modal está em useEffect para evitar loops
+
+                    return (
+                      <ChatMessage
+                        key={message.id}
+                        message={message}
+                        isUser={message.role === 'user'}
+                      />
+                    );
+                  })}
                   {isStreaming && (
                     <div className="flex items-center gap-3 mb-3 justify-start">
                       <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
@@ -738,6 +1122,30 @@ export default function ChatComponent() {
         onClose={() => setShowWeatherModal(false)}
         city={weatherCity}
       />
+
+      {/* Study Pack Modal */}
+      <StudyPackModal
+        isOpen={showStudyPackModal}
+        onClose={() => setShowStudyPackModal(false)}
+        topic={studyPackTopic}
+        isStudyPath={isStudyPathModal}
+      />
+
+      {/* Study Plan Modal */}
+      <StudyPlanModal
+        isOpen={showStudyPlanModal}
+        onClose={() => setShowStudyPlanModal(false)}
+      />
+
+      {/* TI Modal */}
+      <TIModal
+        isOpen={showTIModal}
+        onClose={() => setShowTIModal(false)}
+        data={tiModalData}
+        onStepComplete={handleStepComplete}
+        isLoading={isStreaming}
+      />
+
     </div>
   );
 }

@@ -1,5 +1,5 @@
 export interface DetectedIntent {
-  type: 'aula' | 'enem' | 'redacao' | 'weather' | 'openlibrary' | 'newsapi' | 'numbersapi' | 'currentsapi' | 'giphy' | 'worldbank' | 'calculator' | 'translator' | 'timer' | 'calendar' | 'imagesearch' | 'general';
+  type: 'aula' | 'enem' | 'redacao' | 'weather' | 'openlibrary' | 'newsapi' | 'numbersapi' | 'currentsapi' | 'giphy' | 'worldbank' | 'calculator' | 'translator' | 'timer' | 'calendar' | 'imagesearch' | 'studypack' | 'studypath' | 'general';
   confidence: number;
   topic?: string;
   city?: string;
@@ -541,6 +541,123 @@ export function detectIntent(message: string): DetectedIntent {
       confidence: 0.9,
       extractSearchQuery: true,
     },
+    {
+      type: 'studypack',
+      patterns: [
+        /resumo para prova/i,
+        /material de estudo/i,
+        /study pack/i,
+        /pacote de estudo/i,
+        /resumos e questoes/i,
+        /resumos e questões/i,
+        /questões e resumos/i,
+        /questoes e resumos/i,
+        /preparar.*prova/i,
+        /estudar.*prova/i,
+        /revisar.*prova/i,
+        /revisão.*prova/i,
+        /revisao.*prova/i,
+        /questões.*prova/i,
+        /questoes.*prova/i,
+        /exercicios.*prova/i,
+        /exercícios.*prova/i,
+        /simulado.*resumo/i,
+        /resumo.*simulado/i,
+        /gerar.*material/i,
+        /criar.*material/i,
+        /material.*didatico/i,
+        /material.*didático/i,
+        /conteudo.*prova/i,
+        /conteúdo.*prova/i,
+        /resumo.*conteudo/i,
+        /resumo.*conteúdo/i,
+        /resumo.*materia/i,
+        /resumo.*matéria/i,
+        /resumo.*disciplina/i,
+        /questoes.*materia/i,
+        /questões.*matéria/i,
+        /questoes.*disciplina/i,
+        /questões.*disciplina/i,
+        /estudar.*materia/i,
+        /estudar.*matéria/i,
+        /revisar.*materia/i,
+        /revisar.*matéria/i,
+        /preparar.*materia/i,
+        /preparar.*matéria/i,
+        /exercicios.*materia/i,
+        /exercícios.*matéria/i,
+        /questoes.*tema/i,
+        /questões.*tema/i,
+        /resumo.*tema/i,
+        /material.*tema/i
+      ],
+      confidence: 0.85,
+      extractTopic: true,
+    },
+    {
+      type: 'studypath',
+      patterns: [
+        /trilha de estudo/i,
+        /trilha de estudos/i,
+        /plano de estudo/i,
+        /plano de estudos/i,
+        /cronograma de estudo/i,
+        /cronograma de estudos/i,
+        /roteiro de estudo/i,
+        /roteiro de estudos/i,
+        /caminho de estudo/i,
+        /caminho de estudos/i,
+        /estudo.*sistematico/i,
+        /estudo.*sistemático/i,
+        /preparação.*enem/i,
+        /preparacao.*enem/i,
+        /estudar.*enem/i,
+        /preparar.*enem/i,
+        /plano.*enem/i,
+        /trilha.*enem/i,
+        /cronograma.*enem/i,
+        /estudo.*completo/i,
+        /estudo.*integrado/i,
+        /estudo.*organizado/i,
+        /estudo.*estruturado/i,
+        /preparação.*completa/i,
+        /preparacao.*completa/i,
+        /estudo.*longo prazo/i,
+        /estudo.*longo prazo/i,
+        /planejamento.*estudo/i,
+        /planejamento.*estudos/i,
+        /metodologia.*estudo/i,
+        /metodologia.*estudos/i,
+        /estratégia.*estudo/i,
+        /estratégia.*estudos/i,
+        /estratégia.*enem/i,
+        /estratégia.*enem/i,
+        /guia.*estudo/i,
+        /guia.*estudos/i,
+        /guia.*enem/i,
+        /guia.*enem/i,
+        /mapa.*estudo/i,
+        /mapa.*estudos/i,
+        /roadmap.*estudo/i,
+        /roadmap.*estudos/i,
+        /caminho.*enem/i,
+        /jornada.*estudo/i,
+        /jornada.*estudos/i,
+        /jornada.*enem/i,
+        /itinerário.*estudo/i,
+        /itinerário.*estudos/i,
+        /itinerario.*estudo/i,
+        /itinerario.*estudos/i,
+        /planejar.*estudos/i,
+        /planejar.*estudo/i,
+        /organizar.*estudos/i,
+        /organizar.*estudo/i,
+        /estrutura.*estudo/i,
+        /estrutura.*estudos/i
+      ],
+      confidence: 0.9,
+      extractTopic: true,
+    },
   ];
 
   for (const intent of intents) {
@@ -552,7 +669,7 @@ export function detectIntent(message: string): DetectedIntent {
           topic: intent.extractTopic ? extractTopic(message) : undefined,
           city: intent.extractCity ? extractCity(message) : undefined,
           searchQuery: intent.extractSearchQuery ? extractSearchQuery(message) : undefined,
-          context: intent.type === 'aula' ? 'educational' : intent.type === 'enem' ? 'exam' : intent.type === 'weather' ? 'weather' : intent.type === 'redacao' ? 'writing' : intent.type === 'openlibrary' ? 'books' : intent.type === 'newsapi' ? 'news' : intent.type === 'numbersapi' ? 'numbers' : intent.type === 'currentsapi' ? 'news' : intent.type === 'giphy' ? 'gifs' : intent.type === 'worldbank' ? 'data' : 'general',
+          context: intent.type === 'aula' ? 'educational' : intent.type === 'enem' ? 'exam' : intent.type === 'weather' ? 'weather' : intent.type === 'redacao' ? 'writing' : intent.type === 'openlibrary' ? 'books' : intent.type === 'newsapi' ? 'news' : intent.type === 'numbersapi' ? 'numbers' : intent.type === 'currentsapi' ? 'news' : intent.type === 'giphy' ? 'gifs' : intent.type === 'worldbank' ? 'data' : intent.type === 'studypack' ? 'study' : intent.type === 'studypath' ? 'study_plan' : 'general',
           metadata: { source: 'pattern_match' },
         };
       }
@@ -645,6 +762,8 @@ export function detectIntentAdvanced(message: string): DetectedIntent {
     currentsapi: 0,
     giphy: 0,
     worldbank: 0,
+    studypack: 0,
+    studypath: 0,
     general: 0
   };
 
@@ -810,6 +929,63 @@ export function detectIntentAdvanced(message: string): DetectedIntent {
       { word: 'expectativa de vida', weight: 2 },
       { word: 'estatisticas', weight: 1 },
       { word: 'estatísticas', weight: 1 }
+    ],
+    studypack: [
+      { word: 'resumo', weight: 4 },
+      { word: 'prova', weight: 4 },
+      { word: 'questões', weight: 3 },
+      { word: 'questoes', weight: 3 },
+      { word: 'material', weight: 3 },
+      { word: 'estudo', weight: 3 },
+      { word: 'study pack', weight: 3 },
+      { word: 'pacote', weight: 3 },
+      { word: 'preparar', weight: 2 },
+      { word: 'revisar', weight: 2 },
+      { word: 'revisão', weight: 2 },
+      { word: 'revisao', weight: 2 },
+      { word: 'exercicios', weight: 2 },
+      { word: 'exercícios', weight: 2 },
+      { word: 'simulado', weight: 2 },
+      { word: 'gerar', weight: 1 },
+      { word: 'criar', weight: 1 },
+      { word: 'didatico', weight: 1 },
+      { word: 'didático', weight: 1 },
+      { word: 'conteudo', weight: 1 },
+      { word: 'conteúdo', weight: 1 },
+      { word: 'materia', weight: 1 },
+      { word: 'matéria', weight: 1 },
+      { word: 'disciplina', weight: 1 },
+      { word: 'tema', weight: 1 }
+    ],
+    studypath: [
+      { word: 'trilha', weight: 5 },
+      { word: 'plano', weight: 4 },
+      { word: 'cronograma', weight: 4 },
+      { word: 'roteiro', weight: 4 },
+      { word: 'caminho', weight: 4 },
+      { word: 'estratégia', weight: 4 },
+      { word: 'estratégia', weight: 4 },
+      { word: 'metodologia', weight: 4 },
+      { word: 'jornada', weight: 3 },
+      { word: 'itinerário', weight: 3 },
+      { word: 'itinerario', weight: 3 },
+      { word: 'roadmap', weight: 3 },
+      { word: 'guia', weight: 3 },
+      { word: 'mapa', weight: 3 },
+      { word: 'sistemático', weight: 3 },
+      { word: 'sistematico', weight: 3 },
+      { word: 'completo', weight: 3 },
+      { word: 'integrado', weight: 3 },
+      { word: 'organizado', weight: 3 },
+      { word: 'estruturado', weight: 3 },
+      { word: 'planejamento', weight: 3 },
+      { word: 'planejar', weight: 2 },
+      { word: 'organizar', weight: 2 },
+      { word: 'estrutura', weight: 2 },
+      { word: 'enem', weight: 3 },
+      { word: 'preparação', weight: 3 },
+      { word: 'preparacao', weight: 3 },
+      { word: 'preparar', weight: 2 }
     ]
   };
 
@@ -842,7 +1018,7 @@ export function detectIntentAdvanced(message: string): DetectedIntent {
     topic: bestIntent === 'aula' ? extractTopic(message) : undefined,
     city: bestIntent === 'weather' ? extractCity(message) : undefined,
     searchQuery: ['openlibrary', 'newsapi', 'numbersapi', 'currentsapi', 'giphy', 'worldbank'].includes(bestIntent) ? extractSearchQuery(message) : undefined,
-    context: bestIntent === 'aula' ? 'educational' : bestIntent === 'enem' ? 'exam' : bestIntent === 'weather' ? 'weather' : bestIntent === 'redacao' ? 'writing' : bestIntent === 'openlibrary' ? 'books' : bestIntent === 'newsapi' ? 'news' : bestIntent === 'numbersapi' ? 'numbers' : bestIntent === 'currentsapi' ? 'news' : bestIntent === 'giphy' ? 'gifs' : bestIntent === 'worldbank' ? 'data' : 'general',
+    context: bestIntent === 'aula' ? 'educational' : bestIntent === 'enem' ? 'exam' : bestIntent === 'weather' ? 'weather' : bestIntent === 'redacao' ? 'writing' : bestIntent === 'openlibrary' ? 'books' : bestIntent === 'newsapi' ? 'news' : bestIntent === 'numbersapi' ? 'numbers' : bestIntent === 'currentsapi' ? 'news' : bestIntent === 'giphy' ? 'gifs' : bestIntent === 'worldbank' ? 'data' : bestIntent === 'studypack' ? 'study' : bestIntent === 'studypath' ? 'study_plan' : 'general',
     metadata: { source: 'weighted_scoring', scores: intentScores },
   };
 }
@@ -882,6 +1058,26 @@ export function detectIntentWithContext(message: string, conversationHistory: st
         type: 'aula',
         confidence: 0.7,
         context: 'educational',
+        metadata: { ...currentIntent.metadata, contextBoost: 'conversation_history' }
+      };
+    }
+
+    if (recentMessages.includes('resumo') || recentMessages.includes('prova') || recentMessages.includes('questões') || recentMessages.includes('questoes')) {
+      return {
+        ...currentIntent,
+        type: 'studypack',
+        confidence: 0.7,
+        context: 'study',
+        metadata: { ...currentIntent.metadata, contextBoost: 'conversation_history' }
+      };
+    }
+
+    if (recentMessages.includes('trilha') || recentMessages.includes('plano') || recentMessages.includes('cronograma') || recentMessages.includes('estratégia') || recentMessages.includes('estratégia')) {
+      return {
+        ...currentIntent,
+        type: 'studypath',
+        confidence: 0.7,
+        context: 'study_plan',
         metadata: { ...currentIntent.metadata, contextBoost: 'conversation_history' }
       };
     }

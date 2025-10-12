@@ -70,16 +70,52 @@ MENSAGEM DO USUÁRIO:
 
 INSTRUÇÕES:
 1. Analise o TEMA e INTENÇÃO da mensagem
-2. Escolha o módulo mais apropriado
-3. Retorne APENAS o código do módulo (ex: "ti", "social_media", "professor")
-4. Se não tiver certeza, retorne "chat"
+2. Escolha o módulo mais apropriado baseado nas palavras-chave específicas
+3. Retorne APENAS o código do módulo (ex: "ti", "social_media", "professor", "fact_check")
+4. Use "chat" APENAS para saudações simples, conversas gerais ou quando não houver correspondência clara com nenhum módulo específico
 
-IMPORTANTE:
-- "classroom", "google sala de aula", "app não abre" → ti
-- "post", "instagram", "rede social" → social_media
-- "pagamento", "boleto", "mensalidade" → financeiro
-- "dúvida", "explicação", "matéria" → professor
-- "ansioso", "triste", "problema emocional" → bem_estar
+IMPORTANTE - PALAVRAS-CHAVE POR MÓDULO:
+TI (Suporte Técnico):
+- "internet lenta", "sem internet", "wifi não funciona", "rede não conecta"
+- "computador travando", "pc lento", "notebook lento", "computador não liga"
+- "impressora não funciona", "impressora travada", "não imprime"
+- "programa não abre", "app não funciona", "software erro"
+- "vírus", "antivírus", "malware", "hackeado"
+- "email não funciona", "não consigo enviar email"
+- "tela azul", "erro", "crash", "travando"
+- "não conecta", "sem conexão", "falha de rede"
+
+SOCIAL_MEDIA:
+- "crie um post", "faça um post", "gere um post"
+- "instagram", "facebook", "twitter", "tiktok"
+- "publicação", "story", "reel", "conteúdo"
+- "marketing", "engajamento", "redes sociais"
+
+FACT_CHECK (Verificação de Fatos):
+- "é verdade", "é mentira", "informação errada"
+- "verifique se", "confirme se", "é real"
+- "fake news", "desinformação", "checagem"
+- "verdadeiro", "falso", "correto", "incorreto"
+- "dúvida sobre", "questiono se", "não acredito"
+
+FINANCEIRO:
+- "pagamento", "boleto", "mensalidade", "cobrança"
+- "valor", "preço", "custo", "despesa"
+
+PROFESSOR:
+- "dúvida", "explicação", "matéria", "aula"
+- "não entendi", "como fazer", "exercício"
+- "matemática", "português", "história", "ciências"
+
+BEM_ESTAR:
+- "ansioso", "triste", "problema emocional"
+- "estresse", "ansiedade", "depressão"
+
+CHAT (usar apenas quando não houver correspondência específica):
+- "oi", "olá", "bom dia", "boa tarde", "boa noite"
+- "como vai", "tudo bem", "como está"
+- "obrigado", "obrigada", "valeu", "vlw"
+- "tchau", "até logo", "até mais"
 
 Retorne APENAS o código do módulo (sem explicações):`;
 

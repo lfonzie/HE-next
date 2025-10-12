@@ -14,6 +14,7 @@ import { streamPerplexity } from "@/lib/providers/perplexity";
 import { streamGrok } from "@/lib/providers/grok";
 import { randomUUID } from "crypto";
 import { getSystemPrompt as loadSystemPrompt } from "@/lib/system-message-loader";
+import { loadTIResources } from "@/lib/ti-framework";
 
 export const runtime = "nodejs";
 
@@ -55,7 +56,7 @@ export async function POST(req: NextRequest) {
     await appendMessage(finalConversationId, "user", input, provider, model);
 
     // 4) Criar system prompt contextual baseado no histórico
-    const contextualSystemPrompt = createContextualSystemPrompt(intelligentContext, system, module);
+    const contextualSystemPrompt = await createContextualSystemPrompt(intelligentContext, system, module);
     
     // 5) Criar stream baseado no provedor
     let stream: any;
@@ -83,7 +84,7 @@ export async function POST(req: NextRequest) {
         break;
       case "grok":
         try {
-          stream = await streamGrok(model, intelligentContext, input, contextualSystemPrompt);
+          stream = await streamGrok(model, intelligentContext, input, contextualSystemPrompt, module);
           console.log(`✅ [CHAT-STREAM] Grok stream created successfully`);
         } catch (grokError) {
           console.error(`❌ [CHAT-STREAM] Grok failed, falling back to Gemini:`, grokError);
@@ -247,24 +248,37 @@ export async function POST(req: NextRequest) {
  * Cria um system prompt contextual baseado no histórico da conversa
  * para evitar introduções desnecessárias e manter continuidade
  */
-function createContextualSystemPrompt(
-  history: any[], 
-  customSystem?: string, 
+async function createContextualSystemPrompt(
+  history: any[],
+  customSystem?: string,
   module: string = "chat"
-): string {
+): Promise<string> {
   try {
-    // Carregar prompt do sistema do arquivo system-message.json
-    let basePrompt = loadSystemPrompt(module);
-    
-    console.log(`✅ [SYSTEM-PROMPT] Loaded from system-message.json for module: ${module}`);
-    
-    // Se há histórico, adicionar instrução de continuidade
+    let basePrompt: string;
+
+    // Para problemas técnicos (TI), usar framework estruturado SEM MODIFICAÇÕES
+    if (module === 'ti') {
+      console.log(`🔧 [SYSTEM-PROMPT] Loading TI framework for structured responses`);
+      const tiResources = await loadTIResources();
+      basePrompt = tiResources.framework;
+      console.log(`📋 [SYSTEM-PROMPT] TI Framework loaded for streaming`);
+
+      // 🔥 IMPORTANTE: Para TI, NÃO adicionar instruções de continuidade
+      // pois elas quebram o formato JSON obrigatório
+      return basePrompt;
+    } else {
+      // Para outros módulos, usar prompt normal
+      basePrompt = loadSystemPrompt(module);
+      console.log(`✅ [SYSTEM-PROMPT] Loaded from system-message.json for module: ${module}`);
+    }
+
+    // Se há histórico, adicionar instrução de continuidade (APENAS para módulos não-TI)
     if (history && history.length > 1) {
       const lastUserMessage = history.filter(m => m.role === 'user').pop();
       const lastAssistantMessage = history.filter(m => m.role === 'assistant').pop();
-      
+
       const isContinuation = (lastUserMessage?.content || lastAssistantMessage?.content);
-      
+
       if (isContinuation) {
         // Adicionar instruções de continuidade AO PROMPT DO MÓDULO
         basePrompt += `\n\n⚠️ CONTEXTO IMPORTANTE:
@@ -276,8 +290,11 @@ function createContextualSystemPrompt(
 - Responda APENAS o que foi perguntado`;
       }
     }
-    
-    return customSystem || basePrompt;
+
+    const finalPrompt = customSystem || basePrompt;
+    console.log(`📋 [SYSTEM-PROMPT] Final system prompt preview:`, finalPrompt.substring(0, 500) + '...');
+
+    return finalPrompt;
     
   } catch (error) {
     console.error(`❌ [SYSTEM-PROMPT] Error loading for module ${module}:`, error);

@@ -318,7 +318,7 @@ const ModuleModal: React.FC<{ module: Module | null; isOpen: boolean; onClose: (
   );
 };
 
-const ChatModulesGrid: React.FC = () => {
+const ChatModulesGrid: React.FC<{ modalsState: any; setModalsState: any }> = ({ modalsState, setModalsState }) => {
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -775,7 +775,7 @@ const HubEduLanding: React.FC = () => {
                 <FeatureCard key={index} feature={feature} />
               ))}
             </div>
-            <ChatModulesGrid />
+            <ChatModulesGrid modalsState={modalsState} setModalsState={setModalsState} />
           </div>
         </section>
 
