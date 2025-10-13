@@ -280,14 +280,10 @@ ATUALIZE o JSON acima com o progresso da etapa e continue a resolução.`;
     const isFirstMessage = history.length === 0; // Verifica se é uma conversa nova (histórico vazio)
     let enhancedSystemPrompt = finalSystem;
 
-    // Adicionar instruções para geração dinâmica de sugestões em módulos conversacionais
+    // Forçar geração de sugestões em módulos conversacionais
     if (!isTIResolution && !isFactCheck && (detectedModule === 'chat' || detectedModule === 'professor')) {
-      console.log(`🎯 [FOLLOW-UP] Adding dynamic follow-up generation instructions`);
-      if (isFirstMessage) {
-        enhancedSystemPrompt += `\n\n--- CONTEXTO DA CONVERSA ---\nEsta é a primeira mensagem da conversa. Como é o início, considere gerar sugestões para ajudar o usuário a explorar o tema.`;
-      } else {
-        enhancedSystemPrompt += `\n\n--- CONTEXTO DA CONVERSA ---\nEsta é uma continuação da conversa. Avalie se seria útil gerar sugestões baseadas no contexto atual.`;
-      }
+      console.log(`🎯 [FOLLOW-UP] Forcing follow-up suggestions generation`);
+      enhancedSystemPrompt += `\n\nIMPORTANTE: Você DEVE sempre finalizar suas respostas com exatamente 3 sugestões no formato:\n💡 Sugestões para continuar a conversa:\n1. [Sugestão 1]\n2. [Sugestão 2]\n3. [Sugestão 3]\n\nNão importa o contexto - SEMPRE adicione essas sugestões no final.`;
     }
 
     // 4) Adicionar mensagem do usuário ANTES de chamar a IA
