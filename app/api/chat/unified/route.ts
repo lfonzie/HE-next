@@ -52,91 +52,37 @@ function detectThemes(input: string): string[] {
   return themes;
 }
 
-// Função para gerar sugestões de follow-up baseadas no tema
-function generateFollowUpSuggestions(themes: string[]): string[] {
-  const suggestions: { [key: string]: string[] } = {
-    'gatos': [
-      'Quais raças de gatos você mais gosta?',
-      'Como cuidar da saúde do seu gato?',
-      'Dicas para brincar com gatos'
-    ],
-    'cachorros': [
-      'Quais raças de cães são mais amigáveis?',
-      'Como treinar um cachorro filhote?',
-      'Cuidados veterinários para cães'
-    ],
-    'animais': [
-      'Quais animais você gostaria de ver em um zoológico?',
-      'Como ajudar na preservação da fauna?',
-      'Curiosidades sobre animais selvagens'
-    ],
-    'tecnologia': [
-      'Quais gadgets tecnológicos você usa no dia a dia?',
-      'Como aprender programação?',
-      'Tendências em inteligência artificial'
-    ],
-    'esporte': [
-      'Qual seu esporte favorito para praticar?',
-      'Dicas para manter a motivação nos treinos',
-      'Benefícios do exercício físico'
-    ],
-    'comida': [
-      'Qual sua culinária favorita?',
-      'Dicas para uma alimentação saudável',
-      'Receitas rápidas e fáceis'
-    ],
-    'viagem': [
-      'Para onde você gostaria de viajar?',
-      'Dicas para viagens econômicas',
-      'Como planejar uma viagem perfeita'
-    ],
-    'livros': [
-      'Qual gênero literário você prefere?',
-      'Recomendações de livros clássicos',
-      'Como desenvolver o hábito da leitura'
-    ],
-    'música': [
-      'Qual seu estilo musical favorito?',
-      'Como aprender a tocar um instrumento?',
-      'Festivais de música que valem a pena'
-    ],
-    'filmes': [
-      'Qual seu gênero de filme preferido?',
-      'Séries que você recomenda assistir',
-      'Como escolher bons filmes para assistir'
-    ],
-    'educação': [
-      'Como tornar o aprendizado mais interessante?',
-      'Dicas para estudo eficiente',
-      'Importância da educação continuada'
-    ],
-    'saúde': [
-      'Como manter uma rotina saudável?',
-      'Dicas para melhorar o sono',
-      'Exercícios para o bem-estar mental'
-    ],
-    'natureza': [
-      'Como ajudar o meio ambiente?',
-      'Lugares naturais para visitar',
-      'Benefícios de passar tempo na natureza'
-    ],
-    'arte': [
-      'Qual tipo de arte mais te interessa?',
-      'Como desenvolver a criatividade?',
-      'Museus e galerias imperdíveis'
-    ]
-  };
+// Função para extrair sugestões de follow-up da resposta da IA
+function extractFollowUpSuggestions(aiResponse: string): string[] {
+  const suggestions: string[] = [];
 
-  const followUps: string[] = [];
+  // Procurar pela seção de sugestões na resposta
+  const suggestionSectionRegex = /💡 Sugestões para continuar a conversa:\s*\n(\d+\.\s*.+\n?)+/i;
+  const match = aiResponse.match(suggestionSectionRegex);
 
-  // Pegar até 3 sugestões do primeiro tema detectado
-  for (const theme of themes.slice(0, 1)) {
-    if (suggestions[theme]) {
-      followUps.push(...suggestions[theme].slice(0, 3));
+  if (match) {
+    // Extrair cada sugestão numerada
+    const suggestionRegex = /\d+\.\s*(.+)/g;
+    let suggestionMatch;
+
+    while ((suggestionMatch = suggestionRegex.exec(match[0])) !== null) {
+      const suggestion = suggestionMatch[1].trim();
+      if (suggestion) {
+        suggestions.push(suggestion);
+      }
     }
   }
 
-  return followUps.slice(0, 3); // Máximo de 3 sugestões
+  // Limitar a 3 sugestões
+  return suggestions.slice(0, 3);
+}
+
+// Função para remover as sugestões da resposta principal da IA
+function cleanAIResponse(aiResponse: string): string {
+  // Remover a seção de sugestões da resposta principal
+  const cleanedResponse = aiResponse.replace(/💡 Sugestões para continuar a conversa:\s*\n(\d+\.\s*.+\n?)+/i, '').trim();
+
+  return cleanedResponse;
 }
 
 type Body = {
@@ -330,17 +276,14 @@ ATUALIZE o JSON acima com o progresso da etapa e continue a resolução.`;
       }
     }
 
-    // 3) Detectar temas e gerar sugestões de follow-up ANTES de adicionar a mensagem
-    let followUpSuggestions: string[] = [];
+    // 3) Preparar contexto para geração de sugestões pela IA
     const isFirstMessage = history.length === 0; // Verifica se é uma conversa nova (histórico vazio)
+    let enhancedSystemPrompt = finalSystem;
 
+    // Adicionar instruções especiais para primeira mensagem se for módulo conversacional
     if (isFirstMessage && !isTIResolution && !isFactCheck && (detectedModule === 'chat' || detectedModule === 'professor')) {
-      console.log(`🎯 [FOLLOW-UP] Detecting themes for first message`);
-      const detectedThemes = detectThemes(input);
-      if (detectedThemes.length > 0) {
-        followUpSuggestions = generateFollowUpSuggestions(detectedThemes);
-        console.log(`💡 [FOLLOW-UP] Generated suggestions:`, followUpSuggestions.length, 'suggestions');
-      }
+      console.log(`🎯 [FOLLOW-UP] Adding follow-up generation instructions for first message`);
+      enhancedSystemPrompt += `\n\n--- INSTRUÇÕES PARA ESTA CONVERSA ---\nEsta é a PRIMEIRA mensagem da conversa. O usuário mencionou um tema específico.\n\nAPÓS responder à pergunta normalmente, você DEVE adicionar EXATAMENTE 3 sugestões de follow-up relacionadas ao tema, formatadas assim:\n\n💡 Sugestões para continuar a conversa:\n1. [Sugestão 1]\n2. [Sugestão 2]\n3. [Sugestão 3]`;
     }
 
     // 4) Adicionar mensagem do usuário ANTES de chamar a IA
@@ -353,19 +296,19 @@ ATUALIZE o JSON acima com o progresso da etapa e continue a resolução.`;
     const providerStart = Date.now();
     switch (provider) {
       case "openai":
-        result = await callOpenAI(model, history, input, finalSystem);
+        result = await callOpenAI(model, history, input, enhancedSystemPrompt);
         break;
       case "gpt5":
-        result = await callGPT5(model, history, input, finalSystem);
+        result = await callGPT5(model, history, input, enhancedSystemPrompt);
         break;
       case "gemini":
-        result = await callGemini(model, history, input, finalSystem);
+        result = await callGemini(model, history, input, enhancedSystemPrompt);
         break;
       case "perplexity":
-        result = await callPerplexity(model, history, input, finalSystem);
+        result = await callPerplexity(model, history, input, enhancedSystemPrompt);
         break;
       case "grok":
-        result = await callGrok(model, history, input, finalSystem);
+        result = await callGrok(model, history, input, enhancedSystemPrompt);
         break;
       default:
         return NextResponse.json({ error: "Provider inválido" }, { status: 400 });
@@ -405,6 +348,18 @@ ATUALIZE o JSON acima com o progresso da etapa e continue a resolução.`;
         .replace(/1º ao 5º ano do Fundamental 1/g, 'Ensino Fundamental I')
         .replace(/1º ao 5º ano/g, 'Ensino Fundamental I');
       console.log(`✅ [SOCIAL-MEDIA] Corrected reply:`, finalReply.substring(0, 100));
+    }
+
+    // Extrair sugestões de follow-up da resposta da IA
+    let followUpSuggestions: string[] = [];
+    if (isFirstMessage && !isTIResolution && !isFactCheck && (detectedModule === 'chat' || detectedModule === 'professor')) {
+      console.log(`🎯 [FOLLOW-UP] Extracting suggestions from AI response`);
+      followUpSuggestions = extractFollowUpSuggestions(result.text);
+      console.log(`💡 [FOLLOW-UP] Extracted suggestions:`, followUpSuggestions.length, 'suggestions');
+
+      // Limpar a resposta removendo a seção de sugestões
+      finalReply = cleanAIResponse(result.text);
+      console.log(`🧹 [FOLLOW-UP] Cleaned response length:`, finalReply.length, 'characters');
     }
 
     return NextResponse.json({
