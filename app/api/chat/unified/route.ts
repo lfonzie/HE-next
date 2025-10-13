@@ -334,13 +334,12 @@ ATUALIZE o JSON acima com o progresso da etapa e continue a resolução.`;
     let followUpSuggestions: string[] = [];
     const isFirstMessage = history.length === 0; // Verifica se é uma conversa nova (histórico vazio)
 
-    if (isFirstMessage && !isTIResolution && !isFactCheck && detectedModule === 'chat') {
+    if (isFirstMessage && !isTIResolution && !isFactCheck && (detectedModule === 'chat' || detectedModule === 'professor')) {
       console.log(`🎯 [FOLLOW-UP] Detecting themes for first message`);
       const detectedThemes = detectThemes(input);
       if (detectedThemes.length > 0) {
-        console.log(`✅ [FOLLOW-UP] Detected themes:`, detectedThemes);
         followUpSuggestions = generateFollowUpSuggestions(detectedThemes);
-        console.log(`💡 [FOLLOW-UP] Generated suggestions:`, followUpSuggestions);
+        console.log(`💡 [FOLLOW-UP] Generated suggestions:`, followUpSuggestions.length, 'suggestions');
       }
     }
 

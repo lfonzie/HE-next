@@ -27,7 +27,7 @@ let lastModified: number = 0
  * Carrega as configurações de mensagens do sistema do arquivo JSON
  */
 export function loadSystemMessages(): SystemMessagesConfig {
-  const filePath = path.join(process.cwd(), 'system-message.json')
+  const filePath = path.join(process.cwd(), 'system-message-simple.json')
   
   try {
     // Verificar se o arquivo foi modificado
