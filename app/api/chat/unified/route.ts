@@ -330,11 +330,25 @@ ATUALIZE o JSON acima com o progresso da etapa e continue a resolução.`;
       }
     }
 
-    // 3) Adicionar mensagem do usuário ANTES de chamar a IA
+    // 3) Detectar temas e gerar sugestões de follow-up ANTES de adicionar a mensagem
+    let followUpSuggestions: string[] = [];
+    const isFirstMessage = history.length === 0; // Verifica se é uma conversa nova (histórico vazio)
+
+    if (isFirstMessage && !isTIResolution && !isFactCheck && detectedModule === 'chat') {
+      console.log(`🎯 [FOLLOW-UP] Detecting themes for first message`);
+      const detectedThemes = detectThemes(input);
+      if (detectedThemes.length > 0) {
+        console.log(`✅ [FOLLOW-UP] Detected themes:`, detectedThemes);
+        followUpSuggestions = generateFollowUpSuggestions(detectedThemes);
+        console.log(`💡 [FOLLOW-UP] Generated suggestions:`, followUpSuggestions);
+      }
+    }
+
+    // 4) Adicionar mensagem do usuário ANTES de chamar a IA
     await appendMessage(finalConversationId, "user", input, provider, model);
     console.log(`✅ [CHAT-UNIFIED] User message saved`);
 
-    // 4) Roteamento por provedor
+    // 5) Roteamento por provedor
     let result: { text: string; raw: any; usage?: any };
     
     const providerStart = Date.now();
@@ -392,20 +406,6 @@ ATUALIZE o JSON acima com o progresso da etapa e continue a resolução.`;
         .replace(/1º ao 5º ano do Fundamental 1/g, 'Ensino Fundamental I')
         .replace(/1º ao 5º ano/g, 'Ensino Fundamental I');
       console.log(`✅ [SOCIAL-MEDIA] Corrected reply:`, finalReply.substring(0, 100));
-    }
-
-    // Detectar temas e gerar sugestões de follow-up para conversas iniciais
-    let followUpSuggestions: string[] = [];
-    const isFirstMessage = history.length <= 1; // Considerando apenas a mensagem que acabamos de adicionar
-
-    if (isFirstMessage && !isTIResolution && !isFactCheck && detectedModule === 'chat') {
-      console.log(`🎯 [FOLLOW-UP] Detecting themes for first message`);
-      const detectedThemes = detectThemes(input);
-      if (detectedThemes.length > 0) {
-        console.log(`✅ [FOLLOW-UP] Detected themes:`, detectedThemes);
-        followUpSuggestions = generateFollowUpSuggestions(detectedThemes);
-        console.log(`💡 [FOLLOW-UP] Generated suggestions:`, followUpSuggestions);
-      }
     }
 
     return NextResponse.json({
