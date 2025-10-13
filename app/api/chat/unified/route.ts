@@ -15,8 +15,129 @@ import { callPerplexity } from "@/lib/providers/perplexity";
 import { callGrok } from "@/lib/providers/grok";
 import { ChatMessage } from "@/lib/chat-history";
 import { loadTIResources, loadSocialMediaResources } from "@/lib/ti-framework";
+import { aiClassify } from "@/lib/ai-classifier";
 
 export const runtime = "nodejs"; // Para compatibilidade com Prisma
+
+// Função para detectar temas na entrada do usuário
+function detectThemes(input: string): string[] {
+  const themes = [];
+  const lowerInput = input.toLowerCase();
+
+  // Mapeamento de temas comuns
+  const themeKeywords = {
+    'gatos': ['gato', 'gatinho', 'felino', 'pets', 'animais domésticos'],
+    'cachorros': ['cachorro', 'cão', 'dog', 'pets', 'animais domésticos'],
+    'animais': ['animal', 'zoo', 'selvagem', 'fauna', 'vida selvagem'],
+    'tecnologia': ['tecnologia', 'computador', 'internet', 'software', 'hardware', 'programação'],
+    'esporte': ['esporte', 'futebol', 'basquete', 'natação', 'corrida', 'jogos'],
+    'comida': ['comida', 'receita', 'culinária', 'cozinhar', 'restaurante', 'prato'],
+    'viagem': ['viagem', 'turismo', 'destino', 'feriado', 'passeio', 'explorar'],
+    'livros': ['livro', 'leitura', 'autor', 'biblioteca', 'história', 'romance'],
+    'música': ['música', 'cantor', 'banda', 'concerto', 'instrumento', 'ritmo'],
+    'filmes': ['filme', 'cinema', 'ator', 'diretor', 'série', 'netflix'],
+    'educação': ['escola', 'estudo', 'aprendizado', 'professor', 'aluno', 'aula'],
+    'saúde': ['saúde', 'médico', 'doença', 'bem-estar', 'exercício', 'nutrição'],
+    'natureza': ['natureza', 'ambiente', 'ecologia', 'floresta', 'rios', 'montanhas'],
+    'arte': ['arte', 'pintura', 'escultura', 'museu', 'criatividade', 'design']
+  };
+
+  // Verificar se algum tema está presente na entrada
+  for (const [theme, keywords] of Object.entries(themeKeywords)) {
+    if (keywords.some(keyword => lowerInput.includes(keyword))) {
+      themes.push(theme);
+    }
+  }
+
+  return themes;
+}
+
+// Função para gerar sugestões de follow-up baseadas no tema
+function generateFollowUpSuggestions(themes: string[]): string[] {
+  const suggestions: { [key: string]: string[] } = {
+    'gatos': [
+      'Quais raças de gatos você mais gosta?',
+      'Como cuidar da saúde do seu gato?',
+      'Dicas para brincar com gatos'
+    ],
+    'cachorros': [
+      'Quais raças de cães são mais amigáveis?',
+      'Como treinar um cachorro filhote?',
+      'Cuidados veterinários para cães'
+    ],
+    'animais': [
+      'Quais animais você gostaria de ver em um zoológico?',
+      'Como ajudar na preservação da fauna?',
+      'Curiosidades sobre animais selvagens'
+    ],
+    'tecnologia': [
+      'Quais gadgets tecnológicos você usa no dia a dia?',
+      'Como aprender programação?',
+      'Tendências em inteligência artificial'
+    ],
+    'esporte': [
+      'Qual seu esporte favorito para praticar?',
+      'Dicas para manter a motivação nos treinos',
+      'Benefícios do exercício físico'
+    ],
+    'comida': [
+      'Qual sua culinária favorita?',
+      'Dicas para uma alimentação saudável',
+      'Receitas rápidas e fáceis'
+    ],
+    'viagem': [
+      'Para onde você gostaria de viajar?',
+      'Dicas para viagens econômicas',
+      'Como planejar uma viagem perfeita'
+    ],
+    'livros': [
+      'Qual gênero literário você prefere?',
+      'Recomendações de livros clássicos',
+      'Como desenvolver o hábito da leitura'
+    ],
+    'música': [
+      'Qual seu estilo musical favorito?',
+      'Como aprender a tocar um instrumento?',
+      'Festivais de música que valem a pena'
+    ],
+    'filmes': [
+      'Qual seu gênero de filme preferido?',
+      'Séries que você recomenda assistir',
+      'Como escolher bons filmes para assistir'
+    ],
+    'educação': [
+      'Como tornar o aprendizado mais interessante?',
+      'Dicas para estudo eficiente',
+      'Importância da educação continuada'
+    ],
+    'saúde': [
+      'Como manter uma rotina saudável?',
+      'Dicas para melhorar o sono',
+      'Exercícios para o bem-estar mental'
+    ],
+    'natureza': [
+      'Como ajudar o meio ambiente?',
+      'Lugares naturais para visitar',
+      'Benefícios de passar tempo na natureza'
+    ],
+    'arte': [
+      'Qual tipo de arte mais te interessa?',
+      'Como desenvolver a criatividade?',
+      'Museus e galerias imperdíveis'
+    ]
+  };
+
+  const followUps: string[] = [];
+
+  // Pegar até 3 sugestões do primeiro tema detectado
+  for (const theme of themes.slice(0, 1)) {
+    if (suggestions[theme]) {
+      followUps.push(...suggestions[theme].slice(0, 3));
+    }
+  }
+
+  return followUps.slice(0, 3); // Máximo de 3 sugestões
+}
 
 type Body = {
   provider: "openai" | "gpt5" | "gemini" | "perplexity" | "grok";
@@ -57,26 +178,39 @@ export async function POST(req: NextRequest) {
     const history = await getHistory(finalConversationId);
     console.log(`📚 [CHAT-UNIFIED] History loaded: ${history.length} messages`);
 
-    // 2.5) Detectar módulo e carregar framework apropriado
+    // 2.5) Detectar módulo automaticamente se não especificado
+    let detectedModule = module;
+    if (module === 'chat' || !module) {
+      console.log(`🎯 [CHAT-UNIFIED] Auto-detecting module for input: "${input.substring(0, 50)}..."`);
+      const moduleDetection = await aiClassify(input, history.length);
+      detectedModule = moduleDetection.module;
+      console.log(`✅ [CHAT-UNIFIED] Auto-detected module: ${detectedModule} (confidence: ${moduleDetection.confidence})`);
+    } else {
+      console.log(`🔍 [CHAT-UNIFIED] Module specified directly: ${module}`);
+    }
+
+    // Carregar system prompt baseado no módulo detectado
     let finalSystem = system;
     let isTIResolution = false;
     let isFactCheck = false;
     let isSocialMedia = false;
 
+    console.log(`🔍 [CHAT-UNIFIED] Final module: ${detectedModule}, isSocialMedia: ${isSocialMedia}`);
+
     // Carregar system prompt baseado no módulo detectado
-    if (module === 'ti' || model === 'grok-4-fast-reasoning') {
+    if (detectedModule === 'ti' || model === 'grok-4-fast-reasoning') {
       console.log(`🔧 [CHAT-UNIFIED] TI module detected - loading TI framework`);
       const tiResources = await loadTIResources();
       finalSystem = tiResources.framework || system;
       isTIResolution = true;
       console.log(`📋 [CHAT-UNIFIED] TI Framework loaded for problem resolution`);
-    } else if (module === 'social_media') {
+    } else if (detectedModule === 'social_media') {
       console.log(`📱 [CHAT-UNIFIED] Social Media module detected - loading Social Media framework`);
       const socialMediaResources = await loadSocialMediaResources();
       finalSystem = socialMediaResources.framework || system;
       isSocialMedia = true;
-      console.log(`📋 [CHAT-UNIFIED] Social Media Framework loaded for post generation`);
-    } else if (module === 'fact_check') {
+      console.log(`📋 [CHAT-UNIFIED] Social Media Framework loaded for post generation, isSocialMedia set to: ${isSocialMedia}`);
+    } else if (detectedModule === 'fact_check') {
       console.log(`🔍 [CHAT-UNIFIED] Fact check module detected - loading fact check framework`);
       const factCheckPrompt = `🚨 PROTEÇÕES DE SEGURANÇA OBRIGATÓRIAS:
 
@@ -247,16 +381,44 @@ ATUALIZE o JSON acima com o progresso da etapa e continue a resolução.`;
 
     console.log(`🎉 [CHAT-UNIFIED] SUCCESS - Total time: ${totalTime}ms`);
 
+    // Aplicar correções pós-processamento para social media
+    let finalReply = result.text;
+    if (isSocialMedia) {
+      console.log(`🔧 [SOCIAL-MEDIA] Applying post-processing corrections to:`, result.text.substring(0, 100));
+      finalReply = finalReply
+        .replace(/Fundamental 1/g, 'Ensino Fundamental I')
+        .replace(/Fund 1/g, 'Ensino Fundamental I')
+        .replace(/fundamental 1/g, 'Ensino Fundamental I')
+        .replace(/1º ao 5º ano do Fundamental 1/g, 'Ensino Fundamental I')
+        .replace(/1º ao 5º ano/g, 'Ensino Fundamental I');
+      console.log(`✅ [SOCIAL-MEDIA] Corrected reply:`, finalReply.substring(0, 100));
+    }
+
+    // Detectar temas e gerar sugestões de follow-up para conversas iniciais
+    let followUpSuggestions: string[] = [];
+    const isFirstMessage = history.length <= 1; // Considerando apenas a mensagem que acabamos de adicionar
+
+    if (isFirstMessage && !isTIResolution && !isFactCheck && detectedModule === 'chat') {
+      console.log(`🎯 [FOLLOW-UP] Detecting themes for first message`);
+      const detectedThemes = detectThemes(input);
+      if (detectedThemes.length > 0) {
+        console.log(`✅ [FOLLOW-UP] Detected themes:`, detectedThemes);
+        followUpSuggestions = generateFollowUpSuggestions(detectedThemes);
+        console.log(`💡 [FOLLOW-UP] Generated suggestions:`, followUpSuggestions);
+      }
+    }
+
     return NextResponse.json({
       conversationId: finalConversationId,
-      reply: result.text,
+      reply: finalReply,
       provider,
       model,
       usage: result.usage,
       timing: {
         total: totalTime,
         provider: providerTime
-      }
+      },
+      followUpSuggestions: followUpSuggestions.length > 0 ? followUpSuggestions : undefined
     });
 
   } catch (err: any) {
