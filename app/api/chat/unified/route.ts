@@ -276,14 +276,18 @@ ATUALIZE o JSON acima com o progresso da etapa e continue a resolução.`;
       }
     }
 
-    // 3) Preparar contexto para geração de sugestões pela IA
+    // 3) Preparar contexto para geração dinâmica de sugestões pela IA
     const isFirstMessage = history.length === 0; // Verifica se é uma conversa nova (histórico vazio)
     let enhancedSystemPrompt = finalSystem;
 
-    // Adicionar instruções especiais para primeira mensagem se for módulo conversacional
-    if (isFirstMessage && !isTIResolution && !isFactCheck && (detectedModule === 'chat' || detectedModule === 'professor')) {
-      console.log(`🎯 [FOLLOW-UP] Adding follow-up generation instructions for first message`);
-      enhancedSystemPrompt += `\n\n--- INSTRUÇÕES PARA ESTA CONVERSA ---\nEsta é a PRIMEIRA mensagem da conversa. O usuário mencionou um tema específico.\n\nAPÓS responder à pergunta normalmente, você DEVE adicionar EXATAMENTE 3 sugestões de follow-up relacionadas ao tema, formatadas assim:\n\n💡 Sugestões para continuar a conversa:\n1. [Sugestão 1]\n2. [Sugestão 2]\n3. [Sugestão 3]`;
+    // Adicionar instruções para geração dinâmica de sugestões em módulos conversacionais
+    if (!isTIResolution && !isFactCheck && (detectedModule === 'chat' || detectedModule === 'professor')) {
+      console.log(`🎯 [FOLLOW-UP] Adding dynamic follow-up generation instructions`);
+      if (isFirstMessage) {
+        enhancedSystemPrompt += `\n\n--- CONTEXTO DA CONVERSA ---\nEsta é a primeira mensagem da conversa. Como é o início, considere gerar sugestões para ajudar o usuário a explorar o tema.`;
+      } else {
+        enhancedSystemPrompt += `\n\n--- CONTEXTO DA CONVERSA ---\nEsta é uma continuação da conversa. Avalie se seria útil gerar sugestões baseadas no contexto atual.`;
+      }
     }
 
     // 4) Adicionar mensagem do usuário ANTES de chamar a IA
@@ -350,16 +354,18 @@ ATUALIZE o JSON acima com o progresso da etapa e continue a resolução.`;
       console.log(`✅ [SOCIAL-MEDIA] Corrected reply:`, finalReply.substring(0, 100));
     }
 
-    // Extrair sugestões de follow-up da resposta da IA
+    // Extrair sugestões de follow-up da resposta da IA (sempre verificar)
     let followUpSuggestions: string[] = [];
-    if (isFirstMessage && !isTIResolution && !isFactCheck && (detectedModule === 'chat' || detectedModule === 'professor')) {
-      console.log(`🎯 [FOLLOW-UP] Extracting suggestions from AI response`);
+    if (!isTIResolution && !isFactCheck && (detectedModule === 'chat' || detectedModule === 'professor')) {
+      console.log(`🎯 [FOLLOW-UP] Checking for suggestions in AI response`);
       followUpSuggestions = extractFollowUpSuggestions(result.text);
       console.log(`💡 [FOLLOW-UP] Extracted suggestions:`, followUpSuggestions.length, 'suggestions');
 
-      // Limpar a resposta removendo a seção de sugestões
-      finalReply = cleanAIResponse(result.text);
-      console.log(`🧹 [FOLLOW-UP] Cleaned response length:`, finalReply.length, 'characters');
+      if (followUpSuggestions.length > 0) {
+        // Limpar a resposta removendo a seção de sugestões
+        finalReply = cleanAIResponse(result.text);
+        console.log(`🧹 [FOLLOW-UP] Cleaned response length:`, finalReply.length, 'characters');
+      }
     }
 
     return NextResponse.json({
