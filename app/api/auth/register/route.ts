@@ -1,24 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
-
-// Prevent prerendering of this API route
+import bcrypt from 'bcryptjs'
+import { prisma } from '@/lib/db'
 
 // Prevent prerendering of this API route
 export const dynamic = 'force-dynamic';
 
-
-import bcrypt from 'bcryptjs'
-
-
-import { prisma } from '@/lib/db'
-
-
-
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, password, birth_date, city, state, school } = await request.json()
+    const { name, email, password, birth_date, city, state, school, accept_terms } = await request.json()
 
     if (!name || !email || !password || !birth_date || !city || !state || !school) {
       return NextResponse.json({ error: 'Todos os campos são obrigatórios' }, { status: 400 })
+    }
+
+    if (!accept_terms) {
+      return NextResponse.json({ error: 'Você deve aceitar os Termos de Uso para continuar' }, { status: 400 })
     }
 
     // Check if user already exists
@@ -44,7 +40,7 @@ export async function POST(request: NextRequest) {
         state,
         school,
         plan: 'free',
-        role: 'STUDENT'
+        role: 'FREE'
       }
     })
 
@@ -60,6 +56,9 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Register API error:', error)
-    return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 })
+    return NextResponse.json({ 
+      error: 'Erro interno do servidor',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    }, { status: 500 })
   }
 }

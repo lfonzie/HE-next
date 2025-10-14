@@ -9,37 +9,31 @@ datasource db {
 }
 
 model User {
-  id                String    @id(map: "users_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email             String    @unique @db.VarChar(255)
-  password_hash     String?
-  name              String?   @db.VarChar(255)
-  role              role      @default(FREE)
-  google_id         String?   @db.VarChar(255)
-  profile_image_url String?   @db.VarChar(500)
-  photo             String?   @db.VarChar(500)
-  birth_date        DateTime?
-  city              String?   @db.VarChar(255)
-  state             String?   @db.VarChar(2)
-  school            String?   @db.VarChar(255)
-  plan              String?   @default("free") @db.VarChar(50)
-  school_id         String?   @db.Uuid
-  created_at        DateTime  @default(now()) @db.Timestamp(6)
-  updated_at        DateTime  @default(now()) @db.Timestamp(6)
-  profile           Json?
-  resetToken        String?   @db.VarChar(255)
-  resetTokenExpiry  DateTime? @db.Timestamp(6)
-  
-  // Relacionamentos com quotas
-  quotas            quotas[]
-  quota_usage_logs  quota_usage_log[]
-  
-  // Relacionamentos com limitação de mensagens B2C
-  daily_message_usage daily_message_usage[]
-  message_usage_logs  message_usage_log[]
-  
-  // Relacionamentos com certificados
+  id                  String                @id(map: "users_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email               String                @unique @db.VarChar(255)
+  password_hash       String?
+  name                String?               @db.VarChar(255)
+  role                role                  @default(FREE)
+  google_id           String?               @db.VarChar(255)
+  profile_image_url   String?               @db.VarChar(500)
+  photo               String?               @db.VarChar(500)
+  school_id           String?               @db.Uuid
+  created_at          DateTime              @default(now()) @db.Timestamp(6)
+  updated_at          DateTime              @default(now()) @db.Timestamp(6)
+  profile             Json?
+  resetToken          String?               @db.VarChar(255)
+  resetTokenExpiry    DateTime?             @db.Timestamp(6)
+  birth_date          DateTime?
+  city                String?               @db.VarChar(255)
+  plan                String?               @default("free") @db.VarChar(50)
+  school              String?               @db.VarChar(255)
+  state               String?               @db.VarChar(2)
   certificates        certificates[]
+  daily_message_usage daily_message_usage[]
   lesson_completions  lesson_completions[]
+  message_usage_logs  message_usage_log[]
+  quota_usage_logs    quota_usage_log[]
+  quotas              quotas[]
 }
 
 model DemoUser {
@@ -149,35 +143,32 @@ model artifacts {
 }
 
 model conversations {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id     String   @db.Uuid
-  module      String   @db.VarChar(50)
-  subject     String?  @db.VarChar(100)
-  grade       String?  @db.VarChar(50)
-  messages    Json
-  token_count Int      @default(0)
-  model       String?  @default("gpt-4o-mini") @db.VarChar(50)
-  created_at  DateTime @default(now()) @db.Timestamp(6)
-  updated_at  DateTime @default(now()) @db.Timestamp(6)
-  
-  // Relacionamento com mensagens individuais
+  id                    String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id               String                 @db.Uuid
+  module                String                 @db.VarChar(50)
+  subject               String?                @db.VarChar(100)
+  grade                 String?                @db.VarChar(50)
+  messages              Json
+  token_count           Int                    @default(0)
+  model                 String?                @default("gpt-4o-mini") @db.VarChar(50)
+  created_at            DateTime               @default(now()) @db.Timestamp(6)
+  updated_at            DateTime               @default(now()) @db.Timestamp(6)
   conversation_messages conversation_message[]
 }
 
-// Nova tabela para mensagens individuais com ordem estável
 model conversation_message {
-  id             String       @id @default(cuid())
-  conversationId String       @db.Uuid
-  role           String       // "user" | "assistant" | "system" | "tool"
-  content        Json         // array de segmentos, ou string; use Json para suportar partes (Gemini)
-  tokenCount     Int?         // opcional, para trimming inteligente
-  createdAt      DateTime     @default(now())
+  id             String        @id @default(cuid())
+  conversationId String        @db.Uuid
+  role           String
+  content        Json
+  tokenCount     Int?
+  createdAt      DateTime      @default(now())
+  index          Int
+  providerRaw    Json?
+  provider       String?       @db.VarChar(50)
+  model          String?       @db.VarChar(100)
   conversation   conversations @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  index          Int          // ordem estável
-  providerRaw    Json?        // payload bruto opcional para debug
-  provider       String?      @db.VarChar(50) // "openai" | "gemini" | "groq" | etc.
-  model          String?      @db.VarChar(100) // modelo usado para esta mensagem
-  
+
   @@index([conversationId, index])
   @@index([conversationId, createdAt])
 }
@@ -496,46 +487,42 @@ model quiz_items {
 }
 
 model quotas {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id     String    @db.Uuid
-  month       String    @db.VarChar(7) // Formato: YYYY-MM
-  token_limit Int       @default(100000)
-  token_used  Int       @default(0)
-  is_active   Boolean   @default(true)
-  created_at  DateTime  @default(now()) @db.Timestamp(6)
-  updated_at  DateTime? @default(now()) @db.Timestamp(6)
-  
-  // Relacionamentos
-  user        User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  id          String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id     String            @db.Uuid
+  month       String            @db.VarChar(7)
+  token_limit Int               @default(100000)
+  token_used  Int               @default(0)
+  created_at  DateTime          @default(now()) @db.Timestamp(6)
+  updated_at  DateTime?         @default(now()) @db.Timestamp(6)
+  is_active   Boolean           @default(true)
   usage_logs  quota_usage_log[]
-  
+  user        User              @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
   @@unique([user_id, month], map: "unique_user_month_quota")
   @@index([user_id], map: "idx_quotas_user")
   @@index([month], map: "idx_quotas_month")
 }
 
 model quota_usage_log {
-  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  quota_id        String   @db.Uuid
-  user_id         String   @db.Uuid
-  provider        String   @db.VarChar(50) // openai, google, anthropic, etc
-  model           String   @db.VarChar(100) // gpt-4o-mini, gemini-pro, etc
-  prompt_tokens   Int      @default(0)
-  completion_tokens Int    @default(0)
-  total_tokens    Int      @default(0)
-  cost_usd        Decimal  @default(0) @db.Decimal(10, 6)
-  cost_brl        Decimal  @default(0) @db.Decimal(10, 6)
-  module          String?  @db.VarChar(50) // aulas, professor, etc
-  conversation_id String?  @db.Uuid
-  api_endpoint    String?  @db.VarChar(100)
-  success         Boolean  @default(true)
-  error_message   String?
-  created_at      DateTime @default(now()) @db.Timestamp(6)
-  
-  // Relacionamentos
-  quota           quotas   @relation(fields: [quota_id], references: [id], onDelete: Cascade)
-  user            User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  quota_id          String   @db.Uuid
+  user_id           String   @db.Uuid
+  provider          String   @db.VarChar(50)
+  model             String   @db.VarChar(100)
+  prompt_tokens     Int      @default(0)
+  completion_tokens Int      @default(0)
+  total_tokens      Int      @default(0)
+  cost_usd          Decimal  @default(0) @db.Decimal(10, 6)
+  cost_brl          Decimal  @default(0) @db.Decimal(10, 6)
+  module            String?  @db.VarChar(50)
+  conversation_id   String?  @db.Uuid
+  api_endpoint      String?  @db.VarChar(100)
+  success           Boolean  @default(true)
+  error_message     String?
+  created_at        DateTime @default(now()) @db.Timestamp(6)
+  quota             quotas   @relation(fields: [quota_id], references: [id], onDelete: Cascade)
+  user              User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
   @@index([quota_id], map: "idx_quota_usage_log_quota")
   @@index([user_id], map: "idx_quota_usage_log_user")
   @@index([created_at], map: "idx_quota_usage_log_created")
@@ -544,17 +531,17 @@ model quota_usage_log {
 }
 
 model quota_settings {
-  id                    String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  role                  role     @unique // STUDENT, TEACHER, ADMIN, etc
-  monthly_token_limit   Int      @default(100000)
-  daily_token_limit     Int?     // Opcional: limite diário
-  hourly_token_limit    Int?     // Opcional: limite por hora
-  cost_limit_usd       Decimal? @db.Decimal(10, 6) // Limite de custo em USD
-  cost_limit_brl       Decimal? @db.Decimal(10, 6) // Limite de custo em BRL
-  is_active             Boolean  @default(true)
-  created_at            DateTime @default(now()) @db.Timestamp(6)
-  updated_at            DateTime @default(now()) @db.Timestamp(6)
-  
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  monthly_token_limit Int      @default(100000)
+  daily_token_limit   Int?
+  hourly_token_limit  Int?
+  cost_limit_usd      Decimal? @db.Decimal(10, 6)
+  cost_limit_brl      Decimal? @db.Decimal(10, 6)
+  is_active           Boolean  @default(true)
+  created_at          DateTime @default(now()) @db.Timestamp(6)
+  updated_at          DateTime @default(now()) @db.Timestamp(6)
+  role                role     @unique
+
   @@index([role], map: "idx_quota_settings_role")
 }
 
@@ -605,17 +592,17 @@ model enem_score {
 }
 
 model lesson_progress {
-  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id           String   @db.Uuid
-  lesson_id         String   @db.VarChar(50)
-  current_stage     Int      @default(0)
-  completed_stages  Int[]    @default([])
-  quiz_results      Json     @default("{}")
-  total_time_spent  Int      @default(0) // em segundos
-  is_completed      Boolean  @default(false)
-  completion_date   DateTime? @db.Timestamp(6)
-  created_at        DateTime @default(now()) @db.Timestamp(6)
-  updated_at        DateTime @default(now()) @db.Timestamp(6)
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id          String    @db.Uuid
+  lesson_id        String    @db.VarChar(50)
+  created_at       DateTime  @default(now()) @db.Timestamp(6)
+  updated_at       DateTime  @default(now()) @db.Timestamp(6)
+  completed_stages Int[]     @default([])
+  completion_date  DateTime? @db.Timestamp(6)
+  current_stage    Int       @default(0)
+  is_completed     Boolean   @default(false)
+  quiz_results     Json      @default("{}")
+  total_time_spent Int       @default(0)
 
   @@unique([user_id, lesson_id], map: "idx_lesson_progress_user_lesson")
   @@index([user_id], map: "idx_lesson_progress_user")
@@ -624,20 +611,20 @@ model lesson_progress {
 }
 
 model lesson_certificates {
-  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id           String   @db.Uuid
-  lesson_id         String   @db.VarChar(50)
-  lesson_title      String   @db.VarChar(200)
-  completion_date   DateTime @default(now()) @db.Timestamp(6)
-  duration_minutes  Int
-  total_questions   Int
-  correct_answers   Int
-  accuracy_percent  Float
-  quiz_results      Json
-  certificate_data  Json
-  unique_id         String   @unique @db.VarChar(50)
-  created_at        DateTime @default(now()) @db.Timestamp(6)
-  updated_at        DateTime @default(now()) @db.Timestamp(6)
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id          String   @db.Uuid
+  lesson_id        String   @db.VarChar(50)
+  lesson_title     String   @db.VarChar(200)
+  completion_date  DateTime @default(now()) @db.Timestamp(6)
+  duration_minutes Int
+  total_questions  Int
+  correct_answers  Int
+  accuracy_percent Float
+  quiz_results     Json
+  certificate_data Json
+  unique_id        String   @unique @db.VarChar(50)
+  created_at       DateTime @default(now()) @db.Timestamp(6)
+  updated_at       DateTime @default(now()) @db.Timestamp(6)
 
   @@index([user_id], map: "idx_lesson_certificates_user")
   @@index([lesson_id], map: "idx_lesson_certificates_lesson")
@@ -817,6 +804,148 @@ model LogRecord {
   @@index([time])
   @@index([traceId])
   @@index([severity])
+}
+
+model TiSession {
+  id          String   @id @default(cuid())
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  status      String   @default("active")
+  issueType   String?
+  deviceLabel String?
+  transcript  Json?
+  resolution  String?
+  steps       TiStep[]
+}
+
+model TiStep {
+  id          String    @id @default(cuid())
+  sessionId   String
+  key         String
+  title       String
+  status      String    @default("pending")
+  notes       String?
+  evidenceUrl String?
+  createdAt   DateTime  @default(now())
+  session     TiSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
+
+model TiTicket {
+  id          String   @id @default(cuid())
+  sessionId   String
+  createdAt   DateTime @default(now())
+  priority    String   @default("P3")
+  summary     String
+  details     String
+  assignedTo  String?
+  externalRef String?
+}
+
+model daily_message_usage {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id         String   @db.Uuid
+  date            String   @db.VarChar(10)
+  message_count   Int      @default(0)
+  module          String?  @db.VarChar(50)
+  conversation_id String?  @db.Uuid
+  created_at      DateTime @default(now()) @db.Timestamp(6)
+  updated_at      DateTime @default(now()) @db.Timestamp(6)
+  user            User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, date], name: "unique_user_date")
+  @@index([date])
+  @@index([user_id])
+}
+
+model message_usage_log {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id         String   @db.Uuid
+  date            String   @db.VarChar(10)
+  module          String?  @db.VarChar(50)
+  conversation_id String?  @db.Uuid
+  timestamp       DateTime @default(now()) @db.Timestamp(6)
+  user            User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@index([date])
+  @@index([timestamp])
+}
+
+model certificates {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id         String   @db.Uuid
+  title           String   @db.VarChar(200)
+  description     String
+  type            String   @db.VarChar(50)
+  module          String   @db.VarChar(50)
+  completed_at    DateTime @db.Timestamp(6)
+  issued_at       DateTime @default(now()) @db.Timestamp(6)
+  certificate_url String?  @db.VarChar(500)
+  metadata        Json?
+  user            User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@index([type])
+  @@index([issued_at])
+}
+
+model lesson_completions {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id      String   @db.Uuid
+  lesson_id    String?  @db.Uuid
+  module       String   @db.VarChar(50)
+  title        String   @db.VarChar(200)
+  completed_at DateTime @default(now()) @db.Timestamp(6)
+  time_spent   Int?
+  score        Int?
+  metadata     Json?
+  user         User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@index([module])
+  @@index([completed_at])
+}
+
+model school_subscriptions {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  school_id     String    @db.Uuid
+  plan_id       String    @db.VarChar(50)
+  student_count Int
+  monthly_price Int
+  yearly_price  Int
+  billing_cycle String    @db.VarChar(20)
+  status        String    @db.VarChar(20)
+  start_date    DateTime  @default(now()) @db.Timestamp(6)
+  end_date      DateTime? @db.Timestamp(6)
+  auto_renew    Boolean   @default(true)
+  created_at    DateTime  @default(now()) @db.Timestamp(6)
+  updated_at    DateTime  @default(now()) @db.Timestamp(6)
+  school        School    @relation(fields: [school_id], references: [id], onDelete: Cascade)
+
+  @@index([school_id])
+  @@index([plan_id])
+  @@index([status])
+  @@index([start_date])
+}
+
+model School {
+  id            String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String                 @db.VarChar(255)
+  email         String                 @db.VarChar(255)
+  phone         String?                @db.VarChar(20)
+  address       String?                @db.VarChar(500)
+  city          String?                @db.VarChar(100)
+  state         String?                @db.VarChar(2)
+  cnpj          String?                @db.VarChar(20)
+  student_count Int                    @default(0)
+  status        String                 @default("active") @db.VarChar(20)
+  created_at    DateTime               @default(now()) @db.Timestamp(6)
+  updated_at    DateTime               @default(now()) @db.Timestamp(6)
+  subscriptions school_subscriptions[]
+
+  @@index([status])
+  @@index([created_at])
 }
 
 enum achievement_category {
@@ -1163,161 +1292,4 @@ enum enem_session_status {
   ACTIVE
   COMPLETED
   ABANDONED
-}
-
-model TiSession {
-  id           String   @id @default(cuid())
-  userId       String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  status       String   @default("active") // active | resolved | escalated
-  issueType    String?  // ex: "printer", "wifi", "software"
-  deviceLabel  String?  // ex: "HP 3635 – Secretaria"
-  steps        TiStep[]
-  transcript   Json?    // log condensado do chat
-  resolution   String?
-}
-
-model TiStep {
-  id         String   @id @default(cuid())
-  sessionId  String
-  session    TiSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  key        String    // ex: "check_power_cable"
-  title      String
-  status     String    @default("pending") // pending | done | skipped | failed
-  notes      String?
-  evidenceUrl String?
-  createdAt  DateTime  @default(now())
-}
-
-model TiTicket {
-  id          String   @id @default(cuid())
-  sessionId   String
-  createdAt   DateTime @default(now())
-  priority    String   @default("P3") // P1-P4
-  summary     String
-  details     String
-  assignedTo  String?  // opcional
-  externalRef String?  // id do seu sistema de chamados (se houver)
-}
-
-// Sistema de limitação de mensagens B2C
-model daily_message_usage {
-  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id         String   @db.Uuid
-  date            String   @db.VarChar(10) // YYYY-MM-DD
-  message_count   Int      @default(0)
-  module          String?  @db.VarChar(50)
-  conversation_id String?  @db.Uuid
-  created_at      DateTime @default(now()) @db.Timestamp(6)
-  updated_at      DateTime @default(now()) @db.Timestamp(6)
-  
-  // Relacionamentos
-  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  
-  @@unique([user_id, date], name: "unique_user_date")
-  @@index([date])
-  @@index([user_id])
-}
-
-model message_usage_log {
-  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id         String   @db.Uuid
-  date            String   @db.VarChar(10) // YYYY-MM-DD
-  module          String?  @db.VarChar(50)
-  conversation_id String?  @db.Uuid
-  timestamp       DateTime @default(now()) @db.Timestamp(6)
-  
-  // Relacionamentos
-  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  
-  @@index([user_id])
-  @@index([date])
-  @@index([timestamp])
-}
-
-// Sistema de certificados
-model certificates {
-  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id         String   @db.Uuid
-  title           String   @db.VarChar(200)
-  description     String
-  type            String   @db.VarChar(50) // LESSON_COMPLETION, MODULE_MASTERY, etc.
-  module          String   @db.VarChar(50)
-  completed_at    DateTime @db.Timestamp(6)
-  issued_at       DateTime @default(now()) @db.Timestamp(6)
-  certificate_url String?  @db.VarChar(500)
-  metadata        Json?
-  
-  // Relacionamentos
-  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  
-  @@index([user_id])
-  @@index([type])
-  @@index([issued_at])
-}
-
-model lesson_completions {
-  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id         String   @db.Uuid
-  lesson_id       String?  @db.Uuid
-  module          String   @db.VarChar(50)
-  title           String   @db.VarChar(200)
-  completed_at    DateTime @default(now()) @db.Timestamp(6)
-  time_spent      Int?     // em minutos
-  score           Int?     // pontuação obtida
-  metadata        Json?
-  
-  // Relacionamentos
-  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  
-  @@index([user_id])
-  @@index([module])
-  @@index([completed_at])
-}
-
-// Sistema de pricing B2B
-model school_subscriptions {
-  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  school_id       String   @db.Uuid
-  plan_id         String   @db.VarChar(50) // starter, growth, professional, enterprise
-  student_count   Int
-  monthly_price   Int      // em centavos
-  yearly_price    Int      // em centavos
-  billing_cycle   String   @db.VarChar(20) // monthly, yearly
-  status          String   @db.VarChar(20) // active, inactive, suspended
-  start_date      DateTime @default(now()) @db.Timestamp(6)
-  end_date        DateTime? @db.Timestamp(6)
-  auto_renew      Boolean  @default(true)
-  created_at      DateTime @default(now()) @db.Timestamp(6)
-  updated_at      DateTime @default(now()) @db.Timestamp(6)
-  
-  // Relacionamentos
-  school School @relation(fields: [school_id], references: [id], onDelete: Cascade)
-  
-  @@index([school_id])
-  @@index([plan_id])
-  @@index([status])
-  @@index([start_date])
-}
-
-model School {
-  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name            String   @db.VarChar(255)
-  email           String   @db.VarChar(255)
-  phone           String?  @db.VarChar(20)
-  address         String?  @db.VarChar(500)
-  city            String?  @db.VarChar(100)
-  state           String?  @db.VarChar(2)
-  cnpj            String?  @db.VarChar(20)
-  student_count   Int      @default(0)
-  status          String   @default("active") @db.VarChar(20)
-  created_at      DateTime @default(now()) @db.Timestamp(6)
-  updated_at      DateTime @default(now()) @db.Timestamp(6)
-  
-  // Relacionamentos
-  subscriptions school_subscriptions[]
-  
-  @@index([status])
-  @@index([created_at])
 }

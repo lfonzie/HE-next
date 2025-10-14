@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -8,7 +8,9 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
-import { Mail } from 'lucide-react'
+import { Mail, FileText } from 'lucide-react'
+import { TermsModal } from '@/components/auth/TermsModal'
+import { BrasilApiService, State, City } from '@/lib/services/brasil-api'
 
 export default function RegisterPage() {
   const [name, setName] = useState('')
@@ -19,9 +21,46 @@ export default function RegisterPage() {
   const [city, setCity] = useState('')
   const [state, setState] = useState('')
   const [school, setSchool] = useState('')
+  const [availableCities, setAvailableCities] = useState<City[]>([])
+  const [availableStates, setAvailableStates] = useState<State[]>([])
+  const [isLoadingCities, setIsLoadingCities] = useState(false)
+  const [acceptTerms, setAcceptTerms] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [showTermsModal, setShowTermsModal] = useState(false)
   const router = useRouter()
+
+  // Carregar estados na inicialização
+  useEffect(() => {
+    const loadStates = async () => {
+      try {
+        const states = await BrasilApiService.getStates()
+        setAvailableStates(states)
+      } catch (error) {
+        console.error('Erro ao carregar estados:', error)
+      }
+    }
+    loadStates()
+  }, [])
+
+  const handleStateChange = async (selectedState: string) => {
+    setState(selectedState)
+    setCity('') // Limpa a cidade quando muda o estado
+    setAvailableCities([]) // Limpa cidades anteriores
+    
+    if (selectedState) {
+      setIsLoadingCities(true)
+      try {
+        const cities = await BrasilApiService.getCitiesByState(selectedState)
+        setAvailableCities(cities)
+      } catch (error) {
+        console.error('Erro ao carregar cidades:', error)
+        setError('Erro ao carregar cidades. Tente novamente.')
+      } finally {
+        setIsLoadingCities(false)
+      }
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -34,11 +73,26 @@ export default function RegisterPage() {
       return
     }
 
+    if (!acceptTerms) {
+      setError('Você deve aceitar os Termos de Uso para continuar')
+      setIsLoading(false)
+      return
+    }
+
     try {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, birth_date: birthDate, city, state, school }),
+        body: JSON.stringify({ 
+          name, 
+          email, 
+          password, 
+          birth_date: birthDate, 
+          city, 
+          state, 
+          school,
+          accept_terms: acceptTerms
+        }),
       })
 
       if (response.ok) {
@@ -64,7 +118,11 @@ export default function RegisterPage() {
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true)
-    await signIn('google', { callbackUrl: '/dashboard' })
+    // Redirecionar para Google OAuth com callback para página de informações adicionais
+    await signIn('google', { 
+      callbackUrl: '/auth/google-complete',
+      redirect: true 
+    })
   }
 
   return (
@@ -134,55 +192,50 @@ export default function RegisterPage() {
                 required
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="city">Cidade</Label>
-              <Input
-                id="city"
-                type="text"
-                placeholder="Sua cidade"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                autoComplete="address-level2"
-                required
-              />
-            </div>
+            
             <div className="space-y-2">
               <Label htmlFor="state">Estado</Label>
               <select
                 id="state"
                 value={state}
-                onChange={(e) => setState(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={(e) => handleStateChange(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                 required
               >
                 <option value="">Selecione seu estado</option>
-                <option value="AC">Acre</option>
-                <option value="AL">Alagoas</option>
-                <option value="AP">Amapá</option>
-                <option value="AM">Amazonas</option>
-                <option value="BA">Bahia</option>
-                <option value="CE">Ceará</option>
-                <option value="DF">Distrito Federal</option>
-                <option value="ES">Espírito Santo</option>
-                <option value="GO">Goiás</option>
-                <option value="MA">Maranhão</option>
-                <option value="MT">Mato Grosso</option>
-                <option value="MS">Mato Grosso do Sul</option>
-                <option value="MG">Minas Gerais</option>
-                <option value="PA">Pará</option>
-                <option value="PB">Paraíba</option>
-                <option value="PR">Paraná</option>
-                <option value="PE">Pernambuco</option>
-                <option value="PI">Piauí</option>
-                <option value="RJ">Rio de Janeiro</option>
-                <option value="RN">Rio Grande do Norte</option>
-                <option value="RS">Rio Grande do Sul</option>
-                <option value="RO">Rondônia</option>
-                <option value="RR">Roraima</option>
-                <option value="SC">Santa Catarina</option>
-                <option value="SP">São Paulo</option>
-                <option value="SE">Sergipe</option>
-                <option value="TO">Tocantins</option>
+                {availableStates.map((stateOption) => (
+                  <option key={stateOption.sigla} value={stateOption.sigla}>
+                    {stateOption.nome}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="city">Cidade</Label>
+              <select
+                id="city"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                required
+                disabled={!state || isLoadingCities}
+              >
+                <option value="">
+                  {!state 
+                    ? 'Primeiro selecione o estado' 
+                    : isLoadingCities 
+                    ? 'Carregando cidades...' 
+                    : availableCities.length === 0 
+                    ? 'Nenhuma cidade encontrada' 
+                    : 'Selecione sua cidade'
+                  }
+                </option>
+                {availableCities.map((cityData) => (
+                  <option key={cityData.id} value={cityData.nome}>
+                    {cityData.nome}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="space-y-2">
@@ -197,12 +250,40 @@ export default function RegisterPage() {
                 required
               />
             </div>
+            
+            {/* Terms of Use Checkbox */}
+            <div className="space-y-2">
+              <div className="flex items-start space-x-2">
+                <input
+                  type="checkbox"
+                  id="acceptTerms"
+                  checked={acceptTerms}
+                  onChange={(e) => setAcceptTerms(e.target.checked)}
+                  className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  required
+                />
+                <Label htmlFor="acceptTerms" className="text-sm leading-5">
+                  Eu li e aceito os{' '}
+                  <Button
+                    type="button"
+                    variant="link"
+                    className="p-0 h-auto text-blue-600 hover:text-blue-800 underline"
+                    onClick={() => setShowTermsModal(true)}
+                  >
+                    <FileText className="h-3 w-3 mr-1" />
+                    Termos de Uso
+                  </Button>
+                  {' '}da HubEdu.ia
+                </Label>
+              </div>
+            </div>
+
             {error && (
               <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
                 {error}
               </div>
             )}
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" className="w-full" disabled={isLoading || !acceptTerms}>
               {isLoading ? 'Criando conta...' : 'Criar conta'}
             </Button>
           </form>
@@ -236,6 +317,12 @@ export default function RegisterPage() {
           </div>
         </CardContent>
       </Card>
+      
+      {/* Terms Modal */}
+      <TermsModal 
+        isOpen={showTermsModal} 
+        onClose={() => setShowTermsModal(false)} 
+      />
     </div>
   )
 }
