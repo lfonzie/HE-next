@@ -8,6 +8,7 @@ import { ModernNavigation } from './ModernNavigation'
 import { UserProfile } from './UserProfile'
 import { SupportModal } from './SupportModal'
 import { Button } from '@/components/ui/button'
+import ThemeToggle from '@/components/theme/ThemeToggle'
 import { cn } from '@/lib/utils'
 
 interface ModernHeaderProps {
@@ -39,16 +40,17 @@ export function ModernHeader({
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  const headerClasses = useMemo(() => 
-    cn(
-      'fixed top-0 w-full z-50 transition-all duration-300',
-      transparent 
-        ? 'bg-transparent' 
-        : isClient && scrollY > 50 
-          ? 'bg-white shadow-xl border-b border-gray-200' 
-          : 'bg-white border-b border-yellow-300',
-      className
-    ),
+  const headerClasses = useMemo(
+    () =>
+      cn(
+        'fixed top-0 w-full z-50 border-b transition-all duration-300 backdrop-blur',
+        transparent
+          ? 'border-transparent bg-transparent shadow-none'
+          : isClient && scrollY > 50
+            ? 'border-[color:var(--color-border-strong)] bg-[var(--color-surface-elevated)] shadow-elevated'
+            : 'border-[color:var(--color-border)] bg-[var(--color-surface-veil)] shadow-soft',
+        className
+      ),
     [scrollY, isClient, transparent, className]
   )
 
@@ -77,10 +79,10 @@ export function ModernHeader({
                 height={28}
                 className="h-7 w-auto"
               />
-              <div className="text-base font-bold">
-                <span className="text-black">Hub</span>
-                <span className="text-yellow-500">Edu</span>
-                <span className="text-black">.ia</span>
+              <div className="text-base font-bold text-[var(--color-text-strong)]">
+                <span className="text-[var(--color-text-strong)]">Hub</span>
+                <span className="text-[var(--color-accent)]">Edu</span>
+                <span className="text-[var(--color-text-strong)]">.ia</span>
               </div>
             </Link>
             
@@ -96,10 +98,10 @@ export function ModernHeader({
                 height={32}
                 className="h-8 w-auto"
               />
-              <div className="text-lg font-bold">
-                <span className="text-black">Hub</span>
-                <span className="text-yellow-500">Edu</span>
-                <span className="text-black">.ia</span>
+              <div className="text-lg font-bold text-[var(--color-text-strong)]">
+                <span className="text-[var(--color-text-strong)]">Hub</span>
+                <span className="text-[var(--color-accent)]">Edu</span>
+                <span className="text-[var(--color-text-strong)]">.ia</span>
               </div>
             </Link>
             
@@ -112,18 +114,22 @@ export function ModernHeader({
           </div>
           
           {/* Right side - Support + User Profile + Login Button */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 text-[var(--color-text-strong)]">
             {/* Support Button */}
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setIsSupportModalOpen(true)}
-              className="hidden lg:flex items-center gap-2 px-3 py-2 hover:bg-yellow-50 hover:text-yellow-600 transition-colors rounded-xl"
+              className="hidden lg:flex items-center gap-2 rounded-xl px-3 py-2 text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-accent-strong)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
               title="Suporte"
             >
               <MessageCircle className="h-5 w-5" />
               <span className="text-sm font-medium">Suporte</span>
             </Button>
+
+            <div className="hidden lg:flex">
+              <ThemeToggle hideLabel size="compact" />
+            </div>
 
             {/* User Profile - Only on desktop */}
             {showUserProfile && (
@@ -136,7 +142,7 @@ export function ModernHeader({
             {showLoginButton && (
               <Link
                 href="/login"
-                className="hidden sm:flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
+                className="hidden sm:flex items-center gap-2 rounded-xl bg-[var(--color-accent)] px-6 py-3 font-bold text-[var(--color-accent-contrast)] shadow-soft transition-all duration-300 hover:-translate-y-0.5 hover:bg-[var(--color-accent-strong)] hover:shadow-elevated focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
               >
                 Entrar
               </Link>

@@ -14,7 +14,7 @@ import {
   BarChart3
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { ThemeSwitcherCompact } from '@/components/ui/theme-switcher'
+import ThemeToggle from '@/components/theme/ThemeToggle'
 
 interface UserProfileProps {
   className?: string
@@ -245,7 +245,7 @@ export function UserProfile({
           <div className="py-2">
             <button
               onClick={handleProfileClick}
-              className="w-full flex items-center gap-3 px-4 py-2 text-left text-gray-700 hover:bg-gray-50 transition-colors duration-150"
+              className="flex w-full items-center gap-3 px-4 py-2 text-left text-[var(--color-text-strong)] transition-colors duration-150 hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-accent-strong)]"
             >
               <UserCircle className="h-4 w-4 text-gray-500" />
               <span>Meu Perfil</span>
@@ -253,7 +253,7 @@ export function UserProfile({
 
             <button
               onClick={handleDashboardClick}
-              className="w-full flex items-center gap-3 px-4 py-2 text-left text-gray-700 hover:bg-gray-50 transition-colors duration-150"
+              className="flex w-full items-center gap-3 px-4 py-2 text-left text-[var(--color-text-strong)] transition-colors duration-150 hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-accent-strong)]"
             >
               <BarChart3 className="h-4 w-4 text-gray-500" />
               <span>Dashboard</span>
@@ -261,7 +261,7 @@ export function UserProfile({
 
             <button
               onClick={handleSettingsClick}
-              className="w-full flex items-center gap-3 px-4 py-2 text-left text-gray-700 hover:bg-gray-50 transition-colors duration-150"
+              className="flex w-full items-center gap-3 px-4 py-2 text-left text-[var(--color-text-strong)] transition-colors duration-150 hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-accent-strong)]"
             >
               <Settings className="h-4 w-4 text-gray-500" />
               <span>Configurações</span>
@@ -269,19 +269,19 @@ export function UserProfile({
 
             {/* Theme Switcher */}
             <div className="px-4 py-2">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Tema</span>
-                <ThemeSwitcherCompact />
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-sm text-[var(--color-text-muted)]">Tema</span>
+                <ThemeToggle hideLabel size="compact" />
               </div>
             </div>
 
             {/* Divider */}
-            <div className="border-t border-gray-100 my-2"></div>
+            <div className="my-2 border-t border-subtle"></div>
 
             {/* Logout */}
             <button
               onClick={handleSignOut}
-              className="w-full flex items-center gap-3 px-4 py-2 text-left text-red-600 hover:bg-red-50 transition-colors duration-150"
+              className="flex w-full items-center gap-3 px-4 py-2 text-left text-[var(--color-error)] transition-colors duration-150 hover:bg-[rgba(207,102,121,0.16)]"
             >
               <LogOut className="h-4 w-4" />
               <span>Sair</span>

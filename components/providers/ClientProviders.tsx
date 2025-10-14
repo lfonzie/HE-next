@@ -1,13 +1,13 @@
 'use client';
 
 import { ReactNode } from 'react';
-import { ThemeProvider } from 'next-themes';
 import { SessionProvider } from '@/components/providers/SessionProvider';
 import { GlobalLoadingProvider } from '@/hooks/useGlobalLoading';
 import { ChatProvider } from '@/components/providers/ChatContext';
 import { QuotaProvider } from '@/components/providers/QuotaProvider';
 import { ToastProvider } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 
 interface ClientProvidersProps {
   children: ReactNode;
@@ -15,15 +15,7 @@ interface ClientProvidersProps {
 
 export function ClientProviders({ children }: ClientProvidersProps) {
   return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="system"
-      enableSystem
-      enableColorScheme
-      disableTransitionOnChange
-      storageKey="hubedu-theme"
-      themes={['light', 'dark']}
-    >
+    <ThemeProvider>
       <SessionProvider>
         <GlobalLoadingProvider>
           <ChatProvider>

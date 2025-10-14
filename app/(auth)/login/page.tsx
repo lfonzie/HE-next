@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { useLoading } from '@/components/ui/loading'
-import { ThemeSwitcher } from '@/components/ui/theme-switcher'
+import ThemeToggle from '@/components/theme/ThemeToggle'
 
 function LoginForm() {
   const router = useRouter()
@@ -98,7 +98,7 @@ function LoginForm() {
 
       <div className="absolute right-6 top-6 flex items-center gap-2">
         <MonitorSmartphone className="h-4 w-4 opacity-60" aria-hidden="true" />
-        <ThemeSwitcher />
+        <ThemeToggle hideLabel size="compact" />
       </div>
 
       <motion.div
