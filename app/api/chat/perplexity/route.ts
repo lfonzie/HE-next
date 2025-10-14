@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { perplexity } from '@ai-sdk/perplexity'
 import { generateText } from 'ai'
 import { getSystemPrompt } from '@/lib/system-message-loader'
+import { cleanPerplexityResponseWithAI } from '@/lib/utils/perplexity-cleaner'
 
 // Prevent prerendering of this API route
 export const dynamic = 'force-dynamic';
@@ -75,10 +76,10 @@ export async function POST(request: NextRequest) {
     const result = await generateText({
       model: perplexityModel,
       messages: aiMessages,
-      maxTokens: 1000,
     })
 
-    const responseText = result.text;
+    // Clean the response to remove source citations using AI
+    const cleanedResponseText = await cleanPerplexityResponseWithAI(result.text);
 
     // Headers otimizados
     const headers = {
@@ -92,7 +93,7 @@ export async function POST(request: NextRequest) {
     console.log('✅ Perplexity AI SDK completed successfully')
 
     // Retornar resposta direta (não streaming)
-    return new Response(responseText, {
+    return new Response(cleanedResponseText, {
       headers
     })
 

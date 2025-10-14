@@ -15,6 +15,42 @@ import { streamGrok } from "@/lib/providers/grok";
 import { randomUUID } from "crypto";
 import { getSystemPrompt as loadSystemPrompt } from "@/lib/system-message-loader";
 import { loadTIResources } from "@/lib/ti-framework";
+import { cleanPerplexityResponseWithAI } from "@/lib/utils/perplexity-cleaner";
+
+// Função para extrair sugestões de follow-up da resposta da IA
+function extractFollowUpSuggestions(aiResponse: string): string[] {
+  const suggestions: string[] = [];
+
+  // Procurar pela seção de sugestões na resposta - mais flexível para diferentes formatos
+  const suggestionSectionRegex = /💡 Sugestões para continuar a conversa:\s*(.+)$/i;
+  const match = aiResponse.match(suggestionSectionRegex);
+
+  console.log('🔍 [SUGGESTIONS] Regex match:', match);
+
+  if (match) {
+    // Extrair cada sugestão numerada
+    const suggestionRegex = /\d+\.\s*([^0-9]+)/g;
+    let suggestionMatch;
+
+    while ((suggestionMatch = suggestionRegex.exec(match[1])) !== null) {
+      const suggestion = suggestionMatch[1].trim();
+      console.log('💡 [SUGGESTIONS] Found suggestion:', suggestion);
+      if (suggestion) {
+        suggestions.push(suggestion);
+      }
+    }
+  }
+
+  return suggestions;
+}
+
+// Função para remover as sugestões da resposta principal da IA
+function cleanAIResponse(aiResponse: string): string {
+  // Remover a seção de sugestões da resposta principal - considerando quebras de linha
+  const cleanedResponse = aiResponse.replace(/💡 Sugestões para continuar a conversa:[\s\S]*$/i, '').trim();
+
+  return cleanedResponse;
+}
 
 export const runtime = "nodejs";
 
@@ -164,6 +200,9 @@ export async function POST(req: NextRequest) {
                 controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
               }
             }
+            
+            // Update fullResponse for processing
+            // (will be cleaned later after suggestions are extracted)
           } else if (finalProvider === "grok") {
             for await (const chunk of stream) {
               const content = chunk.choices[0]?.delta?.content;
@@ -176,6 +215,58 @@ export async function POST(req: NextRequest) {
                 controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
               }
             }
+          }
+
+          // Extrair sugestões de follow-up se aplicável (exceto para Perplexity)
+          let followUpSuggestions: string[] = [];
+          let finalCleanedResponse = fullResponse;
+
+          // Só extrair sugestões para módulos conversacionais não-técnicos E não para Perplexity
+          if ((module === 'chat' || module === 'professor') && finalProvider !== 'perplexity') {
+            console.log(`🎯 [FOLLOW-UP] Checking for suggestions in AI response`);
+            followUpSuggestions = extractFollowUpSuggestions(fullResponse);
+            console.log(`💡 [FOLLOW-UP] Extracted suggestions:`, followUpSuggestions.length, 'suggestions');
+
+            if (followUpSuggestions.length > 0) {
+              // Limpar a resposta removendo a seção de sugestões
+              finalCleanedResponse = cleanAIResponse(fullResponse);
+              console.log(`🧹 [FOLLOW-UP] Cleaned response length:`, finalCleanedResponse.length, 'characters');
+
+              // Enviar chunk especial com sugestões
+              const suggestionsChunk = {
+                type: "suggestions",
+                suggestions: followUpSuggestions
+              };
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify(suggestionsChunk)}\n\n`));
+              console.log(`💡 [CHAT-STREAM] Suggestions sent:`, followUpSuggestions);
+            }
+          } else if (finalProvider === 'perplexity') {
+            // Para Perplexity, sempre limpar sugestões (mesmo que não sejam extraídas para botões)
+            finalCleanedResponse = cleanAIResponse(fullResponse);
+            console.log(`🧹 [PERPLEXITY] Cleaned suggestions from response:`, finalCleanedResponse.length, 'characters');
+          }
+
+          // Agora aplicar limpeza final (fontes do Perplexity) na resposta já limpa das sugestões
+          // Usar IA para limpeza inteligente das fontes
+          try {
+            const fullyCleanedResponse = await cleanPerplexityResponseWithAI(finalCleanedResponse);
+            if (fullyCleanedResponse !== finalCleanedResponse) {
+              // Send a special "replace" chunk to update the content with fully cleaned version
+              const replaceData = {
+                type: "content_replace",
+                content: fullyCleanedResponse
+              };
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify(replaceData)}\n\n`));
+              console.log(`🔄 [CHAT-STREAM] Content fully cleaned with AI (suggestions + sources)`);
+            }
+
+            // Update final response for saving
+            finalCleanedResponse = fullyCleanedResponse;
+          } catch (error) {
+            console.error('❌ [CHAT-STREAM] Error cleaning with AI:', error);
+            // Fallback to regex cleaning
+            const fallbackCleaned = require('@/lib/utils/perplexity-cleaner').cleanPerplexityResponseEnhanced(finalCleanedResponse);
+            finalCleanedResponse = fallbackCleaned;
           }
 
           // Enviar metadados finais
@@ -207,14 +298,14 @@ export async function POST(req: NextRequest) {
           streamCompleted = true;
           try {
             await appendMessage(
-              finalConversationId, 
-              "assistant", 
-              fullResponse, 
-              finalProvider, 
+              finalConversationId,
+              "assistant",
+              finalCleanedResponse, // Use the fully cleaned response (suggestions + sources removed)
+              finalProvider,
               finalModel
             );
-            
-            console.log(`✅ [CHAT-STREAM] Response saved: ${fullResponse.length} chars`);
+
+            console.log(`✅ [CHAT-STREAM] Response saved: ${finalCleanedResponse.length} chars`);
           } catch (error) {
             console.error("❌ [CHAT-STREAM] Error saving response:", error);
           }

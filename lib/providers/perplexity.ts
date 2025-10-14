@@ -2,6 +2,7 @@ import { perplexity } from '@ai-sdk/perplexity';
 import { generateText, streamText } from 'ai';
 import { mapToOpenAIMessages, trimHistory, ChatMessage } from "../chat-history";
 import { getRecommendedModel, getModelConfig } from './perplexity-models';
+import { cleanPerplexityResponseEnhanced } from '@/lib/utils/perplexity-cleaner';
 
 function getPerplexityModel() {
   if (!process.env.PERPLEXITY_API_KEY) {
@@ -22,7 +23,7 @@ export async function callPerplexity(
   const perplexityModel = getPerplexityModel();
   
   // Prepare messages for the AI SDK
-  const messages = [
+  const messages: any[] = [
     ...(systemPrompt ? [{ role: 'system' as const, content: systemPrompt }] : []),
     ...mapToOpenAIMessages(trimHistory(history)),
     { role: 'user' as const, content: input }
@@ -32,16 +33,18 @@ export async function callPerplexity(
     const result = await generateText({
       model: perplexityModel,
       messages,
-      maxTokens: 1000,
     });
 
+    // Clean the response to remove source citations
+    const cleanedText = cleanPerplexityResponseEnhanced(result.text);
+
     return {
-      text: result.text,
+      text: cleanedText,
       raw: result,
       usage: {
-        prompt_tokens: result.usage?.promptTokens || 0,
-        completion_tokens: result.usage?.completionTokens || 0,
-        total_tokens: result.usage?.totalTokens || 0
+        prompt_tokens: (result.usage as any)?.promptTokens || 0,
+        completion_tokens: (result.usage as any)?.completionTokens || 0,
+        total_tokens: (result.usage as any)?.totalTokens || 0
       }
     };
   } catch (error) {
@@ -59,7 +62,7 @@ export async function streamPerplexity(
   const perplexityModel = getPerplexityModel();
   
   // Prepare messages for the AI SDK
-  const messages = [
+  const messages: any[] = [
     ...(systemPrompt ? [{ role: 'system' as const, content: systemPrompt }] : []),
     ...mapToOpenAIMessages(trimHistory(history)),
     { role: 'user' as const, content: input }
@@ -69,12 +72,14 @@ export async function streamPerplexity(
     const result = await streamText({
       model: perplexityModel,
       messages,
-      maxTokens: 1000,
     });
 
     return {
       async *[Symbol.asyncIterator]() {
+        let fullContent = '';
+        
         for await (const delta of result.textStream) {
+          fullContent += delta;
           yield {
             choices: [{
               delta: {
@@ -84,10 +89,15 @@ export async function streamPerplexity(
           };
         }
         
-        // Final chunk to indicate completion
+        // Clean the full content and yield the cleaned version as final chunk
+        const cleanedContent = cleanPerplexityResponseEnhanced(fullContent);
+        
+        // Final chunk with cleaned content
         yield {
           choices: [{
-            delta: {},
+            delta: {
+              content: cleanedContent
+            },
             finish_reason: 'stop'
           }]
         };
