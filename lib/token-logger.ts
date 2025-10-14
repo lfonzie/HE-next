@@ -39,6 +39,7 @@ export function calculateCost(model: string, promptTokens: number, completionTok
   const pricing: Record<string, { prompt: number; completion: number }> = {
     'gpt-4o': { prompt: 0.005, completion: 0.015 },
     'gpt-4o-mini': { prompt: 0.00015, completion: 0.0006 },
+    'grok-4-fast-reasoning': { prompt: 0.00012, completion: 0.00048 },
     'gpt-4-turbo': { prompt: 0.01, completion: 0.03 },
     'gpt-4': { prompt: 0.03, completion: 0.06 },
     'gpt-3.5-turbo': { prompt: 0.0015, completion: 0.002 },
@@ -46,7 +47,7 @@ export function calculateCost(model: string, promptTokens: number, completionTok
     'gemini-pro': { prompt: 0.0005, completion: 0.0015 }
   }
 
-  const modelPricing = pricing[model] || pricing['gpt-4o-mini'] // Default to gpt-4o-mini pricing
+  const modelPricing = pricing[model] || pricing['grok-4-fast-reasoning'] // Default to Grok pricing
   
   const costUSD = (promptTokens / 1000) * modelPricing.prompt + (completionTokens / 1000) * modelPricing.completion
   const costBRL = costUSD * 5.5 // Approximate USD to BRL conversion
@@ -68,14 +69,14 @@ export async function logTokens(params: LogTokensParams): Promise<void> {
     const {
       userId,
       moduleGroup,
-      model = 'gpt-4o-mini',
+      model = 'grok-4-fast-reasoning',
       totalTokens,
       promptTokens = 0,
       completionTokens = 0,
       subject,
       grade,
       messages,
-      provider = 'openai',
+      provider = 'grok',
       costUSD,
       costBRL,
       responseTime,
@@ -230,8 +231,8 @@ export async function logUsageFromCallback(
   userId: string,
   moduleGroup: ModuleGroup,
   result: { usage?: any; finishReason?: string },
-  model: string = 'gpt-4o-mini',
-  provider: string = 'openai',
+  model: string = 'grok-4-fast-reasoning',
+  provider: string = 'grok',
   responseTime?: number,
   context?: { subject?: string; grade?: string; messages?: unknown }
 ): Promise<void> {

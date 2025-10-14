@@ -22,7 +22,7 @@ O sistema anterior tinha problemas críticos de contexto:
 - tokenCount (opcional)
 - index (ordem estável)
 - provider (openai|gemini|groq)
-- model (gpt-4o-mini, etc)
+- model (grok-4-fast-reasoning, gpt-4o-mini, etc)
 - providerRaw (debug)
 ```
 
@@ -111,7 +111,7 @@ const {
   setProvider,
   loading,
   error 
-} = useUnifiedChat("openai", "gpt-4o-mini");
+} = useUnifiedChat("grok", "grok-4-fast-reasoning");
 ```
 
 ## 🚀 Como Usar
@@ -158,7 +158,7 @@ GROQ_API_KEY=...
 
 ### Logs Detalhados
 ```
-🚀 [CHAT-UNIFIED] START - Provider: openai, Model: gpt-4o-mini
+🚀 [CHAT-UNIFIED] START - Provider: grok, Model: grok-4-fast-reasoning
 📝 [CHAT-UNIFIED] Conversation ID: cmg05rxz60001kagkmxymuxbm
 📚 [CHAT-UNIFIED] History loaded: 3 messages
 ✅ [CHAT-UNIFIED] User message saved

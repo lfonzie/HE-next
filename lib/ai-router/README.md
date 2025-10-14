@@ -38,7 +38,7 @@ Este sistema implementa um roteador inteligente que seleciona dinamicamente o me
 ### Modo Shadow (Observação)
 - Analisa requisições sem impactar respostas
 - Coleta telemetria comparativa
-- OpenAI continua sendo usado para todas as respostas
+- Grok 4 Fast continua sendo usado para todas as respostas
 
 ### Modo Canário (Teste Parcial)
 - Roteia 1-5% das requisições para modelos alternativos
@@ -48,15 +48,15 @@ Este sistema implementa um roteador inteligente que seleciona dinamicamente o me
 ### Modo AUTO (Operação Completa)
 - Roteamento inteligente para todas as requisições
 - Otimização contínua baseada em aprendizado
-- OpenAI como fallback de segurança
+- Grok 4 Fast como fallback de segurança
 
 ## Configuração
 
 ### Provedores (`config/providers.yml`)
 ```yaml
 providers:
-  openai:
-    id: "openai-gpt-4o-mini"
+  grok:
+    id: "xai-grok-4-fast"
     enabled: true
     capabilities:
       supportsJsonStrict: true
@@ -258,7 +258,7 @@ GET /api/ai-router/test?action=disable    # Desabilitar roteador
 process.env.AI_ROUTER_DEBUG = 'true';
 
 // Verificar métricas de provedor
-const metrics = providerRegistry.getProviderMetrics('openai-gpt-4o-mini');
+const metrics = providerRegistry.getProviderMetrics('xai-grok-4-fast');
 console.log('Provider metrics:', metrics);
 ```
 

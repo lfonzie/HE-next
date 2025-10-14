@@ -12,7 +12,55 @@ export class ProviderRegistry {
   }
 
   private initializeDefaultProviders(): void {
-    // OpenAI - Provedor principal atual
+    // Grok 4 Fast - Provedor padrão prioritário
+    this.registerProvider({
+      id: 'xai-grok-4-fast',
+      name: 'Grok 4 Fast Reasoning',
+      type: 'grok',
+      enabled: true,
+      capabilities: {
+        supportsJsonStrict: true,
+        supportsToolUse: true,
+        supportsStreaming: true,
+        maxContextTokens: 200000,
+        languagePreference: 'multilingual',
+        domainExpertise: [
+          { domain: 'educational', confidence: 0.95, specialties: ['enem', 'redacao', 'aulas'] },
+          { domain: 'technical', confidence: 0.9, specialties: ['codigo', 'debug', 'infra'] },
+          { domain: 'support', confidence: 0.92, specialties: ['atendimento', 'faq'] }
+        ],
+        responseStyle: 'conversational',
+        avgLatencyMs: 650,
+        successRate: 0.985,
+        costPer1kTokens: {
+          inputPer1k: 0.00012,
+          outputPer1k: 0.00048,
+          currency: 'USD'
+        },
+        dataResidency: ['us'],
+        complianceStandards: [
+          { standard: 'SOC2', level: 'advanced', certifications: ['SOC2 Type II'] }
+        ],
+        safetyFilters: {
+          contentFiltering: 'advanced',
+          piiProtection: true,
+          dataRetention: 30
+        }
+      },
+      config: {
+        model: 'grok-4-fast-reasoning',
+        temperature: 0.7,
+        maxTokens: 4000
+      },
+      limits: {
+        requestsPerMinute: 80,
+        tokensPerMinute: 180000,
+        maxConcurrentRequests: 12
+      },
+      fallbackPriority: 0
+    });
+
+    // OpenAI - Provedor secundário atual
     this.registerProvider({
       id: 'openai-gpt-4o-mini',
       name: 'OpenAI GPT-4o Mini',

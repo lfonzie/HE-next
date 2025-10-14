@@ -322,12 +322,12 @@ export class ModelRouter {
     selectedProvider: ProviderScore, 
     features: ContextualFeatures
   ): ProviderScore {
-    // No modo shadow, sempre retorna OpenAI como recomendado
+    // No modo shadow, sempre retorna Grok 4 Fast como recomendado
     if (this.config.mode === 'shadow') {
       return {
         ...selectedProvider,
-        providerId: 'openai-gpt-4o-mini',
-        reasoning: `Shadow mode: Recommended ${selectedProvider.providerId}, using OpenAI`,
+        providerId: 'xai-grok-4-fast',
+        reasoning: `Shadow mode: Recommended ${selectedProvider.providerId}, using Grok 4 Fast`,
         score: selectedProvider.score
       };
     }
@@ -338,8 +338,8 @@ export class ModelRouter {
       if (random > this.config.canaryPercentage / 100) {
         return {
           ...selectedProvider,
-          providerId: 'openai-gpt-4o-mini',
-          reasoning: `Canary mode: ${random.toFixed(2)} > ${this.config.canaryPercentage}%, using OpenAI`,
+          providerId: 'xai-grok-4-fast',
+          reasoning: `Canary mode: ${random.toFixed(2)} > ${this.config.canaryPercentage}%, using Grok 4 Fast`,
           score: selectedProvider.score
         };
       }

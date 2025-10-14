@@ -382,8 +382,8 @@ export class SafetyLayer {
   // Método para verificar se provedor é adequado para dados sensíveis
   isProviderSuitableForSensitiveData(providerId: string, dataType: 'minor' | 'sensitive' | 'general'): boolean {
     // Esta seria uma implementação mais sofisticada em produção
-    // Por enquanto, retorna true para OpenAI (provedor principal)
-    return providerId === 'openai-gpt-4o-mini';
+    // Por enquanto, considera Grok 4 Fast (padrão) e OpenAI como seguros
+    return providerId === 'xai-grok-4-fast' || providerId === 'openai-gpt-4o-mini';
   }
 }
 

@@ -15,7 +15,7 @@ export default function UnifiedChatBox() {
     newConversation,
     error,
     clearError
-  } = useUnifiedChat("openai", "gpt-4o-mini");
+  } = useUnifiedChat("grok", "grok-4-fast-reasoning");
   
   const [input, setInput] = useState("");
   const [useStreaming, setUseStreaming] = useState(true);
@@ -24,11 +24,12 @@ export default function UnifiedChatBox() {
   // Função para definir modelo padrão baseado no provedor
   const getDefaultModel = (provider: string) => {
     switch (provider) {
+      case "grok": return "grok-4-fast-reasoning";
       case "openai": return "gpt-4o-mini";
       case "gpt5": return "gpt-5-chat-latest";
       case "gemini": return "gemini-2.5-flash";
       case "perplexity": return "sonar";
-      default: return "gpt-4o-mini";
+      default: return "grok-4-fast-reasoning";
     }
   };
 
@@ -63,6 +64,7 @@ export default function UnifiedChatBox() {
             className="border rounded px-3 py-2 text-sm"
             disabled={loading}
           >
+            <option value="grok">Grok (4 Fast Reasoning)</option>
             <option value="openai">OpenAI (GPT-4o Mini)</option>
             <option value="gpt5">OpenAI (GPT-5)</option>
             <option value="gemini">Gemini (2.5 Flash)</option>
@@ -73,7 +75,7 @@ export default function UnifiedChatBox() {
             value={model} 
             onChange={e => setModel(e.target.value)} 
             className="border rounded px-3 py-2 text-sm flex-1 min-w-[200px]"
-            placeholder="Modelo (ex: gpt-4o-mini, gpt-5-chat-latest, gemini-2.5-flash, sonar)"
+            placeholder="Modelo (ex: grok-4-fast-reasoning, gpt-4o-mini, gpt-5-chat-latest, gemini-2.5-flash, sonar)"
             disabled={loading}
           />
         </div>
