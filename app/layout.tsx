@@ -5,6 +5,26 @@ import { ClientProviders } from '@/components/providers/ClientProviders'
 import { GlobalLayout } from '@/components/layout/GlobalLayout'
 import './globals.css'
 
+const themeScript = `(() => {
+  try {
+    const storageKey = 'theme'
+    const mediaQuery = '(prefers-color-scheme: dark)'
+    const root = document.documentElement
+    const storedTheme = window.localStorage.getItem(storageKey)
+    const systemPrefersDark = window.matchMedia(mediaQuery).matches
+    const activeTheme = storedTheme === 'light' || storedTheme === 'dark'
+      ? storedTheme
+      : systemPrefersDark
+        ? 'dark'
+        : 'light'
+
+    root.dataset.theme = activeTheme
+    root.style.setProperty('color-scheme', activeTheme === 'dark' ? 'dark' : 'light')
+  } catch (error) {
+    // Storage may be unavailable; ignore gracefully.
+  }
+})()`
+
 const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
@@ -173,8 +193,9 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="pt-BR" className={inter.variable} suppressHydrationWarning>
+    <html lang="pt-BR" className={inter.variable} suppressHydrationWarning data-theme="light">
       <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         {/* Google tag (gtag.js) */}
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-PFZKLG4HCR"></script>
         <script
@@ -258,7 +279,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <link rel="dns-prefetch" href="//commons.wikimedia.org" />
         <link rel="dns-prefetch" href="//upload.wikimedia.org" />
       </head>
-      <body className="min-h-dvh bg-background font-sans text-foreground antialiased">
+      <body className="min-h-dvh bg-[var(--color-background)] font-sans text-[var(--color-text-strong)] antialiased transition-theme">
         <ClientProviders>
           <GlobalLayout>
             {children}
