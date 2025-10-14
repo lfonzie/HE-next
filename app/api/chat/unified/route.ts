@@ -16,6 +16,7 @@ import { callGrok } from "@/lib/providers/grok";
 import { ChatMessage } from "@/lib/chat-history";
 import { loadTIResources, loadSocialMediaResources } from "@/lib/ti-framework";
 import { aiClassify } from "@/lib/ai-classifier";
+import { B2CMessageLimiter } from "@/lib/b2c-message-limiter";
 
 export const runtime = "nodejs"; // Para compatibilidade com Prisma
 
@@ -113,6 +114,22 @@ export async function POST(req: NextRequest) {
     if (!input?.trim()) {
       return NextResponse.json({ error: "Input é obrigatório" }, { status: 400 });
     }
+
+    // Verificar limitação de mensagens para usuários B2C
+    const userRole = session?.user?.role || 'FREE';
+    const messageLimitCheck = await B2CMessageLimiter.checkMessageLimit(userId, userRole);
+    
+    if (!messageLimitCheck.allowed) {
+      console.log(`🚫 [CHAT-UNIFIED] Message limit exceeded for user ${userId}`);
+      return NextResponse.json({ 
+        error: messageLimitCheck.message || "Limite diário de mensagens excedido",
+        limitExceeded: true,
+        remainingMessages: messageLimitCheck.remainingMessages,
+        resetTime: messageLimitCheck.resetTime
+      }, { status: 429 });
+    }
+
+    console.log(`✅ [CHAT-UNIFIED] Message limit check passed. Remaining: ${messageLimitCheck.remainingMessages}`);
 
     // 1) Garantir conversa
     const conv = await ensureConversation(conversationId, userId, provider, module);
@@ -364,6 +381,14 @@ ATUALIZE o JSON acima com o progresso da etapa e continue a resolução.`;
       }
     }
 
+    // Registrar uso da mensagem para limitação B2C
+    await B2CMessageLimiter.recordMessageUsage(
+      userId, 
+      userRole, 
+      module, 
+      finalConversationId
+    );
+
     return NextResponse.json({
       conversationId: finalConversationId,
       reply: finalReply,
@@ -374,7 +399,8 @@ ATUALIZE o JSON acima com o progresso da etapa e continue a resolução.`;
         total: totalTime,
         provider: providerTime
       },
-      followUpSuggestions: followUpSuggestions.length > 0 ? followUpSuggestions : undefined
+      followUpSuggestions: followUpSuggestions.length > 0 ? followUpSuggestions : undefined,
+      remainingMessages: messageLimitCheck.remainingMessages - 1
     });
 
   } catch (err: any) {

@@ -48,7 +48,18 @@ export async function loadSocialMediaResources(): Promise<{
     const framework = JSON.parse(frameworkData);
 
     // Extrair apenas o system_prompt do framework
-    const socialMediaFramework = framework.system_prompt || '';
+    let socialMediaFramework = framework.system_prompt || '';
+
+    // Aplicar correções automáticas para garantir conformidade com MEC
+    socialMediaFramework = socialMediaFramework
+      .replace(/Fundamental 1/g, 'Ensino Fundamental I')
+      .replace(/Fund 1/g, 'Ensino Fundamental I')
+      .replace(/fundamental 1/g, 'Ensino Fundamental I')
+      .replace(/Fundamental I/g, 'Ensino Fundamental I')
+      .replace(/1º ao 5º ano do Fundamental 1/g, 'Ensino Fundamental I')
+      .replace(/1º ao 5º ano/g, 'Ensino Fundamental I')
+      .replace(/séries do médio/g, 'Ensino Médio')
+      .replace(/1ª à 3ª série do Ensino Médio/g, 'Ensino Médio');
 
     return {
       framework: socialMediaFramework

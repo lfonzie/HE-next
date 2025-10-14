@@ -1,12 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import '../styles/modern-dark.css';
 @import '../styles/responsive-fixes.css';
+@import '../styles/aulas-dark-mode.css';
+@import '../styles/chat-dark-mode-force.css';
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import '../styles/aulas-dark-mode.css';
 
 @layer base {
   :root {

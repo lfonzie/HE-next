@@ -28,12 +28,9 @@ import { STRUCTURED_LESSON_PROMPT } from '@/lib/system-prompts/lessons-structure
 
 
 import { PROFESSIONAL_PACING_LESSON_PROMPT, validateProfessionalPacing, calculatePacingMetrics } from '@/lib/system-prompts/lessons-professional-pacing'
-
-
 import { populateLessonWithImages } from '@/lib/unsplash-integration'
-
-
 import { AutoImageService } from '@/lib/autoImageService'
+import { CertificateSystem } from '@/lib/certificate-system'
 
 
 
@@ -399,6 +396,39 @@ IMPORTANTE: Responda APENAS com JSON válido, sem texto adicional, explicações
         })
         
         console.log('Lesson saved successfully:', lesson.id)
+
+        // Registrar conclusão da aula para sistema de certificados
+        await prisma.lesson_completions.create({
+          data: {
+            user_id: session.user.id,
+            lesson_id: lesson.id,
+            module: 'aulas',
+            title: lessonWithImages.title,
+            completed_at: new Date(),
+            time_spent: lessonWithImages.stages.reduce((total: number, stage: any) => total + (stage.activity?.time || 5), 0),
+            metadata: {
+              subject: lessonWithImages.subject,
+              grade: lessonWithImages.grade,
+              stages: lessonWithImages.stages.length
+            }
+          }
+        })
+
+        // Verificar se deve emitir certificado
+        const certificate = await CertificateSystem.checkAndIssueCertificate(
+          session.user.id,
+          'aulas',
+          'lesson_completed',
+          {
+            lessonId: lesson.id,
+            title: lessonWithImages.title,
+            subject: lessonWithImages.subject
+          }
+        )
+
+        if (certificate) {
+          console.log(`🎉 Certificado emitido: ${certificate.title}`)
+        }
 
         // Log the AI request
         await prisma.ai_requests.create({

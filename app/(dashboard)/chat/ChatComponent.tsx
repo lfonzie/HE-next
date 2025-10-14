@@ -10,7 +10,7 @@ import { ModuleWelcomeScreen } from "@/components/chat/ModuleWelcomeScreen";
 import { ClassificationIndicator } from "@/components/chat/ClassificationIndicator";
 import { useUnifiedChat } from "@/hooks/useUnifiedChat";
 import { ModuleId, MODULES, convertModuleId, convertToOldModuleId } from "@/lib/modules";
-import { ModuleType, Message as ChatMessageType, Conversation as ChatConversation } from "@/types";
+import { ModuleType, Message as ChatMessageType, Conversation as ChatConversation, Message } from "@/types";
 import { getRandomSuggestions, ModuleSuggestion } from "@/lib/module-suggestions";
 import { ModuleSuggestions } from "@/components/chat/ModuleSuggestions";
 import { useToast } from "@/hooks/use-toast";
@@ -28,10 +28,54 @@ import { TIModal } from "@/components/chat/TIModal";
 import { detectIntent } from "@/lib/intent-detection";
 import { useGlobalLoading } from "@/hooks/useGlobalLoading";
 import { useNavigationLoading } from "@/hooks/useNavigationLoading";
+import { FollowUpSuggestions } from "@/components/chat/FollowUpSuggestions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import "@/components/chat/ChatInput.css";
+
+/* Estilos específicos para dark mode no chat */
+const chatDarkModeStyles = `
+  .dark .chat-gradient-bg {
+    background: linear-gradient(135deg, #000000 0%, #0f172a 50%, #000000 100%);
+  }
+
+  .dark .chat-message-user {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+  }
+
+  .dark .chat-message-assistant {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    border: 1px solid #475569;
+  }
+
+  .dark .chat-avatar-user {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    border-color: rgba(245, 158, 11, 0.3);
+  }
+
+  .dark .chat-avatar-assistant {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    border-color: rgba(59, 130, 246, 0.3);
+  }
+
+  .dark .chat-header {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border-bottom: 1px solid #334155;
+  }
+`;
+
+// Injetar estilos no componente
+if (typeof document !== 'undefined') {
+  const styleId = 'chat-dark-mode-styles';
+  if (!document.getElementById(styleId)) {
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = chatDarkModeStyles;
+    document.head.appendChild(style);
+  }
+}
 
 type MinimalChatHook = {
   conversations: ChatConversation[];
@@ -252,7 +296,8 @@ export default function ChatComponent() {
     setProvider,
     model,
     setModel,
-    autoSelection
+    autoSelection,
+    followUpSuggestions
   } = useUnifiedChat("grok", "grok-4-fast-reasoning", handleModuleDetected);
 
   // Debug: verificar se as funções estão disponíveis
@@ -482,7 +527,7 @@ export default function ChatComponent() {
     if (isSimpleGreeting) {
       console.log('👋 [CHAT] Detected simple greeting, responding directly');
       // Para saudações simples, usar abordagem simples sem banco de dados
-      const greetingResponse: ChatMessage = {
+      const greetingResponse: Message = {
         id: `greeting-${Date.now()}`,
         role: 'assistant',
         content: 'Oi!',
@@ -492,7 +537,7 @@ export default function ChatComponent() {
       };
 
       // Adicionar mensagem do usuário também
-      const userMessage: ChatMessage = {
+      const userMessage: Message = {
         id: `user-${Date.now()}`,
         role: 'user',
         content: message,
@@ -559,7 +604,7 @@ export default function ChatComponent() {
     }
 
     // Adicionar mensagem do usuário ao estado antes de enviar
-    const userMessage: ChatMessage = {
+    const userMessage: Message = {
       id: `user-${Date.now()}`,
       role: 'user',
       content: message,
@@ -803,6 +848,17 @@ export default function ChatComponent() {
     // TODO: Implement search functionality
   }, []);
 
+  // Handle follow-up suggestion click
+  const handleFollowUpSuggestionClick = useCallback((suggestion: string) => {
+    console.log(`💡 [FOLLOW-UP] Suggestion clicked: ${suggestion}`);
+    handleSendMessage(suggestion, undefined, {
+      onStreamingStart: () => {
+        // Clear suggestions when starting a new message
+        // This will be handled by newConversation in the hook
+      }
+    });
+  }, [handleSendMessage]);
+
   // Handle keyboard shortcuts
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.ctrlKey || e.metaKey) {
@@ -856,7 +912,7 @@ export default function ChatComponent() {
       const lastMessage = currentConversation.messages[currentConversation.messages.length - 1];
       if (lastMessage && lastMessage.role === 'assistant') {
         const hasTIKeywords = (text: string) => {
-          const keywords = ['pc', 'computador', 'lento', 'internet', 'wifi', 'impressora', 'erro', 'problema', 'não funciona', 'travando', 'lento'];
+          const keywords = ['pc', 'computador', 'lento', 'internet', 'wifi', 'impressora', 'erro', 'problema', 'não funciona', 'travando', 'lento', 'conexão', 'rede', 'sistema', 'aplicativo', 'programa', 'software', 'hardware', 'dispositivo', 'equipamento'];
           return keywords.some(keyword => text.toLowerCase().includes(keyword));
         };
 
@@ -865,35 +921,45 @@ export default function ChatComponent() {
           m.role === 'user' && hasTIKeywords(m.content)
         );
 
-        // Só processar se houver problemas técnicos na conversa
-        if (hasTechnicalIssues) {
-          const isTIMessage = lastMessage.role === 'assistant' &&
-            (lastMessage.content.length > 200 || lastMessage.content.trim().startsWith('{')) &&
-            !lastMessage.content.includes('😊') &&
-            !lastMessage.content.includes('Tudo bem?');
+        // Verificar se é uma resposta TI baseada em múltiplos critérios
+        const isTIJSON = lastMessage.content.trim().startsWith('{') && 
+          (lastMessage.content.includes('"problema"') || lastMessage.content.includes('"etapas"'));
+        
+        const isTIMessage = hasTechnicalIssues && (
+          lastMessage.module === 'ti' || // Módulo detectado como TI
+          isTIJSON || // Resposta em formato JSON de TI
+          (lastMessage.content.length > 200 && 
+           !lastMessage.content.includes('😊') && 
+           !lastMessage.content.includes('Tudo bem?') &&
+           !lastMessage.content.includes('Olá') &&
+           !lastMessage.content.includes('Como posso ajudar'))
+        );
 
-          if (isTIMessage) {
-            console.log('✅ [MODAL-EFFECT] Processing TI Modal for message:', lastMessage.id);
-            const tiData = parseTIResolutionData(lastMessage.content);
+        if (isTIMessage) {
+          console.log('✅ [MODAL-EFFECT] Processing TI Modal for message:', lastMessage.id);
+          console.log('✅ [MODAL-EFFECT] Message module:', lastMessage.module);
+          console.log('✅ [MODAL-EFFECT] Is TI JSON:', isTIJSON);
+          console.log('✅ [MODAL-EFFECT] Has technical issues:', hasTechnicalIssues);
+          
+          const tiData = parseTIResolutionData(lastMessage.content);
 
-            // Usar setTimeout para evitar re-renders imediatos
-            setTimeout(() => {
-              setTiModalData(tiData);
-              if (!showTIModal) {
-                console.log('✅ [MODAL-EFFECT] Opening TI Modal');
-                setShowTIModal(true);
-              } else {
-                console.log('✅ [MODAL-EFFECT] Updating TI Modal with new data');
-              }
-            }, 100);
-          }
+          // Usar setTimeout para evitar re-renders imediatos
+          setTimeout(() => {
+            setTiModalData(tiData);
+            if (!showTIModal) {
+              console.log('✅ [MODAL-EFFECT] Opening TI Modal');
+              setShowTIModal(true);
+            } else {
+              console.log('✅ [MODAL-EFFECT] Updating TI Modal with new data');
+            }
+          }, 100);
         }
       }
     }
-  }, [currentConversation?.messages.length]); // Só depende do número de mensagens, não do conteúdo
+  }, [currentConversation?.messages.length, showTIModal]); // Incluir showTIModal para evitar loops
 
   return (
-    <div className="bg-gradient-to-br from-slate-50 via-yellow-50 to-orange-100 flex flex-col">
+    <div className="bg-gradient-to-br from-slate-50 via-yellow-50 to-orange-100 dark:from-black dark:via-slate-900 dark:to-black chat-gradient-bg flex flex-col">
       {/* Chat Container - Fixed at bottom */}
       <div className="flex-1 flex flex-col pb-0" role="main">
         {/* Enhanced Header - Mostrar apenas quando não há mensagens */}
@@ -903,7 +969,7 @@ export default function ChatComponent() {
             {/* Background decoration */}
             <div className="absolute inset-0 bg-gradient-to-r from-orange-400/20 via-red-400/20 to-pink-400/20 rounded-3xl blur-3xl"></div>
               
-              <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl p-12 shadow-xl border border-white/20">
+              <div className="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-3xl p-12 shadow-xl border border-white/20 dark:border-slate-700/20">
                 <div className="relative mb-8">
                   <div className="w-24 h-24 bg-gradient-to-br from-orange-500 to-red-600 rounded-3xl flex items-center justify-center shadow-lg mx-auto mb-6">
                     <MessageSquare className="h-12 w-12 text-white" />
@@ -940,26 +1006,26 @@ export default function ChatComponent() {
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-                  <div className="p-4 bg-orange-50 rounded-2xl border border-orange-200">
-                    <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                  <div className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-2xl border border-orange-200 dark:border-orange-800">
+                    <div className="w-12 h-12 bg-orange-500 dark:bg-orange-600 rounded-xl flex items-center justify-center mx-auto mb-3">
                       <MessageSquare className="h-6 w-6 text-white" />
                     </div>
-                    <h3 className="font-semibold text-orange-800 mb-2">Assistentes Especializados</h3>
-                    <p className="text-sm text-orange-700">Professores, TI, Secretaria e mais módulos especializados</p>
+                    <h3 className="font-semibold text-orange-800 dark:text-orange-200 mb-2">Assistentes Especializados</h3>
+                    <p className="text-sm text-orange-700 dark:text-orange-300">Professores, TI, Secretaria e mais módulos especializados</p>
                   </div>
-                  <div className="p-4 bg-red-50 rounded-2xl border border-red-200">
-                    <div className="w-12 h-12 bg-red-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                  <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-2xl border border-red-200 dark:border-red-800">
+                    <div className="w-12 h-12 bg-red-500 dark:bg-red-600 rounded-xl flex items-center justify-center mx-auto mb-3">
                       <Target className="h-6 w-6 text-white" />
                     </div>
-                    <h3 className="font-semibold text-red-800 mb-2">Respostas Contextuais</h3>
-                    <p className="text-sm text-red-700">IA treinada para cada área específica de conhecimento</p>
+                    <h3 className="font-semibold text-red-800 dark:text-red-200 mb-2">Respostas Contextuais</h3>
+                    <p className="text-sm text-red-700 dark:text-red-300">IA treinada para cada área específica de conhecimento</p>
                   </div>
-                  <div className="p-4 bg-pink-50 rounded-2xl border border-pink-200">
-                    <div className="w-12 h-12 bg-pink-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                  <div className="p-4 bg-pink-50 dark:bg-pink-900/20 rounded-2xl border border-pink-200 dark:border-pink-800">
+                    <div className="w-12 h-12 bg-pink-500 dark:bg-pink-600 rounded-xl flex items-center justify-center mx-auto mb-3">
                       <Brain className="h-6 w-6 text-white" />
                     </div>
-                    <h3 className="font-semibold text-pink-800 mb-2">Conversação Natural</h3>
-                    <p className="text-sm text-pink-700">Interface intuitiva para diálogos fluidos e eficientes</p>
+                    <h3 className="font-semibold text-pink-800 dark:text-pink-200 mb-2">Conversação Natural</h3>
+                    <p className="text-sm text-pink-700 dark:text-pink-300">Interface intuitiva para diálogos fluidos e eficientes</p>
                   </div>
                 </div>
               </div>
@@ -969,26 +1035,26 @@ export default function ChatComponent() {
 
         {/* Chat Interface - Fixed at bottom */}
         <div className="flex-1 flex flex-col min-h-0 px-4 md:px-8 lg:px-16 xl:px-24">
-          <div className="flex-1 bg-white/90 backdrop-blur-sm border-2 border-yellow-200 shadow-xl rounded-3xl overflow-hidden flex flex-col min-h-0">
+          <div className="flex-1 bg-white/90 dark:bg-slate-900/95 backdrop-blur-sm border-2 border-yellow-200 dark:border-slate-600 shadow-xl rounded-3xl overflow-hidden flex flex-col min-h-0">
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-yellow-500 to-yellow-600 text-white flex-shrink-0">
+            <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-yellow-500 to-yellow-600 dark:from-slate-800 dark:to-slate-900 dark:border-slate-700 text-white flex-shrink-0 chat-header">
               <div className="flex items-center gap-4">
-                <h1 className="text-2xl font-bold">Chat IA</h1>
-                
+                <h1 className="text-2xl font-bold text-white dark:text-white">Chat IA</h1>
+
               </div>
-              
+
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handleCreateConversation}
                   disabled={isCreatingConversation}
-                  className="text-black border-yellow-300 hover:bg-white/20"
+                  className="text-black dark:text-white border-yellow-300 dark:border-slate-600 hover:bg-white/20 dark:hover:bg-slate-700/50 shadow-sm"
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Nova Conversa
                 </Button>
-                
+
               </div>
             </div>
 
@@ -1000,13 +1066,13 @@ export default function ChatComponent() {
             >
               {!hasMessages ? (
                 <div className="text-center py-12">
-                  <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <div className="w-16 h-16 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
                     <span className="text-2xl">💬</span>
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
                     Olá! Como posso ajudar?
                   </h3>
-                  <p className="text-gray-600 mb-6">
+                  <p className="text-gray-600 dark:text-gray-400 mb-6">
                     Digite sua mensagem abaixo e receba sugestões inteligentes para aulas, simulados ENEM e correção de redações.
                   </p>
                   <div className="flex flex-wrap gap-2 justify-center relative">
@@ -1016,7 +1082,7 @@ export default function ChatComponent() {
                         variant="outline"
                         size="sm"
                         onClick={() => handleModuleClick(id as ModuleId)}
-                        className="text-xs border-yellow-300 text-yellow-700 hover:bg-yellow-50 hover:scale-105 transition-all duration-200"
+                        className="text-xs border-yellow-300 dark:border-yellow-600 text-yellow-700 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-slate-700 hover:scale-105 transition-all duration-200"
                       >
                         <i className={module.icon}></i> {module.label}
                       </Button>
@@ -1042,22 +1108,37 @@ export default function ChatComponent() {
                   {currentConversation?.messages.map((message) => {
                     // Verificar se é uma resposta de resolução TI
                     console.log('🔍 [MESSAGE-RENDER] Processing message:', message.id, 'role:', message.role, 'content preview:', message.content.substring(0, 100));
-            // 🔧 FORÇAR DETECÇÃO TI: Verificar se é módulo TI independente do conteúdo
+            
+            // 🔧 DETECÇÃO TI: Verificar se é módulo TI baseado no conteúdo e contexto
             const hasTIKeywords = (text: string) => {
-              const keywords = ['pc', 'computador', 'lento', 'internet', 'wifi', 'impressora', 'erro', 'problema', 'não funciona', 'travando', 'lento'];
+              const keywords = ['pc', 'computador', 'lento', 'internet', 'wifi', 'impressora', 'erro', 'problema', 'não funciona', 'travando', 'lento', 'conexão', 'rede', 'sistema', 'aplicativo', 'programa', 'software', 'hardware', 'dispositivo', 'equipamento'];
               return keywords.some(keyword => text.toLowerCase().includes(keyword));
             };
 
-            const isTIMessage = message.role === 'assistant' &&
-              currentConversation?.messages.some(m => m.role === 'user' && hasTIKeywords(m.content)) &&
-              message.content.length > 200 && // Mensagens mais longas são típicas de TI
-              !message.content.includes('😊') && // Evitar saudações
-              !message.content.includes('Tudo bem?'); // Evitar respostas curtas
+            // Verificar se é uma mensagem TI baseada em:
+            // 1. Módulo detectado como 'ti'
+            // 2. Conteúdo JSON de resolução TI
+            // 3. Contexto da conversa (usuário mencionou problema técnico)
+            const isTIJSON = message.content.trim().startsWith('{') && 
+              (message.content.includes('"problema"') || message.content.includes('"etapas"'));
+            
+            const hasUserTIContext = currentConversation?.messages.some(m => 
+              m.role === 'user' && hasTIKeywords(m.content)
+            );
+
+            const isTIMessage = message.role === 'assistant' && (
+              message.module === 'ti' || // Módulo detectado como TI
+              isTIJSON || // Resposta em formato JSON de TI
+              (hasUserTIContext && message.content.length > 200 && !message.content.includes('😊'))
+            );
 
             console.log('🔍 [MESSAGE-RENDER] Is TI message (forced detection):', isTIMessage, 'for message:', message.id);
 
             // Não renderizar mensagens TI no chat - elas aparecem no modal
-            // A lógica de abertura do modal está em useEffect para evitar loops
+            if (isTIMessage) {
+              console.log('🚫 [MESSAGE-RENDER] Skipping TI message in chat - will show in modal');
+              return null;
+            }
 
                     return (
                       <ChatMessage
@@ -1067,14 +1148,23 @@ export default function ChatComponent() {
                       />
                     );
                   })}
+
+                  {/* Follow-up Suggestions */}
+                  {followUpSuggestions && followUpSuggestions.length > 0 && !isStreaming && (
+                    <FollowUpSuggestions
+                      suggestions={followUpSuggestions}
+                      onSuggestionClick={handleFollowUpSuggestionClick}
+                    />
+                  )}
+
                   {isStreaming && (
                     <div className="flex items-center gap-3 mb-3 justify-start">
                       <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
                         <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                       </div>
                       <div className="flex-1">
-                        <div className="bg-gray-100 border border-gray-200 rounded-2xl px-4 py-3 shadow-sm">
-                          <div className="flex items-center gap-2 text-gray-600">
+                        <div className="bg-gray-100 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-2xl px-4 py-3 shadow-sm">
+                          <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                             <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
                             <span className="text-sm">Gerando resposta...</span>
                           </div>

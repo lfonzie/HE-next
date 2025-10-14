@@ -70,7 +70,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           disabled={isStreaming || disabled}
-          className="w-full h-11 resize-none rounded-xl border border-zinc-200 dark:border-zinc-700 px-3 py-2 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 placeholder-zinc-500 dark:placeholder-zinc-400 focus:ring-2 focus:ring-yellow-500 focus:border-transparent type-body overflow-hidden"
+          className="w-full h-11 resize-none rounded-xl border border-zinc-200 dark:border-zinc-600 px-3 py-2 bg-white dark:bg-slate-800 text-zinc-900 dark:text-zinc-100 placeholder-zinc-500 dark:placeholder-zinc-400 focus:ring-2 focus:ring-yellow-500 focus:border-transparent type-body overflow-hidden shadow-sm"
           aria-label="Mensagem"
         />
       </div>
@@ -91,7 +91,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           size="sm"
           onClick={() => document.getElementById('file-upload')?.click()}
           disabled={isStreaming || disabled}
-          className="min-h-11 min-w-11 p-0 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-700"
+          className="min-h-11 min-w-11 p-0 rounded-xl hover:bg-zinc-100 dark:hover:bg-slate-700 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200"
           title="Anexar arquivo"
           aria-label="Anexar arquivo"
         >
@@ -105,7 +105,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           size="sm"
           onClick={handleVoiceRecord}
           disabled={isStreaming || disabled}
-          className={`min-h-11 min-w-11 p-0 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-700 ${isRecording ? 'text-red-500' : ''}`}
+          className={`min-h-11 min-w-11 p-0 rounded-xl hover:bg-zinc-100 dark:hover:bg-slate-700 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 ${isRecording ? 'text-red-500 dark:text-red-400' : ''}`}
           title="Gravar áudio"
           aria-label="Gravar áudio"
         >
@@ -116,7 +116,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         <Button
           type="submit"
           disabled={!message.trim() || isStreaming || disabled}
-          className="min-h-11 rounded-xl px-3 sm:px-4 font-medium bg-yellow-500 hover:bg-yellow-600 text-black disabled:opacity-50 disabled:cursor-not-allowed relative z-10 type-body"
+          className="min-h-11 rounded-xl px-3 sm:px-4 font-medium bg-yellow-500 hover:bg-yellow-600 dark:bg-yellow-600 dark:hover:bg-yellow-700 text-black dark:text-white disabled:opacity-50 disabled:cursor-not-allowed relative z-10 type-body shadow-md"
           aria-label="Enviar mensagem"
         >
           {isStreaming ? (

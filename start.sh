@@ -12,7 +12,7 @@ lsof -ti:3000 | xargs kill -9 2>/dev/null
 sleep 2
 
 echo "✅ Processos na porta 3000 finalizados"
-echo "🚀 Iniciando npm run dev..."
+echo "🚀 Iniciando npm run dev:turbo..."
 
-# Inicia o servidor de desenvolvimento
-npm run dev
+# Inicia o servidor de desenvolvimento com turbopack
+npm run dev:turbo

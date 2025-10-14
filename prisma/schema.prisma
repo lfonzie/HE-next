@@ -32,6 +32,14 @@ model User {
   // Relacionamentos com quotas
   quotas            quotas[]
   quota_usage_logs  quota_usage_log[]
+  
+  // Relacionamentos com limitação de mensagens B2C
+  daily_message_usage daily_message_usage[]
+  message_usage_logs  message_usage_log[]
+  
+  // Relacionamentos com certificados
+  certificates        certificates[]
+  lesson_completions  lesson_completions[]
 }
 
 model DemoUser {
@@ -1191,4 +1199,125 @@ model TiTicket {
   details     String
   assignedTo  String?  // opcional
   externalRef String?  // id do seu sistema de chamados (se houver)
+}
+
+// Sistema de limitação de mensagens B2C
+model daily_message_usage {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id         String   @db.Uuid
+  date            String   @db.VarChar(10) // YYYY-MM-DD
+  message_count   Int      @default(0)
+  module          String?  @db.VarChar(50)
+  conversation_id String?  @db.Uuid
+  created_at      DateTime @default(now()) @db.Timestamp(6)
+  updated_at      DateTime @default(now()) @db.Timestamp(6)
+  
+  // Relacionamentos
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  
+  @@unique([user_id, date], name: "unique_user_date")
+  @@index([date])
+  @@index([user_id])
+}
+
+model message_usage_log {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id         String   @db.Uuid
+  date            String   @db.VarChar(10) // YYYY-MM-DD
+  module          String?  @db.VarChar(50)
+  conversation_id String?  @db.Uuid
+  timestamp       DateTime @default(now()) @db.Timestamp(6)
+  
+  // Relacionamentos
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  
+  @@index([user_id])
+  @@index([date])
+  @@index([timestamp])
+}
+
+// Sistema de certificados
+model certificates {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id         String   @db.Uuid
+  title           String   @db.VarChar(200)
+  description     String
+  type            String   @db.VarChar(50) // LESSON_COMPLETION, MODULE_MASTERY, etc.
+  module          String   @db.VarChar(50)
+  completed_at    DateTime @db.Timestamp(6)
+  issued_at       DateTime @default(now()) @db.Timestamp(6)
+  certificate_url String?  @db.VarChar(500)
+  metadata        Json?
+  
+  // Relacionamentos
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  
+  @@index([user_id])
+  @@index([type])
+  @@index([issued_at])
+}
+
+model lesson_completions {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id         String   @db.Uuid
+  lesson_id       String?  @db.Uuid
+  module          String   @db.VarChar(50)
+  title           String   @db.VarChar(200)
+  completed_at    DateTime @default(now()) @db.Timestamp(6)
+  time_spent      Int?     // em minutos
+  score           Int?     // pontuação obtida
+  metadata        Json?
+  
+  // Relacionamentos
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  
+  @@index([user_id])
+  @@index([module])
+  @@index([completed_at])
+}
+
+// Sistema de pricing B2B
+model school_subscriptions {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  school_id       String   @db.Uuid
+  plan_id         String   @db.VarChar(50) // starter, growth, professional, enterprise
+  student_count   Int
+  monthly_price   Int      // em centavos
+  yearly_price    Int      // em centavos
+  billing_cycle   String   @db.VarChar(20) // monthly, yearly
+  status          String   @db.VarChar(20) // active, inactive, suspended
+  start_date      DateTime @default(now()) @db.Timestamp(6)
+  end_date        DateTime? @db.Timestamp(6)
+  auto_renew      Boolean  @default(true)
+  created_at      DateTime @default(now()) @db.Timestamp(6)
+  updated_at      DateTime @default(now()) @db.Timestamp(6)
+  
+  // Relacionamentos
+  school School @relation(fields: [school_id], references: [id], onDelete: Cascade)
+  
+  @@index([school_id])
+  @@index([plan_id])
+  @@index([status])
+  @@index([start_date])
+}
+
+model School {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name            String   @db.VarChar(255)
+  email           String   @db.VarChar(255)
+  phone           String?  @db.VarChar(20)
+  address         String?  @db.VarChar(500)
+  city            String?  @db.VarChar(100)
+  state           String?  @db.VarChar(2)
+  cnpj            String?  @db.VarChar(20)
+  student_count   Int      @default(0)
+  status          String   @default("active") @db.VarChar(20)
+  created_at      DateTime @default(now()) @db.Timestamp(6)
+  updated_at      DateTime @default(now()) @db.Timestamp(6)
+  
+  // Relacionamentos
+  subscriptions school_subscriptions[]
+  
+  @@index([status])
+  @@index([created_at])
 }

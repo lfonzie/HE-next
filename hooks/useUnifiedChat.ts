@@ -43,6 +43,7 @@ export function useUnifiedChat(
   initialModel = "gpt-4o-mini",
   onModuleDetected?: (module: string, message: string) => void
 ) {
+  const [followUpSuggestions, setFollowUpSuggestions] = useState<string[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [provider, setProvider] = useState<Provider>(initialProvider);
   const [model, setModel] = useState<string>(initialModel);
@@ -292,6 +293,21 @@ export function useUnifiedChat(
                         : msg
                     )
                   );
+                } else if (data.type === 'content_replace') {
+                  // Handle content replacement for Perplexity cleaning
+                  fullContent = data.content;
+                  console.log(`🔄 [UNIFIED-CHAT] Content replaced with cleaned version`);
+                  setMessages(prev =>
+                    prev.map(msg =>
+                      msg.id === tempId
+                        ? { ...msg, content: fullContent }
+                        : msg
+                    )
+                  );
+                } else if (data.type === 'suggestions') {
+                  // Handle follow-up suggestions
+                  console.log(`💡 [UNIFIED-CHAT] Received suggestions:`, data.suggestions);
+                  setFollowUpSuggestions(data.suggestions || []);
                 } else if (data.metadata) {
                   console.log(`📊 [UNIFIED-CHAT] Received metadata:`, data.metadata);
                   setMessages(prev => 
@@ -370,6 +386,7 @@ export function useUnifiedChat(
     window.history.replaceState({}, "", url.toString());
     setMessages([]);
     setError(null);
+    setFollowUpSuggestions([]);
     if (nextProvider) setProvider(nextProvider);
     if (nextModel) setModel(nextModel);
   }, []);
@@ -392,6 +409,7 @@ export function useUnifiedChat(
     error,
     clearError,
     newConversation,
-    autoSelection
+    autoSelection,
+    followUpSuggestions
   };
 }

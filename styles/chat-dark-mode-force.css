@@ -1,0 +1,691 @@
+/* ===== CHAT DARK MODE FORCE - OVERRIDE ALL STYLES ===== */
+/* Este arquivo força o dark mode no chat, sobrescrevendo todos os outros estilos */
+
+/* FORÇAR FUNDO PRETO EM TODOS OS ELEMENTOS */
+.dark body {
+  background: #000000 !important;
+}
+
+.dark html {
+  background: #000000 !important;
+}
+
+.dark #__next {
+  background: #000000 !important;
+}
+
+.dark main {
+  background: #000000 !important;
+}
+
+/* FORÇAR FUNDO PRETO EM TODOS OS CONTAINERS */
+.dark .container,
+.dark .max-w-7xl,
+.dark .mx-auto {
+  background: #000000 !important;
+}
+
+/* FORÇAR FUNDO PRETO ESPECÍFICO PARA CHAT */
+.dark [class*="chat"],
+.dark [class*="Chat"] {
+  background: #000000 !important;
+}
+
+/* FORÇAR HEADER ESCURO */
+.dark .chat-header,
+.dark [class*="bg-gradient-to-r from-yellow-500"],
+.dark .bg-gradient-to-r.from-yellow-500.to-yellow-600 {
+  background: #000000 !important;
+  border-bottom: 1px solid #333333 !important;
+}
+
+/* FORÇAR CONTAINER DO CHAT ESCURO */
+.dark .bg-white\/90,
+.dark .bg-white\/80,
+.dark .bg-slate-800\/90,
+.dark .bg-slate-800\/95 {
+  background: #000000 !important;
+  border: 1px solid #000000 !important;
+}
+
+/* FORÇAR MENSAGENS DO ASSISTENTE ESCURAS */
+.dark .bg-slate-100,
+.dark .bg-white,
+.dark .bg-gray-50,
+.dark .bg-gray-100,
+.dark .self-start {
+  background: #0a0a0a !important;
+  border: 1px solid #000000 !important;
+  color: #ffffff !important;
+}
+
+/* FORÇAR TODAS AS MENSAGENS DO ASSISTENTE */
+.dark [class*="self-start"],
+.dark .justify-start,
+.dark [data-message-role="assistant"] {
+  background: #0a0a0a !important;
+  color: #ffffff !important;
+  border: 1px solid #000000 !important;
+}
+
+/* FORÇAR ESPECIFICAMENTE MENSAGENS DO ASSISTENTE */
+.dark article[aria-label="Resposta do assistente"] {
+  background: #0a0a0a !important;
+  color: #ffffff !important;
+  border: 1px solid #000000 !important;
+}
+
+/* FORÇAR CONTEÚDO DAS MENSAGENS */
+.dark .message-content {
+  background: #0a0a0a !important;
+  color: #ffffff !important;
+  border: 1px solid #000000 !important;
+}
+
+/* FORÇAR PROSE ESCURO */
+.dark .prose {
+  color: #ffffff !important;
+}
+
+.dark .prose p {
+  color: #ffffff !important;
+}
+
+.dark .prose h1,
+.dark .prose h2,
+.dark .prose h3,
+.dark .prose h4,
+.dark .prose h5,
+.dark .prose h6 {
+  color: #ffffff !important;
+}
+
+/* FORÇAR MENSAGENS DO USUÁRIO COM GRADIENTE AMARELO */
+.dark .bg-yellow-500 {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3) !important;
+}
+
+/* FORÇAR AVATARES ESCUROS */
+.dark .chat-avatar-user {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+}
+
+.dark .chat-avatar-assistant {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  border-color: rgba(59, 130, 246, 0.3) !important;
+}
+
+/* FORÇAR INPUT ESCURO */
+.dark .chat-input-fixed {
+  background: #0a0a0a !important;
+  border: 2px solid #000000 !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+}
+
+.dark .chat-input-fixed textarea {
+  background: #1a1a1a !important;
+  border: 1px solid #000000 !important;
+  color: #ffffff !important;
+}
+
+.dark .chat-input-fixed textarea::placeholder {
+  color: #666666 !important;
+}
+
+.dark .chat-input-fixed textarea:focus {
+  border-color: #f59e0b !important;
+  background: #2a2a2a !important;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2) !important;
+}
+
+/* FORÇAR BOTÕES VISÍVEIS NO INPUT */
+.dark .chat-input-fixed button {
+  background: #1a1a1a !important;
+  border: 1px solid #000000 !important;
+  color: #ffffff !important;
+}
+
+.dark .chat-input-fixed button:hover {
+  background: #2a2a2a !important;
+  border-color: #000000 !important;
+}
+
+.dark .chat-input-fixed button.h-11.w-11 {
+  background: #1a1a1a !important;
+  border: 1px solid #000000 !important;
+  color: #ffffff !important;
+}
+
+.dark .chat-input-fixed button.h-11.w-11:hover {
+  background: #2a2a2a !important;
+  border-color: #000000 !important;
+}
+
+.dark .chat-input-fixed button.h-11.px-4 {
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+  color: white !important;
+  border: none !important;
+}
+
+.dark .chat-input-fixed button.h-11.px-4:hover {
+  background: linear-gradient(135deg, #d97706, #b45309) !important;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4) !important;
+}
+
+/* FORÇAR CARDS ESCUROS */
+.dark .bg-white,
+.dark .bg-gray-50,
+.dark .bg-gray-100 {
+  background: #0a0a0a !important;
+  border: 1px solid #000000 !important;
+}
+
+.dark .border-gray-200,
+.dark .border-slate-200 {
+  border-color: #000000 !important;
+}
+
+/* FORÇAR TEXTOS ESCUROS */
+.dark .text-gray-900 {
+  color: #f1f5f9 !important;
+}
+
+.dark .text-gray-800 {
+  color: #e2e8f0 !important;
+}
+
+.dark .text-gray-700 {
+  color: #cbd5e1 !important;
+}
+
+.dark .text-gray-600 {
+  color: #94a3b8 !important;
+}
+
+.dark .text-gray-500 {
+  color: #64748b !important;
+}
+
+.dark .text-gray-400 {
+  color: #475569 !important;
+}
+
+/* FORÇAR BORDAS ESCURAS */
+.dark .border-yellow-200 {
+  border-color: #000000 !important;
+}
+
+.dark .border-blue-200 {
+  border-color: #000000 !important;
+}
+
+.dark .border-gray-200 {
+  border-color: #000000 !important;
+}
+
+.dark .border-slate-200 {
+  border-color: #000000 !important;
+}
+
+.dark .border-slate-600 {
+  border-color: #000000 !important;
+}
+
+.dark .border-slate-700 {
+  border-color: #000000 !important;
+}
+
+/* FORÇAR BACKGROUNDS ESCUROS COM COR DE DESTAQUE */
+.dark .bg-gray-100 {
+  background: rgba(245, 158, 11, 0.05) !important;
+}
+
+.dark .bg-gray-50 {
+  background: #000000 !important;
+}
+
+.dark .bg-blue-100 {
+  background: rgba(245, 158, 11, 0.1) !important;
+}
+
+.dark .bg-yellow-100 {
+  background: rgba(245, 158, 11, 0.2) !important;
+}
+
+/* FORÇAR SCROLLBAR COM COR DE DESTAQUE */
+.dark .chat-messages-container::-webkit-scrollbar-thumb {
+  background: #f59e0b !important;
+}
+
+.dark .chat-messages-container::-webkit-scrollbar-thumb:hover {
+  background: #fbbf24 !important;
+}
+
+/* FORÇAR SOMBRAS COM COR DE DESTAQUE */
+.dark .shadow-sm {
+  box-shadow: 0 1px 2px rgba(245, 158, 11, 0.1) !important;
+}
+
+.dark .shadow-md {
+  box-shadow: 0 4px 6px rgba(245, 158, 11, 0.15) !important;
+}
+
+.dark .shadow-lg {
+  box-shadow: 0 10px 15px rgba(245, 158, 11, 0.2) !important;
+}
+
+.dark .shadow-xl {
+  box-shadow: 0 20px 25px rgba(245, 158, 11, 0.25) !important;
+}
+
+/* FORÇAR BADGES COM COR DE DESTAQUE AMARELA */
+.dark .bg-orange-50 {
+  background: rgba(245, 158, 11, 0.1) !important;
+}
+
+.dark .bg-red-50 {
+  background: rgba(245, 158, 11, 0.1) !important;
+}
+
+.dark .bg-pink-50 {
+  background: rgba(245, 158, 11, 0.1) !important;
+}
+
+.dark .bg-blue-50 {
+  background: rgba(245, 158, 11, 0.1) !important;
+}
+
+.dark .bg-green-50 {
+  background: rgba(245, 158, 11, 0.1) !important;
+}
+
+.dark .bg-purple-50 {
+  background: rgba(245, 158, 11, 0.1) !important;
+}
+
+.dark .text-orange-800 {
+  color: #f59e0b !important;
+}
+
+.dark .text-red-800 {
+  color: #f59e0b !important;
+}
+
+.dark .text-pink-800 {
+  color: #f59e0b !important;
+}
+
+.dark .text-blue-800 {
+  color: #f59e0b !important;
+}
+
+.dark .text-green-800 {
+  color: #f59e0b !important;
+}
+
+.dark .text-purple-800 {
+  color: #f59e0b !important;
+}
+
+/* FORÇAR BORDAS DE CARDS ESCURAS */
+.dark .border-orange-200 {
+  border-color: #000000 !important;
+}
+
+.dark .border-red-200 {
+  border-color: #000000 !important;
+}
+
+.dark .border-pink-200 {
+  border-color: #000000 !important;
+}
+
+/* FORÇAR ÍCONES COM COR DE DESTAQUE AMARELA */
+.dark .text-orange-600 {
+  color: #f59e0b !important;
+}
+
+.dark .text-red-600 {
+  color: #f59e0b !important;
+}
+
+.dark .text-pink-600 {
+  color: #f59e0b !important;
+}
+
+.dark .text-blue-600 {
+  color: #f59e0b !important;
+}
+
+.dark .text-green-600 {
+  color: #f59e0b !important;
+}
+
+.dark .text-purple-600 {
+  color: #f59e0b !important;
+}
+
+/* FORÇAR BACKGROUNDS DE ÍCONES COM COR DE DESTAQUE */
+.dark .bg-orange-500 {
+  background: #f59e0b !important;
+}
+
+.dark .bg-red-500 {
+  background: #f59e0b !important;
+}
+
+.dark .bg-pink-500 {
+  background: #f59e0b !important;
+}
+
+.dark .bg-blue-500 {
+  background: #f59e0b !important;
+}
+
+.dark .bg-green-500 {
+  background: #f59e0b !important;
+}
+
+.dark .bg-purple-500 {
+  background: #f59e0b !important;
+}
+
+/* FORÇAR HOVER STATES ESCUROS */
+.dark .hover\:bg-yellow-50:hover {
+  background: #000000 !important;
+}
+
+.dark .hover\:bg-blue-50:hover {
+  background: #000000 !important;
+}
+
+.dark .hover\:bg-slate-700:hover {
+  background: #000000 !important;
+}
+
+/* FORÇAR FOCUS STATES COM COR DE DESTAQUE */
+.dark .focus\:ring-yellow-500:focus {
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.3) !important;
+}
+
+.dark .focus\:ring-blue-500:focus {
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.3) !important;
+}
+
+.dark .focus\:ring-green-500:focus {
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.3) !important;
+}
+
+/* FORÇAR DISABLED STATES ESCUROS */
+.dark .disabled\:opacity-50:disabled {
+  opacity: 0.5 !important;
+  background: #000000 !important;
+  color: #666666 !important;
+}
+
+/* FORÇAR BACKDROP ESCURO */
+.dark .backdrop-blur-sm {
+  backdrop-filter: blur(4px) !important;
+  background: rgba(0, 0, 0, 0.8) !important;
+}
+
+/* FORÇAR GRADIENTES ESCUROS */
+.dark .from-slate-50 {
+  --tw-gradient-from: #000000 !important;
+}
+
+.dark .via-yellow-50 {
+  --tw-gradient-via: #0f172a !important;
+}
+
+.dark .to-orange-100 {
+  --tw-gradient-to: #000000 !important;
+}
+
+/* FORÇAR TRANSPARÊNCIAS ESCURAS */
+.dark .bg-white\/80 {
+  background: rgba(0, 0, 0, 0.8) !important;
+}
+
+.dark .bg-white\/90 {
+  background: rgba(0, 0, 0, 0.9) !important;
+}
+
+.dark .bg-slate-800\/90 {
+  background: rgba(0, 0, 0, 0.9) !important;
+}
+
+.dark .bg-slate-800\/95 {
+  background: rgba(0, 0, 0, 0.95) !important;
+}
+
+/* FORÇAR BORDAS ESCURAS COM TRANSPARÊNCIA */
+.dark .border-white\/20 {
+  border-color: rgba(0, 0, 0, 0.2) !important;
+}
+
+.dark .border-slate-700\/20 {
+  border-color: rgba(0, 0, 0, 0.2) !important;
+}
+
+/* FORÇAR HOVER COM TRANSPARÊNCIA ESCURA */
+.dark .hover\:bg-white\/20:hover {
+  background: rgba(0, 0, 0, 0.2) !important;
+}
+
+.dark .hover\:bg-slate-700\/20:hover {
+  background: rgba(0, 0, 0, 0.2) !important;
+}
+
+.dark .hover\:bg-slate-700\/50:hover {
+  background: rgba(0, 0, 0, 0.5) !important;
+}
+
+/* FORÇAR FUNDO PRETO ABSOLUTO */
+.dark .bg-gradient-to-br {
+  background: #000000 !important;
+}
+
+/* FORÇAR TODOS OS ELEMENTOS COM GRADIENTE PARA PRETO */
+.dark [class*="gradient"] {
+  background: #000000 !important;
+}
+
+/* FORÇAR TODOS OS ELEMENTOS COM SLATE PARA PRETO (EXCETO BOTÕES) */
+.dark [class*="slate"]:not(button):not(.chat-input-fixed button) {
+  background: #000000 !important;
+}
+
+/* FORÇAR TODOS OS ELEMENTOS COM GRAY PARA PRETO (EXCETO BOTÕES) */
+.dark [class*="gray"]:not(button):not(.chat-input-fixed button) {
+  background: #000000 !important;
+}
+
+/* FORÇAR TODOS OS ELEMENTOS COM WHITE PARA PRETO (EXCETO BOTÕES) */
+.dark [class*="white"]:not(button):not(.chat-input-fixed button) {
+  background: #000000 !important;
+}
+
+/* FORÇAR BORDAS ARREDONDADAS EM TODOS OS ELEMENTOS */
+.dark * {
+  border-radius: 8px !important;
+}
+
+/* EXCEÇÕES PARA ELEMENTOS ESPECÍFICOS */
+.dark button {
+  border-radius: 12px !important;
+}
+
+.dark .chat-input-fixed {
+  border-radius: 25px !important;
+}
+
+.dark .chat-input-fixed textarea {
+  border-radius: 20px !important;
+}
+
+.dark .chat-input-fixed button {
+  border-radius: 20px !important;
+}
+
+/* FORÇAR MENSAGENS COM BORDAS ARREDONDADAS */
+.dark .bg-slate-100,
+.dark .bg-white,
+.dark .bg-gray-50,
+.dark .bg-gray-100,
+.dark .self-start {
+  border-radius: 16px !important;
+}
+
+/* FORÇAR CARDS COM BORDAS ARREDONDADAS */
+.dark .bg-white,
+.dark .bg-gray-50,
+.dark .bg-gray-100 {
+  border-radius: 12px !important;
+}
+
+/* FORÇAR AVATARES CIRCULARES */
+.dark .chat-avatar-user,
+.dark .chat-avatar-assistant {
+  border-radius: 50% !important;
+}
+
+/* FORÇAR BOTÃO COPIAR COM COR DE DESTAQUE E BORDAS ARREDONDADAS */
+.dark button[class*="copy"],
+.dark button[title*="Copiar"],
+.dark button[aria-label*="Copiar"],
+.dark .copy-button {
+  background: #f59e0b !important;
+  color: #000000 !important;
+  border: 1px solid #f59e0b !important;
+  border-radius: 12px !important;
+}
+
+.dark button[class*="copy"]:hover,
+.dark button[title*="Copiar"]:hover,
+.dark button[aria-label*="Copiar"]:hover,
+.dark .copy-button:hover {
+  background: #fbbf24 !important;
+  border-color: #fbbf24 !important;
+  color: #000000 !important;
+  border-radius: 12px !important;
+}
+
+/* FORÇAR TODOS OS BOTÕES SECUNDÁRIOS COM COR DE DESTAQUE E BORDAS ARREDONDADAS */
+.dark button:not([class*="primary"]):not([class*="send"]) {
+  background: #f59e0b !important;
+  color: #000000 !important;
+  border: 1px solid #f59e0b !important;
+  border-radius: 12px !important;
+}
+
+.dark button:not([class*="primary"]):not([class*="send"]):hover {
+  background: #fbbf24 !important;
+  border-color: #fbbf24 !important;
+  color: #000000 !important;
+  border-radius: 12px !important;
+}
+
+/* FORÇAR ÍCONES DOS BOTÕES COM COR DE DESTAQUE */
+.dark button svg,
+.dark button .lucide,
+.dark button [class*="icon"] {
+  color: #000000 !important;
+  fill: #000000 !important;
+}
+
+/* FORÇAR BOTÃO DE ENVIAR AMARELO */
+.dark button[type="submit"],
+.dark .chat-input-fixed button[type="submit"] {
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+  color: white !important;
+  border: none !important;
+}
+
+.dark button[type="submit"]:hover,
+.dark .chat-input-fixed button[type="submit"]:hover {
+  background: linear-gradient(135deg, #d97706, #b45309) !important;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4) !important;
+}
+
+/* FORÇAR BOTÕES GHOST COM COR DE DESTAQUE E BORDAS ARREDONDADAS */
+.dark button[class*="ghost"] {
+  background: #f59e0b !important;
+  color: #000000 !important;
+  border: 1px solid #f59e0b !important;
+  border-radius: 12px !important;
+}
+
+.dark button[class*="ghost"]:hover {
+  background: #fbbf24 !important;
+  border-color: #fbbf24 !important;
+  color: #000000 !important;
+  border-radius: 12px !important;
+}
+
+/* FORÇAR TODOS OS ELEMENTOS INTERATIVOS COM COR DE DESTAQUE */
+.dark input,
+.dark textarea,
+.dark select,
+.dark button,
+.dark [role="button"],
+.dark [tabindex] {
+  background: #1a1a1a !important;
+  color: #ffffff !important;
+  border: 1px solid #f59e0b !important;
+}
+
+.dark input:hover,
+.dark textarea:hover,
+.dark select:hover,
+.dark button:hover,
+.dark [role="button"]:hover,
+.dark [tabindex]:hover {
+  background: #2a2a2a !important;
+  border-color: #fbbf24 !important;
+}
+
+/* FORÇAR CORES DE DESTAQUE AMARELAS */
+.dark .text-primary,
+.dark a,
+.dark .link,
+.dark [class*="text-yellow"],
+.dark .text-blue-600,
+.dark .text-blue-500,
+.dark .text-blue-400 {
+  color: #f59e0b !important;
+}
+
+.dark a:hover,
+.dark .link:hover {
+  color: #fbbf24 !important;
+}
+
+/* FORÇAR BOTÕES DE DESTAQUE AMARELOS */
+.dark .btn-primary,
+.dark .button-primary,
+.dark .bg-primary,
+.dark button.bg-primary {
+  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%) !important;
+  color: #000000 !important;
+  border: none !important;
+  box-shadow: 0 10px 24px rgba(245, 158, 11, 0.25) !important;
+}
+
+.dark .btn-primary:hover,
+.dark .button-primary:hover,
+.dark .bg-primary:hover,
+.dark button.bg-primary:hover {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%) !important;
+  box-shadow: 0 16px 32px rgba(245, 158, 11, 0.35) !important;
+}
+
+/* FORÇAR ÍCONES VISÍVEIS */
+.dark svg,
+.dark .lucide,
+.dark [class*="icon"] {
+  color: #f9fafb !important;
+  fill: #f9fafb !important;
+}

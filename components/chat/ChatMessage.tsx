@@ -193,12 +193,12 @@ export const ChatMessage = memo(function ChatMessage({
   // Bubble classes based on role
   const bubbleClass = (role: 'user' | 'assistant' | 'system') => {
     if (role === 'user') {
-      return "self-end bg-yellow-500 text-black rounded-2xl px-4 py-3 shadow-sm max-w-prose md:max-w-[65ch] break-words hyphens-auto";
+      return "self-end bg-yellow-500 dark:bg-yellow-600 text-black dark:text-white rounded-2xl px-4 py-3 shadow-sm max-w-prose md:max-w-[65ch] break-words hyphens-auto chat-message-user";
     }
     if (role === 'assistant') {
-      return "self-start px-4 py-3 max-w-prose md:max-w-[65ch] break-words hyphens-auto";
+      return "self-start bg-slate-100 dark:bg-slate-900 px-4 py-3 max-w-prose md:max-w-[65ch] break-words hyphens-auto chat-message-assistant";
     }
-    return "self-center text-xs text-zinc-500 bg-zinc-100/60 dark:bg-zinc-800/40 rounded-full px-3 py-1";
+    return "self-center text-xs text-zinc-500 dark:text-zinc-400 bg-zinc-100/60 dark:bg-zinc-800/40 rounded-full px-3 py-1";
   };
 
   return (
@@ -212,14 +212,15 @@ export const ChatMessage = memo(function ChatMessage({
     >
       {/* Avatar - ícone específico do módulo para ambas as mensagens */}
       <div className={`flex flex-col items-center ${isUser ? 'order-last' : 'order-first'}`}>
-        <div 
-          className="w-10 h-10 rounded-full border-2 shadow-md flex items-center justify-center transition-all duration-200 hover:scale-105 cursor-help"
+        <div
+          className={`w-10 h-10 rounded-full border-2 shadow-md flex items-center justify-center transition-all duration-200 hover:scale-105 cursor-help ${isUser ? 'chat-avatar-user' : 'chat-avatar-assistant'}`}
           style={{
             backgroundColor: isUser ? '#f59e0b' : moduleColor, // Amarelo para usuário, cor do módulo para assistente
             color: "#ffffff",
             boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
             borderColor: isUser ? '#f59e0b60' : `${moduleColor}60`
           }}
+          data-dark-mode={isUser ? 'user-avatar' : 'assistant-avatar'}
           title={isUser 
             ? `Usuário\nMódulo detectado: ${moduleInfo?.label || 'N/A'}\nID: ${effectiveModuleId || 'N/A'}` 
             : `Módulo: ${moduleInfo?.label || 'Assistente'}\nID: ${effectiveModuleId || 'N/A'}\nÍcone: ${moduleIconKey}`
@@ -241,7 +242,7 @@ export const ChatMessage = memo(function ChatMessage({
         {/* Descrição do módulo - apenas para assistente */}
         {!isUser && moduleInfo && (
           <div className="mt-2 text-xs text-center max-w-24">
-            <div className="font-semibold text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-800 px-2 py-1 rounded-md shadow-sm border border-gray-200 dark:border-gray-600">
+            <div className="font-semibold text-gray-800 dark:text-gray-200 bg-white dark:bg-slate-800 px-2 py-1 rounded-md shadow-sm border border-gray-200 dark:border-slate-600">
               {moduleInfo.label}
             </div>
             <div className="text-xs text-gray-600 dark:text-gray-400 mt-1 truncate">
@@ -249,7 +250,7 @@ export const ChatMessage = memo(function ChatMessage({
             </div>
           </div>
         )}
-        
+
         {/* Indicador do módulo detectado para mensagens do usuário */}
         {isUser && effectiveModuleId && (
           <div className="mt-2 text-xs text-center max-w-24">
@@ -384,20 +385,20 @@ export const ChatMessage = memo(function ChatMessage({
             {/* Anexo */}
             {message.attachment && (
               <div className="mt-4" role="region" aria-label="Anexo">
-                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                  <File className="text-yellow-600 w-5 h-5" aria-hidden />
+                <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-slate-700 rounded-lg border border-gray-200 dark:border-slate-600">
+                  <File className="text-yellow-600 dark:text-yellow-500 w-5 h-5" aria-hidden />
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-black truncate">
+                    <p className="text-sm font-medium text-black dark:text-white truncate">
                       {message.attachment.name}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
                       {formatFileSize(message.attachment.size)}
                     </p>
                   </div>
                   {message.attachment.url && (
                     <a
                       href={message.attachment.url}
-                      className="ml-auto text-xs underline text-yellow-600 hover:text-yellow-700"
+                      className="ml-auto text-xs underline text-yellow-600 dark:text-yellow-500 hover:text-yellow-700 dark:hover:text-yellow-400"
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label="Abrir anexo em nova aba"
@@ -433,7 +434,7 @@ export const ChatMessage = memo(function ChatMessage({
           </div>
 
           {/* Metadados */}
-          <footer className="mt-1 text-xs text-zinc-500 select-none">
+          <footer className="mt-1 text-xs text-zinc-500 dark:text-zinc-400 select-none">
             <div className="flex items-center gap-2">
               {msgTime && (
                 <time dateTime={(() => {
@@ -447,7 +448,7 @@ export const ChatMessage = memo(function ChatMessage({
                 modelToShow ? (
                   <ModelBadge model={modelToShow} />
                 ) : message.isStreaming ? (
-                  <span className="ml-2 text-xs text-gray-400">...</span>
+                  <span className="ml-2 text-xs text-gray-400 dark:text-gray-500">...</span>
                 ) : null
               )}
             </div>

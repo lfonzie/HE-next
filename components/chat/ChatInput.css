@@ -18,6 +18,13 @@
   max-width: 800px !important;
 }
 
+/* Dark mode for chat input container */
+.dark .chat-input-fixed {
+  background: #1e293b !important;
+  border: 2px solid #475569 !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+}
+
 /* Mobile: Responsive width with safe areas */
 @media (max-width: 767px) {
   .chat-input-fixed {
@@ -102,12 +109,30 @@
   overflow: hidden !important;
 }
 
+/* Dark mode for textarea */
+.dark .chat-input-fixed textarea {
+  background: #334155 !important;
+  border: 1px solid #475569 !important;
+  color: #f1f5f9 !important;
+}
+
+.dark .chat-input-fixed textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
 /* Textarea focus state */
 .chat-input-fixed textarea:focus {
   outline: none !important;
   border-color: #fde68a !important;
   background: white !important;
   box-shadow: 0 0 0 3px rgba(253, 230, 138, 0.1) !important;
+}
+
+/* Dark mode focus state */
+.dark .chat-input-fixed textarea:focus {
+  border-color: #f59e0b !important;
+  background: #475569 !important;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2) !important;
 }
 
 /* Button styling consistency - Rounded modern */
@@ -136,6 +161,17 @@
   transform: translateY(-1px) !important;
 }
 
+/* Dark mode for square buttons */
+.dark .chat-input-fixed button.h-11.w-11 {
+  background: #475569 !important;
+  border: 1px solid #64748b !important;
+  color: #f1f5f9 !important;
+}
+
+.dark .chat-input-fixed button.h-11.w-11:hover {
+  background: #64748b !important;
+}
+
 /* Send button - Primary style */
 .chat-input-fixed button.h-11.px-4 {
   padding: 0 20px !important;
@@ -158,6 +194,22 @@
   color: #9ca3af !important;
   transform: none !important;
   box-shadow: none !important;
+}
+
+/* Dark mode for send button */
+.dark .chat-input-fixed button.h-11.px-4 {
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+  color: white !important;
+}
+
+.dark .chat-input-fixed button.h-11.px-4:hover {
+  background: linear-gradient(135deg, #d97706, #b45309) !important;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4) !important;
+}
+
+.dark .chat-input-fixed button.h-11.px-4:disabled {
+  background: #475569 !important;
+  color: #64748b !important;
 }
 
 /* Ensure proper spacing for content above */
@@ -183,10 +235,21 @@
   outline-offset: 2px !important;
 }
 
+/* Dark mode focus states */
+.dark .chat-input-fixed textarea:focus {
+  outline: 2px solid #f59e0b !important;
+  outline-offset: 2px !important;
+}
+
 /* Button hover effects */
 .chat-input-fixed button:hover {
   transform: translateY(-1px) !important;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Dark mode button hover effects */
+.dark .chat-input-fixed button:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
 }
 
 /* Responsive adjustments with mobile-first tap targets */
@@ -346,4 +409,13 @@ body {
 
 .chat-messages-container::-webkit-scrollbar-thumb:hover {
   background: #9ca3af !important;
+}
+
+/* Dark mode scrollbar */
+.dark .chat-messages-container::-webkit-scrollbar-thumb {
+  background: #475569 !important;
+}
+
+.dark .chat-messages-container::-webkit-scrollbar-thumb:hover {
+  background: #64748b !important;
 }
