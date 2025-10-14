@@ -183,6 +183,8 @@ export class AIRouter {
 
     // Simular diferentes tipos de resposta baseado no provedor
     switch (provider.type) {
+      case 'grok':
+        return this.generateGrokResponse(text, context);
       case 'openai':
         return this.generateOpenAIResponse(text, context);
       case 'anthropic':
@@ -198,7 +200,7 @@ export class AIRouter {
     }
   }
 
-  private generateOpenAIResponse(text: string, context?: Record<string, any>): string {
+  private generateGrokResponse(text: string, context?: Record<string, any>): string {
     if (context?.module === 'aula_interativa') {
       return JSON.stringify({
         slides: [
@@ -207,7 +209,7 @@ export class AIRouter {
         ]
       });
     }
-    
+
     if (context?.module === 'enem') {
       return JSON.stringify({
         questoes: [{
@@ -219,6 +221,10 @@ export class AIRouter {
       });
     }
 
+    return `Resposta Grok 4 Fast para: ${text.substring(0, 50)}...`;
+  }
+
+  private generateOpenAIResponse(text: string, context?: Record<string, any>): string {
     return `Resposta OpenAI para: ${text.substring(0, 50)}...`;
   }
 
@@ -308,13 +314,13 @@ export class AIRouter {
     startTime?: number,
     error?: any
   ): RouterResponse {
-    // Fallback para OpenAI (sistema atual)
-    const fallbackContent = this.generateOpenAIResponse(text, context);
-    
+    // Fallback principal utiliza Grok 4 Fast
+    const fallbackContent = this.generateGrokResponse(text, context);
+
     return {
       success: true,
       content: fallbackContent,
-      provider: 'openai-gpt-4o-mini',
+      provider: 'xai-grok-4-fast',
       metrics: {
         latency: Date.now() - (startTime || Date.now()),
         cost: 0.001, // Custo estimado baixo
@@ -333,7 +339,7 @@ export class AIRouter {
         timestamp: new Date(),
         requestId: requestId || 'fallback',
         module: context?.module || 'unknown',
-        selectedProvider: 'openai-gpt-4o-mini',
+        selectedProvider: 'xai-grok-4-fast',
         alternatives: [],
         actualMetrics: {
           latency: Date.now() - (startTime || Date.now()),

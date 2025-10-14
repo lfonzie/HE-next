@@ -39,8 +39,8 @@ interface ChatMessage {
 export default function ImprovedChatComponent() {
   const { data: session } = useSession()
   const [input, setInput] = useState('')
-  const [selectedProvider, setSelectedProvider] = useState('openai')
-  const [selectedModel, setSelectedModel] = useState('gpt-4o-mini')
+  const [selectedProvider, setSelectedProvider] = useState('grok')
+  const [selectedModel, setSelectedModel] = useState('grok-4-fast-reasoning')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -181,9 +181,9 @@ export default function ImprovedChatComponent() {
                 onChange={(e) => setSelectedProvider(e.target.value)}
                 className="px-2 py-1 border rounded text-sm"
               >
+                <option value="grok">Grok</option>
                 <option value="openai">OpenAI</option>
                 <option value="gemini">Gemini</option>
-                <option value="grok">Grok</option>
                 <option value="perplexity">Perplexity</option>
               </select>
             </div>
@@ -194,6 +194,7 @@ export default function ImprovedChatComponent() {
                 onChange={(e) => setSelectedModel(e.target.value)}
                 className="px-2 py-1 border rounded text-sm"
               >
+                <option value="grok-4-fast-reasoning">Grok 4 Fast Reasoning</option>
                 <option value="gpt-4o-mini">GPT-4o Mini</option>
                 <option value="gpt-4o">GPT-4o</option>
                 <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash</option>

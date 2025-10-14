@@ -62,6 +62,7 @@
     }
   },
   "fallbackChain": [
+    "xai-grok-4-fast",
     "openai-gpt-4o-mini",
     "anthropic-claude-3-haiku",
     "google-gemini-pro",

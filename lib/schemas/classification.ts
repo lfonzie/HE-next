@@ -19,7 +19,7 @@ export const ClassificationSchema = z.object({
     'atendimento'
   ]),
   complexity: z.enum(['simples', 'media', 'complexa']),
-  provider_hint: z.enum(['openai', 'anthropic', 'google', 'groq']).optional(),
+  provider_hint: z.enum(['grok', 'openai', 'anthropic', 'google', 'groq']).optional(),
   confidence: z.number().min(0).max(1),
   rationale: z.string().optional(),
   needsImages: z.boolean().optional()
@@ -64,12 +64,12 @@ export const PROVIDER_CONFIDENCE_THRESHOLD = 0.75
 
 // Políticas de provider por módulo
 export const MODULE_PROVIDER_POLICIES = {
-  enem: { preferred: 'openai', model: 'gpt-4o-mini', complexModel: 'gpt-5-chat-latest' },
-  professor: { preferred: 'openai', model: 'gpt-4o-mini', complexModel: 'gpt-5-chat-latest' },
-  aula_interativa: { preferred: 'openai', model: 'gpt-4o-mini', complexModel: 'gpt-5-chat-latest' },
-  financeiro: { preferred: 'openai', model: 'gpt-4o-mini', complexModel: 'gpt-5-chat-latest' },
-  admin: { preferred: 'openai', model: 'gpt-4o-mini', complexModel: 'gpt-5-chat-latest' },
-  atendimento: { preferred: 'openai', model: 'gpt-4o-mini', complexModel: 'gpt-5-chat-latest' }
+  enem: { preferred: 'grok', model: 'grok-4-fast-reasoning', complexModel: 'gpt-5-chat-latest' },
+  professor: { preferred: 'grok', model: 'grok-4-fast-reasoning', complexModel: 'gpt-5-chat-latest' },
+  aula_interativa: { preferred: 'grok', model: 'grok-4-fast-reasoning', complexModel: 'gpt-5-chat-latest' },
+  financeiro: { preferred: 'grok', model: 'grok-4-fast-reasoning', complexModel: 'gpt-5-chat-latest' },
+  admin: { preferred: 'grok', model: 'grok-4-fast-reasoning', complexModel: 'gpt-5-chat-latest' },
+  atendimento: { preferred: 'grok', model: 'grok-4-fast-reasoning', complexModel: 'gpt-5-chat-latest' }
 } as const
 
 // Heurísticas de alta precisão em português

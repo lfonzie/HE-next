@@ -230,8 +230,8 @@ export function useConversationManager(config: ConversationManagerConfig = DEFAU
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          provider: options.provider || 'openai',
-          model: options.model || 'gpt-4o-mini',
+          provider: options.provider || 'grok',
+          model: options.model || 'grok-4-fast-reasoning',
           input: content,
           module: options.module || 'chat',
           conversationId: conversationContext.conversationId,
