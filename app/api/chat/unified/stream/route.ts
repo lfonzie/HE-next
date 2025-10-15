@@ -7,6 +7,7 @@ import {
   appendMessage, 
   conversationManager 
 } from "@/lib/conversation-manager";
+import { updateConversation } from "@/lib/chat-repository";
 import { streamOpenAI } from "@/lib/providers/openai";
 import { streamGPT5 } from "@/lib/providers/gpt5";
 import { streamGemini } from "@/lib/providers/gemini";
@@ -125,11 +126,11 @@ export async function POST(req: NextRequest) {
         } catch (grokError) {
           console.error(`❌ [CHAT-STREAM] Grok failed, falling back to Gemini:`, grokError);
           // Fallback to Gemini if Grok fails
-          stream = await streamGemini("gemini-2.0-flash-exp", intelligentContext, input, contextualSystemPrompt);
+          stream = await streamGemini("gemini-2.5-flash", intelligentContext, input, contextualSystemPrompt);
           console.log(`✅ [CHAT-STREAM] Gemini fallback stream created successfully`);
           // Update provider for metadata
           finalProvider = "gemini";
-          finalModel = "gemini-2.0-flash-exp";
+          finalModel = "gemini-2.5-flash";
         }
         break;
       default:
@@ -307,7 +308,14 @@ export async function POST(req: NextRequest) {
               finalModel
             );
 
+            // Atualizar a conversa com o modelo correto usado
+            await updateConversation(finalConversationId, {
+              model: finalModel,
+              updated_at: new Date()
+            });
+
             console.log(`✅ [CHAT-STREAM] Response saved: ${finalCleanedResponse.length} chars`);
+            console.log(`✅ [CHAT-STREAM] Conversation updated with model: ${finalModel}`);
           } catch (error) {
             console.error("❌ [CHAT-STREAM] Error saving response:", error);
           }

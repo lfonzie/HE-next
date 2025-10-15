@@ -307,18 +307,37 @@ export async function getModelsData() {
       }
     });
 
+    // Get current month date range
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+
     // Get usage statistics for each model
     const modelUsage = await Promise.all(
       models.map(async (model) => {
         const conversations = await prisma.conversations.count({
-          where: { model: model.name }
+          where: { model: model.id }
         });
         
         const analytics = await prisma.analytics.findMany({
-          where: { model: model.name },
+          where: { model: model.id },
           select: {
             tokens_used: true,
             response_time: true
+          }
+        });
+
+        // Get current month analytics for cost calculation
+        const currentMonthAnalytics = await prisma.analytics.findMany({
+          where: { 
+            model: model.id,
+            date: {
+              gte: startOfMonth,
+              lte: endOfMonth
+            }
+          },
+          select: {
+            tokens_used: true
           }
         });
 
@@ -326,6 +345,16 @@ export async function getModelsData() {
         const avgResponseTime = analytics.length > 0 
           ? Math.round(analytics.reduce((sum, a) => sum + (a.response_time || 0), 0) / analytics.length)
           : 0;
+
+        // Calculate monthly cost estimation
+        const monthlyTokensUsed = currentMonthAnalytics.reduce((sum, a) => sum + a.tokens_used, 0);
+        const inputCostPerToken = model.cost_per_input ? model.cost_per_input / 1000000 : 0; // Convert to cost per token
+        const outputCostPerToken = model.cost_per_output ? model.cost_per_output / 1000000 : 0; // Convert to cost per token
+        
+        // Estimate 70% input tokens, 30% output tokens (typical ratio)
+        const estimatedInputTokens = monthlyTokensUsed * 0.7;
+        const estimatedOutputTokens = monthlyTokensUsed * 0.3;
+        const estimatedMonthlyCost = (estimatedInputTokens * inputCostPerToken) + (estimatedOutputTokens * outputCostPerToken);
 
         return {
           id: model.id,
@@ -337,6 +366,8 @@ export async function getModelsData() {
           totalConversations: conversations,
           totalTokensUsed: totalTokens,
           avgResponseTime,
+          monthlyTokensUsed,
+          estimatedMonthlyCost,
           created_at: model.created_at
         };
       })

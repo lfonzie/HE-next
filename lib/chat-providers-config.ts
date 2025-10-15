@@ -77,9 +77,9 @@ export const CHAT_PROVIDERS: Record<string, ChatProviderConfig> = {
             process.env.GOOGLE_API_KEY,
     createClient: (model: string) => google(model),
     models: {
-      simple: 'gemini-2.0-flash-exp',
-      complex: 'gemini-2.0-flash-exp',
-      fast: 'gemini-2.0-flash-exp'
+      simple: 'gemini-2.5-flash',
+      complex: 'gemini-2.5-flash',
+      fast: 'gemini-2.5-flash'
     },
     timeout: 45000,
     maxRetries: 3,

@@ -11,6 +11,8 @@ interface Model {
   totalConversations: number;
   totalTokensUsed: number;
   avgResponseTime: number;
+  monthlyTokensUsed: number;
+  estimatedMonthlyCost: number;
   created_at: Date;
 }
 
@@ -176,7 +178,7 @@ export default function ModelsPage() {
                         Custo Input
                       </dt>
                       <dd className="mt-1 text-sm text-gray-900">
-                        {model.costPerInput ? `$${model.costPerInput}` : 'N/A'}
+                        {model.costPerInput ? `$${(model.costPerInput / 100).toFixed(2)}/1M tokens` : 'N/A'}
                       </dd>
                     </div>
                     <div>
@@ -184,7 +186,23 @@ export default function ModelsPage() {
                         Custo Output
                       </dt>
                       <dd className="mt-1 text-sm text-gray-900">
-                        {model.costPerOutput ? `$${model.costPerOutput}` : 'N/A'}
+                        {model.costPerOutput ? `$${(model.costPerOutput / 100).toFixed(2)}/1M tokens` : 'N/A'}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                        Tokens Este Mês
+                      </dt>
+                      <dd className="mt-1 text-sm text-gray-900">
+                        {model.monthlyTokensUsed.toLocaleString()}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                        Custo Estimado
+                      </dt>
+                      <dd className="mt-1 text-sm font-semibold text-green-600">
+                        ${model.estimatedMonthlyCost.toFixed(4)}
                       </dd>
                     </div>
                   </div>

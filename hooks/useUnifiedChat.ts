@@ -18,6 +18,7 @@ interface ChatMessage {
   complexity?: string;
   module?: string;
   tokens?: number;
+  isStreaming?: boolean;
   meta?: {
     provider?: 'openai' | 'google' | 'anthropic' | 'local';
     model?: string;
@@ -147,7 +148,6 @@ export function useUnifiedChat(
           system,
           module: detectedModule, // ✨ NOVO: Passar módulo detectado
           conversationId: cid,
-          ...(typeof stepFeedback === 'string' && stepFeedback ? { stepFeedback } : {})
         })
       });
       
@@ -240,7 +240,8 @@ export function useUnifiedChat(
       id: tempId,
       role: "assistant",
       content: "",
-      timestamp: new Date()
+      timestamp: new Date(),
+      isStreaming: true
     };
     
     setMessages(prev => [...prev, tempMessage]);
@@ -256,7 +257,6 @@ export function useUnifiedChat(
           system,
           module: detectedModule, // ✨ NOVO: Passar módulo detectado
           conversationId: cid,
-          ...(typeof stepFeedback === 'string' && stepFeedback ? { stepFeedback } : {})
         })
       });
       
@@ -357,7 +357,7 @@ export function useUnifiedChat(
       setMessages(prev => 
         prev.map(msg => 
           msg.id === tempId 
-            ? { ...msg, id: `assistant-${Date.now()}`, content: fullContent }
+            ? { ...msg, id: `assistant-${Date.now()}`, content: fullContent, isStreaming: false }
             : msg
         )
       );

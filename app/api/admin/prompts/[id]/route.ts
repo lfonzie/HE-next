@@ -1,14 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-// Prevent prerendering of this API route
+import { PrismaClient } from '@prisma/client';
+import { handleAdminRouteError, requireAdmin } from '@/lib/admin-auth';
 
 // Prevent prerendering of this API route
 export const dynamic = 'force-dynamic';
-
-
-import { PrismaClient } from '@prisma/client';
-
-
 
 const prisma = new PrismaClient();
 
@@ -17,12 +12,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Skip authentication in development
-    if (process.env.NODE_ENV === 'development') {
-      // Development mode - skip auth check
-    } else {
-      // TODO: Add authentication check for production
-    }
+    await requireAdmin(request);
 
     const { id: promptId } = await params;
 
@@ -50,7 +40,7 @@ export async function GET(
     }
 
     // Try to find in school_prompts
-    prompt = await prisma.school_prompts.findUnique({
+    const schoolPrompt = await prisma.school_prompts.findUnique({
       where: { id: promptId },
       include: {
         schools: {
@@ -61,27 +51,32 @@ export async function GET(
       }
     });
 
-    if (prompt) {
+    if (schoolPrompt) {
       return NextResponse.json({
-        id: prompt.id,
-        module: prompt.module,
-        text: prompt.prompt,
+        id: schoolPrompt.id,
+        module: schoolPrompt.module,
+        text: schoolPrompt.prompt,
         description: null,
-        isActive: prompt.is_active,
+        isActive: schoolPrompt.is_active,
         temperature: null,
         maxTokens: null,
         maxCompletionTokens: null,
         tone: null,
         type: 'school',
-        school: prompt.schools?.name || 'Unknown',
-        created_at: prompt.created_at,
-        updated_at: prompt.updated_at
+        school: schoolPrompt.schools?.name || 'Unknown',
+        created_at: schoolPrompt.created_at,
+        updated_at: schoolPrompt.updated_at
       });
     }
 
     return NextResponse.json({ error: 'Prompt not found' }, { status: 404 });
 
   } catch (error) {
+    const adminResponse = handleAdminRouteError(error);
+    if (adminResponse) {
+      return adminResponse;
+    }
+
     console.error('Error fetching prompt:', error);
     return NextResponse.json(
       { 
@@ -98,12 +93,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Skip authentication in development
-    if (process.env.NODE_ENV === 'development') {
-      // Development mode - skip auth check
-    } else {
-      // TODO: Add authentication check for production
-    }
+    await requireAdmin(request);
 
     const { id: promptId } = await params;
     const body = await request.json();
@@ -196,6 +186,11 @@ export async function PUT(
     return NextResponse.json({ error: 'Prompt not found' }, { status: 404 });
 
   } catch (error) {
+    const adminResponse = handleAdminRouteError(error);
+    if (adminResponse) {
+      return adminResponse;
+    }
+
     console.error('Error updating prompt:', error);
     return NextResponse.json(
       { 
@@ -212,12 +207,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Skip authentication in development
-    if (process.env.NODE_ENV === 'development') {
-      // Development mode - skip auth check
-    } else {
-      // TODO: Add authentication check for production
-    }
+    await requireAdmin(request);
 
     const { id: promptId } = await params;
 
@@ -248,6 +238,11 @@ export async function DELETE(
     return NextResponse.json({ error: 'Prompt not found' }, { status: 404 });
 
   } catch (error) {
+    const adminResponse = handleAdminRouteError(error);
+    if (adminResponse) {
+      return adminResponse;
+    }
+
     console.error('Error deleting prompt:', error);
     return NextResponse.json(
       { 

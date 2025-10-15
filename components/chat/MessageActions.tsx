@@ -143,24 +143,26 @@ export function MessageActions({
           </div>
         )}
 
-        {/* Copy button */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleCopy}
-              className={`h-8 w-8 p-0 ${
-                isCopied ? 'text-green-600 bg-green-50' : 'text-gray-500'
-              }`}
-            >
-              <Copy className="w-4 h-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            {isCopied ? 'Copiado!' : 'Copiar mensagem'}
-          </TooltipContent>
-        </Tooltip>
+        {/* Copy button - only show when not streaming */}
+        {!message.isStreaming && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleCopy}
+                className={`h-8 w-8 p-0 ${
+                  isCopied ? 'text-green-600 bg-green-50' : 'text-gray-500'
+                }`}
+              >
+                <Copy className="w-4 h-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {isCopied ? 'Copiado!' : 'Copiar mensagem'}
+            </TooltipContent>
+          </Tooltip>
+        )}
 
         {/* More actions */}
         <DropdownMenu>

@@ -4,6 +4,7 @@
 import { callGrok } from '@/lib/providers/grok';
 import { cleanPerplexityResponseComprehensive } from './perplexity-cleaner-enhanced';
 import { cleanPerplexityResponseHybrid } from './perplexity-cleaner-ast';
+import { cleanMarkdownCitations } from '@/lib/cleanCitations';
 
 /**
  * Uses AI to intelligently clean Perplexity responses by removing source citations
@@ -73,7 +74,7 @@ Retorne apenas o texto limpo:`;
 
 /**
  * Main function to clean Perplexity responses using the best available method
- * This function automatically chooses between AI, AST, and regex approaches
+ * This function automatically chooses between AST, hybrid, and regex approaches
  */
 export async function cleanPerplexityResponse(text: string): Promise<string> {
   if (!text || typeof text !== 'string' || text.trim().length === 0) {
@@ -81,10 +82,23 @@ export async function cleanPerplexityResponse(text: string): Promise<string> {
   }
 
   try {
-    // First try the hybrid AST/regex approach for best results
+    // First try the new AST-based approach for best results
+    console.log('[PERPLEXITY-CLEANER] Using AST-based cleaning');
+    const astResult = await cleanMarkdownCitations(text);
+
+    // Verify the result is clean
+    if (astResult && astResult.trim().length > 0) {
+      return astResult;
+    }
+  } catch (error) {
+    console.warn('[PERPLEXITY-CLEANER] AST cleaning failed, falling back to hybrid:', error);
+  }
+
+  try {
+    // Fallback to hybrid AST/regex approach
     console.log('[PERPLEXITY-CLEANER] Using hybrid AST/regex cleaning');
     const hybridResult = await cleanPerplexityResponseHybrid(text);
-    
+
     // Verify the result is clean
     if (hybridResult && hybridResult.trim().length > 0) {
       return hybridResult;
@@ -97,7 +111,7 @@ export async function cleanPerplexityResponse(text: string): Promise<string> {
     // Fallback to comprehensive regex cleaning
     console.log('[PERPLEXITY-CLEANER] Using comprehensive regex cleaning');
     const regexResult = cleanPerplexityResponseComprehensive(text);
-    
+
     if (regexResult && regexResult.trim().length > 0) {
       return regexResult;
     }

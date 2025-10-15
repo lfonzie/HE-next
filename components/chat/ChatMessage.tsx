@@ -211,7 +211,7 @@ export const ChatMessage = memo(function ChatMessage({
       role="group"
     >
       {/* Avatar - ícone específico do módulo para ambas as mensagens */}
-      <div className={`flex flex-col items-center ${isUser ? 'order-last' : 'order-first'}`}>
+      <div className={`flex flex-col items-center ${isUser ? 'order-last' : 'order-first'} ${message.isStreaming ? 'opacity-0' : 'opacity-100'}`}>
         <div
           className={`w-10 h-10 rounded-full border-2 shadow-md flex items-center justify-center transition-all duration-200 hover:scale-105 cursor-help ${isUser ? 'chat-avatar-user' : 'chat-avatar-assistant'}`}
           style={{
@@ -331,8 +331,8 @@ export const ChatMessage = memo(function ChatMessage({
             )}
 
 
-            {/* Detectar e renderizar aula interativa */}
-            {!isUser && message.content && message.content.includes('🎓 **Aula Interativa Criada!**') && (
+            {/* Detectar e renderizar aula interativa - only show when not streaming */}
+            {!isUser && !message.isStreaming && message.content && message.content.includes('🎓 **Aula Interativa Criada!**') && (
               <div className="mt-4 p-4 bg-gradient-to-r from-yellow-50 to-yellow-50 border border-yellow-200 rounded-lg">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
@@ -411,8 +411,8 @@ export const ChatMessage = memo(function ChatMessage({
             )}
 
 
-            {/* Ações (copiar) */}
-            {!isUser && (
+            {/* Ações (copiar) - only show when not streaming */}
+            {!isUser && !message.isStreaming && (
               <div className="mt-2 flex items-center justify-end gap-2">
                 <CopyButton text={message.content} />
               </div>

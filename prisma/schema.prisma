@@ -655,7 +655,7 @@ model schools {
 
 model system_messages {
   id                    String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  module                String   @db.VarChar(50)
+  module                String   @unique @db.VarChar(50)
   content               String
   system_prompt         String?
   description           String?
