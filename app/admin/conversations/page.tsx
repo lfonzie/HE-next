@@ -180,7 +180,14 @@ export default function ConversationsPage() {
                       Criada em
                     </dt>
                     <dd className="mt-1 text-sm text-gray-900">
-                      {new Date(conversation.created_at).toLocaleDateString('pt-BR')}
+                      <div>{new Date(conversation.created_at).toLocaleDateString('pt-BR')}</div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {new Date(conversation.created_at).toLocaleTimeString('pt-BR', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          second: '2-digit'
+                        })}
+                      </div>
                     </dd>
                   </div>
                 </div>

@@ -648,7 +648,10 @@ function AulasPageContent() {
       console.log('Chamando API com AI SDK para gerar aula:', { topic })
       
       const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 300000) // 5 minutos timeout para sistema híbrido
+      const timeoutId = setTimeout(() => {
+        console.log('⏰ Request timeout after 5 minutes, aborting...')
+        controller.abort()
+      }, 300000) // 5 minutos timeout para sistema híbrido
       
       const response = await fetch('/api/aulas/generate-ai-sdk', {
         method: 'POST',
@@ -869,6 +872,10 @@ function AulasPageContent() {
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
           errorMessage = 'Timeout: O sistema híbrido (Grok + Gemini) está processando muitas imagens. Tente novamente.'
+        } else if (error.message.includes('Failed to fetch')) {
+          errorMessage = 'Erro de conexão: Verifique sua internet e tente novamente.'
+        } else if (error.message.includes('ERR_NETWORK_IO_SUSPENDED')) {
+          errorMessage = 'Conexão suspensa: Verifique sua internet e tente novamente.'
         } else if (error.message.includes('sobrecarregada')) {
           errorMessage = 'Todos os provedores estão sobrecarregados. Tente novamente em alguns minutos.'
         } else if (error.message.includes('servidor')) {

@@ -15,7 +15,7 @@ import { streamGrok } from "@/lib/providers/grok";
 import { randomUUID } from "crypto";
 import { getSystemPrompt as loadSystemPrompt } from "@/lib/system-message-loader";
 import { loadTIResources } from "@/lib/ti-framework";
-import { cleanPerplexityResponseWithAI } from "@/lib/utils/perplexity-cleaner";
+import { cleanPerplexityResponseWithAI, isPerplexityResponse } from "@/lib/utils/perplexity-cleaner";
 
 // Função para extrair sugestões de follow-up da resposta da IA
 function extractFollowUpSuggestions(aiResponse: string): string[] {
@@ -247,26 +247,28 @@ export async function POST(req: NextRequest) {
           }
 
           // Agora aplicar limpeza final (fontes do Perplexity) na resposta já limpa das sugestões
-          // Usar IA para limpeza inteligente das fontes
-          try {
-            const fullyCleanedResponse = await cleanPerplexityResponseWithAI(finalCleanedResponse);
-            if (fullyCleanedResponse !== finalCleanedResponse) {
-              // Send a special "replace" chunk to update the content with fully cleaned version
-              const replaceData = {
-                type: "content_replace",
-                content: fullyCleanedResponse
-              };
-              controller.enqueue(encoder.encode(`data: ${JSON.stringify(replaceData)}\n\n`));
-              console.log(`🔄 [CHAT-STREAM] Content fully cleaned with AI (suggestions + sources)`);
-            }
+          // Só usar IA para limpeza se detectar citações que precisam ser removidas
+          if (isPerplexityResponse(finalCleanedResponse)) {
+            try {
+              const fullyCleanedResponse = await cleanPerplexityResponseWithAI(finalCleanedResponse);
+              if (fullyCleanedResponse !== finalCleanedResponse) {
+                // Send a special "replace" chunk to update the content with fully cleaned version
+                const replaceData = {
+                  type: "content_replace",
+                  content: fullyCleanedResponse
+                };
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify(replaceData)}\n\n`));
+                console.log(`🔄 [CHAT-STREAM] Content fully cleaned with AI (suggestions + sources)`);
+              }
 
-            // Update final response for saving
-            finalCleanedResponse = fullyCleanedResponse;
-          } catch (error) {
-            console.error('❌ [CHAT-STREAM] Error cleaning with AI:', error);
-            // Fallback to regex cleaning
-            const fallbackCleaned = require('@/lib/utils/perplexity-cleaner').cleanPerplexityResponseEnhanced(finalCleanedResponse);
-            finalCleanedResponse = fallbackCleaned;
+              // Update final response for saving
+              finalCleanedResponse = fullyCleanedResponse;
+            } catch (error) {
+              console.error('❌ [CHAT-STREAM] Error cleaning with AI:', error);
+              // Fallback to regex cleaning
+              const fallbackCleaned = require('@/lib/utils/perplexity-cleaner').cleanPerplexityResponseEnhanced(finalCleanedResponse);
+              finalCleanedResponse = fallbackCleaned;
+            }
           }
 
           // Enviar metadados finais

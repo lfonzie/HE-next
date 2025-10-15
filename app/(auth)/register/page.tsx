@@ -30,12 +30,22 @@ export default function RegisterPage() {
   const [showTermsModal, setShowTermsModal] = useState(false)
   const router = useRouter()
 
+  // Validador de senha forte
+  const validatePassword = (password: string): boolean => {
+    // Pelo menos 8 caracteres e pelo menos 1 letra maiúscula
+    return password.length >= 8 && /[A-Z]/.test(password)
+  }
+
+  const isPasswordValid = validatePassword(password)
+
   // Carregar estados na inicialização
   useEffect(() => {
     const loadStates = async () => {
       try {
         const states = await BrasilApiService.getStates()
-        setAvailableStates(states)
+        // Ordenar estados alfabeticamente
+        const sortedStates = states.sort((a, b) => a.nome.localeCompare(b.nome))
+        setAvailableStates(sortedStates)
       } catch (error) {
         console.error('Erro ao carregar estados:', error)
       }
@@ -66,6 +76,13 @@ export default function RegisterPage() {
     e.preventDefault()
     setIsLoading(true)
     setError('')
+
+    // Validação de senha forte
+    if (!isPasswordValid) {
+      setError('A senha deve ter pelo menos 8 caracteres e 1 letra maiúscula')
+      setIsLoading(false)
+      return
+    }
 
     if (password !== confirmPassword) {
       setError('As senhas não coincidem')
@@ -103,7 +120,7 @@ export default function RegisterPage() {
         })
 
         if (result?.ok) {
-          router.push('/dashboard')
+          router.push('/chat')
         }
       } else {
         const data = await response.json()
@@ -168,7 +185,20 @@ export default function RegisterPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="new-password"
                 required
+                className={password && !isPasswordValid ? 'border-red-500 focus:ring-red-500' : ''}
               />
+              {password && (
+                <div className="text-xs space-y-1">
+                  <div className={`flex items-center ${password.length >= 8 ? 'text-green-600' : 'text-red-600'}`}>
+                    <span className="mr-1">✓</span>
+                    Pelo menos 8 caracteres
+                  </div>
+                  <div className={`flex items-center ${/[A-Z]/.test(password) ? 'text-green-600' : 'text-red-600'}`}>
+                    <span className="mr-1">✓</span>
+                    Pelo menos 1 letra maiúscula
+                  </div>
+                </div>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirmar Senha</Label>
@@ -221,18 +251,18 @@ export default function RegisterPage() {
                 required
                 disabled={!state || isLoadingCities}
               >
-                <option value="">
-                  {!state 
-                    ? 'Primeiro selecione o estado' 
-                    : isLoadingCities 
-                    ? 'Carregando cidades...' 
-                    : availableCities.length === 0 
-                    ? 'Nenhuma cidade encontrada' 
+                <option key="placeholder" value="">
+                  {!state
+                    ? 'Primeiro selecione o estado'
+                    : isLoadingCities
+                    ? 'Carregando cidades...'
+                    : availableCities.length === 0
+                    ? 'Nenhuma cidade encontrada'
                     : 'Selecione sua cidade'
                   }
                 </option>
                 {availableCities.map((cityData) => (
-                  <option key={cityData.id} value={cityData.nome}>
+                  <option key={`city-${cityData.id}`} value={cityData.nome}>
                     {cityData.nome}
                   </option>
                 ))}

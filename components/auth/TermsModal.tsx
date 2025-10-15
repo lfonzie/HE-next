@@ -196,7 +196,7 @@ export function TermsModal({ isOpen, onClose }: TermsModalProps) {
               <li>Portabilidade dos dados</li>
               <li>Revogação do consentimento</li>
             </ul>
-            <p>7.5. <strong>Contato para Privacidade:</strong> privacidade@hubedu.ia.br</p>
+            <p>7.5. <strong>Contato para Privacidade:</strong> legal@hubedu.ia.br</p>
 
             <h3>8. ISENÇÕES E LIMITAÇÕES DE RESPONSABILIDADE</h3>
             <p>8.1. <strong>Isenção de Garantias</strong></p>
@@ -220,8 +220,6 @@ export function TermsModal({ isOpen, onClose }: TermsModalProps) {
             <h3>10. CONTATO</h3>
             <ul>
               <li>Dúvidas sobre os Termos: legal@hubedu.ia.br</li>
-              <li>Suporte técnico: suporte@hubedu.ia.br</li>
-              <li>Privacidade: privacidade@hubedu.ia.br</li>
             </ul>
 
             <div className="bg-green-50 dark:bg-green-950/20 p-4 rounded-lg mt-6">

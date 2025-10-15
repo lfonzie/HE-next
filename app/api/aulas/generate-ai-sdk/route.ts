@@ -66,6 +66,7 @@ export async function POST(request: Request) {
     // Try Grok first if API key is available
     if (process.env.GROK_API_KEY) {
       try {
+        console.log('🔄 Attempting Grok improved generation...');
         response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/aulas/generate-grok-improved`, {
           method: 'POST',
           headers: {
@@ -73,6 +74,7 @@ export async function POST(request: Request) {
             'Cookie': request.headers.get('cookie') || '',
           },
           body: JSON.stringify(body),
+          signal: AbortSignal.timeout(120000), // 2 minutes timeout
         });
         
         if (response.ok) {
@@ -86,6 +88,7 @@ export async function POST(request: Request) {
         console.log('🔄 Trying original Grok implementation...');
         
         try {
+          console.log('🔄 Attempting original Grok generation...');
           response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/aulas/generate-grok`, {
             method: 'POST',
             headers: {
@@ -93,6 +96,7 @@ export async function POST(request: Request) {
               'Cookie': request.headers.get('cookie') || '',
             },
             body: JSON.stringify(body),
+            signal: AbortSignal.timeout(120000), // 2 minutes timeout
           });
           
           if (response.ok) {
@@ -113,6 +117,7 @@ export async function POST(request: Request) {
               'Cookie': request.headers.get('cookie') || '',
             },
             body: JSON.stringify(body),
+            signal: AbortSignal.timeout(120000), // 2 minutes timeout
           });
           
           if (response.ok) {
@@ -133,6 +138,7 @@ export async function POST(request: Request) {
           'Cookie': request.headers.get('cookie') || '',
         },
         body: JSON.stringify(body),
+        signal: AbortSignal.timeout(120000), // 2 minutes timeout
       });
       
       if (response.ok) {

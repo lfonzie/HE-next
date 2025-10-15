@@ -2,6 +2,8 @@
 // Utility functions to clean Perplexity responses by removing source citations
 
 import { callGrok } from '@/lib/providers/grok';
+import { cleanPerplexityResponseComprehensive } from './perplexity-cleaner-enhanced';
+import { cleanPerplexityResponseHybrid } from './perplexity-cleaner-ast';
 
 /**
  * Uses AI to intelligently clean Perplexity responses by removing source citations
@@ -45,19 +47,19 @@ Retorne apenas o texto limpo:`;
       cleanedText = grokResponse;
     } else if (grokResponse && typeof grokResponse === 'object') {
       // Handle different response formats from Grok
-      cleanedText = grokResponse.text || grokResponse.content || grokResponse.response || '';
+      cleanedText = (grokResponse as any).text || (grokResponse as any).content || (grokResponse as any).response || '';
     }
 
     // Fallback: if AI fails or returns invalid response, use the basic regex cleaning
     if (!cleanedText || typeof cleanedText !== 'string' || cleanedText.trim().length === 0) {
       console.warn('[PERPLEXITY-CLEANER] AI cleaning failed, using regex fallback. Raw response:', grokResponse);
-      return cleanPerplexityResponseEnhanced(text);
+      return cleanPerplexityResponseComprehensive(text);
     }
 
     // Additional check: if the cleaned text still has citation patterns, use regex fallback
     if (/\b\d{3,5}\b(?=[.!?]|$)/.test(cleanedText)) {
       console.warn('[PERPLEXITY-CLEANER] AI cleaning left citation patterns, using regex fallback');
-      return cleanPerplexityResponseEnhanced(text);
+      return cleanPerplexityResponseComprehensive(text);
     }
 
     return cleanedText.trim();
@@ -65,7 +67,51 @@ Retorne apenas o texto limpo:`;
   } catch (error) {
     console.error('[PERPLEXITY-CLEANER] Error using AI for cleaning:', error);
     // Fallback to regex-based cleaning
-    return cleanPerplexityResponseEnhanced(text);
+    return cleanPerplexityResponseComprehensive(text);
+  }
+}
+
+/**
+ * Main function to clean Perplexity responses using the best available method
+ * This function automatically chooses between AI, AST, and regex approaches
+ */
+export async function cleanPerplexityResponse(text: string): Promise<string> {
+  if (!text || typeof text !== 'string' || text.trim().length === 0) {
+    return text;
+  }
+
+  try {
+    // First try the hybrid AST/regex approach for best results
+    console.log('[PERPLEXITY-CLEANER] Using hybrid AST/regex cleaning');
+    const hybridResult = await cleanPerplexityResponseHybrid(text);
+    
+    // Verify the result is clean
+    if (hybridResult && hybridResult.trim().length > 0) {
+      return hybridResult;
+    }
+  } catch (error) {
+    console.warn('[PERPLEXITY-CLEANER] Hybrid cleaning failed, falling back to comprehensive regex:', error);
+  }
+
+  try {
+    // Fallback to comprehensive regex cleaning
+    console.log('[PERPLEXITY-CLEANER] Using comprehensive regex cleaning');
+    const regexResult = cleanPerplexityResponseComprehensive(text);
+    
+    if (regexResult && regexResult.trim().length > 0) {
+      return regexResult;
+    }
+  } catch (error) {
+    console.warn('[PERPLEXITY-CLEANER] Regex cleaning failed, falling back to AI:', error);
+  }
+
+  try {
+    // Final fallback to AI-based cleaning
+    console.log('[PERPLEXITY-CLEANER] Using AI-based cleaning as final fallback');
+    return await cleanPerplexityResponseWithAI(text);
+  } catch (error) {
+    console.error('[PERPLEXITY-CLEANER] All cleaning methods failed, returning original text:', error);
+    return text;
   }
 }
 

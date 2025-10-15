@@ -16,7 +16,7 @@ const TOTAL_SLIDES = 14;
 const QUIZ_SLIDE_NUMBERS = [5, 11];
 const IMAGE_SLIDE_NUMBERS = [1, 3, 6, 9, 12, 14];
 const GROK_MODEL = 'grok-4-fast-reasoning'; // Ultra-fast Grok model for lesson generation
-const MAX_TIMEOUT = 90000; // 1.5 minutes (reduced from 2 minutes)
+const MAX_TIMEOUT = 180000; // 3 minutes (increased to handle slow Grok API responses)
 const IMAGE_SEARCH_TIMEOUT = 10000; // 10 seconds (reduced from 60 seconds)
 
 // Função para traduzir tema usando IA

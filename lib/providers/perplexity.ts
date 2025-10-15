@@ -2,7 +2,7 @@ import { perplexity } from '@ai-sdk/perplexity';
 import { generateText, streamText } from 'ai';
 import { mapToOpenAIMessages, trimHistory, ChatMessage } from "../chat-history";
 import { getRecommendedModel, getModelConfig } from './perplexity-models';
-import { cleanPerplexityResponseEnhanced } from '@/lib/utils/perplexity-cleaner';
+import { cleanPerplexityResponse } from '@/lib/utils/perplexity-cleaner';
 
 function getPerplexityModel() {
   if (!process.env.PERPLEXITY_API_KEY) {
@@ -36,7 +36,7 @@ export async function callPerplexity(
     });
 
     // Clean the response to remove source citations
-    const cleanedText = cleanPerplexityResponseEnhanced(result.text);
+    const cleanedText = await cleanPerplexityResponse(result.text);
 
     return {
       text: cleanedText,
@@ -90,7 +90,7 @@ export async function streamPerplexity(
         }
         
         // Clean the full content and yield the cleaned version as final chunk
-        const cleanedContent = cleanPerplexityResponseEnhanced(fullContent);
+        const cleanedContent = await cleanPerplexityResponse(fullContent);
         
         // Final chunk with cleaned content
         yield {

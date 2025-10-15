@@ -631,7 +631,7 @@ IMPORTANTE:
     const lessonPromise = Promise.race([
       callGrok(GROK_MODEL_NAME, [], lessonPrompt, undefined),
       new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Lesson generation timeout (180s)')), 180000)
+        setTimeout(() => reject(new Error('Lesson generation timeout (300s)')), 300000)
       )
     ]);
     

@@ -4,19 +4,20 @@ import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { LoadingProvider } from '@/components/ui/loading';
 import AdminTelemetryWrapper from '@/components/admin/AdminTelemetryWrapper';
+import { SuperAdminGuard } from '@/components/AuthGuard';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  BarChart3, 
-  Building2, 
-  Users, 
-  MessageSquare, 
-  Bot, 
-  FileText, 
-  Zap, 
-  Code, 
-  Target, 
-  Database, 
+import {
+  BarChart3,
+  Building2,
+  Users,
+  MessageSquare,
+  Bot,
+  FileText,
+  Zap,
+  Code,
+  Target,
+  Database,
   Settings,
   Menu,
   X,
@@ -25,6 +26,14 @@ import {
 } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <SuperAdminGuard>
+      <AdminLayoutContent>{children}</AdminLayoutContent>
+    </SuperAdminGuard>
+  );
+}
+
+function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 

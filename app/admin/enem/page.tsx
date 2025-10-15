@@ -63,7 +63,7 @@ function EnemAdminContent() {
 
       if (logsRes.ok) {
         const logsData = await logsRes.json();
-        setLogs(logsData);
+        setLogs(logsData.logs || []);
       }
 
       if (alertsRes.ok) {

@@ -7,19 +7,10 @@ import './globals.css'
 
 const themeScript = `(() => {
   try {
-    const storageKey = 'theme'
-    const mediaQuery = '(prefers-color-scheme: dark)'
     const root = document.documentElement
-    const storedTheme = window.localStorage.getItem(storageKey)
-    const systemPrefersDark = window.matchMedia(mediaQuery).matches
-    const activeTheme = storedTheme === 'light' || storedTheme === 'dark'
-      ? storedTheme
-      : systemPrefersDark
-        ? 'dark'
-        : 'light'
-
-    root.dataset.theme = activeTheme
-    root.style.setProperty('color-scheme', activeTheme === 'dark' ? 'dark' : 'light')
+    // Force light theme for main page
+    root.dataset.theme = 'light'
+    root.style.setProperty('color-scheme', 'light')
   } catch (error) {
     // Storage may be unavailable; ignore gracefully.
   }

@@ -76,14 +76,18 @@ export class IntelligentQueryProcessor {
         const result = await generateText({
           model: this.grokModel as any, // Type assertion for custom model
           prompt,
-          temperature: 0.2,
-          maxTokens: 500
+          temperature: 0.2
         });
 
         // ✅ FIX: Verificar se result existe antes de acessar propriedades
-        if (!result || !result.text) {
-          console.error(`❌ Grok retornou resultado inválido na tentativa ${attempt}`);
-          throw new Error('Resultado do Grok está vazio ou inválido');
+        if (!result) {
+          console.error(`❌ Grok retornou resultado undefined na tentativa ${attempt}`);
+          throw new Error('Resultado do Grok está undefined');
+        }
+        
+        if (!result.text) {
+          console.error(`❌ Grok retornou resultado sem propriedade text na tentativa ${attempt}`);
+          throw new Error('Resultado do Grok não possui propriedade text');
         }
 
         const response = result.text.trim();
@@ -158,14 +162,18 @@ export class IntelligentQueryProcessor {
         const result = await generateText({
           model: this.openaiModel,
           prompt,
-          temperature: 0.2,
-          maxTokens: 500
+          temperature: 0.2
         });
 
         // ✅ FIX: Verificar se result existe
-        if (!result || !result.text) {
-          console.error(`❌ OpenAI retornou resultado inválido na tentativa ${attempt}`);
-          throw new Error('Resultado do OpenAI está vazio ou inválido');
+        if (!result) {
+          console.error(`❌ OpenAI retornou resultado undefined na tentativa ${attempt}`);
+          throw new Error('Resultado do OpenAI está undefined');
+        }
+        
+        if (!result.text) {
+          console.error(`❌ OpenAI retornou resultado sem propriedade text na tentativa ${attempt}`);
+          throw new Error('Resultado do OpenAI não possui propriedade text');
         }
 
         const response = result.text.trim();

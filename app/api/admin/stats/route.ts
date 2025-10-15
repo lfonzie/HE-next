@@ -26,8 +26,8 @@ export async function GET(request: NextRequest) {
       prisma.models.count(),
       prisma.system_messages.count(),
       prisma.lessons.count(),
-      prisma.enemQuestion.count(),
-      prisma.enem_session.count(),
+      prisma.enemQuestion.count().catch(() => 0),
+      prisma.enem_session.count().catch(() => 0),
     ]);
 
     const stats = {

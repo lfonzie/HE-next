@@ -42,11 +42,14 @@ export function GlobalLayout({ children }: GlobalLayoutProps) {
 
   // Prevent hydration mismatch
   if (!mounted || !themeReady) {
+    const isMainPage = pathname === '/'
     return (
       <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-text-strong)] transition-theme">
-        <div className="fixed right-4 top-4 z-50">
-          <ThemeToggle size="compact" hideLabel />
-        </div>
+        {!isMainPage && (
+          <div className="fixed right-4 top-4 z-50">
+            <ThemeToggle className="" size="compact" hideLabel />
+          </div>
+        )}
         <main className="min-h-screen">{children}</main>
       </div>
     )
@@ -54,11 +57,16 @@ export function GlobalLayout({ children }: GlobalLayoutProps) {
 
   if (!shouldShowSidebar) {
     // Páginas sem sidebar (login, erro, etc.)
+    // Don't show theme toggle on main page to disable dark mode
+    const isMainPage = pathname === '/'
+    
     return (
       <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-text-strong)] transition-theme">
-        <div className="fixed right-4 top-4 z-50">
-          <ThemeToggle size="compact" hideLabel />
-        </div>
+        {!isMainPage && (
+          <div className="fixed right-4 top-4 z-50">
+            <ThemeToggle className="" size="compact" hideLabel />
+          </div>
+        )}
         <main className="min-h-screen">{children}</main>
       </div>
     )
@@ -68,7 +76,7 @@ export function GlobalLayout({ children }: GlobalLayoutProps) {
   return (
     <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-text-strong)] transition-theme">
       <div className="fixed right-4 top-4 z-50 md:hidden">
-        <ThemeToggle size="compact" hideLabel />
+        <ThemeToggle className="" size="compact" hideLabel />
       </div>
       {/* Desktop e Tablet: Sidebar */}
       <div className="hidden md:block">
