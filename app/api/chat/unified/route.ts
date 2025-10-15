@@ -17,6 +17,7 @@ import { ChatMessage } from "@/lib/chat-history";
 import { loadTIResources, loadSocialMediaResources } from "@/lib/ti-framework";
 import { aiClassify } from "@/lib/ai-classifier";
 import { B2CMessageLimiter } from "@/lib/b2c-message-limiter";
+import { cleanPerplexityResponse } from '@/lib/utils/perplexity-cleaner';
 
 export const runtime = "nodejs"; // Para compatibilidade com Prisma
 
@@ -323,6 +324,10 @@ ATUALIZE o JSON acima com o progresso da etapa e continue a resolução.`;
         break;
       case "perplexity":
         result = await callPerplexity(model, history, input, enhancedSystemPrompt);
+        // Clean Perplexity citations
+        if (result.text) {
+          result.text = await cleanPerplexityResponse(result.text);
+        }
         break;
       case "grok":
         result = await callGrok(model, history, input, enhancedSystemPrompt);

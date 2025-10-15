@@ -15,7 +15,7 @@ import { streamGrok } from "@/lib/providers/grok";
 import { randomUUID } from "crypto";
 import { getSystemPrompt as loadSystemPrompt } from "@/lib/system-message-loader";
 import { loadTIResources } from "@/lib/ti-framework";
-import { cleanPerplexityResponseWithAI, isPerplexityResponse } from "@/lib/utils/perplexity-cleaner";
+import { cleanPerplexityResponse, isPerplexityResponse } from "@/lib/utils/perplexity-cleaner";
 
 // Função para extrair sugestões de follow-up da resposta da IA
 function extractFollowUpSuggestions(aiResponse: string): string[] {
@@ -250,7 +250,7 @@ export async function POST(req: NextRequest) {
           // Só usar IA para limpeza se detectar citações que precisam ser removidas
           if (isPerplexityResponse(finalCleanedResponse)) {
             try {
-              const fullyCleanedResponse = await cleanPerplexityResponseWithAI(finalCleanedResponse);
+              const fullyCleanedResponse = await cleanPerplexityResponse(finalCleanedResponse);
               if (fullyCleanedResponse !== finalCleanedResponse) {
                 // Send a special "replace" chunk to update the content with fully cleaned version
                 const replaceData = {
@@ -266,7 +266,7 @@ export async function POST(req: NextRequest) {
             } catch (error) {
               console.error('❌ [CHAT-STREAM] Error cleaning with AI:', error);
               // Fallback to regex cleaning
-              const fallbackCleaned = require('@/lib/utils/perplexity-cleaner').cleanPerplexityResponseEnhanced(finalCleanedResponse);
+              const fallbackCleaned = await cleanPerplexityResponse(finalCleanedResponse);
               finalCleanedResponse = fallbackCleaned;
             }
           }
