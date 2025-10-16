@@ -11,6 +11,7 @@ import { useProgressiveLesson } from '@/hooks/useProgressiveLesson';
 import { useQuizValidation, type QuizValidationResult } from '@/lib/quiz-validation';
 import { useSlideValidation } from '@/hooks/useSlideValidation';
 import QuizSlideComponent from '@/components/interactive/QuizSlideComponent';
+import InlineFlashcards from '@/components/flashcard-maker/InlineFlashcards';
 
 interface ProgressiveLessonComponentProps {
   initialQuery?: string;
@@ -629,6 +630,9 @@ export default function ProgressiveLessonComponent({
             Continue explorando este tema fascinante e aplicando o que aprendeu.
           </p>
         </div>
+
+        {/* Flashcards Module */}
+        <InlineFlashcards topic={skeleton?.theme || 'Tema da Aula'} />
 
       </div>
     );

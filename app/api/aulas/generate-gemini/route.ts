@@ -416,7 +416,7 @@ SLIDES OBRIGATÓRIOS (CONTE CADA UM):
 11. Slide 11 (Aplicação 6)
 12. Slide 12 (QUIZ 2 - type: "quiz")
 13. Slide 13 (Síntese)
-14. Slide 14 (Encerramento - type: "closing")
+14. Slide 14 (Encerramento - type: "closing") - Mencione que flashcards estão disponíveis para prática adicional
 
 ANTES DE RETORNAR: CONTE O NÚMERO DE SLIDES NO ARRAY! DEVEM SER 14!
 
@@ -927,7 +927,7 @@ function parseGeminiContent(content, topic) {
           content = `Teste seus conhecimentos sobre ${topic}!\\n\\nEste quiz irá avaliar sua compreensão dos conceitos apresentados.\\n\\nLeia cada pergunta com atenção e escolha a melhor resposta.`;
         } else if (isClosing) {
           title = `Conclusão: ${topic}`;
-          content = `Parabéns por completar a aula sobre ${topic}!\\n\\nVocê aprendeu conceitos importantes e desenvolveu novas habilidades.\\n\\nContinue explorando e aplicando esses conhecimentos em sua vida.`;
+          content = `Parabéns por completar a aula sobre ${topic}!\\n\\nVocê aprendeu conceitos importantes e desenvolveu novas habilidades.\\n\\nContinue explorando e aplicando esses conhecimentos em sua vida.\\n\\nPara praticar ainda mais, você pode usar os flashcards interativos disponíveis no módulo de flashcards.`;
         } else {
           title = `Conceitos de ${topic}`;
           content = `Neste slide, vamos aprofundar nossos conhecimentos sobre ${topic}.\\n\\nExplore os conceitos apresentados e conecte-os com situações do seu cotidiano.\\n\\nReflita sobre como aplicar esses conhecimentos na prática.`;

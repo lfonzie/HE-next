@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { ArrowLeft, ArrowRight, CheckCircle, X, Trophy, BookOpen, Target, Clock, Star } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
+import InlineFlashcards from '@/components/flashcard-maker/InlineFlashcards'
 import { useLessonStorage } from '@/hooks/useLessonStorage'
 
 interface Question {
@@ -309,13 +310,6 @@ export default function AulasV2LessonPage() {
       >
         {currentSlide.imageUrl && (
           <div className="mb-6 rounded-xl overflow-hidden">
-            {console.log('🖼️ Renderizando imagem:', {
-              slideNumber: currentSlide.slideNumber,
-              hasImageUrl: !!currentSlide.imageUrl,
-              isBase64: currentSlide.imageUrl?.startsWith('data:'),
-              imageSize: currentSlide.imageUrl?.length || 0,
-              imageUrlPreview: currentSlide.imageUrl?.substring(0, 50) + '...'
-            })}
             <img
               src={currentSlide.imageUrl}
               alt={currentSlide.title}
@@ -329,11 +323,6 @@ export default function AulasV2LessonPage() {
         {!currentSlide.imageUrl && currentSlide.requiresImage && (
           <div className="mb-6 rounded-xl overflow-hidden bg-gray-100 p-8 text-center">
             <p className="text-gray-500">🖼️ Imagem não disponível para este slide</p>
-            {console.log('⚠️ Slide sem imagem:', {
-              slideNumber: currentSlide.slideNumber,
-              requiresImage: currentSlide.requiresImage,
-              hasImageUrl: !!currentSlide.imageUrl
-            })}
           </div>
         )}
 
@@ -342,6 +331,18 @@ export default function AulasV2LessonPage() {
             {currentSlide.content}
           </div>
         </div>
+
+        {/* Flashcards Module for Last Slide */}
+        {currentSlideIndex === totalSlides - 1 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="mt-8"
+          >
+            <InlineFlashcards topic={lesson.subject} />
+          </motion.div>
+        )}
       </motion.div>
     )
   }

@@ -9,7 +9,9 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { CheckCircle, Circle, Clock, Trophy, BookOpen, Play, Loader2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { toast } from 'sonner'
 import LessonProgress from '@/components/aulas/LessonProgress'
+import InlineFlashcards from '@/components/flashcard-maker/InlineFlashcards'
 
 interface LessonData {
   id: string
@@ -215,6 +217,9 @@ export default function AulasEnhancedPage() {
       setTimeout(() => {
         loadNextSlide(etapa + 1)
       }, 1000)
+    } else {
+      // Aula completada - mostrar mensagem de parabéns
+      toast.success('🎉 Parabéns! Você completou a aula!')
     }
   }
 
@@ -384,6 +389,17 @@ export default function AulasEnhancedPage() {
                 Próxima
               </Button>
             </div>
+
+            {/* Flashcards Module for Completed Lessons */}
+            {lesson.stages.every(stage => stage.completed) && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-8"
+              >
+                <InlineFlashcards topic={topic} />
+              </motion.div>
+            )}
           </div>
         </div>
       )}

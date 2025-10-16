@@ -124,6 +124,11 @@ export function useUnifiedChat(
     const detectedModule = moduleDetection.module;
     console.log(`🎯 [AI-CLASSIFIER] Module detected: ${detectedModule} (confidence: ${moduleDetection.confidence})`);
 
+    // 🔔 Chamar callback de detecção de módulo
+    if (onModuleDetected) {
+      onModuleDetected(detectedModule, input);
+    }
+
     // 🔧 Para problemas técnicos, forçar uso do Grok 4 Fast
     if (detectedModule === 'ti') {
       console.log(`🔧 [AUTO-TI] Technical problem detected, using Grok 4 Fast`);
@@ -230,6 +235,11 @@ export function useUnifiedChat(
     const moduleDetection = await aiClassify(input, messages.length);
     const detectedModule = moduleDetection.module;
     console.log(`🎯 [AI-CLASSIFIER] Module detected: ${detectedModule} (confidence: ${moduleDetection.confidence})`);
+
+    // 🔔 Chamar callback de detecção de módulo
+    if (onModuleDetected) {
+      onModuleDetected(detectedModule, input);
+    }
 
     // 🔧 Para problemas técnicos, forçar uso do Grok 4 Fast
     if (detectedModule === 'ti') {

@@ -11,6 +11,7 @@ import { toast } from 'sonner'
 import { useProgressiveLoading } from '@/lib/progressive-lesson-loader'
 import { ensureLessonStructure } from '@/lib/lesson-data-transformer'
 import { printLesson } from '@/lib/print-lesson'
+import InlineFlashcards from '@/components/flashcard-maker/InlineFlashcards'
 
 interface LessonData {
   title: string
@@ -985,6 +986,15 @@ export default function LessonPage() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Flashcards Module for Completed Lessons */}
+            {isCompleted && (
+              <Card className="mt-4">
+                <CardContent className="p-4">
+                  <InlineFlashcards topic={lessonData?.metadata?.subject || lessonData?.title || 'Tema da Aula'} />
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* Main Content */}

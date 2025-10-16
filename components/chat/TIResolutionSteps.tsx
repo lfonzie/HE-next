@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import { CheckCircle, Circle, Play, AlertCircle } from 'lucide-react';
+import { CheckCircle, Circle, Play, AlertCircle, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,11 +24,17 @@ interface TIResolutionStepsProps {
   data: TIResolutionData;
   onStepComplete: (stepId: number, success?: boolean) => void;
   isLoading?: boolean;
+  loadingStepId?: number | null;
 }
 
-export function TIResolutionSteps({ data, onStepComplete, isLoading }: TIResolutionStepsProps) {
+export function TIResolutionSteps({ data, onStepComplete, isLoading, loadingStepId }: TIResolutionStepsProps) {
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: string, stepId: number) => {
+    // Se esta etapa está sendo processada, mostrar loading
+    if (loadingStepId === stepId) {
+      return <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />;
+    }
+    
     switch (status) {
       case 'concluido':
         return <CheckCircle className="h-5 w-5 text-green-500" />;
@@ -41,7 +47,12 @@ export function TIResolutionSteps({ data, onStepComplete, isLoading }: TIResolut
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string, stepId: number) => {
+    // Se esta etapa está sendo processada, usar cor de loading
+    if (loadingStepId === stepId) {
+      return 'bg-blue-100 border-blue-200';
+    }
+    
     switch (status) {
       case 'concluido':
         return 'bg-green-100 border-green-200';
@@ -83,11 +94,11 @@ export function TIResolutionSteps({ data, onStepComplete, isLoading }: TIResolut
           {data.etapas.map((etapa) => (
             <div
               key={etapa.id}
-              className={`border rounded-lg p-4 transition-all ${getStatusColor(etapa.status)}`}
+              className={`border rounded-lg p-4 transition-all ${getStatusColor(etapa.status, etapa.id)}`}
             >
               <div className="flex items-start gap-3">
                 <div className="mt-1">
-                  {getStatusIcon(etapa.status)}
+                  {getStatusIcon(etapa.status, etapa.id)}
                 </div>
 
                 <div className="flex-1 space-y-3">
@@ -129,20 +140,34 @@ export function TIResolutionSteps({ data, onStepComplete, isLoading }: TIResolut
                         size="sm"
                         variant="default"
                         onClick={() => onStepComplete(etapa.id, true)}
-                        disabled={isLoading}
+                        disabled={isLoading || loadingStepId === etapa.id}
                         className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                       >
-                        Funcionou
+                        {loadingStepId === etapa.id ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Processando...
+                          </>
+                        ) : (
+                          'Funcionou'
+                        )}
                       </Button>
 
                       <Button
                         size="sm"
                         variant="destructive"
                         onClick={() => onStepComplete(etapa.id, false)}
-                        disabled={isLoading}
+                        disabled={isLoading || loadingStepId === etapa.id}
                         className="flex-1"
                       >
-                        Ainda com Problemas
+                        {loadingStepId === etapa.id ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Processando...
+                          </>
+                        ) : (
+                          'Ainda com Problemas'
+                        )}
                       </Button>
                     </div>
                   )}
@@ -152,6 +177,17 @@ export function TIResolutionSteps({ data, onStepComplete, isLoading }: TIResolut
                       <p className="text-sm text-blue-700">
                         <strong>Executando...</strong> Aguarde a conclusão desta etapa.
                       </p>
+                    </div>
+                  )}
+
+                  {loadingStepId === etapa.id && (
+                    <div className="bg-blue-50 border border-blue-200 rounded p-3">
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />
+                        <p className="text-sm text-blue-700">
+                          <strong>Processando feedback...</strong> Aguarde enquanto analisamos sua resposta.
+                        </p>
+                      </div>
                     </div>
                   )}
 
@@ -177,20 +213,6 @@ export function TIResolutionSteps({ data, onStepComplete, isLoading }: TIResolut
         </CardContent>
       </Card>
 
-      {/* Próxima ação */}
-      {data.proxima_acao && (
-        <Card className="border-l-4 border-l-purple-500">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-purple-500" />
-              Próxima Ação
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-700">{data.proxima_acao}</p>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }

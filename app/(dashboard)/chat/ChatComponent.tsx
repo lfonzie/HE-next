@@ -112,175 +112,21 @@ export default function ChatComponent() {
   const { startLoading, stopLoading } = useGlobalLoading();
   const { isNavigating } = useNavigationLoading();
   
-  // Função para lidar com detecção automática de módulo (simplificada)
+  // Função para lidar com detecção automática de módulo
   const handleModuleDetected = useCallback((module: string, message: string) => {
     console.log(`🎯 [CHAT-COMPONENT] Module detected: ${module} for message: "${message}"`);
-    // Módulos agora são tratados diretamente no chat, sem modais
-  }, []);
-
-  // Funções helper para detectar e parsear respostas de resolução TI
-  const isTIResolutionMessage = useCallback((content: string): boolean => {
-    try {
-      console.log('🔍 [TI-DETECTION] Checking content for TI resolution. Full content:', content);
-      console.log('🔍 [TI-DETECTION] Content length:', content.length);
-
-      // Primeiro verificar se começa com { (JSON)
-      if (!content.trim().startsWith('{')) {
-        console.log('🔍 [TI-DETECTION] Content does not start with {, not JSON');
-        return false;
-      }
-
-      const parsed = JSON.parse(content);
-      const isValid = parsed.problema && parsed.etapas && Array.isArray(parsed.etapas);
-      console.log('🔍 [TI-DETECTION] Parsed JSON:', parsed);
-      console.log('🔍 [TI-DETECTION] Is valid TI JSON:', isValid);
-      return isValid;
-    } catch (error) {
-      console.log('🔍 [TI-DETECTION] Failed to parse as JSON:', error);
-      console.log('🔍 [TI-DETECTION] Raw content that failed:', content);
-
-      // Tentar detectar se é uma resposta de TI mesmo que não seja JSON perfeito
-      // Verificar se contém palavras-chave de TI
-      const hasTIKeywords = /\b(problema|etapas?|solução|diagnóstico|resolver|passo)\b/i.test(content);
-      const hasJSONStructure = /\{[\s\S]*"problema"[\s\S]*"etapas"[\s\S]*\}/i.test(content);
-
-      console.log('🔍 [TI-DETECTION] Has TI keywords:', hasTIKeywords);
-      console.log('🔍 [TI-DETECTION] Has JSON structure:', hasJSONStructure);
-
-      if (hasTIKeywords && hasJSONStructure) {
-        console.log('🔍 [TI-DETECTION] Attempting to extract JSON from mixed content');
-        // Tentar extrair JSON de conteúdo misto
-        const jsonMatch = content.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          try {
-            const extractedJson = JSON.parse(jsonMatch[0]);
-            const isValid = extractedJson.problema && extractedJson.etapas && Array.isArray(extractedJson.etapas);
-            console.log('🔍 [TI-DETECTION] Extracted valid TI JSON:', isValid);
-            return isValid;
-          } catch (extractError) {
-            console.log('🔍 [TI-DETECTION] Failed to extract JSON:', extractError);
-          }
-        }
-      }
-
-      return false;
+    
+    // Se o módulo detectado for TI, abrir o modal automaticamente
+    if (module === 'ti' || module === 'TI') {
+      console.log(`🔧 [TI-AUTO] Opening TI modal for detected technical problem: "${message}"`);
+      console.log(`🔧 [TI-AUTO-DEBUG] Setting tiInitialMessage to: "${message}"`);
+      setTiInitialMessage(message);
+      console.log(`🔧 [TI-AUTO-DEBUG] Setting showTIModal to true`);
+      setShowTIModal(true);
     }
   }, []);
 
-  const parseTIResolutionData = useCallback((content: string) => {
-    try {
-      // Tentar parse direto primeiro
-      return JSON.parse(content);
-    } catch (error) {
-      console.log('🔄 [TI-PARSER] Failed to parse as direct JSON, creating structured data from text');
 
-      // 🔧 PARSER INTELIGENTE: Extrair estrutura do texto normal
-      const lines = content.split('\n').filter(line => line.trim().length > 0);
-
-      // Identificar problema principal
-      let problema = 'Problema técnico identificado';
-      const firstLine = lines[0]?.toLowerCase() || '';
-      if (firstLine.includes('pc') && firstLine.includes('lento')) {
-        problema = 'Computador funcionando lentamente';
-      } else if (firstLine.includes('internet')) {
-        problema = 'Problemas de conexão com internet';
-      } else if (firstLine.includes('impressora')) {
-        problema = 'Impressora com problemas';
-      }
-
-      // Extrair etapas do texto
-      const etapas = [];
-      let stepId = 1;
-
-      // Procurar por padrões comuns de listas numeradas - MODIFICADO PARA EVITAR COMANDOS PERIGOSOS
-      const numberedSteps = content.match(/\d+\.\s*\*\*([^*]+)\*\*:\s*([^]*?)(?=\d+\.|$)/g);
-      if (numberedSteps) {
-        numberedSteps.forEach(step => {
-          const titleMatch = step.match(/\d+\.\s*\*\*([^*]+)\*\*/);
-          const descMatch = step.match(/\*\*:\s*([^]*?)(?=\d+\.|$)/);
-
-          if (titleMatch && descMatch) {
-            let titulo = titleMatch[1].trim();
-            let descricao = descMatch[1].trim();
-
-            // EVITAR comandos perigosos - substituir por instruções manuais
-            if (titulo.toLowerCase().includes('reinici') || titulo.toLowerCase().includes('restart')) {
-              titulo = 'Verificar programas abertos';
-              descricao = 'Feche programas desnecessários antes de reinicializar manualmente se desejar';
-            }
-
-            etapas.push({
-              id: stepId++,
-              titulo,
-              descricao,
-              comando: null, // SEMPRE null - apenas instruções manuais
-              status: 'pendente',
-              validacao: 'Verificar se o problema foi resolvido'
-            });
-          }
-        });
-      }
-
-      // Fallback: criar etapas básicas se não encontrou estrutura - APENAS INSTRUÇÕES MANUAIS
-      if (etapas.length === 0) {
-        // Procurar por palavras-chave comuns - SEM EXECUÇÃO AUTOMÁTICA
-        if (content.toLowerCase().includes('reinici')) {
-          etapas.push({
-            id: 1,
-            titulo: 'Preparar para reinicialização',
-            descricao: 'Salve seus trabalhos e feche programas importantes antes de reinicializar',
-            comando: null,
-            status: 'pendente',
-            validacao: 'Execute a reinicialização manualmente quando estiver pronto'
-          });
-        }
-
-        if (content.toLowerCase().includes('limp')) {
-          etapas.push({
-            id: etapas.length + 1,
-            titulo: 'Limpar arquivos temporários',
-            descricao: 'Abra Configurações > Sistema > Armazenamento e execute a limpeza de disco',
-            comando: null,
-            status: 'pendente',
-            validacao: 'Verificar se há mais espaço disponível no disco após a limpeza'
-          });
-        }
-
-        if (content.toLowerCase().includes('atualiz')) {
-          etapas.push({
-            id: etapas.length + 1,
-            titulo: 'Verificar atualizações',
-            descricao: 'Abra Configurações > Atualização e Segurança > Windows Update para verificar atualizações',
-            comando: null,
-            status: 'pendente',
-            validacao: 'Instalar as atualizações disponíveis quando conveniente'
-          });
-        }
-      }
-
-      // Garantir pelo menos uma etapa - SEM COMANDOS EXECUTÁVEIS
-      if (etapas.length === 0) {
-        etapas.push({
-          id: 1,
-          titulo: 'Verificar programas em execução',
-          descricao: 'Abra o Gerenciador de Tarefas (Ctrl + Shift + Esc) e veja se há programas consumindo muitos recursos',
-          comando: null, // SEMPRE null - apenas instruções manuais
-          status: 'pendente',
-          validacao: 'Feche programas desnecessários e verifique se o PC ficou mais rápido'
-        });
-      }
-
-      const result = {
-        problema,
-        status: 'ativo' as const,
-        etapas,
-        proxima_acao: `Execute a etapa ${etapas.length > 0 ? '1' : ''} e me informe o resultado`
-      };
-
-      console.log('✅ [TI-PARSER] Created structured data from text:', result);
-      return result;
-    }
-  }, []);
 
   // Chat state - usando o novo sistema unificado
   const {
@@ -307,29 +153,6 @@ export default function ChatComponent() {
     setMessagesAvailable: !!setMessages
   });
 
-  // Funções para lidar com etapas de resolução TI
-  const handleStepComplete = useCallback(async (stepId: number, success: boolean = true) => {
-    if (!send) {
-      console.warn('⚠️ [TI-STEP] Send function not available yet');
-      return;
-    }
-
-    const message = success
-      ? `Funcionou! O problema foi resolvido com a etapa ${stepId}.`
-      : `A etapa ${stepId} foi tentada, mas ainda há problemas. Forneça a próxima solução em formato JSON estruturado.`;
-
-    console.log(`✅ [TI-STEP] Step ${stepId} ${success ? 'succeeded' : 'failed'}`);
-
-    if (success) {
-      // Se funcionou, fechar modal e enviar mensagem normal
-      setShowTIModal(false);
-      setTiModalData(null);
-      await send(message, undefined, false, `etapa_${stepId}_funcionou`);
-    } else {
-      // Se ainda há problemas, manter modal aberto e forçar resposta JSON
-      await send(message, 'ti', false, `etapa_${stepId}_problemas`);
-    }
-  }, [send]);
 
 
   // Garantir que sempre inicie com conversa limpa ao montar o componente
@@ -454,7 +277,7 @@ export default function ChatComponent() {
   const [showStudyPlanModal, setShowStudyPlanModal] = useState(false);
   const [studyPlanTopic, setStudyPlanTopic] = useState('');
   const [showTIModal, setShowTIModal] = useState(false);
-  const [tiModalData, setTiModalData] = useState<any>(null);
+  const [tiInitialMessage, setTiInitialMessage] = useState<string | undefined>(undefined);
   const [isCreatingConversation, setIsCreatingConversation] = useState(false);
   const [isDeletingConversation, setIsDeletingConversation] = useState<string | null>(null);
   const [showModuleWelcome, setShowModuleWelcome] = useState(false);
@@ -906,57 +729,6 @@ export default function ChatComponent() {
   const hasMessages = currentConversation?.messages && currentConversation.messages.length > 0;
   const isQuotaExceeded = quota.used >= quota.limit;
 
-  // useEffect para gerenciar abertura do modal TI (evita loops de re-renderização)
-  useEffect(() => {
-    if (currentConversation?.messages && currentConversation.messages.length > 0) {
-      const lastMessage = currentConversation.messages[currentConversation.messages.length - 1];
-      if (lastMessage && lastMessage.role === 'assistant') {
-        const hasTIKeywords = (text: string) => {
-          const keywords = ['pc', 'computador', 'lento', 'internet', 'wifi', 'impressora', 'erro', 'problema', 'não funciona', 'travando', 'lento', 'conexão', 'rede', 'sistema', 'aplicativo', 'programa', 'software', 'hardware', 'dispositivo', 'equipamento'];
-          return keywords.some(keyword => text.toLowerCase().includes(keyword));
-        };
-
-        // Verificar se há mensagens de usuário com problemas técnicos na conversa
-        const hasTechnicalIssues = currentConversation.messages.some(m =>
-          m.role === 'user' && hasTIKeywords(m.content)
-        );
-
-        // Verificar se é uma resposta TI baseada em múltiplos critérios
-        const isTIJSON = lastMessage.content.trim().startsWith('{') && 
-          (lastMessage.content.includes('"problema"') || lastMessage.content.includes('"etapas"'));
-        
-        const isTIMessage = hasTechnicalIssues && (
-          lastMessage.module === 'ti' || // Módulo detectado como TI
-          isTIJSON || // Resposta em formato JSON de TI
-          (lastMessage.content.length > 200 && 
-           !lastMessage.content.includes('😊') && 
-           !lastMessage.content.includes('Tudo bem?') &&
-           !lastMessage.content.includes('Olá') &&
-           !lastMessage.content.includes('Como posso ajudar'))
-        );
-
-        if (isTIMessage) {
-          console.log('✅ [MODAL-EFFECT] Processing TI Modal for message:', lastMessage.id);
-          console.log('✅ [MODAL-EFFECT] Message module:', lastMessage.module);
-          console.log('✅ [MODAL-EFFECT] Is TI JSON:', isTIJSON);
-          console.log('✅ [MODAL-EFFECT] Has technical issues:', hasTechnicalIssues);
-          
-          const tiData = parseTIResolutionData(lastMessage.content);
-
-          // Usar setTimeout para evitar re-renders imediatos
-          setTimeout(() => {
-            setTiModalData(tiData);
-            if (!showTIModal) {
-              console.log('✅ [MODAL-EFFECT] Opening TI Modal');
-              setShowTIModal(true);
-            } else {
-              console.log('✅ [MODAL-EFFECT] Updating TI Modal with new data');
-            }
-          }, 100);
-        }
-      }
-    }
-  }, [currentConversation?.messages.length, showTIModal]); // Incluir showTIModal para evitar loops
 
   return (
     <div className="bg-gradient-to-br from-slate-50 via-yellow-50 to-orange-100 dark:from-black dark:via-slate-900 dark:to-black chat-gradient-bg flex flex-col">
@@ -1076,7 +848,9 @@ export default function ChatComponent() {
                     Digite sua mensagem abaixo e receba sugestões inteligentes para aulas, simulados ENEM e correção de redações.
                   </p>
                   <div className="flex flex-wrap gap-2 justify-center relative">
-                    {Object.entries(MODULES).map(([id, module]) => (
+                    {Object.entries(MODULES)
+                      .filter(([id]) => ['PROFESSOR', 'TI', 'ATENDIMENTO', 'COORDENACAO', 'SOCIAL_MEDIA', 'BEM_ESTAR'].includes(id))
+                      .map(([id, module]) => (
                       <Button
                         key={id}
                         variant="outline"
@@ -1230,10 +1004,11 @@ export default function ChatComponent() {
       {/* TI Modal */}
       <TIModal
         isOpen={showTIModal}
-        onClose={() => setShowTIModal(false)}
-        data={tiModalData}
-        onStepComplete={handleStepComplete}
-        isLoading={isStreaming}
+        onClose={() => {
+          setShowTIModal(false);
+          setTiInitialMessage(undefined);
+        }}
+        initialMessage={tiInitialMessage}
       />
 
     </div>
