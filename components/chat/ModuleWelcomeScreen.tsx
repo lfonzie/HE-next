@@ -461,7 +461,7 @@ export const ModuleWelcomeScreen: React.FC<ModuleWelcomeScreenProps> = ({
             {moduleData.popularQuestions.map((question, index) => (
               <div
                 key={index}
-                className={`rounded-lg px-4 py-3 text-sm cursor-pointer transition-colors relative z-50 ${
+                className={`rounded-2xl px-4 py-3 text-sm cursor-pointer transition-colors relative z-50 ${
                   quotaAvailable 
                     ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow-sm' 
                     : 'bg-gray-50 text-gray-400 cursor-not-allowed'

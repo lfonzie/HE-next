@@ -196,7 +196,7 @@ export const ChatMessage = memo(function ChatMessage({
       return "self-end bg-yellow-500 dark:bg-yellow-600 text-black dark:text-white rounded-2xl px-4 py-3 shadow-sm max-w-prose md:max-w-[65ch] break-words hyphens-auto chat-message-user";
     }
     if (role === 'assistant') {
-      return "self-start bg-slate-100 dark:bg-slate-900 px-4 py-3 max-w-prose md:max-w-[65ch] break-words hyphens-auto chat-message-assistant";
+      return "self-start bg-slate-100 dark:bg-slate-900 rounded-2xl px-4 py-3 max-w-prose md:max-w-[65ch] break-words hyphens-auto chat-message-assistant";
     }
     return "self-center text-xs text-zinc-500 dark:text-zinc-400 bg-zinc-100/60 dark:bg-zinc-800/40 rounded-full px-3 py-1";
   };

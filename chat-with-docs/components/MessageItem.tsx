@@ -70,14 +70,14 @@ const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
     return <div className={`whitespace-pre-wrap text-sm ${textColorClass}`}>{message.text}</div>;
   };
   
-  let bubbleClasses = "p-3 rounded-lg shadow w-full "; // Added w-full
+  let bubbleClasses = "p-3 rounded-2xl shadow w-full "; // Added w-full and changed to rounded-2xl
 
   if (isUser) {
-    bubbleClasses += "bg-white/[.12] text-white rounded-br-none";
+    bubbleClasses += "bg-white/[.12] text-white";
   } else if (isModel) {
-    bubbleClasses += `bg-[rgba(119,119,119,0.10)] border-t border-[rgba(255,255,255,0.04)] backdrop-blur-lg rounded-bl-none`;
+    bubbleClasses += `bg-[rgba(119,119,119,0.10)] border-t border-[rgba(255,255,255,0.04)] backdrop-blur-lg`;
   } else { // System message
-    bubbleClasses += "bg-[#2C2C2C] text-[#A8ABB4] rounded-bl-none";
+    bubbleClasses += "bg-[#2C2C2C] text-[#A8ABB4]";
   }
 
   return (
