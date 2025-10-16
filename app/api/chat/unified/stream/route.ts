@@ -190,6 +190,8 @@ export async function POST(req: NextRequest) {
               }
             }
           } else if (finalProvider === "perplexity") {
+            // Para Perplexity, stream normalmente sem limpeza em tempo real
+            // A limpeza será aplicada apenas no final para salvar no banco
             for await (const chunk of stream) {
               const content = chunk.choices[0]?.delta?.content;
               if (content) {
@@ -201,9 +203,6 @@ export async function POST(req: NextRequest) {
                 controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
               }
             }
-            
-            // Update fullResponse for processing
-            // (will be cleaned later after suggestions are extracted)
           } else if (finalProvider === "grok") {
             for await (const chunk of stream) {
               const content = chunk.choices[0]?.delta?.content;
@@ -247,23 +246,13 @@ export async function POST(req: NextRequest) {
             console.log(`🧹 [PERPLEXITY] Cleaned suggestions from response:`, finalCleanedResponse.length, 'characters');
           }
 
-          // Agora aplicar limpeza final (fontes do Perplexity) na resposta já limpa das sugestões
-          // Só usar IA para limpeza se detectar citações que precisam ser removidas
-          if (isPerplexityResponse(finalCleanedResponse)) {
+          // Para Perplexity, aplicar limpeza final apenas para salvar no banco (não enviar para o frontend)
+          if (finalProvider === 'perplexity' && isPerplexityResponse(finalCleanedResponse)) {
             try {
               const fullyCleanedResponse = await cleanPerplexityResponse(finalCleanedResponse);
-              if (fullyCleanedResponse !== finalCleanedResponse) {
-                // Send a special "replace" chunk to update the content with fully cleaned version
-                const replaceData = {
-                  type: "content_replace",
-                  content: fullyCleanedResponse
-                };
-                controller.enqueue(encoder.encode(`data: ${JSON.stringify(replaceData)}\n\n`));
-                console.log(`🔄 [CHAT-STREAM] Content fully cleaned with AI (suggestions + sources)`);
-              }
-
-              // Update final response for saving
+              // Update final response for saving (não enviar para o frontend para evitar duplicação)
               finalCleanedResponse = fullyCleanedResponse;
+              console.log(`🧹 [PERPLEXITY] Final cleaning applied for database storage only`);
             } catch (error) {
               console.error('❌ [CHAT-STREAM] Error cleaning with AI:', error);
               // Fallback to regex cleaning

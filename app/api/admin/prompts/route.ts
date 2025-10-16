@@ -13,8 +13,7 @@ const prisma = new PrismaClient();
 
 export async function GET(request: NextRequest) {
   try {
-    // Temporarily skip authentication for testing
-    // await requireAdmin(request);
+    await requireAdmin(request);
 
     // Simple implementation without getPromptsData
     const systemPrompts = await prisma.system_messages.findMany({
@@ -39,6 +38,11 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(systemPromptsData);
   } catch (error) {
+    const adminResponse = handleAdminRouteError(error);
+    if (adminResponse) {
+      return adminResponse;
+    }
+
     console.error('Error fetching prompts:', error);
     return NextResponse.json({ 
       error: 'Failed to fetch prompts',

@@ -5,6 +5,7 @@ import { callGrok } from '@/lib/providers/grok';
 import { cleanPerplexityResponseComprehensive } from './perplexity-cleaner-enhanced';
 import { cleanPerplexityResponseHybrid } from './perplexity-cleaner-ast';
 import { cleanMarkdownCitations } from '@/lib/cleanCitations';
+import { styleCitationsAsSuperscript } from '@/lib/citationStyler';
 
 /**
  * Uses AI to intelligently clean Perplexity responses by removing source citations
@@ -73,6 +74,24 @@ Retorne apenas o texto limpo:`;
 }
 
 /**
+ * Style citations with Unicode superscript instead of removing them
+ * This makes citations less visually prominent while keeping them readable
+ */
+export function stylePerplexityCitations(text: string): string {
+  if (!text || typeof text !== 'string' || text.trim().length === 0) {
+    return text;
+  }
+
+  try {
+    console.log('[PERPLEXITY-CLEANER] Using citation styling with Unicode superscript');
+    return styleCitationsAsSuperscript(text);
+  } catch (error) {
+    console.warn('[PERPLEXITY-CLEANER] Citation styling failed, returning original text:', error);
+    return text;
+  }
+}
+
+/**
  * Main function to clean Perplexity responses using the best available method
  * This function automatically chooses between AST, hybrid, and regex approaches
  */
@@ -82,7 +101,19 @@ export async function cleanPerplexityResponse(text: string): Promise<string> {
   }
 
   try {
-    // First try the new AST-based approach for best results
+    // First try citation styling with Unicode superscript (less intrusive)
+    console.log('[PERPLEXITY-CLEANER] Using citation styling with Unicode superscript');
+    const styledResult = stylePerplexityCitations(text);
+    
+    if (styledResult && styledResult.trim().length > 0) {
+      return styledResult;
+    }
+  } catch (error) {
+    console.warn('[PERPLEXITY-CLEANER] Citation styling failed, falling back to AST cleaning:', error);
+  }
+
+  try {
+    // Fallback to AST-based cleaning for complete removal
     console.log('[PERPLEXITY-CLEANER] Using AST-based cleaning');
     const astResult = await cleanMarkdownCitations(text);
 

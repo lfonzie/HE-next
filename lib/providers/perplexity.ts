@@ -76,10 +76,7 @@ export async function streamPerplexity(
 
     return {
       async *[Symbol.asyncIterator]() {
-        let fullContent = '';
-        
         for await (const delta of result.textStream) {
-          fullContent += delta;
           yield {
             choices: [{
               delta: {
@@ -89,14 +86,11 @@ export async function streamPerplexity(
           };
         }
         
-        // Clean the full content and yield the cleaned version as final chunk
-        const cleanedContent = await cleanPerplexityResponse(fullContent);
-        
-        // Final chunk with cleaned content
+        // Final chunk to signal completion
         yield {
           choices: [{
             delta: {
-              content: cleanedContent
+              content: ''
             },
             finish_reason: 'stop'
           }]
