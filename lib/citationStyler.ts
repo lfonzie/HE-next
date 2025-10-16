@@ -39,8 +39,9 @@ export function styleCitationsAsSuperscript(text: string): string {
   let result = text;
 
   // Convert numbers at end of words to superscript
+  // Updated to handle longer citation numbers (1-5 digits) like 12410, 19701, 15913
   result = result.replace(
-    /([a-zA-ZáàâãéèêíìîóòôõúùûçÁÀÂÃÉÈÊÍÌÎÓÒÔÕÚÙÛÇ])(\d{1,3})(?=[.!?]|$|\s)/g,
+    /([a-zA-ZáàâãéèêíìîóòôõúùûçÁÀÂÃÉÈÊÍÌÎÓÒÔÕÚÙÛÇ])(\d{1,5})(?=[.!?]|$|\s)/g,
     (match, letter, numbers) => {
       const superscriptNumbers = numbers
         .split('')
