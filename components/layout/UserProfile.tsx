@@ -14,7 +14,6 @@ import {
   BarChart3
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import ThemeToggle from '@/components/theme/ThemeToggle'
 
 interface UserProfileProps {
   className?: string
@@ -269,10 +268,6 @@ export function UserProfile({
 
             {/* Theme Switcher */}
             <div className="px-4 py-2">
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-sm text-[var(--color-text-muted)]">Tema</span>
-                <ThemeToggle hideLabel size="compact" />
-              </div>
             </div>
 
             {/* Divider */}

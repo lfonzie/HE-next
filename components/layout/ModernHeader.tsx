@@ -8,7 +8,6 @@ import { ModernNavigation } from './ModernNavigation'
 import { UserProfile } from './UserProfile'
 import { SupportModal } from './SupportModal'
 import { Button } from '@/components/ui/button'
-import ThemeToggle from '@/components/theme/ThemeToggle'
 import { cn } from '@/lib/utils'
 
 interface ModernHeaderProps {
@@ -127,9 +126,6 @@ export function ModernHeader({
               <span className="text-sm font-medium">Suporte</span>
             </Button>
 
-            <div className="hidden lg:flex">
-              <ThemeToggle hideLabel size="compact" />
-            </div>
 
             {/* User Profile - Only on desktop */}
             {showUserProfile && (

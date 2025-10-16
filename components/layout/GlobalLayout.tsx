@@ -4,7 +4,6 @@ import { ReactNode, useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { CompactSidebar } from '@/components/layout/CompactSidebar'
 import { ModernHeader } from '@/components/layout/ModernHeader'
-import ThemeToggle from '@/components/theme/ThemeToggle'
 import { useTheme } from '@/hooks/useTheme'
 import { cn } from '@/lib/utils'
 
@@ -45,11 +44,6 @@ export function GlobalLayout({ children }: GlobalLayoutProps) {
     const isMainPage = pathname === '/'
     return (
       <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-text-strong)] transition-theme">
-        {!isMainPage && (
-          <div className="fixed right-4 top-4 z-50">
-            <ThemeToggle className="" size="compact" hideLabel />
-          </div>
-        )}
         <main className="min-h-screen">{children}</main>
       </div>
     )
@@ -62,11 +56,6 @@ export function GlobalLayout({ children }: GlobalLayoutProps) {
     
     return (
       <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-text-strong)] transition-theme">
-        {!isMainPage && (
-          <div className="fixed right-4 top-4 z-50">
-            <ThemeToggle className="" size="compact" hideLabel />
-          </div>
-        )}
         <main className="min-h-screen">{children}</main>
       </div>
     )
@@ -75,9 +64,6 @@ export function GlobalLayout({ children }: GlobalLayoutProps) {
   // Páginas com sidebar (desktop e tablet) e header (mobile)
   return (
     <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-text-strong)] transition-theme">
-      <div className="fixed right-4 top-4 z-50 md:hidden">
-        <ThemeToggle className="" size="compact" hideLabel />
-      </div>
       {/* Desktop e Tablet: Sidebar */}
       <div className="hidden md:block">
         <CompactSidebar />

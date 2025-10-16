@@ -19,6 +19,120 @@ const GROK_MODEL = 'grok-4-fast-reasoning'; // Ultra-fast Grok model for lesson 
 const MAX_TIMEOUT = 180000; // 3 minutes (increased to handle slow Grok API responses)
 const IMAGE_SEARCH_TIMEOUT = 10000; // 10 seconds (reduced from 60 seconds)
 
+// Helper function to clean JSON strings
+function cleanJsonString(jsonString: string): string {
+  try {
+    // Remove control characters and problematic line breaks
+    let cleaned = jsonString
+      .replace(/[\u0000-\u001F\u007F-\u009F]/g, '') // Remove control characters
+      .replace(/\n/g, '\\n') // Escape newlines
+      .replace(/\r/g, '\\r') // Escape carriage returns
+      .replace(/\t/g, '\\t'); // Escape tabs
+    
+    // Fix common JSON issues
+    cleaned = cleaned
+      .replace(/,(\s*[}\]])/g, '$1') // Remove trailing commas
+      .replace(/([{\[,])\s*([}\]])/g, '$1$2') // Remove empty objects/arrays
+      .replace(/([^\\])\\([^"\\\/bfnrt])/g, '$1\\\\$2') // Fix escaped characters
+      .replace(/"\s*([^"]*?)\s*"\s*([^":,}\]]*?)\s*"/g, '"$1": "$2"') // Fix missing colons
+      .replace(/"([^"]*?)"\s*([^":,}\]]*?)\s*"/g, '"$1": "$2"') // Fix missing colons (alternative)
+      .replace(/([^"])\s*([^":,}\]]*?)\s*"/g, '$1: "$2"') // Fix missing quotes and colons
+      .replace(/([^"])\s*([^":,}\]]*?)\s*([^":,}\]]*?)\s*"/g, '$1: "$2$3"'); // Fix complex missing quotes
+    
+    // Try to fix unclosed quotes
+    const quoteCount = (cleaned.match(/"/g) || []).length;
+    if (quoteCount % 2 !== 0) {
+      // Add closing quotes if necessary
+      cleaned += '"';
+    }
+    
+    // Additional fixes for common Grok API issues
+    cleaned = cleaned
+      .replace(/([^\\])\\([^"\\\/bfnrt])/g, '$1\\\\$2') // Fix more escaped characters
+      .replace(/([^"])\s*([^":,}\]]*?)\s*([^":,}\]]*?)\s*"/g, '$1: "$2$3"') // Fix missing quotes in complex cases
+      .replace(/([^"])\s*([^":,}\]]*?)\s*([^":,}\]]*?)\s*([^":,}\]]*?)\s*"/g, '$1: "$2$3$4"'); // Fix even more complex cases
+    
+    return cleaned;
+  } catch (error) {
+    console.error('Error cleaning JSON:', error);
+    return jsonString; // Return original if cleaning fails
+  }
+}
+
+// Advanced JSON repair function for complex malformed JSON
+function repairMalformedJson(jsonString: string): string {
+  try {
+    let repaired = jsonString;
+    
+    // Fix missing colons after property names
+    repaired = repaired.replace(/"([^"]+)"\s+([^":,}\]]+)/g, '"$1": "$2"');
+    
+    // Fix missing quotes around property values
+    repaired = repaired.replace(/:\s*([^":,}\]]+?)\s*([,}])/g, ': "$1"$2');
+    
+    // Fix missing quotes around property names
+    repaired = repaired.replace(/([^"])\s*([^":,}\]]+?)\s*:/g, '"$2":');
+    
+    // Fix trailing commas
+    repaired = repaired.replace(/,(\s*[}\]])/g, '$1');
+    
+    // Fix missing commas between properties
+    repaired = repaired.replace(/"\s*"\s*"/g, '", "');
+    
+    // Fix escaped quotes
+    repaired = repaired.replace(/\\([^"\\\/bfnrt])/g, '\\\\$1');
+    
+    return repaired;
+  } catch (error) {
+    console.error('Error repairing JSON:', error);
+    return jsonString;
+  }
+}
+
+// Function to reconstruct lesson from structured text
+function reconstructLessonFromText(text: string, topic: string): any {
+  const slides: any[] = [];
+  
+  // Extract slides using regex to find slide patterns
+  const slidePattern = /slide\s*(\d+)[:\-]?\s*(.*?)(?=slide\s*\d+[:\-]?|$)/gi;
+  const slideMatches = text.match(slidePattern);
+  
+  if (slideMatches) {
+    slideMatches.forEach((match, index) => {
+      const slideNumber = index + 1;
+      const content = match.replace(/slide\s*\d+[:\-]?\s*/i, '').trim();
+      
+      slides.push({
+        slideNumber,
+        title: `Slide ${slideNumber}`,
+        type: slideNumber === 5 || slideNumber === 11 ? 'quiz' : 'content',
+        content: content || `Conteúdo do slide ${slideNumber}`,
+        timeEstimate: 5,
+        imageQuery: '',
+        questions: []
+      });
+    });
+  } else {
+    // Fallback: create basic slides
+    for (let i = 1; i <= TOTAL_SLIDES; i++) {
+      slides.push({
+        slideNumber: i,
+        title: `Slide ${i}`,
+        type: i === 5 || i === 11 ? 'quiz' : 'content',
+        content: `Conteúdo do slide ${i} sobre ${topic}`,
+        timeEstimate: 5,
+        imageQuery: '',
+        questions: []
+      });
+    }
+  }
+  
+  return {
+    title: `Aula sobre ${topic}`,
+    slides
+  };
+}
+
 // Função para traduzir tema usando IA
 async function translateTopicToEnglish(topic: string): Promise<string> {
   try {
@@ -381,7 +495,63 @@ IMPORTANTE:
       
     } catch (parseError) {
       log.error('Failed to parse lesson JSON', { error: (parseError as Error).message, response: response.text });
-      throw new Error('Failed to parse lesson content');
+      
+      // Try alternative parsing methods
+      try {
+        log.info('🔄 Attempting alternative JSON parsing methods...');
+        
+        // Method 1: Try to extract JSON with more flexible regex
+        const flexibleMatch = response.text.match(/\{(?:[^{}]|{[^{}]*})*\}/);
+        if (flexibleMatch) {
+          let alternativeCleaned = cleanJsonString(flexibleMatch[0]);
+          try {
+            lessonData = JSON.parse(alternativeCleaned);
+            log.info('✅ Successfully parsed JSON with alternative method');
+          } catch (cleanError) {
+            // Try advanced repair
+            alternativeCleaned = repairMalformedJson(alternativeCleaned);
+            lessonData = JSON.parse(alternativeCleaned);
+            log.info('✅ Successfully parsed JSON with advanced repair');
+          }
+        } else {
+          throw new Error('No valid JSON structure found');
+        }
+      } catch (alternativeError) {
+        // Method 2: Try to reconstruct JSON from structured text
+        try {
+          log.info('🔄 Attempting to reconstruct lesson from text...');
+          lessonData = reconstructLessonFromText(response.text, topic);
+          log.info('✅ Successfully reconstructed lesson from text');
+        } catch (reconstructError) {
+          log.error('All parsing methods failed', { 
+            originalError: (parseError as Error).message,
+            alternativeError: (alternativeError as Error).message,
+            reconstructError: (reconstructError as Error).message
+          });
+          throw new Error('Failed to parse lesson content with all methods');
+        }
+      }
+      
+      // Ensure slides array exists and has correct structure after fallback
+      if (!lessonData.slides || !Array.isArray(lessonData.slides)) {
+        throw new Error('Invalid slides structure after fallback');
+      }
+      
+      // Add title if missing
+      if (!lessonData.title) {
+        lessonData.title = `Aula sobre ${topic}`;
+      }
+      
+      // Process slides to ensure correct format
+      lessonData.slides = lessonData.slides.map((slide: any, index: number) => ({
+        slideNumber: slide.slideNumber || slide.number || index + 1,
+        title: slide.title || `Slide ${index + 1}`,
+        type: slide.type || 'content',
+        content: slide.content || '',
+        timeEstimate: slide.timeEstimate || 5,
+        imageQuery: slide.imageQuery || '',
+        questions: slide.questions || []
+      }));
     }
     
     const parseEndTime = Date.now();

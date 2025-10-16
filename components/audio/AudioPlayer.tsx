@@ -1,8 +1,10 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { Slider } from '@/components/ui/slider'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { 
   Play, 
   Pause, 
@@ -11,284 +13,368 @@ import {
   Loader2, 
   AlertCircle,
   RotateCcw,
-  Gauge
+  Gauge,
+  SkipBack,
+  SkipForward,
+  Settings,
+  Download,
+  Share2
 } from 'lucide-react'
 import { toast } from 'sonner'
-import Link from 'next/link'
 
 interface AudioPlayerProps {
   text: string
   className?: string
+  autoPlay?: boolean
+  showControls?: boolean
+  enableKeyboard?: boolean
+  onPlay?: () => void
+  onPause?: () => void
+  onComplete?: () => void
+  onError?: (error: string) => void
 }
 
 // Cache key generator - Unicode-safe encoding
 const generateCacheKey = (text: string): string => {
-  // Encode string to UTF-8 bytes, then to base64
   const utf8Bytes = new TextEncoder().encode(text)
   const base64 = btoa(String.fromCharCode(...utf8Bytes))
   return `tts_alloy_tts-1_${base64.replace(/[^a-zA-Z0-9]/g, '')}`
 }
 
-// Cache management
-const getCachedAudio = (cacheKey: string): string | null => {
+// Cache management with IndexedDB fallback
+const getCachedAudio = async (cacheKey: string): Promise<string | null> => {
   if (typeof window === 'undefined') return null
 
   try {
+    // Try localStorage first
     const cached = localStorage.getItem(cacheKey)
     if (cached) {
       const { data, timestamp, expiresAt } = JSON.parse(cached)
-
-      // Check if cache is still valid (24 hours)
       if (Date.now() < expiresAt) {
-        return data // Return base64 data
+        return data
       } else {
-        // Remove expired cache
         localStorage.removeItem(cacheKey)
       }
     }
+
+    // Fallback to IndexedDB
+    try {
+      const db = await new Promise<IDBDatabase>((resolve, reject) => {
+        const request = indexedDB.open('AudioCache', 1)
+        request.onerror = () => reject(request.error)
+        request.onsuccess = () => resolve(request.result)
+        request.onupgradeneeded = () => {
+          const db = request.result
+          if (!db.objectStoreNames.contains('audio')) {
+            db.createObjectStore('audio', { keyPath: 'key' })
+          }
+        }
+      })
+
+      const transaction = db.transaction(['audio'], 'readonly')
+      const store = transaction.objectStore('audio')
+      const request = store.get(cacheKey)
+      
+      return new Promise<string | null>((resolve) => {
+        request.onsuccess = () => {
+          const result = request.result
+          if (result && Date.now() < result.expiresAt) {
+            resolve(result.data)
+          } else {
+            resolve(null)
+          }
+        }
+        request.onerror = () => resolve(null)
+      })
+    } catch (indexedDBError) {
+      console.warn('IndexedDB not available:', indexedDBError)
+      return null
+    }
   } catch (error) {
     console.warn('Error reading audio cache:', error)
+    return null
   }
-
-  return null
 }
 
-const setCachedAudio = (cacheKey: string, base64Data: string): void => {
+const setCachedAudio = async (cacheKey: string, data: string): Promise<void> => {
   if (typeof window === 'undefined') return
 
+  const cacheData = {
+    data,
+    timestamp: Date.now(),
+    expiresAt: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
+  }
+
   try {
-    const expiresAt = Date.now() + 24 * 60 * 60 * 1000 // 24 hours
-    localStorage.setItem(cacheKey, JSON.stringify({ data: base64Data, timestamp: Date.now(), expiresAt }))
-  } catch (error) {
-    console.warn('Error caching audio:', error)
+    localStorage.setItem(cacheKey, JSON.stringify(cacheData))
+  } catch (localStorageError) {
+    console.warn('localStorage full, trying IndexedDB:', localStorageError)
+    
+    try {
+      const db = await new Promise<IDBDatabase>((resolve, reject) => {
+        const request = indexedDB.open('AudioCache', 1)
+        request.onerror = () => reject(request.error)
+        request.onsuccess = () => resolve(request.result)
+        request.onupgradeneeded = () => {
+          const db = request.result
+          if (!db.objectStoreNames.contains('audio')) {
+            db.createObjectStore('audio', { keyPath: 'key' })
+          }
+        }
+      })
+
+      const transaction = db.transaction(['audio'], 'readwrite')
+      const store = transaction.objectStore('audio')
+      store.put({ key: cacheKey, ...cacheData })
+    } catch (indexedDBError) {
+      console.error('Failed to cache audio:', indexedDBError)
+    }
   }
 }
 
-export default function AudioPlayer({
-  text,
-  className = ''
+const base64toBlob = (base64: string, mimeType: string): Blob => {
+  const byteCharacters = atob(base64)
+  const byteNumbers = new Array(byteCharacters.length)
+  for (let i = 0; i < byteCharacters.length; i++) {
+    byteNumbers[i] = byteCharacters.charCodeAt(i)
+  }
+  const byteArray = new Uint8Array(byteNumbers)
+  return new Blob([byteArray], { type: mimeType })
+}
+
+export default function AudioPlayer({ 
+  text, 
+  className = '', 
+  autoPlay = false,
+  showControls = true,
+  enableKeyboard = true,
+  onPlay,
+  onPause,
+  onComplete,
+  onError
 }: AudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [isMuted, setIsMuted] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [audioBlobUrl, setAudioBlobUrl] = useState<string | null>(null) // Store blob URL
-  const [duration, setDuration] = useState<number>(0)
-  const [currentTime, setCurrentTime] = useState<number>(0)
-  const [playbackRate, setPlaybackRate] = useState<number>(1)
-
+  const [audioUrl, setAudioUrl] = useState<string | null>(null)
+  const [isMuted, setIsMuted] = useState(false)
+  const [volume, setVolume] = useState(1)
+  const [currentTime, setCurrentTime] = useState(0)
+  const [duration, setDuration] = useState(0)
+  const [playbackSpeed, setPlaybackSpeed] = useState(1)
+  const [isCached, setIsCached] = useState(false)
   const audioRef = useRef<HTMLAudioElement>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
 
-  // Generate audio when text changes
-  useEffect(() => {
-    // Don't auto-generate audio anymore
-    // Audio will be generated only when user clicks play
-  }, [text])
+  // Memoized cache key
+  const cacheKey = useMemo(() => generateCacheKey(text), [text])
 
-  const generateAudio = async () => {
+  // Generate audio function with caching
+  const generateAudio = useCallback(async () => {
     if (!text || !text.trim()) {
-      console.log('No text to generate audio')
+      setError('Nenhum texto fornecido para gerar áudio')
       return
     }
 
-    console.log('Generating audio for text:', text.substring(0, 50) + '...')
-    const cacheKey = generateCacheKey(text.trim())
-
-    // Check cache first
-    const cachedBase64 = getCachedAudio(cacheKey)
-    if (cachedBase64) {
-      console.log('Using cached audio for:', cacheKey)
-      const audioBlob = base64toBlob(cachedBase64, 'audio/mpeg')
-      const url = URL.createObjectURL(audioBlob)
-
-      // Revoke previous URL if exists
-      if (audioBlobUrl) {
-        URL.revokeObjectURL(audioBlobUrl)
-      }
-      setAudioBlobUrl(url)
-
-      if (audioRef.current) {
-        audioRef.current.src = url
-        audioRef.current.load()
-        audioRef.current.playbackRate = playbackRate // Apply current playback rate
-      }
-      return
-    }
-
-    console.log('Generating new audio...')
     setIsLoading(true)
     setError(null)
 
     try {
+      // Check cache first
+      const cachedAudio = await getCachedAudio(cacheKey)
+      if (cachedAudio) {
+        console.log('Using cached audio')
+        setIsCached(true)
+        const audioBlob = base64toBlob(cachedAudio, 'audio/mpeg')
+        const url = URL.createObjectURL(audioBlob)
+        
+        if (audioUrl) {
+          URL.revokeObjectURL(audioUrl)
+        }
+        setAudioUrl(url)
+        setIsLoading(false)
+        return
+      }
+
+      // Generate new audio
+      console.log('Generating new audio for text:', text.substring(0, 50) + '...')
+      
       // Cancel previous request if exists
       if (abortControllerRef.current) {
         abortControllerRef.current.abort()
       }
+      
       abortControllerRef.current = new AbortController()
 
-      const response = await fetch('/api/tts/generate', {
+      const response = await fetch('/api/tts/openai', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           text: text.trim(),
-          voice: 'alloy', // Hardcoded for simplicity
-          model: 'tts-1'  // Hardcoded for simplicity
+          voice: 'alloy',
+          model: 'tts-1'
         }),
         signal: abortControllerRef.current.signal
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to generate audio')
+        throw new Error(`Erro na API: ${response.statusText}`)
       }
 
-      // Create blob URL from response
       const audioBlob = await response.blob()
-      const url = URL.createObjectURL(audioBlob)
-
-      // Convert blob to base64 for caching
+      
+      // Convert to base64 for caching
       const reader = new FileReader()
+      reader.onload = async () => {
+        const base64 = (reader.result as string).split(',')[1]
+        await setCachedAudio(cacheKey, base64)
+      }
       reader.readAsDataURL(audioBlob)
-      reader.onloadend = () => {
-        const base64data = reader.result as string
-        setCachedAudio(cacheKey, base64data)
+
+      const url = URL.createObjectURL(audioBlob)
+      
+      if (audioUrl) {
+        URL.revokeObjectURL(audioUrl)
       }
-
-      // Revoke previous URL if exists
-      if (audioBlobUrl) {
-        URL.revokeObjectURL(audioBlobUrl)
-      }
-      setAudioBlobUrl(url)
-
-      // Set up audio element
-      if (audioRef.current) {
-        audioRef.current.src = url
-        audioRef.current.load()
-        audioRef.current.playbackRate = playbackRate // Apply current playback rate
-
-        // Verify audio loads correctly
-        audioRef.current.addEventListener('error', () => {
-          console.error('Audio failed to load:', url)
-          setError('Erro ao carregar áudio')
-        })
-
-        audioRef.current.addEventListener('canplaythrough', () => {
-          console.log('Audio loaded successfully:', url)
-        })
-      }
-
-    } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
-        // Request was cancelled, don't show error
+      setAudioUrl(url)
+      setIsCached(false)
+      
+    } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') {
+        console.log('Audio generation cancelled')
         return
       }
-
-      console.error('Audio generation error:', error)
-      const errorMessage = error instanceof Error ? error.message : 'Failed to generate audio'
-
-      // Check if it's an API key error
-      if (errorMessage.includes('API key') || errorMessage.includes('not configured')) {
-        setError('Chave da OpenAI não configurada. Verifique o arquivo .env.local')
-      } else {
-        setError(errorMessage)
-      }
-
-      toast.error('Erro ao gerar áudio')
+      
+      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido ao gerar áudio'
+      setError(errorMessage)
+      onError?.(errorMessage)
+      console.error('Error generating audio:', err)
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [text, cacheKey, audioUrl, onError])
 
-  const base64toBlob = (base64: string, contentType: string = '', sliceSize: number = 512) => {
-    const byteCharacters = atob(base64.split(',')[1]);
-    const byteArrays = [];
+  // Audio event handlers
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
 
-    for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
-      const slice = byteCharacters.slice(offset, offset + sliceSize);
-
-      const byteNumbers = new Array(slice.length);
-      for (let i = 0; i < slice.length; i++) {
-        byteNumbers[i] = slice.charCodeAt(i);
-      }
-
-      const byteArray = new Uint8Array(byteNumbers);
-      byteArrays.push(byteArray);
+    const handleTimeUpdate = () => setCurrentTime(audio.currentTime)
+    const handleDurationChange = () => setDuration(audio.duration)
+    const handleEnded = () => {
+      setIsPlaying(false)
+      onComplete?.()
     }
-
-    return new Blob(byteArrays, { type: contentType });
-  }
-
-  const playAudio = async () => {
-    // If no audio URL exists, generate it first
-    if (!audioBlobUrl) {
-      await generateAudio()
-      // After generation, check if we have audio URL
-      if (!audioBlobUrl) {
-        console.log('Failed to generate audio')
-        return
-      }
-    }
-    
-    if (audioRef.current && audioBlobUrl) {
-      audioRef.current.play()
-      setIsPlaying(true)
-    }
-  }
-
-  const pauseAudio = () => {
-    if (audioRef.current) {
-      audioRef.current.pause()
+    const handleError = () => {
+      setError('Erro ao reproduzir áudio')
       setIsPlaying(false)
     }
-  }
-
-  const togglePlayPause = () => {
-    if (isPlaying) {
-      pauseAudio()
-    } else {
-      playAudio()
+    const handlePlay = () => {
+      setIsPlaying(true)
+      onPlay?.()
     }
-  }
+    const handlePause = () => {
+      setIsPlaying(false)
+      onPause?.()
+    }
 
-  const toggleMute = () => {
+    audio.addEventListener('timeupdate', handleTimeUpdate)
+    audio.addEventListener('durationchange', handleDurationChange)
+    audio.addEventListener('ended', handleEnded)
+    audio.addEventListener('error', handleError)
+    audio.addEventListener('play', handlePlay)
+    audio.addEventListener('pause', handlePause)
+
+    return () => {
+      audio.removeEventListener('timeupdate', handleTimeUpdate)
+      audio.removeEventListener('durationchange', handleDurationChange)
+      audio.removeEventListener('ended', handleEnded)
+      audio.removeEventListener('error', handleError)
+      audio.removeEventListener('play', handlePlay)
+      audio.removeEventListener('pause', handlePause)
+    }
+  }, [onPlay, onPause, onComplete])
+
+  // Update audio properties
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+
+    audio.volume = isMuted ? 0 : volume
+    audio.playbackRate = playbackSpeed
+  }, [volume, isMuted, playbackSpeed])
+
+  // Keyboard navigation
+  useEffect(() => {
+    if (!enableKeyboard) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target !== document.body) return
+
+      switch (e.key) {
+        case ' ':
+          e.preventDefault()
+          handleTogglePlay()
+          break
+        case 'ArrowLeft':
+          e.preventDefault()
+          handleSeek(Math.max(0, currentTime - 10))
+          break
+        case 'ArrowRight':
+          e.preventDefault()
+          handleSeek(Math.min(duration, currentTime + 10))
+          break
+        case 'm':
+          e.preventDefault()
+          setIsMuted(!isMuted)
+          break
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [enableKeyboard, currentTime, duration, isMuted])
+
+  const handleTogglePlay = useCallback(async () => {
+    if (!audioUrl) {
+      await generateAudio()
+      return
+    }
+
     if (audioRef.current) {
-      audioRef.current.muted = !isMuted
-      setIsMuted(!isMuted)
+      if (isPlaying) {
+        audioRef.current.pause()
+      } else {
+        try {
+          await audioRef.current.play()
+        } catch (err) {
+          setError('Erro ao reproduzir áudio')
+          console.error('Play error:', err)
+        }
+      }
     }
-  }
+  }, [audioUrl, isPlaying, generateAudio])
 
-  const changePlaybackRate = (rate: number) => {
+  const handleSeek = useCallback((time: number) => {
     if (audioRef.current) {
-      audioRef.current.playbackRate = rate
-      setPlaybackRate(rate)
+      audioRef.current.currentTime = time
+      setCurrentTime(time)
     }
-  }
+  }, [])
 
-  const handleTimeUpdate = () => {
-    if (audioRef.current) {
-      setCurrentTime(audioRef.current.currentTime)
-    }
-  }
+  const handleVolumeChange = useCallback((value: number[]) => {
+    setVolume(value[0])
+  }, [])
 
-  const handleLoadedMetadata = () => {
-    if (audioRef.current) {
-      setDuration(audioRef.current.duration)
-    }
-  }
+  const handleSpeedChange = useCallback((speed: number) => {
+    setPlaybackSpeed(speed)
+  }, [])
 
-  const handleEnded = () => {
-    setIsPlaying(false)
-    setCurrentTime(0)
-  }
-
-  const handleError = () => {
-    setError('Erro ao reproduzir áudio')
-    setIsPlaying(false)
-    toast.error('Erro ao reproduzir áudio')
-  }
+  const toggleMute = useCallback(() => {
+    setIsMuted(!isMuted)
+  }, [isMuted])
 
   const formatTime = (time: number) => {
     const minutes = Math.floor(time / 60)
@@ -296,128 +382,232 @@ export default function AudioPlayer({
     return `${minutes}:${seconds.toString().padStart(2, '0')}`
   }
 
+  const handleRestart = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = 0
+      setCurrentTime(0)
+    }
+  }, [])
+
+  const handleSkipBack = useCallback(() => {
+    handleSeek(Math.max(0, currentTime - 10))
+  }, [currentTime, handleSeek])
+
+  const handleSkipForward = useCallback(() => {
+    handleSeek(Math.min(duration, currentTime + 10))
+  }, [currentTime, duration, handleSeek])
+
+  const handleDownload = useCallback(() => {
+    if (audioUrl) {
+      const a = document.createElement('a')
+      a.href = audioUrl
+      a.download = `audio-${Date.now()}.mp3`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+    }
+  }, [audioUrl])
+
+  const handleShare = useCallback(() => {
+    if (navigator.share && audioUrl) {
+      navigator.share({
+        title: 'Áudio gerado',
+        text: text.substring(0, 100) + '...',
+        url: audioUrl,
+      }).catch(console.error)
+    } else {
+      // Fallback to copying URL
+      navigator.clipboard.writeText(audioUrl || '').then(() => {
+        toast.success('Link copiado para a área de transferência')
+      }).catch(console.error)
+    }
+  }, [audioUrl, text])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (audioUrl) {
+        URL.revokeObjectURL(audioUrl)
+      }
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort()
+      }
+    }
+  }, [audioUrl])
+
   return (
-    <Card className={`w-full ${className}`}>
+    <Card className={className}>
       <CardContent className="p-4">
-        <div className="flex items-center gap-4">
-          {/* Play/Pause Button */}
-          <Button
-            onClick={togglePlayPause}
-            disabled={isLoading || !!error || !text?.trim()}
-            size="sm"
-            variant="outline"
-            className="flex-shrink-0"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                Gerando...
-              </>
-            ) : isPlaying ? (
-              <Pause className="h-4 w-4" />
-            ) : (
-              <Play className="h-4 w-4" />
-            )}
-          </Button>
+        <div className="space-y-4">
+          {/* Error Alert */}
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          {/* Main Controls */}
+          <div className="flex items-center justify-center gap-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSkipBack}
+              disabled={!audioUrl || isLoading}
+              aria-label="Voltar 10 segundos"
+            >
+              <SkipBack className="w-4 h-4" />
+            </Button>
+
+            <Button
+              size="lg"
+              onClick={handleTogglePlay}
+              disabled={isLoading}
+              className="w-16 h-16 rounded-full"
+              aria-label={isPlaying ? 'Pausar' : 'Reproduzir'}
+            >
+              {isLoading ? (
+                <Loader2 className="w-6 h-6 animate-spin" />
+              ) : isPlaying ? (
+                <Pause className="w-6 h-6" />
+              ) : (
+                <Play className="w-6 h-6" />
+              )}
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSkipForward}
+              disabled={!audioUrl || isLoading}
+              aria-label="Avançar 10 segundos"
+            >
+              <SkipForward className="w-4 h-4" />
+            </Button>
+          </div>
 
           {/* Progress Bar */}
-          <div className="flex-1 min-w-0">
-            {error ? (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-red-600 text-sm">
-                  <AlertCircle className="h-4 w-4" />
-                  <span>{error}</span>
-                </div>
-                {error.includes('Chave da OpenAI') && (
-                  <div className="text-xs text-blue-600">
-                    📋 <Link href="/tts-setup" className="underline">Ver instruções de configuração</Link>
-                  </div>
-                )}
-                <Button
-                  onClick={generateAudio}
-                  size="sm"
-                  variant="ghost"
-                  className="h-6 px-2 text-xs"
-                >
-                  <RotateCcw className="h-3 w-3 mr-1" />
-                  Tentar novamente
-                </Button>
+          {audioUrl && (
+            <div className="space-y-2">
+              <Slider
+                value={[currentTime]}
+                max={duration}
+                step={1}
+                onValueChange={(value) => handleSeek(value[0])}
+                className="w-full"
+                disabled={isLoading}
+                aria-label="Posição do áudio"
+              />
+              <div className="flex justify-between text-sm text-gray-500">
+                <span>{formatTime(currentTime)}</span>
+                <span>{formatTime(duration)}</span>
               </div>
-            ) : (
-              <div className="space-y-2">
-                {/* Time Display */}
-                <div className="flex justify-between text-xs text-gray-500">
-                  <span>{formatTime(currentTime)}</span>
-                  <span>{formatTime(duration)}</span>
-                </div>
+            </div>
+          )}
 
-                {/* Progress Bar */}
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-orange-500 h-2 rounded-full transition-all duration-300"
-                    style={{
-                      width: duration > 0 ? `${(currentTime / duration) * 100}%` : '0%'
-                    }}
+          {/* Secondary Controls */}
+          {showControls && (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                {/* Volume Control */}
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={toggleMute}
+                    aria-label={isMuted ? 'Ativar som' : 'Silenciar'}
+                  >
+                    {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                  </Button>
+                  <Slider
+                    value={[volume]}
+                    max={1}
+                    step={0.1}
+                    onValueChange={handleVolumeChange}
+                    className="w-20"
+                    disabled={isMuted}
+                    aria-label="Volume"
                   />
                 </div>
 
-                {/* Status Text */}
-                {!audioBlobUrl && !isLoading && (
-                  <div className="text-xs text-gray-500 text-center">
-                    Clique para gerar e reproduzir áudio
-                  </div>
-                )}
+                {/* Playback Speed */}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600">Velocidade:</span>
+                  <select
+                    value={playbackSpeed}
+                    onChange={(e) => handleSpeedChange(parseFloat(e.target.value))}
+                    className="text-sm border rounded px-2 py-1"
+                    disabled={!audioUrl}
+                  >
+                    <option value={0.5}>0.5x</option>
+                    <option value={0.75}>0.75x</option>
+                    <option value={1}>1x</option>
+                    <option value={1.25}>1.25x</option>
+                    <option value={1.5}>1.5x</option>
+                    <option value={2}>2x</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleRestart}
+                  disabled={!audioUrl}
+                  aria-label="Reiniciar áudio"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleDownload}
+                  disabled={!audioUrl}
+                  aria-label="Baixar áudio"
+                >
+                  <Download className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleShare}
+                  disabled={!audioUrl}
+                  aria-label="Compartilhar áudio"
+                >
+                  <Share2 className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Status Indicators */}
+          <div className="flex items-center justify-between text-sm text-gray-500">
+            <div className="flex items-center gap-2">
+              {isCached && (
+                <Badge variant="outline" className="text-xs">
+                  <Gauge className="w-3 h-3 mr-1" />
+                  Cache
+                </Badge>
+              )}
+              {isLoading && (
+                <Badge variant="outline" className="text-xs">
+                  <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                  Gerando
+                </Badge>
+              )}
+            </div>
+            
+            {enableKeyboard && (
+              <div className="text-xs">
+                Pressione <kbd className="px-1 py-0.5 bg-gray-200 rounded">Espaço</kbd> para reproduzir/pausar
               </div>
             )}
           </div>
-
-          {/* Volume Control */}
-          <Button
-            onClick={toggleMute}
-            disabled={!audioBlobUrl || !!error}
-            size="sm"
-            variant="ghost"
-            className="flex-shrink-0"
-          >
-            {isMuted ? (
-              <VolumeX className="h-4 w-4" />
-            ) : (
-              <Volume2 className="h-4 w-4" />
-            )}
-          </Button>
-
-          {/* Speed Control */}
-          {audioBlobUrl && !error && (
-            <div className="flex items-center gap-1">
-              <Gauge className="h-4 w-4 text-gray-500" />
-              <select
-                value={playbackRate}
-                onChange={(e) => changePlaybackRate(parseFloat(e.target.value))}
-                className="text-xs border rounded px-1 py-0.5 bg-white"
-                disabled={!audioBlobUrl || !!error}
-              >
-                <option value={0.5}>0.5x</option>
-                <option value={0.75}>0.75x</option>
-                <option value={1}>1x</option>
-                <option value={1.25}>1.25x</option>
-                <option value={1.5}>1.5x</option>
-                <option value={2}>2x</option>
-              </select>
-            </div>
-          )}
         </div>
 
         {/* Hidden Audio Element */}
-        <audio
-          ref={audioRef}
-          onTimeUpdate={handleTimeUpdate}
-          onLoadedMetadata={handleLoadedMetadata}
-          onEnded={handleEnded}
-          onError={handleError}
-          onPlay={() => setIsPlaying(true)}
-          onPause={() => setIsPlaying(false)}
-          preload="auto"
-        />
+        <audio ref={audioRef} src={audioUrl || undefined} preload="none" />
       </CardContent>
     </Card>
   )

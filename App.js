@@ -1,6 +1,5 @@
 'use client'
 
-import ThemeToggle from './components/theme/ThemeToggle'
 import { ThemeProvider } from './contexts/ThemeContext'
 
 /**
@@ -13,18 +12,6 @@ export default function App() {
     <ThemeProvider>
       <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-text-strong)] transition-theme">
         <header className="mx-auto flex max-w-4xl items-center justify-between gap-6 px-6 py-12">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[var(--color-accent)]">
-              HubEdu.ia UI Kit
-            </p>
-            <h1 className="mt-2 text-3xl font-bold">Pré-visualização do tema</h1>
-            <p className="mt-2 max-w-xl text-sm text-[var(--color-text-muted)]">
-              Aplique o modo escuro baseado em #121212 com destaque amarelo vibrante (#FFEB3B) e
-              acentos teal (#03DAC6). O alternador abaixo sincroniza com o sistema e persiste a
-              escolha do usuário.
-            </p>
-          </div>
-          <ThemeToggle />
         </header>
 
         <main className="mx-auto grid max-w-4xl gap-6 px-6 pb-16">

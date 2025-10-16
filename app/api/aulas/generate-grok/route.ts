@@ -29,30 +29,70 @@ const GROK_MODEL_NAME = GROK_MODEL;
 // Função para limpar JSON malformado
 function cleanJsonString(jsonString: string): string {
   try {
-    // Remove caracteres de controle e quebras de linha problemáticas
+    // Remove control characters and problematic line breaks
     let cleaned = jsonString
       .replace(/[\u0000-\u001F\u007F-\u009F]/g, '') // Remove control characters
       .replace(/\n/g, '\\n') // Escape newlines
       .replace(/\r/g, '\\r') // Escape carriage returns
       .replace(/\t/g, '\\t'); // Escape tabs
     
-    // Corrigir vírgulas duplas ou ausentes
+    // Fix common JSON issues
     cleaned = cleaned
       .replace(/,(\s*[}\]])/g, '$1') // Remove trailing commas
       .replace(/([{\[,])\s*([}\]])/g, '$1$2') // Remove empty objects/arrays
-      .replace(/([^\\])\\([^"\\\/bfnrt])/g, '$1\\\\$2'); // Fix escaped characters
+      .replace(/([^\\])\\([^"\\\/bfnrt])/g, '$1\\\\$2') // Fix escaped characters
+      .replace(/"\s*([^"]*?)\s*"\s*([^":,}\]]*?)\s*"/g, '"$1": "$2"') // Fix missing colons
+      .replace(/"([^"]*?)"\s*([^":,}\]]*?)\s*"/g, '"$1": "$2"') // Fix missing colons (alternative)
+      .replace(/([^"])\s*([^":,}\]]*?)\s*"/g, '$1: "$2"') // Fix missing quotes and colons
+      .replace(/([^"])\s*([^":,}\]]*?)\s*([^":,}\]]*?)\s*"/g, '$1: "$2$3"'); // Fix complex missing quotes
     
-    // Tentar corrigir aspas não fechadas
+    // Try to fix unclosed quotes
     const quoteCount = (cleaned.match(/"/g) || []).length;
     if (quoteCount % 2 !== 0) {
-      // Adicionar aspas de fechamento se necessário
+      // Add closing quotes if necessary
       cleaned += '"';
     }
+    
+    // Additional fixes for common Grok API issues
+    cleaned = cleaned
+      .replace(/([^\\])\\([^"\\\/bfnrt])/g, '$1\\\\$2') // Fix more escaped characters
+      .replace(/([^"])\s*([^":,}\]]*?)\s*([^":,}\]]*?)\s*"/g, '$1: "$2$3"') // Fix missing quotes in complex cases
+      .replace(/([^"])\s*([^":,}\]]*?)\s*([^":,}\]]*?)\s*([^":,}\]]*?)\s*"/g, '$1: "$2$3$4"'); // Fix even more complex cases
     
     return cleaned;
   } catch (error) {
     console.error('Error cleaning JSON:', error);
     return jsonString; // Return original if cleaning fails
+  }
+}
+
+// Advanced JSON repair function for complex malformed JSON
+function repairMalformedJson(jsonString: string): string {
+  try {
+    let repaired = jsonString;
+    
+    // Fix missing colons after property names
+    repaired = repaired.replace(/"([^"]+)"\s+([^":,}\]]+)/g, '"$1": "$2"');
+    
+    // Fix missing quotes around property values
+    repaired = repaired.replace(/:\s*([^":,}\]]+?)\s*([,}])/g, ': "$1"$2');
+    
+    // Fix missing quotes around property names
+    repaired = repaired.replace(/([^"])\s*([^":,}\]]+?)\s*:/g, '"$2":');
+    
+    // Fix trailing commas
+    repaired = repaired.replace(/,(\s*[}\]])/g, '$1');
+    
+    // Fix missing commas between properties
+    repaired = repaired.replace(/"\s*"\s*"/g, '", "');
+    
+    // Fix escaped quotes
+    repaired = repaired.replace(/\\([^"\\\/bfnrt])/g, '\\\\$1');
+    
+    return repaired;
+  } catch (error) {
+    console.error('Error repairing JSON:', error);
+    return jsonString;
   }
 }
 
@@ -695,9 +735,16 @@ IMPORTANTE:
         // Method 1: Try to extract JSON with more flexible regex
         const flexibleMatch = response.text.match(/\{(?:[^{}]|{[^{}]*})*\}/);
         if (flexibleMatch) {
-          const alternativeCleaned = cleanJsonString(flexibleMatch[0]);
-          lessonData = JSON.parse(alternativeCleaned);
-          log.info('Successfully parsed JSON with alternative method');
+          let alternativeCleaned = cleanJsonString(flexibleMatch[0]);
+          try {
+            lessonData = JSON.parse(alternativeCleaned);
+            log.info('Successfully parsed JSON with alternative method');
+          } catch (cleanError) {
+            // Try advanced repair
+            alternativeCleaned = repairMalformedJson(alternativeCleaned);
+            lessonData = JSON.parse(alternativeCleaned);
+            log.info('Successfully parsed JSON with advanced repair');
+          }
         } else {
           throw new Error('No valid JSON structure found');
         }

@@ -29,11 +29,11 @@ function applyThemeToDocument(theme) {
 export const ThemeContext = createContext(undefined)
 
 export function ThemeProvider({ children }) {
-  const [theme, setThemeState] = useState(null)
+  const [theme, setThemeState] = useState('light')
   const [systemTheme, setSystemTheme] = useState('light')
-  const [preference, setPreference] = useState('system')
+  const [preference, setPreference] = useState('user')
   const [mounted, setMounted] = useState(false)
-  const preferenceRef = useRef('system')
+  const preferenceRef = useRef('user')
 
   const updatePreference = useCallback((value) => {
     preferenceRef.current = value
@@ -41,13 +41,14 @@ export function ThemeProvider({ children }) {
   }, [])
 
   const commitTheme = useCallback((nextTheme, persist) => {
-    applyThemeToDocument(nextTheme)
+    // Força sempre o tema claro
+    applyThemeToDocument('light')
 
     if (typeof window === 'undefined') return
 
     try {
       if (persist) {
-        window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme)
+        window.localStorage.setItem(THEME_STORAGE_KEY, 'light')
       } else {
         window.localStorage.removeItem(THEME_STORAGE_KEY)
       }
@@ -59,81 +60,42 @@ export function ThemeProvider({ children }) {
   useEffect(() => {
     if (typeof window === 'undefined') return
 
-    const mediaQueryList = window.matchMedia(COLOR_SCHEME_QUERY)
-    const mediaQueryTheme = mediaQueryList.matches ? 'dark' : 'light'
-    setSystemTheme(mediaQueryTheme)
-
-    let storedTheme = null
-    try {
-      storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY)
-    } catch (error) {
-      storedTheme = null
-    }
-
-    const hasStoredTheme = storedTheme === 'light' || storedTheme === 'dark'
-    const initialTheme = hasStoredTheme ? storedTheme : mediaQueryTheme
-
-    updatePreference(hasStoredTheme ? 'user' : 'system')
-    setThemeState(initialTheme)
+    // Força sempre o tema claro
+    setSystemTheme('light')
+    setThemeState('light')
     setMounted(true)
-    commitTheme(initialTheme, hasStoredTheme)
-
-    const handleSystemChange = (event) => {
-      const nextSystemTheme = event.matches ? 'dark' : 'light'
-      setSystemTheme(nextSystemTheme)
-
-      if (preferenceRef.current === 'system') {
-        setThemeState(nextSystemTheme)
-        commitTheme(nextSystemTheme, false)
-        updatePreference('system')
-      }
-    }
-
-    mediaQueryList.addEventListener('change', handleSystemChange)
-
-    return () => {
-      mediaQueryList.removeEventListener('change', handleSystemChange)
-    }
+    commitTheme('light', true)
+    updatePreference('user')
   }, [commitTheme, updatePreference])
 
   const setTheme = useCallback(
     (value) => {
-      const incomingValue =
-        typeof value === 'function' ? value(theme ?? systemTheme) : value
-
-      if (incomingValue === 'system') {
-        setThemeState(systemTheme)
-        commitTheme(systemTheme, false)
-        updatePreference('system')
-        return
-      }
-
-      const normalizedValue = incomingValue === 'dark' ? 'dark' : 'light'
-      setThemeState(normalizedValue)
-      commitTheme(normalizedValue, true)
+      // Força sempre o tema claro independente do valor recebido
+      setThemeState('light')
+      commitTheme('light', true)
       updatePreference('user')
     },
-    [commitTheme, systemTheme, theme, updatePreference]
+    [commitTheme, updatePreference]
   )
 
   const toggleTheme = useCallback(() => {
-    setTheme((current) => (current === 'dark' ? 'light' : 'dark'))
+    // Desabilita o toggle - sempre mantém o tema claro
+    setTheme('light')
   }, [setTheme])
 
   const value = useMemo(() => {
-    const activeTheme = theme ?? systemTheme
-
+    // Sempre retorna tema claro
     return {
-      theme: activeTheme,
-      resolvedTheme: activeTheme,
-      systemTheme,
-      preference,
-      isDark: activeTheme === 'dark',
+      theme: 'light',
+      resolvedTheme: 'light',
+      systemTheme: 'light',
+      preference: 'user',
+      isDark: false,
       mounted,
       setTheme,
       toggleTheme,
     }
-  }, [mounted, preference, setTheme, systemTheme, theme, toggleTheme])
+  }, [mounted, setTheme, toggleTheme])
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
 }
