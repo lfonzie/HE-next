@@ -74,7 +74,7 @@ export async function POST(request: Request) {
             'Cookie': request.headers.get('cookie') || '',
           },
           body: JSON.stringify(body),
-          signal: AbortSignal.timeout(120000), // 2 minutes timeout
+          signal: AbortSignal.timeout(200000), // 3.3 minutes timeout (longer than Grok's 3min)
         });
         
         if (response.ok) {
@@ -96,7 +96,7 @@ export async function POST(request: Request) {
               'Cookie': request.headers.get('cookie') || '',
             },
             body: JSON.stringify(body),
-            signal: AbortSignal.timeout(120000), // 2 minutes timeout
+            signal: AbortSignal.timeout(200000), // 3.3 minutes timeout (longer than Grok's 3min)
           });
           
           if (response.ok) {
@@ -117,7 +117,7 @@ export async function POST(request: Request) {
               'Cookie': request.headers.get('cookie') || '',
             },
             body: JSON.stringify(body),
-            signal: AbortSignal.timeout(120000), // 2 minutes timeout
+            signal: AbortSignal.timeout(200000), // 3.3 minutes timeout (longer than Grok's 3min)
           });
           
           if (response.ok) {
