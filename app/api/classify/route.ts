@@ -85,6 +85,17 @@ TI (Suporte Técnico):
 - "tela azul", "erro", "crash", "travando"
 - "não conecta", "sem conexão", "falha de rede"
 
+NEWS (Notícias e Atualidades):
+- "notícias", "noticias", "notícia", "noticia"
+- "notícias de hoje", "noticias de hoje", "notícias hoje", "noticias hoje"
+- "notícias de hj", "noticias de hj", "notícias hj", "noticias hj"
+- "o que aconteceu hoje", "aconteceu hoje", "hoje aconteceu"
+- "últimas notícias", "ultimas noticias", "notícias recentes", "noticias recentes"
+- "atualidades", "atualidade", "novidades", "novidade"
+- "política", "politica", "economia", "esportes", "mundo"
+- "brasil hoje", "brasil", "mundo hoje", "internacional"
+- "aconteceu", "acontece", "acontecendo", "acontecerá"
+
 SOCIAL_MEDIA:
 - "crie um post", "faça um post", "gere um post"
 - "instagram", "facebook", "twitter", "tiktok"

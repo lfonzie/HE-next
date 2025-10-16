@@ -103,7 +103,7 @@ export function useUnifiedChat(
     let selectionExplanation = null;
     
     if (useAutoSelection) {
-      const analysis = analyzeQuestion(input);
+      const analysis = await analyzeQuestion(input);
       currentProvider = analysis.recommendedProvider;
       currentModel = analysis.recommendedModel;
       selectionExplanation = getSelectionExplanation(analysis);
@@ -132,6 +132,16 @@ export function useUnifiedChat(
       currentModel = 'grok-4-fast-reasoning';
       setProvider('grok');
       setModel('grok-4-fast-reasoning');
+    }
+    
+    // 📰 Para notícias, forçar uso do Perplexity
+    if (detectedModule === 'news') {
+      console.log(`📰 [AUTO-NEWS] News query detected, using Perplexity`);
+      // Forçar uso do Perplexity para consultas de notícias
+      currentProvider = 'perplexity';
+      currentModel = 'sonar';
+      setProvider('perplexity');
+      setModel('sonar');
     }
 
     const cid = ensureId();
@@ -200,7 +210,7 @@ export function useUnifiedChat(
     let selectionExplanation = null;
     
     if (useAutoSelection) {
-      const analysis = analyzeQuestion(input);
+      const analysis = await analyzeQuestion(input);
       currentProvider = analysis.recommendedProvider;
       currentModel = analysis.recommendedModel;
       selectionExplanation = getSelectionExplanation(analysis);
@@ -229,6 +239,16 @@ export function useUnifiedChat(
       currentModel = 'grok-4-fast-reasoning';
       setProvider('grok');
       setModel('grok-4-fast-reasoning');
+    }
+    
+    // 📰 Para notícias, forçar uso do Perplexity
+    if (detectedModule === 'news') {
+      console.log(`📰 [AUTO-NEWS] News query detected, using Perplexity`);
+      // Forçar uso do Perplexity para consultas de notícias
+      currentProvider = 'perplexity';
+      currentModel = 'sonar';
+      setProvider('perplexity');
+      setModel('sonar');
     }
 
     const cid = ensureId();

@@ -17,7 +17,11 @@ export interface QuestionAnalysis {
 // Palavras-chave para detecção de busca na web
 const WEB_SEARCH_KEYWORDS = [
   'pesquisar', 'buscar', 'encontrar', 'procurar', 'onde', 'quando', 'quem',
-  'últimas notícias', 'notícias', 'atual', 'recente', 'hoje', 'ontem', 'semana',
+  'últimas notícias', 'ultimas noticias', 'notícias', 'noticias', 'notícia', 'noticia',
+  'notícias de hoje', 'noticias de hoje', 'notícias hoje', 'noticias hoje',
+  'notícias de hj', 'noticias de hj', 'notícias hj', 'noticias hj',
+  'o que aconteceu hoje', 'aconteceu hoje', 'hoje aconteceu',
+  'atual', 'recente', 'hoje', 'ontem', 'semana',
   'preço', 'cotação', 'valor', 'mercado', 'bolsa', 'ações',
   'tempo', 'clima', 'previsão', 'temperatura',
   'endereço', 'localização', 'mapa', 'como chegar',
@@ -52,22 +56,39 @@ const TECHNICAL_KEYWORDS = [
   'api', 'endpoint', 'request', 'response', 'json'
 ];
 
-export function analyzeQuestion(question: string): QuestionAnalysis {
+export async function analyzeQuestion(question: string): Promise<QuestionAnalysis> {
   const lowerQuestion = question.toLowerCase();
   
-  // Detectar se precisa de busca na web
-  const needsWebSearch = WEB_SEARCH_KEYWORDS.some(keyword => 
-    lowerQuestion.includes(keyword)
-  );
+  // Usar IA para classificar o módulo primeiro
+  let detectedModule = 'chat';
+  let needsWebSearch = false;
   
-  // Detectar tipo de pergunta
+  try {
+    // Importar dinamicamente para evitar problemas de dependência circular
+    const { aiClassify } = await import('./ai-classifier');
+    const moduleDetection = await aiClassify(question, 0);
+    detectedModule = moduleDetection.module;
+    
+    // Se o módulo detectado for 'news', precisa de busca na web
+    if (detectedModule === 'news') {
+      needsWebSearch = true;
+    }
+  } catch (error) {
+    console.warn('⚠️ [COMPLEXITY-DETECTOR] AI classification failed, using fallback:', error);
+    // Fallback para palavras-chave se a IA falhar
+    needsWebSearch = WEB_SEARCH_KEYWORDS.some(keyword => 
+      lowerQuestion.includes(keyword)
+    );
+  }
+  
+  // Detectar tipo de pergunta baseado no módulo detectado
   let type: QuestionType = 'general';
-  if (needsWebSearch) {
+  if (detectedModule === 'news' || needsWebSearch) {
     type = 'web_search';
+  } else if (detectedModule === 'ti') {
+    type = 'technical';
   } else if (CREATIVE_KEYWORDS.some(keyword => lowerQuestion.includes(keyword))) {
     type = 'creative';
-  } else if (TECHNICAL_KEYWORDS.some(keyword => lowerQuestion.includes(keyword))) {
-    type = 'technical';
   } else if (COMPLEX_KEYWORDS.some(keyword => lowerQuestion.includes(keyword))) {
     type = 'analysis';
   }
@@ -76,7 +97,7 @@ export function analyzeQuestion(question: string): QuestionAnalysis {
   let complexity: ComplexityLevel = 'simple';
   const wordCount = question.split(' ').length;
   
-  if (needsWebSearch || type === 'web_search') {
+  if (detectedModule === 'news' || needsWebSearch || type === 'web_search') {
     complexity = 'medium';
   } else if (wordCount > 20 || COMPLEX_KEYWORDS.some(keyword => lowerQuestion.includes(keyword))) {
     complexity = 'complex';
@@ -89,10 +110,15 @@ export function analyzeQuestion(question: string): QuestionAnalysis {
   let recommendedModel: string;
   let confidence = 0.8;
   
-  if (needsWebSearch || type === 'web_search') {
-    // Busca na web → Perplexity
+  if (detectedModule === 'news' || needsWebSearch || type === 'web_search') {
+    // Módulo de notícias ou busca na web → Perplexity
     recommendedProvider = 'perplexity';
     recommendedModel = 'sonar';
+    confidence = 0.9;
+  } else if (detectedModule === 'ti') {
+    // Problemas técnicos → Grok 4 Fast Reasoning
+    recommendedProvider = 'grok';
+    recommendedModel = 'grok-4-fast-reasoning';
     confidence = 0.9;
   } else if (complexity === 'complex' || type === 'analysis') {
     // Perguntas complexas → Grok 4 Fast Reasoning (mais avançado)

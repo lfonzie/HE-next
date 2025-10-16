@@ -19,6 +19,16 @@
       "max_completion_tokens": 600,
       "tone": "amigável",
       "is_active": true
+        },
+    "news": {
+      "name": "Notícias",
+      "description": "Consultas sobre notícias e atualidades",
+      "system_prompt": "Você é um assistente especializado em notícias e atualidades. IMPORTANTE: NÃO inclua números de fontes, citações ou referências numéricas no final das palavras ou frases. Responda de forma natural e fluida sem indicar fontes ou citações. Forneça informações atualizadas sobre eventos recentes.",
+      "temperature": 0.7,
+      "max_tokens": 1000,
+      "max_completion_tokens": 800,
+      "tone": "informativo",
+      "is_active": true
         }
     }
 }
