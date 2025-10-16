@@ -246,13 +246,13 @@ export async function POST(req: NextRequest) {
             console.log(`🧹 [PERPLEXITY] Cleaned suggestions from response:`, finalCleanedResponse.length, 'characters');
           }
 
-          // Para Perplexity, aplicar limpeza final apenas para salvar no banco (não enviar para o frontend)
+          // Para Perplexity, aplicar limpeza final e enviar para o frontend
           if (finalProvider === 'perplexity' && isPerplexityResponse(finalCleanedResponse)) {
             try {
               const fullyCleanedResponse = await cleanPerplexityResponse(finalCleanedResponse);
-              // Update final response for saving (não enviar para o frontend para evitar duplicação)
+              // Update final response for both frontend and database
               finalCleanedResponse = fullyCleanedResponse;
-              console.log(`🧹 [PERPLEXITY] Final cleaning applied for database storage only`);
+              console.log(`🧹 [PERPLEXITY] Final cleaning applied and sent to frontend`);
             } catch (error) {
               console.error('❌ [CHAT-STREAM] Error cleaning with AI:', error);
               // Fallback to regex cleaning
