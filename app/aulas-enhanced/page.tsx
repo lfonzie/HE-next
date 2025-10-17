@@ -397,7 +397,7 @@ export default function AulasEnhancedPage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="mt-8"
               >
-                <InlineFlashcards topic={topic} />
+                <InlineFlashcards topic={topic} shouldLoad={true} />
               </motion.div>
             )}
           </div>

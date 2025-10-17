@@ -3,6 +3,12 @@ import { EnhancedChemicalReactionLab } from '../experiments/EnhancedChemicalReac
 import { PendulumLab } from '../experiments/PendulumLab';
 import { BouncingBallLab } from '../experiments/BouncingBallLab';
 import { ColorMixingLab } from '../experiments/ColorMixingLab';
+import { CellMicroscopyLab } from '../CellMicroscopyLab';
+import { FunctionGraphingLab } from '../FunctionGraphingLab';
+import { ElectromagnetismLab } from '../ElectromagnetismLab';
+import { ThermodynamicsLab } from '../ThermodynamicsLab';
+import { OpticsLab } from '../OpticsLab';
+import { OrganicChemistryLab } from '../OrganicChemistryLab';
 import { FlaskIcon } from '../icons/FlaskIcon';
 import { PendulumIcon } from '../icons/PendulumIcon';
 import { BallIcon } from '../icons/BallIcon';
@@ -52,6 +58,72 @@ export const experiments: Experiment[] = [
     difficulty: 'beginner',
     duration: 12,
     tags: ['óptica', 'cores', 'RGB', 'CMYK', 'teoria']
+  },
+  {
+    id: 'cell-microscopy' as ExperimentID,
+    name: 'Microscopia Celular',
+    description: 'Explore diferentes tipos de células e suas estruturas usando microscópio virtual.',
+    icon: FlaskIcon,
+    component: CellMicroscopyLab,
+    category: 'biology',
+    difficulty: 'intermediate',
+    duration: 20,
+    tags: ['biologia', 'células', 'microscopia', 'estrutura']
+  },
+  {
+    id: 'function-graphing' as ExperimentID,
+    name: 'Gráficos de Funções',
+    description: 'Visualize e analise diferentes tipos de funções matemáticas com gráficos interativos.',
+    icon: ColorIcon,
+    component: FunctionGraphingLab,
+    category: 'mathematics',
+    difficulty: 'beginner',
+    duration: 15,
+    tags: ['matemática', 'funções', 'gráficos', 'análise']
+  },
+  {
+    id: 'electromagnetism' as ExperimentID,
+    name: 'Eletromagnetismo',
+    description: 'Explore circuitos elétricos, campos magnéticos e fenômenos eletromagnéticos.',
+    icon: FlaskIcon,
+    component: ElectromagnetismLab,
+    category: 'physics',
+    difficulty: 'intermediate',
+    duration: 25,
+    tags: ['física', 'eletromagnetismo', 'circuitos', 'campos']
+  },
+  {
+    id: 'thermodynamics' as ExperimentID,
+    name: 'Termodinâmica',
+    description: 'Estude transferência de calor, mudanças de fase e leis da termodinâmica.',
+    icon: FlaskIcon,
+    component: ThermodynamicsLab,
+    category: 'physics',
+    difficulty: 'advanced',
+    duration: 30,
+    tags: ['física', 'termodinâmica', 'calor', 'fases']
+  },
+  {
+    id: 'optics' as ExperimentID,
+    name: 'Ótica',
+    description: 'Explore refração, reflexão, interferência e outros fenômenos ópticos.',
+    icon: ColorIcon,
+    component: OpticsLab,
+    category: 'physics',
+    difficulty: 'intermediate',
+    duration: 20,
+    tags: ['física', 'óptica', 'refração', 'interferência']
+  },
+  {
+    id: 'organic-chemistry' as ExperimentID,
+    name: 'Química Orgânica',
+    description: 'Explore síntese de moléculas, mecanismos de reação e design de fármacos.',
+    icon: FlaskIcon,
+    component: OrganicChemistryLab,
+    category: 'chemistry',
+    difficulty: 'advanced',
+    duration: 35,
+    tags: ['química', 'orgânica', 'síntese', 'fármacos']
   }
 ];
 

@@ -15,22 +15,23 @@ interface Flashcard {
 interface InlineFlashcardsProps {
   topic: string
   className?: string
+  shouldLoad?: boolean // Nova prop para controlar quando carregar
 }
 
-export default function InlineFlashcards({ topic, className = '' }: InlineFlashcardsProps) {
+export default function InlineFlashcards({ topic, className = '', shouldLoad = true }: InlineFlashcardsProps) {
   const [flashcards, setFlashcards] = useState<Flashcard[]>([])
   const [isGenerating, setIsGenerating] = useState(false)
   const [error, setError] = useState('')
   const [flippedCards, setFlippedCards] = useState<Set<number>>(new Set())
 
-  // Auto-generate flashcards when component mounts
+  // Auto-generate flashcards when component mounts or shouldLoad changes
   useEffect(() => {
-    console.log('🎴 DEBUG: InlineFlashcards mounted with topic:', topic)
-    if (topic && flashcards.length === 0 && !isGenerating) {
+    console.log('🎴 DEBUG: InlineFlashcards mounted with topic:', topic, 'shouldLoad:', shouldLoad)
+    if (topic && shouldLoad && flashcards.length === 0 && !isGenerating) {
       console.log('🎴 DEBUG: Auto-generating flashcards for topic:', topic)
       generateFlashcards()
     }
-  }, [topic])
+  }, [topic, shouldLoad])
 
   const generateFlashcards = async () => {
     console.log('🎴 DEBUG: generateFlashcards called with topic:', topic)

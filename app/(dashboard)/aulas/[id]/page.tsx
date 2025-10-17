@@ -1036,22 +1036,39 @@ export default function LessonPage() {
             })()}
           </AnimatePresence>
 
-          {/* Flashcards Module - Below Main Content */}
+          {/* Flashcards Module - Load on slide 12, show on slide 14 */}
           {(() => {
-            const isLastStage = currentStage === (lessonData?.stages?.length || 0) - 1
-            if (isLastStage) {
-              console.log('🎴 DEBUG: Showing flashcards below main content for last stage:', {
-                currentStage,
-                totalStages: lessonData?.stages?.length || 0,
-                isLastStage,
-                topic: lessonData?.metadata?.subject || lessonData?.title || 'Tema da Aula'
-              })
+            const totalStages = lessonData?.stages?.length || 0
+            const isSlide12 = currentStage === 11 // Slide 12 (0-indexed)
+            const isSlide14 = currentStage === totalStages - 1 // Último slide (slide 14)
+            
+            // Carregar flashcards no slide 12 (preparação)
+            if (isSlide12) {
+              console.log('🎴 DEBUG: Loading flashcards on slide 12 (preparation)')
               return (
                 <div className="mt-8">
-                  <InlineFlashcards topic={lessonData?.metadata?.subject || lessonData?.title || 'Tema da Aula'} />
+                  <InlineFlashcards 
+                    topic={lessonData?.metadata?.subject || lessonData?.title || 'Tema da Aula'} 
+                    shouldLoad={true}
+                    className="opacity-0 h-0 overflow-hidden" // Carrega mas não mostra
+                  />
                 </div>
               )
             }
+            
+            // Mostrar flashcards no slide 14 (último slide)
+            if (isSlide14) {
+              console.log('🎴 DEBUG: Showing flashcards on slide 14 (final slide)')
+              return (
+                <div className="mt-8">
+                  <InlineFlashcards 
+                    topic={lessonData?.metadata?.subject || lessonData?.title || 'Tema da Aula'} 
+                    shouldLoad={true}
+                  />
+                </div>
+              )
+            }
+            
             return null
           })()}
           </div>

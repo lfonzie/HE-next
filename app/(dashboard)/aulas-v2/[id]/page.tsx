@@ -340,7 +340,7 @@ export default function AulasV2LessonPage() {
             transition={{ delay: 0.3 }}
             className="mt-8"
           >
-            <InlineFlashcards topic={lesson.subject} />
+            <InlineFlashcards topic={lesson.subject} shouldLoad={true} />
           </motion.div>
         )}
       </motion.div>

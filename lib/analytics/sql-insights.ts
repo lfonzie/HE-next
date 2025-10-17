@@ -1,5 +1,67 @@
 import { prisma } from '@/lib/prisma';
 
+// Helper function to convert BigInt to Number safely
+function convertBigIntToNumber(value: any): number {
+  if (typeof value === 'bigint') {
+    return Number(value);
+  }
+  if (typeof value === 'string') {
+    const parsed = parseInt(value, 10);
+    return isNaN(parsed) ? 0 : parsed;
+  }
+  return Number(value) || 0;
+}
+
+// Helper function to convert PostgreSQL decimal format to number
+function convertDecimalToNumber(value: any): number {
+  if (typeof value === 'object' && value !== null && 's' in value && 'e' in value && 'd' in value) {
+    // PostgreSQL decimal format: {s: sign, e: exponent, d: digits}
+    const sign = value.s === 1 ? 1 : -1;
+    const exponent = value.e;
+    const digits = value.d;
+    
+    if (!Array.isArray(digits) || digits.length === 0) return 0;
+    
+    // Convert digits array to number
+    // Each element in the digits array represents a group of digits
+    let result = 0;
+    for (let i = 0; i < digits.length; i++) {
+      result = result * 1000000000 + digits[i];
+    }
+    
+    // Apply exponent (this represents the decimal point position)
+    // For PostgreSQL decimals, the exponent is typically negative
+    result = result * Math.pow(10, exponent);
+    
+    // Apply sign
+    return sign * result;
+  }
+  return Number(value) || 0;
+}
+
+// Helper function to recursively convert BigInt and Decimal values in objects/arrays
+function convertBigIntsInData(data: any): any {
+  if (Array.isArray(data)) {
+    return data.map(convertBigIntsInData);
+  }
+  if (data && typeof data === 'object') {
+    // Check if this is a PostgreSQL decimal object
+    if ('s' in data && 'e' in data && 'd' in data) {
+      return convertDecimalToNumber(data);
+    }
+    
+    const converted: any = {};
+    for (const [key, value] of Object.entries(data)) {
+      converted[key] = convertBigIntsInData(value);
+    }
+    return converted;
+  }
+  if (typeof data === 'bigint') {
+    return convertBigIntToNumber(data);
+  }
+  return data;
+}
+
 export interface SQLInsight {
   id: string;
   name: string;
@@ -28,8 +90,8 @@ export class SQLInsightsEngine {
         with route_latency as (
           select 
             (attributes->>'http.route') as route,
-            durationms,
-            percent_rank() over (partition by (attributes->>'http.route') order by durationms) as pr
+            "durationMs",
+            percent_rank() over (partition by (attributes->>'http.route') order by "durationMs") as pr
           from "TraceSpan"
           where "startTime" > NOW() - INTERVAL '24 hours'
             and (attributes ? 'http.route')
@@ -38,7 +100,7 @@ export class SQLInsightsEngine {
         p95_by_route as (
           select 
             route,
-            max(durationms) filter (where pr <= 0.95) as p95_ms,
+            max("durationMs") filter (where pr <= 0.95) as p95_ms,
             count(*) as request_count
           from route_latency
           group by route
@@ -70,15 +132,15 @@ export class SQLInsightsEngine {
         select 
           provider,
           count(*) as total_requests,
-          sum(cost_brl::numeric) as total_cost_brl,
-          avg(cost_brl::numeric) as avg_cost_per_request,
-          avg(case when success then 1.0 else 0.0 end) as success_rate,
-          avg(latency_ms) as avg_latency_ms,
+          sum(cost_brl::numeric)::text as total_cost_brl,
+          avg(cost_brl::numeric)::text as avg_cost_per_request,
+          avg(case when success then 1.0 else 0.0 end)::text as success_rate,
+          avg(latency_ms)::text as avg_latency_ms,
           sum(prompt_tokens + completion_tokens) as total_tokens
         from ai_requests
         where occurred_at > NOW() - INTERVAL '7 days'
         group by provider
-        order by total_cost_brl desc
+        order by sum(cost_brl::numeric) desc
       `,
       category: 'cost',
       frequency: 'daily',
@@ -123,16 +185,16 @@ export class SQLInsightsEngine {
           count(*) as total_lessons,
           avg(case when metadata->>'generation_time_ms' is not null 
               then (metadata->>'generation_time_ms')::int 
-              else null end) as avg_generation_time_ms,
-          avg(case when success then 1.0 else 0.0 end) as success_rate,
-          avg(prompt_tokens + completion_tokens) as avg_tokens_used,
-          sum(cost_brl::numeric) as total_cost_brl
+              else null end)::text as avg_generation_time_ms,
+          avg(case when success then 1.0 else 0.0 end)::text as success_rate,
+          avg(prompt_tokens + completion_tokens)::text as avg_tokens_used,
+          sum(cost_brl::numeric)::text as total_cost_brl
         from ai_requests
         where occurred_at > NOW() - INTERVAL '7 days'
           and (metadata->>'module' = 'aulas' or metadata->>'module' = 'lessons')
           and metadata->>'subject' is not null
         group by metadata->>'subject'
-        order by total_lessons desc
+        order by count(*) desc
       `,
       category: 'business',
       frequency: 'daily',
@@ -149,7 +211,7 @@ export class SQLInsightsEngine {
           "statusCode",
           count(*) as error_count,
           count(distinct "traceId") as unique_traces,
-          avg(durationms) as avg_duration_ms,
+          avg("durationMs") as avg_duration_ms,
           min("startTime") as first_occurrence,
           max("startTime") as last_occurrence
         from "TraceSpan"
@@ -173,8 +235,8 @@ export class SQLInsightsEngine {
           extract(hour from "startTime") as hour,
           count(*) as request_count,
           count(distinct (attributes->>'user.id')) as unique_users,
-          avg(durationms) as avg_latency_ms,
-          percentile_cont(0.95) within group (order by durationms) as p95_latency_ms
+          avg("durationMs") as avg_latency_ms,
+          percentile_cont(0.95) within group (order by "durationMs") as p95_latency_ms
         from "TraceSpan"
         where "startTime" > NOW() - INTERVAL '7 days'
           and kind = 'SERVER'
@@ -194,9 +256,9 @@ export class SQLInsightsEngine {
           select 
             provider,
             count(*) as total_requests,
-            avg(case when success then 1.0 else 0.0 end) as success_rate,
-            avg(latency_ms) as avg_latency,
-            percentile_cont(0.95) within group (order by latency_ms) as p95_latency,
+            avg(case when success then 1.0 else 0.0 end)::text as success_rate,
+            avg(latency_ms)::text as avg_latency,
+            percentile_cont(0.95) within group (order by latency_ms)::text as p95_latency,
             count(case when error_code is not null then 1 end) as error_count,
             array_agg(distinct error_code) filter (where error_code is not null) as error_types
           from ai_requests
@@ -228,11 +290,11 @@ export class SQLInsightsEngine {
           select 
             provider,
             count(*) as requests,
-            sum(cost_brl::numeric) as total_cost,
-            avg(cost_brl::numeric) as avg_cost_per_request,
-            avg(case when success then 1.0 else 0.0 end) as success_rate,
-            avg(prompt_tokens + completion_tokens) as avg_tokens,
-            avg(cost_brl::numeric) / avg(prompt_tokens + completion_tokens) as cost_per_token
+            sum(cost_brl::numeric)::text as total_cost,
+            avg(cost_brl::numeric)::text as avg_cost_per_request,
+            avg(case when success then 1.0 else 0.0 end)::text as success_rate,
+            avg(prompt_tokens + completion_tokens)::text as avg_tokens,
+            avg(cost_brl::numeric) / avg(prompt_tokens + completion_tokens)::text as cost_per_token
           from ai_requests
           where occurred_at > NOW() - INTERVAL '30 days'
           group by provider
@@ -246,13 +308,13 @@ export class SQLInsightsEngine {
           avg_tokens,
           cost_per_token,
           case 
-            when success_rate < 0.8 then 'Low Success Rate'
-            when cost_per_token > (select avg(cost_per_token) * 1.5 from provider_efficiency) then 'High Cost per Token'
-            when avg_tokens > (select avg(avg_tokens) * 1.2 from provider_efficiency) then 'High Token Usage'
+            when success_rate::numeric < 0.8 then 'Low Success Rate'
+            when cost_per_token::numeric > (select avg(cost_per_token::numeric) * 1.5 from provider_efficiency) then 'High Cost per Token'
+            when avg_tokens::numeric > (select avg(avg_tokens::numeric) * 1.2 from provider_efficiency) then 'High Token Usage'
             else 'Efficient'
           end as optimization_opportunity
         from provider_efficiency
-        order by total_cost desc
+        order by total_cost::numeric desc
       `,
       category: 'cost',
       frequency: 'weekly',
@@ -269,7 +331,8 @@ export class SQLInsightsEngine {
     const startTime = Date.now();
     
     try {
-      const data = await prisma.$queryRawUnsafe(insight.query);
+      const rawData = await prisma.$queryRawUnsafe(insight.query);
+      const data = convertBigIntsInData(rawData);
       const executionTime = Date.now() - startTime;
 
       return {

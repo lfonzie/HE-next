@@ -26,9 +26,9 @@ export async function GET(request: NextRequest) {
 
   try {
     // Using Stock Content API for search
-    const response = await axios.get('https://api.freepik.com/v1/stock-content/search', {
+    const response = await axios.get('https://api.freepik.com/v1/resources', {
       headers: {
-        'Authorization': `Bearer ${process.env.FREEPIK_API_KEY}`,
+        'x-freepik-api-key': process.env.FREEPIK_API_KEY,
         'Content-Type': 'application/json',
       },
       params: {

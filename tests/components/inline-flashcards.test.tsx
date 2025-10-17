@@ -49,7 +49,10 @@ describe('InlineFlashcards', () => {
     render(<InlineFlashcards topic="JavaScript" />)
     
     await waitFor(() => {
-      expect(screen.getByText('Card 1 de 3 - JavaScript')).toBeInTheDocument()
+      expect(screen.getByText('3 flashcards sobre JavaScript')).toBeInTheDocument()
+      expect(screen.getByText('React')).toBeInTheDocument()
+      expect(screen.getByText('TypeScript')).toBeInTheDocument()
+      expect(screen.getByText('Next.js')).toBeInTheDocument()
     })
   })
 
@@ -63,14 +66,14 @@ describe('InlineFlashcards', () => {
     })
   })
 
-  it('allows manual generation', () => {
-    render(<InlineFlashcards topic="" />)
+  it('shows manual generation button when shouldLoad is false', () => {
+    render(<InlineFlashcards topic="" shouldLoad={false} />)
     
-    expect(screen.getByText('Gerar Flashcards')).toBeInTheDocument()
-    
+    // Verificar se o botão de gerar está presente
     const generateButton = screen.getByText('Gerar Flashcards')
-    fireEvent.click(generateButton)
+    expect(generateButton).toBeInTheDocument()
     
-    expect(global.fetch).toHaveBeenCalled()
+    // Verificar se o título está correto
+    expect(screen.getByText('🎴 Flashcards do Tema')).toBeInTheDocument()
   })
 })

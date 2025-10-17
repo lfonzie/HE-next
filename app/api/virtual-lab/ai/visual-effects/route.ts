@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { callGrok } from '@/lib/providers/grok';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { aiCache, cacheUtils } from '@/lib/cache/aiCache';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,6 +23,24 @@ export async function POST(request: NextRequest) {
 
     if (!reaction) {
       return NextResponse.json({ error: 'Reaction data is required' }, { status: 400 });
+    }
+
+    // Tentar obter do cache primeiro
+    const cacheKey = cacheUtils.generateVisualEffectsKey(reaction, step, parameters);
+    const cachedResult = await aiCache.getVisualEffects(reaction, step, parameters);
+    
+    if (cachedResult) {
+      console.log(`✅ [VIRTUAL-LAB] Visual effects retrieved from cache`);
+      return NextResponse.json({
+        success: true,
+        visualEffects: cachedResult,
+        reaction,
+        step,
+        parameters,
+        timestamp: new Date().toISOString(),
+        aiProvider: 'grok-4-fast-reasoning',
+        cached: true
+      });
     }
 
     console.log(`🎨 [VIRTUAL-LAB] Generating visual effects with Grok 4 Fast:`, {
@@ -96,6 +115,9 @@ Responda em formato JSON estruturado para facilitar a implementação visual.`;
         };
       }
 
+      // Salvar no cache
+      await aiCache.setVisualEffects(reaction, step, parameters, visualEffects, 3600);
+
       return NextResponse.json({
         success: true,
         visualEffects,
@@ -103,7 +125,8 @@ Responda em formato JSON estruturado para facilitar a implementação visual.`;
         step,
         parameters,
         timestamp: new Date().toISOString(),
-        aiProvider: 'grok-4-fast-reasoning'
+        aiProvider: 'grok-4-fast-reasoning',
+        cached: false
       });
 
     } catch (error: any) {

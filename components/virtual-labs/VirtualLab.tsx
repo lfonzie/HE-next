@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { FixedSizeList as List } from 'react-window';
 import { motion, AnimatePresence } from 'framer-motion';
+import DebouncedControls from './DebouncedControls';
 import { 
   Microscope, 
   Atom, 
@@ -43,399 +45,253 @@ interface LabResults {
   timeSpent: number;
   attempts: number;
   conceptsLearned: string[];
-  recommendations: string[];
 }
 
 interface Experiment {
   id: string;
   name: string;
   description: string;
-  steps: ExperimentStep[];
-  expectedResults: any;
-  variables: LabVariable[];
-  safetyNotes: string[];
-  category: 'chemistry' | 'physics' | 'biology' | 'mathematics';
+  category: string;
   difficulty: 'beginner' | 'intermediate' | 'advanced';
-  duration: number; // em minutos
+  duration: number;
   tags: string[];
-  icon?: React.FC<React.SVGProps<SVGSVGElement>>;
-  component?: React.FC;
-}
-
-interface ExperimentStep {
-  id: string;
-  title: string;
-  description: string;
-  action: string;
-  expectedOutcome: string;
-  isCompleted: boolean;
+  icon: React.FC<React.SVGProps<SVGSVGElement>>;
+  component: React.FC;
 }
 
 interface LabVariable {
   name: string;
-  type: 'numeric' | 'categorical' | 'boolean';
-  value: any;
-  min?: number;
-  max?: number;
-  options?: string[];
-  unit?: string;
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  unit: string;
+  description: string;
 }
+
+// Hook para debounce
+const useDebounce = (value: any, delay: number) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+};
+
+// Componente de card de experimento otimizado
+const ExperimentCard = React.memo(({ experiment, onClick, isSelected }: {
+  experiment: Experiment;
+  onClick: () => void;
+  isSelected: boolean;
+}) => {
+  const IconComponent = experiment.icon;
+  
+  return (
+    <motion.div
+      className={`p-4 rounded-lg border cursor-pointer transition-all duration-200 ${
+        isSelected 
+          ? 'border-blue-500 bg-blue-50 shadow-md' 
+          : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
+      }`}
+      onClick={onClick}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+    >
+      <div className="flex items-center space-x-3">
+        <div className="flex-shrink-0">
+          <IconComponent className="w-8 h-8 text-blue-600" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="text-sm font-medium text-gray-900 truncate">
+            {experiment.name}
+          </h3>
+          <p className="text-xs text-gray-500 truncate">
+            {experiment.description}
+          </p>
+          <div className="flex items-center space-x-2 mt-1">
+            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+              experiment.difficulty === 'beginner' ? 'bg-green-100 text-green-800' :
+              experiment.difficulty === 'intermediate' ? 'bg-yellow-100 text-yellow-800' :
+              'bg-red-100 text-red-800'
+            }`}>
+              {experiment.difficulty}
+            </span>
+            <span className="text-xs text-gray-400">
+              {experiment.duration}min
+            </span>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+});
+
+ExperimentCard.displayName = 'ExperimentCard';
+
+// Lista virtualizada de experimentos
+const VirtualizedExperimentList = React.memo(({ 
+  experiments, 
+  selectedExperiment, 
+  onExperimentSelect 
+}: {
+  experiments: Experiment[];
+  selectedExperiment: Experiment | null;
+  onExperimentSelect: (experiment: Experiment) => void;
+}) => {
+  const Row = useCallback(({ index, style }: { index: number; style: React.CSSProperties }) => (
+    <div style={style} className="px-2">
+      <ExperimentCard
+        experiment={experiments[index]}
+        onClick={() => onExperimentSelect(experiments[index])}
+        isSelected={selectedExperiment?.id === experiments[index].id}
+      />
+    </div>
+  ), [experiments, selectedExperiment, onExperimentSelect]);
+
+  Row.displayName = 'ExperimentRow';
+
+  return (
+    <div className="h-full">
+      <List
+        height={600}
+        itemCount={experiments.length}
+        itemSize={120}
+        width="100%"
+        overscanCount={5}
+      >
+        {Row}
+      </List>
+    </div>
+  );
+});
+
+VirtualizedExperimentList.displayName = 'VirtualizedExperimentList';
 
 const EXPERIMENTS: Record<string, Experiment[]> = {
   chemistry: [
     {
       id: 'acid-base-titration',
       name: 'Titulação Ácido-Base',
-      description: 'Determine a concentração de uma solução ácida usando titulação com base conhecida.',
-      steps: [
-        {
-          id: 'prepare-solutions',
-          title: 'Preparar Soluções',
-          description: 'Prepare a solução ácida desconhecida e a solução básica padrão.',
-          action: 'Adicionar reagentes aos béqueres',
-          expectedOutcome: 'Soluções preparadas com concentrações conhecidas',
-          isCompleted: false
-        },
-        {
-          id: 'add-indicator',
-          title: 'Adicionar Indicador',
-          description: 'Adicione algumas gotas de fenolftaleína à solução ácida.',
-          action: 'Adicionar 2-3 gotas de indicador',
-          expectedOutcome: 'Solução ácida com indicador',
-          isCompleted: false
-        },
-        {
-          id: 'titration',
-          title: 'Realizar Titulação',
-          description: 'Adicione a base gota a gota até o ponto de viragem.',
-          action: 'Adicionar base lentamente',
-          expectedOutcome: 'Mudança de cor no ponto de equivalência',
-          isCompleted: false
-        }
-      ],
-      expectedResults: {
-        concentration: 0.1,
-        pH: 7.0,
-        volumeUsed: 25.0
-      },
-      variables: [
-        { name: 'acidVolume', type: 'numeric', value: 25.0, min: 10, max: 50, unit: 'mL' },
-        { name: 'baseConcentration', type: 'numeric', value: 0.1, min: 0.05, max: 0.2, unit: 'M' },
-        { name: 'temperature', type: 'numeric', value: 25, min: 20, max: 30, unit: '°C' }
-      ],
-      safetyNotes: [
-        'Use óculos de proteção',
-        'Mantenha o ambiente ventilado',
-        'Não misture ácidos e bases diretamente'
-      ],
+      description: 'Determine a concentração de uma solução ácida usando titulação',
       category: 'chemistry',
       difficulty: 'intermediate',
-      duration: 15,
-      tags: ['química', 'titulação', 'ácido-base', 'laboratório']
+      duration: 20,
+      tags: ['química', 'titulação', 'pH', 'concentração'],
+      icon: Beaker,
+      component: () => <div>Titulação Component</div>
     },
     {
       id: 'chemical-reaction',
       name: 'Reação Química',
-      description: 'Misture compostos químicos e veja a IA prever o resultado, com explicações científicas e efeitos visuais.',
-      steps: [
-        {
-          id: 'select-compounds',
-          title: 'Selecionar Compostos',
-          description: 'Escolha os compostos químicos para misturar.',
-          action: 'Selecionar reagentes',
-          expectedOutcome: 'Compostos selecionados',
-          isCompleted: false
-        },
-        {
-          id: 'mix-compounds',
-          title: 'Misturar Compostos',
-          description: 'Combine os compostos e observe a reação.',
-          action: 'Misturar reagentes',
-          expectedOutcome: 'Reação química observada',
-          isCompleted: false
-        },
-        {
-          id: 'analyze-result',
-          title: 'Analisar Resultado',
-          description: 'Analise o produto da reação e suas propriedades.',
-          action: 'Examinar produto',
-          expectedOutcome: 'Produto identificado e analisado',
-          isCompleted: false
-        }
-      ],
-      expectedResults: {
-        product: 'NaCl + H2O',
-        reactionType: 'neutralization',
-        pH: 7.0
-      },
-      variables: [
-        { name: 'temperature', type: 'numeric', value: 25, min: 0, max: 100, unit: '°C' },
-        { name: 'concentration', type: 'numeric', value: 50, min: 10, max: 100, unit: '%' },
-        { name: 'volume', type: 'numeric', value: 50, min: 10, max: 100, unit: 'mL' }
-      ],
-      safetyNotes: [
-        'Use equipamentos de proteção',
-        'Mantenha ventilação adequada',
-        'Descarte produtos adequadamente'
-      ],
+      description: 'Misture compostos e observe as reações com efeitos visuais',
       category: 'chemistry',
       difficulty: 'beginner',
-      duration: 12,
-      tags: ['química', 'reações', 'compostos', 'laboratório']
+      duration: 15,
+      tags: ['química', 'reações', 'compostos', 'laboratório'],
+      icon: Zap,
+      component: () => <div>Reação Component</div>
+    },
+    {
+      id: 'ph-measurement',
+      name: 'Medição de pH',
+      description: 'Meça o pH de diferentes soluções usando indicadores',
+      category: 'chemistry',
+      difficulty: 'beginner',
+      duration: 10,
+      tags: ['química', 'pH', 'indicadores', 'medição'],
+      icon: Target,
+      component: () => <div>pH Component</div>
     }
   ],
   physics: [
     {
-      id: 'pendulum-experiment',
-      name: 'Experimento do Pêndulo',
-      description: 'Investigue a relação entre o período e o comprimento de um pêndulo simples.',
-      steps: [
-        {
-          id: 'setup-pendulum',
-          title: 'Montar Pêndulo',
-          description: 'Monte o pêndulo com massa conhecida e comprimento variável.',
-          action: 'Ajustar comprimento do fio',
-          expectedOutcome: 'Pêndulo montado corretamente',
-          isCompleted: false
-        },
-        {
-          id: 'measure-period',
-          title: 'Medir Período',
-          description: 'Meça o tempo de 10 oscilações completas.',
-          action: 'Cronometrar oscilações',
-          expectedOutcome: 'Período calculado com precisão',
-          isCompleted: false
-        },
-        {
-          id: 'analyze-data',
-          title: 'Analisar Dados',
-          description: 'Compare os resultados com a fórmula T = 2π√(L/g).',
-          action: 'Calcular e comparar',
-          expectedOutcome: 'Confirmação da lei do pêndulo',
-          isCompleted: false
-        }
-      ],
-      expectedResults: {
-        period: 2.0,
-        length: 1.0,
-        gravity: 9.81
-      },
-      variables: [
-        { name: 'length', type: 'numeric', value: 1.0, min: 0.5, max: 2.0, unit: 'm' },
-        { name: 'mass', type: 'numeric', value: 0.1, min: 0.05, max: 0.2, unit: 'kg' },
-        { name: 'angle', type: 'numeric', value: 15, min: 5, max: 30, unit: '°' }
-      ],
-      safetyNotes: [
-        'Mantenha distância segura durante oscilações',
-        'Use massa adequada para evitar acidentes'
-      ],
+      id: 'pendulum-motion',
+      name: 'Movimento Pendular',
+      description: 'Estude o movimento harmônico simples do pêndulo',
       category: 'physics',
       difficulty: 'beginner',
-      duration: 10,
-      tags: ['física', 'movimento', 'pêndulo', 'harmônico']
+      duration: 15,
+      tags: ['física', 'movimento', 'pêndulo', 'harmônico'],
+      icon: Atom,
+      component: () => <div>Pêndulo Component</div>
     },
     {
       id: 'bouncing-ball',
       name: 'Bola Saltitante',
-      description: 'Explore gravidade e elasticidade. Ajuste o coeficiente de restituição e observe o comportamento da bola.',
-      steps: [
-        {
-          id: 'setup-ball',
-          title: 'Configurar Bola',
-          description: 'Configure a bola com diferentes propriedades físicas.',
-          action: 'Ajustar propriedades da bola',
-          expectedOutcome: 'Bola configurada',
-          isCompleted: false
-        },
-        {
-          id: 'drop-ball',
-          title: 'Soltar Bola',
-          description: 'Solte a bola e observe seu movimento.',
-          action: 'Soltar bola',
-          expectedOutcome: 'Movimento da bola observado',
-          isCompleted: false
-        },
-        {
-          id: 'analyze-motion',
-          title: 'Analisar Movimento',
-          description: 'Analise o movimento e calcule a energia.',
-          action: 'Calcular energia',
-          expectedOutcome: 'Energia calculada',
-          isCompleted: false
-        }
-      ],
-      expectedResults: {
-        restitution: 0.8,
-        energyLoss: 0.2,
-        bounceHeight: 0.64
-      },
-      variables: [
-        { name: 'restitution', type: 'numeric', value: 0.8, min: 0.1, max: 1.0, unit: '' },
-        { name: 'gravity', type: 'numeric', value: 9.81, min: 5, max: 15, unit: 'm/s²' },
-        { name: 'airResistance', type: 'numeric', value: 0.1, min: 0, max: 0.5, unit: '' }
-      ],
-      safetyNotes: [
-        'Mantenha distância segura',
-        'Use bola adequada'
-      ],
+      description: 'Explore gravidade e elasticidade com simulação de bola',
       category: 'physics',
       difficulty: 'beginner',
-      duration: 8,
-      tags: ['física', 'gravidade', 'elasticidade', 'movimento']
+      duration: 12,
+      tags: ['física', 'gravidade', 'elasticidade', 'movimento'],
+      icon: Calculator,
+      component: () => <div>Bola Component</div>
+    },
+    {
+      id: 'wave-simulation',
+      name: 'Simulação de Ondas',
+      description: 'Visualize propriedades de ondas mecânicas',
+      category: 'physics',
+      difficulty: 'intermediate',
+      duration: 18,
+      tags: ['física', 'ondas', 'frequência', 'amplitude'],
+      icon: BarChart3,
+      component: () => <div>Ondas Component</div>
     }
   ],
   biology: [
     {
-      id: 'microscopy-cell',
-      name: 'Observação de Células',
-      description: 'Observe diferentes tipos de células ao microscópio e identifique suas estruturas.',
-      steps: [
-        {
-          id: 'prepare-slides',
-          title: 'Preparar Lâminas',
-          description: 'Prepare lâminas com diferentes tipos de células.',
-          action: 'Colocar células nas lâminas',
-          expectedOutcome: 'Lâminas preparadas corretamente',
-          isCompleted: false
-        },
-        {
-          id: 'focus-microscope',
-          title: 'Focar Microscópio',
-          description: 'Ajuste o foco para visualizar as células claramente.',
-          action: 'Ajustar objetiva e foco',
-          expectedOutcome: 'Células visíveis com clareza',
-          isCompleted: false
-        },
-        {
-          id: 'identify-structures',
-          title: 'Identificar Estruturas',
-          description: 'Identifique núcleo, membrana e outras organelas.',
-          action: 'Observar e identificar',
-          expectedOutcome: 'Estruturas celulares identificadas',
-          isCompleted: false
-        }
-      ],
-      expectedResults: {
-        cellType: 'eukaryotic',
-        organelles: ['nucleus', 'membrane', 'cytoplasm'],
-        magnification: 400
-      },
-      variables: [
-        { name: 'magnification', type: 'numeric', value: 400, min: 100, max: 1000, unit: 'x' },
-        { name: 'cellType', type: 'categorical', value: 'plant', options: ['plant', 'animal', 'bacterial'] },
-        { name: 'stain', type: 'categorical', value: 'methylene_blue', options: ['methylene_blue', 'iodine', 'none'] }
-      ],
-      safetyNotes: [
-        'Mantenha o microscópio limpo',
-        'Não toque nas lentes',
-        'Descarte adequadamente as lâminas usadas'
-      ],
+      id: 'cell-microscopy',
+      name: 'Microscopia Celular',
+      description: 'Observe diferentes tipos de células ao microscópio',
       category: 'biology',
       difficulty: 'beginner',
-      duration: 15,
-      tags: ['biologia', 'células', 'microscópio', 'organelas']
+      duration: 20,
+      tags: ['biologia', 'células', 'microscópio', 'estruturas'],
+      icon: Microscope,
+      component: () => <div>Microscopia Component</div>
+    },
+    {
+      id: 'dna-extraction',
+      name: 'Extração de DNA',
+      description: 'Simule o processo de extração de DNA de células',
+      category: 'biology',
+      difficulty: 'intermediate',
+      duration: 25,
+      tags: ['biologia', 'DNA', 'extração', 'genética'],
+      icon: BookOpen,
+      component: () => <div>DNA Component</div>
     }
   ],
   mathematics: [
     {
       id: 'function-graphing',
       name: 'Gráficos de Funções',
-      description: 'Explore diferentes tipos de funções e seus gráficos interativamente.',
-      steps: [
-        {
-          id: 'define-function',
-          title: 'Definir Função',
-          description: 'Escolha um tipo de função para explorar.',
-          action: 'Selecionar tipo de função',
-          expectedOutcome: 'Função definida com parâmetros',
-          isCompleted: false
-        },
-        {
-          id: 'plot-graph',
-          title: 'Plotar Gráfico',
-          description: 'Visualize o gráfico da função escolhida.',
-          action: 'Gerar gráfico',
-          expectedOutcome: 'Gráfico visualizado corretamente',
-          isCompleted: false
-        },
-        {
-          id: 'analyze-properties',
-          title: 'Analisar Propriedades',
-          description: 'Identifique domínio, imagem, zeros e outras propriedades.',
-          action: 'Analisar características',
-          expectedOutcome: 'Propriedades identificadas',
-          isCompleted: false
-        }
-      ],
-      expectedResults: {
-        domain: 'all real numbers',
-        range: 'y ≥ 0',
-        zeros: [0],
-        vertex: [0, 0]
-      },
-      variables: [
-        { name: 'functionType', type: 'categorical', value: 'quadratic', options: ['linear', 'quadratic', 'exponential', 'logarithmic'] },
-        { name: 'coefficientA', type: 'numeric', value: 1, min: -5, max: 5 },
-        { name: 'coefficientB', type: 'numeric', value: 0, min: -5, max: 5 },
-        { name: 'coefficientC', type: 'numeric', value: 0, min: -5, max: 5 }
-      ],
-      safetyNotes: [
-        'Verifique os cálculos',
-        'Use escala apropriada nos eixos'
-      ],
+      description: 'Explore propriedades de funções matemáticas',
       category: 'mathematics',
       difficulty: 'intermediate',
-      duration: 20,
-      tags: ['matemática', 'funções', 'gráficos', 'análise']
+      duration: 15,
+      tags: ['matemática', 'funções', 'gráficos', 'propriedades'],
+      icon: TrendingUp,
+      component: () => <div>Funções Component</div>
     },
     {
       id: 'color-mixing',
       name: 'Mistura de Cores',
-      description: 'Explore a teoria das cores e como diferentes combinações criam novas cores. Experimente com RGB e CMYK.',
-      steps: [
-        {
-          id: 'select-colors',
-          title: 'Selecionar Cores',
-          description: 'Escolha as cores primárias para misturar.',
-          action: 'Selecionar cores',
-          expectedOutcome: 'Cores selecionadas',
-          isCompleted: false
-        },
-        {
-          id: 'mix-colors',
-          title: 'Misturar Cores',
-          description: 'Combine as cores e observe o resultado.',
-          action: 'Misturar cores',
-          expectedOutcome: 'Cores misturadas',
-          isCompleted: false
-        },
-        {
-          id: 'analyze-result',
-          title: 'Analisar Resultado',
-          description: 'Analise a cor resultante e suas propriedades.',
-          action: 'Analisar cor',
-          expectedOutcome: 'Cor analisada',
-          isCompleted: false
-        }
-      ],
-      expectedResults: {
-        rgb: { red: 128, green: 128, blue: 128 },
-        hsl: { hue: 0, saturation: 0, lightness: 50 },
-        hex: '#808080'
-      },
-      variables: [
-        { name: 'red', type: 'numeric', value: 128, min: 0, max: 255, unit: '' },
-        { name: 'green', type: 'numeric', value: 128, min: 0, max: 255, unit: '' },
-        { name: 'blue', type: 'numeric', value: 128, min: 0, max: 255, unit: '' }
-      ],
-      safetyNotes: [
-        'Use cores adequadas',
-        'Verifique acessibilidade'
-      ],
+      description: 'Explore teoria das cores RGB e CMYK',
       category: 'mathematics',
       difficulty: 'beginner',
       duration: 12,
-      tags: ['matemática', 'cores', 'RGB', 'CMYK', 'teoria']
+      tags: ['matemática', 'cores', 'RGB', 'CMYK', 'teoria'],
+      icon: Sparkles,
+      component: () => <div>Cores Component</div>
     }
   ]
 };
@@ -465,6 +321,24 @@ export default function VirtualLab({
   const [insights, setInsights] = useState<string[]>([]);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  // Debounced values for performance
+  const debouncedTemperature = useDebounce(variables.find(v => v.name === 'temperature')?.value || 25, 300);
+  const debouncedConcentration = useDebounce(variables.find(v => v.name === 'concentration')?.value || 50, 300);
+
+  // Memoized experiment list
+  const availableExperiments = useMemo(() => {
+    return EXPERIMENTS[subject] || [];
+  }, [subject]);
+
+  // Memoized filtered experiments
+  const filteredExperiments = useMemo(() => {
+    return availableExperiments.filter(exp => 
+      exp.difficulty === difficulty || 
+      (difficulty === 'beginner' && exp.difficulty === 'intermediate') ||
+      (difficulty === 'intermediate' && exp.difficulty === 'advanced')
+    );
+  }, [availableExperiments, difficulty]);
+
   useEffect(() => {
     initializeExperiment();
   }, [subject, topic]);
@@ -481,231 +355,213 @@ export default function VirtualLab({
     };
   }, []);
 
-  const initializeExperiment = () => {
-    const availableExperiments = EXPERIMENTS[subject] || [];
-    const experiment = availableExperiments[0]; // Por simplicidade, pega o primeiro
-    
-    if (experiment) {
-      setCurrentExperiment(experiment);
-      setVariables([...experiment.variables]);
-      setResults({});
-      setCurrentStep(0);
-      setAttempts(0);
-      setShowResults(false);
-      setInsights([]);
-      setExperimentData(null);
-      
-      // Notify parent component about experiment change
-      if (onExperimentChange) {
-        onExperimentChange(experiment);
-      }
+  // Update simulation when debounced values change
+  useEffect(() => {
+    if (isRunning && (debouncedTemperature !== 25 || debouncedConcentration !== 50)) {
+      updateSimulation({ temperature: debouncedTemperature, concentration: debouncedConcentration });
     }
-  };
+  }, [debouncedTemperature, debouncedConcentration, isRunning]);
 
-  const toggleFullscreen = () => {
-    if (!enableFullscreen) return;
-    
-    if (!isFullscreen) {
-      if (document.documentElement.requestFullscreen) {
-        document.documentElement.requestFullscreen();
-      }
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-      }
-    }
-    setIsFullscreen(!isFullscreen);
-  };
-
-  const handleExperimentChange = (experimentId: string) => {
-    const availableExperiments = EXPERIMENTS[subject] || [];
-    const experiment = availableExperiments.find(exp => exp.id === experimentId);
-    
-    if (experiment) {
+  const initializeExperiment = useCallback(() => {
+    const availableExperiments = EXPERIMENTS[subject];
+    if (availableExperiments && availableExperiments.length > 0) {
+      const experiment = availableExperiments.find(exp => exp.topic === topic) || availableExperiments[0];
       setCurrentExperiment(experiment);
-      setVariables([...experiment.variables]);
-      setResults({});
-      setCurrentStep(0);
-      setShowResults(false);
-      setInsights([]);
-      setExperimentData(null);
       
       if (onExperimentChange) {
         onExperimentChange(experiment);
       }
+      
+      // Initialize variables based on experiment
+      const defaultVariables: LabVariable[] = [
+        { name: 'temperature', value: 25, min: 0, max: 100, step: 1, unit: '°C', description: 'Temperatura do ambiente' },
+        { name: 'concentration', value: 50, min: 0, max: 100, step: 5, unit: '%', description: 'Concentração da solução' },
+        { name: 'pressure', value: 1, min: 0.5, max: 2, step: 0.1, unit: 'atm', description: 'Pressão atmosférica' }
+      ];
+      setVariables(defaultVariables);
     }
-  };
+  }, [subject, topic, onExperimentChange]);
 
-  const startExperiment = () => {
+  const updateSimulation = useCallback(async (params: any) => {
+    try {
+      const response = await fetch('/api/virtual-lab/simulate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          experimentId: currentExperiment?.id,
+          parameters: params,
+          action: 'update_parameters'
+        })
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        setExperimentData(data.data);
+      }
+    } catch (error) {
+      console.error('Error updating simulation:', error);
+    }
+  }, [currentExperiment]);
+
+  const startExperiment = useCallback(async () => {
     setIsRunning(true);
     setStartTime(new Date());
     setAttempts(prev => prev + 1);
-    setInsights([]);
     
-    // Generate initial insights based on experiment
-    const initialInsights = generateInsights();
-    setInsights(initialInsights);
-  };
-
-  const generateInsights = (): string[] => {
-    if (!currentExperiment) return [];
-    
-    const insights = [];
-    
-    // Subject-specific insights
-    switch (currentExperiment.category) {
-      case 'chemistry':
-        insights.push('💡 Dica: Observe as mudanças de cor e temperatura durante a reação');
-        insights.push('🔬 Lembre-se: Sempre use equipamentos de proteção');
-        break;
-      case 'physics':
-        insights.push('⚡ Dica: Meça com precisão para obter resultados confiáveis');
-        insights.push('📊 Lembre-se: Registre todas as observações');
-        break;
-      case 'biology':
-        insights.push('🔍 Dica: Ajuste o foco gradualmente para melhor visualização');
-        insights.push('📝 Lembre-se: Desenhe o que você observa');
-        break;
-      case 'mathematics':
-        insights.push('📈 Dica: Varie os parâmetros para entender melhor o comportamento');
-        insights.push('🧮 Lembre-se: Verifique seus cálculos');
-        break;
+    try {
+      const response = await fetch('/api/virtual-lab/simulate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          experimentId: currentExperiment?.id,
+          parameters: variables.reduce((acc, v) => ({ ...acc, [v.name]: v.value }), {}),
+          action: 'start'
+        })
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        setExperimentData(data.data);
+      }
+    } catch (error) {
+      console.error('Error starting experiment:', error);
     }
-    
-    // Difficulty-specific insights
-    if (currentExperiment.difficulty === 'beginner') {
-      insights.push('🌟 Você está no nível iniciante - não se preocupe com erros!');
-    } else if (currentExperiment.difficulty === 'advanced') {
-      insights.push('🚀 Nível avançado - você pode explorar variações complexas');
-    }
-    
-    return insights;
-  };
+  }, [currentExperiment, variables]);
 
-  const completeStep = () => {
-    if (!currentExperiment) return;
-
-    const updatedSteps = [...currentExperiment.steps];
-    updatedSteps[currentStep].isCompleted = true;
-    
-    setCurrentExperiment({
-      ...currentExperiment,
-      steps: updatedSteps
-    });
-
-    // Add step-specific insights
-    const stepInsights = generateStepInsights(currentStep);
-    setInsights(prev => [...prev, ...stepInsights]);
-
-    if (currentStep < currentExperiment.steps.length - 1) {
-      setCurrentStep(prev => prev + 1);
-    } else {
-      completeExperiment();
-    }
-  };
-
-  const generateStepInsights = (stepIndex: number): string[] => {
-    if (!currentExperiment) return [];
-    
-    const step = currentExperiment.steps[stepIndex];
-    const insights = [];
-    
-    // Step-specific insights based on the step title
-    if (step.title.includes('Preparar') || step.title.includes('Configurar')) {
-      insights.push('✅ Preparação concluída! Agora você pode prosseguir');
-    } else if (step.title.includes('Medir') || step.title.includes('Observar')) {
-      insights.push('📏 Medição realizada! Registre o valor obtido');
-    } else if (step.title.includes('Analisar') || step.title.includes('Calcular')) {
-      insights.push('🧠 Análise concluída! Compare com os valores esperados');
-    }
-    
-    return insights;
-  };
-
-  const completeExperiment = () => {
+  const pauseExperiment = useCallback(async () => {
     setIsRunning(false);
-    const timeSpent = startTime ? Date.now() - startTime.getTime() : 0;
+    
+    try {
+      const response = await fetch('/api/virtual-lab/simulate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          experimentId: currentExperiment?.id,
+          action: 'pause'
+        })
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        setExperimentData(data.data);
+      }
+    } catch (error) {
+      console.error('Error pausing experiment:', error);
+    }
+  }, [currentExperiment]);
+
+  const resetExperiment = useCallback(async () => {
+    setIsRunning(false);
+    setCurrentStep(0);
+    setResults({});
+    setShowResults(false);
+    
+    try {
+      const response = await fetch('/api/virtual-lab/simulate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          experimentId: currentExperiment?.id,
+          action: 'reset'
+        })
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        setExperimentData(data.data);
+      }
+    } catch (error) {
+      console.error('Error resetting experiment:', error);
+    }
+  }, [currentExperiment]);
+
+  const completeExperiment = useCallback(() => {
+    const endTime = new Date();
+    const timeSpent = startTime ? (endTime.getTime() - startTime.getTime()) / 1000 : 0;
     
     const labResults: LabResults = {
-      score: calculateScore(),
-      timeSpent: Math.floor(timeSpent / 1000),
+      score: Math.min(100, Math.max(0, 100 - attempts * 10 + Math.floor(timeSpent / 60) * 5)),
+      timeSpent,
       attempts,
-      conceptsLearned: currentExperiment?.steps.map(s => s.title) || [],
-      recommendations: generateRecommendations()
+      conceptsLearned: currentExperiment?.tags || []
     };
 
     setResults(labResults);
     setShowResults(true);
-    onComplete?.(labResults);
-  };
-
-  const calculateScore = (): number => {
-    if (!currentExperiment) return 0;
     
-    const completedSteps = currentExperiment.steps.filter(s => s.isCompleted).length;
-    const totalSteps = currentExperiment.steps.length;
-    const baseScore = (completedSteps / totalSteps) * 100;
-    
-    // Bonus por completar rapidamente
-    const timeBonus = startTime ? Math.max(0, 10 - Math.floor((Date.now() - startTime.getTime()) / 60000)) : 0;
-    
-    return Math.min(100, baseScore + timeBonus);
-  };
-
-  const generateRecommendations = (): string[] => {
-    const recommendations = [];
-    
-    if (results.score < 70) {
-      recommendations.push('Revise os conceitos básicos antes de prosseguir');
-      recommendations.push('Pratique mais exercícios similares');
-    } else if (results.score >= 90) {
-      recommendations.push('Excelente! Você pode avançar para tópicos mais avançados');
-      recommendations.push('Considere explorar variações do experimento');
-    } else {
-      recommendations.push('Bom trabalho! Continue praticando para melhorar');
+    if (onComplete) {
+      onComplete(labResults);
     }
-    
-    return recommendations;
-  };
+  }, [startTime, attempts, currentExperiment, onComplete]);
 
-  const updateVariable = (variableName: string, value: any) => {
+  const toggleFullscreen = useCallback(async () => {
+    if (!enableFullscreen) return;
+    
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+      } else {
+        await document.exitFullscreen();
+      }
+    } catch (error) {
+      console.error('Error toggling fullscreen:', error);
+    }
+  }, [enableFullscreen]);
+
+  const generateInsights = useCallback(async () => {
+    if (!enableAI || !currentExperiment) return;
+    
+    try {
+      const response = await fetch('/api/virtual-lab/ai/visual-effects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reaction: {
+            type: currentExperiment.category,
+            equation: currentExperiment.name
+          },
+          step: 'analysis',
+          parameters: variables.reduce((acc, v) => ({ ...acc, [v.name]: v.value }), {})
+        })
+      });
+      
+      const data = await response.json();
+      if (data.success && data.visualEffects) {
+        const newInsights = [
+          `Insight sobre ${currentExperiment.name}: ${data.visualEffects.rawResponse || 'Análise completa'}`,
+          `Parâmetros otimizados: temperatura ${debouncedTemperature}°C, concentração ${debouncedConcentration}%`,
+          `Próximo passo recomendado: ${currentStep < 5 ? 'Continue o experimento' : 'Analise os resultados'}`
+        ];
+        setInsights(newInsights);
+      }
+    } catch (error) {
+      console.error('Error generating insights:', error);
+    }
+  }, [enableAI, currentExperiment, variables, debouncedTemperature, debouncedConcentration, currentStep]);
+
+  const updateVariable = useCallback((name: string, value: number) => {
     setVariables(prev => prev.map(v => 
-      v.name === variableName ? { ...v, value } : v
+      v.name === name ? { ...v, value } : v
     ));
-  };
+  }, []);
 
-  const resetExperiment = () => {
-    initializeExperiment();
+  const selectExperiment = useCallback((experiment: Experiment) => {
+    setCurrentExperiment(experiment);
+    setCurrentStep(0);
     setIsRunning(false);
-    setStartTime(null);
+    setResults({});
     setShowResults(false);
-  };
-
-  const getSubjectIcon = () => {
-    switch (subject) {
-      case 'chemistry': return <Beaker className="w-8 h-8" />;
-      case 'physics': return <Atom className="w-8 h-8" />;
-      case 'biology': return <Microscope className="w-8 h-8" />;
-      case 'mathematics': return <Calculator className="w-8 h-8" />;
-      default: return <BookOpen className="w-8 h-8" />;
+    
+    if (onExperimentChange) {
+      onExperimentChange(experiment);
     }
-  };
-
-  const getSubjectColor = () => {
-    switch (subject) {
-      case 'chemistry': return 'from-green-500 to-emerald-600';
-      case 'physics': return 'from-blue-500 to-cyan-600';
-      case 'biology': return 'from-purple-500 to-violet-600';
-      case 'mathematics': return 'from-orange-500 to-red-600';
-      default: return 'from-gray-500 to-gray-600';
-    }
-  };
+  }, [onExperimentChange]);
 
   if (!currentExperiment) {
     return (
-      <div className="flex items-center justify-center h-96">
+      <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <div className="animate-spin w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Carregando laboratório virtual...</p>
         </div>
       </div>
@@ -713,413 +569,275 @@ export default function VirtualLab({
   }
 
   return (
-    <div className={`flex h-full font-sans antialiased overflow-hidden ${
-      isFullscreen ? 'fixed inset-0 z-50 bg-white' : ''
-    }`}>
+    <div className={`h-full bg-gray-50 ${isFullscreen ? 'fixed inset-0 z-50' : ''}`}>
+      <div className="flex h-full">
       {/* Sidebar */}
       {showSidebar && (
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="w-80 bg-gray-900 text-white p-6 overflow-y-auto"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold">Laboratório Virtual</h2>
-            <button
-              onClick={toggleFullscreen}
-              className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
-              title="Tela cheia"
-            >
-              {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-            </button>
-          </div>
-          
-          <div className="space-y-4">
-            <div className="p-4 bg-gray-800 rounded-lg">
-              <h3 className="font-semibold mb-2">{getSubjectIcon()} {subject.charAt(0).toUpperCase() + subject.slice(1)}</h3>
-              <p className="text-sm text-gray-300">{currentExperiment?.name}</p>
-              <div className="flex items-center gap-2 mt-2">
-                <span className={`px-2 py-1 text-xs rounded ${
-                  currentExperiment?.difficulty === 'beginner' ? 'bg-green-600' :
-                  currentExperiment?.difficulty === 'intermediate' ? 'bg-yellow-600' : 'bg-red-600'
-                }`}>
-                  {currentExperiment?.difficulty}
+          <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
+            <div className="p-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900 mb-2">
+                Laboratório Virtual
+              </h2>
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-600">Matéria:</span>
+                <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                  {subject}
                 </span>
-                <span className="text-xs text-gray-400">{currentExperiment?.duration} min</span>
+                <span className="text-sm text-gray-600">Dificuldade:</span>
+                <span className={`px-2 py-1 text-xs rounded-full ${
+                  difficulty === 'beginner' ? 'bg-green-100 text-green-800' :
+                  difficulty === 'intermediate' ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-red-100 text-red-800'
+                }`}>
+                  {difficulty}
+                </span>
               </div>
             </div>
             
-            <div className="space-y-2">
-              <h4 className="font-semibold">Experimentos Disponíveis</h4>
-              {EXPERIMENTS[subject]?.map((experiment) => (
-                <button
-                  key={experiment.id}
-                  onClick={() => handleExperimentChange(experiment.id)}
-                  className={`w-full text-left p-3 rounded-lg transition-colors ${
-                    currentExperiment?.id === experiment.id
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-800 hover:bg-gray-700'
-                  }`}
-                >
-                  <div className="font-medium">{experiment.name}</div>
-                  <div className="text-xs text-gray-400 mt-1">{experiment.description}</div>
-                  <div className="flex gap-1 mt-2">
-                    {experiment.tags.slice(0, 2).map((tag, index) => (
-                      <span key={index} className="px-2 py-1 bg-gray-700 text-xs rounded">
-                        {tag}
-                      </span>
-                    ))}
+            <div className="flex-1 overflow-hidden">
+              <VirtualizedExperimentList
+                experiments={filteredExperiments}
+                selectedExperiment={currentExperiment}
+                onExperimentSelect={selectExperiment}
+              />
                   </div>
-                </button>
-              ))}
             </div>
-          </div>
-        </motion.div>
       )}
       
       {/* Main Content */}
-      <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
-        <div className="max-w-6xl mx-auto space-y-6">
+        <div className="flex-1 flex flex-col">
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className={`bg-gradient-to-r ${getSubjectColor()} text-white p-6 rounded-2xl`}
-      >
+          <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            {getSubjectIcon()}
-            <div>
-              <h2 className="text-2xl font-bold">{currentExperiment.name}</h2>
-              <p className="text-white/80">{currentExperiment.description}</p>
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <currentExperiment.icon className="w-6 h-6 text-blue-600" />
+                  <h1 className="text-xl font-semibold text-gray-900">
+                    {currentExperiment.name}
+                  </h1>
             </div>
+                <div className="flex items-center space-x-2">
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    currentExperiment.difficulty === 'beginner' ? 'bg-green-100 text-green-800' :
+                    currentExperiment.difficulty === 'intermediate' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-red-100 text-red-800'
+                  }`}>
+                    {currentExperiment.difficulty}
+                  </span>
+                  <span className="text-sm text-gray-500">
+                    {currentExperiment.duration}min
+                  </span>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold">{attempts}</div>
-              <div className="text-sm text-white/80">Tentativas</div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold">
-                {startTime ? Math.floor((Date.now() - startTime.getTime()) / 1000) : 0}s
-              </div>
-              <div className="text-sm text-white/80">Tempo</div>
-            </div>
+              
+              <div className="flex items-center space-x-2">
             {enableAI && (
               <button
                 onClick={() => setShowAI(!showAI)}
-                className="flex items-center gap-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors"
-                title="Assistente IA"
+                    className={`p-2 rounded-lg transition-colors ${
+                      showAI ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'
+                    }`}
               >
-                <Bot className="w-4 h-4" />
-                IA
+                    <Bot className="w-5 h-5" />
               </button>
             )}
+                
             <button
-              onClick={resetExperiment}
-              className="flex items-center gap-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors"
+                  onClick={() => setShowSettings(!showSettings)}
+                  className="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
             >
-              <RotateCcw className="w-4 h-4" />
-              Reset
+                  <Settings className="w-5 h-5" />
             </button>
-          </div>
-        </div>
-      </motion.div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Controles do Experimento */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="bg-white p-6 rounded-2xl shadow-lg border"
-        >
-          <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-            <Settings className="w-5 h-5 text-blue-500" />
-            Controles
-          </h3>
-          
-          <div className="space-y-4">
+                
+                {enableFullscreen && (
             <button
-              onClick={startExperiment}
-              disabled={isRunning}
-              className="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                    onClick={toggleFullscreen}
+                    className="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
             >
-              {isRunning ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-              {isRunning ? 'Executando...' : 'Iniciar Experimento'}
+                    {isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
             </button>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-600">Progresso</label>
-              <div className="flex items-center gap-2">
-                <div className="flex-1 bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-blue-400 h-2 rounded-full transition-all duration-500"
-                    style={{ width: `${(currentStep / currentExperiment.steps.length) * 100}%` }}
-                  />
+                )}
                 </div>
-                <span className="text-sm font-medium">
-                  {currentStep}/{currentExperiment.steps.length}
-                </span>
               </div>
             </div>
             
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-600">Dificuldade</label>
-              <div className="p-2 bg-gray-50 rounded-lg">
-                <span className="capitalize font-medium">{difficulty}</span>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Passos do Experimento */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white p-6 rounded-2xl shadow-lg border"
-        >
-          <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-            <Target className="w-5 h-5 text-green-500" />
-            Passos do Experimento
+          {/* Content Area */}
+          <div className="flex-1 flex">
+            {/* Experiment Area */}
+            <div className="flex-1 p-6">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 h-full">
+                <div className="p-6">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">
+                    {currentExperiment.description}
           </h3>
           
-          <div className="space-y-4">
-            {currentExperiment.steps.map((step, index) => (
-              <div
-                key={step.id}
-                className={`p-4 rounded-lg border-2 transition-all ${
-                  index === currentStep
-                    ? 'border-blue-300 bg-blue-50'
-                    : step.isCompleted
-                    ? 'border-green-300 bg-green-50'
-                    : 'border-gray-200 bg-gray-50'
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                    step.isCompleted
-                      ? 'bg-green-500 text-white'
-                      : index === currentStep
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-gray-300 text-gray-600'
-                  }`}>
-                    {step.isCompleted ? <CheckCircle className="w-4 h-4" /> : index + 1}
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-medium">{step.title}</h4>
-                    <p className="text-sm text-gray-600 mt-1">{step.description}</p>
-                    {index === currentStep && isRunning && (
+                  {/* Experiment Controls */}
+                  <div className="space-y-4 mb-6">
+                    <div className="flex items-center space-x-4">
                       <button
-                        onClick={completeStep}
-                        className="mt-2 px-3 py-1 bg-green-500 hover:bg-green-600 text-white text-sm rounded transition-colors"
+                        onClick={isRunning ? pauseExperiment : startExperiment}
+                        className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                          isRunning 
+                            ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' 
+                            : 'bg-green-100 text-green-800 hover:bg-green-200'
+                        }`}
                       >
-                        Completar Passo
+                        {isRunning ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                        <span>{isRunning ? 'Pausar' : 'Iniciar'}</span>
+                      </button>
+                      
+                      <button
+                        onClick={resetExperiment}
+                        className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-gray-100 text-gray-800 hover:bg-gray-200 transition-colors"
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                        <span>Resetar</span>
+                      </button>
+                      
+                      {currentStep > 0 && (
+                        <button
+                          onClick={completeExperiment}
+                          className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-blue-100 text-blue-800 hover:bg-blue-200 transition-colors"
+                        >
+                          <CheckCircle className="w-4 h-4" />
+                          <span>Concluir</span>
                       </button>
                     )}
                   </div>
+                    
+                    {/* Progress */}
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${(currentStep / 10) * 100}%` }}
+                      ></div>
                 </div>
               </div>
-            ))}
-          </div>
-        </motion.div>
 
-        {/* Variáveis e Simulação */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="bg-white p-6 rounded-2xl shadow-lg border"
-        >
-          <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-purple-500" />
-            Variáveis
-          </h3>
-          
-          <div className="space-y-4">
-            {variables.map((variable) => (
-              <div key={variable.name} className="space-y-2">
-                <label className="text-sm font-medium text-gray-600 capitalize">
-                  {variable.name.replace(/([A-Z])/g, ' $1').trim()}
-                  {variable.unit && ` (${variable.unit})`}
-                </label>
-                
-                {variable.type === 'numeric' ? (
-                  <div className="space-y-2">
-                    <input
-                      type="range"
-                      min={variable.min}
-                      max={variable.max}
-                      value={variable.value}
-                      onChange={(e) => updateVariable(variable.name, parseFloat(e.target.value))}
-                      className="w-full"
-                    />
-                    <div className="text-center text-sm font-medium">
-                      {variable.value}{variable.unit}
-                    </div>
-                  </div>
-                ) : variable.type === 'categorical' ? (
-                  <select
-                    value={variable.value}
-                    onChange={(e) => updateVariable(variable.name, e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded-lg"
-                  >
-                    {variable.options?.map((option) => (
-                      <option key={option} value={option}>
-                        {option.replace(/_/g, ' ')}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <input
-                    type="checkbox"
-                    checked={variable.value}
-                    onChange={(e) => updateVariable(variable.name, e.target.checked)}
-                    className="w-4 h-4"
+                  {/* Variables with Debounced Controls */}
+                  <DebouncedControls
+                    parameters={variables.map(v => ({
+                      name: v.name,
+                      label: v.description,
+                      type: 'slider' as const,
+                      min: v.min,
+                      max: v.max,
+                      step: v.step,
+                      unit: v.unit,
+                      description: v.description,
+                      defaultValue: v.value,
+                      validator: (value) => ({
+                        isValid: value >= v.min && value <= v.max,
+                        error: value < v.min || value > v.max ? `Valor deve estar entre ${v.min} e ${v.max}` : undefined
+                      })
+                    }))}
+                    onParameterChange={updateVariable}
+                    onSave={(params) => {
+                      console.log('Parâmetros salvos:', params);
+                    }}
+                    onReset={() => {
+                      setVariables(prev => prev.map(v => ({ ...v, value: v.defaultValue || 25 })));
+                    }}
+                    onStart={startExperiment}
+                    onPause={pauseExperiment}
+                    isRunning={isRunning}
+                    debounceDelay={300}
+                    showValidation={true}
+                    showTimestamps={false}
+                    className="mb-6"
                   />
-                )}
-              </div>
-            ))}
-          </div>
           
-          {/* Canvas para simulação visual */}
-          <div className="mt-6">
-            <label className="text-sm font-medium text-gray-600 mb-2 block">Simulação Visual</label>
+                  {/* Canvas Area */}
+                  <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
             <canvas
               ref={canvasRef}
-              width={300}
-              height={200}
-              className="w-full border border-gray-300 rounded-lg bg-gray-50"
+                      className="w-full h-64 bg-white rounded border"
             />
           </div>
-        </motion.div>
+                </div>
+              </div>
       </div>
 
-      {/* AI Assistant Panel */}
+            {/* AI Assistant */}
       {showAI && enableAI && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-6 rounded-2xl"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold flex items-center gap-2">
-              <Bot className="w-5 h-5" />
-              Assistente IA
+              <div className="w-80 bg-white border-l border-gray-200 flex flex-col">
+                <div className="p-4 border-b border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
+                    <Bot className="w-5 h-5 text-blue-600" />
+                    <span>Assistente IA</span>
             </h3>
+                </div>
+                
+                <div className="flex-1 p-4 space-y-4">
             <button
-              onClick={() => setShowAI(false)}
-              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                    onClick={generateInsights}
+                    className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200 transition-colors"
             >
-              <EyeOff className="w-4 h-4" />
+                    <Lightbulb className="w-4 h-4" />
+                    <span>Gerar Insights</span>
             </button>
-          </div>
-          
-          <div className="space-y-4">
-            <div className="bg-white/20 p-4 rounded-lg">
-              <h4 className="font-semibold mb-2 flex items-center gap-2">
-                <Sparkles className="w-4 h-4" />
-                Insights Inteligentes
-              </h4>
+                  
+                  {insights.length > 0 && (
               <div className="space-y-2">
                 {insights.map((insight, index) => (
-                  <div key={index} className="text-sm bg-white/10 p-2 rounded">
+                        <div key={index} className="p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
                     {insight}
                   </div>
                 ))}
               </div>
+                  )}
             </div>
-            
-            <div className="bg-white/20 p-4 rounded-lg">
-              <h4 className="font-semibold mb-2 flex items-center gap-2">
-                <TrendingUp className="w-4 h-4" />
-                Sugestões de Melhoria
-              </h4>
-              <div className="text-sm space-y-1">
-                <p>• Varie os parâmetros para explorar diferentes cenários</p>
-                <p>• Registre suas observações em um caderno</p>
-                <p>• Compare seus resultados com os valores esperados</p>
-                <p>• Experimente diferentes configurações</p>
               </div>
-            </div>
+            )}
           </div>
-        </motion.div>
-      )}
 
-      {/* Notas de Segurança */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg"
-      >
-        <h4 className="font-bold text-yellow-800 mb-2 flex items-center gap-2">
-          <AlertCircle className="w-5 h-5" />
-          Notas de Segurança
-        </h4>
-        <ul className="space-y-1 text-sm text-yellow-700">
-          {currentExperiment.safetyNotes.map((note, index) => (
-            <li key={index} className="flex items-start gap-2">
-              <span className="text-yellow-600 mt-1">•</span>
-              <span>{note}</span>
-            </li>
-          ))}
-        </ul>
-      </motion.div>
-
-      {/* Resultados */}
+          {/* Results */}
       <AnimatePresence>
         {showResults && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="bg-white p-6 rounded-2xl shadow-lg border"
+                className="bg-white border-t border-gray-200 p-6"
           >
-            <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-              <Lightbulb className="w-5 h-5 text-yellow-500" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Resultados do Experimento
             </h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-green-500">{results.score}%</div>
-                <div className="text-sm text-gray-600">Pontuação</div>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="bg-green-50 p-4 rounded-lg">
+                    <div className="text-2xl font-bold text-green-800">
+                      {results.score}
               </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-blue-500">{results.timeSpent}s</div>
-                <div className="text-sm text-gray-600">Tempo Gasto</div>
+                    <div className="text-sm text-green-600">Pontuação</div>
               </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-purple-500">{results.attempts}</div>
-                <div className="text-sm text-gray-600">Tentativas</div>
+                  
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-800">
+                      {Math.round(results.timeSpent)}s
               </div>
+                    <div className="text-sm text-blue-600">Tempo Gasto</div>
             </div>
             
-            <div className="mt-6">
-              <h4 className="font-bold mb-2">Conceitos Aprendidos:</h4>
-              <div className="flex flex-wrap gap-2">
-                {results.conceptsLearned?.map((concept, index) => (
-                  <span key={index} className="px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full">
-                    {concept}
-                  </span>
-                ))}
+                  <div className="bg-yellow-50 p-4 rounded-lg">
+                    <div className="text-2xl font-bold text-yellow-800">
+                      {results.attempts}
               </div>
+                    <div className="text-sm text-yellow-600">Tentativas</div>
             </div>
             
-            <div className="mt-4">
-              <h4 className="font-bold mb-2">Recomendações:</h4>
-              <ul className="space-y-1">
-                {results.recommendations?.map((rec, index) => (
-                  <li key={index} className="flex items-start gap-2 text-sm text-gray-700">
-                    <span className="text-blue-500 mt-1">•</span>
-                    <span>{rec}</span>
-                  </li>
-                ))}
-              </ul>
+                  <div className="bg-purple-50 p-4 rounded-lg">
+                    <div className="text-2xl font-bold text-purple-800">
+                      {results.conceptsLearned.length}
+                    </div>
+                    <div className="text-sm text-purple-600">Conceitos</div>
+                  </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

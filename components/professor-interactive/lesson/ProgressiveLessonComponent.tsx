@@ -632,7 +632,7 @@ export default function ProgressiveLessonComponent({
         </div>
 
         {/* Flashcards Module */}
-        <InlineFlashcards topic={skeleton?.theme || 'Tema da Aula'} />
+        <InlineFlashcards topic={skeleton?.theme || 'Tema da Aula'} shouldLoad={true} />
 
       </div>
     );
