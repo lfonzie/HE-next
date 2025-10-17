@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { FixedSizeList as List } from 'react-window';
+import { FixedSizeList } from 'react-window';
 import { motion, AnimatePresence } from 'framer-motion';
 import DebouncedControls from './DebouncedControls';
 import { 
@@ -160,7 +160,7 @@ const VirtualizedExperimentList = React.memo(({
 
   return (
     <div className="h-full">
-      <List
+                <FixedSizeList
         height={600}
         itemCount={experiments.length}
         itemSize={120}
