@@ -14,11 +14,13 @@ import {
   Video,
   VideoOff,
   Monitor,
-  MonitorOff
+  MonitorOff,
+  Bot
 } from 'lucide-react'
 import { useLiveChat } from '@/hooks/useLiveChat'
 import { useToast } from '@/hooks/use-toast'
 import { LiveChatErrorBoundary, ConnectionErrorFallback } from './LiveChatErrorBoundary'
+import { VoiceAssistant } from '../virtual-labs/VoiceAssistant'
 
 interface LiveMessage {
   id: string
@@ -34,6 +36,7 @@ interface LiveChatInterfaceProps {
 }
 
 export function LiveChatInterface({ className = '', autoConnect = false }: LiveChatInterfaceProps) {
+  const [voiceAssistantEnabled, setVoiceAssistantEnabled] = useState(false)
   
   // Elementos para WebRTC
   useEffect(() => {
@@ -59,7 +62,7 @@ export function LiveChatInterface({ className = '', autoConnect = false }: LiveC
 
   const {
     messages,
-    isConnected,
+    connected: isConnected,
     isStreaming,
     isVideoStreaming,
     isScreenSharing,
@@ -88,6 +91,68 @@ export function LiveChatInterface({ className = '', autoConnect = false }: LiveC
 
   const { toast } = useToast()
 
+  // Voice Assistant Handlers
+  const handleVoiceMeasurementRequest = (instrument: string, value: number, unit: string) => {
+    console.log('Medição via voz:', { instrument, value, unit })
+    // Adicionar mensagem ao chat
+    const message: LiveMessage = {
+      id: Date.now().toString(),
+      role: 'assistant',
+      content: `📊 Medição registrada: ${value} ${unit} usando ${instrument}`,
+      timestamp: Date.now()
+    }
+    // Aqui você adicionaria a mensagem ao estado do chat
+  }
+
+  const handleVoiceCalculationRequest = (formula: string, variables: Record<string, number>) => {
+    console.log('Cálculo via voz:', { formula, variables })
+    // Implementar cálculos básicos
+    let result = 0
+    try {
+      switch (formula.toLowerCase()) {
+        case 'ph':
+          result = -Math.log10(variables.concentration || 0.001)
+          break
+        case 'concentration':
+          result = variables.moles / (variables.volume / 1000)
+          break
+        case 'ohms_law':
+          result = variables.voltage / variables.resistance
+          break
+        default:
+          result = 0
+      }
+    } catch (error) {
+      console.error('Erro no cálculo:', error)
+    }
+    
+    const message: LiveMessage = {
+      id: Date.now().toString(),
+      role: 'assistant',
+      content: `🧮 Cálculo ${formula}: ${result.toFixed(2)}`,
+      timestamp: Date.now()
+    }
+    return result
+  }
+
+  const handleVoiceExperimentGuidance = (step: string, instructions: string[]) => {
+    console.log('Orientação via voz:', { step, instructions })
+    const message: LiveMessage = {
+      id: Date.now().toString(),
+      role: 'assistant',
+      content: `🎯 ${step}: ${instructions.join(', ')}`,
+      timestamp: Date.now()
+    }
+  }
+
+  const handleVoiceAssistantError = (error: Error) => {
+    console.error('Erro do assistente de voz:', error)
+    toast({
+      title: "Erro no Assistente de Voz",
+      description: error.message,
+      variant: "destructive"
+    })
+  }
 
   // Handle connection status changes
   useEffect(() => {
@@ -320,6 +385,16 @@ export function LiveChatInterface({ className = '', autoConnect = false }: LiveC
                 <Button
                   variant="outline"
                   size="sm"
+                  onClick={() => setVoiceAssistantEnabled(!voiceAssistantEnabled)}
+                  className={`${voiceAssistantEnabled ? 'bg-blue-50 text-blue-600' : ''}`}
+                >
+                  <Bot className="w-4 h-4 mr-2" />
+                  {voiceAssistantEnabled ? 'IA Ativa' : 'Ativar IA'}
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={clearMessages}
                   disabled={messages.length === 0}
                 >
@@ -401,6 +476,19 @@ export function LiveChatInterface({ className = '', autoConnect = false }: LiveC
         </CardContent>
       </Card>
       </div>
+
+      {/* Voice Assistant */}
+      {voiceAssistantEnabled && (
+        <VoiceAssistant
+          experimentId="live-chat"
+          experimentType="chemistry"
+          difficulty="intermediate"
+          onMeasurementRequest={handleVoiceMeasurementRequest}
+          onCalculationRequest={handleVoiceCalculationRequest}
+          onExperimentGuidance={handleVoiceExperimentGuidance}
+          onError={handleVoiceAssistantError}
+        />
+      )}
     </LiveChatErrorBoundary>
   )
 }

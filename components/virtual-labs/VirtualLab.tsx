@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { FixedSizeList } from 'react-window';
+// import { FixedSizeList } from 'react-window';
 import { motion, AnimatePresence } from 'framer-motion';
 import DebouncedControls from './DebouncedControls';
 import { 
@@ -160,15 +160,11 @@ const VirtualizedExperimentList = React.memo(({
 
   return (
     <div className="h-full">
-                <FixedSizeList
-        height={600}
-        itemCount={experiments.length}
-        itemSize={120}
-        width="100%"
-        overscanCount={5}
-      >
-        {Row}
-      </List>
+      <div className="space-y-4 max-h-96 overflow-y-auto">
+        {experiments.map((experiment, index) => (
+          <Row key={experiment.id} index={index} style={{}} data={experiments} />
+        ))}
+      </div>
     </div>
   );
 });

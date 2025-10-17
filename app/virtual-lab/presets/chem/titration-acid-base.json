@@ -1,0 +1,198 @@
+{
+  "id": "chem_titration_ab_01",
+  "title": "Titulação Ácido-Base (HCl × NaOH)",
+  "discipline": "chem",
+  "objective": "Compreender neutralização e curvas de titulação; identificar ponto de equivalência com indicador.",
+  "seed": 42,
+  "bench": {
+    "items": [
+      {
+        "id": "v1",
+        "kind": "vessel",
+        "name": "Erlenmeyer 250 mL",
+        "sprite": "/assets/vessels/erlen250.png",
+        "props": {
+          "capacity_mL": 250,
+          "material": "vidro"
+        },
+        "constraints": ["liquid-only"]
+      },
+      {
+        "id": "b1",
+        "kind": "vessel",
+        "name": "Bureta 50 mL",
+        "sprite": "/assets/vessels/burette50.png",
+        "props": {
+          "capacity_mL": 50,
+          "flow_mLps": [0, 1],
+          "precision": 0.1
+        },
+        "constraints": ["requires-stand", "vertical-only"]
+      },
+      {
+        "id": "r1",
+        "kind": "reagent",
+        "name": "HCl 0,1 M",
+        "sprite": "/assets/reagents/hcl.png",
+        "props": {
+          "solution": {
+            "volume_mL": 50,
+            "temperature_C": 25,
+            "species": [
+              {"formula": "H+", "mol": 0.005},
+              {"formula": "Cl-", "mol": 0.005},
+              {"formula": "H2O", "mol": 2.7}
+            ],
+            "pH": 1.0
+          },
+          "concentration_M": 0.1,
+          "hazard_level": "corrosive"
+        }
+      },
+      {
+        "id": "r2",
+        "kind": "reagent",
+        "name": "NaOH 0,1 M",
+        "sprite": "/assets/reagents/naoh.png",
+        "props": {
+          "solution": {
+            "volume_mL": 50,
+            "temperature_C": 25,
+            "species": [
+              {"formula": "Na+", "mol": 0.005},
+              {"formula": "OH-", "mol": 0.005},
+              {"formula": "H2O", "mol": 2.7}
+            ],
+            "pH": 13.0
+          },
+          "concentration_M": 0.1,
+          "hazard_level": "corrosive"
+        }
+      },
+      {
+        "id": "ind",
+        "kind": "reagent",
+        "name": "Fenolftaleína",
+        "sprite": "/assets/reagents/indicator.png",
+        "props": {
+          "indicator": "phenolphthalein",
+          "pH_range": [8.3, 10.0],
+          "color_acid": "incolor",
+          "color_base": "rosa",
+          "transition_point": 9.0
+        }
+      },
+      {
+        "id": "phm",
+        "kind": "instrument",
+        "name": "pHmetro",
+        "sprite": "/assets/instruments/phmeter.png",
+        "props": {
+          "precision": 0.01,
+          "range": [0, 14],
+          "calibrated": true
+        }
+      },
+      {
+        "id": "stand",
+        "kind": "tool",
+        "name": "Suporte Universal",
+        "sprite": "/assets/tools/stand.png",
+        "props": {
+          "height_cm": 60,
+          "max_load_kg": 5
+        },
+        "constraints": ["supports-burette"]
+      }
+    ],
+    "layout": [
+      {"itemId": "v1", "x": 420, "y": 520},
+      {"itemId": "b1", "x": 620, "y": 120},
+      {"itemId": "r1", "x": 120, "y": 520},
+      {"itemId": "r2", "x": 120, "y": 420},
+      {"itemId": "ind", "x": 240, "y": 520},
+      {"itemId": "phm", "x": 320, "y": 320},
+      {"itemId": "stand", "x": 620, "y": 200}
+    ],
+    "connections": [
+      {"from": "b1", "to": "stand", "type": "connection"},
+      {"from": "b1", "to": "v1", "type": "tube"}
+    ]
+  },
+  "initialState": {
+    "in_vessel": {
+      "v1": {
+        "solutionRef": "r1",
+        "volume_mL": 25,
+        "indicator": "ind"
+      }
+    },
+    "burette_source": {
+      "b1": "r2"
+    },
+    "burette_volume": {
+      "b1": 50
+    }
+  },
+  "objectives": [
+    {
+      "id": "o1",
+      "description": "Determinar o ponto de equivalência (pH ~ 7.0)",
+      "validator": {
+        "type": "pH-in-range",
+        "params": {
+          "vesselId": "v1",
+          "min": 6.9,
+          "max": 7.1
+        }
+      },
+      "points": 50
+    },
+    {
+      "id": "o2",
+      "description": "Registrar volume gasto na bureta",
+      "validator": {
+        "type": "log-has-key",
+        "params": {
+          "key": "burette_volume_final"
+        }
+      },
+      "points": 20
+    },
+    {
+      "id": "o3",
+      "description": "Observar mudança de cor do indicador",
+      "validator": {
+        "type": "indicator-color-change",
+        "params": {
+          "indicatorId": "ind",
+          "expectedColor": "rosa"
+        }
+      },
+      "points": 15
+    },
+    {
+      "id": "o4",
+      "description": "Completar titulação em menos de 5 minutos",
+      "validator": {
+        "type": "time-limit",
+        "params": {
+          "maxTime": 300
+        }
+      },
+      "points": 15
+    }
+  ],
+  "hints": [
+    "Use a bureta abrindo aos poucos e meça o pH em intervalos regulares.",
+    "Adicione algumas gotas de fenolftaleína ao ácido antes de começar.",
+    "O ponto de equivalência ocorre quando o pH atinge aproximadamente 7.0.",
+    "Pare de adicionar base quando a solução ficar rosa claro."
+  ],
+  "expectedOutcomes": {
+    "equivalence_point_volume": "25.0 mL",
+    "final_pH": "7.0",
+    "indicator_color": "rosa claro",
+    "reaction_equation": "HCl + NaOH → NaCl + H2O"
+  }
+}

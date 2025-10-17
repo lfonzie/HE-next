@@ -70,24 +70,6 @@ export function useLiveChat(options: LiveChatOptions = {}) {
 
   console.log('[useLiveChat] Initial state:', state);
 
-
-  // Auto-connect if specified
-  useEffect(() => {
-    if (options.autoConnect) {
-      connect();
-    }
-  }, [options.autoConnect, connect]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    const onBeforeUnload = () => disconnect();
-    window.addEventListener('beforeunload', onBeforeUnload);
-    return () => {
-      window.removeEventListener('beforeunload', onBeforeUnload);
-      disconnect();
-    };
-  }, [disconnect]);
-
   const updateState = useCallback((updates: Partial<LiveChatState>) => {
     console.log('[useLiveChat] updateState called with:', updates);
     setState(prev => {
@@ -178,7 +160,7 @@ export function useLiveChat(options: LiveChatOptions = {}) {
     } finally {
       connectingRef.current = false;
     }
-  }, [updateState]);
+  }, [state.connected, updateState]);
 
   // Real-time Audio Streaming
   const startAudioStreaming = useCallback(async () => {
@@ -275,7 +257,7 @@ export function useLiveChat(options: LiveChatOptions = {}) {
       console.log('[LiveChat] Audio streaming started successfully');
     } catch (error) {
       console.error('[LiveChat] Failed to start audio streaming:', error);
-      updateState({ error: 'Failed to start audio streaming: ' + error.message });
+      updateState({ error: 'Failed to start audio streaming: ' + (error as Error).message });
     }
   }, [state.connected, state.isAudioStreaming, updateState, addStreamingMessage]);
 
@@ -516,37 +498,6 @@ export function useLiveChat(options: LiveChatOptions = {}) {
     });
   }, [state.isAudioStreaming, state.isVideoStreaming, updateState]);
 
-  // Legacy recording functions (for compatibility)
-  const startRecording = useCallback(async () => {
-    console.log('[LiveChat] startRecording called');
-    
-    // Simple test first
-    try {
-      console.log('[LiveChat] Testing microphone access...');
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      console.log('[LiveChat] Microphone access successful!', stream);
-      
-      // Add a simple message to show it's working
-      addMessage({
-        id: `test_${Date.now()}`,
-        role: 'assistant',
-        content: 'Microfone acessado com sucesso! Streaming iniciado.',
-        timestamp: Date.now(),
-      });
-      
-      // Now start the real streaming
-      startAudioStreaming();
-    } catch (error) {
-      console.error('[LiveChat] Microphone access failed:', error);
-      updateState({ error: 'Falha ao acessar microfone: ' + error.message });
-    }
-  }, [startAudioStreaming, addMessage, updateState]);
-
-  const stopRecording = useCallback(() => {
-    console.log('[LiveChat] stopRecording called');
-    stopAudioStreaming();
-  }, [stopAudioStreaming]);
-
   const disconnect = useCallback(() => {
     console.log('[LiveChat] Disconnecting...');
     
@@ -574,6 +525,54 @@ export function useLiveChat(options: LiveChatOptions = {}) {
       videoElement: null,
     });
   }, [state.isAudioStreaming, state.isVideoStreaming, state.isScreenSharing, stopAudioStreaming, stopVideoStreaming, stopScreenSharing, updateState]);
+
+  // Auto-connect if specified
+  useEffect(() => {
+    if (options.autoConnect) {
+      connect();
+    }
+  }, [options.autoConnect, connect]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    const onBeforeUnload = () => disconnect();
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', onBeforeUnload);
+      disconnect();
+    };
+  }, [disconnect]);
+
+  // Legacy recording functions (for compatibility)
+  const startRecording = useCallback(async () => {
+    console.log('[LiveChat] startRecording called');
+    
+    // Simple test first
+    try {
+      console.log('[LiveChat] Testing microphone access...');
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      console.log('[LiveChat] Microphone access successful!', stream);
+      
+      // Add a simple message to show it's working
+      addMessage({
+        id: `test_${Date.now()}`,
+        role: 'assistant',
+        content: 'Microfone acessado com sucesso! Streaming iniciado.',
+        timestamp: Date.now(),
+      });
+      
+      // Now start the real streaming
+      startAudioStreaming();
+    } catch (error) {
+      console.error('[LiveChat] Microphone access failed:', error);
+      updateState({ error: 'Falha ao acessar microfone: ' + (error as Error).message });
+    }
+  }, [startAudioStreaming, addMessage, updateState]);
+
+  const stopRecording = useCallback(() => {
+    console.log('[LiveChat] stopRecording called');
+    stopAudioStreaming();
+  }, [stopAudioStreaming]);
 
   const toggleAudio = useCallback(() => {
     if (state.isAudioStreaming) {

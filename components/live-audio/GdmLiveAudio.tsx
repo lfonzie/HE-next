@@ -8,6 +8,7 @@ import {LitElement, css, html} from 'lit';
 import {customElement, state} from 'lit/decorators.js';
 import {createBlob, decode, decodeAudioData} from './utils';
 import './visual-3d';
+import { GeminiLiveService, initializeGeminiLive } from '../../lib/gemini-live-api';
 
 @customElement('gdm-live-audio')
 export class GdmLiveAudio extends LitElement {
@@ -17,6 +18,7 @@ export class GdmLiveAudio extends LitElement {
 
   private client: GoogleGenAI;
   private session: Session;
+  private geminiLiveService: GeminiLiveService;
   private inputAudioContext = new (window.AudioContext ||
     window.webkitAudioContext)({sampleRate: 16000});
   private outputAudioContext = new (window.AudioContext ||
@@ -87,9 +89,27 @@ export class GdmLiveAudio extends LitElement {
   private async initClient() {
     this.initAudio();
 
+    // Inicializar cliente tradicional para compatibilidade
     this.client = new GoogleGenAI({
       apiKey: process.env.GEMINI_API_KEY,
     });
+
+    // Inicializar novo serviço Gemini Live
+    try {
+      this.geminiLiveService = initializeGeminiLive({
+        apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY,
+        modelId: 'gemini-live-2.5-flash-preview-native-audio-09-2025',
+        responseModalities: ['AUDIO', 'TEXT'],
+        voiceConfig: {
+          voiceName: 'Aoede',
+          language: 'pt-BR'
+        },
+        systemInstruction: 'Você é um assistente de áudio interativo especializado em conversas naturais e análises de áudio.'
+      });
+    } catch (error) {
+      console.error('Erro ao inicializar Gemini Live Service:', error);
+      this.error = 'Erro ao inicializar serviço de áudio';
+    }
 
     this.outputNode.connect(this.outputAudioContext.destination);
 

@@ -1,0 +1,257 @@
+{
+  "id": "phy_ohm_series_parallel_01",
+  "title": "Lei de Ohm e Associações",
+  "discipline": "physics",
+  "objective": "Explorar V=IR e calcular correntes em série e paralelo.",
+  "seed": 8,
+  "bench": {
+    "items": [
+      {
+        "id": "bat",
+        "kind": "physics",
+        "name": "Bateria 9V",
+        "sprite": "/assets/physics/battery.png",
+        "props": {
+          "V": 9,
+          "internal_resistance": 0.1,
+          "capacity_mAh": 500
+        }
+      },
+      {
+        "id": "rA",
+        "kind": "physics",
+        "name": "Resistor 100Ω",
+        "sprite": "/assets/physics/resistor.png",
+        "props": {
+          "R_ohm": 100,
+          "tolerance": 5,
+          "power_W": 0.25,
+          "color_bands": ["marrom", "preto", "marrom", "dourado"]
+        }
+      },
+      {
+        "id": "rB",
+        "kind": "physics",
+        "name": "Resistor 200Ω",
+        "sprite": "/assets/physics/resistor.png",
+        "props": {
+          "R_ohm": 200,
+          "tolerance": 5,
+          "power_W": 0.25,
+          "color_bands": ["vermelho", "preto", "marrom", "dourado"]
+        }
+      },
+      {
+        "id": "rC",
+        "kind": "physics",
+        "name": "Resistor 300Ω",
+        "sprite": "/assets/physics/resistor.png",
+        "props": {
+          "R_ohm": 300,
+          "tolerance": 5,
+          "power_W": 0.25,
+          "color_bands": ["laranja", "preto", "marrom", "dourado"]
+        }
+      },
+      {
+        "id": "lamp",
+        "kind": "physics",
+        "name": "Lâmpada 6V",
+        "sprite": "/assets/physics/lamp.png",
+        "props": {
+          "nominal_voltage": 6,
+          "nominal_current": 0.1,
+          "resistance_cold": 20,
+          "resistance_hot": 60
+        }
+      },
+      {
+        "id": "switch",
+        "kind": "physics",
+        "name": "Chave SPST",
+        "sprite": "/assets/physics/switch.png",
+        "props": {
+          "type": "SPST",
+          "max_current": 2,
+          "max_voltage": 12,
+          "closed": false
+        }
+      },
+      {
+        "id": "amm",
+        "kind": "instrument",
+        "name": "Amperímetro",
+        "sprite": "/assets/physics/ammeter.png",
+        "props": {
+          "range_A": [0, 2],
+          "precision": 0.01,
+          "internal_resistance": 0.1
+        }
+      },
+      {
+        "id": "volt",
+        "kind": "instrument",
+        "name": "Voltímetro",
+        "sprite": "/assets/physics/voltmeter.png",
+        "props": {
+          "range_V": [0, 20],
+          "precision": 0.1,
+          "internal_resistance": 1000000
+        }
+      },
+      {
+        "id": "breadboard",
+        "kind": "tool",
+        "name": "Protoboard",
+        "sprite": "/assets/tools/breadboard.png",
+        "props": {
+          "rows": 30,
+          "columns": 10,
+          "hole_spacing": 2.54
+        }
+      }
+    ],
+    "layout": [
+      {"itemId": "bat", "x": 100, "y": 300},
+      {"itemId": "rA", "x": 200, "y": 300},
+      {"itemId": "rB", "x": 300, "y": 300},
+      {"itemId": "rC", "x": 400, "y": 300},
+      {"itemId": "lamp", "x": 500, "y": 300},
+      {"itemId": "switch", "x": 600, "y": 300},
+      {"itemId": "amm", "x": 350, "y": 200},
+      {"itemId": "volt", "x": 350, "y": 400},
+      {"itemId": "breadboard", "x": 350, "y": 300}
+    ],
+    "connections": [
+      {"from": "bat", "to": "rA", "type": "wire"},
+      {"from": "rA", "to": "rB", "type": "wire"},
+      {"from": "rB", "to": "rC", "type": "wire"},
+      {"from": "rC", "to": "lamp", "type": "wire"},
+      {"from": "lamp", "to": "switch", "type": "wire"},
+      {"from": "switch", "to": "bat", "type": "wire"}
+    ]
+  },
+  "initialState": {
+    "circuit": {
+      "nodes": ["V+", "N1", "N2", "N3", "N4", "GND"],
+      "elements": [
+        {
+          "type": "voltageSource",
+          "id": "bat",
+          "n1": "V+",
+          "n2": "GND",
+          "value": 9,
+          "unit": "V"
+        },
+        {
+          "type": "resistor",
+          "id": "rA",
+          "n1": "V+",
+          "n2": "N1",
+          "value": 100,
+          "unit": "Ω"
+        },
+        {
+          "type": "resistor",
+          "id": "rB",
+          "n1": "N1",
+          "n2": "N2",
+          "value": 200,
+          "unit": "Ω"
+        },
+        {
+          "type": "resistor",
+          "id": "rC",
+          "n1": "N2",
+          "n2": "N3",
+          "value": 300,
+          "unit": "Ω"
+        },
+        {
+          "type": "lamp",
+          "id": "lamp",
+          "n1": "N3",
+          "n2": "N4",
+          "value": 60,
+          "unit": "Ω"
+        },
+        {
+          "type": "switch",
+          "id": "switch",
+          "n1": "N4",
+          "n2": "GND",
+          "value": 1,
+          "unit": "Ω",
+          "properties": {
+            "closed": false
+          }
+        }
+      ],
+      "ground_node": "GND"
+    }
+  },
+  "objectives": [
+    {
+      "id": "o1",
+      "description": "Medir a corrente no circuito em série (100Ω + 200Ω + 300Ω)",
+      "validator": {
+        "type": "current-in-range",
+        "params": {
+          "min": 0.014,
+          "max": 0.016
+        }
+      },
+      "points": 30
+    },
+    {
+      "id": "o2",
+      "description": "Verificar a Lei de Ohm: V = I × R",
+      "validator": {
+        "type": "ohm-law-verification",
+        "params": {
+          "tolerance": 0.05
+        }
+      },
+      "points": 25
+    },
+    {
+      "id": "o3",
+      "description": "Medir a tensão em cada resistor",
+      "validator": {
+        "type": "voltage-measurements",
+        "params": {
+          "resistors": ["rA", "rB", "rC"],
+          "expected_voltages": [1.5, 3.0, 4.5],
+          "tolerance": 0.1
+        }
+      },
+      "points": 20
+    },
+    {
+      "id": "o4",
+      "description": "Reconfigurar para paralelo e comparar correntes",
+      "validator": {
+        "type": "compare-series-parallel",
+        "params": {
+          "ratioMin": 2.5,
+          "ratioMax": 3.5
+        }
+      },
+      "points": 25
+    }
+  ],
+  "hints": [
+    "Use o amperímetro para medir a corrente total do circuito.",
+    "Use o voltímetro para medir a tensão em cada resistor.",
+    "Para circuito em série: R_total = R1 + R2 + R3",
+    "Para circuito em paralelo: 1/R_total = 1/R1 + 1/R2 + 1/R3",
+    "A Lei de Ohm é V = I × R, onde V é tensão, I é corrente e R é resistência."
+  ],
+  "expectedOutcomes": {
+    "series_resistance": "600 Ω",
+    "series_current": "0.015 A",
+    "parallel_resistance": "54.5 Ω",
+    "parallel_current": "0.165 A",
+    "power_dissipated": "0.135 W"
+  }
+}
