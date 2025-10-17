@@ -17,15 +17,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const prompt = `Crie flashcards educacionais de alta qualidade para o tópico "${topic}". 
+    const prompt = `Crie EXATAMENTE 12 flashcards educacionais de alta qualidade para o tópico "${topic}". 
 
 INSTRUÇÕES IMPORTANTES:
-1. **FOQUE NO CONTEÚDO PRINCIPAL**: Cada flashcard deve cobrir conceitos fundamentais e essenciais
-2. **TERMOS CLAROS**: Use termos específicos e precisos (não genéricos)
-3. **DEFINIÇÕES CONCISAS**: Máximo 2-3 frases por definição
-4. **CONTEÚDO EDUCATIVO**: Priorize informações que realmente ajudam no aprendizado
-5. **EXEMPLOS PRÁTICOS**: Inclua exemplos quando relevante
-6. **DIFICULDADE PROGRESSIVA**: Comece com conceitos básicos e avance para mais complexos
+1. **EXATAMENTE 12 FLASHCARDS**: Não mais, não menos. Sempre 12 flashcards.
+2. **FOQUE NO CONTEÚDO PRINCIPAL**: Cada flashcard deve cobrir conceitos fundamentais e essenciais
+3. **TERMOS CLAROS**: Use termos específicos e precisos (não genéricos)
+4. **DEFINIÇÕES CONCISAS**: Máximo 2-3 frases por definição
+5. **CONTEÚDO EDUCATIVO**: Priorize informações que realmente ajudam no aprendizado
+6. **EXEMPLOS PRÁTICOS**: Inclua exemplos quando relevante
+7. **DIFICULDADE PROGRESSIVA**: Comece com conceitos básicos e avance para mais complexos
 
 FORMATO DE SAÍDA:
 Termo: Definição concisa e educativa
@@ -34,7 +35,7 @@ EXEMPLO DE QUALIDADE:
 Fotossíntese: Processo pelo qual plantas convertem luz solar em energia química, produzindo glicose e liberando oxigênio
 Mitocôndria: Organela celular responsável pela respiração celular e produção de ATP
 
-Gere entre 8 e 12 flashcards de alta qualidade para "${topic}".`
+Gere EXATAMENTE 12 flashcards de alta qualidade para "${topic}".`
 
     const result = await callGrok(
       'grok-4-fast-reasoning',

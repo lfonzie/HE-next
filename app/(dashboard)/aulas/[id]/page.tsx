@@ -322,7 +322,15 @@ export default function LessonPage() {
 
     // Check if lesson is completed
     const totalStages = lessonData?.stages?.length || 0
+    console.log('🎴 DEBUG: Checking lesson completion:', {
+      stageIndex,
+      totalStages,
+      isLastStage: stageIndex === totalStages - 1,
+      lessonTitle: lessonData?.title
+    })
+    
     if (stageIndex === totalStages - 1) {
+      console.log('🎴 DEBUG: Lesson completed! Setting isCompleted to true')
       setIsCompleted(true)
       
       // Verificar se todos os quizzes foram completados
@@ -987,14 +995,6 @@ export default function LessonPage() {
               </CardContent>
             </Card>
 
-            {/* Flashcards Module for Completed Lessons */}
-            {isCompleted && (
-              <Card className="mt-4">
-                <CardContent className="p-4">
-                  <InlineFlashcards topic={lessonData?.metadata?.subject || lessonData?.title || 'Tema da Aula'} />
-                </CardContent>
-              </Card>
-            )}
           </div>
 
           {/* Main Content */}
@@ -1035,6 +1035,25 @@ export default function LessonPage() {
               );
             })()}
           </AnimatePresence>
+
+          {/* Flashcards Module - Below Main Content */}
+          {(() => {
+            const isLastStage = currentStage === (lessonData?.stages?.length || 0) - 1
+            if (isLastStage) {
+              console.log('🎴 DEBUG: Showing flashcards below main content for last stage:', {
+                currentStage,
+                totalStages: lessonData?.stages?.length || 0,
+                isLastStage,
+                topic: lessonData?.metadata?.subject || lessonData?.title || 'Tema da Aula'
+              })
+              return (
+                <div className="mt-8">
+                  <InlineFlashcards topic={lessonData?.metadata?.subject || lessonData?.title || 'Tema da Aula'} />
+                </div>
+              )
+            }
+            return null
+          })()}
           </div>
         </div>
       </div>

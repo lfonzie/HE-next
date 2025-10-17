@@ -22,26 +22,29 @@ export default function InlineFlashcards({ topic, className = '' }: InlineFlashc
   const [isGenerating, setIsGenerating] = useState(false)
   const [error, setError] = useState('')
   const [flippedCards, setFlippedCards] = useState<Set<number>>(new Set())
-  const [currentCardIndex, setCurrentCardIndex] = useState(0)
 
   // Auto-generate flashcards when component mounts
   useEffect(() => {
+    console.log('🎴 DEBUG: InlineFlashcards mounted with topic:', topic)
     if (topic && flashcards.length === 0 && !isGenerating) {
+      console.log('🎴 DEBUG: Auto-generating flashcards for topic:', topic)
       generateFlashcards()
     }
   }, [topic])
 
   const generateFlashcards = async () => {
+    console.log('🎴 DEBUG: generateFlashcards called with topic:', topic)
     if (!topic.trim()) {
+      console.log('🎴 DEBUG: No topic provided, setting error')
       setError('Tópico não disponível para gerar flashcards.')
       return
     }
 
+    console.log('🎴 DEBUG: Starting flashcard generation...')
     setIsGenerating(true)
     setError('')
     setFlashcards([])
     setFlippedCards(new Set())
-    setCurrentCardIndex(0)
 
     try {
       const response = await fetch('/api/flashcards/generate', {
@@ -86,16 +89,8 @@ export default function InlineFlashcards({ topic, className = '' }: InlineFlashc
 
   const resetCards = () => {
     setFlippedCards(new Set())
-    setCurrentCardIndex(0)
   }
 
-  const nextCard = () => {
-    setCurrentCardIndex(prev => (prev + 1) % flashcards.length)
-  }
-
-  const prevCard = () => {
-    setCurrentCardIndex(prev => (prev - 1 + flashcards.length) % flashcards.length)
-  }
 
   if (isGenerating) {
     return (
@@ -137,108 +132,83 @@ export default function InlineFlashcards({ topic, className = '' }: InlineFlashc
     )
   }
 
-  const currentCard = flashcards[currentCardIndex]
-  const isFlipped = flippedCards.has(currentCardIndex)
-
   return (
     <div className={`bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-xl p-6 ${className}`}>
-      <div className="text-center mb-4">
+      <div className="text-center mb-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-2 flex items-center justify-center gap-2">
           <span className="text-xl">🎴</span>
           Flashcards do Tema
         </h3>
         <p className="text-sm text-gray-600">
-          Card {currentCardIndex + 1} de {flashcards.length} - {topic}
+          {flashcards.length} flashcards sobre {topic}
         </p>
       </div>
 
-      <div className="max-w-md mx-auto">
-        <motion.div
-          key={currentCardIndex}
-          initial={{ opacity: 0, rotateY: 90 }}
-          animate={{ opacity: 1, rotateY: 0 }}
-          exit={{ opacity: 0, rotateY: -90 }}
-          transition={{ duration: 0.3 }}
-          className="perspective-1000"
+      {/* Grid 3x4 - Responsivo */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
+        {flashcards.map((card, index) => {
+          const isFlipped = flippedCards.has(index)
+          
+          return (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3, delay: index * 0.1 }}
+              className="perspective-1000"
+            >
+              <Card 
+                className={`cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 ${
+                  isFlipped ? 'bg-blue-100' : 'bg-white'
+                }`}
+                onClick={() => toggleCard(index)}
+              >
+                <CardContent className="p-4 min-h-[150px] flex items-center justify-center">
+                  <div className="text-center w-full">
+                    <AnimatePresence mode="wait">
+                      {isFlipped ? (
+                        <motion.div
+                          key={`definition-${index}`}
+                          initial={{ opacity: 0, rotateY: 90 }}
+                          animate={{ opacity: 1, rotateY: 0 }}
+                          exit={{ opacity: 0, rotateY: -90 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <h4 className="text-xs font-medium text-blue-600 mb-2">DEFINIÇÃO</h4>
+                          <p className="text-gray-800 leading-relaxed text-sm">{card.definition}</p>
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          key={`term-${index}`}
+                          initial={{ opacity: 0, rotateY: -90 }}
+                          animate={{ opacity: 1, rotateY: 0 }}
+                          exit={{ opacity: 0, rotateY: 90 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <h4 className="text-xs font-medium text-blue-600 mb-2">TERMO</h4>
+                          <p className="text-gray-800 font-semibold text-base">{card.term}</p>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )
+        })}
+      </div>
+
+      {/* Controles */}
+      <div className="flex justify-center mt-6">
+        <Button
+          onClick={resetCards}
+          variant="outline"
+          size="sm"
+          className="text-gray-600"
         >
-          <Card 
-            className={`cursor-pointer transition-all duration-300 hover:shadow-lg ${
-              isFlipped ? 'bg-blue-100' : 'bg-white'
-            }`}
-            onClick={() => toggleCard(currentCardIndex)}
-          >
-            <CardContent className="p-6 min-h-[200px] flex items-center justify-center">
-              <div className="text-center">
-                <AnimatePresence mode="wait">
-                  {isFlipped ? (
-                    <motion.div
-                      key="definition"
-                      initial={{ opacity: 0, rotateY: 90 }}
-                      animate={{ opacity: 1, rotateY: 0 }}
-                      exit={{ opacity: 0, rotateY: -90 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <h4 className="text-sm font-medium text-blue-600 mb-2">DEFINIÇÃO</h4>
-                      <p className="text-gray-800 leading-relaxed">{currentCard.definition}</p>
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="term"
-                      initial={{ opacity: 0, rotateY: -90 }}
-                      animate={{ opacity: 1, rotateY: 0 }}
-                      exit={{ opacity: 0, rotateY: 90 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <h4 className="text-sm font-medium text-blue-600 mb-2">TERMO</h4>
-                      <p className="text-gray-800 font-semibold text-lg">{currentCard.term}</p>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <div className="flex justify-center items-center gap-4 mt-4">
-          <Button
-            onClick={prevCard}
-            variant="outline"
-            size="sm"
-            disabled={flashcards.length <= 1}
-          >
-            ← Anterior
-          </Button>
-          
-          <Button
-            onClick={() => toggleCard(currentCardIndex)}
-            variant="outline"
-            size="sm"
-            className="bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            {isFlipped ? 'Ver Termo' : 'Ver Definição'}
-          </Button>
-          
-          <Button
-            onClick={nextCard}
-            variant="outline"
-            size="sm"
-            disabled={flashcards.length <= 1}
-          >
-            Próximo →
-          </Button>
-        </div>
-
-        <div className="flex justify-center mt-4">
-          <Button
-            onClick={resetCards}
-            variant="outline"
-            size="sm"
-            className="text-gray-600"
-          >
-            <RotateCcw className="w-4 h-4 mr-2" />
-            Reiniciar
-          </Button>
-        </div>
+          <RotateCcw className="w-4 h-4 mr-2" />
+          Reiniciar Todos os Cards
+        </Button>
       </div>
     </div>
   )
