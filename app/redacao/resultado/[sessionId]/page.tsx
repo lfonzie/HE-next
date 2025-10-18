@@ -229,9 +229,9 @@ export default function RedacaoResultadoPage() {
           body {
             margin: 0;
             padding: 0;
-            font-family: 'Times New Roman', serif;
-            font-size: 12pt;
-            line-height: 1.5;
+            font-family: 'Arial', sans-serif;
+            font-size: 10pt;
+            line-height: 1.3;
             color: #000 !important;
             background: white !important;
           }
@@ -239,150 +239,152 @@ export default function RedacaoResultadoPage() {
           .print-container {
             max-width: 210mm;
             margin: 0 auto;
-            padding: 20mm;
+            padding: 15mm;
             background: white !important;
             box-shadow: none !important;
           }
           
           .print-header {
             text-align: center;
-            margin-bottom: 25pt;
-            border-bottom: 3pt solid #000;
-            padding-bottom: 15pt;
+            margin-bottom: 15pt;
+            border-bottom: 2pt solid #000;
+            padding-bottom: 8pt;
           }
           
           .print-title {
-            font-size: 20pt;
-            font-weight: bold;
-            margin-bottom: 8pt;
-            color: #000 !important;
-            text-transform: uppercase;
-            letter-spacing: 1pt;
-          }
-          
-          .print-subtitle {
-            font-size: 14pt;
-            color: #333 !important;
-            font-style: italic;
-          }
-          
-          .print-score {
-            font-size: 28pt;
-            font-weight: bold;
-            color: #000 !important;
-            text-align: center;
-            margin: 15pt 0;
-            padding: 10pt;
-            border: 2pt solid #000;
-            border-radius: 10pt;
-            background: #f8f9fa !important;
-          }
-          
-          .print-section {
-            margin-bottom: 20pt;
-            page-break-inside: avoid;
-          }
-          
-          .print-section-title {
             font-size: 16pt;
             font-weight: bold;
-            margin-bottom: 12pt;
-            color: #000 !important;
-            border-bottom: 2pt solid #000;
-            padding-bottom: 5pt;
-            text-transform: uppercase;
-            letter-spacing: 0.5pt;
-          }
-          
-          .print-content {
-            font-size: 12pt;
-            line-height: 1.4;
-            color: #000 !important;
-            margin-bottom: 10pt;
-          }
-          
-          .print-competencies {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15pt;
-            margin-bottom: 20pt;
-          }
-          
-          .print-competency {
-            border: 2pt solid #000;
-            padding: 12pt;
-            page-break-inside: avoid;
-            border-radius: 8pt;
-            background: #f8f9fa !important;
-          }
-          
-          .print-competency-title {
-            font-weight: bold;
-            font-size: 13pt;
             margin-bottom: 5pt;
             color: #000 !important;
             text-transform: uppercase;
             letter-spacing: 0.5pt;
           }
           
+          .print-subtitle {
+            font-size: 11pt;
+            color: #333 !important;
+            font-style: italic;
+          }
+          
+          .print-score {
+            font-size: 20pt;
+            font-weight: bold;
+            color: #000 !important;
+            text-align: center;
+            margin: 10pt 0;
+            padding: 8pt;
+            border: 1pt solid #000;
+            border-radius: 5pt;
+            background: #f8f9fa !important;
+          }
+          
+          .print-section {
+            margin-bottom: 12pt;
+            page-break-inside: avoid;
+          }
+          
+          .print-section-title {
+            font-size: 12pt;
+            font-weight: bold;
+            margin-bottom: 8pt;
+            color: #000 !important;
+            border-bottom: 1pt solid #000;
+            padding-bottom: 3pt;
+            text-transform: uppercase;
+            letter-spacing: 0.3pt;
+          }
+          
+          .print-content {
+            font-size: 10pt;
+            line-height: 1.3;
+            color: #000 !important;
+            margin-bottom: 6pt;
+          }
+          
+          .print-competencies {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8pt;
+            margin-bottom: 12pt;
+          }
+          
+          .print-competency {
+            border: 1pt solid #000;
+            padding: 6pt;
+            page-break-inside: avoid;
+            border-radius: 4pt;
+            background: #f8f9fa !important;
+          }
+          
+          .print-competency-title {
+            font-weight: bold;
+            font-size: 9pt;
+            margin-bottom: 3pt;
+            color: #000 !important;
+            text-transform: uppercase;
+            letter-spacing: 0.3pt;
+          }
+          
           .print-competency-score {
             font-weight: bold;
-            font-size: 14pt;
+            font-size: 10pt;
             color: #000 !important;
             text-align: right;
-            margin-top: 5pt;
+            margin-top: 3pt;
           }
           
           .print-feedback {
-            font-size: 12pt;
-            line-height: 1.5;
+            font-size: 9pt;
+            line-height: 1.3;
             color: #000 !important;
             white-space: pre-wrap;
-            margin-bottom: 15pt;
-            padding: 15pt;
+            margin-bottom: 8pt;
+            padding: 8pt;
             border: 1pt solid #ccc;
-            border-radius: 8pt;
+            border-radius: 4pt;
             background: #f8f9fa !important;
           }
           
           .print-suggestions {
-            font-size: 12pt;
+            font-size: 9pt;
             color: #000 !important;
-            padding: 15pt;
+            padding: 8pt;
             border: 1pt solid #ccc;
-            border-radius: 8pt;
+            border-radius: 4pt;
             background: #f8f9fa !important;
           }
           
           .print-suggestions li {
-            margin-bottom: 8pt;
+            margin-bottom: 4pt;
             list-style-type: disc;
-            margin-left: 20pt;
-            line-height: 1.4;
+            margin-left: 12pt;
+            line-height: 1.3;
           }
           
           .print-essay {
-            font-size: 12pt;
+            font-size: 10pt;
             line-height: 1.5;
             color: #000 !important;
             white-space: pre-wrap;
-            border: 2pt solid #000;
-            padding: 15pt;
-            margin-top: 15pt;
-            border-radius: 8pt;
+            border: 1pt solid #000;
+            padding: 12pt;
+            margin-top: 8pt;
+            border-radius: 4pt;
             background: #f8f9fa !important;
+            text-align: justify;
+            font-family: 'Times New Roman', serif;
           }
           
           .print-info {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15pt;
-            margin-bottom: 20pt;
-            font-size: 11pt;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 8pt;
+            margin-bottom: 12pt;
+            font-size: 9pt;
             color: #000 !important;
-            padding: 15pt;
+            padding: 8pt;
             border: 1pt solid #ccc;
-            border-radius: 8pt;
+            border-radius: 4pt;
             background: #f8f9fa !important;
           }
           
@@ -390,8 +392,8 @@ export default function RedacaoResultadoPage() {
             display: flex;
             justify-content: space-between;
             border-bottom: 1pt dotted #666;
-            padding-bottom: 5pt;
-            margin-bottom: 5pt;
+            padding-bottom: 3pt;
+            margin-bottom: 3pt;
           }
           
           .print-info-item:last-child {
@@ -417,19 +419,19 @@ export default function RedacaoResultadoPage() {
           /* Melhorar espaçamento geral */
           h1, h2, h3, h4, h5, h6 {
             margin-top: 0;
-            margin-bottom: 10pt;
+            margin-bottom: 6pt;
           }
           
           p {
-            margin-bottom: 8pt;
+            margin-bottom: 4pt;
           }
           
           /* Rodapé da página */
           @page {
-            margin: 20mm;
+            margin: 15mm;
             @bottom-center {
               content: "Página " counter(page) " de " counter(pages);
-              font-size: 10pt;
+              font-size: 8pt;
               color: #666;
             }
           }
@@ -662,7 +664,7 @@ export default function RedacaoResultadoPage() {
           </Card>
         </div>
 
-        {/* Competências para impressão */}
+        {/* Competências para impressão - Layout compacto */}
         <div className="print-section">
           <h2 className="print-section-title">Avaliação por Competência</h2>
           <div className="print-competencies">
@@ -672,13 +674,10 @@ export default function RedacaoResultadoPage() {
               return (
                 <div key={competencia.id} className="print-competency">
                   <div className="print-competency-title">
-                    {competencia.name}
+                    {competencia.name} - {score}/200
                   </div>
                   <div className="print-content">
                     {competencia.description}
-                  </div>
-                  <div className="print-competency-score">
-                    {score}/200 pontos
                   </div>
                 </div>
               )
@@ -686,23 +685,23 @@ export default function RedacaoResultadoPage() {
           </div>
         </div>
 
-        {/* Feedback e Sugestões para impressão */}
+        {/* Feedback e Sugestões combinados para impressão */}
         <div className="print-section">
-          <h2 className="print-section-title">Análise Detalhada</h2>
+          <h2 className="print-section-title">Análise e Recomendações</h2>
           <div className="print-feedback">
+            <strong>Análise Detalhada:</strong><br/>
             {result.feedback}
           </div>
-        </div>
-
-        <div className="print-section">
-          <h2 className="print-section-title">Recomendações</h2>
-          <ul className="print-suggestions">
-            {result.suggestions.map((suggestion, index) => (
-              <li key={index}>
-                {suggestion}
-              </li>
-            ))}
-          </ul>
+          <div className="print-suggestions">
+            <strong>Recomendações:</strong>
+            <ul>
+              {result.suggestions.map((suggestion, index) => (
+                <li key={index}>
+                  {suggestion}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
 
         {/* Feedback e Sugestões */}
@@ -753,11 +752,11 @@ export default function RedacaoResultadoPage() {
           </Card>
         </div>
 
-        {/* Conteúdo da Redação para impressão */}
+        {/* Conteúdo da Redação para impressão - Versão completa */}
         <div className="print-section">
           <h2 className="print-section-title">Texto da Redação</h2>
           <div className="print-essay">
-            {result.content}
+            ${result.content}
           </div>
         </div>
 

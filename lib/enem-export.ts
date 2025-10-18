@@ -105,7 +105,7 @@ export class EnemExportService {
     yPosition += 20;
 
     // Score summary
-    if (data.score) {
+    if (data.score && data.score.total_score !== undefined) {
       doc.setFontSize(18);
       doc.text('Resumo de Pontuação', 20, yPosition);
       yPosition += 15;
@@ -114,19 +114,27 @@ export class EnemExportService {
       doc.text(`Pontuação Total: ${data.score.total_score.toFixed(1)}`, 20, yPosition);
       yPosition += 10;
 
-      doc.text(`Estimativa TRI: ${data.score.tri_estimated.score.toFixed(0)}`, 20, yPosition);
-      yPosition += 10;
+      if (data.score.tri_estimated && data.score.tri_estimated.score !== undefined) {
+        doc.text(`Estimativa TRI: ${data.score.tri_estimated.score.toFixed(0)}`, 20, yPosition);
+        yPosition += 10;
 
-      doc.text(`Intervalo de Confiança: ${data.score.tri_estimated.confidence_interval.lower.toFixed(0)} - ${data.score.tri_estimated.confidence_interval.upper.toFixed(0)}`, 20, yPosition);
-      yPosition += 15;
+        if (data.score.tri_estimated.confidence_interval) {
+          doc.text(`Intervalo de Confiança: ${data.score.tri_estimated.confidence_interval.lower.toFixed(0)} - ${data.score.tri_estimated.confidence_interval.upper.toFixed(0)}`, 20, yPosition);
+          yPosition += 15;
+        }
+      }
 
       // Area scores
-      doc.text('Pontuações por Área:', 20, yPosition);
-      yPosition += 10;
+      if (data.score.area_scores) {
+        doc.text('Pontuações por Área:', 20, yPosition);
+        yPosition += 10;
 
-      for (const [area, areaScore] of Object.entries(data.score.area_scores)) {
-        doc.text(`${area}: ${areaScore.percentage.toFixed(1)}% (${areaScore.correct}/${areaScore.total})`, 30, yPosition);
-        yPosition += 8;
+        for (const [area, areaScore] of Object.entries(data.score.area_scores)) {
+          if (areaScore && areaScore.percentage !== undefined) {
+            doc.text(`${area}: ${areaScore.percentage.toFixed(1)}% (${areaScore.correct}/${areaScore.total})`, 30, yPosition);
+            yPosition += 8;
+          }
+        }
       }
     }
 
@@ -171,7 +179,7 @@ export class EnemExportService {
     }
 
     // Statistics page
-    if (options.includeStatistics && data.score) {
+    if (options.includeStatistics && data.score && data.score.stats) {
       doc.addPage();
       yPosition = 20;
 
@@ -180,17 +188,25 @@ export class EnemExportService {
       yPosition += 15;
 
       doc.setFontSize(12);
-      doc.text(`Tempo total: ${data.score.stats.total_time_spent}s`, 20, yPosition);
-      yPosition += 8;
-      doc.text(`Tempo médio por questão: ${data.score.stats.average_time_per_question.toFixed(1)}s`, 20, yPosition);
-      yPosition += 15;
+      if (data.score.stats.total_time_spent !== undefined) {
+        doc.text(`Tempo total: ${data.score.stats.total_time_spent}s`, 20, yPosition);
+        yPosition += 8;
+      }
+      if (data.score.stats.average_time_per_question !== undefined) {
+        doc.text(`Tempo médio por questão: ${data.score.stats.average_time_per_question.toFixed(1)}s`, 20, yPosition);
+        yPosition += 15;
+      }
 
-      doc.text('Desempenho por Tópico:', 20, yPosition);
-      yPosition += 8;
+      if (data.score.stats.accuracy_by_topic) {
+        doc.text('Desempenho por Tópico:', 20, yPosition);
+        yPosition += 8;
 
-      for (const [topic, accuracy] of Object.entries(data.score.stats.accuracy_by_topic)) {
-        doc.text(`${topic}: ${(accuracy * 100).toFixed(1)}%`, 30, yPosition);
-        yPosition += 6;
+        for (const [topic, accuracy] of Object.entries(data.score.stats.accuracy_by_topic)) {
+          if (accuracy !== undefined) {
+            doc.text(`${topic}: ${(accuracy * 100).toFixed(1)}%`, 30, yPosition);
+            yPosition += 6;
+          }
+        }
       }
     }
 
@@ -218,22 +234,39 @@ export class EnemExportService {
     csvLines.push('');
 
     // Score summary
-    if (data.score) {
+    if (data.score && data.score.total_score !== undefined) {
       csvLines.push('Métrica,Valor');
       csvLines.push(`Pontuação Total,${data.score.total_score.toFixed(1)}`);
-      csvLines.push(`Estimativa TRI,${data.score.tri_estimated.score.toFixed(0)}`);
-      csvLines.push(`TRI Inferior,${data.score.tri_estimated.confidence_interval.lower.toFixed(0)}`);
-      csvLines.push(`TRI Superior,${data.score.tri_estimated.confidence_interval.upper.toFixed(0)}`);
-      csvLines.push(`Tempo Total,${data.score.stats.total_time_spent}`);
-      csvLines.push(`Tempo Médio por Questão,${data.score.stats.average_time_per_question.toFixed(1)}`);
+      
+      if (data.score.tri_estimated && data.score.tri_estimated.score !== undefined) {
+        csvLines.push(`Estimativa TRI,${data.score.tri_estimated.score.toFixed(0)}`);
+        
+        if (data.score.tri_estimated.confidence_interval) {
+          csvLines.push(`TRI Inferior,${data.score.tri_estimated.confidence_interval.lower.toFixed(0)}`);
+          csvLines.push(`TRI Superior,${data.score.tri_estimated.confidence_interval.upper.toFixed(0)}`);
+        }
+      }
+      
+      if (data.score.stats) {
+        if (data.score.stats.total_time_spent !== undefined) {
+          csvLines.push(`Tempo Total,${data.score.stats.total_time_spent}`);
+        }
+        if (data.score.stats.average_time_per_question !== undefined) {
+          csvLines.push(`Tempo Médio por Questão,${data.score.stats.average_time_per_question.toFixed(1)}`);
+        }
+      }
       csvLines.push('');
 
       // Area scores
-      csvLines.push('Área,Percentual,Corretas,Total');
-      for (const [area, areaScore] of Object.entries(data.score.area_scores)) {
-        csvLines.push(`${area},${areaScore.percentage.toFixed(1)},${areaScore.correct},${areaScore.total}`);
+      if (data.score.area_scores) {
+        csvLines.push('Área,Percentual,Corretas,Total');
+        for (const [area, areaScore] of Object.entries(data.score.area_scores)) {
+          if (areaScore && areaScore.percentage !== undefined) {
+            csvLines.push(`${area},${areaScore.percentage.toFixed(1)},${areaScore.correct},${areaScore.total}`);
+          }
+        }
+        csvLines.push('');
       }
-      csvLines.push('');
     }
 
     // Detailed responses

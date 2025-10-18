@@ -10,7 +10,7 @@ import {
   Target, 
   Clock, 
   TrendingUp, 
-  Download, 
+  Printer, 
   Share2, 
   RotateCcw,
   CheckCircle,
@@ -41,9 +41,10 @@ interface EnemResultsProps {
 }
 
 export function EnemResults({ score, sessionId, onRetake, onRefocus, items = [], responses = [] }: EnemResultsProps) {
-  const [exporting, setExporting] = useState(false);
+  const [printing, setPrinting] = useState(false);
   const [generatingExplanation, setGeneratingExplanation] = useState<string | null>(null);
   const [explanations, setExplanations] = useState<Record<string, string>>({});
+  const [printLoading, setPrintLoading] = useState(false);
   const { toast } = useToast();
 
   // Converter URLs de imagens do enem.dev para caminhos locais
@@ -58,51 +59,502 @@ export function EnemResults({ score, sessionId, onRetake, onRefocus, items = [],
     return itemIndex !== -1 ? itemIndex + 1 : index + 1;
   };
 
-  const handleExport = async (format: 'PDF' | 'CSV' | 'JSON') => {
-    setExporting(true);
-    try {
-      const response = await fetch('/api/enem/export', {
+  // Função para gerar explicações em lote
+  const generateAllExplanations = async () => {
+    const questionsToReview = [...wrongAnswers, ...unansweredQuestions];
+    const explanationsToGenerate = questionsToReview.filter(item => !explanations[item.item_id]);
+    
+    if (explanationsToGenerate.length === 0) {
+      return explanations;
+    }
+
+    const newExplanations = { ...explanations };
+    
+    for (const item of explanationsToGenerate) {
+      try {
+        const response = await fetch('/api/enem/explanation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+            item_id: item.item_id,
           session_id: sessionId,
-          format,
-          options: {
-            includeAnswers: true,
-            includeExplanations: true,
-            includeStatistics: true,
-            includeSimilarQuestions: true
-          }
+            question_text: item.text,
+            alternatives: item.alternatives,
+            correct_answer: item.correct_answer,
+            user_answer: responses.find(r => r.item_id === item.item_id)?.selected_answer,
+            area: item.area,
+            question_number: getQuestionNumber(item.item_id, processedItems.findIndex(i => i.item_id === item.item_id))
         })
       });
 
-      if (!response.ok) {
-        throw new Error('Export failed');
+        if (response.ok) {
+          const data = await response.json();
+          newExplanations[item.item_id] = data.explanation;
+        }
+      } catch (error) {
+        console.error(`Error generating explanation for ${item.item_id}:`, error);
+      }
+    }
+
+    return newExplanations;
+  };
+
+  const handleCompletePrint = async () => {
+    setPrintLoading(true);
+    try {
+      // Gerar todas as explicações necessárias
+      toast({
+        title: "Preparando impressão",
+        description: "Gerando explicações para todas as questões...",
+      });
+
+      const allExplanations = await generateAllExplanations();
+      setExplanations(allExplanations);
+
+      // Aguardar um pouco para o usuário ver o progresso
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Criar uma nova janela para impressão
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        throw new Error('Não foi possível abrir a janela de impressão');
       }
 
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `enem-session-${sessionId}.${format.toLowerCase()}`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      // Criar o HTML completo para impressão
+      const printHTML = `
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Resultado Completo do Simulado ENEM</title>
+          <style>
+            * {
+              -webkit-print-color-adjust: exact !important;
+              color-adjust: exact !important;
+            }
+            
+            body {
+              font-family: 'Arial', sans-serif;
+              font-size: 9pt;
+              line-height: 1.2;
+              color: #000 !important;
+              margin: 0;
+              padding: 10mm;
+              background: white !important;
+            }
+            
+            .print-header {
+              text-align: center;
+              margin-bottom: 15pt;
+              padding-bottom: 8pt;
+              border-bottom: 1pt solid #000;
+            }
+            .print-title {
+              font-size: 14pt;
+              font-weight: bold;
+              color: #000 !important;
+              margin-bottom: 5pt;
+              text-transform: uppercase;
+            }
+            .print-subtitle {
+              font-size: 10pt;
+              color: #000 !important;
+            }
+            .score-section {
+              background: #f8f9fa !important;
+              border: 1pt solid #000;
+              border-radius: 4pt;
+              padding: 8pt;
+              margin-bottom: 10pt;
+            }
+            .score-title {
+              font-size: 11pt;
+              font-weight: bold;
+              color: #000 !important;
+              margin-bottom: 6pt;
+              text-transform: uppercase;
+            }
+            .score-value {
+              font-size: 18pt;
+              font-weight: bold;
+              color: #000 !important;
+              text-align: center;
+              margin-bottom: 6pt;
+            }
+            .area-scores {
+              display: grid;
+              grid-template-columns: repeat(4, 1fr);
+              gap: 6pt;
+              margin-top: 8pt;
+            }
+            .area-score {
+              background: white !important;
+              border: 1pt solid #000;
+              border-radius: 3pt;
+              padding: 6pt;
+              text-align: center;
+            }
+            .area-name {
+              font-weight: bold;
+              margin-bottom: 3pt;
+              color: #000 !important;
+              font-size: 8pt;
+            }
+            .area-percentage {
+              font-size: 12pt;
+              font-weight: bold;
+              color: #000 !important;
+              margin-bottom: 2pt;
+            }
+            .area-details {
+              font-size: 7pt;
+              color: #000 !important;
+            }
+            .questions-section {
+              margin-top: 10pt;
+            }
+            .question-card {
+              border: 1pt solid #000;
+              border-radius: 3pt;
+              padding: 6pt;
+              margin-bottom: 8pt;
+              background: white !important;
+              page-break-inside: avoid;
+            }
+            .question-header {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 4pt;
+              padding-bottom: 3pt;
+              border-bottom: 1pt solid #ccc;
+            }
+            .question-number {
+              font-weight: bold;
+              color: #000 !important;
+              font-size: 8pt;
+            }
+            .question-area {
+              background: #f0f0f0 !important;
+              color: #000 !important;
+              padding: 2pt 4pt;
+              border-radius: 2pt;
+              font-size: 7pt;
+            }
+            .question-difficulty {
+              background: #f0f0f0 !important;
+              color: #000 !important;
+              padding: 2pt 4pt;
+              border-radius: 2pt;
+              font-size: 7pt;
+            }
+            .question-text {
+              margin-bottom: 6pt;
+              line-height: 1.2;
+              font-size: 8pt;
+            }
+            .alternatives {
+              margin-top: 6pt;
+            }
+            .alternative {
+              margin-bottom: 3pt;
+              padding: 3pt;
+              border-radius: 2pt;
+              font-size: 7pt;
+            }
+            .alternative.correct {
+              background: #e8f5e8 !important;
+              border: 1pt solid #000;
+            }
+            .alternative.incorrect {
+              background: #ffe8e8 !important;
+              border: 1pt solid #000;
+            }
+            .alternative.neutral {
+              background: #f8f8f8 !important;
+              border: 1pt solid #ccc;
+            }
+            .alternative-label {
+              font-weight: bold;
+              margin-right: 4pt;
+            }
+            .explanation {
+              margin-top: 6pt;
+              padding: 4pt;
+              background: #f0f8ff !important;
+              border: 1pt solid #000;
+              border-radius: 3pt;
+              font-size: 7pt;
+              line-height: 1.3;
+            }
+            .explanation-title {
+              font-weight: bold;
+              margin-bottom: 2pt;
+              color: #000 !important;
+            }
+            .stats-section {
+              background: #f8f9fa !important;
+              border: 1pt solid #000;
+              border-radius: 4pt;
+              padding: 8pt;
+              margin-top: 10pt;
+            }
+            .stats-title {
+              font-size: 10pt;
+              font-weight: bold;
+              color: #000 !important;
+              margin-bottom: 6pt;
+              text-transform: uppercase;
+            }
+            .stats-grid {
+              display: grid;
+              grid-template-columns: repeat(4, 1fr);
+              gap: 6pt;
+            }
+            .stat-item {
+              text-align: center;
+            }
+            .stat-value {
+              font-size: 12pt;
+              font-weight: bold;
+              color: #000 !important;
+            }
+            .stat-label {
+              font-size: 7pt;
+              color: #000 !important;
+            }
+            
+            /* Layout compacto para competências */
+            .competencies-grid {
+              display: grid;
+              grid-template-columns: repeat(3, 1fr);
+              gap: 6pt;
+              margin-bottom: 10pt;
+            }
+            .competency-item {
+              border: 1pt solid #000;
+              padding: 4pt;
+              border-radius: 3pt;
+              background: white !important;
+            }
+            .competency-name {
+              font-weight: bold;
+              font-size: 7pt;
+              color: #000 !important;
+              margin-bottom: 2pt;
+            }
+            .competency-score {
+              font-size: 9pt;
+              font-weight: bold;
+              color: #000 !important;
+              text-align: center;
+            }
+            
+            /* Layout compacto para dificuldades */
+            .difficulty-grid {
+              display: grid;
+              grid-template-columns: repeat(3, 1fr);
+              gap: 6pt;
+              margin-bottom: 10pt;
+            }
+            .difficulty-item {
+              border: 1pt solid #000;
+              padding: 4pt;
+              border-radius: 3pt;
+              background: white !important;
+              text-align: center;
+            }
+            .difficulty-name {
+              font-weight: bold;
+              font-size: 7pt;
+              color: #000 !important;
+              margin-bottom: 2pt;
+            }
+            .difficulty-score {
+              font-size: 9pt;
+              font-weight: bold;
+              color: #000 !important;
+            }
+            
+            @media print {
+              body { margin: 0; padding: 8mm; }
+              .print-header { page-break-after: avoid; }
+              .score-section { page-break-inside: avoid; }
+              .question-card { page-break-inside: avoid; }
+              .competencies-grid { page-break-inside: avoid; }
+              .difficulty-grid { page-break-inside: avoid; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="print-header">
+            <div class="print-title">Resultado Completo do Simulado ENEM</div>
+            <div class="print-subtitle">Sessão: ${sessionId} | Data: ${new Date().toLocaleDateString('pt-BR')}</div>
+          </div>
+          
+          <!-- Pontuação Geral -->
+          <div class="score-section">
+            <div class="score-title">Pontuação Geral</div>
+            <div class="score-value">${score.total_score.toFixed(1)} pontos</div>
+            <div style="text-align: center; font-size: 8pt; color: #000; margin-bottom: 6pt;">
+              Estimativa TRI: ${score.tri_estimated.score.toFixed(0)} 
+              (${score.tri_estimated.confidence_interval.lower.toFixed(0)} - ${score.tri_estimated.confidence_interval.upper.toFixed(0)})
+            </div>
+            
+            <!-- Pontuações por Área -->
+            <div class="area-scores">
+              ${Object.entries(score.area_scores)
+                .filter(([_, areaScore]) => areaScore.total > 0)
+                .map(([area, areaScore]) => {
+                  const areaNames = {
+                    'CN': 'Ciências da Natureza',
+                    'CH': 'Ciências Humanas', 
+                    'LC': 'Linguagens e Códigos',
+                    'MT': 'Matemática'
+                  };
+                  return `
+                    <div class="area-score">
+                      <div class="area-name">${areaNames[area] || area}</div>
+                      <div class="area-percentage">${areaScore.percentage.toFixed(1)}%</div>
+                      <div class="area-details">${areaScore.correct}/${areaScore.total}</div>
+                    </div>
+                  `;
+                }).join('')}
+            </div>
+          </div>
+          
+          <!-- Estatísticas por Dificuldade -->
+          <div class="stats-section">
+            <div class="stats-title">Desempenho por Dificuldade</div>
+            <div class="difficulty-grid">
+              ${Object.entries(score.stats.difficulty_breakdown).map(([difficulty, stats]) => {
+                const difficultyNames = {
+                  'easy': 'Fácil',
+                  'medium': 'Médio',
+                  'hard': 'Difícil'
+                };
+                const percentage = stats.total > 0 ? ((stats.correct / stats.total) * 100).toFixed(1) : 0;
+                return `
+                  <div class="difficulty-item">
+                    <div class="difficulty-name">${difficultyNames[difficulty] || difficulty}</div>
+                    <div class="difficulty-score">${stats.correct}/${stats.total}</div>
+                    <div style="font-size: 6pt; color: #000;">${percentage}%</div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+          
+          <!-- Estatísticas Gerais -->
+          <div class="stats-section">
+            <div class="stats-title">Estatísticas Gerais</div>
+            <div class="stats-grid">
+              <div class="stat-item">
+                <div class="stat-value">${Math.floor(score.stats.total_time_spent / 60)}</div>
+                <div class="stat-label">Minutos</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value">${score.stats.average_time_per_question.toFixed(1)}</div>
+                <div class="stat-label">Seg/Questão</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value">${Object.keys(score.stats.accuracy_by_topic).length}</div>
+                <div class="stat-label">Tópicos</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value">${Object.values(score.stats.accuracy_by_topic).filter(acc => acc >= 0.5).length}</div>
+                <div class="stat-label">Dominados</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Análise por Tópico (Compacta) -->
+          <div class="stats-section">
+            <div class="stats-title">Análise por Tópico</div>
+            <div class="competencies-grid">
+              ${Object.entries(score.stats.accuracy_by_topic).map(([topic, accuracy]) => `
+                <div class="competency-item">
+                  <div class="competency-name">${topic}</div>
+                  <div class="competency-score">${(accuracy * 100).toFixed(1)}%</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          
+          <!-- TODAS AS QUESTÕES COM EXPLICAÇÕES -->
+          <div class="stats-section">
+            <div class="stats-title">Todas as Questões com Explicações</div>
+            ${processedItems.map((item, index) => {
+              const userResponse = responses.find(r => r.item_id === item.item_id);
+              const isUnanswered = !userResponse || !userResponse.selected_answer;
+              const isWrong = userResponse && userResponse.selected_answer !== item.correct_answer;
+              const explanation = allExplanations[item.item_id] || '';
+              
+              return `
+                <div class="question-card">
+                  <div class="question-header">
+                    <div class="question-number">Questão ${getQuestionNumber(item.item_id, index)}</div>
+                    <div style="display: flex; gap: 4pt;">
+                      <div class="question-area">${item.area}</div>
+                      <div class="question-difficulty">
+                        ${item.estimated_difficulty === 'EASY' ? 'Fácil' : 
+                          item.estimated_difficulty === 'MEDIUM' ? 'Médio' : 
+                          item.estimated_difficulty === 'HARD' ? 'Difícil' : item.estimated_difficulty}
+                      </div>
+                    </div>
+                  </div>
+                  <div class="question-text">
+                    ${item.text}
+                  </div>
+                  <div class="alternatives">
+                    ${item.alternatives ? Object.entries(item.alternatives).map(([key, value]) => `
+                      <div class="alternative ${
+                        key === item.correct_answer ? 'correct' : 
+                        key === userResponse?.selected_answer ? 'incorrect' : 'neutral'
+                      }">
+                        <span class="alternative-label">${key})</span> ${value}
+                      </div>
+                    `).join('') : ''}
+                  </div>
+                  ${explanation ? `
+                    <div class="explanation">
+                      <div class="explanation-title">💡 Explicação:</div>
+                      ${explanation}
+                    </div>
+                  ` : ''}
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </body>
+        </html>
+      `;
+
+      printWindow.document.write(printHTML);
+      printWindow.document.close();
+      
+      // Aguardar o conteúdo carregar e então imprimir
+      printWindow.onload = () => {
+        setTimeout(() => {
+          printWindow.print();
+          printWindow.close();
+        }, 1000);
+      };
 
       toast({
         title: "Sucesso",
-        description: `Relatório ${format} baixado com sucesso!`,
+        description: "Arquivo completo preparado para impressão!",
       });
     } catch (error) {
-      console.error('Export error:', error);
+      console.error('Print error:', error);
       toast({
         title: "Erro",
-        description: "Falha ao exportar relatório. Tente novamente.",
+        description: "Falha ao preparar impressão completa. Tente novamente.",
         variant: "destructive"
       });
     } finally {
-      setExporting(false);
+      setPrintLoading(false);
     }
   };
 
@@ -207,7 +659,7 @@ export function EnemResults({ score, sessionId, onRetake, onRefocus, items = [],
 
       toast({
         title: "Sucesso",
-        description: `Explicação gerada com sucesso! ${data.source === 'openai' ? '(IA)' : '(Fallback)'}`,
+        description: `Explicação gerada com sucesso!`,
       });
     } catch (error) {
       console.error('Error generating explanation:', error);
@@ -304,21 +756,19 @@ export function EnemResults({ score, sessionId, onRetake, onRefocus, items = [],
           </CardHeader>
           <CardContent className="space-y-3">
             <Button 
-              onClick={() => handleExport('PDF')} 
+              onClick={handleCompletePrint} 
               className="w-full"
-              disabled={exporting}
+              disabled={printLoading}
             >
-              <Download className="h-4 w-4 mr-2" />
-              Exportar PDF
-            </Button>
-            <Button 
-              onClick={() => handleExport('CSV')} 
-              variant="outline" 
-              className="w-full"
-              disabled={exporting}
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Exportar CSV
+              <Printer className="h-4 w-4 mr-2" />
+              {printLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Gerando Arquivo...
+                </>
+              ) : (
+                'Imprimir Completo'
+              )}
             </Button>
             <Button 
               onClick={handleShare} 
@@ -450,9 +900,15 @@ export function EnemResults({ score, sessionId, onRetake, onRefocus, items = [],
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {Object.entries(score.stats.difficulty_breakdown).map(([difficulty, stats]) => (
+            {Object.entries(score.stats.difficulty_breakdown).map(([difficulty, stats]) => {
+              const difficultyNames: Record<string, string> = {
+                'easy': 'Fácil',
+                'medium': 'Médio', 
+                'hard': 'Difícil'
+              };
+              return (
               <div key={difficulty} className="text-center">
-                <div className="text-lg font-semibold capitalize mb-2">{difficulty}</div>
+                  <div className="text-lg font-semibold mb-2">{difficultyNames[difficulty] || difficulty}</div>
                 <div className="text-2xl font-bold text-blue-600 mb-1">
                   {stats.correct}/{stats.total}
                 </div>
@@ -460,7 +916,8 @@ export function EnemResults({ score, sessionId, onRetake, onRefocus, items = [],
                   {stats.total > 0 ? ((stats.correct / stats.total) * 100).toFixed(1) : 0}% de acerto
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </CardContent>
       </Card>
@@ -504,7 +961,11 @@ export function EnemResults({ score, sessionId, onRetake, onRefocus, items = [],
                             Questão {getQuestionNumber(item.item_id, index)}
                           </Badge>
                           <Badge variant="outline">{item.area}</Badge>
-                          <Badge variant="secondary">{item.estimated_difficulty}</Badge>
+                          <Badge variant="secondary">
+                            {item.estimated_difficulty === 'EASY' ? 'Fácil' : 
+                             item.estimated_difficulty === 'MEDIUM' ? 'Médio' : 
+                             item.estimated_difficulty === 'HARD' ? 'Difícil' : item.estimated_difficulty}
+                          </Badge>
                           {isUnanswered && (
                             <Badge variant="outline" className="text-orange-600 border-orange-300">
                               Não respondida
